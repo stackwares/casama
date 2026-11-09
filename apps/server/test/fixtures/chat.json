@@ -1,0 +1,197 @@
+{
+  "name": "chat",
+  "turns": [
+    {
+      "when": { "systemIncludes": "Reply with OK." },
+      "events": [
+        { "type": "text", "text": "OK" },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 10, "outputTokens": 1 },
+          "finishReason": "length",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories",
+        "lastUserIncludes": "favorite color is"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[{\"kind\":\"preference\",\"content\":\"The user's favorite color is teal.\",\"importance\":0.8}]}"
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 200, "outputTokens": 30 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "systemIncludes": "extract lasting memories" },
+      "events": [
+        { "type": "text", "text": "{\"memories\":[]}" },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 100, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "my favorite color is" },
+      "events": [
+        { "type": "text", "text": "Noted. " },
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "mem1",
+            "name": "memory__write",
+            "args": { "content": "The user's favorite color is teal.", "kind": "preference" }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 900, "outputTokens": 40 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "memory.write",
+        "lastUserIncludes": "my favorite color is"
+      },
+      "events": [
+        { "type": "text", "text": "Got it, " },
+        { "type": "text", "text": "I'll remember that." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 950, "outputTokens": 10 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastUserIncludes": "what is my favorite color",
+        "systemIncludes": "favorite color is teal"
+      },
+      "events": [
+        { "type": "text", "text": "Your favorite color is teal." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 800, "outputTokens": 8 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastUserIncludes": "what is my favorite color" },
+      "events": [
+        { "type": "text", "text": "I don't know your favorite color yet." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 800, "outputTokens": 9 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "crash test" },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "crash1",
+            "name": "memory__write",
+            "args": { "content": "Crash test marker fact.", "kind": "fact" }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 500, "outputTokens": 20 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "memory.write",
+        "lastUserIncludes": "crash test"
+      },
+      "delayMs": 250,
+      "events": [
+        { "type": "text", "text": "Resumed " },
+        { "type": "text", "text": "after " },
+        { "type": "text", "text": "the " },
+        { "type": "text", "text": "crash " },
+        { "type": "text", "text": "and " },
+        { "type": "text", "text": "finished." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 600, "outputTokens": 12 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastUserIncludes": "slow" },
+      "delayMs": 200,
+      "events": [
+        { "type": "text", "text": "one " },
+        { "type": "text", "text": "two " },
+        { "type": "text", "text": "three " },
+        { "type": "text", "text": "four " },
+        { "type": "text", "text": "five " },
+        { "type": "text", "text": "six " },
+        { "type": "text", "text": "seven " },
+        { "type": "text", "text": "eight " },
+        { "type": "text", "text": "nine " },
+        { "type": "text", "text": "ten " },
+        { "type": "text", "text": "eleven " },
+        { "type": "text", "text": "twelve " },
+        { "type": "text", "text": "thirteen " },
+        { "type": "text", "text": "fourteen " },
+        { "type": "text", "text": "fifteen " },
+        { "type": "text", "text": "sixteen " },
+        { "type": "text", "text": "seventeen " },
+        { "type": "text", "text": "eighteen " },
+        { "type": "text", "text": "nineteen " },
+        { "type": "text", "text": "twenty " },
+        { "type": "text", "text": "done" },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 100, "outputTokens": 21 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "events": [
+        { "type": "text", "text": "Hello! " },
+        { "type": "text", "text": "How can I help?" },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 6 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

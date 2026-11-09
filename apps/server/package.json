@@ -1,0 +1,35 @@
+{
+  "name": "@kasama/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=../../.env src/main.ts",
+    "dev:worker": "MODE=worker node --watch --env-file-if-exists=../../.env src/main.ts",
+    "start": "node src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dbos-inc/dbos-sdk": "^5.4.0",
+    "@hono/node-server": "^2.1.6",
+    "@hono/zod-openapi": "^1.6.3",
+    "@kasama/agent": "workspace:*",
+    "@kasama/contracts": "workspace:*",
+    "@kasama/db": "workspace:*",
+    "@kasama/domain": "workspace:*",
+    "@kasama/observability": "workspace:*",
+    "@kasama/sandbox": "workspace:*",
+    "@scalar/hono-api-reference": "^0.12.18",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.17",
+    "jose": "^6.2.15",
+    "postgres": "^4.1.0",
+    "ws": "^8.22.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.2"
+  }
+}

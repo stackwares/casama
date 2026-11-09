@@ -1,0 +1,9 @@
+{
+  "name": "@kasama/egress-proxy",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": { ".": "./src/proxy.ts" },
+  "scripts": { "start": "node src/main.ts", "typecheck": "tsc --noEmit", "test": "vitest run" }
+}

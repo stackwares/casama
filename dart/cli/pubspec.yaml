@@ -1,0 +1,19 @@
+name: kasama_cli
+description: Command-line client for Kasama.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.9.0
+executables:
+  kasama: kasama
+dependencies:
+  args: ^2.6.0
+  dio: ^5.7.0
+  kasama_api:
+    path: ../kasama_api
+  kasama_sdk:
+    path: ../kasama_sdk
+  path: ^1.9.0
+dev_dependencies:
+  test: ^1.25.0

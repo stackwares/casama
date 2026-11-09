@@ -1,0 +1,1 @@
+-- Local development seed. Intentionally empty: the default plan ships in migrations.

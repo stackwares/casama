@@ -1,0 +1,43 @@
+{
+  "name": "computer",
+  "turns": [
+    { "when": { "systemIncludes": "extract lasting memories" }, "events": [{ "type": "text", "text": "{\"memories\":[]}" }, { "type": "finish", "usage": { "inputTokens": 50, "outputTokens": 5 }, "finishReason": "stop", "model": "" }] },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "research example.com" },
+      "events": [
+        { "type": "text", "text": "Opening the site. " },
+        { "type": "tool_call", "call": { "callId": "r1", "name": "browser__open", "args": { "url": "https://example.com" } } },
+        { "type": "finish", "usage": { "inputTokens": 900, "outputTokens": 30 }, "finishReason": "tool-calls", "model": "" }
+      ]
+    },
+    {
+      "when": { "lastRole": "tool", "lastToolName": "browser.open", "lastUserIncludes": "research example.com" },
+      "events": [
+        { "type": "tool_call", "call": { "callId": "r2", "name": "browser__read", "args": {} } },
+        { "type": "finish", "usage": { "inputTokens": 1000, "outputTokens": 10 }, "finishReason": "tool-calls", "model": "" }
+      ]
+    },
+    {
+      "when": { "lastRole": "tool", "lastToolName": "browser.read", "lastUserIncludes": "research example.com" },
+      "events": [
+        { "type": "tool_call", "call": { "callId": "r3", "name": "shell__exec", "args": { "command": "{ echo '# Research report: example.com'; echo; agent-browser get title; echo; agent-browser read | head -c 2000; } > report.md && wc -c report.md" } } },
+        { "type": "finish", "usage": { "inputTokens": 1500, "outputTokens": 40 }, "finishReason": "tool-calls", "model": "" }
+      ]
+    },
+    {
+      "when": { "lastRole": "tool", "lastToolName": "shell.exec", "lastUserIncludes": "research example.com" },
+      "events": [{ "type": "text", "text": "Done. The report is in report.md." }, { "type": "finish", "usage": { "inputTokens": 1600, "outputTokens": 12 }, "finishReason": "stop", "model": "" }]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "clean up the old folder" },
+      "events": [
+        { "type": "tool_call", "call": { "callId": "d1", "name": "shell__exec", "args": { "command": "rm -rf old && ls" } } },
+        { "type": "finish", "usage": { "inputTokens": 500, "outputTokens": 20 }, "finishReason": "tool-calls", "model": "" }
+      ]
+    },
+    {
+      "when": { "lastRole": "tool", "lastToolName": "shell.exec", "lastUserIncludes": "clean up the old folder" },
+      "events": [{ "type": "text", "text": "Removed it. I saved a checkpoint first." }, { "type": "finish", "usage": { "inputTokens": 600, "outputTokens": 10 }, "finishReason": "stop", "model": "" }]
+    }
+  ]
+}

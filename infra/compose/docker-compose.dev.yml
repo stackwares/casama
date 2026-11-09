@@ -1,0 +1,34 @@
+# Local development stack. Supabase itself runs through `supabase start`
+# (Postgres :54322, API :54321); this file adds the Kasama services next to it.
+#   supabase start
+#   docker compose -f infra/compose/docker-compose.dev.yml up --build
+name: kasama-dev
+
+x-server: &server
+  build:
+    context: ../..
+    dockerfile: apps/server/Dockerfile
+  env_file: ../../.env
+  environment:
+    DATABASE_URL: postgres://postgres:postgres@host.docker.internal:54322/postgres
+    SUPABASE_URL: http://host.docker.internal:54321
+  extra_hosts:
+    - host.docker.internal:host-gateway
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *server
+    environment:
+      MODE: api
+      DATABASE_URL: postgres://postgres:postgres@host.docker.internal:54322/postgres
+      SUPABASE_URL: http://host.docker.internal:54321
+    ports:
+      - "8787:8787"
+
+  worker:
+    <<: *server
+    environment:
+      MODE: worker
+      DATABASE_URL: postgres://postgres:postgres@host.docker.internal:54322/postgres
+      SUPABASE_URL: http://host.docker.internal:54321

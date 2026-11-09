@@ -1,0 +1,7 @@
+# Kasama computer shell defaults
+export PS1='\u@computer:\w\$ '
+# The egress proxy is the only way out; make common tools use it.
+if [ -n "$HTTPS_PROXY" ]; then
+  export https_proxy="$HTTPS_PROXY" http_proxy="${HTTP_PROXY:-$HTTPS_PROXY}" no_proxy="${NO_PROXY:-localhost,127.0.0.1}"
+  export AGENT_BROWSER_PROXY="${AGENT_BROWSER_PROXY:-$HTTPS_PROXY}"
+fi

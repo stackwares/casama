@@ -1,0 +1,9 @@
+**/node_modules
+**/.turbo
+**/dist
+**/.dart_tool
+**/build
+.git
+client
+supabase/.temp
+.env

@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.turbo/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+# Dart / Flutter
+.dart_tool/
+build/
+pubspec_overrides.yaml
+# Supabase
+supabase/.branches
+supabase/.temp
+# test databases
+.pgdata*/

@@ -1,0 +1,150 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'conversation.dart';
+
+// **************************************************************************
+// CopyWithGenerator
+// **************************************************************************
+
+abstract class _$ConversationCWProxy {
+  Conversation id(String id);
+
+  Conversation botId(String botId);
+
+  Conversation title(String? title);
+
+  Conversation lastMessageAt(DateTime? lastMessageAt);
+
+  Conversation createdAt(DateTime createdAt);
+
+  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Conversation(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  ///
+  /// Usage
+  /// ```dart
+  /// Conversation(...).copyWith(id: 12, name: "My name")
+  /// ````
+  Conversation call({
+    String id,
+    String botId,
+    String? title,
+    DateTime? lastMessageAt,
+    DateTime createdAt,
+  });
+}
+
+/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfConversation.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfConversation.copyWith.fieldName(...)`
+class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
+  const _$ConversationCWProxyImpl(this._value);
+
+  final Conversation _value;
+
+  @override
+  Conversation id(String id) => this(id: id);
+
+  @override
+  Conversation botId(String botId) => this(botId: botId);
+
+  @override
+  Conversation title(String? title) => this(title: title);
+
+  @override
+  Conversation lastMessageAt(DateTime? lastMessageAt) =>
+      this(lastMessageAt: lastMessageAt);
+
+  @override
+  Conversation createdAt(DateTime createdAt) => this(createdAt: createdAt);
+
+  @override
+  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Conversation(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  ///
+  /// Usage
+  /// ```dart
+  /// Conversation(...).copyWith(id: 12, name: "My name")
+  /// ````
+  Conversation call({
+    Object? id = const $CopyWithPlaceholder(),
+    Object? botId = const $CopyWithPlaceholder(),
+    Object? title = const $CopyWithPlaceholder(),
+    Object? lastMessageAt = const $CopyWithPlaceholder(),
+    Object? createdAt = const $CopyWithPlaceholder(),
+  }) {
+    return Conversation(
+      id: id == const $CopyWithPlaceholder()
+          ? _value.id
+          // ignore: cast_nullable_to_non_nullable
+          : id as String,
+      botId: botId == const $CopyWithPlaceholder()
+          ? _value.botId
+          // ignore: cast_nullable_to_non_nullable
+          : botId as String,
+      title: title == const $CopyWithPlaceholder()
+          ? _value.title
+          // ignore: cast_nullable_to_non_nullable
+          : title as String?,
+      lastMessageAt: lastMessageAt == const $CopyWithPlaceholder()
+          ? _value.lastMessageAt
+          // ignore: cast_nullable_to_non_nullable
+          : lastMessageAt as DateTime?,
+      createdAt: createdAt == const $CopyWithPlaceholder()
+          ? _value.createdAt
+          // ignore: cast_nullable_to_non_nullable
+          : createdAt as DateTime,
+    );
+  }
+}
+
+extension $ConversationCopyWith on Conversation {
+  /// Returns a callable class that can be used as follows: `instanceOfConversation.copyWith(...)` or like so:`instanceOfConversation.copyWith.fieldName(...)`.
+  // ignore: library_private_types_in_public_api
+  _$ConversationCWProxy get copyWith => _$ConversationCWProxyImpl(this);
+}
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
+    $checkedCreate(
+      'Conversation',
+      json,
+      ($checkedConvert) {
+        $checkKeys(
+          json,
+          requiredKeys: const [
+            'id',
+            'bot_id',
+            'title',
+            'last_message_at',
+            'created_at',
+          ],
+        );
+        final val = Conversation(
+          id: $checkedConvert('id', (v) => v as String),
+          botId: $checkedConvert('bot_id', (v) => v as String),
+          title: $checkedConvert('title', (v) => v as String?),
+          lastMessageAt: $checkedConvert(
+            'last_message_at',
+            (v) => v == null ? null : DateTime.parse(v as String),
+          ),
+          createdAt: $checkedConvert(
+            'created_at',
+            (v) => DateTime.parse(v as String),
+          ),
+        );
+        return val;
+      },
+      fieldKeyMap: const {
+        'botId': 'bot_id',
+        'lastMessageAt': 'last_message_at',
+        'createdAt': 'created_at',
+      },
+    );
+
+Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'bot_id': instance.botId,
+      'title': instance.title,
+      'last_message_at': instance.lastMessageAt?.toIso8601String(),
+      'created_at': instance.createdAt.toIso8601String(),
+    };

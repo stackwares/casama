@@ -1,0 +1,60 @@
+# Headless computer: Ubuntu 24.04, computerd, shell tools, Node.js, Python, Chromium, agent-browser.
+# Build from the repo root:
+#   docker build -f infra/images/computer/Dockerfile.headless -t kasama/computer-headless:dev .
+
+# --- computerd (Dart, compiled to one native binary) ---
+FROM dart:stable AS computerd
+WORKDIR /src
+COPY dart/ ./
+RUN mkdir -p /out && dart pub get && dart compile exe computerd/bin/computerd.dart -o /out/computerd
+
+# --- computer image ---
+FROM ubuntu:24.04
+ARG AGENT_BROWSER_VERSION=0.41.2
+ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8 TZ=UTC
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl wget git openssh-client bash tar gzip xz-utils zstd unzip zip jq ripgrep \
+      less nano vim-tiny procps psmisc iproute2 iputils-ping dnsutils file bsdextrautils util-linux \
+      python3 python3-pip python3-venv build-essential tzdata locales fonts-liberation fonts-noto-color-emoji \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node.js 24 LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs && rm -rf /var/lib/apt/lists/*
+
+# agent-browser plus Playwright's Chromium build (Chrome for Testing has no Linux arm64 build).
+# Installed outside the home directory so it is not archived on sleep.
+ARG PLAYWRIGHT_VERSION=1.65.0
+RUN npm install -g agent-browser@${AGENT_BROWSER_VERSION} playwright@${PLAYWRIGHT_VERSION} \
+    && PLAYWRIGHT_BROWSERS_PATH=/opt/browser playwright install --with-deps --no-shell chromium \
+    && rm -rf /var/lib/apt/lists/* \
+    && CHROME="$(find /opt/browser -type f -name chrome -perm -u+x | head -1)" \
+    && test -n "$CHROME" && ln -sf "$CHROME" /usr/local/bin/chrome \
+    && chmod -R a+rX /opt/browser \
+    && chrome --version
+
+# Unprivileged user; home is the only persistent, writable place (plus /tmp).
+RUN userdel -r ubuntu 2>/dev/null || true \
+    && useradd --create-home --uid 1000 --shell /bin/bash kasama \
+    && mkdir -p /home/kasama/workspace && chown -R kasama:kasama /home/kasama
+COPY --from=computerd /out/computerd /usr/local/bin/computerd
+COPY infra/images/computer/bashrc /etc/kasama-bashrc
+RUN echo '. /etc/kasama-bashrc' >> /etc/bash.bashrc
+
+ENV HOME=/home/kasama \
+    COMPUTERD_HOME=/home/kasama \
+    AGENT_BROWSER_EXECUTABLE_PATH=/usr/local/bin/chrome \
+    AGENT_BROWSER_PROFILE=/home/kasama/.browser-profile \
+    AGENT_BROWSER_SOCKET_DIR=/tmp/agent-browser \
+    AGENT_BROWSER_NO_VERSION_CHECK=1 \
+    PIP_USER=1 \
+    NPM_CONFIG_PREFIX=/home/kasama/.npm-global \
+    PATH=/home/kasama/.npm-global/bin:/home/kasama/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+LABEL org.opencontainers.image.title="kasama-computer-headless" \
+      org.opencontainers.image.licenses="Apache-2.0"
+USER kasama
+WORKDIR /home/kasama/workspace
+EXPOSE 7070
+CMD ["computerd"]
