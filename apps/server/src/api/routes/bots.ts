@@ -9,6 +9,7 @@ import { enforceLimit } from "../../billing/limits.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
+import type { ModelListOutcome } from "../workflows.ts";
 import { applyTemplate } from "./autonomy.ts";
 
 const { bots, conversations, runs, memories, modelCredentials } = schema;
@@ -456,6 +457,29 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!allowed)
       throw new ApiError(403, "forbidden", "Only owners and admins can test model keys");
     return c.json(await deps.workflows.testCredential(id, cred.orgId, model), 200);
+  });
+
+  // Model lists change rarely; a short cache keeps the picker fast and the providers unbothered.
+  const modelCache = new Map<string, { at: number; value: ModelListOutcome }>();
+  app.openapi(routes.listCredentialModels, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    // RLS limits this to members of the key's workspace; the key itself never leaves the worker.
+    const [cred] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(modelCredentials).where(eq(modelCredentials.id, id)),
+    );
+    if (!cred) throw new ApiError(404, "credential_not_found", "Credential not found");
+    const hit = modelCache.get(id);
+    let value = hit && Date.now() - hit.at < 10 * 60_000 ? hit.value : undefined;
+    if (!value) {
+      value = await deps.workflows.listCredentialModels(id, cred.orgId).catch(() => ({
+        models: [],
+        source: "featured" as const,
+        error: "Could not load the model list.",
+      }));
+      if (value.source === "live") modelCache.set(id, { at: Date.now(), value });
+    }
+    return c.json({ items: value.models, source: value.source, error: value.error }, 200);
   });
 
   app.openapi(routes.listMemories, async (c) => {

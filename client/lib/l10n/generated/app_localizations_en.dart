@@ -543,6 +543,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blankBot => 'Blank';
 
   @override
+  String get defaultBotName => 'Chief';
+
+  @override
+  String get chooseModel => 'Choose a model';
+
+  @override
+  String get searchModels => 'Search models or type a model id';
+
+  @override
+  String get recommendedModels => 'Recommended';
+
+  @override
+  String get allModels => 'All models';
+
+  @override
+  String useCustomModel(String id) {
+    return 'Use \"$id\"';
+  }
+
+  @override
+  String modelListFallback(String reason) {
+    return 'Showing suggested models. $reason You can still type any model id.';
+  }
+
+  @override
+  String get noModelsFound => 'No models match.';
+
+  @override
+  String get addModelKeyFirst =>
+      'Add a model key first. Your bot uses it to think; it\'s stored encrypted and never shown again.';
+
+  @override
   String get botIntegrations => 'Integrations for this bot';
 
   @override

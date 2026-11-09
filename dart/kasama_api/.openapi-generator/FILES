@@ -123,6 +123,8 @@ lib/src/model/message_completed_event_payload.dart
 lib/src/model/message_delta_event.dart
 lib/src/model/message_delta_event_payload.dart
 lib/src/model/model_choice.dart
+lib/src/model/model_option.dart
+lib/src/model/model_option_list.dart
 lib/src/model/model_policy.dart
 lib/src/model/ok.dart
 lib/src/model/org_role.dart

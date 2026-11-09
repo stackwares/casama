@@ -37,6 +37,7 @@ export interface Harness {
 const noWorkflows: Workflows = {
   startRun: async () => {},
   testCredential: async () => ({ ok: false, model: "", latency_ms: 0, error: "no worker" }),
+  listCredentialModels: async () => ({ models: [], source: "featured", error: "no worker" }),
   close: async () => {},
   signalRun: async () => {},
   testIntegration: async () => ({ ok: false, tools: [], error: "no worker" }),

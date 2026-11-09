@@ -193,6 +193,29 @@ export const CredentialTestResult = z
   })
   .openapi("CredentialTestResult");
 
+export const ModelOption = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    context_length: z.number().int().optional(),
+    featured: z
+      .boolean()
+      .optional()
+      .openapi({ description: "Recommended by Kasama; listed first" }),
+  })
+  .openapi("ModelOption");
+
+export const ModelOptionList = z
+  .object({
+    items: z.array(ModelOption),
+    source: z.enum(["live", "featured"]).openapi({
+      description:
+        "live: the provider's own list; featured: Kasama's short list (provider unreachable or fixture mode)",
+    }),
+    error: z.string().optional(),
+  })
+  .openapi("ModelOptionList");
+
 export const Memory = z
   .object({
     id: Uuid,

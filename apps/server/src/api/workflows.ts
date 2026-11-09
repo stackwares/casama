@@ -7,6 +7,12 @@ export interface CredentialTestOutcome {
   error?: string;
 }
 
+export interface ModelListOutcome {
+  models: Array<{ id: string; name: string; context_length?: number; featured?: boolean }>;
+  source: "live" | "featured";
+  error?: string;
+}
+
 /** How the API hands work to the worker. */
 export interface Workflows {
   startRun(runId: string): Promise<void>;
@@ -15,6 +21,8 @@ export interface Workflows {
     orgId: string,
     model?: string,
   ): Promise<CredentialTestOutcome>;
+  /** The model picker's list for a key (live from the provider, or Kasama's short list). */
+  listCredentialModels(credentialId: string, orgId: string): Promise<ModelListOutcome>;
   /** Wakes a run that waits for an approval (decided or cancelled). */
   signalRun(runId: string): Promise<void>;
   testIntegration(integrationId: string): Promise<{ ok: boolean; tools: string[]; error?: string }>;
@@ -82,6 +90,14 @@ export async function dbosWorkflows(databaseUrl: string): Promise<Workflows> {
         setTimeout(() => reject(new Error("credential test timed out")), 30_000),
       );
       return Promise.race([handle.getResult({ pollingIntervalMs: 200 }), timeout]);
+    },
+    async listCredentialModels(credentialId, orgId) {
+      const handle = await client.enqueue<(c: string, o: string) => Promise<ModelListOutcome>>(
+        { queueName: "system", workflowName: "listCredentialModels" },
+        credentialId,
+        orgId,
+      );
+      return withTimeout(handle.getResult({ pollingIntervalMs: 200 }), 20_000, "model list");
     },
     async signalRun(runId) {
       await client.send(runId, { at: Date.now() }, "signal").catch(() => {});

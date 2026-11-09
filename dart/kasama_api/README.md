@@ -113,6 +113,7 @@ Class | Method | HTTP request | Description
 [*ComputersApi*](doc/ComputersApi.md) | [**updateComputer**](doc/ComputersApi.md#updatecomputer) | **PATCH** /v1/computers/{id} | 
 [*ComputersApi*](doc/ComputersApi.md) | [**uploadComputerFile**](doc/ComputersApi.md#uploadcomputerfile) | **PUT** /v1/computers/{id}/files | Upload a file (request body is the raw contents, up to 100 MB)
 [*CredentialsApi*](doc/CredentialsApi.md) | [**createCredential**](doc/CredentialsApi.md#createcredential) | **POST** /v1/credentials | Store a model key in Vault; returns metadata only
+[*CredentialsApi*](doc/CredentialsApi.md) | [**listCredentialModels**](doc/CredentialsApi.md#listcredentialmodels) | **GET** /v1/credentials/{id}/models | Models this key can use, recommended ones first
 [*CredentialsApi*](doc/CredentialsApi.md) | [**listCredentials**](doc/CredentialsApi.md#listcredentials) | **GET** /v1/credentials | 
 [*CredentialsApi*](doc/CredentialsApi.md) | [**testCredential**](doc/CredentialsApi.md#testcredential) | **POST** /v1/credentials/{id}/test | Validate a key with a 1-token call
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**attachIntegration**](doc/IntegrationsApi.md#attachintegration) | **POST** /v1/bots/{id}/integrations | Let a bot use an integration&#39;s tools (optionally only some)
@@ -253,6 +254,8 @@ Class | Method | HTTP request | Description
  - [MessageDeltaEvent](doc/MessageDeltaEvent.md)
  - [MessageDeltaEventPayload](doc/MessageDeltaEventPayload.md)
  - [ModelChoice](doc/ModelChoice.md)
+ - [ModelOption](doc/ModelOption.md)
+ - [ModelOptionList](doc/ModelOptionList.md)
  - [ModelPolicy](doc/ModelPolicy.md)
  - [Ok](doc/Ok.md)
  - [OrgRole](doc/OrgRole.md)

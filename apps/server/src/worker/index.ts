@@ -207,6 +207,7 @@ export async function startWorker(opts: WorkerOptions) {
     gateway,
     computers,
     fetch: fetchOut,
+    offlineModels: !!opts.modelFixtures,
     voice: {
       db,
       key: providerKey,
@@ -288,6 +289,7 @@ export async function startWorker(opts: WorkerOptions) {
 
 export {
   agentRunWorkflow,
+  listCredentialModelsWorkflow,
   pingWorkflow,
   QUEUES,
   testCredentialWorkflow,

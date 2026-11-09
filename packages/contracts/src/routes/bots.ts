@@ -8,6 +8,7 @@ import {
   Credential,
   CredentialTestResult,
   Memory,
+  ModelOptionList,
   Run,
   RunEventsPage,
   SendMessageRequest,
@@ -177,6 +178,21 @@ export const testCredential = createRoute({
     400: e400,
     401: e401,
     403: e403,
+    404: e404,
+  },
+});
+
+export const listCredentialModels = createRoute({
+  operationId: "listCredentialModels",
+  method: "get",
+  path: "/v1/credentials/{id}/models",
+  tags: ["credentials"],
+  security,
+  summary: "Models this key can use, recommended ones first",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse("Models", ModelOptionList),
+    401: e401,
     404: e404,
   },
 });

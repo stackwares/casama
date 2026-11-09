@@ -86,7 +86,9 @@ class FakeBackend implements Backend {
   Future<Invite> invite(String orgId, String email, {bool admin = false}) async => throw UnimplementedError();
 
   @override
-  Future<List<Credential>> credentials(String orgId) async => [
+  Future<List<Credential>> credentials(String orgId) async => noKeys
+      ? const []
+      : [
         Credential(id: 'cred', orgId: orgId, provider: ProviderId.openrouter, label: 'Main', baseUrl: null, keyHint: '1234', lastTestedAt: null, lastTestOk: null, createdAt: DateTime(2026)),
       ];
   @override
@@ -95,6 +97,15 @@ class FakeBackend implements Backend {
   @override
   Future<CredentialTestResult> testCredential(String credentialId, {String? model}) async =>
       CredentialTestResult(ok: true, model: 'm', latencyMs: 12);
+  @override
+  Future<ModelOptionList> models(String credentialId) async => ModelOptionList(
+        items: [
+          ModelOption(id: 'openai/gpt-6-luna', name: 'OpenAI: GPT-6 Luna', featured: true),
+          ModelOption(id: 'anthropic/claude-sonnet-5.5', name: 'Anthropic: Claude Sonnet 5.5', featured: true),
+          ModelOption(id: 'acme/other', name: 'Acme: Other'),
+        ],
+        source_: ModelOptionListSource_Enum.live,
+      );
 
   Bot bot({BotStatusEnum status = BotStatusEnum.idle}) => Bot(
         id: botId,
@@ -119,10 +130,14 @@ class FakeBackend implements Backend {
   Future<Bot> createBot(String orgId,
       {required String name, required String credentialId, required String model, String persona = '', String? templateId}) async {
     createdBotTemplate = templateId;
+    createdBot = (name: name, model: model);
     return bot();
   }
 
   String? createdBotTemplate;
+  ({String name, String model})? createdBot;
+  /// Set to true to simulate a workspace without model keys.
+  bool noKeys = false;
 
   @override
   Future<List<Template>> templates() async => [

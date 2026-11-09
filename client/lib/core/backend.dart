@@ -76,6 +76,8 @@ abstract class Backend {
   Future<List<Credential>> credentials(String orgId);
   Future<Credential> addCredential(String orgId, ProviderId provider, String label, {String? apiKey, String? baseUrl});
   Future<CredentialTestResult> testCredential(String credentialId, {String? model});
+  /// Models the key can use, recommended first (live from the provider, or Kasama's short list).
+  Future<ModelOptionList> models(String credentialId);
 
   // Bots
   Future<List<Bot>> bots(String orgId);

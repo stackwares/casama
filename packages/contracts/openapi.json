@@ -2438,6 +2438,54 @@
           "items"
         ]
       },
+      "ModelOptionList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelOption"
+            }
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "live",
+              "featured"
+            ],
+            "description": "live: the provider's own list; featured: Kasama's short list (provider unreachable or fixture mode)"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "source"
+        ]
+      },
+      "ModelOption": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "context_length": {
+            "type": "integer"
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Recommended by Kasama; listed first"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
       "CredentialList": {
         "type": "object",
         "properties": {
@@ -6094,6 +6142,63 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ConversationList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/credentials/{id}/models": {
+      "get": {
+        "operationId": "listCredentialModels",
+        "tags": [
+          "credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Models this key can use, recommended ones first",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelOptionList"
                 }
               }
             }

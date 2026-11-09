@@ -1030,6 +1030,60 @@ abstract class AppLocalizations {
   /// **'Blank'**
   String get blankBot;
 
+  /// No description provided for @defaultBotName.
+  ///
+  /// In en, this message translates to:
+  /// **'Chief'**
+  String get defaultBotName;
+
+  /// No description provided for @chooseModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a model'**
+  String get chooseModel;
+
+  /// No description provided for @searchModels.
+  ///
+  /// In en, this message translates to:
+  /// **'Search models or type a model id'**
+  String get searchModels;
+
+  /// No description provided for @recommendedModels.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get recommendedModels;
+
+  /// No description provided for @allModels.
+  ///
+  /// In en, this message translates to:
+  /// **'All models'**
+  String get allModels;
+
+  /// No description provided for @useCustomModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Use \"{id}\"'**
+  String useCustomModel(String id);
+
+  /// No description provided for @modelListFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing suggested models. {reason} You can still type any model id.'**
+  String modelListFallback(String reason);
+
+  /// No description provided for @noModelsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No models match.'**
+  String get noModelsFound;
+
+  /// No description provided for @addModelKeyFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a model key first. Your bot uses it to think; it\'s stored encrypted and never shown again.'**
+  String get addModelKeyFirst;
+
   /// No description provided for @botIntegrations.
   ///
   /// In en, this message translates to:

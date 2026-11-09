@@ -3,7 +3,10 @@ import {
   type ComputerService,
   CredentialResolver,
   collect,
+  listModels,
   type ModelGateway,
+  type ModelList,
+  mergeModelList,
   type RunDeps,
   refreshIntegration,
   runAgent,
@@ -24,6 +27,7 @@ export const QUEUES = {
 export const WORKFLOWS = {
   agentRun: "agentRun",
   testCredential: "testCredential",
+  listCredentialModels: "listCredentialModels",
   ping: "ping",
 } as const;
 
@@ -38,6 +42,8 @@ let runtime:
       voice?: VoiceRuntime;
       billing?: import("../billing/service.ts").BillingService;
       telemetry?: { url: string; version: string };
+      /** Fixture mode: the model picker uses Kasama's short list instead of calling providers. */
+      offlineModels?: boolean;
     }
   | undefined;
 export function configureWorkflows(r: NonNullable<typeof runtime>) {
@@ -228,6 +234,40 @@ export const testCredentialWorkflow = DBOS.registerWorkflow(
       name: "test",
     }),
   { name: WORKFLOWS.testCredential },
+);
+
+/** The model picker's list for a key. Runs in the worker because only the worker reads Vault. */
+export async function listCredentialModels(
+  db: Database,
+  credentialId: string,
+  orgId: string,
+  opts: { offline?: boolean; fetch?: typeof fetch } = {},
+): Promise<ModelList> {
+  const [row] = await db.execute<{
+    provider: string;
+    base_url: string | null;
+    key: string | null;
+  }>(sql`
+    select c.provider, c.base_url, s.decrypted_secret as key
+    from public.model_credentials c
+    left join vault.decrypted_secrets s on s.id = c.vault_secret_id
+    where c.id = ${credentialId}::uuid and c.org_id = ${orgId}::uuid`);
+  if (!row) return { models: [], source: "featured", error: "Credential not found." };
+  if (opts.offline) return { models: mergeModelList(row.provider, []), source: "featured" };
+  // The admin chose this base URL (it may be a local Ollama), so the plain fetch is used, as in chats.
+  return listModels(
+    { provider: row.provider, apiKey: row.key ?? undefined, baseUrl: row.base_url ?? undefined },
+    opts.fetch,
+  );
+}
+
+export const listCredentialModelsWorkflow = DBOS.registerWorkflow(
+  async (credentialId: string, orgId: string) =>
+    DBOS.runStep(
+      () => listCredentialModels(rt().db, credentialId, orgId, { offline: rt().offlineModels }),
+      { name: "list" },
+    ),
+  { name: WORKFLOWS.listCredentialModels },
 );
 
 /** Voice (D-065): short, keyed operations on their own queue. */

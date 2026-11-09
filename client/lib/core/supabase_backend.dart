@@ -111,6 +111,10 @@ class SupabaseBackend implements Backend {
   Future<CredentialTestResult> testCredential(String credentialId, {String? model}) async =>
       (await api.credentials.testCredential(id: credentialId, testCredentialRequest: TestCredentialRequest(model: model))).data!;
 
+  @override
+  Future<ModelOptionList> models(String credentialId) async =>
+      (await api.credentials.listCredentialModels(id: credentialId)).data!;
+
   // --- bots -----------------------------------------------------------------
 
   @override

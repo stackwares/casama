@@ -57,6 +57,11 @@ final credentialsProvider = FutureProvider<List<Credential>>((ref) async {
   return ref.watch(backendProvider).credentials(org.id);
 });
 
+/// Models a key can use for the bot model picker (cached by the server for 10 minutes).
+final modelOptionsProvider = FutureProvider.family<ModelOptionList, String>(
+  (ref, credentialId) => ref.watch(backendProvider).models(credentialId),
+);
+
 final usageTodayProvider = FutureProvider<UsageReport?>((ref) async {
   final org = ref.watch(currentOrgProvider);
   if (org == null) return null;

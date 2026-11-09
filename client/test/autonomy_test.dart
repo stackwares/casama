@@ -213,15 +213,75 @@ void main() {
     expect(find.text('Approved'), findsWidgets);
   });
 
-  testWidgets('new bots default to GPT-6 Luna for an OpenRouter key, but keep a typed model', (tester) async {
+  testWidgets('new bots are named Chief and default to GPT-6 Luna; the model comes from a searchable picker', (tester) async {
     await setSize(tester, const Size(600, 1000));
     final backend = FakeBackend();
+    final router = GoRouter(routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, _) => Scaffold(
+          body: Consumer(builder: (context, ref, _) => TextButton(onPressed: () => showCreateBot(context, ref), child: const Text('open'))),
+        ),
+      ),
+      GoRoute(path: '/bots/:id/chat', builder: (_, _) => const Text('chat opened')),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [backendProvider.overrideWithValue(backend)],
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, 'Chief');
+    // The picker shows the model's name with its id underneath.
+    expect(find.text('OpenAI: GPT-6 Luna'), findsOneWidget);
+    expect(find.text('openai/gpt-6-luna'), findsOneWidget);
+
+    // A template renames the bot; going back to Blank restores Chief.
+    await tester.tap(find.byKey(const Key('template-daily-briefing')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, isNot('Chief'));
+    await tester.tap(find.text('Blank'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, 'Chief');
+
+    await tester.tap(find.byKey(const Key('modelPicker')));
+    await tester.pumpAndSettle();
+    expect(find.text('Recommended'), findsOneWidget);
+    expect(find.text('All models'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('modelSearch')), 'sonnet');
+    await tester.pumpAndSettle();
+    expect(find.text('Acme: Other'), findsNothing);
+    await tester.tap(find.byKey(const Key('model-anthropic/claude-sonnet-5.5')));
+    await tester.pumpAndSettle();
+    expect(find.text('Anthropic: Claude Sonnet 5.5'), findsOneWidget);
+
+    // Any model id can still be typed in.
+    await tester.tap(find.byKey(const Key('modelPicker')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('modelSearch')), 'acme/brand-new');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('customModel')));
+    await tester.pumpAndSettle();
+    expect(find.text('acme/brand-new'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+    await tester.pumpAndSettle();
+    expect(backend.createdBot, (name: 'Chief', model: 'acme/brand-new'));
+    expect(find.text('chat opened'), findsOneWidget);
+  });
+
+  testWidgets('without a model key the new-bot sheet offers to add one', (tester) async {
+    await setSize(tester, const Size(600, 1000));
+    final backend = FakeBackend()..noKeys = true;
     await tester.pumpWidget(harness(backend, const Scaffold(body: CreateBotSheet())));
     await tester.pumpAndSettle();
-    final field = find.widgetWithText(TextField, 'Model');
-    expect(tester.widget<TextField>(field).controller!.text, 'openai/gpt-6-luna');
-    await tester.enterText(field, 'anthropic/claude-sonnet-5-5');
-    await tester.pumpAndSettle();
-    expect(tester.widget<TextField>(field).controller!.text, 'anthropic/claude-sonnet-5-5');
+    expect(find.textContaining('Add a model key first'), findsOneWidget);
+    expect(find.byKey(const Key('apiKey')), findsOneWidget);
+    expect(find.byKey(const Key('modelPicker')), findsNothing);
+    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Create')).onPressed, isNull);
   });
 }

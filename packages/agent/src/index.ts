@@ -11,6 +11,7 @@ export * from "./gateway/types.ts";
 export * from "./integrations.ts";
 export * from "./media.ts";
 export * from "./memory.ts";
+export * from "./models.ts";
 export * from "./notifications.ts";
 export * from "./redact.ts";
 export * from "./run.ts";

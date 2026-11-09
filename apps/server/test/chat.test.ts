@@ -83,6 +83,17 @@ describe("model keys", () => {
     expect(list.items[0]).toMatchObject({ id: credentialId, last_test_ok: true });
   });
 
+  it("lists models for the picker, recommended first (fixture mode: Kasama's short list)", async () => {
+    const res = await call(`/v1/credentials/${credentialId}/models`, { token: owner.token });
+    expect(res.status).toBe(200);
+    const body = await j(res);
+    expect(body.source).toBe("featured");
+    expect(body.items[0]).toMatchObject({ id: "openai/gpt-6-luna", featured: true });
+    const stranger = await h.user("models-stranger@example.com");
+    const denied = await call(`/v1/credentials/${credentialId}/models`, { token: stranger.token });
+    expect(denied.status).toBe(404);
+  });
+
   it("only admins add keys", async () => {
     const member = await h.user("chat-member@example.com");
     const invite = await j(

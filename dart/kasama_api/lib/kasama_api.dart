@@ -123,6 +123,8 @@ export 'package:kasama_api/src/model/message_completed_event_payload.dart';
 export 'package:kasama_api/src/model/message_delta_event.dart';
 export 'package:kasama_api/src/model/message_delta_event_payload.dart';
 export 'package:kasama_api/src/model/model_choice.dart';
+export 'package:kasama_api/src/model/model_option.dart';
+export 'package:kasama_api/src/model/model_option_list.dart';
 export 'package:kasama_api/src/model/model_policy.dart';
 export 'package:kasama_api/src/model/ok.dart';
 export 'package:kasama_api/src/model/org_role.dart';

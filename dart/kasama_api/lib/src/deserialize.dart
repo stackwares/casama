@@ -86,6 +86,8 @@ import 'package:kasama_api/src/model/message_completed_event_payload.dart';
 import 'package:kasama_api/src/model/message_delta_event.dart';
 import 'package:kasama_api/src/model/message_delta_event_payload.dart';
 import 'package:kasama_api/src/model/model_choice.dart';
+import 'package:kasama_api/src/model/model_option.dart';
+import 'package:kasama_api/src/model/model_option_list.dart';
 import 'package:kasama_api/src/model/model_policy.dart';
 import 'package:kasama_api/src/model/ok.dart';
 import 'package:kasama_api/src/model/org_settings.dart';
@@ -380,6 +382,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return MessageDeltaEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ModelChoice':
           return ModelChoice.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ModelOption':
+          return ModelOption.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ModelOptionList':
+          return ModelOptionList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ModelPolicy':
           return ModelPolicy.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Ok':
