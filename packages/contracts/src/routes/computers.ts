@@ -1,9 +1,22 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { IdempotencyKeyHeader, jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
-import { Checkpoint, Computer, ComputerFileEntry, CreateCheckpointRequest } from "../computers.ts";
+import {
+  Checkpoint,
+  Computer,
+  ComputerFileEntry,
+  CreateCheckpointRequest,
+  CreateComputerRequest,
+  Lease,
+  ReleaseLeaseRequest,
+  StreamSession,
+  StreamSessionRequest,
+  TakeLeaseRequest,
+  TakeoverRequest,
+  UpdateComputerRequest,
+} from "../computers.ts";
 
 const security = [{ bearerAuth: [] }];
-const { 400: e400, 401: e401, 404: e404, 409: e409 } = problemResponses;
+const { 400: e400, 401: e401, 403: e403, 404: e404, 409: e409 } = problemResponses;
 const idParam = z.object({ id: Uuid });
 const pathQuery = z.object({ path: z.string().max(4000).optional() });
 
@@ -207,4 +220,131 @@ export const computerTerminal = createRoute({
     }),
   },
   responses: { 101: { description: "Switching to WebSocket" }, 401: e401, 404: e404 },
+});
+
+export const createComputer = createRoute({
+  operationId: "createComputer",
+  method: "post",
+  path: "/v1/computers",
+  tags: ["computers"],
+  security,
+  summary: "Create a private computer for a bot (or the team computer if it was removed)",
+  request: { headers: IdempotencyKeyHeader, body: jsonBody(CreateComputerRequest) },
+  responses: { 201: jsonResponse("Created", Computer), 400: e400, 401: e401, 403: e403, 409: e409 },
+});
+
+export const updateComputer = createRoute({
+  operationId: "updateComputer",
+  method: "patch",
+  path: "/v1/computers/{id}",
+  tags: ["computers"],
+  security,
+  request: { params: idParam, body: jsonBody(UpdateComputerRequest) },
+  responses: { 200: jsonResponse("Updated", Computer), 400: e400, 401: e401, 403: e403, 404: e404 },
+});
+
+export const deleteComputer = createRoute({
+  operationId: "deleteComputer",
+  method: "delete",
+  path: "/v1/computers/{id}",
+  tags: ["computers"],
+  security,
+  summary: "Delete a computer and its files, snapshots and checkpoints",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse("Deleted", z.object({ deleted: Uuid }).openapi("DeletedComputer")),
+    401: e401,
+    403: e403,
+    404: e404,
+  },
+});
+
+export const createStreamSession = createRoute({
+  operationId: "createStreamSession",
+  method: "post",
+  path: "/v1/computers/{id}/stream-session",
+  tags: ["computers"],
+  security,
+  summary: "Get a 5-minute live-view session (signaling URL, token, TURN credentials)",
+  request: { params: idParam, body: jsonBody(StreamSessionRequest) },
+  responses: {
+    200: jsonResponse("Session", StreamSession),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
+});
+
+export const computerStream = createRoute({
+  operationId: "computerStream",
+  method: "get",
+  path: "/v1/computers/{id}/stream",
+  tags: ["computers"],
+  summary:
+    "WebSocket live-view signaling (Neko protocol). Authenticated by the stream-session token; input is accepted only in control mode while you hold the lease.",
+  request: { params: idParam, query: z.object({ token: z.string() }) },
+  responses: { 101: { description: "Switching to WebSocket" }, 401: e401, 404: e404 },
+});
+
+export const getLease = createRoute({
+  operationId: "getLease",
+  method: "get",
+  path: "/v1/computers/{id}/lease",
+  tags: ["computers"],
+  security,
+  summary: "Who controls the screen (the bot unless a person took over)",
+  request: { params: idParam },
+  responses: { 200: jsonResponse("Lease", Lease), 401: e401, 404: e404 },
+});
+
+export const takeLease = createRoute({
+  operationId: "takeLease",
+  method: "post",
+  path: "/v1/computers/{id}/lease",
+  tags: ["computers"],
+  security,
+  summary:
+    "Take control (or renew it). The bot pauses screen actions; control returns after 15 minutes without renewal.",
+  request: { params: idParam, body: jsonBody(TakeLeaseRequest) },
+  responses: { 200: jsonResponse("Lease", Lease), 401: e401, 404: e404, 409: e409 },
+});
+
+export const releaseLease = createRoute({
+  operationId: "releaseLease",
+  method: "delete",
+  path: "/v1/computers/{id}/lease",
+  tags: ["computers"],
+  security,
+  summary: "Hand control back to the bot, optionally with a note",
+  request: { params: idParam, body: jsonBody(ReleaseLeaseRequest) },
+  responses: { 200: jsonResponse("Lease", Lease), 401: e401, 404: e404 },
+});
+
+export const listTakeovers = createRoute({
+  operationId: "listTakeovers",
+  method: "get",
+  path: "/v1/takeovers",
+  tags: ["computers"],
+  security,
+  summary: "Open requests from bots for a person to take over a screen",
+  request: { query: z.object({ org_id: Uuid }) },
+  responses: {
+    200: jsonResponse(
+      "Takeover requests",
+      z.object({ items: z.array(TakeoverRequest) }).openapi("TakeoverRequestList"),
+    ),
+    401: e401,
+  },
+});
+
+export const dismissTakeover = createRoute({
+  operationId: "dismissTakeover",
+  method: "post",
+  path: "/v1/takeovers/{id}/dismiss",
+  tags: ["computers"],
+  security,
+  summary: "Decline a takeover request; the bot continues without help",
+  request: { params: idParam, body: jsonBody(ReleaseLeaseRequest) },
+  responses: { 200: jsonResponse("Dismissed", TakeoverRequest), 401: e401, 404: e404, 409: e409 },
 });

@@ -77,6 +77,12 @@ class SettingsScreen extends ConsumerWidget {
           onTap: () => context.push('/settings/integrations'),
         ),
         ListTile(
+          key: const Key('settingsComputers'),
+          leading: const Icon(Icons.computer_outlined),
+          title: Text(l10n.computers),
+          onTap: () => context.push('/settings/computers'),
+        ),
+        ListTile(
           key: const Key('settingsSecrets'),
           leading: const Icon(Icons.lock_outline),
           title: Text(l10n.secrets),
@@ -146,6 +152,23 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
           onChanged: (v) => setState(() => _autonomy = v),
         ),
         const SizedBox(height: 8),
+        Builder(builder: (context) {
+          final computers = ref.watch(computersProvider).value ?? const <Computer>[];
+          final usable = computers.where((c) => c.kind == ComputerKindEnum.team || c.ownerBotId == bot.id).toList();
+          return DropdownButtonFormField<String?>(
+            key: const Key('botComputer'),
+            initialValue: usable.any((c) => c.id == bot.defaultComputerId) ? bot.defaultComputerId : null,
+            decoration: InputDecoration(labelText: l10n.botComputer),
+            items: [
+              DropdownMenuItem<String?>(value: null, child: Text(l10n.botComputerDefault)),
+              for (final c in usable) DropdownMenuItem<String?>(value: c.id, child: Text(c.name)),
+            ],
+            onChanged: (v) async {
+              await runGuarded(context, () => ref.read(backendProvider).setBotComputer(bot.id, v));
+              ref.invalidate(botsProvider);
+            },
+          );
+        }),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.schedule),

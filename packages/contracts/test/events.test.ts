@@ -28,6 +28,7 @@ describe("run events", () => {
       "approval.requested",
       "approval.resolved",
       "takeover.requested",
+      "takeover.resolved",
       "lease.changed",
       "computer.state",
       "checkpoint.created",

@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Starts the virtual display, accessibility bus and window manager, then computerd.
+# Starts the X server, accessibility bus and window manager, then computerd.
+# computerd starts the Neko streamer only while someone is watching (D-054).
 set -euo pipefail
 export DISPLAY="${DISPLAY:-:1}"
-Xvfb "$DISPLAY" -screen 0 "${SCREEN_GEOMETRY:-1280x800x24}" -nolisten tcp &
-for _ in $(seq 1 50); do xdpyinfo >/dev/null 2>&1 && break; sleep 0.1; done
+mkdir -p "$HOME/.local/share/xorg"
+/usr/lib/xorg/Xorg "$DISPLAY" -config /etc/kasama/xorg.conf -logfile /tmp/xorg.log -noreset -nolisten tcp &
+for _ in $(seq 1 100); do xdpyinfo >/dev/null 2>&1 && break; sleep 0.1; done
 eval "$(dbus-launch --sh-syntax)"
 export NO_AT_BRIDGE=0 GTK_MODULES=gail:atk-bridge
 /usr/libexec/at-spi-bus-launcher --launch-immediately >/dev/null 2>&1 &

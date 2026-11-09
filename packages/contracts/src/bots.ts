@@ -40,6 +40,9 @@ export const Bot = z
     visibility: Visibility,
     budget: BotBudget,
     status: z.enum(["idle", "working", "waiting", "disabled"]),
+    default_computer_id: Uuid.nullable().openapi({
+      description: "Its computer; null = its private computer, else the team computer",
+    }),
     created_at: ts,
   })
   .openapi("Bot");

@@ -460,5 +460,83 @@
       }
     }
   },
-  "weekdaysAt9": "Weekdays at 9:00"
+  "weekdaysAt9": "Weekdays at 9:00",
+  "botBackInControl": "The bot is back in control",
+  "botComputer": "Computer",
+  "botComputerDefault": "Default (its private computer, else the team computer)",
+  "botInControl": "Bot in control",
+  "computerName": "Name",
+  "computers": "Computers",
+  "connectingLive": "Connecting…",
+  "dismiss": "Dismiss",
+  "forBot": "For bot",
+  "handBack": "Hand back",
+  "handBackNote": "Note for the bot (optional)",
+  "handBackNoteHint": "For example: I signed in, carry on",
+  "live": "Live",
+  "liveView": "Live view",
+  "liveViewHelp": "Watch this computer live and take control when needed.",
+  "newComputer": "New computer",
+  "newComputerHelp": "A private computer belongs to one bot. Its files stay separate from the team computer.",
+  "openLiveView": "Open live view",
+  "paused": "Paused",
+  "pausedUserInControl": "Paused: a person is in control of the screen",
+  "privateComputer": "Private computer",
+  "profileDesktop": "Desktop",
+  "profileHeadless": "Headless",
+  "rename": "Rename",
+  "rightClickNextTap": "Right-click on next tap",
+  "screenshotMode": "Screenshots (live video unavailable on this network)",
+  "showKeyboard": "Keyboard",
+  "someoneElseInControl": "Someone else is in control",
+  "switchToDesktop": "Switch to desktop",
+  "switchToHeadless": "Switch to headless",
+  "takeControl": "Take control",
+  "takeoverCompleted": "Handed back",
+  "takeoverDismissed": "Declined",
+  "takeoverPrivacy": "While you're in control, the bot is paused and nothing you type or see is sent to it.",
+  "teamComputer": "Team computer",
+  "withDesktop": "With a desktop",
+  "withDesktopHelp": "Adds a screen you can watch live; uses more memory",
+  "youAreInControl": "You're in control",
+  "botAsksForHelp": "The bot asks: {reason}",
+  "@botAsksForHelp": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "botNeedsHelp": "{bot} needs your help",
+  "@botNeedsHelp": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteComputerConfirm": "Delete {name}? Its files, snapshots and checkpoints are deleted too.",
+  "@deleteComputerConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "latencyMs": "{ms} ms",
+  "@latencyMs": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "privateComputerOf": "{bot}'s computer",
+  "@privateComputerOf": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      }
+    }
+  }
 }

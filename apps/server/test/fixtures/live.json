@@ -1,0 +1,225 @@
+{
+  "name": "live",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 50,
+            "outputTokens": 5
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "check the screen"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "s1",
+            "name": "desktop__screenshot",
+            "args": {
+              "path": "screen.png"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "desktop.screenshot",
+        "lastUserIncludes": "check the screen"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "The screen is saved."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "sign in to the site"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "t1",
+            "name": "computer__request_takeover",
+            "args": {
+              "reason": "Please sign in to the site; I can't enter your password."
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "computer.request_takeover"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Thanks, continuing from here."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "write a note in Mousepad"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "m1",
+            "name": "desktop__launch",
+            "args": {
+              "app": "mousepad",
+              "args": ["/home/kasama/workspace/note.txt"]
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "desktop.launch"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "m2",
+            "name": "desktop__type",
+            "args": {
+              "text": "Hello from Kasama"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "desktop.type"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "m3",
+            "name": "desktop__press",
+            "args": {
+              "keys": "ctrl+s"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "desktop.press"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Saved the note in Mousepad."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

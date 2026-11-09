@@ -18,13 +18,16 @@ type RawChunk =
 export class ComputerdClient {
   readonly baseUrl: string;
   private readonly token: string;
-  constructor(baseUrl: string, token: string) {
+  private readonly extraHeaders: Record<string, string>;
+  /** extraHeaders: sent with every call (for example a hosted provider's preview token). */
+  constructor(baseUrl: string, token: string, extraHeaders: Record<string, string> = {}) {
     this.baseUrl = baseUrl.replace(/\/$/, "");
     this.token = token;
+    this.extraHeaders = extraHeaders;
   }
 
-  get authHeaders() {
-    return { authorization: `Bearer ${this.token}` };
+  get authHeaders(): Record<string, string> {
+    return { ...this.extraHeaders, authorization: `Bearer ${this.token}` };
   }
 
   private async call(path: string, init: RequestInit = {}, expectOk = true) {
@@ -153,6 +156,23 @@ export class ComputerdClient {
     });
   }
 
+  /** Starts the Neko streamer (idempotent) and returns its port and per-start logins. */
+  async streamStart(body: { ice_servers?: unknown[]; screen?: string } = {}) {
+    const res = await this.call("/stream/start", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return (await res.json()) as {
+      port: number;
+      users: Record<"viewer" | "controller", { username: string; password: string }>;
+    };
+  }
+
+  async streamStop() {
+    await this.call("/stream/stop", { method: "POST" });
+  }
+
   terminalUrl(opts: { cols?: number; rows?: number } = {}) {
     const ws = this.baseUrl.replace(/^http/, "ws");
     return `${ws}/terminal?cols=${opts.cols ?? 120}&rows=${opts.rows ?? 32}`;
@@ -163,7 +183,7 @@ export class ComputerdClient {
     const until = Date.now() + timeoutMs;
     for (;;) {
       try {
-        const res = await fetch(`${this.baseUrl}/health`);
+        const res = await fetch(`${this.baseUrl}/health`, { headers: this.extraHeaders });
         if (res.ok) return;
       } catch {}
       if (Date.now() > until)

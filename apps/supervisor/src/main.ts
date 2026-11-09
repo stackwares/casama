@@ -1,9 +1,12 @@
 import {
   DockerApi,
   DockerProvider,
+  daytonaProvider,
+  e2bProvider,
   egressControl,
   FsObjectStore,
   S3ObjectStore,
+  type SandboxProvider,
 } from "@kasama/sandbox";
 import { startSupervisor } from "./app.ts";
 
@@ -46,6 +49,13 @@ const provider = new DockerProvider({
     ),
   },
   supervisorContainer: env.SUPERVISOR_CONTAINER,
+  turn: env.TURN_SECRET
+    ? {
+        containerName: env.TURN_CONTAINER ?? "kasama-turn",
+        secret: env.TURN_SECRET,
+        port: env.TURN_PORT ? Number(env.TURN_PORT) : undefined,
+      }
+    : undefined,
   namePrefix: env.NAME_PREFIX ?? "kasama",
   defaults: {
     cpus: env.COMPUTER_CPUS ? Number(env.COMPUTER_CPUS) : undefined,
@@ -53,9 +63,50 @@ const provider = new DockerProvider({
   },
 });
 
+// Hosted providers (D-056, D-057): same image and computerd, reached over the provider's port URLs.
+const hostedOpts = {
+  store,
+  tokenSecret: need("COMPUTER_TOKEN_SECRET"),
+  turn:
+    env.TURN_SECRET && env.TURN_PUBLIC_HOST
+      ? { host: env.TURN_PUBLIC_HOST, port: Number(env.TURN_PORT ?? 3478), secret: env.TURN_SECRET }
+      : undefined,
+};
+const hosted: Record<string, SandboxProvider> = {};
+if (env.E2B_API_KEY)
+  hosted.e2b = e2bProvider(
+    {
+      apiKey: env.E2B_API_KEY,
+      apiUrl: env.E2B_API_URL,
+      templates: {
+        headless: env.E2B_TEMPLATE_HEADLESS ?? "kasama-computer-headless",
+        desktop: env.E2B_TEMPLATE_DESKTOP ?? "kasama-computer-desktop",
+      },
+    },
+    hostedOpts,
+  );
+if (env.DAYTONA_API_KEY)
+  hosted.daytona = daytonaProvider(
+    {
+      apiKey: env.DAYTONA_API_KEY,
+      apiUrl: env.DAYTONA_API_URL,
+      organizationId: env.DAYTONA_ORGANIZATION_ID,
+      snapshots: {
+        headless: env.DAYTONA_SNAPSHOT_HEADLESS ?? "kasama-computer-headless",
+        desktop: env.DAYTONA_SNAPSHOT_DESKTOP ?? "kasama-computer-desktop",
+      },
+    },
+    hostedOpts,
+  );
+
 const port = Number(env.PORT ?? 8788);
-startSupervisor(provider, token, port);
+startSupervisor(provider, token, port, hosted);
 console.log(
-  JSON.stringify({ msg: "supervisor listening", port, runtime: env.SANDBOX_RUNTIME || "default" }),
+  JSON.stringify({
+    msg: "supervisor listening",
+    port,
+    runtime: env.SANDBOX_RUNTIME || "default",
+    hosted: Object.keys(hosted),
+  }),
 );
 for (const s of ["SIGTERM", "SIGINT"] as const) process.once(s, () => process.exit(0));

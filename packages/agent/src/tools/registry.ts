@@ -43,6 +43,11 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   riskFor?: (args: z.infer<S>) => Risk;
   /** The output is untrusted (web pages, outside services): later medium-risk calls need approval. */
   untrustedOutput?: boolean;
+  /**
+   * Acts on the screen (browser or desktop). Waits while a person has control of the computer;
+   * shell and file tools wait too unless the person allowed them.
+   */
+  screen?: boolean;
   /** Raw JSON Schema for tools defined outside Zod (integration tools). */
   jsonSchema?: Record<string, unknown>;
   execute(args: z.infer<S>, ctx: ToolContext): Promise<ToolResult>;

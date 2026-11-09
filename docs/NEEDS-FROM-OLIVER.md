@@ -17,6 +17,9 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 | Brave Search or Tavily API key (free tiers) | `web.search` tool | Credential with provider `brave_search` or `tavily` | Tested against mocks |
 | Verification of the Composio and Pipedream REST shapes with real keys | Confidence that the adapters match the live APIs (D-052) | `packages/agent/src/integrations.ts` | Written from public docs; mock-tested only |
 
+| E2B API key, and a template built from `infra/images/computer` (computerd start command) | Hosted computers on E2B (Phase 5) | Supervisor `E2B_API_KEY`, `E2B_TEMPLATE_HEADLESS`, `E2B_TEMPLATE_DESKTOP` | Adapter tested against a local mock of the E2B API (D-057) |
+| Daytona API key, and snapshots built from the computer images | Hosted computers on Daytona (Phase 5) | Supervisor `DAYTONA_API_KEY`, `DAYTONA_SNAPSHOT_*` | Adapter tested against a local mock of the Daytona API |
+
 ## Infrastructure
 
 | Item                                                      | Needed for                                                                       | Status                                                                                              |
@@ -28,6 +31,8 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 | A Linux sandbox host with XFS project quotas | Enforcing the 10 GB per-computer disk limit (D-032) | Free disk is reported; no hard cap on Docker Desktop |
 | Object storage bucket (Cloudflare R2 free tier or Supabase Storage) | Computer snapshots and checkpoints off the sandbox host | `OBJECT_STORE=s3` + `S3_*` variables; tested only with the filesystem store |
 
+| A public TURN relay: a host with UDP 3478 and the relay port range open, plus a TLS certificate for `turns:` on 5349 | Live view from outside this Mac (phones on 4G, networks that block UDP) | `infra/turn` image and `TURN_*` settings; tested only on Docker Desktop (D-055) |
+| A phone on a mobile network | The Phase 5 gate "live view under 500 ms on 4G" | Measured 1–3 ms data-channel RTT locally (D-060) |
 | GitHub Actions enabled on `stackwares/kasama` | CI (lint, tests, RLS on real Supabase, image builds) | Disabled at the repo/org level; workflows are committed but have not run. Private repos use the org's free Actions minutes |
 | Review of Dependabot PRs | Dependency updates opened automatically on the first push | 5+ PRs left open, not merged |
 

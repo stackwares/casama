@@ -39,6 +39,17 @@ import {
   resolvePlaceholders,
   SecretError,
 } from "./secrets.ts";
+import {
+  activeUserLease,
+  createTakeover,
+  finishTakeover,
+  handBackMessage,
+  pauseForUser,
+  resumeFromUser,
+  TAKEOVER_TOOL,
+  TAKEOVER_TTL_MS,
+  takeoverState,
+} from "./takeover.ts";
 import { type ToolDefinition, ToolError, ToolRegistry } from "./tools/registry.ts";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
@@ -66,7 +77,17 @@ export interface RunDeps {
   waitForApproval?: (approvalId: string, runId: string, timeoutMs: number) => Promise<void>;
   /** Guarded fetch for integration calls (private ranges blocked). */
   fetch?: typeof fetch;
+  /**
+   * Durable wait until `done` returns true or the timeout passes (user control, takeover).
+   * The worker checks in a step and sleeps on DBOS.recv; the default polls.
+   */
+  waitUntil?: (name: string, done: () => Promise<boolean>, timeoutMs: number) => Promise<void>;
 }
+
+const pollUntil = async (_name: string, done: () => Promise<boolean>, timeoutMs: number) => {
+  const until = Date.now() + timeoutMs;
+  while (Date.now() < until && !(await done())) await new Promise((r) => setTimeout(r, 300));
+};
 
 const TERMINAL = new Set(["completed", "failed", "cancelled"]);
 
@@ -188,8 +209,15 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     const primaryModel = info.policy.primary?.model ?? "unknown";
     const caps = capabilitiesOf(primaryModel);
     const allowed = info.allowedTools;
+    // Desktop tools only for bots whose computer has a desktop.
+    const desktop = deps.computers
+      ? await step("computer-profile", async () => {
+          const row = await deps.computers?.forBot(info.botId).catch(() => null);
+          return row?.profile === "desktop";
+        })
+      : false;
     const available = registry.available(
-      { computer: !!deps.computers, desktop: false, vision: caps.vision },
+      { computer: !!deps.computers, desktop, vision: caps.vision },
       allowed ? (name) => allowed.some((a) => name === a || name.startsWith(`${a}.`)) : undefined,
     );
     const toolSpecs = registry.specs(available);
@@ -283,6 +311,70 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
                 : "The approval request expired without a decision. Continue without this action.";
           }
         }
+        const waitUntil = deps.waitUntil ?? pollUntil;
+        // A bot asking a person to take over the screen waits here, durably.
+        if (!blocked && call.name === TAKEOVER_TOOL && deps.computers) {
+          const started = await step(`takeover-${i}-${call.callId}`, () =>
+            startTakeoverStep(deps, info, call, bus),
+          );
+          if ("error" in started) {
+            const res = await step(`blocked-${i}-${call.callId}`, () =>
+              blockedStep(deps, info, call, started.error, bus),
+            );
+            turn.push({ role: "tool", callId: call.callId, name: call.name, content: res.content });
+            continue;
+          }
+          let state = "pending";
+          await waitUntil(
+            `takeover-${call.callId}`,
+            async () => {
+              state = await takeoverState(db, started.id);
+              return !["pending", "taken"].includes(state);
+            },
+            TAKEOVER_TTL_MS,
+          );
+          if (state === "cancelled") {
+            await step("cancel", () => finishCancelled(db, info, bus));
+            return { status: "cancelled" };
+          }
+          const content = await step(`takeover-done-${i}-${call.callId}`, async () => {
+            const text = await finishTakeover(db, info.runId, started.id, bus);
+            await completeToolEvent(deps, info, call, text, bus);
+            return text;
+          });
+          turn.push({ role: "tool", callId: call.callId, name: call.name, content });
+          continue;
+        }
+        // While a person controls the screen, screen tools (and shell, unless allowed) wait.
+        let handBack: string | null = null;
+        const def = registry.get(call.name);
+        if (!blocked && deps.computers && def?.requires?.computer) {
+          const hold = await step(`lease-${i}-${call.callId}`, async () => {
+            const row = await deps.computers?.forBot(info.botId).catch(() => null);
+            if (!row) return null;
+            const lease = await activeUserLease(db, row.id);
+            if (!lease || (!def.screen && lease.allowShell)) return null;
+            await pauseForUser(db, info.runId, row.id, bus);
+            return row.id;
+          });
+          if (hold) {
+            await waitUntil(
+              `lease-${call.callId}`,
+              async () => {
+                const lease = await activeUserLease(db, hold);
+                const [r] = await db.execute<{ cancel: Date | null }>(
+                  sql`select cancel_requested_at as cancel from public.runs where id = ${info.runId}::uuid`,
+                );
+                return !lease || !!r?.cancel || (!def.screen && lease.allowShell);
+              },
+              24 * 3600 * 1000,
+            );
+            const note = await step(`lease-resume-${i}-${call.callId}`, () =>
+              resumeFromUser(db, info.runId, hold, bus),
+            );
+            handBack = handBackMessage(note);
+          }
+        }
         const res = blocked
           ? await step(`blocked-${i}-${call.callId}`, () =>
               blockedStep(deps, info, call, blocked as string, bus),
@@ -291,7 +383,12 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
               toolStep(deps, registry, info, call, bus, redactor, secrets),
             );
         if (res.untrusted) untrusted = true;
-        turn.push({ role: "tool", callId: call.callId, name: call.name, content: res.content });
+        turn.push({
+          role: "tool",
+          callId: call.callId,
+          name: call.name,
+          content: handBack ? `${handBack}\n\n${res.content}` : res.content,
+        });
       }
     }
 
@@ -1093,6 +1190,40 @@ async function blockedStep(
     message,
   });
   return { content: message, untrusted: false };
+}
+
+/** Creates a takeover request for the bot's desktop computer (the wait happens in the run loop). */
+async function startTakeoverStep(
+  deps: RunDeps,
+  info: RunInfo,
+  call: ToolCall,
+  busFn: () => Promise<EventBus>,
+): Promise<{ id: string } | { error: string }> {
+  const reason = String((call.args as { reason?: unknown }).reason ?? "")
+    .slice(0, 1000)
+    .trim();
+  if (!reason) return { error: "Give a reason so the person knows what to do." };
+  const row = await deps.computers?.forBot(info.botId).catch(() => null);
+  if (row?.profile !== "desktop") return { error: "Takeover needs a computer with a desktop." };
+  await deps.computers?.ensureRunning(row.id);
+  const id = await createTakeover(deps.db, info, row.id, reason, busFn, deps.notifications);
+  return { id };
+}
+
+/** Records a tool call that finished outside toolStep (takeover). */
+async function completeToolEvent(
+  _deps: RunDeps,
+  info: RunInfo,
+  call: ToolCall,
+  text: string,
+  busFn: () => Promise<EventBus>,
+) {
+  await (await busFn()).append(info.runId, "tool.completed", {
+    call_id: call.callId,
+    result_preview: text.slice(0, 200),
+    artifact_path: null,
+    duration_ms: 0,
+  });
 }
 
 // ---------------------------------------------------------------------------

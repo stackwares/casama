@@ -1509,6 +1509,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weekdays at 9:00'**
   String get weekdaysAt9;
+
+  /// No description provided for @botBackInControl.
+  ///
+  /// In en, this message translates to:
+  /// **'The bot is back in control'**
+  String get botBackInControl;
+
+  /// No description provided for @botComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer'**
+  String get botComputer;
+
+  /// No description provided for @botComputerDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default (its private computer, else the team computer)'**
+  String get botComputerDefault;
+
+  /// No description provided for @botInControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot in control'**
+  String get botInControl;
+
+  /// No description provided for @computerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get computerName;
+
+  /// No description provided for @computers.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers'**
+  String get computers;
+
+  /// No description provided for @connectingLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get connectingLive;
+
+  /// No description provided for @dismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get dismiss;
+
+  /// No description provided for @forBot.
+  ///
+  /// In en, this message translates to:
+  /// **'For bot'**
+  String get forBot;
+
+  /// No description provided for @handBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand back'**
+  String get handBack;
+
+  /// No description provided for @handBackNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note for the bot (optional)'**
+  String get handBackNote;
+
+  /// No description provided for @handBackNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: I signed in, carry on'**
+  String get handBackNoteHint;
+
+  /// No description provided for @live.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get live;
+
+  /// No description provided for @liveView.
+  ///
+  /// In en, this message translates to:
+  /// **'Live view'**
+  String get liveView;
+
+  /// No description provided for @liveViewHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch this computer live and take control when needed.'**
+  String get liveViewHelp;
+
+  /// No description provided for @newComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'New computer'**
+  String get newComputer;
+
+  /// No description provided for @newComputerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A private computer belongs to one bot. Its files stay separate from the team computer.'**
+  String get newComputerHelp;
+
+  /// No description provided for @openLiveView.
+  ///
+  /// In en, this message translates to:
+  /// **'Open live view'**
+  String get openLiveView;
+
+  /// No description provided for @paused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get paused;
+
+  /// No description provided for @pausedUserInControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused: a person is in control of the screen'**
+  String get pausedUserInControl;
+
+  /// No description provided for @privateComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Private computer'**
+  String get privateComputer;
+
+  /// No description provided for @profileDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop'**
+  String get profileDesktop;
+
+  /// No description provided for @profileHeadless.
+  ///
+  /// In en, this message translates to:
+  /// **'Headless'**
+  String get profileHeadless;
+
+  /// No description provided for @rename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get rename;
+
+  /// No description provided for @rightClickNextTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click on next tap'**
+  String get rightClickNextTap;
+
+  /// No description provided for @screenshotMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshots (live video unavailable on this network)'**
+  String get screenshotMode;
+
+  /// No description provided for @showKeyboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard'**
+  String get showKeyboard;
+
+  /// No description provided for @someoneElseInControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else is in control'**
+  String get someoneElseInControl;
+
+  /// No description provided for @switchToDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to desktop'**
+  String get switchToDesktop;
+
+  /// No description provided for @switchToHeadless.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to headless'**
+  String get switchToHeadless;
+
+  /// No description provided for @takeControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Take control'**
+  String get takeControl;
+
+  /// No description provided for @takeoverCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Handed back'**
+  String get takeoverCompleted;
+
+  /// No description provided for @takeoverDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined'**
+  String get takeoverDismissed;
+
+  /// No description provided for @takeoverPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'While you\'re in control, the bot is paused and nothing you type or see is sent to it.'**
+  String get takeoverPrivacy;
+
+  /// No description provided for @teamComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Team computer'**
+  String get teamComputer;
+
+  /// No description provided for @withDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'With a desktop'**
+  String get withDesktop;
+
+  /// No description provided for @withDesktopHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds a screen you can watch live; uses more memory'**
+  String get withDesktopHelp;
+
+  /// No description provided for @youAreInControl.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in control'**
+  String get youAreInControl;
+
+  /// No description provided for @botAsksForHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The bot asks: {reason}'**
+  String botAsksForHelp(String reason);
+
+  /// No description provided for @botNeedsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} needs your help'**
+  String botNeedsHelp(String bot);
+
+  /// No description provided for @deleteComputerConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}? Its files, snapshots and checkpoints are deleted too.'**
+  String deleteComputerConfirm(String name);
+
+  /// No description provided for @latencyMs.
+  ///
+  /// In en, this message translates to:
+  /// **'{ms} ms'**
+  String latencyMs(int ms);
+
+  /// No description provided for @privateComputerOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot}\'s computer'**
+  String privateComputerOf(String bot);
 }
 
 class _AppLocalizationsDelegate

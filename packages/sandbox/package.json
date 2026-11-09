@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./contract": "./src/contract.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./testing-stream": "./src/testing-stream.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -18,6 +19,9 @@
     "@aws-sdk/lib-storage": "^3.1164.0"
   },
   "devDependencies": {
-    "vitest": "^5.1.0"
+    "@types/ws": "^8.18.2",
+    "vitest": "^5.1.0",
+    "werift": "0.26.0",
+    "ws": "^8.22.1"
   }
 }

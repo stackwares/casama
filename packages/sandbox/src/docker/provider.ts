@@ -1,6 +1,7 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { ComputerdClient } from "../computerd-client.ts";
 import type { ObjectStore } from "../object-store.ts";
+import { turnCredentials, turnIceServer } from "../turn.ts";
 import {
   type CheckpointRef,
   type ComputerSpec,
@@ -56,17 +57,23 @@ export interface DockerProviderOptions {
   defaults?: { cpus?: number; memoryMb?: number; pids?: number; tmpMb?: number; shmMb?: number };
   /** Prefix for container, network and volume names (lets tests run side by side). */
   namePrefix?: string;
+  /**
+   * The TURN relay for live view (D-055). It joins each desktop computer's network under the
+   * alias "turn", so the streamer reaches it without the computer reaching anything else.
+   */
+  turn?: { containerName: string; secret: string; port?: number };
 }
 
 const LABEL = "dev.kasama.computer";
 
 export class DockerProvider implements SandboxProvider {
   readonly id = "docker" as const;
-  readonly capabilities = { desktop: false, snapshots: true, liveStream: false };
+  readonly capabilities: SandboxProvider["capabilities"];
   readonly opts: DockerProviderOptions;
 
   constructor(opts: DockerProviderOptions) {
     this.opts = opts;
+    this.capabilities = { desktop: true, snapshots: true, liveStream: !!opts.turn };
   }
 
   private names(ref: string) {
@@ -87,9 +94,14 @@ export class DockerProvider implements SandboxProvider {
     );
   }
 
-  private async connect(network: string, container: string) {
+  private async connect(network: string, container: string, aliases?: string[]) {
     await this.opts.docker
-      .call("POST", `/networks/${network}/connect`, { Container: container }, [200])
+      .call(
+        "POST",
+        `/networks/${network}/connect`,
+        { Container: container, ...(aliases ? { EndpointConfig: { Aliases: aliases } } : {}) },
+        [200],
+      )
       .catch((err: SandboxError) => {
         if (!/already exists|is already connected/.test(err.message)) throw err;
       });
@@ -173,6 +185,8 @@ export class DockerProvider implements SandboxProvider {
     });
     await this.connect(n.network, this.opts.egress.containerName);
     if (this.opts.supervisorContainer) await this.connect(n.network, this.opts.supervisorContainer);
+    if (spec.profile === "desktop" && this.opts.turn)
+      await this.connect(n.network, this.opts.turn.containerName, ["turn"]);
     await d.call("POST", `/containers/${n.container}/start`);
     await this.client(spec.ref).waitReady();
     return this.handle(spec.ref);
@@ -212,6 +226,7 @@ export class DockerProvider implements SandboxProvider {
     await this.disconnect(n.network, this.opts.egress.containerName);
     if (this.opts.supervisorContainer)
       await this.disconnect(n.network, this.opts.supervisorContainer);
+    if (this.opts.turn) await this.disconnect(n.network, this.opts.turn.containerName);
     await d.call("DELETE", `/networks/${n.network}`).catch(() => {});
     await d.call("DELETE", `/volumes/${n.volume}?force=true`).catch(() => {});
     await this.opts.egress.control.unregister(ref).catch(() => {});
@@ -242,13 +257,35 @@ export class DockerProvider implements SandboxProvider {
       listDir: (p) => c.listDir(p),
       search: (q, p) => c.search(q, p),
       enableDesktop: async () => {
-        throw new SandboxError("desktop_unavailable", "Desktop computers arrive in Phase 5");
+        if (!(await c.health()).display)
+          throw new SandboxError("desktop_unavailable", "This computer has no desktop", 409);
       },
       screenshot: () => c.screenshot(),
       input: (e: InputEvent) => c.input(e),
-      streamEndpoint: async () => {
-        throw new SandboxError("stream_unavailable", "Live view arrives in Phase 5");
+      streamEndpoint: async (opts = {}) => {
+        const turn = this.opts.turn;
+        if (!turn)
+          throw new SandboxError("stream_unavailable", "Live view needs a TURN relay", 409);
+        // The streamer relays through TURN too; its credentials last as long as a stream can.
+        const creds = turnCredentials(turn.secret, `computer-${ref}`, 12 * 3600);
+        const started = await c.streamStart({
+          ice_servers: [turnIceServer("turn", turn.port ?? 3478, creds)],
+        });
+        const user = started.users[opts.mode === "control" ? "controller" : "viewer"];
+        const host = `${this.names(ref).container}:${started.port}`;
+        const login = await fetch(`http://${host}/api/login`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(user),
+        }).catch((err: Error) => {
+          throw new SandboxError("stream_unreachable", `streamer unreachable: ${err.message}`);
+        });
+        if (!login.ok)
+          throw new SandboxError("stream_login_failed", `streamer login ${login.status}`);
+        const { token } = (await login.json()) as { token: string };
+        return { url: `ws://${host}/api/ws?token=${encodeURIComponent(token)}`, headers: {} };
       },
+      stopStream: () => c.streamStop(),
       terminalEndpoint: async (opts) => ({ url: c.terminalUrl(opts), headers: c.authHeaders }),
       checkpoint: async (label: string): Promise<CheckpointRef> => {
         const id = randomUUID();

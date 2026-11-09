@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:path/path.dart' as p;
 
@@ -74,6 +75,7 @@ class Computerd {
   }
 
   Future<void> stop() async {
+    await _stopStreamer();
     for (final e in _execs.values) {
       _killTree(e.process);
     }
@@ -118,6 +120,13 @@ class Computerd {
           return await _screenshot(req);
         case ('POST', ['input']):
           return await _input(req);
+        case ('POST', ['stream', 'start']):
+          return await _streamStart(req);
+        case ('POST', ['stream', 'stop']):
+          await _stopStreamer();
+          return await _json(res, 200, {'ok': true});
+        case ('GET', ['stream']):
+          return await _json(res, 200, {'running': _streamer != null, 'port': _streamPort});
         default:
           throw _ApiError(404, 'not_found', 'No such endpoint');
       }
@@ -468,5 +477,118 @@ class Computerd {
     final r = await Process.run('xdotool', args);
     if (r.exitCode != 0) throw _ApiError(500, 'input_failed', '${r.stderr}');
     await _json(req.response, 200, {'ok': true});
+  }
+
+  // ---------------------------------------------------------------------------
+  // live view: the Neko WebRTC streamer, started only while someone watches (D-054)
+
+  Process? _streamer;
+  Map<String, Object?>? _streamUsers;
+  static const _streamPort = 8080;
+
+  static String _secret() {
+    final r = Random.secure();
+    return base64Url.encode(List<int>.generate(24, (_) => r.nextInt(256))).replaceAll('=', '');
+  }
+
+  static Future<String?> _ownAddress() async {
+    for (final i in await NetworkInterface.list(type: InternetAddressType.IPv4)) {
+      for (final a in i.addresses) {
+        if (!a.isLoopback) return a.address;
+      }
+    }
+    return null;
+  }
+
+  /// POST /stream/start {ice_servers?: [...], screen?: "1280x800@30"} -> {port, users:{viewer, controller}}
+  Future<void> _streamStart(HttpRequest req) async {
+    if (Platform.environment['DISPLAY'] == null) throw _ApiError(501, 'no_display', 'This computer has no desktop running');
+    final b = await _body(req);
+    if (_streamer == null) {
+      final viewer = {'username': 'viewer', 'password': _secret()};
+      final controller = {'username': 'controller', 'password': _secret()};
+      // Multiuser: every login is its own session, so several people can watch at once.
+      // "Admin" here only means the controller password; neither profile is a Neko admin.
+      Map<String, Object?> profile({required bool host}) => {
+            'name': host ? 'User' : 'Viewer',
+            'is_admin': false,
+            'can_login': true,
+            'can_connect': true,
+            'can_watch': true,
+            'can_host': host,
+            'can_access_clipboard': host,
+            'can_share_media': false,
+            'sends_inactive_cursor': false,
+            'can_see_inactive_cursors': false,
+          };
+      final address = await _ownAddress();
+      final env = {
+        ...Platform.environment,
+        'NEKO_SERVER_BIND': ':$_streamPort',
+        'NEKO_MEMBER_PROVIDER': 'multiuser',
+        'NEKO_MEMBER_MULTIUSER_USER_PASSWORD': viewer['password']!,
+        'NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD': controller['password']!,
+        'NEKO_MEMBER_MULTIUSER_USER_PROFILE': jsonEncode(profile(host: false)),
+        'NEKO_MEMBER_MULTIUSER_ADMIN_PROFILE': jsonEncode(profile(host: true)),
+        'NEKO_DESKTOP_SCREEN': '${b['screen'] ?? '1280x800@30'}',
+        'NEKO_DESKTOP_INPUT_ENABLED': 'false',
+        'NEKO_CAPTURE_MICROPHONE_ENABLED': 'false',
+        'NEKO_PLUGINS_ENABLED': 'false',
+        'NEKO_FILETRANSFER_ENABLED': 'false',
+        'NEKO_CHAT_ENABLED': 'false',
+        'NEKO_SESSION_IMPLICIT_HOSTING': 'false',
+        'NEKO_WEBRTC_ICESERVERS_BACKEND': jsonEncode(b['ice_servers'] ?? const []),
+        'NEKO_WEBRTC_ICESERVERS_FRONTEND': '[]',
+        // Never look up a public IP; media goes through the TURN relay.
+        'NEKO_WEBRTC_NAT1TO1': ?address,
+        'NEKO_WEBRTC_IP_RETRIEVAL_URL': '',
+      };
+      final log = File('/tmp/neko.log').openWrite();
+      final process = await Process.start('neko', ['serve'], environment: env);
+      // Both streams go to one file; never let a logging error take computerd down.
+      process.stdout.listen(log.add, onError: (_) {});
+      process.stderr.listen(log.add, onError: (_) {});
+      unawaited(process.exitCode.then((_) => log.close()).catchError((_) => null));
+      _streamer = process;
+      _streamUsers = {'viewer': viewer, 'controller': controller};
+      unawaited(process.exitCode.then((_) {
+        if (identical(_streamer, process)) {
+          _streamer = null;
+          _streamUsers = null;
+        }
+      }));
+      final client = HttpClient();
+      final deadline = DateTime.now().add(const Duration(seconds: 20));
+      var ready = false;
+      while (DateTime.now().isBefore(deadline) && _streamer != null) {
+        try {
+          final r = await (await client.get('127.0.0.1', _streamPort, '/health')).close();
+          await r.drain<void>();
+          if (r.statusCode == 200) {
+            ready = true;
+            break;
+          }
+        } catch (_) {}
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+      }
+      client.close(force: true);
+      if (!ready) {
+        await _stopStreamer();
+        throw _ApiError(500, 'stream_failed', 'The streamer did not start (see /tmp/neko.log)');
+      }
+    }
+    await _json(req.response, 200, {'port': _streamPort, 'users': _streamUsers});
+  }
+
+  Future<void> _stopStreamer() async {
+    final s = _streamer;
+    _streamer = null;
+    _streamUsers = null;
+    if (s == null) return;
+    s.kill(ProcessSignal.sigint);
+    await s.exitCode.timeout(const Duration(seconds: 3), onTimeout: () {
+      s.kill(ProcessSignal.sigkill);
+      return -1;
+    });
   }
 }

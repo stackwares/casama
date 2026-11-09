@@ -56,6 +56,9 @@
             "$ref": "#/components/schemas/TakeoverRequestedEvent"
           },
           {
+            "$ref": "#/components/schemas/TakeoverResolvedEvent"
+          },
+          {
             "$ref": "#/components/schemas/LeaseChangedEvent"
           },
           {
@@ -102,6 +105,7 @@
             "approval.requested": "#/components/schemas/ApprovalRequestedEvent",
             "approval.resolved": "#/components/schemas/ApprovalResolvedEvent",
             "takeover.requested": "#/components/schemas/TakeoverRequestedEvent",
+            "takeover.resolved": "#/components/schemas/TakeoverResolvedEvent",
             "lease.changed": "#/components/schemas/LeaseChangedEvent",
             "computer.state": "#/components/schemas/ComputerStateEvent",
             "checkpoint.created": "#/components/schemas/CheckpointCreatedEvent",
@@ -733,6 +737,75 @@
             "required": [
               "computer_id",
               "reason"
+            ]
+          }
+        },
+        "required": [
+          "v",
+          "run_id",
+          "seq",
+          "ts",
+          "bot_id",
+          "type",
+          "payload"
+        ]
+      },
+      "TakeoverResolvedEvent": {
+        "type": "object",
+        "properties": {
+          "v": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Protocol version, currently 1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seq": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "takeover.resolved"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "computer_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "completed",
+                  "dismissed",
+                  "expired"
+                ]
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "computer_id",
+              "outcome",
+              "note"
             ]
           }
         },
@@ -1935,6 +2008,14 @@
               "disabled"
             ]
           },
+          "default_computer_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Its computer; null = its private computer, else the team computer"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -1951,6 +2032,7 @@
           "visibility",
           "budget",
           "status",
+          "default_computer_id",
           "created_at"
         ]
       },
@@ -2525,17 +2607,6 @@
           "label"
         ]
       },
-      "DeleteResult": {
-        "type": "object",
-        "properties": {
-          "deleted": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "deleted"
-        ]
-      },
       "Computer": {
         "type": "object",
         "properties": {
@@ -2641,6 +2712,274 @@
           "error"
         ]
       },
+      "CreateComputerRequest": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "team",
+              "private"
+            ]
+          },
+          "owner_bot_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required for private computers"
+          },
+          "profile": {
+            "type": "string",
+            "enum": [
+              "headless",
+              "desktop"
+            ]
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "docker",
+              "e2b",
+              "daytona"
+            ]
+          }
+        },
+        "required": [
+          "org_id",
+          "name",
+          "kind"
+        ]
+      },
+      "StreamSession": {
+        "type": "object",
+        "properties": {
+          "signaling_url": {
+            "type": "string",
+            "description": "WebSocket URL (Neko signaling protocol, proxied by the API); includes the token"
+          },
+          "token": {
+            "type": "string",
+            "description": "Bound to you, this computer and the mode; 5 minutes"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/StreamMode"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ice_servers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IceServer"
+            }
+          },
+          "ice_transport_policy": {
+            "type": "string",
+            "enum": [
+              "all",
+              "relay"
+            ]
+          },
+          "screenshot_url": {
+            "type": "string",
+            "description": "Fallback: poll about once a second"
+          }
+        },
+        "required": [
+          "signaling_url",
+          "token",
+          "mode",
+          "expires_at",
+          "ice_servers",
+          "ice_transport_policy",
+          "screenshot_url"
+        ]
+      },
+      "StreamMode": {
+        "type": "string",
+        "enum": [
+          "view",
+          "control"
+        ]
+      },
+      "IceServer": {
+        "type": "object",
+        "properties": {
+          "urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "username": {
+            "type": "string"
+          },
+          "credential": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "urls"
+        ]
+      },
+      "StreamSessionRequest": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/StreamMode"
+          }
+        }
+      },
+      "DeletedComputer": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "DeleteResult": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "TakeoverRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "computer_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "taken",
+              "completed",
+              "dismissed",
+              "expired"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "bot_id",
+          "run_id",
+          "computer_id",
+          "reason",
+          "status",
+          "note",
+          "expires_at",
+          "created_at"
+        ]
+      },
+      "ReleaseLeaseRequest": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "Told to the bot on hand-back"
+          }
+        }
+      },
+      "Lease": {
+        "type": "object",
+        "properties": {
+          "computer_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "holder_type": {
+            "type": "string",
+            "enum": [
+              "bot",
+              "user"
+            ]
+          },
+          "holder_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "view",
+              "control"
+            ]
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "you": {
+            "type": "boolean",
+            "description": "Whether you hold it"
+          }
+        },
+        "required": [
+          "computer_id",
+          "holder_type",
+          "holder_id",
+          "mode",
+          "expires_at",
+          "you"
+        ]
+      },
       "CheckpointList": {
         "type": "object",
         "properties": {
@@ -2718,6 +3057,47 @@
         "required": [
           "items"
         ]
+      },
+      "TakeoverRequestList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TakeoverRequest"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "TakeLeaseRequest": {
+        "type": "object",
+        "properties": {
+          "allow_shell": {
+            "type": "boolean",
+            "description": "Let the bot keep using shell and file tools while you have control"
+          }
+        }
+      },
+      "UpdateComputerRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "profile": {
+            "type": "string",
+            "enum": [
+              "headless",
+              "desktop"
+            ],
+            "description": "Takes effect on the next start (a running computer restarts)"
+          }
+        }
       },
       "UploadResult": {
         "type": "object",
@@ -4868,6 +5248,59 @@
         }
       }
     },
+    "/v1/computers/{id}/stream": {
+      "get": {
+        "operationId": "computerStream",
+        "tags": [
+          "computers"
+        ],
+        "summary": "WebSocket live-view signaling (Neko protocol). Authenticated by the stream-session token; input is accepted only in control mode while you hold the lease.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "token",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching to WebSocket"
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/computers/{id}/terminal": {
       "get": {
         "operationId": "computerTerminal",
@@ -5058,6 +5491,431 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers": {
+      "post": {
+        "operationId": "createComputer",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create a private computer for a bot (or the team computer if it was removed)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "description": "Retries with the same key return the first result"
+            },
+            "required": false,
+            "description": "Retries with the same key return the first result",
+            "name": "idempotency-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateComputerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Computer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listComputers",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "org_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Computers you can use",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}/stream-session": {
+      "post": {
+        "operationId": "createStreamSession",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get a 5-minute live-view session (signaling URL, token, TURN credentials)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StreamSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}": {
+      "delete": {
+        "operationId": "deleteComputer",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete a computer and its files, snapshots and checkpoints",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedComputer"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getComputer",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Computer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Computer"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateComputer",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateComputerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Computer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5297,9 +6155,9 @@
         }
       }
     },
-    "/v1/computers/{id}": {
-      "get": {
-        "operationId": "getComputer",
+    "/v1/takeovers/{id}/dismiss": {
+      "post": {
+        "operationId": "dismissTakeover",
         "tags": [
           "computers"
         ],
@@ -5308,6 +6166,7 @@
             "bearerAuth": []
           }
         ],
+        "summary": "Decline a takeover request; the bot continues without help",
         "parameters": [
           {
             "schema": {
@@ -5319,13 +6178,23 @@
             "in": "path"
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseLeaseRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Computer",
+            "description": "Dismissed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Computer"
+                  "$ref": "#/components/schemas/TakeoverRequest"
                 }
               }
             }
@@ -5342,6 +6211,213 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}/lease": {
+      "get": {
+        "operationId": "getLease",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Who controls the screen (the bot unless a person took over)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lease",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lease"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "releaseLease",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Hand control back to the bot, optionally with a note",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseLeaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lease",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lease"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "takeLease",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Take control (or renew it). The bot pauses screen actions; control returns after 15 minutes without renewal.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TakeLeaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lease",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lease"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5419,9 +6495,9 @@
         }
       }
     },
-    "/v1/computers": {
+    "/v1/takeovers": {
       "get": {
-        "operationId": "listComputers",
+        "operationId": "listTakeovers",
         "tags": [
           "computers"
         ],
@@ -5430,6 +6506,7 @@
             "bearerAuth": []
           }
         ],
+        "summary": "Open requests from bots for a person to take over a screen",
         "parameters": [
           {
             "schema": {
@@ -5443,11 +6520,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Computers you can use",
+            "description": "Takeover requests",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ComputerList"
+                  "$ref": "#/components/schemas/TakeoverRequestList"
                 }
               }
             }

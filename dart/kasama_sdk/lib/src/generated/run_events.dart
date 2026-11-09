@@ -4,7 +4,7 @@
 import 'package:kasama_api/kasama_api.dart';
 
 /// All run event types known to this client version.
-const knownRunEventTypes = <String>{'run.started', 'message.delta', 'message.completed', 'tool.started', 'tool.output', 'tool.completed', 'tool.failed', 'approval.requested', 'approval.resolved', 'takeover.requested', 'lease.changed', 'computer.state', 'checkpoint.created', 'subrun.started', 'subrun.completed', 'memory.written', 'skill.loaded', 'usage', 'run.completed', 'run.failed', 'run.cancelled'};
+const knownRunEventTypes = <String>{'run.started', 'message.delta', 'message.completed', 'tool.started', 'tool.output', 'tool.completed', 'tool.failed', 'approval.requested', 'approval.resolved', 'takeover.requested', 'takeover.resolved', 'lease.changed', 'computer.state', 'checkpoint.created', 'subrun.started', 'subrun.completed', 'memory.written', 'skill.loaded', 'usage', 'run.completed', 'run.failed', 'run.cancelled'};
 
 /// A run event: the envelope plus, for known types, the typed event.
 /// Unknown types parse to [UnknownRunEventItem] so newer servers never break older clients.
@@ -38,6 +38,8 @@ sealed class RunEventItem {
         return ApprovalResolvedItem(envelope, ApprovalResolvedEvent.fromJson(json));
       case 'takeover.requested':
         return TakeoverRequestedItem(envelope, TakeoverRequestedEvent.fromJson(json));
+      case 'takeover.resolved':
+        return TakeoverResolvedItem(envelope, TakeoverResolvedEvent.fromJson(json));
       case 'lease.changed':
         return LeaseChangedItem(envelope, LeaseChangedEvent.fromJson(json));
       case 'computer.state':
@@ -114,6 +116,11 @@ final class ApprovalResolvedItem extends RunEventItem {
 final class TakeoverRequestedItem extends RunEventItem {
   const TakeoverRequestedItem(super.envelope, this.event);
   final TakeoverRequestedEvent event;
+}
+
+final class TakeoverResolvedItem extends RunEventItem {
+  const TakeoverResolvedItem(super.envelope, this.event);
+  final TakeoverResolvedEvent event;
 }
 
 final class LeaseChangedItem extends RunEventItem {

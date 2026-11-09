@@ -12,6 +12,7 @@ import { rateLimit } from "./middleware/rate-limit.ts";
 import { registerAutonomyRoutes } from "./routes/autonomy.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
 import { registerComputerRoutes } from "./routes/computers.ts";
+import { registerLiveRoutes } from "./routes/live.ts";
 import { registerSystemRoutes } from "./routes/system.ts";
 import { registerWorkspaceRoutes } from "./routes/workspaces.ts";
 import type { AppDeps, AppEnv } from "./types.ts";
@@ -118,6 +119,7 @@ export function createApp(deps: AppDeps) {
   registerWorkspaceRoutes(app, deps);
   registerBotRoutes(app, deps);
   registerComputerRoutes(app, deps);
+  registerLiveRoutes(app, deps);
   registerAutonomyRoutes(app, deps);
 
   app.doc31("/openapi.json", (c) => ({

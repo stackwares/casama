@@ -42,7 +42,7 @@ select is((select count(*)::int from public.computers), 1, 'other org sees only 
 select is((select count(*)::int from public.checkpoints), 0, 'other org sees no checkpoints');
 update public.computers set state = 'running';
 reset role;
-select is((select count(*)::int from public.computers where state = 'running'), 0, 'users cannot change computers directly');
+select is((select count(*)::int from public.computers where state = 'running' and org_id in ('70000000-0000-0000-0000-00000000000a', '70000000-0000-0000-0000-00000000000b')), 0, 'users cannot change computers directly');
 
 select * from finish();
 rollback;

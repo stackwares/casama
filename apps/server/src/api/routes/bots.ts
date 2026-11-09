@@ -31,6 +31,7 @@ const botOut = (b: BotRow) => ({
   visibility: b.visibility,
   budget: b.budget as { per_run_usd?: number; daily_usd?: number },
   status: b.status as "idle",
+  default_computer_id: b.defaultComputerId ?? null,
   created_at: iso(b.createdAt),
 });
 

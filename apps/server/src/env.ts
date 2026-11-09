@@ -31,6 +31,13 @@ export const EnvSchema = z.object({
   /** Sandbox supervisor (computers). Both unset: bots have no computers. */
   SUPERVISOR_URL: z.url().optional(),
   SUPERVISOR_TOKEN: z.string().min(16).optional(),
+  /** Live view (Phase 5): coturn's static-auth-secret and the TURN address clients use. */
+  TURN_SECRET: z.string().min(16).optional(),
+  TURN_PUBLIC_HOST: z.string().default("localhost"),
+  TURN_PORT: z.coerce.number().int().default(3478),
+  TURN_TLS_PORT: z.coerce.number().int().optional(),
+  /** Public base URL of this API (signaling URLs); defaults to the request's origin. */
+  PUBLIC_API_URL: z.url().optional(),
 });
 export type Env = z.infer<typeof EnvSchema>;
 

@@ -46,10 +46,13 @@ export type InputEvent =
   | { type: "key"; key: string }
   | { type: "scroll"; dy: number };
 
+/** Where to open the live-view signaling WebSocket (Neko protocol, D-054). */
 export interface StreamEndpoint {
   url: string;
-  token?: string;
+  headers: Record<string, string>;
 }
+
+export type StreamMode = "view" | "control";
 
 /** A stored archive of a computer's home directory. */
 export interface SnapshotRef {
@@ -97,7 +100,10 @@ export interface SandboxHandle {
   enableDesktop(): Promise<void>; // start X server, window manager, streamer
   screenshot(): Promise<Uint8Array>;
   input(event: InputEvent): Promise<void>; // mouse and keyboard
-  streamEndpoint(): Promise<StreamEndpoint>; // WebRTC signaling target
+  /** Starts the streamer if needed and returns the signaling target for a viewer or controller. */
+  streamEndpoint(opts?: { mode?: StreamMode }): Promise<StreamEndpoint>;
+  /** Stops the streamer (called 60 s after the last viewer leaves). */
+  stopStream(): Promise<void>;
   /** Opens an interactive terminal (WebSocket URL plus auth headers). */
   terminalEndpoint(opts?: {
     cols?: number;

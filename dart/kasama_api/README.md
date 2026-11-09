@@ -76,18 +76,28 @@ Class | Method | HTTP request | Description
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
 [*ComputersApi*](doc/ComputersApi.md) | [**computerScreenshot**](doc/ComputersApi.md#computerscreenshot) | **GET** /v1/computers/{id}/screenshot | PNG of the desktop, or of the bot&#39;s browser page on headless computers
+[*ComputersApi*](doc/ComputersApi.md) | [**computerStream**](doc/ComputersApi.md#computerstream) | **GET** /v1/computers/{id}/stream | WebSocket live-view signaling (Neko protocol). Authenticated by the stream-session token; input is accepted only in control mode while you hold the lease.
 [*ComputersApi*](doc/ComputersApi.md) | [**computerTerminal**](doc/ComputersApi.md#computerterminal) | **GET** /v1/computers/{id}/terminal | WebSocket terminal. Binary frames carry terminal bytes both ways. Browsers may pass the access token as ?access_token&#x3D;.
 [*ComputersApi*](doc/ComputersApi.md) | [**createCheckpoint**](doc/ComputersApi.md#createcheckpoint) | **POST** /v1/computers/{id}/checkpoints | 
+[*ComputersApi*](doc/ComputersApi.md) | [**createComputer**](doc/ComputersApi.md#createcomputer) | **POST** /v1/computers | Create a private computer for a bot (or the team computer if it was removed)
+[*ComputersApi*](doc/ComputersApi.md) | [**createStreamSession**](doc/ComputersApi.md#createstreamsession) | **POST** /v1/computers/{id}/stream-session | Get a 5-minute live-view session (signaling URL, token, TURN credentials)
+[*ComputersApi*](doc/ComputersApi.md) | [**deleteComputer**](doc/ComputersApi.md#deletecomputer) | **DELETE** /v1/computers/{id} | Delete a computer and its files, snapshots and checkpoints
 [*ComputersApi*](doc/ComputersApi.md) | [**deleteComputerFile**](doc/ComputersApi.md#deletecomputerfile) | **DELETE** /v1/computers/{id}/files | 
+[*ComputersApi*](doc/ComputersApi.md) | [**dismissTakeover**](doc/ComputersApi.md#dismisstakeover) | **POST** /v1/takeovers/{id}/dismiss | Decline a takeover request; the bot continues without help
 [*ComputersApi*](doc/ComputersApi.md) | [**downloadComputerFile**](doc/ComputersApi.md#downloadcomputerfile) | **GET** /v1/computers/{id}/files | Download a file
 [*ComputersApi*](doc/ComputersApi.md) | [**getComputer**](doc/ComputersApi.md#getcomputer) | **GET** /v1/computers/{id} | 
+[*ComputersApi*](doc/ComputersApi.md) | [**getLease**](doc/ComputersApi.md#getlease) | **GET** /v1/computers/{id}/lease | Who controls the screen (the bot unless a person took over)
 [*ComputersApi*](doc/ComputersApi.md) | [**listCheckpoints**](doc/ComputersApi.md#listcheckpoints) | **GET** /v1/computers/{id}/checkpoints | 
 [*ComputersApi*](doc/ComputersApi.md) | [**listComputerFiles**](doc/ComputersApi.md#listcomputerfiles) | **GET** /v1/computers/{id}/files/list | List a directory (default ~/workspace)
 [*ComputersApi*](doc/ComputersApi.md) | [**listComputers**](doc/ComputersApi.md#listcomputers) | **GET** /v1/computers | 
+[*ComputersApi*](doc/ComputersApi.md) | [**listTakeovers**](doc/ComputersApi.md#listtakeovers) | **GET** /v1/takeovers | Open requests from bots for a person to take over a screen
+[*ComputersApi*](doc/ComputersApi.md) | [**releaseLease**](doc/ComputersApi.md#releaselease) | **DELETE** /v1/computers/{id}/lease | Hand control back to the bot, optionally with a note
 [*ComputersApi*](doc/ComputersApi.md) | [**restartComputer**](doc/ComputersApi.md#restartcomputer) | **POST** /v1/computers/{id}/restart | Sleep and start again with the same files
 [*ComputersApi*](doc/ComputersApi.md) | [**restoreCheckpoint**](doc/ComputersApi.md#restorecheckpoint) | **POST** /v1/computers/{id}/checkpoints/{cid}/restore | Undo to a checkpoint (replaces the home directory)
 [*ComputersApi*](doc/ComputersApi.md) | [**startComputer**](doc/ComputersApi.md#startcomputer) | **POST** /v1/computers/{id}/start | Start or restore the computer
 [*ComputersApi*](doc/ComputersApi.md) | [**stopComputer**](doc/ComputersApi.md#stopcomputer) | **POST** /v1/computers/{id}/stop | Save the home directory to storage and stop (sleep)
+[*ComputersApi*](doc/ComputersApi.md) | [**takeLease**](doc/ComputersApi.md#takelease) | **POST** /v1/computers/{id}/lease | Take control (or renew it). The bot pauses screen actions; control returns after 15 minutes without renewal.
+[*ComputersApi*](doc/ComputersApi.md) | [**updateComputer**](doc/ComputersApi.md#updatecomputer) | **PATCH** /v1/computers/{id} | 
 [*ComputersApi*](doc/ComputersApi.md) | [**uploadComputerFile**](doc/ComputersApi.md#uploadcomputerfile) | **PUT** /v1/computers/{id}/files | Upload a file (request body is the raw contents, up to 100 MB)
 [*CredentialsApi*](doc/CredentialsApi.md) | [**createCredential**](doc/CredentialsApi.md#createcredential) | **POST** /v1/credentials | Store a model key in Vault; returns metadata only
 [*CredentialsApi*](doc/CredentialsApi.md) | [**listCredentials**](doc/CredentialsApi.md#listcredentials) | **GET** /v1/credentials | 
@@ -152,6 +162,7 @@ Class | Method | HTTP request | Description
  - [ConversationList](doc/ConversationList.md)
  - [CreateBotRequest](doc/CreateBotRequest.md)
  - [CreateCheckpointRequest](doc/CreateCheckpointRequest.md)
+ - [CreateComputerRequest](doc/CreateComputerRequest.md)
  - [CreateConversationRequest](doc/CreateConversationRequest.md)
  - [CreateCredentialRequest](doc/CreateCredentialRequest.md)
  - [CreateIntegrationRequest](doc/CreateIntegrationRequest.md)
@@ -164,8 +175,10 @@ Class | Method | HTTP request | Description
  - [CredentialList](doc/CredentialList.md)
  - [CredentialTestResult](doc/CredentialTestResult.md)
  - [DeleteResult](doc/DeleteResult.md)
+ - [DeletedComputer](doc/DeletedComputer.md)
  - [DeletedId](doc/DeletedId.md)
  - [Health](doc/Health.md)
+ - [IceServer](doc/IceServer.md)
  - [Integration](doc/Integration.md)
  - [IntegrationKind](doc/IntegrationKind.md)
  - [IntegrationList](doc/IntegrationList.md)
@@ -173,6 +186,7 @@ Class | Method | HTTP request | Description
  - [IntegrationToolsInner](doc/IntegrationToolsInner.md)
  - [Invite](doc/Invite.md)
  - [InviteRole](doc/InviteRole.md)
+ - [Lease](doc/Lease.md)
  - [LeaseChangedEvent](doc/LeaseChangedEvent.md)
  - [LeaseChangedEventPayload](doc/LeaseChangedEventPayload.md)
  - [Me](doc/Me.md)
@@ -196,6 +210,7 @@ Class | Method | HTTP request | Description
  - [ProblemErrorsInner](doc/ProblemErrorsInner.md)
  - [ProviderId](doc/ProviderId.md)
  - [PublicConfig](doc/PublicConfig.md)
+ - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
  - [Risk](doc/Risk.md)
  - [Routine](doc/Routine.md)
  - [RoutineList](doc/RoutineList.md)
@@ -220,12 +235,20 @@ Class | Method | HTTP request | Description
  - [SendMessageResponse](doc/SendMessageResponse.md)
  - [SkillLoadedEvent](doc/SkillLoadedEvent.md)
  - [SkillLoadedEventPayload](doc/SkillLoadedEventPayload.md)
+ - [StreamMode](doc/StreamMode.md)
+ - [StreamSession](doc/StreamSession.md)
+ - [StreamSessionRequest](doc/StreamSessionRequest.md)
  - [SubrunCompletedEvent](doc/SubrunCompletedEvent.md)
  - [SubrunCompletedEventPayload](doc/SubrunCompletedEventPayload.md)
  - [SubrunStartedEvent](doc/SubrunStartedEvent.md)
  - [SubrunStartedEventPayload](doc/SubrunStartedEventPayload.md)
+ - [TakeLeaseRequest](doc/TakeLeaseRequest.md)
+ - [TakeoverRequest](doc/TakeoverRequest.md)
+ - [TakeoverRequestList](doc/TakeoverRequestList.md)
  - [TakeoverRequestedEvent](doc/TakeoverRequestedEvent.md)
  - [TakeoverRequestedEventPayload](doc/TakeoverRequestedEventPayload.md)
+ - [TakeoverResolvedEvent](doc/TakeoverResolvedEvent.md)
+ - [TakeoverResolvedEventPayload](doc/TakeoverResolvedEventPayload.md)
  - [Task](doc/Task.md)
  - [TaskList](doc/TaskList.md)
  - [Template](doc/Template.md)
@@ -240,6 +263,7 @@ Class | Method | HTTP request | Description
  - [ToolOutputEventPayload](doc/ToolOutputEventPayload.md)
  - [ToolStartedEvent](doc/ToolStartedEvent.md)
  - [ToolStartedEventPayload](doc/ToolStartedEventPayload.md)
+ - [UpdateComputerRequest](doc/UpdateComputerRequest.md)
  - [UpdateRoutineRequest](doc/UpdateRoutineRequest.md)
  - [UploadResult](doc/UploadResult.md)
  - [UsageEvent](doc/UsageEvent.md)

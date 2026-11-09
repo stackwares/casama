@@ -55,6 +55,15 @@ export const agentRunWorkflow = DBOS.registerWorkflow(
       ...rt().agent,
       step: (name, fn) => DBOS.runStep(fn, { name }),
       // Waits durably (days if needed) without holding a process: woken by decisions and cancels.
+      waitUntil: async (name, done, timeoutMs) => {
+        const deadline = (await DBOS.now()) + timeoutMs;
+        for (;;) {
+          if (await DBOS.runStep(done, { name: `${name}-check` })) return;
+          const now = await DBOS.now();
+          if (now >= deadline) return;
+          await DBOS.recv("signal", Math.max(1, Math.min(300, Math.ceil((deadline - now) / 1000))));
+        }
+      },
       waitForApproval: async (approvalId, run, timeoutMs) => {
         const deadline = (await DBOS.now()) + timeoutMs;
         for (;;) {

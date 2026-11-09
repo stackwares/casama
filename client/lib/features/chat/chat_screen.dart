@@ -10,7 +10,10 @@ import 'chat_controller.dart';
 import 'widgets/chat_widgets.dart';
 
 /// The computer a bot uses: its private computer, else the team computer.
-Computer? computerForBot(List<Computer> computers, String botId) {
+Computer? computerForBot(List<Computer> computers, String botId, {String? defaultComputerId}) {
+  for (final c in computers) {
+    if (defaultComputerId != null && c.id == defaultComputerId) return c;
+  }
   for (final c in computers) {
     if (c.ownerBotId == botId) return c;
   }
@@ -96,7 +99,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final bot = ref.watch(botProvider(widget.botId));
     final chat = ref.watch(chatControllerProvider(widget.botId));
     final controller = ref.read(chatControllerProvider(widget.botId).notifier);
-    final computer = computerForBot(ref.watch(computersProvider).value ?? const [], widget.botId);
+    final computer = computerForBot(
+      ref.watch(computersProvider).value ?? const [],
+      widget.botId,
+      defaultComputerId: bot?.defaultComputerId,
+    );
     ref.listen(chatControllerProvider(widget.botId), (_, _) => _scrollToEnd());
     final name = bot?.name ?? '';
 
@@ -140,6 +147,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         final MessageEntry m => MessageBubble(key: ValueKey(m.id), entry: m),
                         final ToolEntry t => ToolCard(key: ValueKey(t.callId), entry: t),
                         final ApprovalEntry a => ApprovalPrompt(key: ValueKey(a.approvalId), entry: a, botName: name),
+                        final TakeoverEntry t => TakeoverPrompt(
+                            entry: t,
+                            botName: name,
+                            onOpen: () => context.push('/computer/live?c=${t.computerId}'),
+                          ),
                         final NoticeEntry n => NoticeLine(
                             entry: n,
                             onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp),

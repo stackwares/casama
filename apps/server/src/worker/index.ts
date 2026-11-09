@@ -23,6 +23,7 @@ import {
   recordingGateway,
   registerAutonomyTools,
   registerComputerTools,
+  registerDesktopTools,
   TavilySearchProvider,
 } from "@kasama/agent";
 import { createDb, type Database } from "@kasama/db";
@@ -103,7 +104,10 @@ export async function startWorker(opts: WorkerOptions) {
     db,
     memory: async (orgId) => new MemoryService(db, await embedderFor(orgId)),
   });
-  if (computers) registerComputerTools(tools);
+  if (computers) {
+    registerComputerTools(tools);
+    registerDesktopTools(tools);
+  }
 
   const fetchOut = createSafeFetch({ exemptCidrs: opts.egressExemptCidrs });
   const push =

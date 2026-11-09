@@ -68,7 +68,16 @@ class ApprovalEntry extends ChatEntry {
   final String? decision;
 }
 
-enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled }
+/// A bot asking a person to take over its screen; [outcome] is set once resolved.
+class TakeoverEntry extends ChatEntry {
+  const TakeoverEntry({required this.computerId, required this.reason, this.outcome, this.note});
+  final String computerId;
+  final String reason;
+  final String? outcome;
+  final String? note;
+}
+
+enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled, userControl, botControl }
 
 class NoticeEntry extends ChatEntry {
   const NoticeEntry({required this.kind, required this.text, this.refId});
@@ -260,6 +269,22 @@ class ChatController extends Notifier<ChatState> {
           entries[i] = ApprovalEntry(approvalId: a.approvalId, tool: a.tool, args: a.args, risk: a.risk, decision: event.payload.decision.value);
         }
         ref.invalidate(approvalsProvider);
+      case TakeoverRequestedItem(:final event):
+        entries.add(TakeoverEntry(computerId: event.payload.computerId, reason: event.payload.reason));
+        ref.invalidate(takeoversProvider);
+      case TakeoverResolvedItem(:final event):
+        final i = indexWhere((x) => x is TakeoverEntry && x.computerId == event.payload.computerId && x.outcome == null);
+        if (i >= 0) {
+          final t = entries[i] as TakeoverEntry;
+          entries[i] = TakeoverEntry(computerId: t.computerId, reason: t.reason, outcome: event.payload.outcome.value, note: event.payload.note);
+        }
+        ref.invalidate(takeoversProvider);
+      case LeaseChangedItem(:final event):
+        entries.add(NoticeEntry(
+          kind: event.payload.holderType.value == 'user' ? NoticeKind.userControl : NoticeKind.botControl,
+          text: '',
+          refId: event.payload.computerId,
+        ));
       case MemoryWrittenItem():
         entries.add(const NoticeEntry(kind: NoticeKind.memory, text: ''));
       case SkillLoadedItem(:final event):

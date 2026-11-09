@@ -5,6 +5,7 @@ import {
   type ComputerSpec,
   type DockerProvider,
   SandboxError,
+  type SandboxProvider,
   type SnapshotRef,
 } from "@kasama/sandbox";
 import { Hono } from "hono";
@@ -15,8 +16,20 @@ import { WebSocket, WebSocketServer } from "ws";
  * Supervisor HTTP API: the only service with Docker access. The API and worker call it with
  * a bearer token; computers never receive that token.
  */
-export function createSupervisorApp(provider: DockerProvider, token: string) {
+export function createSupervisorApp(
+  provider: DockerProvider,
+  token: string,
+  hosted: Record<string, SandboxProvider> = {},
+) {
   const app = new Hono();
+  /** Docker by default; E2B or Daytona when the caller names them (D-056). */
+  const pick = (c: { req: { header(name: string): string | undefined } }): SandboxProvider => {
+    const id = c.req.header("x-kasama-provider");
+    if (!id || id === "docker") return provider;
+    const p = hosted[id];
+    if (!p) throw new SandboxError("provider_unavailable", `Provider ${id} is not configured`, 400);
+    return p;
+  };
 
   app.onError((err, c) => {
     if (err instanceof SandboxError) {
@@ -46,8 +59,11 @@ export function createSupervisorApp(provider: DockerProvider, token: string) {
     await next();
   });
 
-  const running = async (ref: string) => {
-    const h = await provider.get(ref);
+  const running = async (
+    ref: string,
+    c?: { req: { header(name: string): string | undefined } },
+  ) => {
+    const h = await (c ? pick(c) : provider).get(ref);
     if (!h) throw new SandboxError("not_running", `Computer ${ref} is not running`, 409);
     return h;
   };
@@ -56,12 +72,12 @@ export function createSupervisorApp(provider: DockerProvider, token: string) {
 
   app.post("/computers", async (c) => {
     const spec = (await c.req.json()) as ComputerSpec;
-    await provider.create(spec);
+    await pick(c).create(spec);
     return c.json({ ref: spec.ref, state: "running" }, 201);
   });
 
   app.get("/computers/:ref", async (c) => {
-    const h = await provider.get(c.req.param("ref"));
+    const h = await pick(c).get(c.req.param("ref"));
     return c.json({
       ref: c.req.param("ref"),
       running: !!h,
@@ -74,19 +90,19 @@ export function createSupervisorApp(provider: DockerProvider, token: string) {
       snapshot?: SnapshotRef;
       spec?: Partial<ComputerSpec>;
     };
-    await provider.resume(c.req.param("ref"), body.snapshot, body.spec);
+    await pick(c).resume(c.req.param("ref"), body.snapshot, body.spec);
     return c.json({ ref: c.req.param("ref"), state: "running" });
   });
 
-  app.post("/computers/:ref/sleep", async (c) => c.json(await provider.sleep(c.req.param("ref"))));
+  app.post("/computers/:ref/sleep", async (c) => c.json(await pick(c).sleep(c.req.param("ref"))));
 
   app.delete("/computers/:ref", async (c) => {
-    await provider.destroy(c.req.param("ref"));
+    await pick(c).destroy(c.req.param("ref"));
     return c.json({ ok: true });
   });
 
   app.post("/computers/:ref/exec", async (c) => {
-    const h = await running(c.req.param("ref"));
+    const h = await running(c.req.param("ref"), c);
     const body = (await c.req.json()) as {
       cmd: string;
       cwd?: string;
@@ -113,44 +129,47 @@ export function createSupervisorApp(provider: DockerProvider, token: string) {
   });
 
   app.post("/computers/:ref/exec/:id/kill", async (c) => {
-    await (await running(c.req.param("ref"))).kill(c.req.param("id"));
+    await (await running(c.req.param("ref"), c)).kill(c.req.param("id"));
     return c.json({ ok: true });
   });
 
   app.get("/computers/:ref/files", async (c) => {
-    const data = await (await running(c.req.param("ref"))).readFile(c.req.query("path") ?? "");
+    const data = await (await running(c.req.param("ref"), c)).readFile(c.req.query("path") ?? "");
     return c.body(Buffer.from(data), 200, { "content-type": "application/octet-stream" });
   });
   app.put("/computers/:ref/files", async (c) => {
-    const h = await running(c.req.param("ref"));
+    const h = await running(c.req.param("ref"), c);
     await h.writeFile(c.req.query("path") ?? "", new Uint8Array(await c.req.arrayBuffer()));
     return c.json({ ok: true });
   });
   app.delete("/computers/:ref/files", async (c) => {
-    await (await running(c.req.param("ref"))).deleteFile(c.req.query("path") ?? "");
+    await (await running(c.req.param("ref"), c)).deleteFile(c.req.query("path") ?? "");
     return c.json({ ok: true });
   });
   app.get("/computers/:ref/files/list", async (c) =>
     c.json({
-      entries: await (await running(c.req.param("ref"))).listDir(c.req.query("path") ?? ""),
+      entries: await (await running(c.req.param("ref"), c)).listDir(c.req.query("path") ?? ""),
     }),
   );
   app.post("/computers/:ref/files/search", async (c) => {
     const body = (await c.req.json()) as { query: string; path?: string };
     return c.json({
-      matches: await (await running(c.req.param("ref"))).search(body.query, body.path),
+      matches: await (await running(c.req.param("ref"), c)).search(body.query, body.path),
     });
   });
 
   app.post("/computers/:ref/checkpoints", async (c) => {
     const { label } = (await c.req.json()) as { label: string };
-    return c.json(await (await running(c.req.param("ref"))).checkpoint(label ?? "checkpoint"), 201);
+    return c.json(
+      await (await running(c.req.param("ref"), c)).checkpoint(label ?? "checkpoint"),
+      201,
+    );
   });
   app.post("/computers/:ref/checkpoints/restore", async (c) => {
     const cp = (await c.req.json()) as Parameters<
       Awaited<ReturnType<typeof running>>["restore"]
     >[0];
-    await (await running(c.req.param("ref"))).restore(cp);
+    await (await running(c.req.param("ref"), c)).restore(cp);
     return c.json({ ok: true });
   });
   app.post("/objects/delete", async (c) => {
@@ -162,32 +181,143 @@ export function createSupervisorApp(provider: DockerProvider, token: string) {
   });
 
   app.get("/computers/:ref/health", async (c) =>
-    c.json(await (await running(c.req.param("ref"))).health()),
+    c.json(await (await running(c.req.param("ref"), c)).health()),
   );
   app.get("/computers/:ref/screenshot", async (c) =>
-    c.body(Buffer.from(await (await running(c.req.param("ref"))).screenshot()), 200, {
+    c.body(Buffer.from(await (await running(c.req.param("ref"), c)).screenshot()), 200, {
       "content-type": "image/png",
     }),
   );
+  app.post("/computers/:ref/stream/stop", async (c) => {
+    await (await running(c.req.param("ref"), c)).stopStream();
+    return c.json({ ok: true });
+  });
   app.post("/computers/:ref/input", async (c) => {
-    await (await running(c.req.param("ref"))).input(await c.req.json());
+    await (await running(c.req.param("ref"), c)).input(await c.req.json());
     return c.json({ ok: true });
   });
 
   return app;
 }
 
-/** Proxies terminal WebSockets: client <-> supervisor <-> computerd. */
-export function attachTerminalProxy(server: Server, provider: DockerProvider, token: string) {
+/** Client messages a view-only connection may never send (Neko also refuses them). */
+const VIEW_BLOCKED = /^(control|clipboard|keyboard|screen\/set|send)\//;
+
+/**
+ * Proxies live-view signaling: API <-> supervisor <-> the computer's Neko streamer.
+ * Starts the streamer on the first viewer and stops it `idleStopMs` after the last one leaves.
+ */
+export function attachStreamProxy(
+  _server: Server,
+  provider: DockerProvider,
+  token: string,
+  opts: { idleStopMs?: number; hosted?: Record<string, SandboxProvider> } = {},
+) {
   const wss = new WebSocketServer({ noServer: true });
+  const viewers = new Map<string, number>();
+  const stopTimers = new Map<string, NodeJS.Timeout>();
+  const idleStopMs = opts.idleStopMs ?? 60_000;
+  return async (req: IncomingMessage, socket: Duplex, head: Buffer): Promise<boolean> => {
+    const url = new URL(req.url ?? "/", "http://supervisor");
+    const ref = url.pathname.match(/^\/computers\/([\w-]+)\/stream$/)?.[1];
+    if (!ref) return false;
+    if (req.headers.authorization !== `Bearer ${token}`) {
+      socket.end("HTTP/1.1 401 Unauthorized\r\n\r\n");
+      return true;
+    }
+    const mode = url.searchParams.get("mode") === "control" ? "control" : "view";
+    const which = req.headers["x-kasama-provider"];
+    const p = typeof which === "string" && which !== "docker" ? opts.hosted?.[which] : provider;
+    const h = await p?.get(ref).catch(() => null);
+    if (!h) {
+      socket.end("HTTP/1.1 409 Conflict\r\n\r\n");
+      return true;
+    }
+    let target: { url: string; headers: Record<string, string> };
+    try {
+      target = await h.streamEndpoint({ mode });
+    } catch (err) {
+      socket.end(`HTTP/1.1 502 Bad Gateway\r\n\r\n${(err as Error).message}`);
+      return true;
+    }
+    clearTimeout(stopTimers.get(ref));
+    viewers.set(ref, (viewers.get(ref) ?? 0) + 1);
+    wss.handleUpgrade(req, socket, head, (client) => {
+      const upstream = new WebSocket(target.url, { headers: target.headers });
+      const pending: Array<{ data: unknown; binary: boolean }> = [];
+      client.on("message", (data, binary) => {
+        if (mode === "view" && !binary) {
+          try {
+            const event = (JSON.parse(String(data)) as { event?: string }).event ?? "";
+            if (VIEW_BLOCKED.test(event)) return;
+          } catch {
+            return;
+          }
+        }
+        if (upstream.readyState === WebSocket.OPEN) upstream.send(data as Buffer, { binary });
+        else pending.push({ data, binary });
+      });
+      upstream.on("open", () => {
+        for (const p of pending.splice(0)) upstream.send(p.data as Buffer, { binary: p.binary });
+      });
+      upstream.on(
+        "message",
+        (data, binary) =>
+          client.readyState === WebSocket.OPEN && client.send(data as Buffer, { binary }),
+      );
+      let closed = false;
+      const close = () => {
+        client.close();
+        upstream.close();
+        if (closed) return;
+        closed = true;
+        const left = (viewers.get(ref) ?? 1) - 1;
+        viewers.set(ref, left);
+        if (left <= 0) {
+          viewers.delete(ref);
+          stopTimers.set(
+            ref,
+            setTimeout(() => {
+              stopTimers.delete(ref);
+              if (!viewers.has(ref)) void h.stopStream().catch(() => {});
+            }, idleStopMs),
+          );
+        }
+      };
+      upstream.on("close", close);
+      upstream.on("error", close);
+      client.on("close", close);
+      client.on("error", close);
+    });
+    return true;
+  };
+}
+
+/** Proxies terminal WebSockets: client <-> supervisor <-> computerd. */
+export function attachTerminalProxy(
+  server: Server,
+  provider: DockerProvider,
+  token: string,
+  hosted: Record<string, SandboxProvider> = {},
+) {
+  const wss = new WebSocketServer({ noServer: true });
+  const stream = attachStreamProxy(server, provider, token, {
+    hosted,
+    idleStopMs: process.env.STREAM_IDLE_STOP_MS
+      ? Number(process.env.STREAM_IDLE_STOP_MS)
+      : undefined,
+  });
   server.on("upgrade", async (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+    if (await stream(req, socket, head)) return;
     const url = new URL(req.url ?? "/", "http://supervisor");
     const ref = url.pathname.match(/^\/computers\/([\w-]+)\/terminal$/)?.[1];
     if (!ref || req.headers.authorization !== `Bearer ${token}`) {
       socket.end("HTTP/1.1 401 Unauthorized\r\n\r\n");
       return;
     }
-    const h = await provider.get(ref).catch(() => null);
+    const which = req.headers["x-kasama-provider"];
+    const p = typeof which === "string" && which !== "docker" ? hosted[which] : provider;
+    const h = await p?.get(ref).catch(() => null);
     if (!h) {
       socket.end("HTTP/1.1 409 Conflict\r\n\r\n");
       return;
@@ -223,9 +353,14 @@ export function attachTerminalProxy(server: Server, provider: DockerProvider, to
   });
 }
 
-export function startSupervisor(provider: DockerProvider, token: string, port: number) {
-  const app = createSupervisorApp(provider, token);
+export function startSupervisor(
+  provider: DockerProvider,
+  token: string,
+  port: number,
+  hosted: Record<string, SandboxProvider> = {},
+) {
+  const app = createSupervisorApp(provider, token, hosted);
   const server = serve({ fetch: app.fetch, port, hostname: "0.0.0.0" }) as Server;
-  attachTerminalProxy(server, provider, token);
+  attachTerminalProxy(server, provider, token, hosted);
   return server;
 }

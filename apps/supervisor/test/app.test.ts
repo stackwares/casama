@@ -44,3 +44,35 @@ describe("supervisor API", () => {
     expect(failed.status).toBe(500);
   });
 });
+
+describe("hosted provider routing", () => {
+  const created: string[] = [];
+  const e2b = {
+    id: "e2b",
+    get: async () => null,
+    create: async (spec: { ref: string }) => {
+      created.push(spec.ref);
+      return {};
+    },
+  } as never;
+  const app = createSupervisorApp(fakeProvider, "supervisor-token-0123456789", { e2b });
+  const auth = { authorization: "Bearer supervisor-token-0123456789" };
+
+  it("routes to the provider named in x-kasama-provider", async () => {
+    const res = await app.request("/computers", {
+      method: "POST",
+      headers: { ...auth, "x-kasama-provider": "e2b", "content-type": "application/json" },
+      body: JSON.stringify({ ref: "r1", profile: "headless" }),
+    });
+    expect(res.status).toBe(201);
+    expect(created).toEqual(["r1"]);
+  });
+
+  it("refuses providers that are not configured", async () => {
+    const res = await app.request("/computers/r1", {
+      headers: { ...auth, "x-kasama-provider": "daytona" },
+    });
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe("provider_unavailable");
+  });
+});

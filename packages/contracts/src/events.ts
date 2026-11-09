@@ -44,6 +44,11 @@ export const runEventPayloads = {
     decided_by: id.nullable(),
   }),
   "takeover.requested": z.object({ computer_id: id, reason: z.string() }),
+  "takeover.resolved": z.object({
+    computer_id: id,
+    outcome: z.enum(["completed", "dismissed", "expired"]),
+    note: z.string().nullable(),
+  }),
   "lease.changed": z.object({
     computer_id: id,
     holder_type: z.enum(["bot", "user"]),

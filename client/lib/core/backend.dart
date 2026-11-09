@@ -129,6 +129,20 @@ abstract class Backend {
   Future<List<Task>> tasks(String orgId);
   Future<void> setTaskStatus(String taskId, String status);
 
+  // Computers: management (Phase 5)
+  Future<Computer> createComputer(String orgId, {required String name, required bool private, String? ownerBotId, String profile});
+  Future<Computer> updateComputer(String computerId, {String? name, String? profile});
+  Future<void> deleteComputer(String computerId);
+  Future<void> setBotComputer(String botId, String? computerId);
+
+  // Live view and take control (Phase 5)
+  Future<StreamSession> streamSession(String computerId, {String mode});
+  Future<Lease> lease(String computerId);
+  Future<Lease> takeLease(String computerId, {bool allowShell});
+  Future<Lease> releaseLease(String computerId, {String? note});
+  Future<List<TakeoverRequest>> takeovers(String orgId);
+  Future<void> dismissTakeover(String takeoverId, {String? note});
+
   // Computers
   Future<List<Computer>> computers(String orgId);
   Future<Computer> startComputer(String id);

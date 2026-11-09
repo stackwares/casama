@@ -30,6 +30,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | turbo                                   | kasama (tooling)                                      | MIT               |
 | typescript                              | kasama (tooling)                                      | Apache-2.0        |
 | undici                                  | @kasama/agent (runtime)                               | MIT               |
+| werift                                  | @kasama/sandbox (tests)                               | MIT               |
 | vitest                                  | kasama (tooling)                                      | MIT               |
 | zod                                     | @kasama/contracts (runtime), @kasama/server (runtime) | MIT               |
 
@@ -54,14 +55,18 @@ Update this file in the same pull request that adds or removes a dependency.
 | share_plus, web_socket_channel               | client                             | BSD-3-Clause |
 | sentry_flutter                               | client                             | MIT          |
 | firebase_core, firebase_messaging            | client                             | BSD-3-Clause |
+| flutter_webrtc                               | client                             | MIT          |
 | mocktail                                     | client (tooling)                   | MIT          |
 
 ## Other software
 
-| Software                               | Role               | License                          |
-| -------------------------------------- | ------------------ | -------------------------------- |
-| PostgreSQL                             | database           | PostgreSQL License               |
-| pgvector                               | database extension | PostgreSQL License               |
-| pgTAP                                  | database tests     | PostgreSQL License               |
-| Supabase (self-hosted services)        | platform           | Apache-2.0 / MIT (per component) |
-| OpenAPI Generator (dart-dio templates) | code generation    | Apache-2.0                       |
+| Software                               | Role                           | License                                        |
+| -------------------------------------- | ------------------------------ | ---------------------------------------------- |
+| PostgreSQL                             | database                       | PostgreSQL License                             |
+| Neko (m1k1o/neko), built from source   | desktop image: WebRTC streamer | Apache-2.0                                     |
+| coturn                                 | TURN relay image               | BSD-3-Clause                                   |
+| X.Org server, Openbox, Mousepad        | desktop image                  | MIT/X11, GPL-2.0 (system packages, unmodified) |
+| pgvector                               | database extension             | PostgreSQL License                             |
+| pgTAP                                  | database tests                 | PostgreSQL License                             |
+| Supabase (self-hosted services)        | platform                       | Apache-2.0 / MIT (per component)               |
+| OpenAPI Generator (dart-dio templates) | code generation                | Apache-2.0                                     |

@@ -6,6 +6,8 @@ import '../features/auth/sign_in_screen.dart';
 import '../features/bots/bots_screen.dart';
 import '../features/chat/chat_screen.dart';
 import '../features/computer/computer_screen.dart';
+import '../features/computer/computers_screen.dart';
+import '../features/computer/live_view_screen.dart';
 import '../features/home/home_shell.dart';
 import '../features/inbox/inbox_screen.dart';
 import '../features/integrations/integrations_screen.dart';
@@ -78,7 +80,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/inbox', builder: (_, s) => InboxScreen(initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? 0)),
           GoRoute(path: '/tasks', builder: (_, _) => const InboxScreen(initialTab: 2)),
           GoRoute(path: '/approvals/:id', builder: (_, s) => ApprovalScreen(approvalId: s.pathParameters['id']!)),
-          GoRoute(path: '/computer', builder: (_, _) => const ComputerScreen()),
+          GoRoute(
+            path: '/computer',
+            builder: (_, _) => const ComputerScreen(),
+            routes: [
+              GoRoute(
+                path: 'live',
+                builder: (_, s) => LiveViewScreen(
+                  computerId: s.uri.queryParameters['c'] ?? '',
+                  takeoverId: s.uri.queryParameters['takeover'],
+                ),
+              ),
+            ],
+          ),
           GoRoute(
             path: '/settings',
             builder: (_, _) => const SettingsScreen(),
@@ -87,6 +101,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'skills', builder: (_, _) => const SkillsScreen()),
               GoRoute(path: 'integrations', builder: (_, _) => const IntegrationsScreen()),
               GoRoute(path: 'secrets', builder: (_, _) => const SecretsScreen()),
+              GoRoute(path: 'computers', builder: (_, _) => const ComputersScreen()),
             ],
           ),
         ],

@@ -820,4 +820,150 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weekdaysAt9 => 'Weekdays at 9:00';
+
+  @override
+  String get botBackInControl => 'The bot is back in control';
+
+  @override
+  String get botComputer => 'Computer';
+
+  @override
+  String get botComputerDefault =>
+      'Default (its private computer, else the team computer)';
+
+  @override
+  String get botInControl => 'Bot in control';
+
+  @override
+  String get computerName => 'Name';
+
+  @override
+  String get computers => 'Computers';
+
+  @override
+  String get connectingLive => 'Connecting…';
+
+  @override
+  String get dismiss => 'Dismiss';
+
+  @override
+  String get forBot => 'For bot';
+
+  @override
+  String get handBack => 'Hand back';
+
+  @override
+  String get handBackNote => 'Note for the bot (optional)';
+
+  @override
+  String get handBackNoteHint => 'For example: I signed in, carry on';
+
+  @override
+  String get live => 'Live';
+
+  @override
+  String get liveView => 'Live view';
+
+  @override
+  String get liveViewHelp =>
+      'Watch this computer live and take control when needed.';
+
+  @override
+  String get newComputer => 'New computer';
+
+  @override
+  String get newComputerHelp =>
+      'A private computer belongs to one bot. Its files stay separate from the team computer.';
+
+  @override
+  String get openLiveView => 'Open live view';
+
+  @override
+  String get paused => 'Paused';
+
+  @override
+  String get pausedUserInControl =>
+      'Paused: a person is in control of the screen';
+
+  @override
+  String get privateComputer => 'Private computer';
+
+  @override
+  String get profileDesktop => 'Desktop';
+
+  @override
+  String get profileHeadless => 'Headless';
+
+  @override
+  String get rename => 'Rename';
+
+  @override
+  String get rightClickNextTap => 'Right-click on next tap';
+
+  @override
+  String get screenshotMode =>
+      'Screenshots (live video unavailable on this network)';
+
+  @override
+  String get showKeyboard => 'Keyboard';
+
+  @override
+  String get someoneElseInControl => 'Someone else is in control';
+
+  @override
+  String get switchToDesktop => 'Switch to desktop';
+
+  @override
+  String get switchToHeadless => 'Switch to headless';
+
+  @override
+  String get takeControl => 'Take control';
+
+  @override
+  String get takeoverCompleted => 'Handed back';
+
+  @override
+  String get takeoverDismissed => 'Declined';
+
+  @override
+  String get takeoverPrivacy =>
+      'While you\'re in control, the bot is paused and nothing you type or see is sent to it.';
+
+  @override
+  String get teamComputer => 'Team computer';
+
+  @override
+  String get withDesktop => 'With a desktop';
+
+  @override
+  String get withDesktopHelp =>
+      'Adds a screen you can watch live; uses more memory';
+
+  @override
+  String get youAreInControl => 'You\'re in control';
+
+  @override
+  String botAsksForHelp(String reason) {
+    return 'The bot asks: $reason';
+  }
+
+  @override
+  String botNeedsHelp(String bot) {
+    return '$bot needs your help';
+  }
+
+  @override
+  String deleteComputerConfirm(String name) {
+    return 'Delete $name? Its files, snapshots and checkpoints are deleted too.';
+  }
+
+  @override
+  String latencyMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String privateComputerOf(String bot) {
+    return '$bot\'s computer';
+  }
 }

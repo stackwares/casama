@@ -244,6 +244,103 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     }) as never;
   });
 
+  /** Team computers are managed by admins; private computers by whoever manages the bot. */
+  const canManage = async (claims: JwtClaims, orgId: string, ownerBotId: string | null) => {
+    const [r] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ ok: boolean }>(
+        ownerBotId
+          ? sql`select public.can_manage_bot(${ownerBotId}::uuid) as ok`
+          : sql`select public.has_role(${orgId}::uuid, 'admin') as ok`,
+      ),
+    );
+    if (!r?.ok)
+      throw new ApiError(
+        403,
+        "forbidden",
+        ownerBotId ? "Only the bot's managers can do that" : "Only workspace admins can do that",
+      );
+  };
+
+  app.openapi(routes.createComputer, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const body = c.req.valid("json");
+    if (body.kind === "private" && !body.owner_bot_id)
+      throw new ApiError(
+        400,
+        "owner_required",
+        "Private computers belong to a bot: set owner_bot_id",
+      );
+    const owner = body.kind === "private" ? (body.owner_bot_id as string) : null;
+    if (owner) {
+      const [bot] = await db.execute<{ org_id: string }>(
+        sql`select org_id from public.bots where id = ${owner}::uuid`,
+      );
+      if (bot?.org_id !== body.org_id)
+        throw new ApiError(400, "bad_owner", "That bot is not in this workspace");
+    }
+    await canManage(claims, body.org_id, owner);
+    const inserted = await db
+      .insert(computers)
+      .values({
+        orgId: body.org_id,
+        kind: body.kind,
+        ownerBotId: owner,
+        name: body.name,
+        profile: body.profile ?? "headless",
+        provider: body.provider ?? "docker",
+      })
+      .returning()
+      .catch((err: { code?: string; cause?: { code?: string } }) => {
+        if ((err.code ?? err.cause?.code) === "23505")
+          throw new ApiError(
+            409,
+            "team_computer_exists",
+            "This workspace already has a team computer",
+          );
+        throw err;
+      });
+    return c.json(out(inserted[0] as Row), 201);
+  });
+
+  app.openapi(routes.updateComputer, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    const current = await visible(claims, id);
+    await canManage(claims, current.orgId, current.ownerBotId);
+    await db
+      .update(computers)
+      .set({
+        ...(body.name ? { name: body.name } : {}),
+        ...(body.profile ? { profile: body.profile } : {}),
+      })
+      .where(eq(computers.id, id));
+    // A new profile needs a new container: restart it if it is running (files are kept).
+    if (
+      body.profile &&
+      body.profile !== current.profile &&
+      ["running", "idle"].includes(current.state)
+    ) {
+      await sandbox(async () => {
+        await service().stop(id);
+        await service().ensureRunning(id);
+      });
+    }
+    return c.json(await reload(id), 200);
+  });
+
+  app.openapi(routes.deleteComputer, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const current = await visible(claims, id);
+    await canManage(claims, current.orgId, current.ownerBotId);
+    if (deps.computers) await sandbox(() => service().remove(id));
+    else await db.delete(computers).where(eq(computers.id, id));
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id)
+      values (${current.orgId}::uuid, 'user', ${claims.sub}::uuid, 'computer.deleted', 'computer', ${id}::uuid)`);
+    return c.json({ deleted: id }, 200);
+  });
+
   app.openapi(routes.computerTerminal, async () => {
     throw new ApiError(400, "websocket_required", "Connect to this endpoint with a WebSocket");
   });

@@ -198,6 +198,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.open",
+    screen: true,
     untrustedOutput: true,
     description:
       "Open a URL in your computer's browser. Then use browser.snapshot to see interactive elements with refs like @e1.",
@@ -212,6 +213,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.snapshot",
+    screen: true,
     untrustedOutput: true,
     readOnly: true,
     description:
@@ -227,6 +229,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.read",
+    screen: true,
     untrustedOutput: true,
     readOnly: true,
     description: "Read the current page's main text content.",
@@ -241,6 +244,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.click",
+    screen: true,
     untrustedOutput: true,
     description: "Click an element by its ref from the last snapshot (for example @e3).",
     risk: "low",
@@ -254,6 +258,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.fill",
+    screen: true,
     untrustedOutput: true,
     description: "Clear a form field by ref and type text into it.",
     risk: "low",
@@ -283,6 +288,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.type",
+    screen: true,
     untrustedOutput: true,
     description: "Type text into the focused element.",
     risk: "low",
@@ -295,6 +301,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.press",
+    screen: true,
     untrustedOutput: true,
     description: "Press a key, for example Enter, Tab, Escape or Control+a.",
     risk: "low",
@@ -310,6 +317,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.scroll",
+    screen: true,
     untrustedOutput: true,
     description: "Scroll the page up or down.",
     risk: "low",
@@ -329,6 +337,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.screenshot",
+    screen: true,
     description:
       "Save a screenshot of the current page to a file in your computer and return its path.",
     risk: "low",

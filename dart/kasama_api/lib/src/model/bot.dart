@@ -44,6 +44,8 @@ class Bot {
 
     required  this.status,
 
+    required  this.defaultComputerId,
+
     required  this.createdAt,
   });
 
@@ -167,6 +169,19 @@ class Bot {
 
 
 
+      /// Its computer; null = its private computer, else the team computer
+  @JsonKey(
+    
+    name: r'default_computer_id',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? defaultComputerId;
+
+
+
   @JsonKey(
     
     name: r'created_at',
@@ -193,6 +208,7 @@ class Bot {
       other.visibility == visibility &&
       other.budget == budget &&
       other.status == status &&
+      other.defaultComputerId == defaultComputerId &&
       other.createdAt == createdAt;
 
     @override
@@ -207,6 +223,7 @@ class Bot {
         visibility.hashCode +
         budget.hashCode +
         status.hashCode +
+        (defaultComputerId == null ? 0 : defaultComputerId.hashCode) +
         createdAt.hashCode;
 
   factory Bot.fromJson(Map<String, dynamic> json) => _$BotFromJson(json);

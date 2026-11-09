@@ -7,6 +7,7 @@ import {
   type FileEntry,
   type HealthStatus,
   type InputEvent,
+  type ProviderId,
   SandboxError,
   type SandboxHandle,
   type SandboxProvider,
@@ -16,14 +17,27 @@ import {
 
 /** SandboxProvider backed by the supervisor's HTTP API. Used by the API and the worker. */
 export class SupervisorProvider implements SandboxProvider {
-  readonly id = "docker" as const;
-  readonly capabilities = { desktop: false, snapshots: true, liveStream: false };
+  readonly id: ProviderId;
+  readonly capabilities = { desktop: true, snapshots: true, liveStream: true };
   readonly baseUrl: string;
   private readonly token: string;
 
-  constructor(baseUrl: string, token: string) {
+  constructor(baseUrl: string, token: string, provider: ProviderId = "docker") {
     this.baseUrl = baseUrl.replace(/\/$/, "");
     this.token = token;
+    this.id = provider;
+  }
+
+  /** The same supervisor, routing to another provider (E2B, Daytona); see D-056. */
+  forProvider(id: string) {
+    return new SupervisorProvider(this.baseUrl, this.token, id as ProviderId);
+  }
+
+  private get authHeaders(): Record<string, string> {
+    return {
+      authorization: `Bearer ${this.token}`,
+      ...(this.id === "docker" ? {} : { "x-kasama-provider": this.id }),
+    };
   }
 
   async call(path: string, init: RequestInit = {}): Promise<Response> {
@@ -31,10 +45,7 @@ export class SupervisorProvider implements SandboxProvider {
     try {
       res = await fetch(`${this.baseUrl}${path}`, {
         ...init,
-        headers: {
-          authorization: `Bearer ${this.token}`,
-          ...(init.headers as Record<string, string>),
-        },
+        headers: { ...this.authHeaders, ...(init.headers as Record<string, string>) },
       });
     } catch (err) {
       throw new SandboxError(
@@ -139,17 +150,21 @@ export class SupervisorProvider implements SandboxProvider {
           ).json()) as { matches: SearchMatch[] }
         ).matches,
       enableDesktop: async () => {
-        throw new SandboxError("desktop_unavailable", "Desktop computers arrive in Phase 5");
+        const h = (await (await self.call(`${base}/health`)).json()) as HealthStatus;
+        if (!h.display)
+          throw new SandboxError("desktop_unavailable", "This computer has no desktop", 409);
       },
       screenshot: async () =>
         new Uint8Array(await (await self.call(`${base}/screenshot`)).arrayBuffer()),
       input: async (e: InputEvent) => void (await self.json(`${base}/input`, "POST", e)),
-      streamEndpoint: async () => {
-        throw new SandboxError("stream_unavailable", "Live view arrives in Phase 5");
-      },
+      streamEndpoint: async (opts = {}) => ({
+        url: `${self.baseUrl.replace(/^http/, "ws")}${base}/stream?mode=${opts.mode ?? "view"}`,
+        headers: self.authHeaders,
+      }),
+      stopStream: async () => void (await self.json(`${base}/stream/stop`, "POST", {})),
       terminalEndpoint: async (opts = {}) => ({
         url: `${self.baseUrl.replace(/^http/, "ws")}${base}/terminal?cols=${opts.cols ?? 120}&rows=${opts.rows ?? 32}`,
-        headers: { authorization: `Bearer ${self.token}` },
+        headers: self.authHeaders,
       }),
       checkpoint: async (label) =>
         (await (await self.json(`${base}/checkpoints`, "POST", { label })).json()) as CheckpointRef,

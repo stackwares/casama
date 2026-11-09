@@ -17,11 +17,15 @@ export interface SandboxStack {
   token: string;
   prefix: string;
   egressContainer: string;
+  /** TURN relay reachable from this machine (for live-view tests). */
+  turn: { secret: string; host: string; udpPort: number; tcpPort: number; container: string };
   stop(): Promise<void>;
 }
 
 export const TEST_IMAGES = {
   headless: process.env.TEST_COMPUTER_IMAGE ?? "kasama/computer-headless:dev",
+  desktop: process.env.TEST_DESKTOP_IMAGE ?? "kasama/computer-desktop:dev",
+  turn: process.env.TEST_TURN_IMAGE ?? "kasama/turn:dev",
   supervisor: process.env.TEST_SUPERVISOR_IMAGE ?? "kasama/supervisor:dev",
   egress: process.env.TEST_EGRESS_IMAGE ?? "kasama/egress-proxy:dev",
 };
@@ -36,7 +40,7 @@ export async function dockerAvailable() {
 }
 
 export async function startSandboxStack(
-  opts: { egressExemptCidrs?: string } = {},
+  opts: { egressExemptCidrs?: string; streamIdleStopMs?: number } = {},
 ): Promise<SandboxStack> {
   const prefix = `kt${randomBytes(3).toString("hex")}`;
   const token = randomBytes(24).toString("hex");
@@ -44,6 +48,8 @@ export async function startSandboxStack(
   const control = `${prefix}-control`;
   const egress = `${prefix}-egress`;
   const sup = `${prefix}-sup`;
+  const turnName = `${prefix}-turn`;
+  const turnSecret = randomBytes(24).toString("hex");
   await docker("network", "create", "--label", "dev.kasama.test=1", control);
   await docker(
     "run",
@@ -61,6 +67,25 @@ export async function startSandboxStack(
   );
   // The default bridge gives the proxy (and only the proxy) a route to the internet.
   await docker("network", "connect", "bridge", egress);
+  await docker(
+    "run",
+    "-d",
+    "--name",
+    turnName,
+    "--network",
+    control,
+    "--label",
+    "dev.kasama.test=1",
+    "-p",
+    "127.0.0.1::3478/udp",
+    "-p",
+    "127.0.0.1::3478/tcp",
+    "-e",
+    `TURN_SECRET=${turnSecret}`,
+    TEST_IMAGES.turn,
+  );
+  const turnPort = async (proto: string) =>
+    Number((await docker("port", turnName, `3478/${proto}`)).split("\n")[0]?.split(":").pop());
   await docker(
     "run",
     "-d",
@@ -91,6 +116,14 @@ export async function startSandboxStack(
     "-e",
     `COMPUTER_IMAGE_HEADLESS=${TEST_IMAGES.headless}`,
     "-e",
+    `COMPUTER_IMAGE_DESKTOP=${TEST_IMAGES.desktop}`,
+    "-e",
+    `TURN_SECRET=${turnSecret}`,
+    "-e",
+    `TURN_CONTAINER=${turnName}`,
+    "-e",
+    `STREAM_IDLE_STOP_MS=${opts.streamIdleStopMs ?? 60_000}`,
+    "-e",
     "OBJECT_STORE_DIR=/data/objects",
     TEST_IMAGES.supervisor,
   );
@@ -111,10 +144,17 @@ export async function startSandboxStack(
     token,
     prefix,
     egressContainer: egress,
+    turn: {
+      secret: turnSecret,
+      host: "127.0.0.1",
+      udpPort: await turnPort("udp"),
+      tcpPort: await turnPort("tcp"),
+      container: turnName,
+    },
     async stop() {
       for (const ref of await provider.list().catch(() => [] as string[]))
         await provider.destroy(ref).catch(() => {});
-      await docker("rm", "-f", sup, egress).catch(() => {});
+      await docker("rm", "-f", sup, egress, turnName).catch(() => {});
       // Remove anything a failed test left behind.
       const leftovers = await docker("ps", "-aq", "--filter", `name=${prefix}-c-`).catch(() => "");
       if (leftovers) await docker("rm", "-f", ...leftovers.split("\n")).catch(() => {});

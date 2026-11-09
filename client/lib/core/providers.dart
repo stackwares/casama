@@ -119,6 +119,7 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
       if (current.any((c) => c.id == n.id)) return;
       state = AsyncData([n, ...current]);
       if (n.kind == 'approval') ref.invalidate(approvalsProvider);
+      if (n.kind == 'takeover') ref.invalidate(takeoversProvider);
     });
     ref.onDispose(sub.cancel);
     return backend.notifications();
@@ -138,9 +139,9 @@ final notificationsProvider = AsyncNotifierProvider<NotificationsNotifier, List<
 
 /// Badge count for the inbox: pending approvals plus unread notifications (approval notices are not double counted).
 final inboxBadgeProvider = Provider<int>((ref) {
-  final approvals = ref.watch(approvalsProvider).value?.length ?? 0;
+  final approvals = (ref.watch(approvalsProvider).value?.length ?? 0) + (ref.watch(takeoversProvider).value?.length ?? 0);
   final unread = (ref.watch(notificationsProvider).value ?? const <NotificationView>[])
-      .where((n) => n.readAt == null && n.kind != 'approval')
+      .where((n) => n.readAt == null && n.kind != 'approval' && n.kind != 'takeover')
       .length;
   return approvals + unread;
 });
@@ -169,6 +170,13 @@ final tasksProvider = FutureProvider<List<Task>>((ref) async {
   final org = ref.watch(currentOrgProvider);
   if (org == null) return const [];
   return ref.watch(backendProvider).tasks(org.id);
+});
+
+/// Open requests from bots for a person to take over a screen.
+final takeoversProvider = FutureProvider<List<TakeoverRequest>>((ref) async {
+  final org = ref.watch(currentOrgProvider);
+  if (org == null) return const [];
+  return ref.watch(backendProvider).takeovers(org.id);
 });
 
 /// Formats US dollars for cost meters.

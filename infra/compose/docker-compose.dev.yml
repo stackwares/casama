@@ -48,6 +48,8 @@ services:
       COMPUTER_IMAGE_HEADLESS: kasama/computer-headless:dev
       COMPUTER_IMAGE_DESKTOP: kasama/computer-desktop:dev
       OBJECT_STORE_DIR: /data/objects
+      # Live view: the relay joins each desktop computer's network as "turn" (D-055).
+      TURN_CONTAINER: kasama-turn
       # SANDBOX_RUNTIME: runsc   # gVisor on a Linux host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -65,12 +67,35 @@ services:
     networks: [control, egress]
     restart: unless-stopped
 
+  # TURN relay for live view: the only media path between viewers and computers (D-055).
+  # Production also needs TLS on 5349 (turns:) for networks that only allow HTTPS.
+  turn:
+    build:
+      context: ../..
+      dockerfile: infra/turn/Dockerfile
+    container_name: kasama-turn
+    env_file: ../../.env
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+    networks: [control]
+    restart: unless-stopped
+
   # Build-only services so `compose build` also builds the computer images.
   computer-headless:
     build:
       context: ../..
       dockerfile: infra/images/computer/Dockerfile.headless
     image: kasama/computer-headless:dev
+    profiles: [images]
+
+  computer-desktop:
+    build:
+      context: ../..
+      dockerfile: infra/images/computer/Dockerfile.desktop
+      args:
+        BASE: kasama/computer-headless:dev
+    image: kasama/computer-desktop:dev
     profiles: [images]
 
 networks:

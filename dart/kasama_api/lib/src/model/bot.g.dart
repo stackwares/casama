@@ -27,6 +27,8 @@ abstract class _$BotCWProxy {
 
   Bot status(BotStatusEnum status);
 
+  Bot defaultComputerId(String? defaultComputerId);
+
   Bot createdAt(DateTime createdAt);
 
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Bot(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
@@ -46,6 +48,7 @@ abstract class _$BotCWProxy {
     Visibility visibility,
     BotBudget budget,
     BotStatusEnum status,
+    String? defaultComputerId,
     DateTime createdAt,
   });
 }
@@ -87,6 +90,10 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
   Bot status(BotStatusEnum status) => this(status: status);
 
   @override
+  Bot defaultComputerId(String? defaultComputerId) =>
+      this(defaultComputerId: defaultComputerId);
+
+  @override
   Bot createdAt(DateTime createdAt) => this(createdAt: createdAt);
 
   @override
@@ -107,6 +114,7 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
     Object? visibility = const $CopyWithPlaceholder(),
     Object? budget = const $CopyWithPlaceholder(),
     Object? status = const $CopyWithPlaceholder(),
+    Object? defaultComputerId = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Bot(
@@ -150,6 +158,10 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as BotStatusEnum,
+      defaultComputerId: defaultComputerId == const $CopyWithPlaceholder()
+          ? _value.defaultComputerId
+          // ignore: cast_nullable_to_non_nullable
+          : defaultComputerId as String?,
       createdAt: createdAt == const $CopyWithPlaceholder()
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -185,6 +197,7 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
         'visibility',
         'budget',
         'status',
+        'default_computer_id',
         'created_at',
       ],
     );
@@ -214,6 +227,10 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
         'status',
         (v) => $enumDecode(_$BotStatusEnumEnumMap, v),
       ),
+      defaultComputerId: $checkedConvert(
+        'default_computer_id',
+        (v) => v as String?,
+      ),
       createdAt: $checkedConvert(
         'created_at',
         (v) => DateTime.parse(v as String),
@@ -226,6 +243,7 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
     'avatarUrl': 'avatar_url',
     'personaMd': 'persona_md',
     'modelPolicy': 'model_policy',
+    'defaultComputerId': 'default_computer_id',
     'createdAt': 'created_at',
   },
 );
@@ -241,6 +259,7 @@ Map<String, dynamic> _$BotToJson(Bot instance) => <String, dynamic>{
   'visibility': _$VisibilityEnumMap[instance.visibility]!,
   'budget': instance.budget.toJson(),
   'status': _$BotStatusEnumEnumMap[instance.status]!,
+  'default_computer_id': instance.defaultComputerId,
   'created_at': instance.createdAt.toIso8601String(),
 };
 

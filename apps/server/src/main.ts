@@ -7,6 +7,7 @@ import { sql } from "drizzle-orm";
 import { createApp } from "./api/app.ts";
 import { createTokenVerifier } from "./api/auth.ts";
 import { attachTerminal } from "./api/routes/computers.ts";
+import { attachStream, liveConfigFromEnv } from "./api/routes/live.ts";
 import { pgRunEventHub } from "./api/run-event-hub.ts";
 import { dbosWorkflows } from "./api/workflows.ts";
 import { loadEnv } from "./env.ts";
@@ -48,6 +49,7 @@ if (env.MODE === "api") {
             new SupervisorProvider(env.SUPERVISOR_URL, env.SUPERVISOR_TOKEN),
           )
         : undefined,
+    live: liveConfigFromEnv(env),
     env,
     db: handle.db,
     logger,
@@ -63,6 +65,7 @@ if (env.MODE === "api") {
     logger.info("api listening", { port: info.port }),
   );
   attachTerminal(server as unknown as import("node:http").Server, deps);
+  attachStream(server as unknown as import("node:http").Server, deps);
   stoppers.push(() => new Promise((r) => server.close(r)));
 } else {
   const { startWorker } = await import("./worker/index.ts");

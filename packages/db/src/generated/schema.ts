@@ -405,67 +405,6 @@ export const auditLog = pgTable("audit_log", {
 	check("audit_log_actor_type_check", sql`actor_type = ANY (ARRAY['user'::text, 'bot'::text, 'system'::text])`),
 ]);
 
-export const runs = pgTable("runs", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	botId: uuid("bot_id").notNull(),
-	conversationId: uuid("conversation_id"),
-	parentRunId: uuid("parent_run_id"),
-	createdBy: uuid("created_by"),
-	trigger: text().default('chat').notNull(),
-	status: text().default('queued').notNull(),
-	budget: jsonb().default({}).notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	tokensIn: bigint("tokens_in", { mode: "number" }).default(0).notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	tokensOut: bigint("tokens_out", { mode: "number" }).default(0).notNull(),
-	costUsd: numeric("cost_usd", { precision: 12, scale:  6 }).default('0').notNull(),
-	lastSeq: integer("last_seq").default(0).notNull(),
-	cancelRequestedAt: timestamp("cancel_requested_at", { withTimezone: true, mode: 'string' }),
-	cancelledBy: uuid("cancelled_by"),
-	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }),
-	endedAt: timestamp("ended_at", { withTimezone: true, mode: 'string' }),
-	error: jsonb(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	routineId: uuid("routine_id"),
-}, (table) => [
-	index("runs_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
-	index("runs_conversation_id_idx").using("btree", table.conversationId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "runs_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.botId],
-			foreignColumns: [bots.id],
-			name: "runs_bot_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.conversationId],
-			foreignColumns: [conversations.id],
-			name: "runs_conversation_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.parentRunId],
-			foreignColumns: [table.id],
-			name: "runs_parent_run_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.createdBy],
-			foreignColumns: [users.id],
-			name: "runs_created_by_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.routineId],
-			foreignColumns: [routines.id],
-			name: "runs_routine_id_fkey"
-		}).onDelete("set null"),
-	pgPolicy("runs_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("runs_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
-	check("runs_status_check", sql`status = ANY (ARRAY['queued'::text, 'running'::text, 'waiting_approval'::text, 'waiting_takeover'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])`),
-]);
-
 export const usageLedger = pgTable("usage_ledger", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -528,6 +467,74 @@ export const modelCredentials = pgTable("model_credentials", {
 	check("model_credentials_provider_check", sql`provider = ANY (ARRAY['openai'::text, 'anthropic'::text, 'google'::text, 'xai'::text, 'openrouter'::text, 'openai_compatible'::text, 'fal'::text, 'brave_search'::text, 'tavily'::text])`),
 ]);
 
+export const runs = pgTable("runs", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	conversationId: uuid("conversation_id"),
+	parentRunId: uuid("parent_run_id"),
+	createdBy: uuid("created_by"),
+	trigger: text().default('chat').notNull(),
+	status: text().default('queued').notNull(),
+	budget: jsonb().default({}).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	tokensIn: bigint("tokens_in", { mode: "number" }).default(0).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	tokensOut: bigint("tokens_out", { mode: "number" }).default(0).notNull(),
+	costUsd: numeric("cost_usd", { precision: 12, scale:  6 }).default('0').notNull(),
+	lastSeq: integer("last_seq").default(0).notNull(),
+	cancelRequestedAt: timestamp("cancel_requested_at", { withTimezone: true, mode: 'string' }),
+	cancelledBy: uuid("cancelled_by"),
+	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }),
+	endedAt: timestamp("ended_at", { withTimezone: true, mode: 'string' }),
+	error: jsonb(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	routineId: uuid("routine_id"),
+	waitingComputerId: uuid("waiting_computer_id"),
+}, (table) => [
+	index("runs_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	index("runs_conversation_id_idx").using("btree", table.conversationId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("timestamptz_ops")),
+	index("runs_waiting_computer_idx").using("btree", table.waitingComputerId.asc().nullsLast().op("uuid_ops")).where(sql`(waiting_computer_id IS NOT NULL)`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "runs_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "runs_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.conversationId],
+			foreignColumns: [conversations.id],
+			name: "runs_conversation_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.parentRunId],
+			foreignColumns: [table.id],
+			name: "runs_parent_run_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "runs_created_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.routineId],
+			foreignColumns: [routines.id],
+			name: "runs_routine_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.waitingComputerId],
+			foreignColumns: [computers.id],
+			name: "runs_waiting_computer_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("runs_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
+	pgPolicy("runs_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
+	check("runs_status_check", sql`status = ANY (ARRAY['queued'::text, 'running'::text, 'waiting_approval'::text, 'waiting_takeover'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])`),
+]);
+
 export const computers = pgTable("computers", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -567,32 +574,6 @@ export const computers = pgTable("computers", {
 	check("computers_check", sql`((kind = 'private'::text) = (owner_bot_id IS NOT NULL)) OR (kind = 'local'::text)`),
 ]);
 
-export const computerLeases = pgTable("computer_leases", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	computerId: uuid("computer_id").notNull(),
-	holderType: text("holder_type").notNull(),
-	holderId: uuid("holder_id").notNull(),
-	mode: text().notNull(),
-	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("computer_leases_computer_idx").using("btree", table.computerId.asc().nullsLast().op("timestamptz_ops"), table.expiresAt.asc().nullsLast().op("timestamptz_ops")),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "computer_leases_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.computerId],
-			foreignColumns: [computers.id],
-			name: "computer_leases_computer_id_fkey"
-		}).onDelete("cascade"),
-	pgPolicy("computer_leases_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_computer(computer_id)` }),
-	check("computer_leases_mode_check", sql`mode = ANY (ARRAY['view'::text, 'control'::text])`),
-	check("computer_leases_holder_type_check", sql`holder_type = ANY (ARRAY['bot'::text, 'user'::text])`),
-]);
-
 export const checkpoints = pgTable("checkpoints", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -620,6 +601,37 @@ export const checkpoints = pgTable("checkpoints", {
 		}).onDelete("set null"),
 	pgPolicy("checkpoints_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_computer(computer_id)` }),
 	check("checkpoints_label_check", sql`(char_length(label) >= 1) AND (char_length(label) <= 200)`),
+]);
+
+export const computerLeases = pgTable("computer_leases", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	computerId: uuid("computer_id").notNull(),
+	holderType: text("holder_type").notNull(),
+	holderId: uuid("holder_id").notNull(),
+	mode: text().notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	note: text(),
+	releasedAt: timestamp("released_at", { withTimezone: true, mode: 'string' }),
+	allowShell: boolean("allow_shell").default(false).notNull(),
+}, (table) => [
+	index("computer_leases_active_idx").using("btree", table.computerId.asc().nullsLast().op("uuid_ops")).where(sql`(released_at IS NULL)`),
+	index("computer_leases_computer_idx").using("btree", table.computerId.asc().nullsLast().op("timestamptz_ops"), table.expiresAt.asc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "computer_leases_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.computerId],
+			foreignColumns: [computers.id],
+			name: "computer_leases_computer_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("computer_leases_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_computer(computer_id)` }),
+	check("computer_leases_mode_check", sql`mode = ANY (ARRAY['view'::text, 'control'::text])`),
+	check("computer_leases_holder_type_check", sql`holder_type = ANY (ARRAY['bot'::text, 'user'::text])`),
+	check("computer_leases_note_check", sql`char_length(note) <= 2000`),
 ]);
 
 export const approvals = pgTable("approvals", {
@@ -918,6 +930,53 @@ export const notifications = pgTable("notifications", {
 	pgPolicy("notifications_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
 	pgPolicy("notifications_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("notifications_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+]);
+
+export const takeoverRequests = pgTable("takeover_requests", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	runId: uuid("run_id").notNull(),
+	computerId: uuid("computer_id").notNull(),
+	reason: text().notNull(),
+	status: text().default('pending').notNull(),
+	note: text(),
+	resolvedBy: uuid("resolved_by"),
+	resolvedAt: timestamp("resolved_at", { withTimezone: true, mode: 'string' }),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '24:00:00'::interval)`).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("takeover_requests_computer_idx").using("btree", table.computerId.asc().nullsLast().op("text_ops"), table.status.asc().nullsLast().op("text_ops")),
+	index("takeover_requests_run_idx").using("btree", table.runId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "takeover_requests_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "takeover_requests_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "takeover_requests_run_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.computerId],
+			foreignColumns: [computers.id],
+			name: "takeover_requests_computer_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.resolvedBy],
+			foreignColumns: [users.id],
+			name: "takeover_requests_resolved_by_fkey"
+		}).onDelete("set null"),
+	pgPolicy("takeover_requests_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
+	check("takeover_requests_reason_check", sql`(char_length(reason) >= 1) AND (char_length(reason) <= 1000)`),
+	check("takeover_requests_status_check", sql`status = ANY (ARRAY['pending'::text, 'taken'::text, 'completed'::text, 'dismissed'::text, 'expired'::text])`),
+	check("takeover_requests_note_check", sql`char_length(note) <= 2000`),
 ]);
 
 export const idempotencyKeys = pgTable("idempotency_keys", {

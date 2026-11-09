@@ -147,6 +147,8 @@ class NoticeLine extends StatelessWidget {
       NoticeKind.computer => (Icons.computer, l10n.computerState(entry.text), theme.colorScheme.outline),
       NoticeKind.failed => (Icons.error_outline, l10n.runFailed(entry.text), theme.colorScheme.error),
       NoticeKind.cancelled => (Icons.stop_circle_outlined, l10n.runCancelled, theme.colorScheme.outline),
+      NoticeKind.userControl => (Icons.pan_tool_outlined, l10n.pausedUserInControl, theme.colorScheme.tertiary),
+      NoticeKind.botControl => (Icons.smart_toy_outlined, l10n.botBackInControl, theme.colorScheme.outline),
     };
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -227,6 +229,57 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
               TextButton(onPressed: _busy ? null : () => _decide(true, always: true), child: Text(l10n.alwaysAllow)),
               FilledButton(key: const Key('chatApprove'), onPressed: _busy ? null : () => _decide(true), child: Text(l10n.approve)),
             ]),
+        ]),
+      ),
+    );
+  }
+}
+
+/// A bot asking for a person to take over its screen.
+class TakeoverPrompt extends StatelessWidget {
+  const TakeoverPrompt({super.key, required this.entry, required this.botName, required this.onOpen});
+  final TakeoverEntry entry;
+  final String botName;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    return Card(
+      key: const Key('chatTakeover'),
+      color: theme.colorScheme.tertiaryContainer,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            const Icon(Icons.front_hand_outlined, size: 18),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.botNeedsHelp(botName), style: theme.textTheme.titleSmall)),
+          ]),
+          const SizedBox(height: 6),
+          Text(entry.reason),
+          const SizedBox(height: 8),
+          if (entry.outcome != null)
+            Text(
+              switch (entry.outcome) {
+                'completed' => l10n.takeoverCompleted,
+                'dismissed' => l10n.takeoverDismissed,
+                _ => l10n.expired,
+              },
+              style: theme.textTheme.labelLarge,
+            )
+          else
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                key: const Key('chatTakeControl'),
+                onPressed: onOpen,
+                icon: const Icon(Icons.live_tv_outlined),
+                label: Text(l10n.takeControl),
+              ),
+            ),
         ]),
       ),
     );

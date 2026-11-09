@@ -16,6 +16,8 @@ export interface AppDeps {
   /** Computers (Phase 2); unset when no supervisor is configured. */
   computers?: import("@kasama/agent").ComputerService;
   hub: RunEventHub;
+  /** Live view (Phase 5); unset when no TURN relay is configured. */
+  live?: import("./routes/live.ts").LiveConfig;
   /** Readiness checks by name; each throws when unhealthy. */
   readiness: Record<string, () => Promise<void>>;
 }

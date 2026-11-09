@@ -14,6 +14,7 @@ import type { EmailMessage, EmailSender } from "../src/services/email.ts";
 export const JWT_SECRET = "test-secret-at-least-32-characters-long!!";
 
 export interface Harness {
+  deps: import("../src/api/types.ts").AppDeps;
   computers?: ComputerService;
   tdb: TestDatabase;
   handle: DbHandle;
@@ -86,18 +87,29 @@ export async function startHarness(
   const computers = opts.sandbox
     ? new ComputerService(handle.db, opts.sandbox.provider)
     : undefined;
-  const app = createApp({
+  const live = opts.sandbox
+    ? {
+        turnSecret: opts.sandbox.turn.secret,
+        turnHost: opts.sandbox.turn.host,
+        turnPort: opts.sandbox.turn.udpPort,
+        tokenSecret: "test-stream-token-secret-0123456789",
+      }
+    : undefined;
+  const deps = {
     workflows,
     hub,
     computers,
+    live,
     env,
     db: handle.db,
     logger: createLogger("test", "error"),
     verifyToken: createTokenVerifier({ supabaseUrl: env.SUPABASE_URL, jwtSecret: JWT_SECRET }),
     email,
     readiness: { database: async () => void (await tdb.admin`select 1`) },
-  });
+  };
+  const app = createApp(deps);
   return {
+    deps,
     computers,
     tdb,
     handle,

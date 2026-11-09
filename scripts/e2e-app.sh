@@ -4,6 +4,9 @@
 #   API + worker              (node --env-file=.env apps/server/src/main.ts, MODE=api and MODE=worker,
 #                              with KASAMA_MODEL_FIXTURES so no model key is needed)
 # Usage: scripts/e2e-app.sh [device]   (default: macos; also an iOS simulator id, emulator-5554, or "web")
+# E2E_LIVE=1 also runs the live-view test; the API then needs SUPERVISOR_URL/TOKEN and TURN_* set and
+# the desktop computer image built (WebRTC needs the TURN port reachable from the device: macOS and
+# the iOS Simulator use 127.0.0.1; the Android emulator would need TURN_PUBLIC_HOST=10.0.2.2).
 set -euo pipefail
 cd "$(dirname "$0")/../client"
 device="${1:-macos}"
@@ -22,4 +25,7 @@ if [[ "$device" == "web" ]]; then
     -d web-server --browser-name=chrome --chrome-binary="$CHROME_BINARY" --headless --web-port=3000
 else
   flutter test integration_test/app_flow_test.dart -d "$device"
+  if [[ "${E2E_LIVE:-0}" == "1" ]]; then
+    flutter test integration_test/live_flow_test.dart -d "$device"
+  fi
 fi

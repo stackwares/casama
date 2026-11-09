@@ -12,6 +12,7 @@ export interface ComputerRow {
   kind: string;
   owner_bot_id: string | null;
   profile: "headless" | "desktop";
+  provider?: string;
   state: string;
   size: { cpus?: number; memory_mb?: number };
   snapshot_ref: SnapshotRef | null;
@@ -22,6 +23,8 @@ export interface ComputerRow {
 /** The provider plus optional object deletion (the supervisor client has it). */
 export type ComputerProvider = SandboxProvider & {
   deleteObjects?: (keys: string[]) => Promise<void>;
+  /** The same backend scoped to one provider (docker, e2b, daytona); see D-056. */
+  forProvider?: (id: string) => ComputerProvider;
 };
 
 type Emit = (type: string, payload: Record<string, unknown>) => Promise<void>;
@@ -49,6 +52,27 @@ export class ComputerService {
       limit 1`);
     if (!row) throw new Error("no_computer");
     return row;
+  }
+
+  /** The provider a computer runs on. */
+  providerFor(c: ComputerRow): ComputerProvider {
+    const id = typeof c.provider === "string" ? c.provider : "docker";
+    return id === "docker" ? this.provider : (this.provider.forProvider?.(id) ?? this.provider);
+  }
+
+  /** Destroys a computer's sandbox and stored archives, then deletes it. */
+  async remove(computerId: string) {
+    const c = await this.byId(computerId);
+    if (!c) return;
+    const p = this.providerFor(c);
+    if (await p.get(computerId).catch(() => null)) await this.recordUsage(c);
+    await p.destroy(computerId);
+    const cps = await this.db.execute<{ key: string }>(
+      sql`select storage_ref ->> 'key' as key from public.checkpoints where computer_id = ${computerId}::uuid`,
+    );
+    const keys = [...cps.map((r) => r.key), ...(c.snapshot_ref?.key ? [c.snapshot_ref.key] : [])];
+    if (keys.length) await this.provider.deleteObjects?.(keys).catch(() => {});
+    await this.db.execute(sql`delete from public.computers where id = ${computerId}::uuid`);
   }
 
   async byId(id: string): Promise<ComputerRow | null> {
@@ -96,7 +120,7 @@ export class ComputerService {
       );
       if (!c) throw new Error("computer_not_found");
       if (c.state === "running" || c.state === "idle") {
-        const h = await this.provider.get(computerId);
+        const h = await this.providerFor(c).get(computerId);
         if (h) {
           await tx.execute(
             sql`update public.computers set last_active_at = now(), state = 'running' where id = ${computerId}::uuid`,
@@ -111,7 +135,7 @@ export class ComputerService {
           size: { cpus: c.size?.cpus, memoryMb: c.size?.memory_mb },
           labels: { "dev.kasama.org": c.org_id },
         };
-        const h = await this.provider.resume(computerId, c.snapshot_ref ?? undefined, spec);
+        const h = await this.providerFor(c).resume(computerId, c.snapshot_ref ?? undefined, spec);
         await this.setState(computerId, "running", emit);
         return h;
       } catch (err) {
@@ -133,11 +157,12 @@ export class ComputerService {
   async sleep(computerId: string, emit?: Emit) {
     const c = await this.byId(computerId);
     if (!c) throw new Error("computer_not_found");
-    if (!(await this.provider.get(computerId))) {
+    const p = this.providerFor(c);
+    if (!(await p.get(computerId))) {
       await this.setState(computerId, c.snapshot_ref ? "sleeping" : "stopped", emit);
       return;
     }
-    const snap = await this.provider.sleep(computerId);
+    const snap = await p.sleep(computerId);
     await this.recordUsage(c);
     await this.db.execute(
       sql`update public.computers set snapshot_ref = ${JSON.stringify(snap)}::jsonb where id = ${computerId}::uuid`,
@@ -154,7 +179,9 @@ export class ComputerService {
       where state in ('running', 'idle') and coalesce(last_active_at, created_at) < now() - (${idleMs} * interval '1 millisecond')`);
     const slept: string[] = [];
     for (const c of rows) {
-      const h = await this.provider.get(c.id).catch(() => null);
+      const h = await this.providerFor(c)
+        .get(c.id)
+        .catch(() => null);
       if (h) {
         const health = await h.health().catch(() => null);
         if (health && (health.openTerminals > 0 || health.runningExecs > 0)) {

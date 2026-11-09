@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -82,13 +83,36 @@ class ComputerPanel extends ConsumerWidget {
         ]),
         Expanded(
           child: TabBarView(children: [
-            running ? _ScreenTab(computerId: computer.id) : EmptyState(icon: Icons.bedtime_outlined, message: l10n.computerAsleep),
+            computer.profile == ComputerProfileEnum.desktop
+                ? _LiveEntry(computer: computer)
+                : (running ? _ScreenTab(computerId: computer.id) : EmptyState(icon: Icons.bedtime_outlined, message: l10n.computerAsleep)),
             TerminalTab(computerId: computer.id),
             FilesTab(computerId: computer.id),
             CheckpointsTab(computerId: computer.id),
           ]),
         ),
       ]),
+    );
+  }
+}
+
+/// Desktop computers open the live view (it starts the computer if it is asleep).
+class _LiveEntry extends StatelessWidget {
+  const _LiveEntry({required this.computer});
+  final Computer computer;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return EmptyState(
+      icon: Icons.live_tv_outlined,
+      message: l10n.liveViewHelp,
+      action: FilledButton.icon(
+        key: const Key('openLiveView'),
+        onPressed: () => GoRouter.of(context).push('/computer/live?c=${computer.id}'),
+        icon: const Icon(Icons.play_arrow),
+        label: Text(l10n.openLiveView),
+      ),
     );
   }
 }

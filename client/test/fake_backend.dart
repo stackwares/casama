@@ -104,8 +104,11 @@ class FakeBackend implements Backend {
         visibility: Visibility.team,
         budget: BotBudget(perRunUsd: 1, dailyUsd: 10),
         status: status,
+        defaultComputerId: defaultComputer,
         createdAt: DateTime(2026),
       );
+
+  String? defaultComputer;
 
   @override
   Future<List<Bot>> bots(String orgId) async => [bot()];
@@ -330,6 +333,76 @@ class FakeBackend implements Backend {
       ];
   @override
   Future<void> setTaskStatus(String taskId, String status) async => taskStatus[taskId] = status;
+
+  // --- Phase 5 ---------------------------------------------------------------
+
+  final createdComputers = <String>[];
+  final computerUpdates = <String>[];
+  final deletedComputers = <String>[];
+  var leaseHeld = false;
+  String? releasedNote;
+  final dismissed = <String>[];
+  List<TakeoverRequest> openTakeovers = [];
+
+  Lease _lease() => Lease(
+        computerId: computerId,
+        holderType: leaseHeld ? LeaseHolderTypeEnum.user : LeaseHolderTypeEnum.bot,
+        holderId: leaseHeld ? 'me' : null,
+        mode: LeaseModeEnum.control,
+        expiresAt: leaseHeld ? DateTime.now().add(const Duration(minutes: 15)) : null,
+        you: leaseHeld,
+      );
+
+  @override
+  Future<Computer> createComputer(String orgId, {required String name, required bool private, String? ownerBotId, String profile = 'headless'}) async {
+    createdComputers.add('$name:$profile:$ownerBotId');
+    return (await computers(orgId)).first;
+  }
+
+  @override
+  Future<Computer> updateComputer(String computerId, {String? name, String? profile}) async {
+    computerUpdates.add('${name ?? ''}${profile ?? ''}');
+    return (await computers(orgId)).first;
+  }
+
+  @override
+  Future<void> deleteComputer(String computerId) async => deletedComputers.add(computerId);
+  @override
+  Future<void> setBotComputer(String botId, String? computerId) async => defaultComputer = computerId;
+
+  @override
+  Future<StreamSession> streamSession(String computerId, {String mode = 'control'}) async => StreamSession(
+        signalingUrl: 'ws://localhost/v1/computers/$computerId/stream?token=t',
+        token: 't',
+        mode: StreamMode.values.firstWhere((m) => m.value == mode),
+        expiresAt: DateTime.now().add(const Duration(minutes: 5)),
+        iceServers: [IceServer(urls: const ['turn:localhost:3478?transport=udp'], username: 'u', credential: 'c')],
+        iceTransportPolicy: StreamSessionIceTransportPolicyEnum.relay,
+        screenshotUrl: 'http://localhost/v1/computers/$computerId/screenshot',
+      );
+
+  @override
+  Future<Lease> lease(String computerId) async => _lease();
+  @override
+  Future<Lease> takeLease(String computerId, {bool allowShell = false}) async {
+    leaseHeld = true;
+    return _lease();
+  }
+
+  @override
+  Future<Lease> releaseLease(String computerId, {String? note}) async {
+    leaseHeld = false;
+    releasedNote = note;
+    return _lease();
+  }
+
+  @override
+  Future<List<TakeoverRequest>> takeovers(String orgId) async => openTakeovers;
+  @override
+  Future<void> dismissTakeover(String takeoverId, {String? note}) async {
+    dismissed.add(takeoverId);
+    openTakeovers = openTakeovers.where((t) => t.id != takeoverId).toList();
+  }
 
   @override
   Future<List<Computer>> computers(String orgId) async => [

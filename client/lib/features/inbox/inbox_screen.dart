@@ -42,14 +42,21 @@ class ApprovalsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final takeovers = ref.watch(takeoversProvider).value ?? const <TakeoverRequest>[];
     return AsyncView(
       value: ref.watch(approvalsProvider),
       onRetry: () => ref.invalidate(approvalsProvider),
-      data: (items) => items.isEmpty
+      data: (items) => items.isEmpty && takeovers.isEmpty
           ? EmptyState(icon: Icons.verified_user_outlined, message: l10n.noApprovals)
           : RefreshIndicator(
-              onRefresh: () async => ref.invalidate(approvalsProvider),
-              child: ListView(padding: const EdgeInsets.all(12), children: [for (final a in items) ApprovalCard(approval: a)]),
+              onRefresh: () async {
+                ref.invalidate(approvalsProvider);
+                ref.invalidate(takeoversProvider);
+              },
+              child: ListView(padding: const EdgeInsets.all(12), children: [
+                for (final t in takeovers) TakeoverCard(takeover: t),
+                for (final a in items) ApprovalCard(approval: a),
+              ]),
             ),
     );
   }
@@ -263,6 +270,47 @@ class TaskBoard extends ConsumerWidget {
                   ],
               ]),
             ),
+    );
+  }
+}
+
+/// A bot asking for a person to take over its screen.
+class TakeoverCard extends ConsumerWidget {
+  const TakeoverCard({super.key, required this.takeover});
+  final TakeoverRequest takeover;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final bot = ref.watch(botProvider(takeover.botId));
+    return Card(
+      key: Key('takeover-${takeover.id}'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(l10n.botNeedsHelp(bot?.name ?? l10n.aBot), style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(takeover.reason),
+          const SizedBox(height: 4),
+          Text(relativeTime(takeover.createdAt, context), style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 12),
+          Wrap(alignment: WrapAlignment.end, spacing: 8, children: [
+            OutlinedButton(
+              key: const Key('dismissTakeover'),
+              onPressed: () async {
+                await runGuarded(context, () => ref.read(backendProvider).dismissTakeover(takeover.id));
+                ref.invalidate(takeoversProvider);
+              },
+              child: Text(l10n.dismiss),
+            ),
+            FilledButton(
+              key: const Key('openTakeover'),
+              onPressed: () => context.push('/computer/live?c=${takeover.computerId}&takeover=${takeover.id}'),
+              child: Text(l10n.takeControl),
+            ),
+          ]),
+        ]),
+      ),
     );
   }
 }

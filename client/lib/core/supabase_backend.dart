@@ -509,6 +509,64 @@ class SupabaseBackend implements Backend {
         .update({'status': status, 'updated_at': DateTime.now().toUtc().toIso8601String()}).eq('id', taskId);
   }
 
+  // --- computer management and live view (Phase 5) -------------------------
+
+  @override
+  Future<Computer> createComputer(String orgId, {required String name, required bool private, String? ownerBotId, String profile = 'headless'}) async =>
+      (await api.computers.createComputer(
+        createComputerRequest: CreateComputerRequest(
+          orgId: orgId,
+          name: name,
+          kind: private ? CreateComputerRequestKindEnum.private : CreateComputerRequestKindEnum.team,
+          ownerBotId: ownerBotId,
+          profile: CreateComputerRequestProfileEnum.values.firstWhere((p) => p.value == profile),
+        ),
+      ))
+          .data!;
+
+  @override
+  Future<Computer> updateComputer(String computerId, {String? name, String? profile}) async => (await api.computers.updateComputer(
+        id: computerId,
+        updateComputerRequest: UpdateComputerRequest(
+          name: name,
+          profile: profile == null ? null : UpdateComputerRequestProfileEnum.values.firstWhere((p) => p.value == profile),
+        ),
+      ))
+          .data!;
+
+  @override
+  Future<void> deleteComputer(String computerId) async => api.computers.deleteComputer(id: computerId);
+
+  @override
+  Future<void> setBotComputer(String botId, String? computerId) async {
+    await supabase.from('bots').update({'default_computer_id': computerId}).eq('id', botId);
+  }
+
+  @override
+  Future<StreamSession> streamSession(String computerId, {String mode = 'control'}) async => (await api.computers.createStreamSession(
+        id: computerId,
+        streamSessionRequest: StreamSessionRequest(mode: StreamMode.values.firstWhere((m) => m.value == mode)),
+      ))
+          .data!;
+
+  @override
+  Future<Lease> lease(String computerId) async => (await api.computers.getLease(id: computerId)).data!;
+
+  @override
+  Future<Lease> takeLease(String computerId, {bool allowShell = false}) async =>
+      (await api.computers.takeLease(id: computerId, takeLeaseRequest: TakeLeaseRequest(allowShell: allowShell))).data!;
+
+  @override
+  Future<Lease> releaseLease(String computerId, {String? note}) async =>
+      (await api.computers.releaseLease(id: computerId, releaseLeaseRequest: ReleaseLeaseRequest(note: note))).data!;
+
+  @override
+  Future<List<TakeoverRequest>> takeovers(String orgId) async => (await api.computers.listTakeovers(orgId: orgId)).data!.items;
+
+  @override
+  Future<void> dismissTakeover(String takeoverId, {String? note}) async =>
+      api.computers.dismissTakeover(id: takeoverId, releaseLeaseRequest: ReleaseLeaseRequest(note: note));
+
   // --- computers ------------------------------------------------------------
 
   @override
