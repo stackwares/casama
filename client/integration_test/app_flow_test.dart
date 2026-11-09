@@ -96,5 +96,25 @@ void main() {
 
     // Events arrived over Supabase Realtime (private run topic), not only through polling.
     expect(backend.realtimeEvents, greaterThan(0), reason: 'realtime=${backend.realtimeEvents} catchUp=${backend.catchUpEvents}');
+
+    // Phase 4: schedule a routine in a timezone, run it now, and get its notification live in the inbox.
+    final botPath = GoRouter.of(tester.element(find.byKey(const Key('messageInput')))).routeInformationProvider.value.uri.path;
+    final botId = RegExp(r'^/bots/([^/]+)').firstMatch(botPath)!.group(1)!;
+    router.push('/bots/$botId/routines');
+    await waitFor(tester, find.byKey(const Key('newRoutine')).hitTestable());
+    await tap(tester, find.byKey(const Key('newRoutine')));
+    await waitFor(tester, find.byKey(const Key('routineName')).hitTestable());
+    await tester.enterText(find.byKey(const Key('routineName')), 'Morning summary');
+    await tester.enterText(find.byKey(const Key('routineInstructions')), 'Prepare the morning summary');
+    await tester.enterText(find.byKey(const Key('routineTimezone')), 'America/Chicago');
+    await tester.pump();
+    await tap(tester, find.byKey(const Key('createRoutine')));
+    await waitFor(tester, find.textContaining('(America/Chicago)'));
+    expect(find.textContaining('Next:'), findsOneWidget);
+    await tap(tester, find.byIcon(Icons.play_arrow));
+    await waitFor(tester, find.text('Routine started'));
+
+    router.go('/inbox?tab=1');
+    await waitFor(tester, find.text('Ada: Morning summary'), timeout: const Duration(seconds: 60));
   });
 }

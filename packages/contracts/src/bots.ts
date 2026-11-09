@@ -54,6 +54,11 @@ export const CreateBotRequest = z
     autonomy: Autonomy.optional(),
     visibility: Visibility.optional(),
     budget: BotBudget.optional(),
+    template_id: z
+      .string()
+      .max(64)
+      .optional()
+      .openapi({ description: "Start from a starter template (persona, skills, routines)" }),
   })
   .openapi("CreateBotRequest");
 
@@ -115,7 +120,17 @@ export const RunEventsPage = z
   .openapi("RunEventsPage");
 
 export const ProviderId = z
-  .enum(["openai", "anthropic", "google", "xai", "openrouter", "openai_compatible"])
+  .enum([
+    "openai",
+    "anthropic",
+    "google",
+    "xai",
+    "openrouter",
+    "openai_compatible",
+    "fal",
+    "brave_search",
+    "tavily",
+  ])
   .openapi("ProviderId");
 
 export const Credential = z

@@ -217,4 +217,7 @@ const _$ProviderIdEnumMap = {
   ProviderId.xai: 'xai',
   ProviderId.openrouter: 'openrouter',
   ProviderId.openaiCompatible: 'openai_compatible',
+  ProviderId.fal: 'fal',
+  ProviderId.braveSearch: 'brave_search',
+  ProviderId.tavily: 'tavily',
 };

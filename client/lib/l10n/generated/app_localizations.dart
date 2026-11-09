@@ -933,6 +933,582 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{n, plural, =1{yesterday} other{{n} days ago}}'**
   String daysAgo(int n);
+
+  /// No description provided for @aBot.
+  ///
+  /// In en, this message translates to:
+  /// **'A bot'**
+  String get aBot;
+
+  /// No description provided for @addIntegration.
+  ///
+  /// In en, this message translates to:
+  /// **'Add integration'**
+  String get addIntegration;
+
+  /// No description provided for @addSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Add secret'**
+  String get addSecret;
+
+  /// No description provided for @allowedHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed hosts'**
+  String get allowedHosts;
+
+  /// No description provided for @allowedHostsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma-separated, for example api.github.com'**
+  String get allowedHostsHelp;
+
+  /// No description provided for @alwaysAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Always allow'**
+  String get alwaysAllow;
+
+  /// No description provided for @approval.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval'**
+  String get approval;
+
+  /// No description provided for @approvalAlreadyDecided.
+  ///
+  /// In en, this message translates to:
+  /// **'This request was already decided or has expired.'**
+  String get approvalAlreadyDecided;
+
+  /// No description provided for @approvals.
+  ///
+  /// In en, this message translates to:
+  /// **'Approvals'**
+  String get approvals;
+
+  /// No description provided for @approve.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approve;
+
+  /// No description provided for @approved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get approved;
+
+  /// No description provided for @authHeaderOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorization header (optional)'**
+  String get authHeaderOptional;
+
+  /// No description provided for @authSecretName.
+  ///
+  /// In en, this message translates to:
+  /// **'Auth secret name (optional)'**
+  String get authSecretName;
+
+  /// No description provided for @authSecretNameHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Name of a secret from Settings › Secrets, sent as a bearer token'**
+  String get authSecretNameHelp;
+
+  /// No description provided for @baseUrlOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Base URL (optional)'**
+  String get baseUrlOptional;
+
+  /// No description provided for @blankBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Blank'**
+  String get blankBot;
+
+  /// No description provided for @botIntegrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations for this bot'**
+  String get botIntegrations;
+
+  /// No description provided for @changeStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Change status'**
+  String get changeStatus;
+
+  /// No description provided for @composioToolkits.
+  ///
+  /// In en, this message translates to:
+  /// **'Toolkits (comma-separated, for example github, gmail)'**
+  String get composioToolkits;
+
+  /// No description provided for @copySecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy secret'**
+  String get copySecret;
+
+  /// No description provided for @cronExpression.
+  ///
+  /// In en, this message translates to:
+  /// **'Cron expression'**
+  String get cronExpression;
+
+  /// No description provided for @cronHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'minute hour day month weekday'**
+  String get cronHelp;
+
+  /// No description provided for @denied.
+  ///
+  /// In en, this message translates to:
+  /// **'Denied'**
+  String get denied;
+
+  /// No description provided for @deny.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny'**
+  String get deny;
+
+  /// No description provided for @everyDayAt7.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day at 7:00'**
+  String get everyDayAt7;
+
+  /// No description provided for @everyHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Every hour'**
+  String get everyHour;
+
+  /// No description provided for @expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get expired;
+
+  /// No description provided for @inbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox'**
+  String get inbox;
+
+  /// No description provided for @integrationName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get integrationName;
+
+  /// No description provided for @integrationNameHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowercase letters, numbers and underscores'**
+  String get integrationNameHelp;
+
+  /// No description provided for @integrationType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get integrationType;
+
+  /// No description provided for @integrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations'**
+  String get integrations;
+
+  /// No description provided for @kindMcp.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP server'**
+  String get kindMcp;
+
+  /// No description provided for @kindOpenapi.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenAPI'**
+  String get kindOpenapi;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get markAllRead;
+
+  /// No description provided for @mondaysAt9.
+  ///
+  /// In en, this message translates to:
+  /// **'Mondays at 9:00'**
+  String get mondaysAt9;
+
+  /// No description provided for @newRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'New routine'**
+  String get newRoutine;
+
+  /// No description provided for @noApprovals.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing needs your approval right now.'**
+  String get noApprovals;
+
+  /// No description provided for @noIntegrations.
+  ///
+  /// In en, this message translates to:
+  /// **'No integrations yet. Connect an MCP server, an OpenAPI source, Composio or Pipedream.'**
+  String get noIntegrations;
+
+  /// No description provided for @noIntegrationsForBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Add integrations in Settings first.'**
+  String get noIntegrationsForBot;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet.'**
+  String get noNotifications;
+
+  /// No description provided for @noRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'No routines yet. Routines run this bot on a schedule or when a webhook arrives.'**
+  String get noRoutines;
+
+  /// No description provided for @noSecrets.
+  ///
+  /// In en, this message translates to:
+  /// **'No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.'**
+  String get noSecrets;
+
+  /// No description provided for @noTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'The task board is empty.'**
+  String get noTasks;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @openInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Open inbox'**
+  String get openInbox;
+
+  /// No description provided for @pipedreamApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps (comma-separated)'**
+  String get pipedreamApps;
+
+  /// No description provided for @pipedreamClientId.
+  ///
+  /// In en, this message translates to:
+  /// **'Client ID'**
+  String get pipedreamClientId;
+
+  /// No description provided for @pipedreamClientSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Client secret'**
+  String get pipedreamClientSecret;
+
+  /// No description provided for @pipedreamProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Project ID'**
+  String get pipedreamProject;
+
+  /// No description provided for @riskHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High risk'**
+  String get riskHigh;
+
+  /// No description provided for @riskLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low risk'**
+  String get riskLow;
+
+  /// No description provided for @riskMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium risk'**
+  String get riskMedium;
+
+  /// No description provided for @routineGithub.
+  ///
+  /// In en, this message translates to:
+  /// **'On GitHub events'**
+  String get routineGithub;
+
+  /// No description provided for @routineInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructions'**
+  String get routineInstructions;
+
+  /// No description provided for @routineInstructionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What should the bot do each time?'**
+  String get routineInstructionsHint;
+
+  /// No description provided for @routineName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get routineName;
+
+  /// No description provided for @routineStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine started'**
+  String get routineStarted;
+
+  /// No description provided for @routineWebhook.
+  ///
+  /// In en, this message translates to:
+  /// **'On webhook'**
+  String get routineWebhook;
+
+  /// No description provided for @routines.
+  ///
+  /// In en, this message translates to:
+  /// **'Routines'**
+  String get routines;
+
+  /// No description provided for @runNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Run now'**
+  String get runNow;
+
+  /// No description provided for @secretName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get secretName;
+
+  /// No description provided for @secretNameHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Uppercase, for example GITHUB_TOKEN'**
+  String get secretNameHelp;
+
+  /// No description provided for @secretValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get secretValue;
+
+  /// No description provided for @secrets.
+  ///
+  /// In en, this message translates to:
+  /// **'Secrets'**
+  String get secrets;
+
+  /// No description provided for @serverUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get serverUrl;
+
+  /// No description provided for @specUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenAPI spec URL'**
+  String get specUrl;
+
+  /// No description provided for @startFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from'**
+  String get startFrom;
+
+  /// No description provided for @storedEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored encrypted; never shown again'**
+  String get storedEncrypted;
+
+  /// No description provided for @taskBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get taskBlocked;
+
+  /// No description provided for @taskBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get taskBoard;
+
+  /// No description provided for @taskDoing.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get taskDoing;
+
+  /// No description provided for @taskDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get taskDone;
+
+  /// No description provided for @taskTodo.
+  ///
+  /// In en, this message translates to:
+  /// **'To do'**
+  String get taskTodo;
+
+  /// No description provided for @test.
+  ///
+  /// In en, this message translates to:
+  /// **'Test'**
+  String get test;
+
+  /// No description provided for @timezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Timezone'**
+  String get timezone;
+
+  /// No description provided for @triggerGithub.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub'**
+  String get triggerGithub;
+
+  /// No description provided for @triggerSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get triggerSchedule;
+
+  /// No description provided for @triggerWebhook.
+  ///
+  /// In en, this message translates to:
+  /// **'Webhook'**
+  String get triggerWebhook;
+
+  /// No description provided for @viewRun.
+  ///
+  /// In en, this message translates to:
+  /// **'View run'**
+  String get viewRun;
+
+  /// No description provided for @webhookCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Webhook created'**
+  String get webhookCreated;
+
+  /// No description provided for @webhookSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing secret'**
+  String get webhookSecret;
+
+  /// No description provided for @webhookShownOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the signing secret now. It is shown only once.'**
+  String get webhookShownOnce;
+
+  /// No description provided for @webhookUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get webhookUrl;
+
+  /// No description provided for @approvalsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Approvals ({n})'**
+  String approvalsCount(int n);
+
+  /// No description provided for @botWantsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot}: {summary}'**
+  String botWantsTo(String bot, String summary);
+
+  /// No description provided for @integrationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed: {error}'**
+  String integrationFailed(String error);
+
+  /// No description provided for @integrationOk.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{Connected, 1 tool} other{Connected, {n} tools}}'**
+  String integrationOk(int n);
+
+  /// No description provided for @needsApprovalFor.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} needs your approval to use {tool}'**
+  String needsApprovalFor(String bot, String tool);
+
+  /// No description provided for @nextRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {when}'**
+  String nextRun(String when);
+
+  /// No description provided for @onlySentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Only sent to {hosts}'**
+  String onlySentTo(String hosts);
+
+  /// No description provided for @requestedAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'requested {when}'**
+  String requestedAgo(String when);
+
+  /// No description provided for @routineSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'{cron} ({timezone})'**
+  String routineSchedule(String cron, String timezone);
+
+  /// No description provided for @templateIncludesRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes routines: {names}.'**
+  String templateIncludesRoutines(String names);
+
+  /// No description provided for @toolCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 tool} other{{n} tools}}'**
+  String toolCount(int n);
+
+  /// No description provided for @weekdaysAt9.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays at 9:00'**
+  String get weekdaysAt9;
 }
 
 class _AppLocalizationsDelegate

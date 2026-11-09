@@ -9,6 +9,7 @@ import { HTTPException } from "hono/http-exception";
 import { ApiError, problem } from "./errors.ts";
 import { idempotency } from "./middleware/idempotency.ts";
 import { rateLimit } from "./middleware/rate-limit.ts";
+import { registerAutonomyRoutes } from "./routes/autonomy.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
 import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerSystemRoutes } from "./routes/system.ts";
@@ -110,12 +111,14 @@ export function createApp(deps: AppDeps) {
     await next();
   });
   app.use("/v1/*", rateLimit({ perMinute: deps.env.RATE_LIMIT_PER_MINUTE }));
+  app.use("/hooks/*", rateLimit({ perMinute: deps.env.RATE_LIMIT_PER_MINUTE }));
   app.use("/v1/*", idempotency(deps.db));
 
   registerSystemRoutes(app, deps);
   registerWorkspaceRoutes(app, deps);
   registerBotRoutes(app, deps);
   registerComputerRoutes(app, deps);
+  registerAutonomyRoutes(app, deps);
 
   app.doc31("/openapi.json", (c) => ({
     ...openApiConfig,

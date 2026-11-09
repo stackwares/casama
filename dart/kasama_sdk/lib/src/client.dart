@@ -73,6 +73,11 @@ class KasamaClient {
   MemoryApi get memory => api.getMemoryApi();
   UsageApi get usage => api.getUsageApi();
   ComputersApi get computers => api.getComputersApi();
+  ApprovalsApi get approvals => api.getApprovalsApi();
+  IntegrationsApi get integrations => api.getIntegrationsApi();
+  RoutinesApi get routines => api.getRoutinesApi();
+  SecretsApi get secrets => api.getSecretsApi();
+  TasksApi get tasks => api.getTasksApi();
 
   Future<Map<String, String>> _authHeader() async {
     final session = await currentSession();

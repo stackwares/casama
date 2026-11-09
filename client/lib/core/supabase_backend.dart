@@ -109,16 +109,21 @@ class SupabaseBackend implements Backend {
   Future<List<Bot>> bots(String orgId) async => (await api.bots.listBots(orgId: orgId)).data!.items;
 
   @override
-  Future<Bot> createBot(String orgId, {required String name, required String credentialId, required String model, String persona = ''}) async =>
+  Future<Bot> createBot(String orgId,
+          {required String name, required String credentialId, required String model, String persona = '', String? templateId}) async =>
       (await api.bots.createBot(
         createBotRequest: CreateBotRequest(
           orgId: orgId,
           name: name,
           personaMd: persona,
           modelPolicy: ModelPolicy(primary: ModelChoice(credentialId: credentialId, model: model)),
+          templateId: templateId,
         ),
       ))
           .data!;
+
+  @override
+  Future<List<Template>> templates() async => (await api.bots.listTemplates()).data!.items;
 
   @override
   Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy}) async {
@@ -333,6 +338,176 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> deleteSkill(String id) async => supabase.from('skills').delete().eq('id', id);
+
+  // --- approvals and notifications ------------------------------------------
+
+  @override
+  Future<List<Approval>> approvals(String orgId, {bool pendingOnly = true}) async =>
+      (await api.approvals.listApprovals(orgId: orgId, status: pendingOnly ? 'pending' : null)).data!.items;
+
+  @override
+  Future<Approval> decideApproval(String approvalId, {required bool approve, bool alwaysAllow = false}) async =>
+      (await api.approvals.decideApproval(
+        id: approvalId,
+        approvalDecisionRequest: ApprovalDecisionRequest(
+          decision: approve ? ApprovalDecisionRequestDecisionEnum.approved : ApprovalDecisionRequestDecisionEnum.denied,
+          alwaysAllow: approve && alwaysAllow ? true : null,
+        ),
+      ))
+          .data!;
+
+  static NotificationView _notification(Map row) {
+    final payload = row['payload'] is Map ? row['payload'] as Map : const {};
+    return NotificationView(
+      id: row['id'] as String,
+      kind: row['kind'] as String,
+      title: '${payload['title'] ?? ''}',
+      body: '${payload['body'] ?? ''}',
+      link: payload['link'] as String?,
+      createdAt: DateTime.parse(row['created_at'] as String),
+      readAt: row['read_at'] == null ? null : DateTime.parse(row['read_at'] as String),
+    );
+  }
+
+  @override
+  Future<List<NotificationView>> notifications() async {
+    final rows = await supabase
+        .from('notifications')
+        .select('id, kind, payload, read_at, created_at')
+        .order('created_at', ascending: false)
+        .limit(100);
+    return [for (final r in rows) _notification(r)];
+  }
+
+  @override
+  Future<void> markNotificationsRead() async {
+    await supabase.from('notifications').update({'read_at': DateTime.now().toUtc().toIso8601String()}).isFilter('read_at', null);
+  }
+
+  @override
+  Stream<NotificationView> watchNotifications() {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return const Stream.empty();
+    late final StreamController<NotificationView> out;
+    sb.RealtimeChannel? channel;
+    out = StreamController<NotificationView>(
+      onListen: () {
+        channel = supabase
+            .channel('user:$userId', opts: const sb.RealtimeChannelConfig(private: true))
+            .onBroadcast(
+              event: 'notification',
+              callback: (message) {
+                final data = message['payload'] is Map ? message['payload'] as Map : message;
+                try {
+                  out.add(_notification(data));
+                } catch (_) {}
+              },
+            )
+            .subscribe();
+      },
+      onCancel: () async {
+        if (channel != null) await supabase.removeChannel(channel!);
+      },
+    );
+    return out.stream;
+  }
+
+  @override
+  Future<void> registerDevice(String platform, String token) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return;
+    await supabase.from('devices').upsert(
+      {'user_id': userId, 'platform': platform, 'fcm_token': token, 'last_seen_at': DateTime.now().toUtc().toIso8601String()},
+      onConflict: 'fcm_token',
+    );
+  }
+
+  // --- routines -------------------------------------------------------------
+
+  @override
+  Future<List<Routine>> routines(String botId) async => (await api.routines.listRoutines(id: botId)).data!.items;
+
+  @override
+  Future<CreatedRoutine> createRoutine(String botId,
+          {required String name, required String instructions, required String trigger, String? cron, String? timezone}) async =>
+      (await api.routines.createRoutine(
+        createRoutineRequest: CreateRoutineRequest(
+          botId: botId,
+          name: name,
+          instructions: instructions,
+          trigger: RoutineTrigger.values.firstWhere((t) => t.value == trigger),
+          scheduleCron: trigger == 'schedule' ? cron : null,
+          timezone: timezone,
+        ),
+      ))
+          .data!;
+
+  @override
+  Future<void> setRoutineEnabled(String routineId, bool enabled) async =>
+      api.routines.updateRoutine(id: routineId, updateRoutineRequest: UpdateRoutineRequest(enabled: enabled));
+
+  @override
+  Future<String> runRoutine(String routineId) async => (await api.routines.runRoutine(id: routineId)).data!.runId;
+
+  // --- integrations and secrets ---------------------------------------------
+
+  @override
+  Future<List<Integration>> integrations(String orgId) async => (await api.integrations.listIntegrations(orgId: orgId)).data!.items;
+
+  @override
+  Future<Integration> createIntegration(String orgId,
+          {required String kind, required String name, required Map<String, Object?> config, String? secret}) async =>
+      (await api.integrations.createIntegration(
+        createIntegrationRequest: CreateIntegrationRequest(
+          orgId: orgId,
+          kind: IntegrationKind.values.firstWhere((k) => k.value == kind),
+          name: name,
+          config: config,
+          secret: secret,
+        ),
+      ))
+          .data!;
+
+  @override
+  Future<IntegrationTestResult> testIntegration(String integrationId) async =>
+      (await api.integrations.testIntegration(id: integrationId)).data!;
+
+  @override
+  Future<Set<String>> botIntegrationIds(String botId) async {
+    final rows = await supabase.from('bot_integrations').select('integration_id').eq('bot_id', botId);
+    return {for (final r in rows) r['integration_id'] as String};
+  }
+
+  @override
+  Future<void> setBotIntegration(String botId, String integrationId, bool enabled) async {
+    if (enabled) {
+      await api.integrations.attachIntegration(id: botId, attachIntegrationRequest: AttachIntegrationRequest(integrationId: integrationId));
+    } else {
+      await supabase.from('bot_integrations').delete().eq('bot_id', botId).eq('integration_id', integrationId);
+    }
+  }
+
+  @override
+  Future<List<Secret>> secrets(String orgId) async => (await api.secrets.listSecrets(orgId: orgId)).data!.items;
+
+  @override
+  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts}) async =>
+      api.secrets.createSecret(createSecretRequest: CreateSecretRequest(orgId: orgId, name: name, value: value, allowedHosts: hosts));
+
+  @override
+  Future<void> deleteSecret(String secretId) async => api.secrets.deleteSecret(id: secretId);
+
+  // --- task board -----------------------------------------------------------
+
+  @override
+  Future<List<Task>> tasks(String orgId) async => (await api.tasks.listTasks(orgId: orgId)).data!.items;
+
+  @override
+  Future<void> setTaskStatus(String taskId, String status) async {
+    await supabase
+        .from('tasks')
+        .update({'status': status, 'updated_at': DateTime.now().toUtc().toIso8601String()}).eq('id', taskId);
+  }
 
   // --- computers ------------------------------------------------------------
 

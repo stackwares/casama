@@ -26,6 +26,8 @@ dependencies:
   sentry_flutter: ^10.3.0
   web_socket_channel: ^3.0.3
   dio: ^5.11.1
+  firebase_core: ^5.1.0
+  firebase_messaging: ^17.0.1
 
 dev_dependencies:
   integration_test:

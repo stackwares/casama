@@ -5,6 +5,7 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import 'template_picker.dart';
 
 String botStatusLabel(BuildContext context, BotStatusEnum s) => switch (s) {
       BotStatusEnum.working => context.l10n.botStatusWorking,
@@ -97,6 +98,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
   final _model = TextEditingController(text: 'openai/gpt-4o-mini');
   final _persona = TextEditingController();
   String? _credentialId;
+  String? _templateId;
   var _busy = false;
 
   @override
@@ -117,6 +119,14 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(l10n.newBot, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
+        TemplatePicker(
+          selected: _templateId,
+          onChanged: (t) => setState(() {
+            _templateId = t?.id;
+            if (t != null && _name.text.trim().isEmpty) _name.text = t.name;
+          }),
+        ),
+        const SizedBox(height: 8),
         TextField(controller: _name, decoration: InputDecoration(labelText: l10n.botName), autofocus: true, onChanged: (_) => setState(() {})),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
@@ -144,6 +154,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                           credentialId: _credentialId!,
                           model: _model.text.trim(),
                           persona: _persona.text.trim(),
+                          templateId: _templateId,
                         ),
                   );
                   if (!context.mounted) return;

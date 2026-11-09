@@ -119,6 +119,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onSelected: (v) => context.push('/bots/${widget.botId}/$v'),
             itemBuilder: (_) => [
               PopupMenuItem(value: 'memory', child: Text(l10n.memory)),
+              PopupMenuItem(value: 'routines', child: Text(l10n.routines)),
+              PopupMenuItem(value: 'integrations', child: Text(l10n.botIntegrations)),
               PopupMenuItem(value: 'settings', child: Text(l10n.botSettings)),
             ],
           ),
@@ -137,6 +139,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       itemBuilder: (context, i) => switch (chat.entries[i]) {
                         final MessageEntry m => MessageBubble(key: ValueKey(m.id), entry: m),
                         final ToolEntry t => ToolCard(key: ValueKey(t.callId), entry: t),
+                        final ApprovalEntry a => ApprovalPrompt(key: ValueKey(a.approvalId), entry: a, botName: name),
                         final NoticeEntry n => NoticeLine(
                             entry: n,
                             onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp),

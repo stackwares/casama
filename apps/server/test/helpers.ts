@@ -28,13 +28,21 @@ const noWorkflows: Workflows = {
   startRun: async () => {},
   testCredential: async () => ({ ok: false, model: "", latency_ms: 0, error: "no worker" }),
   close: async () => {},
+  signalRun: async () => {},
+  testIntegration: async () => ({ ok: false, tools: [], error: "no worker" }),
+  routineWebhook: async () => {},
 };
 
 export async function startHarness(
   opts: {
     email?: boolean;
     rateLimit?: number;
-    worker?: { fixtures: string };
+    worker?: {
+      fixtures: string;
+      push?: import("@kasama/agent").PushSender;
+      egressExemptCidrs?: string[];
+      providerBases?: { fal?: string; brave?: string; tavily?: string };
+    };
     workflowsClient?: boolean;
     sandbox?: SandboxStack;
   } = {},
@@ -67,6 +75,9 @@ export async function startHarness(
       supervisor: opts.sandbox
         ? { url: opts.sandbox.supervisorUrl, token: opts.sandbox.token }
         : undefined,
+      push: opts.worker.push,
+      egressExemptCidrs: opts.worker.egressExemptCidrs,
+      providerBases: opts.worker.providerBases,
     });
     workflows = await dbosWorkflows(tdb.url);
   } else if (opts.workflowsClient) {

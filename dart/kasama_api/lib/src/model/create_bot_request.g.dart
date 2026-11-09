@@ -23,6 +23,8 @@ abstract class _$CreateBotRequestCWProxy {
 
   CreateBotRequest budget(BotBudget? budget);
 
+  CreateBotRequest templateId(String? templateId);
+
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateBotRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
   /// Usage
@@ -38,6 +40,7 @@ abstract class _$CreateBotRequestCWProxy {
     Autonomy? autonomy,
     Visibility? visibility,
     BotBudget? budget,
+    String? templateId,
   });
 }
 
@@ -74,6 +77,10 @@ class _$CreateBotRequestCWProxyImpl implements _$CreateBotRequestCWProxy {
   CreateBotRequest budget(BotBudget? budget) => this(budget: budget);
 
   @override
+  CreateBotRequest templateId(String? templateId) =>
+      this(templateId: templateId);
+
+  @override
   /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateBotRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
   ///
   /// Usage
@@ -89,6 +96,7 @@ class _$CreateBotRequestCWProxyImpl implements _$CreateBotRequestCWProxy {
     Object? autonomy = const $CopyWithPlaceholder(),
     Object? visibility = const $CopyWithPlaceholder(),
     Object? budget = const $CopyWithPlaceholder(),
+    Object? templateId = const $CopyWithPlaceholder(),
   }) {
     return CreateBotRequest(
       orgId: orgId == const $CopyWithPlaceholder()
@@ -123,6 +131,10 @@ class _$CreateBotRequestCWProxyImpl implements _$CreateBotRequestCWProxy {
           ? _value.budget
           // ignore: cast_nullable_to_non_nullable
           : budget as BotBudget?,
+      templateId: templateId == const $CopyWithPlaceholder()
+          ? _value.templateId
+          // ignore: cast_nullable_to_non_nullable
+          : templateId as String?,
     );
   }
 }
@@ -166,6 +178,7 @@ CreateBotRequest _$CreateBotRequestFromJson(
         'budget',
         (v) => v == null ? null : BotBudget.fromJson(v as Map<String, dynamic>),
       ),
+      templateId: $checkedConvert('template_id', (v) => v as String?),
     );
     return val;
   },
@@ -174,6 +187,7 @@ CreateBotRequest _$CreateBotRequestFromJson(
     'personaMd': 'persona_md',
     'avatarUrl': 'avatar_url',
     'modelPolicy': 'model_policy',
+    'templateId': 'template_id',
   },
 );
 
@@ -187,6 +201,7 @@ Map<String, dynamic> _$CreateBotRequestToJson(CreateBotRequest instance) =>
       'autonomy': ?_$AutonomyEnumMap[instance.autonomy],
       'visibility': ?_$VisibilityEnumMap[instance.visibility],
       'budget': ?instance.budget?.toJson(),
+      'template_id': ?instance.templateId,
     };
 
 const _$AutonomyEnumMap = {

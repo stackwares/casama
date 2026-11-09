@@ -71,6 +71,18 @@ class SettingsScreen extends ConsumerWidget {
         ListTile(leading: const Icon(Icons.key_outlined), title: Text(l10n.modelKeys), onTap: () => context.push('/settings/keys')),
         ListTile(leading: const Icon(Icons.menu_book_outlined), title: Text(l10n.skills), onTap: () => context.push('/settings/skills')),
         ListTile(
+          key: const Key('settingsIntegrations'),
+          leading: const Icon(Icons.extension_outlined),
+          title: Text(l10n.integrations),
+          onTap: () => context.push('/settings/integrations'),
+        ),
+        ListTile(
+          key: const Key('settingsSecrets'),
+          leading: const Icon(Icons.lock_outline),
+          title: Text(l10n.secrets),
+          onTap: () => context.push('/settings/secrets'),
+        ),
+        ListTile(
           leading: const Icon(Icons.payments_outlined),
           title: Text(l10n.usage),
           subtitle: Text(l10n.usageMonth(formatUsd(month?.totalCostUsd ?? 0))),
@@ -134,6 +146,20 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
           onChanged: (v) => setState(() => _autonomy = v),
         ),
         const SizedBox(height: 8),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.schedule),
+          title: Text(l10n.routines),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push('/bots/${bot.id}/routines'),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.extension_outlined),
+          title: Text(l10n.botIntegrations),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push('/bots/${bot.id}/integrations'),
+        ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.model),

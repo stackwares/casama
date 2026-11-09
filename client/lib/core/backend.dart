@@ -30,6 +30,17 @@ class SkillView {
   final String? botId;
 }
 
+class NotificationView {
+  const NotificationView({required this.id, required this.kind, required this.title, required this.body, this.link, required this.createdAt, this.readAt});
+  final String id;
+  final String kind;
+  final String title;
+  final String body;
+  final String? link;
+  final DateTime createdAt;
+  final DateTime? readAt;
+}
+
 class RunSummary {
   const RunSummary({required this.id, required this.status, required this.trigger, required this.createdAt, required this.costUsd});
   final String id;
@@ -65,7 +76,8 @@ abstract class Backend {
 
   // Bots
   Future<List<Bot>> bots(String orgId);
-  Future<Bot> createBot(String orgId, {required String name, required String credentialId, required String model, String persona});
+  Future<Bot> createBot(String orgId, {required String name, required String credentialId, required String model, String persona, String? templateId});
+  Future<List<Template>> templates();
   Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy});
   Future<UsageReport> usage(String orgId, {String period});
 
@@ -87,6 +99,35 @@ abstract class Backend {
   Future<List<SkillView>> skills(String orgId);
   Future<void> saveSkill(String orgId, {String? id, String? botId, required String name, required String description, required String bodyMd, bool enabled = true});
   Future<void> deleteSkill(String id);
+
+  // Approvals and notifications
+  Future<List<Approval>> approvals(String orgId, {bool pendingOnly = true});
+  Future<Approval> decideApproval(String approvalId, {required bool approve, bool alwaysAllow = false});
+  Future<List<NotificationView>> notifications();
+  Future<void> markNotificationsRead();
+  /// New notifications for the signed-in user, live.
+  Stream<NotificationView> watchNotifications();
+  Future<void> registerDevice(String platform, String token);
+
+  // Routines
+  Future<List<Routine>> routines(String botId);
+  Future<CreatedRoutine> createRoutine(String botId, {required String name, required String instructions, required String trigger, String? cron, String? timezone});
+  Future<void> setRoutineEnabled(String routineId, bool enabled);
+  Future<String> runRoutine(String routineId);
+
+  // Integrations and secrets
+  Future<List<Integration>> integrations(String orgId);
+  Future<Integration> createIntegration(String orgId, {required String kind, required String name, required Map<String, Object?> config, String? secret});
+  Future<IntegrationTestResult> testIntegration(String integrationId);
+  Future<Set<String>> botIntegrationIds(String botId);
+  Future<void> setBotIntegration(String botId, String integrationId, bool enabled);
+  Future<List<Secret>> secrets(String orgId);
+  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts});
+  Future<void> deleteSecret(String secretId);
+
+  // Task board
+  Future<List<Task>> tasks(String orgId);
+  Future<void> setTaskStatus(String taskId, String status);
 
   // Computers
   Future<List<Computer>> computers(String orgId);

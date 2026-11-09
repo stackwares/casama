@@ -48,15 +48,15 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:kasama_api/kasama_api.dart';
 
 
-final api = KasamaApi().getBotsApi();
-final CreateBotRequest createBotRequest = ; // CreateBotRequest | 
-final String idempotencyKey = idempotencyKey_example; // String | Retries with the same key return the first result
+final api = KasamaApi().getApprovalsApi();
+final String id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final ApprovalDecisionRequest approvalDecisionRequest = ; // ApprovalDecisionRequest | 
 
 try {
-    final response = await api.createBot(createBotRequest, idempotencyKey);
+    final response = await api.decideApproval(id, approvalDecisionRequest);
     print(response);
 } catch on DioException (e) {
-    print("Exception when calling BotsApi->createBot: $e\n");
+    print("Exception when calling ApprovalsApi->decideApproval: $e\n");
 }
 
 ```
@@ -67,8 +67,11 @@ All URIs are relative to *http://localhost:8787*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*ApprovalsApi*](doc/ApprovalsApi.md) | [**decideApproval**](doc/ApprovalsApi.md#decideapproval) | **POST** /v1/approvals/{id}/decision | Approve or deny; denying cancels that step only
+[*ApprovalsApi*](doc/ApprovalsApi.md) | [**listApprovals**](doc/ApprovalsApi.md#listapprovals) | **GET** /v1/approvals | 
 [*BotsApi*](doc/BotsApi.md) | [**createBot**](doc/BotsApi.md#createbot) | **POST** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listBots**](doc/BotsApi.md#listbots) | **GET** /v1/bots | 
+[*BotsApi*](doc/BotsApi.md) | [**listTemplates**](doc/BotsApi.md#listtemplates) | **GET** /v1/templates | 
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
@@ -89,14 +92,28 @@ Class | Method | HTTP request | Description
 [*CredentialsApi*](doc/CredentialsApi.md) | [**createCredential**](doc/CredentialsApi.md#createcredential) | **POST** /v1/credentials | Store a model key in Vault; returns metadata only
 [*CredentialsApi*](doc/CredentialsApi.md) | [**listCredentials**](doc/CredentialsApi.md#listcredentials) | **GET** /v1/credentials | 
 [*CredentialsApi*](doc/CredentialsApi.md) | [**testCredential**](doc/CredentialsApi.md#testcredential) | **POST** /v1/credentials/{id}/test | Validate a key with a 1-token call
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**attachIntegration**](doc/IntegrationsApi.md#attachintegration) | **POST** /v1/bots/{id}/integrations | Let a bot use an integration&#39;s tools (optionally only some)
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**createIntegration**](doc/IntegrationsApi.md#createintegration) | **POST** /v1/integrations | Add an MCP server, OpenAPI source, Composio or Pipedream Connect
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**listIntegrations**](doc/IntegrationsApi.md#listintegrations) | **GET** /v1/integrations | 
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**testIntegration**](doc/IntegrationsApi.md#testintegration) | **POST** /v1/integrations/{id}/test | List tools to prove the connection works (refreshes the tool cache)
 [*MemoryApi*](doc/MemoryApi.md) | [**listMemories**](doc/MemoryApi.md#listmemories) | **GET** /v1/bots/{id}/memories | 
+[*RoutinesApi*](doc/RoutinesApi.md) | [**createRoutine**](doc/RoutinesApi.md#createroutine) | **POST** /v1/routines | Schedule a routine (cron in a timezone) or create a GitHub/custom webhook trigger
+[*RoutinesApi*](doc/RoutinesApi.md) | [**listRoutines**](doc/RoutinesApi.md#listroutines) | **GET** /v1/bots/{id}/routines | 
+[*RoutinesApi*](doc/RoutinesApi.md) | [**runRoutine**](doc/RoutinesApi.md#runroutine) | **POST** /v1/routines/{id}/run | Run a routine now
+[*RoutinesApi*](doc/RoutinesApi.md) | [**updateRoutine**](doc/RoutinesApi.md#updateroutine) | **PATCH** /v1/routines/{id} | 
 [*RunsApi*](doc/RunsApi.md) | [**cancelRun**](doc/RunsApi.md#cancelrun) | **POST** /v1/runs/{id}/cancel | Cancel a run and its subruns
 [*RunsApi*](doc/RunsApi.md) | [**getRun**](doc/RunsApi.md#getrun) | **GET** /v1/runs/{id} | 
 [*RunsApi*](doc/RunsApi.md) | [**listRunEvents**](doc/RunsApi.md#listrunevents) | **GET** /v1/runs/{id}/events | Events after a seq. Send Accept: text/event-stream to keep streaming live events (SSE).
+[*SecretsApi*](doc/SecretsApi.md) | [**createSecret**](doc/SecretsApi.md#createsecret) | **POST** /v1/secrets | Create a named secret with allowed hosts (value stored in Vault)
+[*SecretsApi*](doc/SecretsApi.md) | [**deleteSecret**](doc/SecretsApi.md#deletesecret) | **DELETE** /v1/secrets/{id} | 
+[*SecretsApi*](doc/SecretsApi.md) | [**listSecrets**](doc/SecretsApi.md#listsecrets) | **GET** /v1/secrets | 
 [*SystemApi*](doc/SystemApi.md) | [**getConfig**](doc/SystemApi.md#getconfig) | **GET** /v1/config | Public client configuration (no auth)
 [*SystemApi*](doc/SystemApi.md) | [**healthz**](doc/SystemApi.md#healthz) | **GET** /healthz | 
 [*SystemApi*](doc/SystemApi.md) | [**readyz**](doc/SystemApi.md#readyz) | **GET** /readyz | 
+[*TasksApi*](doc/TasksApi.md) | [**listTasks**](doc/TasksApi.md#listtasks) | **GET** /v1/tasks | 
 [*UsageApi*](doc/UsageApi.md) | [**getUsage**](doc/UsageApi.md#getusage) | **GET** /v1/usage | 
+[*WebhooksApi*](doc/WebhooksApi.md) | [**customWebhook**](doc/WebhooksApi.md#customwebhook) | **POST** /hooks/custom/{routine_id} | Custom webhook for a routine (X-Kasama-Signature: sha256&#x3D;HMAC-SHA256 of the body)
+[*WebhooksApi*](doc/WebhooksApi.md) | [**githubWebhook**](doc/WebhooksApi.md#githubwebhook) | **POST** /hooks/github/{routine_id} | GitHub webhook for a routine (X-Hub-Signature-256)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**acceptInvite**](doc/WorkspacesApi.md#acceptinvite) | **POST** /v1/invites/{token}/accept | Join an organization with an invite token
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createInvite**](doc/WorkspacesApi.md#createinvite) | **POST** /v1/orgs/{id}/invites | Invite someone by email (owners and admins)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createOrg**](doc/WorkspacesApi.md#createorg) | **POST** /v1/orgs | Create an organization; the caller becomes its owner
@@ -106,10 +123,15 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [Accepted](doc/Accepted.md)
+ - [Approval](doc/Approval.md)
+ - [ApprovalDecisionRequest](doc/ApprovalDecisionRequest.md)
+ - [ApprovalList](doc/ApprovalList.md)
  - [ApprovalRequestedEvent](doc/ApprovalRequestedEvent.md)
  - [ApprovalRequestedEventPayload](doc/ApprovalRequestedEventPayload.md)
  - [ApprovalResolvedEvent](doc/ApprovalResolvedEvent.md)
  - [ApprovalResolvedEventPayload](doc/ApprovalResolvedEventPayload.md)
+ - [AttachIntegrationRequest](doc/AttachIntegrationRequest.md)
  - [Autonomy](doc/Autonomy.md)
  - [Bot](doc/Bot.md)
  - [BotBudget](doc/BotBudget.md)
@@ -132,13 +154,23 @@ Class | Method | HTTP request | Description
  - [CreateCheckpointRequest](doc/CreateCheckpointRequest.md)
  - [CreateConversationRequest](doc/CreateConversationRequest.md)
  - [CreateCredentialRequest](doc/CreateCredentialRequest.md)
+ - [CreateIntegrationRequest](doc/CreateIntegrationRequest.md)
  - [CreateInviteRequest](doc/CreateInviteRequest.md)
  - [CreateOrganizationRequest](doc/CreateOrganizationRequest.md)
+ - [CreateRoutineRequest](doc/CreateRoutineRequest.md)
+ - [CreateSecretRequest](doc/CreateSecretRequest.md)
+ - [CreatedRoutine](doc/CreatedRoutine.md)
  - [Credential](doc/Credential.md)
  - [CredentialList](doc/CredentialList.md)
  - [CredentialTestResult](doc/CredentialTestResult.md)
  - [DeleteResult](doc/DeleteResult.md)
+ - [DeletedId](doc/DeletedId.md)
  - [Health](doc/Health.md)
+ - [Integration](doc/Integration.md)
+ - [IntegrationKind](doc/IntegrationKind.md)
+ - [IntegrationList](doc/IntegrationList.md)
+ - [IntegrationTestResult](doc/IntegrationTestResult.md)
+ - [IntegrationToolsInner](doc/IntegrationToolsInner.md)
  - [Invite](doc/Invite.md)
  - [InviteRole](doc/InviteRole.md)
  - [LeaseChangedEvent](doc/LeaseChangedEvent.md)
@@ -155,6 +187,7 @@ Class | Method | HTTP request | Description
  - [MessageDeltaEventPayload](doc/MessageDeltaEventPayload.md)
  - [ModelChoice](doc/ModelChoice.md)
  - [ModelPolicy](doc/ModelPolicy.md)
+ - [Ok](doc/Ok.md)
  - [OrgRole](doc/OrgRole.md)
  - [Organization](doc/Organization.md)
  - [OrganizationList](doc/OrganizationList.md)
@@ -163,6 +196,10 @@ Class | Method | HTTP request | Description
  - [ProblemErrorsInner](doc/ProblemErrorsInner.md)
  - [ProviderId](doc/ProviderId.md)
  - [PublicConfig](doc/PublicConfig.md)
+ - [Risk](doc/Risk.md)
+ - [Routine](doc/Routine.md)
+ - [RoutineList](doc/RoutineList.md)
+ - [RoutineTrigger](doc/RoutineTrigger.md)
  - [Run](doc/Run.md)
  - [RunCancelledEvent](doc/RunCancelledEvent.md)
  - [RunCancelledEventPayload](doc/RunCancelledEventPayload.md)
@@ -173,9 +210,12 @@ Class | Method | HTTP request | Description
  - [RunEventsPage](doc/RunEventsPage.md)
  - [RunFailedEvent](doc/RunFailedEvent.md)
  - [RunFailedEventPayload](doc/RunFailedEventPayload.md)
+ - [RunStarted](doc/RunStarted.md)
  - [RunStartedEvent](doc/RunStartedEvent.md)
  - [RunStartedEventPayload](doc/RunStartedEventPayload.md)
  - [RunStatus](doc/RunStatus.md)
+ - [Secret](doc/Secret.md)
+ - [SecretList](doc/SecretList.md)
  - [SendMessageRequest](doc/SendMessageRequest.md)
  - [SendMessageResponse](doc/SendMessageResponse.md)
  - [SkillLoadedEvent](doc/SkillLoadedEvent.md)
@@ -186,6 +226,11 @@ Class | Method | HTTP request | Description
  - [SubrunStartedEventPayload](doc/SubrunStartedEventPayload.md)
  - [TakeoverRequestedEvent](doc/TakeoverRequestedEvent.md)
  - [TakeoverRequestedEventPayload](doc/TakeoverRequestedEventPayload.md)
+ - [Task](doc/Task.md)
+ - [TaskList](doc/TaskList.md)
+ - [Template](doc/Template.md)
+ - [TemplateList](doc/TemplateList.md)
+ - [TemplateRoutinesInner](doc/TemplateRoutinesInner.md)
  - [TestCredentialRequest](doc/TestCredentialRequest.md)
  - [ToolCompletedEvent](doc/ToolCompletedEvent.md)
  - [ToolCompletedEventPayload](doc/ToolCompletedEventPayload.md)
@@ -195,6 +240,7 @@ Class | Method | HTTP request | Description
  - [ToolOutputEventPayload](doc/ToolOutputEventPayload.md)
  - [ToolStartedEvent](doc/ToolStartedEvent.md)
  - [ToolStartedEventPayload](doc/ToolStartedEventPayload.md)
+ - [UpdateRoutineRequest](doc/UpdateRoutineRequest.md)
  - [UploadResult](doc/UploadResult.md)
  - [UsageEvent](doc/UsageEvent.md)
  - [UsageEventPayload](doc/UsageEventPayload.md)

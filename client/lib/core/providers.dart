@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
@@ -94,6 +96,80 @@ final runsProvider = FutureProvider.family<List<RunSummary>, String>(
 final runEventsProvider = FutureProvider.family<List<RunEventItem>, String>(
   (ref, runId) => ref.watch(backendProvider).runEvents(runId),
 );
+
+// --- Phase 4: autonomy ------------------------------------------------------
+
+final templatesProvider = FutureProvider<List<Template>>((ref) => ref.watch(backendProvider).templates());
+
+final approvalsProvider = FutureProvider<List<Approval>>((ref) async {
+  final org = ref.watch(currentOrgProvider);
+  if (org == null) return const [];
+  return ref.watch(backendProvider).approvals(org.id);
+});
+
+/// The notification inbox: loaded once, then kept live from the user's Realtime topic.
+class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
+  @override
+  Future<List<NotificationView>> build() async {
+    final signedIn = ref.watch(signedInProvider).value ?? false;
+    if (!signedIn) return const [];
+    final backend = ref.watch(backendProvider);
+    final sub = backend.watchNotifications().listen((n) {
+      final current = state.value ?? const <NotificationView>[];
+      if (current.any((c) => c.id == n.id)) return;
+      state = AsyncData([n, ...current]);
+      if (n.kind == 'approval') ref.invalidate(approvalsProvider);
+    });
+    ref.onDispose(sub.cancel);
+    return backend.notifications();
+  }
+
+  Future<void> markAllRead() async {
+    await ref.read(backendProvider).markNotificationsRead();
+    final now = DateTime.now();
+    state = AsyncData([
+      for (final n in state.value ?? const <NotificationView>[])
+        NotificationView(id: n.id, kind: n.kind, title: n.title, body: n.body, link: n.link, createdAt: n.createdAt, readAt: n.readAt ?? now),
+    ]);
+  }
+}
+
+final notificationsProvider = AsyncNotifierProvider<NotificationsNotifier, List<NotificationView>>(NotificationsNotifier.new);
+
+/// Badge count for the inbox: pending approvals plus unread notifications (approval notices are not double counted).
+final inboxBadgeProvider = Provider<int>((ref) {
+  final approvals = ref.watch(approvalsProvider).value?.length ?? 0;
+  final unread = (ref.watch(notificationsProvider).value ?? const <NotificationView>[])
+      .where((n) => n.readAt == null && n.kind != 'approval')
+      .length;
+  return approvals + unread;
+});
+
+final routinesProvider = FutureProvider.family<List<Routine>, String>(
+  (ref, botId) => ref.watch(backendProvider).routines(botId),
+);
+
+final integrationsProvider = FutureProvider<List<Integration>>((ref) async {
+  final org = ref.watch(currentOrgProvider);
+  if (org == null) return const [];
+  return ref.watch(backendProvider).integrations(org.id);
+});
+
+final botIntegrationIdsProvider = FutureProvider.family<Set<String>, String>(
+  (ref, botId) => ref.watch(backendProvider).botIntegrationIds(botId),
+);
+
+final secretsProvider = FutureProvider<List<Secret>>((ref) async {
+  final org = ref.watch(currentOrgProvider);
+  if (org == null) return const [];
+  return ref.watch(backendProvider).secrets(org.id);
+});
+
+final tasksProvider = FutureProvider<List<Task>>((ref) async {
+  final org = ref.watch(currentOrgProvider);
+  if (org == null) return const [];
+  return ref.watch(backendProvider).tasks(org.id);
+});
 
 /// Formats US dollars for cost meters.
 String formatUsd(num value) {

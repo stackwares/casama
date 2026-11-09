@@ -39,6 +39,8 @@ class CreateBotRequest {
      this.visibility,
 
      this.budget,
+
+     this.templateId,
   });
 
   @JsonKey(
@@ -137,6 +139,19 @@ class CreateBotRequest {
 
 
 
+      /// Start from a starter template (persona, skills, routines)
+  @JsonKey(
+    
+    name: r'template_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? templateId;
+
+
+
 
 
     @override
@@ -148,7 +163,8 @@ class CreateBotRequest {
       other.modelPolicy == modelPolicy &&
       other.autonomy == autonomy &&
       other.visibility == visibility &&
-      other.budget == budget;
+      other.budget == budget &&
+      other.templateId == templateId;
 
     @override
     int get hashCode =>
@@ -159,7 +175,8 @@ class CreateBotRequest {
         modelPolicy.hashCode +
         autonomy.hashCode +
         visibility.hashCode +
-        budget.hashCode;
+        budget.hashCode +
+        templateId.hashCode;
 
   factory CreateBotRequest.fromJson(Map<String, dynamic> json) => _$CreateBotRequestFromJson(json);
 

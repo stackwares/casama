@@ -18,7 +18,13 @@ enum ProviderId {
       @JsonValue(r'openrouter')
       openrouter(r'openrouter'),
       @JsonValue(r'openai_compatible')
-      openaiCompatible(r'openai_compatible');
+      openaiCompatible(r'openai_compatible'),
+      @JsonValue(r'fal')
+      fal(r'fal'),
+      @JsonValue(r'brave_search')
+      braveSearch(r'brave_search'),
+      @JsonValue(r'tavily')
+      tavily(r'tavily');
 
   const ProviderId(this.value);
 

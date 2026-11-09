@@ -278,5 +278,187 @@
         "type": "int"
       }
     }
-  }
+  },
+  "aBot": "A bot",
+  "addIntegration": "Add integration",
+  "addSecret": "Add secret",
+  "allowedHosts": "Allowed hosts",
+  "allowedHostsHelp": "Comma-separated, for example api.github.com",
+  "alwaysAllow": "Always allow",
+  "approval": "Approval",
+  "approvalAlreadyDecided": "This request was already decided or has expired.",
+  "approvals": "Approvals",
+  "approve": "Approve",
+  "approved": "Approved",
+  "authHeaderOptional": "Authorization header (optional)",
+  "authSecretName": "Auth secret name (optional)",
+  "authSecretNameHelp": "Name of a secret from Settings › Secrets, sent as a bearer token",
+  "baseUrlOptional": "Base URL (optional)",
+  "blankBot": "Blank",
+  "botIntegrations": "Integrations for this bot",
+  "changeStatus": "Change status",
+  "composioToolkits": "Toolkits (comma-separated, for example github, gmail)",
+  "copySecret": "Copy secret",
+  "cronExpression": "Cron expression",
+  "cronHelp": "minute hour day month weekday",
+  "denied": "Denied",
+  "deny": "Deny",
+  "everyDayAt7": "Every day at 7:00",
+  "everyHour": "Every hour",
+  "expired": "Expired",
+  "inbox": "Inbox",
+  "integrationName": "Name",
+  "integrationNameHelp": "Lowercase letters, numbers and underscores",
+  "integrationType": "Type",
+  "integrations": "Integrations",
+  "kindMcp": "MCP server",
+  "kindOpenapi": "OpenAPI",
+  "markAllRead": "Mark all as read",
+  "mondaysAt9": "Mondays at 9:00",
+  "newRoutine": "New routine",
+  "noApprovals": "Nothing needs your approval right now.",
+  "noIntegrations": "No integrations yet. Connect an MCP server, an OpenAPI source, Composio or Pipedream.",
+  "noIntegrationsForBot": "Add integrations in Settings first.",
+  "noNotifications": "No notifications yet.",
+  "noRoutines": "No routines yet. Routines run this bot on a schedule or when a webhook arrives.",
+  "noSecrets": "No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.",
+  "noTasks": "The task board is empty.",
+  "notifications": "Notifications",
+  "openInbox": "Open inbox",
+  "pipedreamApps": "Apps (comma-separated)",
+  "pipedreamClientId": "Client ID",
+  "pipedreamClientSecret": "Client secret",
+  "pipedreamProject": "Project ID",
+  "riskHigh": "High risk",
+  "riskLow": "Low risk",
+  "riskMedium": "Medium risk",
+  "routineGithub": "On GitHub events",
+  "routineInstructions": "Instructions",
+  "routineInstructionsHint": "What should the bot do each time?",
+  "routineName": "Name",
+  "routineStarted": "Routine started",
+  "routineWebhook": "On webhook",
+  "routines": "Routines",
+  "runNow": "Run now",
+  "secretName": "Name",
+  "secretNameHelp": "Uppercase, for example GITHUB_TOKEN",
+  "secretValue": "Value",
+  "secrets": "Secrets",
+  "serverUrl": "Server URL",
+  "specUrl": "OpenAPI spec URL",
+  "startFrom": "Start from",
+  "storedEncrypted": "Stored encrypted; never shown again",
+  "taskBlocked": "Blocked",
+  "taskBoard": "Tasks",
+  "taskDoing": "In progress",
+  "taskDone": "Done",
+  "taskTodo": "To do",
+  "test": "Test",
+  "timezone": "Timezone",
+  "triggerGithub": "GitHub",
+  "triggerSchedule": "Schedule",
+  "triggerWebhook": "Webhook",
+  "viewRun": "View run",
+  "webhookCreated": "Webhook created",
+  "webhookSecret": "Signing secret",
+  "webhookShownOnce": "Copy the signing secret now. It is shown only once.",
+  "webhookUrl": "URL",
+  "approvalsCount": "Approvals ({n})",
+  "@approvalsCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "botWantsTo": "{bot}: {summary}",
+  "@botWantsTo": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      },
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "integrationFailed": "Connection failed: {error}",
+  "@integrationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "integrationOk": "{n, plural, =1{Connected, 1 tool} other{Connected, {n} tools}}",
+  "@integrationOk": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "needsApprovalFor": "{bot} needs your approval to use {tool}",
+  "@needsApprovalFor": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      },
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "nextRun": "Next: {when}",
+  "@nextRun": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "onlySentTo": "Only sent to {hosts}",
+  "@onlySentTo": {
+    "placeholders": {
+      "hosts": {
+        "type": "String"
+      }
+    }
+  },
+  "requestedAgo": "requested {when}",
+  "@requestedAgo": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "routineSchedule": "{cron} ({timezone})",
+  "@routineSchedule": {
+    "placeholders": {
+      "cron": {
+        "type": "String"
+      },
+      "timezone": {
+        "type": "String"
+      }
+    }
+  },
+  "templateIncludesRoutines": "Includes routines: {names}.",
+  "@templateIncludesRoutines": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "toolCount": "{n, plural, =1{1 tool} other{{n} tools}}",
+  "@toolCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "weekdaysAt9": "Weekdays at 9:00"
 }

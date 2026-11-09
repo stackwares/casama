@@ -13,6 +13,7 @@ export function builtinTools(deps: {
 
   registry.register({
     name: "memory.search",
+    readOnly: true,
     description:
       "Search your long-term memory about the user and past work. Returns the most relevant memories.",
     risk: "low",
@@ -64,6 +65,7 @@ export function builtinTools(deps: {
 
   registry.register({
     name: "skills.load",
+    readOnly: true,
     description: "Load the full instructions of one skill from the skills index by name.",
     risk: "low",
     schema: z.object({ name: z.string().min(1).max(63) }),

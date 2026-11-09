@@ -7,6 +7,10 @@ import '../features/bots/bots_screen.dart';
 import '../features/chat/chat_screen.dart';
 import '../features/computer/computer_screen.dart';
 import '../features/home/home_shell.dart';
+import '../features/inbox/inbox_screen.dart';
+import '../features/integrations/integrations_screen.dart';
+import '../features/routines/routines_screen.dart';
+import '../features/settings/secrets_screen.dart';
 import '../features/memory/memory_screen.dart';
 import '../features/settings/model_keys_screen.dart';
 import '../features/settings/settings_screen.dart';
@@ -23,7 +27,7 @@ class _RouterRefresh extends ChangeNotifier {
   }
 }
 
-/// Routes, including the deep links push notifications use (/bots/:id/chat).
+/// Routes, including the deep links push notifications use (/bots/:id/chat, /approvals/:id).
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _RouterRefresh(ref);
   ref.onDispose(refresh.dispose);
@@ -67,8 +71,13 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(path: ':botId/memory', builder: (_, s) => MemoryScreen(botId: s.pathParameters['botId']!)),
               GoRoute(path: ':botId/settings', builder: (_, s) => BotSettingsScreen(botId: s.pathParameters['botId']!)),
+              GoRoute(path: ':botId/routines', builder: (_, s) => RoutinesScreen(botId: s.pathParameters['botId']!)),
+              GoRoute(path: ':botId/integrations', builder: (_, s) => BotIntegrationsScreen(botId: s.pathParameters['botId']!)),
             ],
           ),
+          GoRoute(path: '/inbox', builder: (_, s) => InboxScreen(initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? 0)),
+          GoRoute(path: '/tasks', builder: (_, _) => const InboxScreen(initialTab: 2)),
+          GoRoute(path: '/approvals/:id', builder: (_, s) => ApprovalScreen(approvalId: s.pathParameters['id']!)),
           GoRoute(path: '/computer', builder: (_, _) => const ComputerScreen()),
           GoRoute(
             path: '/settings',
@@ -76,6 +85,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(path: 'keys', builder: (_, _) => const ModelKeysScreen()),
               GoRoute(path: 'skills', builder: (_, _) => const SkillsScreen()),
+              GoRoute(path: 'integrations', builder: (_, _) => const IntegrationsScreen()),
+              GoRoute(path: 'secrets', builder: (_, _) => const SecretsScreen()),
             ],
           ),
         ],

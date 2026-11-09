@@ -31,8 +31,20 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   schema: S;
   risk: Risk;
   requires?: { computer?: boolean; desktop?: boolean; vision?: boolean };
-  /** Arguments that may carry {{secret:NAME}} placeholders (Phase 4). */
+  /** Arguments may carry {{secret:NAME}} placeholders, swapped in only for allowed hosts. */
   acceptsSecrets?: boolean;
+  /** Where the call sends data, for secret host allowlists (may ask the computer, e.g. the browser's page). */
+  destinationHost?: (args: z.infer<S>, ctx: ToolContext) => Promise<string | null> | string | null;
+  /** No side effects: never needs approval. */
+  readOnly?: boolean;
+  /** Asks for approval under the default autonomy whatever its risk (for example media generation). */
+  confirm?: boolean;
+  /** Risk that depends on the arguments (overrides `risk`). */
+  riskFor?: (args: z.infer<S>) => Risk;
+  /** The output is untrusted (web pages, outside services): later medium-risk calls need approval. */
+  untrustedOutput?: boolean;
+  /** Raw JSON Schema for tools defined outside Zod (integration tools). */
+  jsonSchema?: Record<string, unknown>;
   execute(args: z.infer<S>, ctx: ToolContext): Promise<ToolResult>;
 }
 
@@ -47,6 +59,14 @@ export class ToolError extends Error {
 /** One registry for every tool: schema, risk, capability needs and executor. */
 export class ToolRegistry {
   private readonly tools = new Map<string, ToolDefinition>();
+
+  /** A copy of this registry plus extra tools (per-run integration tools). */
+  with(defs: ToolDefinition[]) {
+    const r = new ToolRegistry();
+    for (const d of this.tools.values()) r.tools.set(d.name, d);
+    for (const d of defs) r.tools.set(d.name, d);
+    return r;
+  }
 
   register<S extends z.ZodType>(def: ToolDefinition<S>) {
     if (this.tools.has(def.name)) throw new Error(`tool ${def.name} already registered`);
@@ -80,7 +100,9 @@ export class ToolRegistry {
     return defs.map((t) => ({
       name: ToolRegistry.wireName(t.name),
       description: t.description,
-      inputSchema: z.toJSONSchema(t.schema, { target: "draft-7" }) as Record<string, unknown>,
+      inputSchema:
+        t.jsonSchema ??
+        (z.toJSONSchema(t.schema, { target: "draft-7" }) as Record<string, unknown>),
     }));
   }
 

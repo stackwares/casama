@@ -1,12 +1,14 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { routes } from "@kasama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@kasama/db";
+import { templateById } from "@kasama/domain";
 import { withSpan } from "@kasama/observability";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { streamSSE } from "hono/streaming";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
+import { applyTemplate } from "./autonomy.ts";
 
 const { bots, conversations, runs, memories, modelCredentials } = schema;
 const TERMINAL_EVENTS = new Set(["run.completed", "run.failed", "run.cancelled"]);
@@ -165,17 +167,30 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           orgId: body.org_id,
           createdBy: claims.sub,
           name: body.name,
-          personaMd: body.persona_md ?? "",
+          personaMd:
+            body.persona_md ??
+            (body.template_id ? (templateById(body.template_id)?.persona ?? "") : ""),
           avatarUrl: body.avatar_url,
           modelPolicy: body.model_policy ?? {},
-          autonomy: body.autonomy ?? "ask_risky",
+          autonomy:
+            body.autonomy ??
+            (body.template_id ? templateById(body.template_id)?.autonomy : undefined) ??
+            "ask_risky",
           visibility: body.visibility ?? "team",
           budget: { per_run_usd: 1, daily_usd: 10, ...body.budget },
         })
         .returning(),
     );
     if (!bot) throw new Error("bot insert returned nothing");
-    await audit(bot.orgId, claims.sub, "bot.created", "bot", bot.id);
+    if (body.template_id) await applyTemplate(db, bot.id, bot.orgId, claims.sub, body.template_id);
+    await audit(
+      bot.orgId,
+      claims.sub,
+      "bot.created",
+      "bot",
+      bot.id,
+      body.template_id ? { template: body.template_id } : {},
+    );
     return c.json(botOut(bot), 201);
   });
 
@@ -284,6 +299,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await withUserSession(db, claims, (tx) =>
       tx.execute(sql`select public.request_run_cancel(${id}::uuid)`),
     );
+    await deps.workflows.signalRun(id);
     return c.json(runOut(await visibleRun(claims, id)), 202);
   });
 

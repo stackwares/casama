@@ -1,0 +1,176 @@
+{
+  "name": "autonomy",
+  "turns": [
+    {
+      "when": { "systemIncludes": "extract lasting memories" },
+      "events": [
+        { "type": "text", "text": "{\"memories\":[]}" },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 50, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastUserIncludes": "Prepare the morning summary" },
+      "events": [
+        { "type": "text", "text": "Good morning! Three things changed overnight." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 400, "outputTokens": 20 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "clean the system folder" },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": { "callId": "hr1", "name": "mcp__risky__add", "args": { "a": 1, "b": 2 } }
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 20 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "mcp.risky.add",
+        "lastUserIncludes": "clean the system folder"
+      },
+      "events": [
+        { "type": "text", "text": "Handled the system folder request." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 10 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "use the calculator" },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": { "callId": "mc1", "name": "mcp__calc__add", "args": { "a": 40, "b": 2 } }
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 20 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastRole": "tool", "lastToolName": "mcp.calc.add" },
+      "events": [
+        { "type": "text", "text": "The calculator says 42." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 10 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "draw a teal robot" },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "img1",
+            "name": "media__image__generate",
+            "args": { "prompt": "a teal robot" }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 20 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastRole": "tool", "lastToolName": "media.image.generate" },
+      "events": [
+        { "type": "text", "text": "Here is the robot." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 10 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "research with a helper" },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "sub1",
+            "name": "subagent__spawn",
+            "args": { "task": "Endless research loop", "budget_usd": 0.01 }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 20 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastUserIncludes": "endless research loop" },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": { "callId": "loop", "name": "memory__search", "args": { "query": "more" } }
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 50000, "outputTokens": 5000 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastRole": "tool", "lastToolName": "subagent.spawn" },
+      "events": [
+        { "type": "text", "text": "My helper hit its budget." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 10 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastUserIncludes": "Review the pushed commit" },
+      "events": [
+        { "type": "text", "text": "Reviewed the push." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 10 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

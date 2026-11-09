@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 
+import '../../../core/providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets.dart';
 import '../chat_controller.dart';
@@ -155,6 +157,78 @@ class NoticeLine extends StatelessWidget {
         if (entry.kind == NoticeKind.checkpoint && entry.refId != null && onRestore != null)
           TextButton(onPressed: () => onRestore!(entry.refId!), child: Text(l10n.restore)),
       ]),
+    );
+  }
+}
+
+/// An approval request inside the chat: approve or deny right where the bot paused.
+class ApprovalPrompt extends ConsumerStatefulWidget {
+  const ApprovalPrompt({super.key, required this.entry, required this.botName});
+  final ApprovalEntry entry;
+  final String botName;
+
+  @override
+  ConsumerState<ApprovalPrompt> createState() => _ApprovalPromptState();
+}
+
+class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
+  var _busy = false;
+  String? _localDecision;
+
+  Future<void> _decide(bool approve, {bool always = false}) async {
+    setState(() => _busy = true);
+    final ok = await runGuarded(context, () async {
+      await ref.read(backendProvider).decideApproval(widget.entry.approvalId, approve: approve, alwaysAllow: always);
+      return true;
+    });
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (ok == true) _localDecision = approve ? 'approved' : 'denied';
+    });
+    if (ok == true) ref.invalidate(approvalsProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final e = widget.entry;
+    final decision = e.decision ?? _localDecision;
+    final high = e.risk == 'high';
+    return Card(
+      key: const Key('chatApproval'),
+      color: high ? theme.colorScheme.errorContainer : theme.colorScheme.secondaryContainer,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            Icon(high ? Icons.warning_amber : Icons.verified_user_outlined, size: 18),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.needsApprovalFor(widget.botName, e.tool), style: theme.textTheme.titleSmall)),
+          ]),
+          const SizedBox(height: 6),
+          Text(
+            const JsonEncoder.withIndent('  ').convert(e.args),
+            style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+            maxLines: 8,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          if (decision != null)
+            Text(
+              switch (decision) { 'approved' => l10n.approved, 'denied' => l10n.denied, _ => l10n.expired },
+              style: theme.textTheme.labelLarge,
+            )
+          else
+            Wrap(alignment: WrapAlignment.end, spacing: 8, children: [
+              TextButton(onPressed: _busy ? null : () => _decide(false), child: Text(l10n.deny)),
+              TextButton(onPressed: _busy ? null : () => _decide(true, always: true), child: Text(l10n.alwaysAllow)),
+              FilledButton(key: const Key('chatApprove'), onPressed: _busy ? null : () => _decide(true), child: Text(l10n.approve)),
+            ]),
+        ]),
+      ),
     );
   }
 }

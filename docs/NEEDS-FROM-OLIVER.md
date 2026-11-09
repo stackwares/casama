@@ -13,6 +13,10 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 | Pipedream Connect project (client id and secret, free tier)                 | Pipedream Connect integration tools (Phase 4)                  | Same as above                                                             |
 | fal.ai API key                                                              | `media.image.generate` / `media.video.generate` (Phase 4)      | `MediaProvider` fal.ai adapter; tested against a mock                     |
 
+| Firebase project: service account JSON and app options | Push notifications (approvals, routine results) | Worker `FCM_SERVICE_ACCOUNT_JSON`; app `--dart-define=FIREBASE_API_KEY, FIREBASE_APP_ID, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_PROJECT_ID` (web also `FIREBASE_VAPID_KEY`) | Sender tested with a recording stub; app registration builds on 4 platforms, not run with a real project. iOS also needs an APNs key uploaded to Firebase |
+| Brave Search or Tavily API key (free tiers) | `web.search` tool | Credential with provider `brave_search` or `tavily` | Tested against mocks |
+| Verification of the Composio and Pipedream REST shapes with real keys | Confidence that the adapters match the live APIs (D-052) | `packages/agent/src/integrations.ts` | Written from public docs; mock-tested only |
+
 ## Infrastructure
 
 | Item                                                      | Needed for                                                                       | Status                                                                                              |

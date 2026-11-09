@@ -5,6 +5,7 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../bots/template_picker.dart';
 import '../settings/model_keys_screen.dart';
 
 /// First run: create or join a workspace, add a model key, create a bot.
@@ -21,6 +22,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _botName = TextEditingController(text: 'Assistant');
   final _model = TextEditingController(text: 'openai/gpt-4o-mini');
   final _persona = TextEditingController();
+  String? _templateId;
   String? _credentialId;
   var _busy = false;
 
@@ -111,6 +113,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 title: Text(l10n.createFirstBot),
                 isActive: step == 2,
                 content: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  TemplatePicker(
+                    selected: _templateId,
+                    onChanged: (t) => setState(() {
+                      _templateId = t?.id;
+                      if (t != null) _botName.text = t.name;
+                    }),
+                  ),
+                  const SizedBox(height: 8),
                   TextField(key: const Key('botName'), controller: _botName, decoration: InputDecoration(labelText: l10n.botName)),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
@@ -140,6 +150,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                     credentialId: _credentialId!,
                                     model: _model.text.trim(),
                                     persona: _persona.text.trim(),
+                                    templateId: _templateId,
                                   );
                               ref.invalidate(botsProvider);
                               if (context.mounted) context.go('/bots/${bot.id}/chat');

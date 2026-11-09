@@ -70,7 +70,7 @@ select throws_ok($$ select public.request_run_cancel('50000000-0000-0000-0000-00
 select lives_ok($$ select public.request_run_cancel('50000000-0000-0000-0000-00000000000a') $$, 'can cancel own org run');
 reset role;
 select is((select count(*)::int from public.run_events where type = 'tampered'), 0, 'run events cannot be updated');
-select is((select count(*)::int from public.run_events), 3, 'run events cannot be deleted');
+select is((select count(*)::int from public.run_events where run_id in ('50000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-00000000000b')), 3, 'run events cannot be deleted');
 
 select * from finish();
 rollback;

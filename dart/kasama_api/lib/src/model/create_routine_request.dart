@@ -1,0 +1,174 @@
+//
+// AUTO-GENERATED FILE, DO NOT MODIFY!
+//
+
+// ignore_for_file: unused_element
+import 'package:kasama_api/src/model/routine_trigger.dart';
+import 'package:copy_with_extension/copy_with_extension.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'create_routine_request.g.dart';
+
+
+@CopyWith()
+@JsonSerializable(
+  checked: true,
+  createToJson: true,
+  disallowUnrecognizedKeys: false,
+  explicitToJson: true,
+)
+class CreateRoutineRequest {
+  /// Returns a new [CreateRoutineRequest] instance.
+  CreateRoutineRequest({
+
+    required  this.botId,
+
+    required  this.name,
+
+    required  this.instructions,
+
+     this.trigger,
+
+     this.scheduleCron,
+
+     this.timezone,
+
+     this.notify,
+
+     this.events,
+  });
+
+  @JsonKey(
+    
+    name: r'bot_id',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final String botId;
+
+
+
+  @JsonKey(
+    
+    name: r'name',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final String name;
+
+
+
+  @JsonKey(
+    
+    name: r'instructions',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final String instructions;
+
+
+
+  @JsonKey(
+    
+    name: r'trigger',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final RoutineTrigger? trigger;
+
+
+
+      /// 5-field cron, required for schedule triggers
+  @JsonKey(
+    
+    name: r'schedule_cron',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? scheduleCron;
+
+
+
+      /// IANA timezone; defaults to your profile's
+  @JsonKey(
+    
+    name: r'timezone',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? timezone;
+
+
+
+  @JsonKey(
+    
+    name: r'notify',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? notify;
+
+
+
+      /// GitHub event names to accept
+  @JsonKey(
+    
+    name: r'events',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? events;
+
+
+
+
+
+    @override
+    bool operator ==(Object other) => identical(this, other) || other is CreateRoutineRequest &&
+      other.botId == botId &&
+      other.name == name &&
+      other.instructions == instructions &&
+      other.trigger == trigger &&
+      other.scheduleCron == scheduleCron &&
+      other.timezone == timezone &&
+      other.notify == notify &&
+      other.events == events;
+
+    @override
+    int get hashCode =>
+        botId.hashCode +
+        name.hashCode +
+        instructions.hashCode +
+        trigger.hashCode +
+        scheduleCron.hashCode +
+        timezone.hashCode +
+        notify.hashCode +
+        events.hashCode;
+
+  factory CreateRoutineRequest.fromJson(Map<String, dynamic> json) => _$CreateRoutineRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CreateRoutineRequestToJson(this);
+
+  @override
+  String toString() {
+    return toJson().toString();
+  }
+
+}
+

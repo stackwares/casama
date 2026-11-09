@@ -64,6 +64,12 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "shell.exec",
+    // Destructive commands that reach outside the workspace are high risk.
+    riskFor: (args: { command: string }) =>
+      isDestructive(args.command) &&
+      /(^|[\s'"=])(\/(?!home\/kasama\/workspace)|~\/(?!workspace)|\.\.\/)/.test(args.command)
+        ? "high"
+        : "low",
     description:
       "Run a bash command in your computer (Ubuntu, home /home/kasama, working directory ~/workspace by default). Output streams to the user. Use for code, files, git, package installs and CLIs.",
     risk: "low",
@@ -94,6 +100,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "files.read",
+    readOnly: true,
     description: "Read a text file from your computer. Relative paths are inside ~/workspace.",
     risk: "low",
     requires,
@@ -136,6 +143,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "files.list",
+    readOnly: true,
     description: "List a directory in your computer (default ~/workspace).",
     risk: "low",
     requires,
@@ -157,6 +165,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "files.search",
+    readOnly: true,
     description:
       "Search text files in your computer for a phrase (case-insensitive). Returns path, line and text.",
     risk: "low",
@@ -189,6 +198,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.open",
+    untrustedOutput: true,
     description:
       "Open a URL in your computer's browser. Then use browser.snapshot to see interactive elements with refs like @e1.",
     risk: "low",
@@ -202,6 +212,8 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.snapshot",
+    untrustedOutput: true,
+    readOnly: true,
     description:
       "Accessibility snapshot of the current page. Interactive elements get refs (@e1, @e2) to use with click and fill.",
     risk: "low",
@@ -215,6 +227,8 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.read",
+    untrustedOutput: true,
+    readOnly: true,
     description: "Read the current page's main text content.",
     risk: "low",
     requires,
@@ -227,6 +241,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.click",
+    untrustedOutput: true,
     description: "Click an element by its ref from the last snapshot (for example @e3).",
     risk: "low",
     requires,
@@ -239,10 +254,23 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.fill",
+    untrustedOutput: true,
     description: "Clear a form field by ref and type text into it.",
     risk: "low",
     requires,
     acceptsSecrets: true,
+    // Secrets may only be typed into pages on the secret's allowed hosts.
+    destinationHost: async (_args: unknown, ctx: ToolContext) => {
+      if (!ctx.computer) return null;
+      const r = await collectExec(
+        (await ctx.computer()).exec("agent-browser get url", { timeoutMs: 20_000 }),
+      );
+      try {
+        return new URL(r.stdout.trim()).hostname;
+      } catch {
+        return null;
+      }
+    },
     schema: z.object({ ref: z.string().regex(/^@?e\d+$/), text: z.string().max(20_000) }),
     async execute(args, ctx) {
       const ref = args.ref.startsWith("@") ? args.ref : `@${args.ref}`;
@@ -255,6 +283,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.type",
+    untrustedOutput: true,
     description: "Type text into the focused element.",
     risk: "low",
     requires,
@@ -266,6 +295,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.press",
+    untrustedOutput: true,
     description: "Press a key, for example Enter, Tab, Escape or Control+a.",
     risk: "low",
     requires,
@@ -280,6 +310,7 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.scroll",
+    untrustedOutput: true,
     description: "Scroll the page up or down.",
     risk: "low",
     requires,

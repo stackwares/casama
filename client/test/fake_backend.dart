@@ -110,8 +110,33 @@ class FakeBackend implements Backend {
   @override
   Future<List<Bot>> bots(String orgId) async => [bot()];
   @override
-  Future<Bot> createBot(String orgId, {required String name, required String credentialId, required String model, String persona = ''}) async =>
-      bot();
+  Future<Bot> createBot(String orgId,
+      {required String name, required String credentialId, required String model, String persona = '', String? templateId}) async {
+    createdBotTemplate = templateId;
+    return bot();
+  }
+
+  String? createdBotTemplate;
+
+  @override
+  Future<List<Template>> templates() async => [
+        Template(
+          id: 'daily-briefing',
+          name: 'Daily briefing',
+          description: 'A morning summary of what changed.',
+          autonomy: TemplateAutonomyEnum.askRisky,
+          skills: const ['briefing'],
+          routines: [TemplateRoutinesInner(name: 'Morning summary', scheduleCron: '0 7 * * *')],
+        ),
+        Template(
+          id: 'writer',
+          name: 'Writer',
+          description: 'Drafts and edits documents.',
+          autonomy: TemplateAutonomyEnum.askRisky,
+          skills: const [],
+          routines: const [],
+        ),
+      ];
   @override
   Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy}) async {}
   @override
@@ -170,6 +195,141 @@ class FakeBackend implements Backend {
       {String? id, String? botId, required String name, required String description, required String bodyMd, bool enabled = true}) async {}
   @override
   Future<void> deleteSkill(String id) async {}
+
+  // --- Phase 4 ---------------------------------------------------------------
+
+  final decisions = <String, String>{};
+  List<Approval> pendingApprovals = [
+    Approval(
+      id: 'appr1',
+      botId: botId,
+      runId: runId,
+      toolName: 'shell.exec',
+      argsRedacted: const {'cmd': 'rm -rf /data/old'},
+      summary: 'Run a destructive shell command',
+      risk: Risk.high,
+      status: ApprovalStatusEnum.pending,
+      decidedAt: null,
+      expiresAt: DateTime.now().add(const Duration(hours: 24)),
+      createdAt: DateTime.now(),
+    ),
+  ];
+  final notificationsController = StreamController<NotificationView>.broadcast();
+  List<NotificationView> storedNotifications = [
+    NotificationView(id: 'n1', kind: 'approval', title: 'Ada needs approval', body: 'Run a destructive shell command', link: '/approvals/appr1', createdAt: DateTime.now()),
+  ];
+  var notificationsRead = false;
+  final devices = <String>[];
+  final routineList = <Routine>[];
+  final routinesRun = <String>[];
+  final integrationList = <Integration>[];
+  final attached = <String>{};
+  final secretList = <Secret>[];
+  final taskStatus = <String, String>{};
+
+  @override
+  Future<List<Approval>> approvals(String orgId, {bool pendingOnly = true}) async =>
+      pendingApprovals.where((a) => !decisions.containsKey(a.id)).toList();
+  @override
+  Future<Approval> decideApproval(String approvalId, {required bool approve, bool alwaysAllow = false}) async {
+    decisions[approvalId] = approve ? (alwaysAllow ? 'always' : 'approved') : 'denied';
+    return pendingApprovals.firstWhere((a) => a.id == approvalId);
+  }
+
+  @override
+  Future<List<NotificationView>> notifications() async => storedNotifications;
+  @override
+  Future<void> markNotificationsRead() async => notificationsRead = true;
+  @override
+  Stream<NotificationView> watchNotifications() => notificationsController.stream;
+  @override
+  Future<void> registerDevice(String platform, String token) async => devices.add('$platform:$token');
+
+  @override
+  Future<List<Routine>> routines(String botId) async => routineList;
+  @override
+  Future<CreatedRoutine> createRoutine(String botId,
+      {required String name, required String instructions, required String trigger, String? cron, String? timezone}) async {
+    final r = CreatedRoutine(
+      id: 'r${routineList.length + 1}',
+      botId: botId,
+      name: name,
+      instructionsMd: instructions,
+      scheduleCron: cron,
+      timezone: timezone ?? 'America/Chicago',
+      trigger: RoutineTrigger.values.firstWhere((t) => t.value == trigger),
+      notify: true,
+      enabled: true,
+      nextRunAt: trigger == 'schedule' ? DateTime(2026, 11, 11, 7) : null,
+      lastRunAt: null,
+      conversationId: null,
+      createdAt: DateTime.now(),
+      webhookUrl: trigger == 'schedule' ? null : 'http://localhost/hooks/custom/r1',
+      webhookSecret: trigger == 'schedule' ? null : 'whsec_test',
+    );
+    routineList.add(Routine.fromJson(r.toJson()));
+    return r;
+  }
+
+  @override
+  Future<void> setRoutineEnabled(String routineId, bool enabled) async {}
+  @override
+  Future<String> runRoutine(String routineId) async {
+    routinesRun.add(routineId);
+    return runId;
+  }
+
+  @override
+  Future<List<Integration>> integrations(String orgId) async => integrationList;
+  @override
+  Future<Integration> createIntegration(String orgId,
+      {required String kind, required String name, required Map<String, Object?> config, String? secret}) async {
+    final i = Integration(
+      id: 'i${integrationList.length + 1}',
+      orgId: orgId,
+      kind: IntegrationKind.values.firstWhere((k) => k.value == kind),
+      name: name,
+      status: IntegrationStatusEnum.pending,
+      error: null,
+      tools: const [],
+      toolsCachedAt: null,
+      createdAt: DateTime.now(),
+    );
+    integrationList.add(i);
+    return i;
+  }
+
+  @override
+  Future<IntegrationTestResult> testIntegration(String integrationId) async => IntegrationTestResult(ok: true, tools: const ['add', 'subtract']);
+  @override
+  Future<Set<String>> botIntegrationIds(String botId) async => attached;
+  @override
+  Future<void> setBotIntegration(String botId, String integrationId, bool enabled) async =>
+      enabled ? attached.add(integrationId) : attached.remove(integrationId);
+
+  @override
+  Future<List<Secret>> secrets(String orgId) async => secretList;
+  @override
+  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts}) async =>
+      secretList.add(Secret(id: 's${secretList.length + 1}', orgId: orgId, name: name, allowedHosts: hosts, allowedBotIds: null, createdAt: DateTime.now()));
+  @override
+  Future<void> deleteSecret(String secretId) async => secretList.removeWhere((s) => s.id == secretId);
+
+  @override
+  Future<List<Task>> tasks(String orgId) async => [
+        Task(
+          id: 't1',
+          title: 'Summarize the release notes',
+          detailsMd: '',
+          status: TaskStatusEnum.values.firstWhere((s) => s.value == (taskStatus['t1'] ?? 'todo')),
+          assigneeBotId: botId,
+          createdByBotId: botId,
+          resultMd: null,
+          updatedAt: DateTime.now(),
+        ),
+      ];
+  @override
+  Future<void> setTaskStatus(String taskId, String status) async => taskStatus[taskId] = status;
 
   @override
   Future<List<Computer>> computers(String orgId) async => [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../bots/bots_screen.dart';
 import '../computer/computer_screen.dart';
@@ -17,21 +18,25 @@ class HomeShell extends ConsumerWidget {
   final Widget child;
 
   int get _index {
-    if (location.startsWith('/computer')) return 1;
-    if (location.startsWith('/settings')) return 2;
+    if (location.startsWith('/inbox') || location.startsWith('/approvals') || location.startsWith('/tasks')) return 1;
+    if (location.startsWith('/computer')) return 2;
+    if (location.startsWith('/settings')) return 3;
     return 0;
   }
 
   String? get _botId => RegExp(r'^/bots/([^/]+)').firstMatch(location)?.group(1);
 
-  void _go(BuildContext context, int i) => context.go(const ['/bots', '/computer', '/settings'][i]);
+  void _go(BuildContext context, int i) => context.go(const ['/bots', '/inbox', '/computer', '/settings'][i]);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final size = layoutFor(MediaQuery.sizeOf(context).width);
+    final badge = ref.watch(inboxBadgeProvider);
+    Widget inboxIcon(IconData icon) => Badge(isLabelVisible: badge > 0, label: Text('$badge'), child: Icon(icon));
     final destinations = [
       (Icons.smart_toy_outlined, Icons.smart_toy, l10n.navBots),
+      (Icons.inbox_outlined, Icons.inbox, l10n.inbox),
       (Icons.computer_outlined, Icons.computer, l10n.navComputer),
       (Icons.settings_outlined, Icons.settings, l10n.navSettings),
     ];
@@ -42,7 +47,14 @@ class HomeShell extends ConsumerWidget {
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
           onDestinationSelected: (i) => _go(context, i),
-          destinations: [for (final d in destinations) NavigationDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: d.$3)],
+          destinations: [
+            for (final d in destinations)
+              NavigationDestination(
+                icon: d.$1 == Icons.inbox_outlined ? inboxIcon(d.$1) : Icon(d.$1),
+                selectedIcon: d.$2 == Icons.inbox ? inboxIcon(d.$2) : Icon(d.$2),
+                label: d.$3,
+              ),
+          ],
         ),
       );
     }
@@ -51,7 +63,14 @@ class HomeShell extends ConsumerWidget {
       selectedIndex: _index,
       onDestinationSelected: (i) => _go(context, i),
       labelType: NavigationRailLabelType.all,
-      destinations: [for (final d in destinations) NavigationRailDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: Text(d.$3))],
+      destinations: [
+        for (final d in destinations)
+          NavigationRailDestination(
+            icon: d.$1 == Icons.inbox_outlined ? inboxIcon(d.$1) : Icon(d.$1),
+            selectedIcon: d.$2 == Icons.inbox ? inboxIcon(d.$2) : Icon(d.$2),
+            label: Text(d.$3),
+          ),
+      ],
     );
 
     final inChat = _botId != null && location.contains('/chat');

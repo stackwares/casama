@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { Database } from "@kasama/db";
-import { checkBudget, RUN_DEFAULTS } from "@kasama/domain";
+import { APPROVAL_TTL_MS, checkBudget, needsApproval, RUN_DEFAULTS } from "@kasama/domain";
 import type { Logger } from "@kasama/observability";
 import type { SandboxHandle } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
+import { z } from "zod";
 import type { ComputerService } from "./computers.ts";
 import { buildContext, offloadLargeResult } from "./context.ts";
 import type { CredentialResolver, ModelPolicy } from "./credentials.ts";
@@ -19,9 +20,26 @@ import {
   type ToolCall,
   type Usage,
 } from "./gateway/types.ts";
+import {
+  createAdapter,
+  type IntegrationToolInfo,
+  integrationToolName,
+  loadIntegration,
+  refreshIntegration,
+  wrapIntegrationOutput,
+} from "./integrations.ts";
 import { COMPACTION_SYSTEM, extractMemories, MemoryService } from "./memory.ts";
+import type { NotificationService } from "./notifications.ts";
 import { Redactor } from "./redact.ts";
-import { ToolError, ToolRegistry } from "./tools/registry.ts";
+import { safeFetch } from "./safe-fetch.ts";
+import {
+  hasPlaceholders,
+  loadSecrets,
+  type NamedSecret,
+  resolvePlaceholders,
+  SecretError,
+} from "./secrets.ts";
+import { type ToolDefinition, ToolError, ToolRegistry } from "./tools/registry.ts";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
 export type StepRunner = <T>(name: string, fn: () => Promise<T>) => Promise<T>;
@@ -42,6 +60,12 @@ export interface RunDeps {
   fallback?: FallbackOptions;
   deltaIntervalMs?: number;
   cancelPollMs?: number;
+  /** Push and in-app notifications (approval requests, routine results). */
+  notifications?: NotificationService;
+  /** Durable wait for an approval decision (DBOS.recv in the worker; polling by default). */
+  waitForApproval?: (approvalId: string, runId: string, timeoutMs: number) => Promise<void>;
+  /** Guarded fetch for integration calls (private ranges blocked). */
+  fetch?: typeof fetch;
 }
 
 const TERMINAL = new Set(["completed", "failed", "cancelled"]);
@@ -66,6 +90,12 @@ interface RunInfo {
   current: { id: string; text: string } | null;
   history: ChatMessage[];
   skills: Array<{ name: string; description: string }>;
+  botOwner: string | null;
+  parentRunId: string | null;
+  /** Subagents: tool allowlist and time limit from the run's budget. */
+  allowedTools: string[] | null;
+  wallTimeMs: number | null;
+  routine: { id: string; notify: boolean; createdBy: string | null; name: string } | null;
 }
 
 type StepOutcome = { ok: true } | { ok: false; code: string; message: string };
@@ -90,22 +120,34 @@ export function partsText(content: unknown): string {
  */
 export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: string }> {
   const { step, db } = deps;
-  const limits = { ...RUN_DEFAULTS, ...deps.limits };
   const log = deps.logger;
 
   const info = await step("load", () => loadRun(db, runId));
   if (!info) return { status: "missing" };
   if (TERMINAL.has(info.status)) return { status: info.status };
+  const limits = {
+    ...RUN_DEFAULTS,
+    ...deps.limits,
+    ...(info.wallTimeMs ? { wallTimeMs: info.wallTimeMs } : {}),
+  };
 
-  // In-process caches only (never persisted in step outputs): keys and the redactor.
+  // In-process caches only (never persisted in step outputs): keys, secrets and the redactor.
   let redactorCache: Redactor | undefined;
+  let secretsCache: NamedSecret[] | undefined;
+  const secrets = async () => {
+    secretsCache ??= await loadSecrets(db, info.orgId, info.botId);
+    return secretsCache;
+  };
   const redactor = async () => {
     if (!redactorCache) {
-      redactorCache = new Redactor();
+      const r = new Redactor();
       for (const choice of policyChoices(info.policy)) {
         const m = await deps.credentials.resolve(info.orgId, choice).catch(() => null);
-        redactorCache.add(m?.apiKey, "model_key");
+        r.add(m?.apiKey, "model_key");
       }
+      // Every secret this bot could use is scrubbed from events, logs and model input.
+      for (const sec of await secrets()) r.add(sec.value, sec.name);
+      redactorCache = r;
     }
     return redactorCache;
   };
@@ -129,19 +171,36 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       return memory.recall(info.botId, info.current.text);
     });
 
+    // Integration tools (MCP, OpenAPI, Composio, Pipedream) allowed for this bot.
+    const integrationSpecs = await step("integrations", () =>
+      loadIntegrationTools(db, info, deps.fetch ?? safeFetch, secrets).catch((err) => {
+        log?.warn("integration tools unavailable", {
+          run_id: runId,
+          error: (err as Error).message,
+        });
+        return [] as IntegrationToolSpec[];
+      }),
+    );
+    const registry = deps.tools.with(
+      integrationDefs(db, integrationSpecs, deps.fetch ?? safeFetch, secrets),
+    );
+
     const primaryModel = info.policy.primary?.model ?? "unknown";
     const caps = capabilitiesOf(primaryModel);
-    const available = deps.tools.available({
-      computer: !!deps.computers,
-      desktop: false,
-      vision: caps.vision,
-    });
-    const toolSpecs = deps.tools.specs(available);
+    const allowed = info.allowedTools;
+    const available = registry.available(
+      { computer: !!deps.computers, desktop: false, vision: caps.vision },
+      allowed ? (name) => allowed.some((a) => name === a || name.startsWith(`${a}.`)) : undefined,
+    );
+    const toolSpecs = registry.specs(available);
 
     const contextFor = (summary: string) =>
       buildContext({
         botName: info.botName,
-        persona: info.persona,
+        persona:
+          info.trigger === "subagent" || info.trigger === "delegation"
+            ? `${info.persona}\n\nYou are working on a task handed to you by another run. Finish it, then reply with a concise summary of what you did and found.`.trim()
+            : info.persona,
         autonomy: info.autonomy,
         now: new Date(info.now),
         timezone: info.timezone,
@@ -167,6 +226,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
 
     const turn: ChatMessage[] = [];
     let final: { text: string; messageId: string } | null = null;
+    // Untrusted content read since the last approval (web pages, outside services).
+    let untrusted = false;
 
     for (let i = 0; ; i++) {
       const check = await step(`check-${i}`, () => checkRun(db, info, i, limits));
@@ -200,9 +261,36 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       }
       turn.push({ role: "assistant", content: out.text, toolCalls: out.toolCalls });
       for (const call of out.toolCalls) {
-        const res = await step(`tool-${i}-${call.callId}`, () =>
-          toolStep(deps, info, call, bus, redactor),
+        const gate = await step(`gate-${i}-${call.callId}`, () =>
+          approvalGate(deps, registry, info, call, untrusted, bus, redactor),
         );
+        let blocked: string | null = null;
+        if (gate.approvalId) {
+          const wait = deps.waitForApproval ?? ((id, run, ms) => pollApproval(db, id, run, ms));
+          await wait(gate.approvalId, info.runId, APPROVAL_TTL_MS);
+          const outcome = await step(`resolve-${i}-${call.callId}`, () =>
+            resolveApproval(db, info, gate.approvalId as string, bus),
+          );
+          if (outcome === "cancelled") {
+            await step("cancel", () => finishCancelled(db, info, bus));
+            return { status: "cancelled" };
+          }
+          if (outcome === "approved") untrusted = false;
+          else {
+            blocked =
+              outcome === "denied"
+                ? "The user denied this action. Do not retry it; continue without it or ask the user what to do instead."
+                : "The approval request expired without a decision. Continue without this action.";
+          }
+        }
+        const res = blocked
+          ? await step(`blocked-${i}-${call.callId}`, () =>
+              blockedStep(deps, info, call, blocked as string, bus),
+            )
+          : await step(`tool-${i}-${call.callId}`, () =>
+              toolStep(deps, registry, info, call, bus, redactor, secrets),
+            );
+        if (res.untrusted) untrusted = true;
         turn.push({ role: "tool", callId: call.callId, name: call.name, content: res.content });
       }
     }
@@ -223,6 +311,28 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       }),
     );
     await step("complete", () => finishCompleted(db, info, finalMessage.messageId, bus));
+    if (info.routine?.notify && deps.notifications) {
+      const notifications = deps.notifications;
+      const routine = info.routine;
+      await step("notify", async () => {
+        const to = routine.createdBy ?? info.botOwner;
+        if (!to) return;
+        await notifications
+          .notify(to, info.orgId, "routine_result", {
+            title: `${info.botName}: ${routine.name}`,
+            body: finalMessage.text.replace(/\s+/g, " ").slice(0, 240),
+            link: `/bots/${info.botId}/chat${info.conversationId ? `?c=${info.conversationId}` : ""}`,
+            bot_id: info.botId,
+            run_id: info.runId,
+          })
+          .catch((err) =>
+            log?.warn("routine notification failed", {
+              run_id: runId,
+              error: (err as Error).message,
+            }),
+          );
+      });
+    }
     return { status: "completed" };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -274,14 +384,23 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     timezone: string | null;
     summary: string | null;
     summary_through: Date | null;
+    bot_owner: string | null;
+    parent_run_id: string | null;
+    routine_id: string | null;
+    routine_notify: boolean | null;
+    routine_created_by: string | null;
+    routine_name: string | null;
   }>(sql`
     select r.id, r.org_id, r.bot_id, r.conversation_id, r.created_by, r.trigger, r.status, r.budget as run_budget,
-           b.name, b.persona_md, b.autonomy, b.model_policy, b.budget as bot_budget,
-           p.timezone, c.summary, c.summary_through
+           b.name, b.persona_md, b.autonomy, b.model_policy, b.budget as bot_budget, b.created_by as bot_owner,
+           coalesce(p.timezone, po.timezone) as timezone, c.summary, c.summary_through, r.parent_run_id,
+           r.routine_id, rt.notify as routine_notify, rt.created_by as routine_created_by, rt.name as routine_name
     from public.runs r
     join public.bots b on b.id = r.bot_id
     left join public.profiles p on p.user_id = r.created_by
+    left join public.profiles po on po.user_id = b.created_by
     left join public.conversations c on c.id = r.conversation_id
+    left join public.routines rt on rt.id = r.routine_id
     where r.id = ${runId}::uuid`);
   if (!row) return null;
 
@@ -306,6 +425,9 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
       .map((m) => ({ role: m.role as "user" | "assistant", content: partsText(m.content) }))
       .filter((m) => m.content.length > 0);
   }
+  // Subagent runs carry their task in the run's budget instead of a conversation message.
+  const task = typeof row.run_budget?.task === "string" ? (row.run_budget.task as string) : null;
+  if (!current && task) current = { id: `task-${row.id}`, text: task };
   const skills = await db.execute<{ name: string; description: string }>(sql`
     select distinct on (name) name, description from public.skills
     where org_id = ${row.org_id}::uuid and enabled and (bot_id is null or bot_id = ${row.bot_id}::uuid)
@@ -332,6 +454,21 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     current,
     history,
     skills: [...skills],
+    botOwner: row.bot_owner,
+    parentRunId: row.parent_run_id,
+    allowedTools: Array.isArray(row.run_budget?.tools) ? (row.run_budget.tools as string[]) : null,
+    wallTimeMs:
+      typeof row.run_budget?.timeout_s === "number"
+        ? (row.run_budget.timeout_s as number) * 1000
+        : null,
+    routine: row.routine_id
+      ? {
+          id: row.routine_id,
+          notify: row.routine_notify ?? false,
+          createdBy: row.routine_created_by,
+          name: row.routine_name ?? "",
+        }
+      : null,
   };
 }
 
@@ -522,21 +659,22 @@ async function modelStep(
 
 async function toolStep(
   deps: RunDeps,
+  registry: ToolRegistry,
   info: RunInfo,
   call: ToolCall,
   busFn: () => Promise<EventBus>,
   redactorFn: () => Promise<Redactor>,
-) {
+  secretsFn: () => Promise<NamedSecret[]>,
+): Promise<{ content: string; untrusted: boolean }> {
   const bus = await busFn();
   const redactor = await redactorFn();
   const started = Date.now();
-  await bus.append(info.runId, "tool.started", {
-    call_id: call.callId,
-    tool: call.name,
-    args_redacted: redactor.value(call.args),
-  });
+  let untrusted = false;
   try {
-    const { def, args } = deps.tools.parse(call.name, call.args);
+    const parsed = registry.parse(call.name, call.args);
+    const def = parsed.def;
+    let args = parsed.args as Record<string, unknown>;
+    untrusted = def.untrustedOutput === true;
     const emit = (type: string, payload: Record<string, unknown>) =>
       bus.append(info.runId, type, payload).then(() => undefined);
     // The computer is started or restored on first use and touched on every call.
@@ -552,7 +690,34 @@ async function toolStep(
       }
       return computer;
     };
-    const res = await def.execute(args, {
+    const toolCtx = {
+      runId: info.runId,
+      botId: info.botId,
+      orgId: info.orgId,
+      output: (chunk: string) =>
+        bus
+          .append(info.runId, "tool.output", { call_id: call.callId, chunk: redactor.text(chunk) })
+          .then(() => undefined),
+      emit,
+      computer: deps.computers ? async () => (await getComputer()).handle : undefined,
+    };
+    // {{secret:NAME}} placeholders are filled in only now, only for tools that accept them,
+    // and only when the destination host is in the secret's allowlist.
+    if (hasPlaceholders(args)) {
+      if (!def.acceptsSecrets)
+        throw new ToolError(
+          "secrets_not_accepted",
+          `${def.name} does not accept {{secret:...}} placeholders.`,
+        );
+      const host = (await def.destinationHost?.(args as never, toolCtx)) ?? null;
+      try {
+        args = resolvePlaceholders(args, await secretsFn(), host);
+      } catch (err) {
+        if (err instanceof SecretError) throw new ToolError(err.code, err.message);
+        throw err;
+      }
+    }
+    const res = await def.execute(args as never, {
       runId: info.runId,
       botId: info.botId,
       orgId: info.orgId,
@@ -598,7 +763,7 @@ async function toolStep(
       artifact_path: res.artifactPath ?? off.artifactPath,
       duration_ms: Date.now() - started,
     });
-    return { content };
+    return { content, untrusted };
   } catch (err) {
     const code = err instanceof ToolError ? err.code : "tool_error";
     const message = redactor.text(err instanceof Error ? err.message : String(err));
@@ -607,7 +772,7 @@ async function toolStep(
       error_code: code,
       message,
     });
-    return { content: `Error (${code}): ${message}` };
+    return { content: `Error (${code}): ${message}`, untrusted };
   }
 }
 
@@ -728,6 +893,9 @@ async function extractStep(
 }
 
 async function setTerminal(db: Database, info: RunInfo, status: string, error: unknown) {
+  await db.execute(
+    sql`update public.approvals set status = 'expired' where run_id = ${info.runId}::uuid and status = 'pending'`,
+  );
   const rows = await db.execute<{ id: string }>(sql`
     update public.runs set status = ${status}, ended_at = now(), error = ${error ? JSON.stringify(error) : null}::jsonb
     where id = ${info.runId}::uuid and status not in ('completed', 'failed', 'cancelled') returning id`);
@@ -771,4 +939,255 @@ async function finishCancelled(db: Database, info: RunInfo, busFn: () => Promise
       cancelled_by: run?.cancelled_by ?? null,
     });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Approvals
+// ---------------------------------------------------------------------------
+
+/** One-line, human-readable summary of a tool call for approval cards and push notifications. */
+function describeCall(tool: string, args: Record<string, unknown>) {
+  const key = ["command", "url", "query", "prompt", "title", "task", "path", "content"].find(
+    (k) => typeof args[k] === "string",
+  );
+  const detail = key ? String(args[key]).replace(/\s+/g, " ").slice(0, 160) : "";
+  return detail ? `${tool}: ${detail}` : tool;
+}
+
+/**
+ * Records tool.started, applies the approval policy and, when needed, creates the approval
+ * request, pauses the run and notifies the bot's owner. Idempotent per call.
+ */
+async function approvalGate(
+  deps: RunDeps,
+  registry: ToolRegistry,
+  info: RunInfo,
+  call: ToolCall,
+  untrusted: boolean,
+  busFn: () => Promise<EventBus>,
+  redactorFn: () => Promise<Redactor>,
+): Promise<{ approvalId: string | null }> {
+  const bus = await busFn();
+  const redactor = await redactorFn();
+  const argsRedacted = redactor.value(call.args);
+  await bus.append(info.runId, "tool.started", {
+    call_id: call.callId,
+    tool: call.name,
+    args_redacted: argsRedacted,
+  });
+  let def: ToolDefinition;
+  let args: Record<string, unknown>;
+  try {
+    const parsed = registry.parse(call.name, call.args);
+    def = parsed.def;
+    args = parsed.args as Record<string, unknown>;
+  } catch {
+    return { approvalId: null }; // the tool step reports the error
+  }
+  const risk = def.riskFor?.(args as never) ?? def.risk;
+  const [grant] = await deps.db.execute<{ id: string }>(
+    sql`select id from public.tool_grants where bot_id = ${info.botId}::uuid and tool_name = ${call.name}`,
+  );
+  const needed = needsApproval({
+    autonomy: info.autonomy,
+    risk,
+    readOnly: def.readOnly === true,
+    confirmUnderDefault: def.confirm === true,
+    untrustedSinceApproval: untrusted,
+    granted: !!grant,
+  });
+  if (!needed) return { approvalId: null };
+
+  const summary = `${info.botName} wants to run ${describeCall(call.name, argsRedacted as Record<string, unknown>)}`;
+  const expires = new Date(Date.now() + APPROVAL_TTL_MS).toISOString();
+  const inserted = await deps.db.execute<{ id: string; expires_at: Date }>(sql`
+    insert into public.approvals (org_id, bot_id, run_id, call_id, tool_name, args_redacted, summary, risk, expires_at)
+    values (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, ${call.callId}, ${call.name},
+            ${JSON.stringify(argsRedacted)}::jsonb, ${summary.slice(0, 500)}, ${risk}, ${expires}::timestamptz)
+    on conflict (run_id, call_id) do update set summary = excluded.summary
+    returning id, expires_at`);
+  const approval = inserted[0];
+  if (!approval) throw new Error("approval insert returned nothing");
+  await deps.db.execute(
+    sql`update public.runs set status = 'waiting_approval' where id = ${info.runId}::uuid and status = 'running'`,
+  );
+  await deps.db.execute(
+    sql`update public.bots set status = 'waiting' where id = ${info.botId}::uuid`,
+  );
+  await bus.append(info.runId, "approval.requested", {
+    approval_id: approval.id,
+    tool: call.name,
+    args_redacted: argsRedacted,
+    risk,
+    expires_at: new Date(approval.expires_at).toISOString(),
+  });
+  const recipients = new Set([info.createdBy, info.botOwner].filter((u): u is string => !!u));
+  for (const user of recipients) {
+    await deps.notifications
+      ?.notify(user, info.orgId, "approval_request", {
+        title: `${info.botName} needs your approval`,
+        body: summary.slice(0, 240),
+        link: `/approvals/${approval.id}`,
+        approval_id: approval.id,
+        bot_id: info.botId,
+        run_id: info.runId,
+      })
+      .catch((err) =>
+        deps.logger?.warn("approval notification failed", { error: (err as Error).message }),
+      );
+  }
+  return { approvalId: approval.id };
+}
+
+/** Default wait: polls until the approval is decided, the run is cancelled, or the timeout passes. */
+async function pollApproval(db: Database, approvalId: string, _runId: string, timeoutMs: number) {
+  const until = Date.now() + timeoutMs;
+  while (Date.now() < until) {
+    const [row] = await db.execute<{ status: string; cancel: Date | null }>(sql`
+      select a.status, r.cancel_requested_at as cancel from public.approvals a join public.runs r on r.id = a.run_id
+      where a.id = ${approvalId}::uuid`);
+    if (row?.status !== "pending" || row.cancel) return;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+}
+
+/** Reads the decision (expiring it if still pending), resumes the run and emits approval.resolved. */
+async function resolveApproval(
+  db: Database,
+  info: RunInfo,
+  approvalId: string,
+  busFn: () => Promise<EventBus>,
+) {
+  const [run] = await db.execute<{ cancel: Date | null }>(
+    sql`select cancel_requested_at as cancel from public.runs where id = ${info.runId}::uuid`,
+  );
+  const [row] = await db.execute<{ status: string; decided_by: string | null }>(sql`
+    update public.approvals set status = case when status = 'pending' then 'expired' else status end
+    where id = ${approvalId}::uuid returning status, decided_by`);
+  const status = (row?.status ?? "expired") as "approved" | "denied" | "expired";
+  if (!run?.cancel) {
+    await db.execute(
+      sql`update public.runs set status = 'running' where id = ${info.runId}::uuid and status = 'waiting_approval'`,
+    );
+    await db.execute(sql`update public.bots set status = 'working' where id = ${info.botId}::uuid`);
+  }
+  await (await busFn()).append(info.runId, "approval.resolved", {
+    approval_id: approvalId,
+    decision: status,
+    decided_by: row?.decided_by ?? null,
+  });
+  return run?.cancel ? ("cancelled" as const) : status;
+}
+
+/** A denied or expired step: the model is told, the run continues. */
+async function blockedStep(
+  _deps: RunDeps,
+  info: RunInfo,
+  call: ToolCall,
+  message: string,
+  busFn: () => Promise<EventBus>,
+) {
+  await (await busFn()).append(info.runId, "tool.failed", {
+    call_id: call.callId,
+    error_code: "approval_denied",
+    message,
+  });
+  return { content: message, untrusted: false };
+}
+
+// ---------------------------------------------------------------------------
+// Integration tools
+// ---------------------------------------------------------------------------
+
+export interface IntegrationToolSpec {
+  integrationId: string;
+  kind: string;
+  integration: string;
+  tool: string;
+  fullName: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+  risk: "low" | "medium" | "high";
+}
+
+const INTEGRATION_CACHE_MS = 24 * 60 * 60 * 1000;
+
+/** The integration tools a bot may use (refreshing caches older than 24 hours). Serializable. */
+async function loadIntegrationTools(
+  db: Database,
+  info: RunInfo,
+  fetchImpl: typeof fetch,
+  secretsFn: () => Promise<NamedSecret[]>,
+): Promise<IntegrationToolSpec[]> {
+  const rows = await db.execute<{
+    id: string;
+    kind: string;
+    name: string;
+    tools_cache: IntegrationToolInfo[];
+    tools_cached_at: Date | null;
+    risk_overrides: Record<string, "low" | "medium" | "high">;
+    tool_allowlist: string[] | null;
+  }>(sql`
+    select i.id, i.kind, i.name, i.tools_cache, i.tools_cached_at, i.risk_overrides, bi.tool_allowlist
+    from public.bot_integrations bi join public.integrations i on i.id = bi.integration_id
+    where bi.bot_id = ${info.botId}::uuid and i.status <> 'error'`);
+  const out: IntegrationToolSpec[] = [];
+  for (const row of rows) {
+    let tools = row.tools_cache ?? [];
+    if (
+      !row.tools_cached_at ||
+      Date.now() - new Date(row.tools_cached_at).getTime() > INTEGRATION_CACHE_MS
+    ) {
+      const r = await refreshIntegration(db, row.id, {
+        fetch: fetchImpl,
+        secrets: await secretsFn(),
+      });
+      if (r.ok) tools = r.tools;
+    }
+    for (const t of tools) {
+      if (row.tool_allowlist && !row.tool_allowlist.includes(t.name)) continue;
+      out.push({
+        integrationId: row.id,
+        kind: row.kind,
+        integration: row.name,
+        tool: t.name,
+        fullName: integrationToolName({ kind: row.kind as "mcp", name: row.name }, t.name),
+        description: t.description.slice(0, 1000),
+        inputSchema: t.inputSchema ?? { type: "object" },
+        risk: row.risk_overrides?.[t.name] ?? t.risk ?? "medium",
+      });
+    }
+  }
+  return out;
+}
+
+/** Tool definitions that call integrations; output is untrusted. */
+function integrationDefs(
+  db: Database,
+  specs: IntegrationToolSpec[],
+  fetchImpl: typeof fetch,
+  secretsFn: () => Promise<NamedSecret[]>,
+): ToolDefinition[] {
+  return specs.map((spec) => ({
+    name: spec.fullName,
+    description: `[${spec.kind}:${spec.integration}] ${spec.description}`,
+    risk: spec.risk,
+    untrustedOutput: true,
+    jsonSchema: { type: "object", ...spec.inputSchema },
+    schema: z.record(z.string(), z.unknown()),
+    async execute(args: Record<string, unknown>) {
+      const rec = await loadIntegration(db, spec.integrationId);
+      if (!rec) throw new ToolError("integration_not_found", "This integration was removed.");
+      const adapter = createAdapter(rec, { fetch: fetchImpl, secrets: await secretsFn() });
+      try {
+        const text = await adapter.callTool(spec.tool, args);
+        return {
+          content: wrapIntegrationOutput(rec, text),
+          preview: text.replace(/\s+/g, " ").slice(0, 200),
+        };
+      } finally {
+        await adapter.close?.();
+      }
+    },
+  }));
 }

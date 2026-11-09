@@ -490,4 +490,334 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get aBot => 'A bot';
+
+  @override
+  String get addIntegration => 'Add integration';
+
+  @override
+  String get addSecret => 'Add secret';
+
+  @override
+  String get allowedHosts => 'Allowed hosts';
+
+  @override
+  String get allowedHostsHelp => 'Comma-separated, for example api.github.com';
+
+  @override
+  String get alwaysAllow => 'Always allow';
+
+  @override
+  String get approval => 'Approval';
+
+  @override
+  String get approvalAlreadyDecided =>
+      'This request was already decided or has expired.';
+
+  @override
+  String get approvals => 'Approvals';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String get approved => 'Approved';
+
+  @override
+  String get authHeaderOptional => 'Authorization header (optional)';
+
+  @override
+  String get authSecretName => 'Auth secret name (optional)';
+
+  @override
+  String get authSecretNameHelp =>
+      'Name of a secret from Settings › Secrets, sent as a bearer token';
+
+  @override
+  String get baseUrlOptional => 'Base URL (optional)';
+
+  @override
+  String get blankBot => 'Blank';
+
+  @override
+  String get botIntegrations => 'Integrations for this bot';
+
+  @override
+  String get changeStatus => 'Change status';
+
+  @override
+  String get composioToolkits =>
+      'Toolkits (comma-separated, for example github, gmail)';
+
+  @override
+  String get copySecret => 'Copy secret';
+
+  @override
+  String get cronExpression => 'Cron expression';
+
+  @override
+  String get cronHelp => 'minute hour day month weekday';
+
+  @override
+  String get denied => 'Denied';
+
+  @override
+  String get deny => 'Deny';
+
+  @override
+  String get everyDayAt7 => 'Every day at 7:00';
+
+  @override
+  String get everyHour => 'Every hour';
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String get inbox => 'Inbox';
+
+  @override
+  String get integrationName => 'Name';
+
+  @override
+  String get integrationNameHelp =>
+      'Lowercase letters, numbers and underscores';
+
+  @override
+  String get integrationType => 'Type';
+
+  @override
+  String get integrations => 'Integrations';
+
+  @override
+  String get kindMcp => 'MCP server';
+
+  @override
+  String get kindOpenapi => 'OpenAPI';
+
+  @override
+  String get markAllRead => 'Mark all as read';
+
+  @override
+  String get mondaysAt9 => 'Mondays at 9:00';
+
+  @override
+  String get newRoutine => 'New routine';
+
+  @override
+  String get noApprovals => 'Nothing needs your approval right now.';
+
+  @override
+  String get noIntegrations =>
+      'No integrations yet. Connect an MCP server, an OpenAPI source, Composio or Pipedream.';
+
+  @override
+  String get noIntegrationsForBot => 'Add integrations in Settings first.';
+
+  @override
+  String get noNotifications => 'No notifications yet.';
+
+  @override
+  String get noRoutines =>
+      'No routines yet. Routines run this bot on a schedule or when a webhook arrives.';
+
+  @override
+  String get noSecrets =>
+      'No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.';
+
+  @override
+  String get noTasks => 'The task board is empty.';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get openInbox => 'Open inbox';
+
+  @override
+  String get pipedreamApps => 'Apps (comma-separated)';
+
+  @override
+  String get pipedreamClientId => 'Client ID';
+
+  @override
+  String get pipedreamClientSecret => 'Client secret';
+
+  @override
+  String get pipedreamProject => 'Project ID';
+
+  @override
+  String get riskHigh => 'High risk';
+
+  @override
+  String get riskLow => 'Low risk';
+
+  @override
+  String get riskMedium => 'Medium risk';
+
+  @override
+  String get routineGithub => 'On GitHub events';
+
+  @override
+  String get routineInstructions => 'Instructions';
+
+  @override
+  String get routineInstructionsHint => 'What should the bot do each time?';
+
+  @override
+  String get routineName => 'Name';
+
+  @override
+  String get routineStarted => 'Routine started';
+
+  @override
+  String get routineWebhook => 'On webhook';
+
+  @override
+  String get routines => 'Routines';
+
+  @override
+  String get runNow => 'Run now';
+
+  @override
+  String get secretName => 'Name';
+
+  @override
+  String get secretNameHelp => 'Uppercase, for example GITHUB_TOKEN';
+
+  @override
+  String get secretValue => 'Value';
+
+  @override
+  String get secrets => 'Secrets';
+
+  @override
+  String get serverUrl => 'Server URL';
+
+  @override
+  String get specUrl => 'OpenAPI spec URL';
+
+  @override
+  String get startFrom => 'Start from';
+
+  @override
+  String get storedEncrypted => 'Stored encrypted; never shown again';
+
+  @override
+  String get taskBlocked => 'Blocked';
+
+  @override
+  String get taskBoard => 'Tasks';
+
+  @override
+  String get taskDoing => 'In progress';
+
+  @override
+  String get taskDone => 'Done';
+
+  @override
+  String get taskTodo => 'To do';
+
+  @override
+  String get test => 'Test';
+
+  @override
+  String get timezone => 'Timezone';
+
+  @override
+  String get triggerGithub => 'GitHub';
+
+  @override
+  String get triggerSchedule => 'Schedule';
+
+  @override
+  String get triggerWebhook => 'Webhook';
+
+  @override
+  String get viewRun => 'View run';
+
+  @override
+  String get webhookCreated => 'Webhook created';
+
+  @override
+  String get webhookSecret => 'Signing secret';
+
+  @override
+  String get webhookShownOnce =>
+      'Copy the signing secret now. It is shown only once.';
+
+  @override
+  String get webhookUrl => 'URL';
+
+  @override
+  String approvalsCount(int n) {
+    return 'Approvals ($n)';
+  }
+
+  @override
+  String botWantsTo(String bot, String summary) {
+    return '$bot: $summary';
+  }
+
+  @override
+  String integrationFailed(String error) {
+    return 'Connection failed: $error';
+  }
+
+  @override
+  String integrationOk(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Connected, $n tools',
+      one: 'Connected, 1 tool',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String needsApprovalFor(String bot, String tool) {
+    return '$bot needs your approval to use $tool';
+  }
+
+  @override
+  String nextRun(String when) {
+    return 'Next: $when';
+  }
+
+  @override
+  String onlySentTo(String hosts) {
+    return 'Only sent to $hosts';
+  }
+
+  @override
+  String requestedAgo(String when) {
+    return 'requested $when';
+  }
+
+  @override
+  String routineSchedule(String cron, String timezone) {
+    return '$cron ($timezone)';
+  }
+
+  @override
+  String templateIncludesRoutines(String names) {
+    return 'Includes routines: $names.';
+  }
+
+  @override
+  String toolCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n tools',
+      one: '1 tool',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weekdaysAt9 => 'Weekdays at 9:00';
 }

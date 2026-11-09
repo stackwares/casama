@@ -58,6 +58,16 @@ class ToolEntry extends ChatEntry {
       );
 }
 
+/// A tool call waiting for someone's decision; [decision] is set once resolved.
+class ApprovalEntry extends ChatEntry {
+  const ApprovalEntry({required this.approvalId, required this.tool, required this.args, required this.risk, this.decision});
+  final String approvalId;
+  final String tool;
+  final Map<String, Object?> args;
+  final String risk;
+  final String? decision;
+}
+
 enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled }
 
 class NoticeEntry extends ChatEntry {
@@ -236,6 +246,20 @@ class ChatController extends Notifier<ChatState> {
         if (i >= 0) {
           entries[i] = (entries[i] as ToolEntry).copyWith(status: ToolStatus.failed, error: event.payload.message);
         }
+      case ApprovalRequestedItem(:final event):
+        entries.add(ApprovalEntry(
+          approvalId: event.payload.approvalId,
+          tool: event.payload.tool,
+          args: event.payload.argsRedacted,
+          risk: event.payload.risk.value,
+        ));
+      case ApprovalResolvedItem(:final event):
+        final i = indexWhere((x) => x is ApprovalEntry && x.approvalId == event.payload.approvalId);
+        if (i >= 0) {
+          final a = entries[i] as ApprovalEntry;
+          entries[i] = ApprovalEntry(approvalId: a.approvalId, tool: a.tool, args: a.args, risk: a.risk, decision: event.payload.decision.value);
+        }
+        ref.invalidate(approvalsProvider);
       case MemoryWrittenItem():
         entries.add(const NoticeEntry(kind: NoticeKind.memory, text: ''));
       case SkillLoadedItem(:final event):
