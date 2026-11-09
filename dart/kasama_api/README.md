@@ -131,6 +131,7 @@ Class | Method | HTTP request | Description
 [*PrivacyApi*](doc/PrivacyApi.md) | [**getOrgSettings**](doc/PrivacyApi.md#getorgsettings) | **GET** /v1/orgs/{id}/settings | 
 [*PrivacyApi*](doc/PrivacyApi.md) | [**updateOrgSettings**](doc/PrivacyApi.md#updateorgsettings) | **PATCH** /v1/orgs/{id}/settings | Change workspace settings such as run event retention (admins)
 [*RoutinesApi*](doc/RoutinesApi.md) | [**createRoutine**](doc/RoutinesApi.md#createroutine) | **POST** /v1/routines | Schedule a routine (cron in a timezone) or create a GitHub/custom webhook trigger
+[*RoutinesApi*](doc/RoutinesApi.md) | [**deleteRoutine**](doc/RoutinesApi.md#deleteroutine) | **DELETE** /v1/routines/{id} | Delete a routine (its past runs and conversation are kept)
 [*RoutinesApi*](doc/RoutinesApi.md) | [**listRoutines**](doc/RoutinesApi.md#listroutines) | **GET** /v1/bots/{id}/routines | 
 [*RoutinesApi*](doc/RoutinesApi.md) | [**runRoutine**](doc/RoutinesApi.md#runroutine) | **POST** /v1/routines/{id}/run | Run a routine now
 [*RoutinesApi*](doc/RoutinesApi.md) | [**updateRoutine**](doc/RoutinesApi.md#updateroutine) | **PATCH** /v1/routines/{id} | 
@@ -228,6 +229,7 @@ Class | Method | HTTP request | Description
  - [DeletedComputer](doc/DeletedComputer.md)
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
+ - [DeletedRoutine](doc/DeletedRoutine.md)
  - [Health](doc/Health.md)
  - [IceServer](doc/IceServer.md)
  - [Integration](doc/Integration.md)
@@ -249,6 +251,7 @@ Class | Method | HTTP request | Description
  - [MemoryList](doc/MemoryList.md)
  - [MemoryWrittenEvent](doc/MemoryWrittenEvent.md)
  - [MemoryWrittenEventPayload](doc/MemoryWrittenEventPayload.md)
+ - [MessageAttachment](doc/MessageAttachment.md)
  - [MessageCompletedEvent](doc/MessageCompletedEvent.md)
  - [MessageCompletedEventPayload](doc/MessageCompletedEventPayload.md)
  - [MessageDeltaEvent](doc/MessageDeltaEvent.md)

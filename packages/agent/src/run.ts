@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Database } from "@kasama/db";
 import { APPROVAL_TTL_MS, checkBudget, needsApproval, RUN_DEFAULTS } from "@kasama/domain";
 import type { Logger } from "@kasama/observability";
-import type { SandboxHandle } from "@kasama/sandbox";
+import { collectExec, type SandboxHandle } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import type { ComputerService } from "./computers.ts";
@@ -108,7 +108,7 @@ interface RunInfo {
   timezone: string;
   now: string;
   summary: string;
-  current: { id: string; text: string } | null;
+  current: { id: string; text: string; files?: FilePart[] } | null;
   history: ChatMessage[];
   skills: Array<{ name: string; description: string }>;
   botOwner: string | null;
@@ -124,16 +124,64 @@ interface RunInfo {
 type StepOutcome = { ok: true } | { ok: false; code: string; message: string };
 
 /** Plain text of a message's content parts. */
+const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+/** Reads up to four attached images from the bot's computer for a vision model. */
+async function loadImages(computers: ComputerService, botId: string, files: FilePart[]) {
+  const wanted = files
+    .filter((f) => IMAGE_TYPES.has(f.mime_type) && f.size <= MAX_IMAGE_BYTES)
+    .slice(0, 4);
+  if (!wanted.length) return [];
+  const row = await computers.forBot(botId);
+  const handle = await computers.ensureRunning(row.id);
+  const out: Array<{ data: Uint8Array; mediaType: string }> = [];
+  for (const f of wanted) {
+    const data = await handle.readFile(`~/${f.path}`);
+    if (data.length <= MAX_IMAGE_BYTES) out.push({ data, mediaType: f.mime_type });
+  }
+  return out;
+}
+
+export interface FilePart {
+  path: string;
+  name: string;
+  mime_type: string;
+  size: number;
+}
+
+/** Files attached to a message. */
+export function partsFiles(content: unknown): FilePart[] {
+  if (!Array.isArray(content)) return [];
+  return content.filter(
+    (p): p is FilePart & { type: "file" } =>
+      !!p &&
+      typeof p === "object" &&
+      (p as { type?: string }).type === "file" &&
+      typeof (p as { path?: unknown }).path === "string",
+  );
+}
+
+const kb = (n: number) =>
+  n >= 1024 * 1024
+    ? `${(n / 1024 / 1024).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(n / 1024))} KB`;
+
+/** A message's text, with its attachments listed so the model knows where to find them. */
 export function partsText(content: unknown): string {
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
-  return content
+  const text = content
     .map((p) =>
       p && typeof p === "object" && (p as { type?: string }).type === "text"
         ? String((p as { text?: unknown }).text ?? "")
         : "",
     )
     .join("");
+  const files = partsFiles(content);
+  if (!files.length) return text;
+  const list = files.map((f) => `- ${f.path} (${f.mime_type || "file"}, ${kb(f.size)})`).join("\n");
+  return `${text}${text ? "\n\n" : ""}Attached files (on your computer, under the home folder):\n${list}`;
 }
 
 /**
@@ -274,6 +322,17 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       return { status: "completed" };
     }
 
+    // Images attached to this message go to vision models as images; every model sees the file list.
+    const images =
+      caps.vision && deps.computers && info.current?.files?.length
+        ? await loadImages(deps.computers, info.botId, info.current.files).catch((err) => {
+            log?.warn("attachment images not loaded", {
+              run_id: runId,
+              error: (err as Error).message,
+            });
+            return [];
+          })
+        : [];
     const contextFor = (summary: string) =>
       buildContext({
         botName: info.botName,
@@ -288,9 +347,12 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         memories: recalled.map((m) => ({ kind: m.kind, content: m.content })),
         summary,
         history: info.history,
-        current: info.current ? { role: "user", content: info.current.text } : undefined,
+        current: info.current
+          ? { role: "user", content: info.current.text, ...(images.length ? { images } : {}) }
+          : undefined,
         contextWindow: caps.contextWindow,
         computer: !!deps.computers,
+        routine: info.routine ? { id: info.routine.id, name: info.routine.name } : undefined,
       });
 
     let ctx = contextFor(info.summary);
@@ -570,7 +632,12 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
       order by created_at, id`);
     const idx = msgs.findIndex((m) => m.role === "user" && m.run_id === runId);
     const currentRow = idx >= 0 ? msgs[idx] : undefined;
-    if (currentRow) current = { id: currentRow.id, text: partsText(currentRow.content) };
+    if (currentRow)
+      current = {
+        id: currentRow.id,
+        text: partsText(currentRow.content),
+        files: partsFiles(currentRow.content),
+      };
     history = (idx >= 0 ? msgs.slice(0, idx) : msgs)
       .map((m) => ({ role: m.role as "user" | "assistant", content: partsText(m.content) }))
       .filter((m) => m.content.length > 0);
@@ -1304,11 +1371,50 @@ async function startTakeoverStep(
     .slice(0, 1000)
     .trim();
   if (!reason) return { error: "Give a reason so the person knows what to do." };
-  const row = await deps.computers?.forBot(info.botId).catch(() => null);
-  if (row?.profile !== "desktop") return { error: "Takeover needs a computer with a desktop." };
-  await deps.computers?.ensureRunning(row.id);
+  const computers = deps.computers;
+  const row = await computers?.forBot(info.botId).catch(() => null);
+  if (!computers || !row) return { error: "Takeover needs a computer." };
+  // The page the bot is on, so the person lands where they are needed.
+  const url = await currentBrowserUrl(computers, row.id);
+  if (row.profile !== "desktop") {
+    // A person needs a screen: switch this computer to the desktop profile (files are kept).
+    await deps.db.execute(
+      sql`update public.computers set profile = 'desktop' where id = ${row.id}::uuid`,
+    );
+    await computers.stop(row.id).catch(() => {});
+  }
+  const handle = await computers.ensureRunning(row.id);
+  if (url) {
+    // Reopen it in a visible window (desktop computers run the browser headed).
+    const quoted = `'${url.replace(/'/g, "'\\''")}'`;
+    await collectExec(
+      handle.exec(`agent-browser close >/dev/null 2>&1; agent-browser open ${quoted}`, {
+        timeoutMs: 60_000,
+      }),
+    ).catch(() => {});
+  }
   const id = await createTakeover(deps.db, info, row.id, reason, busFn, deps.notifications);
   return { id };
+}
+
+/** The browser's current page, if the computer is running and the browser has one open. */
+async function currentBrowserUrl(
+  computers: ComputerService,
+  computerId: string,
+): Promise<string | null> {
+  const row = await computers.byId(computerId).catch(() => null);
+  if (!row || !["running", "idle"].includes(row.state)) return null;
+  try {
+    const handle = await computers.ensureRunning(computerId);
+    const r = await collectExec(handle.exec("agent-browser get url", { timeoutMs: 15_000 }));
+    const url = r.stdout
+      .trim()
+      .split(/\s+/)
+      .find((t) => /^https?:\/\//.test(t));
+    return url ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /** Records a tool call that finished outside toolStep (takeover). */

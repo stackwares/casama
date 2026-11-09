@@ -62,8 +62,8 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(_app(FakeBackend(), const SettingsScreen()));
     await tester.pumpAndSettle();
-    final scaffoldColor = () => Theme.of(tester.element(find.byType(SettingsScreen))).colorScheme.surface;
-    final primary = () => Theme.of(tester.element(find.byType(SettingsScreen))).colorScheme.primary;
+    Color scaffoldColor() => Theme.of(tester.element(find.byType(SettingsScreen))).colorScheme.surface;
+    Color primary() => Theme.of(tester.element(find.byType(SettingsScreen))).colorScheme.primary;
     final lightSurface = scaffoldColor();
     final tealPrimary = primary();
 

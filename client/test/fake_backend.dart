@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -177,9 +178,11 @@ class FakeBackend implements Backend {
   Future<List<ChatMessageView>> messages(String conversationId) async => storedMessages;
   @override
   Future<String?> activeRun(String conversationId) async => null;
+  final sentAttachments = <List<AttachmentRef>>[];
   @override
-  Future<SendMessageResponse> send(String conversationId, String text) async {
+  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const []}) async {
     sent.add(text);
+    sentAttachments.add(attachments);
     return SendMessageResponse(messageId: 'm1', runId: runId, conversationId: conversationId);
   }
 
@@ -273,23 +276,23 @@ class FakeBackend implements Backend {
   Future<List<Routine>> routines(String botId) async => routineList;
   @override
   Future<CreatedRoutine> createRoutine(String botId,
-      {required String name, required String instructions, required String trigger, String? cron, String? timezone}) async {
+      {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt}) async {
     final r = CreatedRoutine(
       id: 'r${routineList.length + 1}',
       botId: botId,
       name: name,
       instructionsMd: instructions,
-      scheduleCron: cron,
+      scheduleCron: trigger == 'schedule' ? cron : null,
       timezone: timezone ?? 'America/Chicago',
       trigger: RoutineTrigger.values.firstWhere((t) => t.value == trigger),
       notify: true,
       enabled: true,
-      nextRunAt: trigger == 'schedule' ? DateTime(2026, 11, 11, 7) : null,
+      nextRunAt: trigger == 'schedule' ? DateTime(2026, 11, 11, 7) : (trigger == 'once' ? runAt : null),
       lastRunAt: null,
       conversationId: null,
       createdAt: DateTime.now(),
-      webhookUrl: trigger == 'schedule' ? null : 'http://localhost/hooks/custom/r1',
-      webhookSecret: trigger == 'schedule' ? null : 'whsec_test',
+      webhookUrl: trigger == 'schedule' || trigger == 'once' ? null : 'http://localhost/hooks/custom/r1',
+      webhookSecret: trigger == 'schedule' || trigger == 'once' ? null : 'whsec_test',
     );
     routineList.add(Routine.fromJson(r.toJson()));
     return r;
@@ -297,6 +300,13 @@ class FakeBackend implements Backend {
 
   @override
   Future<void> setRoutineEnabled(String routineId, bool enabled) async {}
+  final deletedRoutines = <String>[];
+  @override
+  Future<void> deleteRoutine(String routineId) async {
+    deletedRoutines.add(routineId);
+    routineList.removeWhere((r) => r.id == routineId);
+  }
+  final uploads = <String, Uint8List>{};
   @override
   Future<String> runRoutine(String routineId) async {
     routinesRun.add(routineId);
@@ -690,9 +700,9 @@ class FakeBackend implements Backend {
   @override
   Future<List<ComputerFileEntry>> listFiles(String computerId, String path) async => const [];
   @override
-  Future<Uint8List> downloadFile(String computerId, String path) async => Uint8List(0);
+  Future<Uint8List> downloadFile(String computerId, String path) async => uploads[path] ?? Uint8List.fromList(utf8.encode('# Hello\n\nfile $path'));
   @override
-  Future<void> uploadFile(String computerId, String path, Uint8List bytes) async {}
+  Future<void> uploadFile(String computerId, String path, Uint8List bytes) async => uploads[path] = bytes;
   @override
   Future<void> deleteFile(String computerId, String path) async {}
   @override

@@ -4,18 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../ui/adaptive_modal.dart';
 
 /// Skills: Markdown instruction packs that bots load on demand.
 class SkillsScreen extends ConsumerWidget {
   const SkillsScreen({super.key});
 
   Future<void> _edit(BuildContext context, WidgetRef ref, [SkillView? skill]) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => _SkillEditor(skill: skill),
-    );
+    await showAdaptiveSheet<void>(context: context, heightFactor: 0.85, builder: (_) => _SkillEditor(skill: skill));
     ref.invalidate(skillsProvider);
   }
 
@@ -90,7 +86,7 @@ class _SkillEditorState extends ConsumerState<_SkillEditor> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(context).bottom + 16),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         TextField(controller: _name, decoration: InputDecoration(labelText: l10n.skillName)),
         const SizedBox(height: 8),

@@ -87,7 +87,11 @@ const routineOut = (r: RoutineRow) => ({
   instructions_md: r.instructionsMd,
   schedule_cron: r.scheduleCron,
   timezone: r.timezone,
-  trigger: ((r.trigger as { type?: string })?.type ?? "schedule") as "schedule",
+  trigger: ((r.trigger as { type?: string })?.type ?? "schedule") as
+    | "schedule"
+    | "once"
+    | "github"
+    | "webhook",
   notify: r.notify,
   enabled: r.enabled,
   next_run_at: r.nextRunAt ? iso(r.nextRunAt) : null,
@@ -370,9 +374,14 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         errors: [{ path: "schedule_cron", message: "Invalid cron" }],
       });
     }
+    if (trigger === "once" && (!body.run_at || Date.parse(body.run_at) < Date.now() - 60_000)) {
+      throw new ApiError(400, "validation_failed", "A once routine needs a run_at in the future", {
+        errors: [{ path: "run_at", message: "Pick a time in the future" }],
+      });
+    }
     let webhookSecret: string | undefined;
     let triggerJson: Record<string, unknown> = { type: trigger };
-    if (trigger !== "schedule") {
+    if (trigger === "github" || trigger === "webhook") {
       webhookSecret = randomBytes(24).toString("hex");
       triggerJson = {
         type: trigger,
@@ -393,7 +402,11 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         timezone: tz,
         trigger: triggerJson,
         notify: body.notify ?? true,
-        nextRunAt: cron ? nextRunAt(cron, tz).toISOString() : null,
+        nextRunAt: cron
+          ? nextRunAt(cron, tz).toISOString()
+          : trigger === "once"
+            ? new Date(body.run_at as string).toISOString()
+            : null,
       })
       .returning();
     if (!row) throw new Error("routine insert returned nothing");
@@ -421,7 +434,8 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     );
     if (!cur) throw new ApiError(404, "routine_not_found", "Routine not found");
     const tz = body.timezone ?? cur.timezone;
-    const cron = body.schedule_cron ?? cur.scheduleCron;
+    const isOnce = (cur.trigger as { type?: string })?.type === "once";
+    const cron = isOnce ? null : (body.schedule_cron ?? cur.scheduleCron);
     if (!isValidTimezone(tz))
       throw new ApiError(400, "validation_failed", `Unknown timezone ${tz}`);
     if (body.schedule_cron && !isValidCron(body.schedule_cron))
@@ -436,13 +450,35 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
           timezone: tz,
           notify: body.notify ?? cur.notify,
           enabled: body.enabled ?? cur.enabled,
-          nextRunAt:
-            cron && (body.enabled ?? cur.enabled) ? nextRunAt(cron, tz).toISOString() : null,
+          nextRunAt: !(body.enabled ?? cur.enabled)
+            ? null
+            : isOnce
+              ? body.run_at
+                ? new Date(body.run_at).toISOString()
+                : cur.nextRunAt
+                  ? iso(cur.nextRunAt)
+                  : null
+              : cron
+                ? nextRunAt(cron, tz).toISOString()
+                : null,
         })
         .where(eq(routines.id, id))
         .returning(),
     );
     return c.json(routineOut(row as RoutineRow), 200);
+  });
+
+  app.openapi(routes.deleteRoutine, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx
+        .delete(routines)
+        .where(eq(routines.id, id))
+        .returning({ id: routines.id, botId: routines.botId }),
+    );
+    if (!row) throw new ApiError(404, "routine_not_found", "Routine not found");
+    return c.json({ deleted: row.id }, 200);
   });
 
   app.openapi(routes.runRoutine, async (c) => {

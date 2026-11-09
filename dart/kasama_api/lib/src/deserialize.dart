@@ -62,6 +62,7 @@ import 'package:kasama_api/src/model/delete_result.dart';
 import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
+import 'package:kasama_api/src/model/deleted_routine.dart';
 import 'package:kasama_api/src/model/health.dart';
 import 'package:kasama_api/src/model/ice_server.dart';
 import 'package:kasama_api/src/model/integration.dart';
@@ -81,6 +82,7 @@ import 'package:kasama_api/src/model/memory.dart';
 import 'package:kasama_api/src/model/memory_list.dart';
 import 'package:kasama_api/src/model/memory_written_event.dart';
 import 'package:kasama_api/src/model/memory_written_event_payload.dart';
+import 'package:kasama_api/src/model/message_attachment.dart';
 import 'package:kasama_api/src/model/message_completed_event.dart';
 import 'package:kasama_api/src/model/message_completed_event_payload.dart';
 import 'package:kasama_api/src/model/message_delta_event.dart';
@@ -328,6 +330,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedId':
           return DeletedId.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedRoutine':
+          return DeletedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
           return Health.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'IceServer':
@@ -372,6 +376,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return MemoryWrittenEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'MemoryWrittenEventPayload':
           return MemoryWrittenEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MessageAttachment':
+          return MessageAttachment.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'MessageCompletedEvent':
           return MessageCompletedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'MessageCompletedEventPayload':

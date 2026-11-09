@@ -10,6 +10,7 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 import '../../core/live.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../ui/shell_header.dart';
 
 /// Watch a computer's desktop live and take control (deep link: /computer/live?c=&takeover=).
 class LiveViewScreen extends ConsumerStatefulWidget {
@@ -252,8 +253,8 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
         : RTCVideoView(conn!.renderer!, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.liveView),
+      appBar: ShellHeader(
+        title: l10n.liveView,
         actions: [
           if (_rtt != null)
             Padding(

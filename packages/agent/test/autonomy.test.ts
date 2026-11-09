@@ -25,6 +25,7 @@ import {
   refreshIntegration,
   registerAutonomyTools,
   runAgent,
+  ToolRegistry,
 } from "../src/index.ts";
 
 const SECRET_VALUE = "tok_live_ABCDEF1234567890";
@@ -408,6 +409,62 @@ describe("approvals", () => {
     expect(
       (await events(runId)).find((e) => e.type === "approval.resolved")?.payload,
     ).toMatchObject({ decision: "expired" });
+  });
+});
+
+describe("routine tools", () => {
+  it("schedules one-time work with in_minutes, lists and deletes routines", async () => {
+    const botId = await makeBot("Scheduler");
+    const runId = await startRun(botId, "remind me later");
+    const tools = new ToolRegistry();
+    registerAutonomyTools(tools, {
+      db: h.db,
+      fetch: testFetch,
+      notifications: new NotificationService(h.db, push),
+    });
+    const ctx = { runId, botId, orgId, output: async () => {}, emit: async () => {} };
+    const exec = (name: string, args: Record<string, unknown>) =>
+      tools.get(name)!.execute(args as never, ctx);
+
+    const before = Date.now();
+    const made = await exec("routines.create", {
+      name: "Water",
+      instructions: "Remind them to drink water.",
+      in_minutes: 1,
+    });
+    expect(made.content).toContain("runs once");
+    const [row] = await tdb.admin<
+      { id: string; schedule_cron: string | null; trigger: { type: string }; next_run_at: Date }[]
+    >`
+      select id, schedule_cron, trigger, next_run_at from public.routines where bot_id = ${botId}`;
+    expect(row!.schedule_cron).toBeNull();
+    expect(row!.trigger.type).toBe("once");
+    const delay = new Date(row!.next_run_at).getTime() - before;
+    expect(delay).toBeGreaterThanOrEqual(55_000);
+    expect(delay).toBeLessThan(70_000);
+
+    // Exactly one way to schedule.
+    await expect(
+      exec("routines.create", {
+        name: "x",
+        instructions: "y",
+        in_minutes: 1,
+        schedule_cron: "* * * * *",
+      }),
+    ).rejects.toThrow(/exactly one/);
+
+    const listed = await exec("routines.list", {});
+    expect(listed.content).toContain(row!.id);
+    expect(listed.content).toContain("once");
+
+    const paused = await exec("routines.update", { routine_id: row!.id, enabled: false });
+    expect(paused.preview).toBe("paused");
+    const deleted = await exec("routines.delete", { routine_id: row!.id });
+    expect(deleted.content).toContain("Water");
+    const [left] = await tdb.admin<
+      { n: number }[]
+    >`select count(*)::int as n from public.routines where bot_id = ${botId}`;
+    expect(left?.n).toBe(0);
   });
 });
 

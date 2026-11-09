@@ -16,6 +16,10 @@
 		</dict>
 	</array>
 
+	<key>NSCameraUsageDescription</key>
+	<string>Kasama uses the camera when you take a photo to send to a bot.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Kasama opens your photo library when you choose a photo to send to a bot.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Kasama uses the microphone for dictation and voice calls with your bots.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>

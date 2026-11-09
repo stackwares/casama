@@ -1,9 +1,13 @@
+import 'package:desktop_drop/desktop_drop.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
+import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/voice.dart';
 import '../../core/widgets.dart';
@@ -13,6 +17,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/shell_header.dart';
+import '../files/file_preview.dart';
 import '../home/home_shell.dart';
 import 'chat_controller.dart';
 import 'widgets/chat_widgets.dart';
@@ -49,12 +54,7 @@ bool get _touchFirst => !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS 
 /// Starter requests: the emoji is decoration; tapping sends the sentence.
 List<(String, String)> _suggestions(BuildContext context) {
   final l10n = context.l10n;
-  return [
-    ('🔎', l10n.suggestResearch),
-    ('🗂️', l10n.suggestFiles),
-    ('🌐', l10n.suggestWebsite),
-    ('🧰', l10n.suggestCapabilities),
-  ];
+  return [('🔎', l10n.suggestResearch), ('🗂️', l10n.suggestFiles), ('🌐', l10n.suggestWebsite), ('🧰', l10n.suggestCapabilities)];
 }
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -74,6 +74,74 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   var _recording = false;
   var _transcribing = false;
   var _stickToBottom = true;
+  final _pending = <_Pending>[];
+  var _dragging = false;
+
+  static const _maxFileBytes = 25 * 1024 * 1024;
+
+  bool get _uploading => _pending.any((p) => p.ref == null && !p.failed);
+
+  String? _computerId() {
+    final bot = ref.read(botProvider(widget.botId));
+    return computerForBot(ref.read(computersProvider).value ?? const [], widget.botId, defaultComputerId: bot?.defaultComputerId)?.id;
+  }
+
+  /// Uploads each file to the bot's computer right away (workspace/uploads), so Send only waits
+  /// for what is still in flight.
+  Future<void> _addFiles(List<(String, Uint8List, String?)> files) async {
+    final computerId = _computerId();
+    if (computerId == null) {
+      showMessage(context, context.l10n.noComputerForFiles);
+      return;
+    }
+    for (final (name, bytes, mime) in files) {
+      if (bytes.length > _maxFileBytes) {
+        showMessage(context, context.l10n.fileTooLarge(name));
+        continue;
+      }
+      final stamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[^0-9]'), '').substring(0, 14);
+      final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
+      final item = _Pending(
+        name: name,
+        bytes: bytes,
+        mime: (mime == null || mime.isEmpty) ? mimeFor(name) : mime,
+        apiPath: 'uploads/$stamp-$safe',
+      );
+      setState(() => _pending.add(item));
+      try {
+        await ref.read(backendProvider).uploadFile(computerId, item.apiPath, bytes);
+        if (!mounted) return;
+        setState(() => item.ref = AttachmentRef(path: 'workspace/${item.apiPath}', name: name, mimeType: item.mime, size: bytes.length));
+      } catch (_) {
+        if (!mounted) return;
+        setState(() => item.failed = true);
+        showMessage(context, context.l10n.uploadFailed(name));
+      }
+    }
+  }
+
+  Future<void> _pickFiles() async {
+    final picked = await FilePicker.pickFiles();
+    if (picked.isEmpty) return;
+    await _addFiles([for (final f in picked) (f.name, await f.readAsBytes(), null)]);
+  }
+
+  Future<void> _pickPhotos() async {
+    final images = await ImagePicker().pickMultiImage(imageQuality: 90, maxWidth: 2560);
+    if (images.isEmpty) return;
+    await _addFiles([for (final x in images) (x.name, await x.readAsBytes(), x.mimeType)]);
+  }
+
+  Future<void> _takePhoto() async {
+    final x = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 90, maxWidth: 2560);
+    if (x == null) return;
+    await _addFiles([(x.name, await x.readAsBytes(), x.mimeType)]);
+  }
+
+  Future<void> _dropped(DropDoneDetails detail) async {
+    setState(() => _dragging = false);
+    await _addFiles([for (final f in detail.files) (f.name, await f.readAsBytes(), f.mimeType)]);
+  }
 
   @override
   void initState() {
@@ -116,16 +184,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _jumpToLatest() {
     if (!_scroll.hasClients) return;
-    _scroll.animateTo(_scroll.position.maxScrollExtent, duration: AppMotion.of(context, const Duration(milliseconds: 380)), curve: AppMotion.curve);
+    _scroll.animateTo(
+      _scroll.position.maxScrollExtent,
+      duration: AppMotion.of(context, const Duration(milliseconds: 380)),
+      curve: AppMotion.curve,
+    );
   }
 
   Future<void> _send([String? text]) async {
     final message = text ?? _input.text;
-    if (message.trim().isEmpty) return;
-    if (text == null) _input.clear();
+    final attachments = text == null
+        ? [
+            for (final p in _pending)
+              if (p.ref != null) p.ref!,
+          ]
+        : const <AttachmentRef>[];
+    if (message.trim().isEmpty && attachments.isEmpty) return;
+    if (_uploading && text == null) return;
+    if (text == null) {
+      _input.clear();
+      setState(_pending.clear);
+    }
     _stickToBottom = true;
     if (_touchFirst) FocusManager.instance.primaryFocus?.unfocus();
-    await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).send(message));
+    await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).send(message, attachments: attachments));
     if (!_touchFirst && mounted) _focus.requestFocus();
   }
 
@@ -178,10 +260,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final bot = ref.watch(botProvider(widget.botId));
     final chat = ref.watch(chatControllerProvider(widget.botId));
     final controller = ref.read(chatControllerProvider(widget.botId).notifier);
-    final computer = computerForBot(ref.watch(computersProvider).value ?? const [], widget.botId, defaultComputerId: bot?.defaultComputerId);
+    final computer = computerForBot(
+      ref.watch(computersProvider).value ?? const [],
+      widget.botId,
+      defaultComputerId: bot?.defaultComputerId,
+    );
     ref.listen(chatControllerProvider(widget.botId), (prev, next) {
       final opened = (prev?.loading ?? false) && !next.loading;
-      _followIfAtBottom(force: opened || (next.entries.length > (prev?.entries.length ?? 0) && next.entries.lastOrNull is MessageEntry && (next.entries.last as MessageEntry).role == 'user'));
+      _followIfAtBottom(
+        force:
+            opened ||
+            (next.entries.length > (prev?.entries.length ?? 0) &&
+                next.entries.lastOrNull is MessageEntry &&
+                (next.entries.last as MessageEntry).role == 'user'),
+      );
     });
     final name = bot?.name ?? '';
     final layout = layoutFor(MediaQuery.sizeOf(context).width);
@@ -235,114 +327,206 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           _MoreMenu(botId: widget.botId, showComputer: layout != LayoutSize.desktop),
         ],
       ),
-      body: LayoutBuilder(builder: (context, constraints) {
-        final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth);
-        final background = Theme.of(context).scaffoldBackgroundColor;
-        final Widget thread;
-        if (chat.loading) {
-          thread = const Center(child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)));
-        } else if (chat.entries.isEmpty) {
-          thread = _EmptyThread(name: name, side: side, onAsk: _send);
-        } else {
-          final rows = _buildRows(context, chat, name, computer);
-          thread = ListView.builder(
-            controller: _scroll,
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: EdgeInsets.fromLTRB(side, AppSpace.md, side, AppSpace.xl),
-            itemCount: rows.length,
-            itemBuilder: (context, i) => Padding(
-              key: rows[i].key,
-              padding: EdgeInsets.only(top: i == 0 ? 0 : rows[i].gap),
-              child: rows[i].fresh ? rows[i].build().appMessageEntrance() : rows[i].build(),
-            ),
-          );
-        }
-        return Column(children: [
-          Expanded(
-            child: Stack(children: [
-              Positioned.fill(child: thread),
-              // The thread fades out above the composer instead of being cut.
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: AppSpace.md,
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [background.withValues(alpha: 0), background]),
-                    ),
-                  ),
+      body: _wrapFiles(
+        computer,
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth);
+            final background = Theme.of(context).scaffoldBackgroundColor;
+            final Widget thread;
+            if (chat.loading) {
+              thread = const Center(
+                child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)),
+              );
+            } else if (chat.entries.isEmpty) {
+              thread = _EmptyThread(name: name, side: side, onAsk: _send);
+            } else {
+              final rows = _buildRows(context, chat, name, computer);
+              thread = ListView.builder(
+                controller: _scroll,
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(side, AppSpace.md, side, AppSpace.xl),
+                itemCount: rows.length,
+                itemBuilder: (context, i) => Padding(
+                  key: rows[i].key,
+                  padding: EdgeInsets.only(top: i == 0 ? 0 : rows[i].gap),
+                  child: rows[i].fresh ? rows[i].build().appMessageEntrance() : rows[i].build(),
                 ),
-              ),
-              Positioned(
-                bottom: AppSpace.sm,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: _showJump,
-                    builder: (context, show, _) => IgnorePointer(
-                      ignoring: !show,
-                      child: AnimatedSlide(
-                        offset: show ? Offset.zero : const Offset(0, 0.4),
-                        duration: AppMotion.of(context, AppMotion.fast),
-                        curve: AppMotion.curve,
-                        child: AnimatedOpacity(
-                          opacity: show ? 1 : 0,
-                          duration: AppMotion.of(context, AppMotion.fast),
-                          child: IconButton.filledTonal(
-                            tooltip: l10n.jumpToLatest,
-                            onPressed: _jumpToLatest,
-                            icon: const Icon(Icons.arrow_downward_rounded),
-                            style: IconButton.styleFrom(
-                              backgroundColor: context.colorScheme.surfaceContainerHigh,
-                              foregroundColor: context.colorScheme.onSurface,
-                              side: BorderSide(color: context.appColors.hairline),
+              );
+            }
+            return Column(
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: thread),
+                      // The thread fades out above the composer instead of being cut.
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: AppSpace.md,
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [background.withValues(alpha: 0), background],
+                              ),
                             ),
                           ),
                         ),
                       ),
+                      Positioned(
+                        bottom: AppSpace.sm,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: ValueListenableBuilder<bool>(
+                            valueListenable: _showJump,
+                            builder: (context, show, _) => IgnorePointer(
+                              ignoring: !show,
+                              child: AnimatedSlide(
+                                offset: show ? Offset.zero : const Offset(0, 0.4),
+                                duration: AppMotion.of(context, AppMotion.fast),
+                                curve: AppMotion.curve,
+                                child: AnimatedOpacity(
+                                  opacity: show ? 1 : 0,
+                                  duration: AppMotion.of(context, AppMotion.fast),
+                                  child: IconButton.filledTonal(
+                                    tooltip: l10n.jumpToLatest,
+                                    onPressed: _jumpToLatest,
+                                    icon: const Icon(Icons.arrow_downward_rounded),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: context.colorScheme.surfaceContainerHigh,
+                                      foregroundColor: context.colorScheme.onSurface,
+                                      side: BorderSide(color: context.appColors.hairline),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(side, AppSpace.xxs, side, AppSpace.xs),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ChatComposer(
+                          controller: _input,
+                          focusNode: _focus,
+                          hint: l10n.messageHint(name),
+                          running: chat.running,
+                          onSend: _send,
+                          onStop: () => runGuarded(context, controller.cancel),
+                          recording: _recording,
+                          transcribing: _transcribing,
+                          onDictate: _toggleDictation,
+                          attachButton: _AttachButton(onFiles: _pickFiles, onPhotos: _pickPhotos, onCamera: _takePhoto),
+                          hasAttachments: _pending.any((p) => p.ref != null),
+                          uploading: _uploading,
+                          attachments: _pending.isEmpty
+                              ? null
+                              : SizedBox(
+                                  height: 64,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: _pending.length,
+                                    separatorBuilder: (_, _) => const SizedBox(width: AppSpace.xs),
+                                    itemBuilder: (context, i) =>
+                                        _PendingChip(item: _pending[i], onRemove: () => setState(() => _pending.removeAt(i))),
+                                  ),
+                                ),
+                        ),
+                        AnimatedSize(
+                          duration: AppMotion.of(context, AppMotion.fast),
+                          child: chat.tokens > 0
+                              ? Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Text(
+                                    l10n.runCost(formatUsd(chat.costUsd), chat.tokens),
+                                    style: context.textTheme.labelSmall?.copyWith(
+                                      color: context.colorScheme.onSurfaceVariant,
+                                      fontFeatures: AppText.tabular,
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox(width: double.infinity),
+                        ),
+                      ],
                     ),
                   ),
                 ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// File links and attachments open from the bot's computer; on desktop and the web, files
+  /// dropped anywhere on the chat are attached.
+  Widget _wrapFiles(Computer? computer, Widget child) {
+    Widget body = FileLinkScope(
+      computerId: computer?.id,
+      open: (path) {
+        if (computer == null) {
+          showMessage(context, context.l10n.noComputerForFiles);
+          return;
+        }
+        showComputerFile(context, computerId: computer.id, path: path);
+      },
+      child: child,
+    );
+    if (_touchFirst) return body;
+    body = DropTarget(
+      onDragEntered: (_) => setState(() => _dragging = true),
+      onDragExited: (_) => setState(() => _dragging = false),
+      onDragDone: _dropped,
+      child: Stack(
+        children: [
+          Positioned.fill(child: body),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedOpacity(
+                opacity: _dragging ? 1 : 0,
+                duration: AppMotion.of(context, AppMotion.fast),
+                child: Container(
+                  margin: const EdgeInsets.all(AppSpace.md),
+                  decoration: BoxDecoration(
+                    color: context.colorScheme.primary.withValues(alpha: 0.08),
+                    borderRadius: AppRadius.cardAll,
+                    border: Border.all(color: context.colorScheme.primary.withValues(alpha: 0.6), width: 2),
+                  ),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.file_upload_outlined, size: 40, color: context.colorScheme.primary),
+                      const SizedBox(height: AppSpace.xs),
+                      Text(
+                        context.l10n.dropToAttach,
+                        style: context.textTheme.titleMedium?.copyWith(color: context.colorScheme.primary, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ]),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(side, AppSpace.xxs, side, AppSpace.xs),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                ChatComposer(
-                  controller: _input,
-                  focusNode: _focus,
-                  hint: l10n.messageHint(name),
-                  running: chat.running,
-                  onSend: _send,
-                  onStop: () => runGuarded(context, controller.cancel),
-                  recording: _recording,
-                  transcribing: _transcribing,
-                  onDictate: _toggleDictation,
-                ),
-                AnimatedSize(
-                  duration: AppMotion.of(context, AppMotion.fast),
-                  child: chat.tokens > 0
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            l10n.runCost(formatUsd(chat.costUsd), chat.tokens),
-                            style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant, fontFeatures: AppText.tabular),
-                          ),
-                        )
-                      : const SizedBox(width: double.infinity),
-                ),
-              ]),
             ),
           ),
-        ]);
-      }),
+        ],
+      ),
     );
+    return body;
   }
 
   /// Turns the chat into rows: one bot header per turn, consecutive tool steps grouped in a card,
@@ -373,15 +557,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final fresh = i >= freshFrom && chat.running;
       switch (e) {
         case MessageEntry(role: 'user'):
-          rows.add(_Row(ValueKey(e.id), lastSide.isEmpty ? 0 : AppSpace.xl, () => UserBubble(text: e.text), fresh: fresh));
+          rows.add(
+            _Row(
+              ValueKey(e.id),
+              lastSide.isEmpty ? 0 : AppSpace.xl,
+              () => UserBubble(text: e.text, attachments: e.attachments),
+              fresh: fresh,
+            ),
+          );
           lastSide = 'user';
         case final MessageEntry m:
           botSide(m.id);
-          rows.add(_Row(
-            ValueKey(m.id),
-            rows.last.header ? 0 : AppSpace.sm,
-            () => AssistantMessage(entry: m, status: workingStatus(), onSpeak: !m.streaming ? () => _speak(m.id) : null),
-          ));
+          rows.add(
+            _Row(
+              ValueKey(m.id),
+              rows.last.header ? 0 : AppSpace.sm,
+              () => AssistantMessage(entry: m, status: workingStatus(), onSpeak: !m.streaming ? () => _speak(m.id) : null),
+            ),
+          );
         case ToolEntry():
           final group = <ToolEntry>[e];
           // Consecutive steps share one card; the computer starting up in between doesn't split it.
@@ -397,52 +590,64 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             }
           }
           botSide(e.callId);
-          rows.add(_Row(
-            ValueKey('tools-${e.callId}'),
-            rows.last.header ? 0 : AppSpace.sm,
-            () => ToolGroupCard(steps: group),
-          ));
+          rows.add(_Row(ValueKey('tools-${e.callId}'), rows.last.header ? 0 : AppSpace.sm, () => ToolGroupCard(steps: group)));
         case final ApprovalEntry a:
           botSide(a.approvalId);
-          rows.add(_Row(ValueKey(a.approvalId), AppSpace.sm, () => ApprovalPrompt(entry: a, botName: name), fresh: fresh));
+          rows.add(
+            _Row(
+              ValueKey(a.approvalId),
+              AppSpace.sm,
+              () => ApprovalPrompt(entry: a, botName: name),
+              fresh: fresh,
+            ),
+          );
         case final TakeoverEntry t:
           botSide('takeover-$i');
-          rows.add(_Row(
-            ValueKey('takeover-$i'),
-            AppSpace.sm,
-            () => TakeoverPrompt(entry: t, botName: name, onOpen: () => context.push('/computer/live?c=${t.computerId}')),
-            fresh: fresh,
-          ));
+          rows.add(
+            _Row(
+              ValueKey('takeover-$i'),
+              AppSpace.sm,
+              () => TakeoverPrompt(entry: t, botName: name, onOpen: () => context.push('/computer/live?c=${t.computerId}')),
+              fresh: fresh,
+            ),
+          );
         case final NoticeEntry n:
           final last = i == entries.length - 1;
-          rows.add(_Row(ValueKey('notice-$i'), AppSpace.sm, () {
-            final line = NoticeLine(entry: n, onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp));
-            if (!(last && n.kind == NoticeKind.failed && chat.lastUserText != null && !chat.running)) return line;
-            return Column(children: [
-              line,
-              const SizedBox(height: AppSpace.xs),
-              TextButton.icon(
-                onPressed: () => runGuarded(context, ref.read(chatControllerProvider(widget.botId).notifier).retry),
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: Text(context.l10n.retry),
-              ),
-            ]);
-          }));
+          rows.add(
+            _Row(ValueKey('notice-$i'), AppSpace.sm, () {
+              final line = NoticeLine(entry: n, onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp));
+              if (!(last && n.kind == NoticeKind.failed && chat.lastUserText != null && !chat.running)) return line;
+              return Column(
+                children: [
+                  line,
+                  const SizedBox(height: AppSpace.xs),
+                  TextButton.icon(
+                    onPressed: () => runGuarded(context, ref.read(chatControllerProvider(widget.botId).notifier).retry),
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: Text(context.l10n.retry),
+                  ),
+                ],
+              );
+            }),
+          );
       }
     }
 
     // Thinking between steps, or before the first word of the reply.
     final last = entries.lastOrNull;
-    final waitingOnPerson = last is ApprovalEntry && last.decision == null;
+    // Waiting on a person (an approval or a takeover): no "thinking" shimmer.
+    final waitingOnPerson = (last is ApprovalEntry && last.decision == null) || (last is TakeoverEntry && last.outcome == null);
     final replying = last is MessageEntry && last.role == 'assistant' && last.streaming;
     final toolRunning = last is ToolEntry && last.status == ToolStatus.running;
     if (chat.running && !waitingOnPerson && !replying && !toolRunning) {
       botSide('working');
-      rows.add(_Row(
-        const ValueKey('working'),
-        rows.last.header ? 0 : AppSpace.md,
-        () => WorkingIndicator(status: workingStatus() ?? context.l10n.thinking),
-      ));
+      rows.add(
+        _Row(
+          const ValueKey('working'),
+          rows.last.header ? 0 : AppSpace.md,
+          () => WorkingIndicator(status: workingStatus() ?? context.l10n.thinking),
+        ),
+      );
     }
     return rows;
   }
@@ -463,6 +668,138 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Navigator.of(sheetContext).pop();
           context.go('/bots/${widget.botId}/chat?c=$id');
         },
+      ),
+    );
+  }
+}
+
+/// A file chosen for the next message: uploading until [ref] is set.
+class _Pending {
+  _Pending({required this.name, required this.bytes, required this.mime, required this.apiPath});
+  final String name;
+  final Uint8List bytes;
+  final String mime;
+  final String apiPath;
+  AttachmentRef? ref;
+  var failed = false;
+}
+
+class _PendingChip extends StatelessWidget {
+  const _PendingChip({required this.item, required this.onRemove});
+  final _Pending item;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final image = item.mime.startsWith('image/') && item.mime != 'image/heic';
+    final uploading = item.ref == null && !item.failed;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          key: Key('pending-${item.name}'),
+          width: image ? 64 : 180,
+          height: 64,
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(AppRadius.row),
+            border: Border.all(color: item.failed ? scheme.error : context.appColors.hairline),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: image
+              ? Image.memory(item.bytes, fit: BoxFit.cover, gaplessPlayback: true)
+              : Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(
+                    children: [
+                      Icon(fileIconFor(item.name), color: scheme.primary, size: 22),
+                      const SizedBox(width: AppSpace.xs),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              formatBytes(item.bytes.length),
+                              style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+        ),
+        if (uploading)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(color: scheme.surface.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(AppRadius.row)),
+              alignment: Alignment.center,
+              child: const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)),
+            ),
+          ),
+        Positioned(
+          top: -6,
+          right: -6,
+          child: Material(
+            color: scheme.onSurface,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onRemove,
+              child: Tooltip(
+                message: context.l10n.removeAttachment,
+                child: Padding(
+                  padding: const EdgeInsets.all(3),
+                  child: Icon(Icons.close_rounded, size: 14, color: scheme.surface),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// "+" in the composer: files everywhere, the photo library and camera where the device has them.
+class _AttachButton extends StatelessWidget {
+  const _AttachButton({required this.onFiles, required this.onPhotos, required this.onCamera});
+  final VoidCallback onFiles;
+  final VoidCallback onPhotos;
+  final VoidCallback onCamera;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final mobile = !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
+    final photos = mobile || (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS);
+    MenuItemButton item(Key key, IconData icon, String label, VoidCallback onPressed) => MenuItemButton(
+      key: key,
+      leadingIcon: Icon(icon, size: 20),
+      onPressed: onPressed,
+      child: Padding(padding: const EdgeInsets.only(right: 16), child: Text(label)),
+    );
+    return MenuAnchor(
+      alignmentOffset: const Offset(0, -8),
+      menuChildren: [
+        if (photos) item(const Key('attachPhotos'), Icons.photo_library_outlined, l10n.attachPhotos, onPhotos),
+        if (mobile) item(const Key('attachCamera'), Icons.photo_camera_outlined, l10n.attachCamera, onCamera),
+        item(const Key('attachFiles'), Icons.attach_file_rounded, l10n.attachFiles, onFiles),
+      ],
+      builder: (context, controller, _) => IconButton(
+        key: const Key('attachButton'),
+        tooltip: l10n.attach,
+        onPressed: () => controller.isOpen ? controller.close() : controller.open(),
+        icon: Icon(Icons.add_rounded, size: 24, color: context.colorScheme.onSurfaceVariant),
+        style: IconButton.styleFrom(fixedSize: const Size.square(40), minimumSize: const Size.square(40), padding: EdgeInsets.zero),
       ),
     );
   }
@@ -501,44 +838,57 @@ class _EmptyThread extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(side, AppSpace.lg, side, AppSpace.md),
           sliver: SliverFillRemaining(
             hasScrollBody: false,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              const Spacer(),
-              Column(mainAxisSize: MainAxisSize.min, children: [
-                _HeroMark(name: name).appCardEntrance(),
-                const SizedBox(height: AppSpace.lg),
-                Text(
-                  l10n.emptyChat(name),
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3),
-                ).appCardEntrance(delay: const Duration(milliseconds: 60)),
-                const SizedBox(height: AppSpace.xs),
-                Text(
-                  l10n.chatEmptySubtitle(name),
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.45),
-                ).appCardEntrance(delay: const Duration(milliseconds: 100)),
-              ]),
-              const Spacer(),
-              for (var i = 0; i < suggestions.length; i++)
-                Padding(
-                  padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpace.xs),
-                  child: AppCard(
-                    key: Key('suggestion-$i'),
-                    onTap: () => onAsk(suggestions[i].$2),
-                    radius: AppRadius.tile,
-                    padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
-                    child: Row(children: [
-                      ExcludeSemantics(child: SizedBox(width: 24, child: Text(suggestions[i].$1, style: const TextStyle(fontSize: 17, height: 1)))),
-                      const SizedBox(width: AppSpace.xs),
-                      Expanded(
-                        child: Text(suggestions[i].$2, style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.35)),
-                      ),
-                      const SizedBox(width: AppSpace.sm),
-                      Icon(Icons.arrow_upward_rounded, size: 18, color: scheme.onSurfaceVariant),
-                    ]),
-                  ).appListItemEntrance(i + 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Spacer(),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _HeroMark(name: name).appCardEntrance(),
+                    const SizedBox(height: AppSpace.lg),
+                    Text(
+                      l10n.emptyChat(name),
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3),
+                    ).appCardEntrance(delay: const Duration(milliseconds: 60)),
+                    const SizedBox(height: AppSpace.xs),
+                    Text(
+                      l10n.chatEmptySubtitle(name),
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.45),
+                    ).appCardEntrance(delay: const Duration(milliseconds: 100)),
+                  ],
                 ),
-            ]),
+                const Spacer(),
+                for (var i = 0; i < suggestions.length; i++)
+                  Padding(
+                    padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpace.xs),
+                    child: AppCard(
+                      key: Key('suggestion-$i'),
+                      onTap: () => onAsk(suggestions[i].$2),
+                      radius: AppRadius.tile,
+                      padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
+                      child: Row(
+                        children: [
+                          ExcludeSemantics(
+                            child: SizedBox(width: 24, child: Text(suggestions[i].$1, style: const TextStyle(fontSize: 17, height: 1))),
+                          ),
+                          const SizedBox(width: AppSpace.xs),
+                          Expanded(
+                            child: Text(
+                              suggestions[i].$2,
+                              style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.35),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpace.sm),
+                          Icon(Icons.arrow_upward_rounded, size: 18, color: scheme.onSurfaceVariant),
+                        ],
+                      ),
+                    ).appListItemEntrance(i + 2),
+                  ),
+              ],
+            ),
           ),
         ),
       ],
@@ -557,24 +907,28 @@ class _HeroMark extends StatelessWidget {
     return SizedBox(
       width: size + 14,
       height: size + 10,
-      child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
-        BotAvatar(name: name.isEmpty ? '?' : name, size: size),
-        Positioned(
-          right: 0,
-          bottom: 0,
-          child: Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: scheme.primary,
-              shape: BoxShape.circle,
-              border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 3),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          BotAvatar(name: name.isEmpty ? '?' : name, size: size),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                shape: BoxShape.circle,
+                border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 3),
+              ),
+              alignment: Alignment.center,
+              child: Icon(Icons.auto_awesome_rounded, size: 17, color: scheme.onPrimary),
             ),
-            alignment: Alignment.center,
-            child: Icon(Icons.auto_awesome_rounded, size: 17, color: scheme.onPrimary),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
@@ -587,8 +941,11 @@ class _MoreMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    MenuItemButton item(IconData icon, String label, VoidCallback onPressed) =>
-        MenuItemButton(leadingIcon: Icon(icon, size: 20), onPressed: onPressed, child: Padding(padding: const EdgeInsets.only(right: 24), child: Text(label)));
+    MenuItemButton item(IconData icon, String label, VoidCallback onPressed) => MenuItemButton(
+      leadingIcon: Icon(icon, size: 20),
+      onPressed: onPressed,
+      child: Padding(padding: const EdgeInsets.only(right: 24), child: Text(label)),
+    );
     return MenuAnchor(
       alignmentOffset: const Offset(-140, 6),
       menuChildren: [
@@ -621,43 +978,46 @@ class _ConversationsSheet extends ConsumerWidget {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final convos = ref.watch(conversationsProvider(botId));
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      SheetTitle(
-        l10n.conversations,
-        trailing: FilledButton.tonalIcon(onPressed: onNew, icon: const Icon(Icons.edit_square, size: 18), label: Text(l10n.newChat)),
-      ),
-      Expanded(
-        child: AsyncView(
-          value: convos,
-          onRetry: () => ref.invalidate(conversationsProvider(botId)),
-          data: (items) => items.isEmpty
-              ? EmptyState(icon: Icons.forum_outlined, message: l10n.noConversations)
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(AppSpace.sm, 0, AppSpace.sm, AppSpace.md),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 2),
-                  itemBuilder: (context, i) {
-                    final c = items[i];
-                    final current = c.id == currentId;
-                    return ListTile(
-                      selected: current,
-                      leading: Icon(current ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded, size: 20),
-                      title: Text(
-                        c.title ?? l10n.untitledChat,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.bodyLarge?.copyWith(fontWeight: current ? FontWeight.w700 : FontWeight.w500),
-                      ),
-                      trailing: Text(
-                        relativeTime(c.lastMessageAt ?? c.createdAt, context),
-                        style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
-                      ),
-                      onTap: () => onOpen(c.id),
-                    );
-                  },
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SheetTitle(
+          l10n.conversations,
+          trailing: FilledButton.tonalIcon(onPressed: onNew, icon: const Icon(Icons.edit_square, size: 18), label: Text(l10n.newChat)),
         ),
-      ),
-    ]);
+        Expanded(
+          child: AsyncView(
+            value: convos,
+            onRetry: () => ref.invalidate(conversationsProvider(botId)),
+            data: (items) => items.isEmpty
+                ? EmptyState(icon: Icons.forum_outlined, message: l10n.noConversations)
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(AppSpace.sm, 0, AppSpace.sm, AppSpace.md),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 2),
+                    itemBuilder: (context, i) {
+                      final c = items[i];
+                      final current = c.id == currentId;
+                      return ListTile(
+                        selected: current,
+                        leading: Icon(current ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded, size: 20),
+                        title: Text(
+                          c.title ?? l10n.untitledChat,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.bodyLarge?.copyWith(fontWeight: current ? FontWeight.w700 : FontWeight.w500),
+                        ),
+                        trailing: Text(
+                          relativeTime(c.lastMessageAt ?? c.createdAt, context),
+                          style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                        onTap: () => onOpen(c.id),
+                      );
+                    },
+                  ),
+          ),
+        ),
+      ],
+    );
   }
 }

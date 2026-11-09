@@ -313,6 +313,7 @@ Map<String, dynamic> _$CreatedRoutineToJson(CreatedRoutine instance) =>
 
 const _$RoutineTriggerEnumMap = {
   RoutineTrigger.schedule: 'schedule',
+  RoutineTrigger.once: 'once',
   RoutineTrigger.github: 'github',
   RoutineTrigger.webhook: 'webhook',
 };

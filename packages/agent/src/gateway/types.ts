@@ -27,7 +27,7 @@ export interface ResolvedModel {
 }
 
 export type ChatMessage =
-  | { role: "user"; content: string }
+  | { role: "user"; content: string; images?: Array<{ data: Uint8Array; mediaType: string }> }
   | { role: "assistant"; content: string; toolCalls?: ToolCall[] }
   | { role: "tool"; callId: string; name: string; content: string };
 

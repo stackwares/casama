@@ -380,7 +380,7 @@
   "test": "Test",
   "timezone": "Timezone",
   "triggerGithub": "GitHub",
-  "triggerSchedule": "Schedule",
+  "triggerSchedule": "Repeats",
   "triggerWebhook": "Webhook",
   "viewRun": "View run",
   "webhookCreated": "Webhook created",
@@ -976,5 +976,113 @@
   "providerHintCompatible": "Ollama, LM Studio, vLLM",
   "providerHintImages": "images",
   "providerHintSearch": "web search",
-  "providerHintVoice": "voice"
+  "providerHintVoice": "voice",
+  "noRoutinesHelp": "A routine is work a bot does later on its own: once at a time you pick, on a schedule, or when a webhook arrives.",
+  "routineOnce": "Once",
+  "lastRun": "Last: {when}",
+  "@lastRun": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "routineOff": "Off",
+  "deleteRoutineTitle": "Delete “{name}”?",
+  "@deleteRoutineTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteRoutineBody": "It won't run again. Results it already posted stay in their conversation.",
+  "triggerOnce": "Once",
+  "inMinutes": "In {n} min",
+  "@inMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "inHours": "{n, plural, =1{In 1 hour} other{In {n} hours}}",
+  "@inHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "tomorrowAt9": "Tomorrow 9:00",
+  "integrationNeedsName": "Give it a name with at least one letter.",
+  "integrationNeedsField": "Fill in {field} to save.",
+  "@integrationNeedsField": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "integrationSavedAs": "Saved as {name}",
+  "@integrationSavedAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "integrationUrlInvalid": "Use a full address starting with https://",
+  "openFile": "Open",
+  "saveFile": "Save",
+  "shareFile": "Share",
+  "savedFile": "Saved {name}",
+  "@savedFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noAppToOpen": "No app on this device opens {name}. Save it instead.",
+  "@noAppToOpen": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "previewUnavailable": "No preview for this kind of file. Open or save it to view it.",
+  "openFileInChat": "Open file",
+  "attach": "Attach",
+  "attachFiles": "Files",
+  "attachPhotos": "Photo library",
+  "attachCamera": "Take photo",
+  "dropToAttach": "Drop files to attach",
+  "uploadFailed": "Couldn't upload {name}",
+  "@uploadFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removeAttachment": "Remove",
+  "noComputerForFiles": "This bot has no computer to keep files on.",
+  "fileTooLarge": "{name} is over 25 MB, too large to attach.",
+  "@fileTooLarge": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "toolRoutineCreate": "Scheduled a routine",
+  "toolRoutineDelete": "Deleted a routine",
+  "toolRoutines": "Checked routines",
+  "toolTasks": "Updated the task board",
+  "toolNotify": "Sent you a notification",
+  "toolHttp": "Called a web API",
+  "toolMedia": "Made an image",
+  "toolTakeover": "Asked you to take over"
 }

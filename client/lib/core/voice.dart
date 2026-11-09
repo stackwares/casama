@@ -26,15 +26,21 @@ class RecordDictation implements Dictation {
   // Web records Opus in WebM; native platforms stream 16 kHz mono PCM, uploaded as WAV
   // (both formats are accepted by OpenAI and Deepgram).
   static const _webConfig = RecordConfig(encoder: AudioEncoder.opus, numChannels: 1);
-  static const _nativeConfig = RecordConfig(encoder: AudioEncoder.wav, numChannels: 1, sampleRate: 16000);
+  // Streaming takes raw PCM on every native platform; WAV is only for recording to a file.
+  static const _nativeConfig = RecordConfig(encoder: AudioEncoder.pcm16bits, numChannels: 1, sampleRate: 16000);
 
   @override
   Future<bool> start() async {
     if (!await _rec.hasPermission()) return false;
     _chunks.clear();
-    final stream = await _rec.startStream(kIsWeb ? _webConfig : _nativeConfig);
-    _sub = stream.listen(_chunks.addAll);
-    return true;
+    try {
+      final stream = await _rec.startStream(kIsWeb ? _webConfig : _nativeConfig);
+      _sub = stream.listen(_chunks.addAll);
+      return true;
+    } catch (e) {
+      debugPrint('dictation failed to start: $e');
+      return false;
+    }
   }
 
   @override

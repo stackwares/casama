@@ -175,6 +175,21 @@ export const updateRoutine = createRoute({
   responses: { 200: jsonResponse("Updated", Routine), 400: e400, 401: e401, 404: e404 },
 });
 
+export const deleteRoutine = createRoute({
+  operationId: "deleteRoutine",
+  method: "delete",
+  path: "/v1/routines/{id}",
+  tags: ["routines"],
+  security,
+  summary: "Delete a routine (its past runs and conversation are kept)",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse("Deleted", z.object({ deleted: Uuid }).openapi("DeletedRoutine")),
+    401: e401,
+    404: e404,
+  },
+});
+
 export const runRoutine = createRoute({
   operationId: "runRoutine",
   method: "post",

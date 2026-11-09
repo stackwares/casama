@@ -8,7 +8,9 @@ import '../../../core/providers.dart';
 import '../../../core/widgets.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../theme/app_colors.dart';
+import '../../../core/backend.dart';
 import '../../../theme/app_tokens.dart';
+import '../../files/file_preview.dart';
 import '../../../ui/app_card.dart';
 import '../../../ui/bot_avatar.dart';
 import '../../../ui/motion.dart';
@@ -18,13 +20,25 @@ import 'chat_markdown.dart';
 // ---------------------------------------------------------------------------------------------
 // Messages
 
-/// What you wrote: a bubble on the right in the accent tint, the tail corner tucked in.
+/// What you wrote: a bubble on the right in the accent tint, the tail corner tucked in, with any
+/// attached files above it.
 class UserBubble extends StatelessWidget {
-  const UserBubble({super.key, required this.text});
+  const UserBubble({super.key, required this.text, this.attachments = const []});
   final String text;
+  final List<AttachmentRef> attachments;
 
   @override
   Widget build(BuildContext context) {
+    if (attachments.isEmpty) return _bubble(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+      Wrap(alignment: WrapAlignment.end, spacing: AppSpace.xs, runSpacing: AppSpace.xs, children: [
+        for (final a in attachments) AttachmentTile(attachment: a),
+      ]),
+      if (text.isNotEmpty) ...[const SizedBox(height: 6), _bubble(context)],
+    ]);
+  }
+
+  Widget _bubble(BuildContext context) {
     final scheme = context.colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) => Align(
@@ -274,6 +288,65 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
+/// An attached file: a thumbnail for images, a chip for the rest. Tap to open it.
+class AttachmentTile extends ConsumerWidget {
+  const AttachmentTile({super.key, required this.attachment});
+  final AttachmentRef attachment;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scope = FileLinkScope.maybeOf(context);
+    final path = computerPathFromLink(attachment.path) ?? attachment.path;
+    final scheme = context.colorScheme;
+    void open() => scope?.open(path);
+    if (attachment.isImage && scope?.computerId != null) {
+      final bytes = ref.watch(computerFileProvider((scope!.computerId!, path))).value;
+      return Tooltip(
+        message: attachment.name,
+        child: InkWell(
+          key: Key('attachment-${attachment.path}'),
+          onTap: open,
+          borderRadius: BorderRadius.circular(AppRadius.tile),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.tile),
+            child: Container(
+              width: 168,
+              height: 126,
+              color: scheme.surfaceContainerHigh,
+              child: bytes == null
+                  ? Center(child: Icon(Icons.image_outlined, color: scheme.onSurfaceVariant))
+                  : Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true, errorBuilder: (_, _, _) => Icon(Icons.broken_image_outlined, color: scheme.onSurfaceVariant)),
+            ),
+          ),
+        ),
+      );
+    }
+    return Material(
+      color: scheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.rowAll, side: BorderSide(color: context.appColors.hairline)),
+      child: InkWell(
+        key: Key('attachment-${attachment.path}'),
+        onTap: open,
+        customBorder: RoundedRectangleBorder(borderRadius: AppRadius.rowAll),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(fileIconFor(attachment.name), size: 20, color: scheme.primary),
+            const SizedBox(width: AppSpace.xs),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 220),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text(attachment.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
+                if (attachment.size > 0) Text(formatBytes(attachment.size), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Tool steps
 
@@ -288,8 +361,16 @@ class _Placeholder extends StatelessWidget {
   if (tool.startsWith('memory')) return (l10n.toolMemory, Icons.psychology_outlined);
   if (tool.startsWith('skills')) return (l10n.toolSkill, Icons.menu_book_outlined);
   if (tool.startsWith('checkpoint')) return (l10n.toolCheckpoint, Icons.restore_rounded);
+  if (tool == 'computer.request_takeover') return (l10n.toolTakeover, Icons.front_hand_outlined);
   if (tool.startsWith('desktop') || tool.startsWith('computer')) return (l10n.toolDesktop, Icons.mouse_outlined);
   if (tool.contains('delegate') || tool.contains('subagent')) return (l10n.toolDelegate, Icons.group_outlined);
+  if (tool == 'routines.create') return (l10n.toolRoutineCreate, Icons.alarm_add_rounded);
+  if (tool == 'routines.delete') return (l10n.toolRoutineDelete, Icons.alarm_off_rounded);
+  if (tool.startsWith('routines')) return (l10n.toolRoutines, Icons.schedule_rounded);
+  if (tool.startsWith('tasks')) return (l10n.toolTasks, Icons.checklist_rounded);
+  if (tool.startsWith('notify')) return (l10n.toolNotify, Icons.notifications_active_outlined);
+  if (tool.startsWith('http')) return (l10n.toolHttp, Icons.public_rounded);
+  if (tool.startsWith('media')) return (l10n.toolMedia, Icons.auto_awesome_outlined);
   return (l10n.toolOther(tool), Icons.build_outlined);
 }
 
@@ -450,10 +531,21 @@ class _ToolDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
+    final filePath = _toolFile(entry);
+    final files = FileLinkScope.maybeOf(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(50, 0, 12, 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(entry.tool, style: AppText.mono.copyWith(fontSize: 12, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+        Row(children: [
+          Expanded(child: Text(entry.tool, style: AppText.mono.copyWith(fontSize: 12, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600))),
+          if (filePath != null && files != null && entry.status == ToolStatus.done)
+            TextButton.icon(
+              key: Key('openToolFile-${entry.callId}'),
+              onPressed: () => files.open(filePath),
+              icon: const Icon(Icons.open_in_new_rounded, size: 16),
+              label: Text(l10n.openFileInChat),
+            ),
+        ]),
         const SizedBox(height: 6),
         CodePanel(text: const JsonEncoder.withIndent('  ').convert(entry.args)),
         if (entry.output.isNotEmpty) ...[
@@ -473,6 +565,15 @@ class _ToolDetails extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// The file a tool step made or read, as a files API path (null when it isn't about a file).
+String? _toolFile(ToolEntry t) {
+  final artifact = t.artifactPath;
+  if (artifact != null && artifact.isNotEmpty) return computerPathFromLink(artifact);
+  if (!t.tool.startsWith('files.') || t.tool == 'files.list' || t.tool == 'files.search' || t.tool == 'files.delete') return null;
+  final p = t.args['path'];
+  return p is String && p.isNotEmpty ? computerPathFromLink(p) : null;
 }
 
 /// Monospaced text on the code surface (arguments, output).

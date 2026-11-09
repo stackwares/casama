@@ -5,18 +5,14 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../ui/adaptive_modal.dart';
 
 /// Team and private computers: create, rename, switch between headless and desktop, delete.
 class ComputersScreen extends ConsumerWidget {
   const ComputersScreen({super.key});
 
   Future<void> _create(BuildContext context, WidgetRef ref) async {
-    final created = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => const NewComputerSheet(),
-    );
+    final created = await showAdaptiveSheet<bool>(context: context, builder: (_) => const NewComputerSheet());
     if (created == true) ref.invalidate(computersProvider);
   }
 
@@ -151,7 +147,7 @@ class _NewComputerSheetState extends ConsumerState<NewComputerSheet> {
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     _botId ??= bots.isEmpty ? null : bots.first.id;
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(context).bottom + 16),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(l10n.newComputer, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),

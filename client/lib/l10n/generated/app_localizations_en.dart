@@ -767,7 +767,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get triggerGithub => 'GitHub';
 
   @override
-  String get triggerSchedule => 'Schedule';
+  String get triggerSchedule => 'Repeats';
 
   @override
   String get triggerWebhook => 'Webhook';
@@ -1672,4 +1672,148 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerHintVoice => 'voice';
+
+  @override
+  String get noRoutinesHelp =>
+      'A routine is work a bot does later on its own: once at a time you pick, on a schedule, or when a webhook arrives.';
+
+  @override
+  String get routineOnce => 'Once';
+
+  @override
+  String lastRun(String when) {
+    return 'Last: $when';
+  }
+
+  @override
+  String get routineOff => 'Off';
+
+  @override
+  String deleteRoutineTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get deleteRoutineBody =>
+      'It won\'t run again. Results it already posted stay in their conversation.';
+
+  @override
+  String get triggerOnce => 'Once';
+
+  @override
+  String inMinutes(int n) {
+    return 'In $n min';
+  }
+
+  @override
+  String inHours(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'In $n hours',
+      one: 'In 1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tomorrowAt9 => 'Tomorrow 9:00';
+
+  @override
+  String get integrationNeedsName => 'Give it a name with at least one letter.';
+
+  @override
+  String integrationNeedsField(String field) {
+    return 'Fill in $field to save.';
+  }
+
+  @override
+  String integrationSavedAs(String name) {
+    return 'Saved as $name';
+  }
+
+  @override
+  String get integrationUrlInvalid =>
+      'Use a full address starting with https://';
+
+  @override
+  String get openFile => 'Open';
+
+  @override
+  String get saveFile => 'Save';
+
+  @override
+  String get shareFile => 'Share';
+
+  @override
+  String savedFile(String name) {
+    return 'Saved $name';
+  }
+
+  @override
+  String noAppToOpen(String name) {
+    return 'No app on this device opens $name. Save it instead.';
+  }
+
+  @override
+  String get previewUnavailable =>
+      'No preview for this kind of file. Open or save it to view it.';
+
+  @override
+  String get openFileInChat => 'Open file';
+
+  @override
+  String get attach => 'Attach';
+
+  @override
+  String get attachFiles => 'Files';
+
+  @override
+  String get attachPhotos => 'Photo library';
+
+  @override
+  String get attachCamera => 'Take photo';
+
+  @override
+  String get dropToAttach => 'Drop files to attach';
+
+  @override
+  String uploadFailed(String name) {
+    return 'Couldn\'t upload $name';
+  }
+
+  @override
+  String get removeAttachment => 'Remove';
+
+  @override
+  String get noComputerForFiles => 'This bot has no computer to keep files on.';
+
+  @override
+  String fileTooLarge(String name) {
+    return '$name is over 25 MB, too large to attach.';
+  }
+
+  @override
+  String get toolRoutineCreate => 'Scheduled a routine';
+
+  @override
+  String get toolRoutineDelete => 'Deleted a routine';
+
+  @override
+  String get toolRoutines => 'Checked routines';
+
+  @override
+  String get toolTasks => 'Updated the task board';
+
+  @override
+  String get toolNotify => 'Sent you a notification';
+
+  @override
+  String get toolHttp => 'Called a web API';
+
+  @override
+  String get toolMedia => 'Made an image';
+
+  @override
+  String get toolTakeover => 'Asked you to take over';
 }

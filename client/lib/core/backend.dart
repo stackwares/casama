@@ -4,13 +4,25 @@ import 'dart:typed_data';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
 /// A message as shown in a conversation (final messages only; live text comes from run events).
+/// A file attached to a message, stored on the bot's computer ([path] is under its home folder).
+class AttachmentRef {
+  const AttachmentRef({required this.path, required this.name, required this.mimeType, required this.size});
+  final String path;
+  final String name;
+  final String mimeType;
+  final int size;
+
+  bool get isImage => mimeType.startsWith('image/');
+}
+
 class ChatMessageView {
-  const ChatMessageView({required this.id, required this.role, required this.text, required this.createdAt, this.runId});
+  const ChatMessageView({required this.id, required this.role, required this.text, required this.createdAt, this.runId, this.attachments = const []});
   final String id;
   final String role;
   final String text;
   final DateTime createdAt;
   final String? runId;
+  final List<AttachmentRef> attachments;
 }
 
 class SkillView {
@@ -91,7 +103,7 @@ abstract class Backend {
   Future<Conversation> createConversation(String botId);
   Future<List<ChatMessageView>> messages(String conversationId);
   Future<String?> activeRun(String conversationId);
-  Future<SendMessageResponse> send(String conversationId, String text);
+  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const []});
   Future<void> cancelRun(String runId);
   Stream<RunEventItem> watchRun(String runId, {int afterSeq = 0});
   Future<List<RunEventItem>> runEvents(String runId);
@@ -117,8 +129,10 @@ abstract class Backend {
 
   // Routines
   Future<List<Routine>> routines(String botId);
-  Future<CreatedRoutine> createRoutine(String botId, {required String name, required String instructions, required String trigger, String? cron, String? timezone});
+  Future<CreatedRoutine> createRoutine(String botId,
+      {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt});
   Future<void> setRoutineEnabled(String routineId, bool enabled);
+  Future<void> deleteRoutine(String routineId);
   Future<String> runRoutine(String routineId);
 
   // Integrations and secrets

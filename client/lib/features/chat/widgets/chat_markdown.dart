@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
+import '../../files/file_preview.dart';
 
 /// Bot replies as Markdown in the app's type and surfaces: comfortable paragraphs, Nunito headings,
 /// and code in rounded panels with the language and a copy button.
@@ -37,7 +38,14 @@ class ChatMarkdown extends StatelessWidget {
         style: TextStyle(color: scheme.primary, decoration: TextDecoration.underline, decorationColor: scheme.primary.withValues(alpha: 0.4)),
         onTap: (url) {
           final uri = Uri.tryParse(url);
-          if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+            launchUrl(uri, mode: LaunchMode.externalApplication);
+            return;
+          }
+          // Files the bot made ("sandbox:/home/kasama/workspace/x.md", "workspace/x.md") open in the app.
+          final path = computerPathFromLink(url);
+          final files = FileLinkScope.maybeOf(context);
+          if (path != null && files != null) files.open(path);
         },
       ),
       CodeConfig(

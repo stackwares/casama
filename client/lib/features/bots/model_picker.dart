@@ -4,6 +4,7 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../ui/adaptive_modal.dart';
 
 /// A dropdown-style field for a bot's model. Opens a searchable list of the models the chosen key
 /// can use (recommended first) and still accepts any model id typed in.
@@ -28,15 +29,10 @@ class ModelPickerField extends ConsumerWidget {
       onTap: !enabled
           ? null
           : () async {
-              final picked = await showModalBottomSheet<String>(
+              final picked = await showAdaptiveSheet<String>(
                 context: context,
-                isScrollControlled: true,
-                useSafeArea: true,
-                showDragHandle: true,
-                builder: (_) => FractionallySizedBox(
-                  heightFactor: 0.85,
-                  child: _ModelSheet(credentialId: credentialId!, current: value),
-                ),
+                heightFactor: 0.85,
+                builder: (_) => _ModelSheet(credentialId: credentialId!, current: value),
               );
               if (picked != null) onChanged(picked);
             },

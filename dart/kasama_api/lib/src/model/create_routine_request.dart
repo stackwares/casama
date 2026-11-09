@@ -31,6 +31,8 @@ class CreateRoutineRequest {
 
      this.scheduleCron,
 
+     this.runAt,
+
      this.timezone,
 
      this.notify,
@@ -99,6 +101,19 @@ class CreateRoutineRequest {
 
 
 
+      /// When a once routine runs (it switches itself off afterwards)
+  @JsonKey(
+    
+    name: r'run_at',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final DateTime? runAt;
+
+
+
       /// IANA timezone; defaults to your profile's
   @JsonKey(
     
@@ -146,6 +161,7 @@ class CreateRoutineRequest {
       other.instructions == instructions &&
       other.trigger == trigger &&
       other.scheduleCron == scheduleCron &&
+      other.runAt == runAt &&
       other.timezone == timezone &&
       other.notify == notify &&
       other.events == events;
@@ -157,6 +173,7 @@ class CreateRoutineRequest {
         instructions.hashCode +
         trigger.hashCode +
         scheduleCron.hashCode +
+        runAt.hashCode +
         timezone.hashCode +
         notify.hashCode +
         events.hashCode;

@@ -97,6 +97,7 @@ lib/src/model/delete_result.dart
 lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
+lib/src/model/deleted_routine.dart
 lib/src/model/health.dart
 lib/src/model/ice_server.dart
 lib/src/model/integration.dart
@@ -118,6 +119,7 @@ lib/src/model/memory.dart
 lib/src/model/memory_list.dart
 lib/src/model/memory_written_event.dart
 lib/src/model/memory_written_event_payload.dart
+lib/src/model/message_attachment.dart
 lib/src/model/message_completed_event.dart
 lib/src/model/message_completed_event_payload.dart
 lib/src/model/message_delta_event.dart

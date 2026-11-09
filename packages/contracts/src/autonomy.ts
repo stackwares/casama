@@ -102,7 +102,11 @@ export const AttachIntegrationRequest = z
   .object({ integration_id: Uuid, tool_allowlist: z.array(z.string()).optional() })
   .openapi("AttachIntegrationRequest");
 
-export const RoutineTrigger = z.enum(["schedule", "github", "webhook"]).openapi("RoutineTrigger");
+export const RoutineTrigger = z
+  .enum(["schedule", "once", "github", "webhook"])
+  .openapi("RoutineTrigger", {
+    description: "schedule repeats on a cron; once runs a single time at run_at",
+  });
 
 export const Routine = z
   .object({
@@ -133,6 +137,10 @@ export const CreateRoutineRequest = z
       .max(100)
       .optional()
       .openapi({ description: "5-field cron, required for schedule triggers" }),
+    run_at: z.iso
+      .datetime({ offset: true })
+      .optional()
+      .openapi({ description: "When a once routine runs (it switches itself off afterwards)" }),
     timezone: z
       .string()
       .max(64)
@@ -160,6 +168,7 @@ export const UpdateRoutineRequest = z
     name: z.string().trim().min(1).max(120).optional(),
     instructions: z.string().min(1).max(20_000).optional(),
     schedule_cron: z.string().max(100).optional(),
+    run_at: z.iso.datetime({ offset: true }).optional(),
     timezone: z.string().max(64).optional(),
     notify: z.boolean().optional(),
     enabled: z.boolean().optional(),

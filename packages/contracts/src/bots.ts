@@ -90,8 +90,32 @@ export const CreateConversationRequest = z
   .object({ bot_id: Uuid, title: z.string().max(200).optional() })
   .openapi("CreateConversationRequest");
 
+export const MessageAttachment = z
+  .object({
+    path: z
+      .string()
+      .min(1)
+      .max(500)
+      .regex(/^(?!\/)(?!.*\.\.)/, "A path under the home folder, without ..")
+      .openapi({
+        description:
+          "Where the file is on the bot's computer, under its home folder (upload it first)",
+      }),
+    name: z.string().min(1).max(255),
+    mime_type: z.string().max(120),
+    size: z.number().int().min(0),
+  })
+  .openapi("MessageAttachment");
+
 export const SendMessageRequest = z
-  .object({ text: z.string().trim().min(1).max(100_000) })
+  .object({
+    text: z.string().trim().max(100_000).default(""),
+    attachments: z.array(MessageAttachment).max(10).optional(),
+  })
+  .refine((b) => b.text.length > 0 || (b.attachments?.length ?? 0) > 0, {
+    message: "Send some text or an attachment",
+    path: ["text"],
+  })
   .openapi("SendMessageRequest");
 
 export const SendMessageResponse = z

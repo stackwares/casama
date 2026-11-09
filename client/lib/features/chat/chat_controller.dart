@@ -15,13 +15,14 @@ sealed class ChatEntry {
 }
 
 class MessageEntry extends ChatEntry {
-  const MessageEntry({required this.id, required this.role, required this.text, this.streaming = false});
+  const MessageEntry({required this.id, required this.role, required this.text, this.streaming = false, this.attachments = const []});
   final String id;
   final String role;
   final String text;
   final bool streaming;
+  final List<AttachmentRef> attachments;
   MessageEntry copyWith({String? text, bool? streaming}) =>
-      MessageEntry(id: id, role: role, text: text ?? this.text, streaming: streaming ?? this.streaming);
+      MessageEntry(id: id, role: role, text: text ?? this.text, streaming: streaming ?? this.streaming, attachments: attachments);
 }
 
 class ToolEntry extends ChatEntry {
@@ -162,7 +163,7 @@ class ChatController extends Notifier<ChatState> {
     final messages = await _backend.messages(id);
     state = ChatState(
       conversationId: id,
-      entries: [for (final m in messages) MessageEntry(id: m.id, role: m.role, text: m.text)],
+      entries: [for (final m in messages) MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments)],
     );
     final active = await _backend.activeRun(id);
     if (active != null) _attach(active);
@@ -173,18 +174,19 @@ class ChatController extends Notifier<ChatState> {
     state = const ChatState();
   }
 
-  Future<void> send(String text) async {
+  Future<void> send(String text, {List<AttachmentRef> attachments = const []}) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty || state.running) return;
+    if ((trimmed.isEmpty && attachments.isEmpty) || state.running) return;
     var conversationId = state.conversationId;
     if (conversationId == null) {
       conversationId = (await _backend.createConversation(botId)).id;
       state = state.copyWith(conversationId: conversationId);
       ref.invalidate(conversationsProvider(botId));
     }
-    final optimistic = MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed);
+    final optimistic =
+        MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed, attachments: attachments);
     state = state.copyWith(entries: [...state.entries, optimistic], lastUserText: trimmed);
-    final sent = await _backend.send(conversationId, trimmed);
+    final sent = await _backend.send(conversationId, trimmed, attachments: attachments);
     unawaited(ref.read(runActivitiesProvider).started(sent.runId, ref.read(botProvider(botId))?.name ?? ''));
     _attach(sent.runId);
   }

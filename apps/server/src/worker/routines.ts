@@ -66,12 +66,20 @@ export async function claimDueRoutines(
   return db.transaction(async (tx) => {
     const due = await tx.execute<RoutineRow>(sql`
       select * from public.routines
-      where enabled and schedule_cron is not null and next_run_at <= ${now.toISOString()}::timestamptz
+      where enabled and next_run_at <= ${now.toISOString()}::timestamptz
+        and (schedule_cron is not null or trigger ->> 'type' = 'once')
       order by next_run_at limit ${limit}
       for update skip locked`);
     const runIds: string[] = [];
     for (const r of due) {
       runIds.push(await createRoutineRun(tx, r, "routine"));
+      if (r.trigger?.type === "once") {
+        // A one-time routine runs once and switches itself off.
+        await tx.execute(
+          sql`update public.routines set enabled = false, next_run_at = null where id = ${r.id}::uuid`,
+        );
+        continue;
+      }
       const next = nextRunAt(r.schedule_cron as string, r.timezone, now);
       await tx.execute(
         sql`update public.routines set next_run_at = ${next.toISOString()}::timestamptz where id = ${r.id}::uuid`,

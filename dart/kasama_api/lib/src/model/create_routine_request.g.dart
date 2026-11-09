@@ -17,6 +17,8 @@ abstract class _$CreateRoutineRequestCWProxy {
 
   CreateRoutineRequest scheduleCron(String? scheduleCron);
 
+  CreateRoutineRequest runAt(DateTime? runAt);
+
   CreateRoutineRequest timezone(String? timezone);
 
   CreateRoutineRequest notify(bool? notify);
@@ -37,6 +39,7 @@ abstract class _$CreateRoutineRequestCWProxy {
     String instructions,
     RoutineTrigger? trigger,
     String? scheduleCron,
+    DateTime? runAt,
     String? timezone,
     bool? notify,
     List<String>? events,
@@ -70,6 +73,9 @@ class _$CreateRoutineRequestCWProxyImpl
       call(scheduleCron: scheduleCron);
 
   @override
+  CreateRoutineRequest runAt(DateTime? runAt) => call(runAt: runAt);
+
+  @override
   CreateRoutineRequest timezone(String? timezone) => call(timezone: timezone);
 
   @override
@@ -93,6 +99,7 @@ class _$CreateRoutineRequestCWProxyImpl
     Object? instructions = const $CopyWithPlaceholder(),
     Object? trigger = const $CopyWithPlaceholder(),
     Object? scheduleCron = const $CopyWithPlaceholder(),
+    Object? runAt = const $CopyWithPlaceholder(),
     Object? timezone = const $CopyWithPlaceholder(),
     Object? notify = const $CopyWithPlaceholder(),
     Object? events = const $CopyWithPlaceholder(),
@@ -119,6 +126,10 @@ class _$CreateRoutineRequestCWProxyImpl
           ? _value.scheduleCron
           // ignore: cast_nullable_to_non_nullable
           : scheduleCron as String?,
+      runAt: runAt == const $CopyWithPlaceholder()
+          ? _value.runAt
+          // ignore: cast_nullable_to_non_nullable
+          : runAt as DateTime?,
       timezone: timezone == const $CopyWithPlaceholder()
           ? _value.timezone
           // ignore: cast_nullable_to_non_nullable
@@ -149,26 +160,39 @@ extension $CreateRoutineRequestCopyWith on CreateRoutineRequest {
 
 CreateRoutineRequest _$CreateRoutineRequestFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate('CreateRoutineRequest', json, ($checkedConvert) {
-  $checkKeys(json, requiredKeys: const ['bot_id', 'name', 'instructions']);
-  final val = CreateRoutineRequest(
-    botId: $checkedConvert('bot_id', (v) => v as String),
-    name: $checkedConvert('name', (v) => v as String),
-    instructions: $checkedConvert('instructions', (v) => v as String),
-    trigger: $checkedConvert(
-      'trigger',
-      (v) => $enumDecodeNullable(_$RoutineTriggerEnumMap, v),
-    ),
-    scheduleCron: $checkedConvert('schedule_cron', (v) => v as String?),
-    timezone: $checkedConvert('timezone', (v) => v as String?),
-    notify: $checkedConvert('notify', (v) => v as bool?),
-    events: $checkedConvert(
-      'events',
-      (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
-    ),
-  );
-  return val;
-}, fieldKeyMap: const {'botId': 'bot_id', 'scheduleCron': 'schedule_cron'});
+) => $checkedCreate(
+  'CreateRoutineRequest',
+  json,
+  ($checkedConvert) {
+    $checkKeys(json, requiredKeys: const ['bot_id', 'name', 'instructions']);
+    final val = CreateRoutineRequest(
+      botId: $checkedConvert('bot_id', (v) => v as String),
+      name: $checkedConvert('name', (v) => v as String),
+      instructions: $checkedConvert('instructions', (v) => v as String),
+      trigger: $checkedConvert(
+        'trigger',
+        (v) => $enumDecodeNullable(_$RoutineTriggerEnumMap, v),
+      ),
+      scheduleCron: $checkedConvert('schedule_cron', (v) => v as String?),
+      runAt: $checkedConvert(
+        'run_at',
+        (v) => v == null ? null : DateTime.parse(v as String),
+      ),
+      timezone: $checkedConvert('timezone', (v) => v as String?),
+      notify: $checkedConvert('notify', (v) => v as bool?),
+      events: $checkedConvert(
+        'events',
+        (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+      ),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'botId': 'bot_id',
+    'scheduleCron': 'schedule_cron',
+    'runAt': 'run_at',
+  },
+);
 
 Map<String, dynamic> _$CreateRoutineRequestToJson(
   CreateRoutineRequest instance,
@@ -178,6 +202,7 @@ Map<String, dynamic> _$CreateRoutineRequestToJson(
   'instructions': instance.instructions,
   'trigger': ?_$RoutineTriggerEnumMap[instance.trigger],
   'schedule_cron': ?instance.scheduleCron,
+  'run_at': ?instance.runAt?.toIso8601String(),
   'timezone': ?instance.timezone,
   'notify': ?instance.notify,
   'events': ?instance.events,
@@ -185,6 +210,7 @@ Map<String, dynamic> _$CreateRoutineRequestToJson(
 
 const _$RoutineTriggerEnumMap = {
   RoutineTrigger.schedule: 'schedule',
+  RoutineTrigger.once: 'once',
   RoutineTrigger.github: 'github',
   RoutineTrigger.webhook: 'webhook',
 };

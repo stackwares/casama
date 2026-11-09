@@ -2603,12 +2603,47 @@
         "properties": {
           "text": {
             "type": "string",
+            "maxLength": 100000,
+            "default": ""
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageAttachment"
+            },
+            "maxItems": 10
+          }
+        }
+      },
+      "MessageAttachment": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
             "minLength": 1,
-            "maxLength": 100000
+            "maxLength": 500,
+            "pattern": "^(?!\\/)(?!.*\\.\\.)",
+            "description": "Where the file is on the bot's computer, under its home folder (upload it first)"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "mime_type": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
           }
         },
         "required": [
-          "text"
+          "path",
+          "name",
+          "mime_type",
+          "size"
         ]
       },
       "CredentialTestResult": {
@@ -3380,9 +3415,11 @@
         "type": "string",
         "enum": [
           "schedule",
+          "once",
           "github",
           "webhook"
-        ]
+        ],
+        "description": "schedule repeats on a cron; once runs a single time at run_at"
       },
       "Routine": {
         "type": "object",
@@ -3485,6 +3522,11 @@
             "type": "string",
             "maxLength": 100,
             "description": "5-field cron, required for schedule triggers"
+          },
+          "run_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When a once routine runs (it switches itself off afterwards)"
           },
           "timezone": {
             "type": "string",
@@ -3692,6 +3734,18 @@
         },
         "required": [
           "decision"
+        ]
+      },
+      "DeletedRoutine": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
         ]
       },
       "DeletedId": {
@@ -3951,6 +4005,10 @@
           "schedule_cron": {
             "type": "string",
             "maxLength": 100
+          },
+          "run_at": {
+            "type": "string",
+            "format": "date-time"
           },
           "timezone": {
             "type": "string",
@@ -8747,6 +8805,137 @@
         }
       }
     },
+    "/v1/routines/{id}": {
+      "delete": {
+        "operationId": "deleteRoutine",
+        "tags": [
+          "routines"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete a routine (its past runs and conversation are kept)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedRoutine"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateRoutine",
+        "tags": [
+          "routines"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoutineRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Routine"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/secrets/{id}": {
       "delete": {
         "operationId": "deleteSecret",
@@ -9148,82 +9337,6 @@
           },
           "403": {
             "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/routines/{id}": {
-      "patch": {
-        "operationId": "updateRoutine",
-        "tags": [
-          "routines"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "name": "id",
-            "in": "path"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateRoutineRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Routine"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation failed",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not authenticated",
             "content": {
               "application/problem+json": {
                 "schema": {

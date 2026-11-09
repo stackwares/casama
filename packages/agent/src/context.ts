@@ -42,6 +42,8 @@ export interface ContextInput {
   computer?: boolean;
   /** Fraction of the window that triggers compaction. */
   compactAt?: number;
+  /** Set when one of the bot's routines started this run. */
+  routine?: { id: string; name: string };
 }
 
 export interface BuiltContext {
@@ -54,9 +56,18 @@ export interface BuiltContext {
 
 function localDate(now: Date, timezone: string) {
   try {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: timezone, dateStyle: "full" }).format(now);
+    const date = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, dateStyle: "full" }).format(
+      now,
+    );
+    const time = new Intl.DateTimeFormat("en-GB", {
+      timeZone: timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZoneName: "shortOffset",
+    }).format(now);
+    return `${date}, ${time}`;
   } catch {
-    return now.toISOString().slice(0, 10);
+    return now.toISOString().slice(0, 16);
   }
 }
 
@@ -73,8 +84,9 @@ export function buildContext(input: ContextInput): BuiltContext {
     input.persona.trim() ? `Persona:\n${input.persona.trim()}` : "",
     `Autonomy: ${AUTONOMY_TEXT[input.autonomy]}`,
     input.computer
-      ? "You have your own Linux computer (Ubuntu, home /home/kasama, work in ~/workspace) with a shell, files and a browser. Files persist between conversations. Use the browser tools for websites and files.write for deliverables."
+      ? "You have your own Linux computer (Ubuntu, home /home/kasama, work in ~/workspace) with a shell, files and a browser. Files persist between conversations. Use the browser tools for websites and files.write for deliverables. When you mention a file you made, link it with its path under the home folder, like [report.md](workspace/report.md); the app opens those links. Never use sandbox: or file: links. Files the user attaches arrive in workspace/uploads."
       : "",
+    "To do something later, use routines.create: in_minutes or run_at for one-time work (reminders, follow-ups), schedule_cron only for work that repeats. Use routines.list, routines.update and routines.delete to change or stop routines.",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -89,6 +101,11 @@ export function buildContext(input: ContextInput): BuiltContext {
     skills,
     `Today is ${localDate(input.now, input.timezone)} (user timezone ${input.timezone}).`,
   ];
+  if (input.routine) {
+    system.push(
+      `This run was started by your routine "${input.routine.name}" (id ${input.routine.id}). If it should not run again, switch it off with routines.update (enabled: false) or remove it with routines.delete.`,
+    );
+  }
   if (input.memories.length) {
     system.push(
       `What you remember about this user and work:\n${input.memories.map((m) => `- (${m.kind}) ${m.content}`).join("\n")}`,

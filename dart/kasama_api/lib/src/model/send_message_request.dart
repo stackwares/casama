@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:kasama_api/src/model/message_attachment.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -20,18 +21,32 @@ class SendMessageRequest {
   /// Returns a new [SendMessageRequest] instance.
   SendMessageRequest({
 
-    required  this.text,
+     this.text = '',
+
+     this.attachments,
   });
 
   @JsonKey(
-    
+    defaultValue: '',
     name: r'text',
-    required: true,
+    required: false,
     includeIfNull: false,
   )
 
 
-  final String text;
+  final String? text;
+
+
+
+  @JsonKey(
+    
+    name: r'attachments',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<MessageAttachment>? attachments;
 
 
 
@@ -39,11 +54,13 @@ class SendMessageRequest {
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is SendMessageRequest &&
-      other.text == text;
+      other.text == text &&
+      other.attachments == attachments;
 
     @override
     int get hashCode =>
-        text.hashCode;
+        text.hashCode +
+        attachments.hashCode;
 
   factory SendMessageRequest.fromJson(Map<String, dynamic> json) => _$SendMessageRequestFromJson(json);
 

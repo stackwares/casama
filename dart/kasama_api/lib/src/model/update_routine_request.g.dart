@@ -13,6 +13,8 @@ abstract class _$UpdateRoutineRequestCWProxy {
 
   UpdateRoutineRequest scheduleCron(String? scheduleCron);
 
+  UpdateRoutineRequest runAt(DateTime? runAt);
+
   UpdateRoutineRequest timezone(String? timezone);
 
   UpdateRoutineRequest notify(bool? notify);
@@ -31,6 +33,7 @@ abstract class _$UpdateRoutineRequestCWProxy {
     String? name,
     String? instructions,
     String? scheduleCron,
+    DateTime? runAt,
     String? timezone,
     bool? notify,
     bool? enabled,
@@ -57,6 +60,9 @@ class _$UpdateRoutineRequestCWProxyImpl
       call(scheduleCron: scheduleCron);
 
   @override
+  UpdateRoutineRequest runAt(DateTime? runAt) => call(runAt: runAt);
+
+  @override
   UpdateRoutineRequest timezone(String? timezone) => call(timezone: timezone);
 
   @override
@@ -78,6 +84,7 @@ class _$UpdateRoutineRequestCWProxyImpl
     Object? name = const $CopyWithPlaceholder(),
     Object? instructions = const $CopyWithPlaceholder(),
     Object? scheduleCron = const $CopyWithPlaceholder(),
+    Object? runAt = const $CopyWithPlaceholder(),
     Object? timezone = const $CopyWithPlaceholder(),
     Object? notify = const $CopyWithPlaceholder(),
     Object? enabled = const $CopyWithPlaceholder(),
@@ -95,6 +102,10 @@ class _$UpdateRoutineRequestCWProxyImpl
           ? _value.scheduleCron
           // ignore: cast_nullable_to_non_nullable
           : scheduleCron as String?,
+      runAt: runAt == const $CopyWithPlaceholder()
+          ? _value.runAt
+          // ignore: cast_nullable_to_non_nullable
+          : runAt as DateTime?,
       timezone: timezone == const $CopyWithPlaceholder()
           ? _value.timezone
           // ignore: cast_nullable_to_non_nullable
@@ -130,12 +141,16 @@ UpdateRoutineRequest _$UpdateRoutineRequestFromJson(
     name: $checkedConvert('name', (v) => v as String?),
     instructions: $checkedConvert('instructions', (v) => v as String?),
     scheduleCron: $checkedConvert('schedule_cron', (v) => v as String?),
+    runAt: $checkedConvert(
+      'run_at',
+      (v) => v == null ? null : DateTime.parse(v as String),
+    ),
     timezone: $checkedConvert('timezone', (v) => v as String?),
     notify: $checkedConvert('notify', (v) => v as bool?),
     enabled: $checkedConvert('enabled', (v) => v as bool?),
   );
   return val;
-}, fieldKeyMap: const {'scheduleCron': 'schedule_cron'});
+}, fieldKeyMap: const {'scheduleCron': 'schedule_cron', 'runAt': 'run_at'});
 
 Map<String, dynamic> _$UpdateRoutineRequestToJson(
   UpdateRoutineRequest instance,
@@ -143,6 +158,7 @@ Map<String, dynamic> _$UpdateRoutineRequestToJson(
   'name': ?instance.name,
   'instructions': ?instance.instructions,
   'schedule_cron': ?instance.scheduleCron,
+  'run_at': ?instance.runAt?.toIso8601String(),
   'timezone': ?instance.timezone,
   'notify': ?instance.notify,
   'enabled': ?instance.enabled,

@@ -163,6 +163,20 @@ class SupabaseBackend implements Backend {
     return content.whereType<Map>().where((p) => p['type'] == 'text').map((p) => '${p['text'] ?? ''}').join();
   }
 
+  static List<AttachmentRef> _files(Object? content) {
+    if (content is! List) return const [];
+    return [
+      for (final p in content.whereType<Map>())
+        if (p['type'] == 'file' && p['path'] is String)
+          AttachmentRef(
+            path: p['path'] as String,
+            name: '${p['name'] ?? (p['path'] as String).split('/').last}',
+            mimeType: '${p['mime_type'] ?? ''}',
+            size: (p['size'] as num?)?.toInt() ?? 0,
+          ),
+    ];
+  }
+
   @override
   Future<List<ChatMessageView>> messages(String conversationId) async {
     final rows = await supabase
@@ -180,6 +194,7 @@ class SupabaseBackend implements Backend {
           text: _text(r['content']),
           createdAt: DateTime.parse(r['created_at'] as String),
           runId: r['run_id'] as String?,
+          attachments: _files(r['content']),
         ),
     ];
   }
@@ -197,8 +212,17 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<SendMessageResponse> send(String conversationId, String text) async =>
-      (await api.chat.sendMessage(id: conversationId, sendMessageRequest: SendMessageRequest(text: text))).data!;
+  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const []}) async =>
+      (await api.chat.sendMessage(
+        id: conversationId,
+        sendMessageRequest: SendMessageRequest(
+          text: text,
+          attachments: attachments.isEmpty
+              ? null
+              : [for (final a in attachments) MessageAttachment(path: a.path, name: a.name, mimeType: a.mimeType, size: a.size)],
+        ),
+      ))
+          .data!;
 
   @override
   Future<void> cancelRun(String runId) async => api.runs.cancelRun(id: runId);
@@ -446,7 +470,7 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<CreatedRoutine> createRoutine(String botId,
-          {required String name, required String instructions, required String trigger, String? cron, String? timezone}) async =>
+          {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt}) async =>
       (await api.routines.createRoutine(
         createRoutineRequest: CreateRoutineRequest(
           botId: botId,
@@ -454,10 +478,14 @@ class SupabaseBackend implements Backend {
           instructions: instructions,
           trigger: RoutineTrigger.values.firstWhere((t) => t.value == trigger),
           scheduleCron: trigger == 'schedule' ? cron : null,
+          runAt: trigger == 'once' ? runAt?.toUtc() : null,
           timezone: timezone,
         ),
       ))
           .data!;
+
+  @override
+  Future<void> deleteRoutine(String routineId) async => api.routines.deleteRoutine(id: routineId);
 
   @override
   Future<void> setRoutineEnabled(String routineId, bool enabled) async =>

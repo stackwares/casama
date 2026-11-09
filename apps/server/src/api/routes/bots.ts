@@ -245,7 +245,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.sendMessage, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
-    const { text } = c.req.valid("json");
+    const { text, attachments } = c.req.valid("json");
     return withSpan("chat.send", { conversation_id: id }, async (span) => {
       const created = await withUserSession(db, claims, async (tx) => {
         const [conv] = await tx.select().from(conversations).where(eq(conversations.id, id));
@@ -264,7 +264,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         const [msg] = await tx.execute<{ id: string }>(sql`
           insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
           values (${conv.orgId}::uuid, ${conv.id}::uuid, 'user', ${claims.sub}::uuid,
-                  ${JSON.stringify([{ type: "text", text }])}::jsonb, ${run.id}::uuid)
+                  ${JSON.stringify([{ type: "text", text }, ...(attachments ?? []).map((f) => ({ type: "file", ...f }))])}::jsonb, ${run.id}::uuid)
           returning id`);
         await tx
           .update(conversations)

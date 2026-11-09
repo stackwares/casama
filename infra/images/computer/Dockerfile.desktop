@@ -42,6 +42,8 @@ COPY infra/images/computer/desktop-start.sh /usr/local/bin/desktop-start
 COPY infra/images/computer/openbox-menu.xml /etc/xdg/openbox/menu.xml
 COPY infra/images/computer/tint2rc /etc/xdg/tint2/tint2rc
 RUN chmod +x /usr/local/bin/desktop-start
-ENV DISPLAY=:1 KASAMA_PROFILE=desktop
+COPY infra/images/computer/kasama-browser.desktop /usr/share/applications/kasama-browser.desktop
+# The bot's browser runs as a visible window here, so a person taking over sees what the bot sees.
+ENV DISPLAY=:1 KASAMA_PROFILE=desktop AGENT_BROWSER_HEADED=1 AGENT_BROWSER_ARGS=--start-maximized,--hide-crash-restore-bubble,--test-type,--no-default-browser-check
 USER kasama
 CMD ["desktop-start"]

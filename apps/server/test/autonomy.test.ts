@@ -202,6 +202,72 @@ describe("Phase 4 gate", () => {
     expect(new Date(routine!.next_run_at).getTime()).toBeGreaterThan(Date.now());
   }, 60_000);
 
+  it("a one-time routine runs once, then switches itself off; routines can be deleted", async () => {
+    const bot = await makeBot("Reminder");
+    const runAt = new Date(Date.now() + 60_000).toISOString();
+    const created = await j(
+      await h.request("/v1/routines", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          bot_id: bot.id,
+          name: "Water",
+          instructions: "Remind me to drink water.",
+          trigger: "once",
+          run_at: runAt,
+        },
+      }),
+    );
+    expect(created).toMatchObject({ trigger: "once", schedule_cron: null, enabled: true });
+    expect(new Date(created.next_run_at).toISOString()).toBe(runAt);
+    // A time in the past is refused.
+    const past = await h.request("/v1/routines", {
+      method: "POST",
+      token: owner.token,
+      json: {
+        bot_id: bot.id,
+        name: "Late",
+        instructions: "x",
+        trigger: "once",
+        run_at: "2020-01-01T00:00:00Z",
+      },
+    });
+    expect(past.status).toBe(400);
+
+    await h.tdb
+      .admin`update public.routines set next_run_at = now() - interval '1 minute' where id = ${created.id}`;
+    await (await DBOS.startWorkflow(routinesTickWorkflow)(new Date(), null)).getResult();
+    // A second tick must not run it again.
+    await (
+      await DBOS.startWorkflow(routinesTickWorkflow)(new Date(Date.now() + 120_000), null)
+    ).getResult();
+    const [row] = await h.tdb.admin<{ enabled: boolean; next_run_at: Date | null; runs: number }[]>`
+      select enabled, next_run_at, (select count(*)::int from public.runs where routine_id = ${created.id}) as runs
+      from public.routines where id = ${created.id}`;
+    expect(row).toMatchObject({ enabled: false, next_run_at: null, runs: 1 });
+
+    const del = await h.request(`/v1/routines/${created.id}`, {
+      method: "DELETE",
+      token: owner.token,
+    });
+    expect(del.status).toBe(200);
+    const list = await j(await h.request(`/v1/bots/${bot.id}/routines`, { token: owner.token }));
+    expect(list.items).toEqual([]);
+    // Someone outside the workspace can't delete routines.
+    const stranger = await h.user("routine-stranger@example.com");
+    const other = await j(
+      await h.request("/v1/routines", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: bot.id, name: "Keep", instructions: "x", schedule_cron: "0 8 * * *" },
+      }),
+    );
+    expect(
+      (await h.request(`/v1/routines/${other.id}`, { method: "DELETE", token: stranger.token }))
+        .status,
+    ).toBe(404);
+  }, 60_000);
+
   let riskyBot: (name: string) => Promise<{ id: string }> = async (name: string) => {
     // An MCP tool whose risk an admin raised to high.
     const integ = await j(

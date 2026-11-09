@@ -7,7 +7,9 @@ part of 'send_message_request.dart';
 // **************************************************************************
 
 abstract class _$SendMessageRequestCWProxy {
-  SendMessageRequest text(String text);
+  SendMessageRequest text(String? text);
+
+  SendMessageRequest attachments(List<MessageAttachment>? attachments);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -17,7 +19,7 @@ abstract class _$SendMessageRequestCWProxy {
   /// ```dart
   /// SendMessageRequest(...).copyWith(id: 12, name: "My name")
   /// ```
-  SendMessageRequest call({String text});
+  SendMessageRequest call({String? text, List<MessageAttachment>? attachments});
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -28,7 +30,11 @@ class _$SendMessageRequestCWProxyImpl implements _$SendMessageRequestCWProxy {
   final SendMessageRequest _value;
 
   @override
-  SendMessageRequest text(String text) => call(text: text);
+  SendMessageRequest text(String? text) => call(text: text);
+
+  @override
+  SendMessageRequest attachments(List<MessageAttachment>? attachments) =>
+      call(attachments: attachments);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -39,12 +45,19 @@ class _$SendMessageRequestCWProxyImpl implements _$SendMessageRequestCWProxy {
   /// SendMessageRequest(...).copyWith(id: 12, name: "My name")
   /// ```
   @override
-  SendMessageRequest call({Object? text = const $CopyWithPlaceholder()}) {
+  SendMessageRequest call({
+    Object? text = const $CopyWithPlaceholder(),
+    Object? attachments = const $CopyWithPlaceholder(),
+  }) {
     return SendMessageRequest(
-      text: text == const $CopyWithPlaceholder() || text == null
+      text: text == const $CopyWithPlaceholder()
           ? _value.text
           // ignore: cast_nullable_to_non_nullable
-          : text as String,
+          : text as String?,
+      attachments: attachments == const $CopyWithPlaceholder()
+          ? _value.attachments
+          // ignore: cast_nullable_to_non_nullable
+          : attachments as List<MessageAttachment>?,
     );
   }
 }
@@ -63,12 +76,22 @@ extension $SendMessageRequestCopyWith on SendMessageRequest {
 
 SendMessageRequest _$SendMessageRequestFromJson(Map<String, dynamic> json) =>
     $checkedCreate('SendMessageRequest', json, ($checkedConvert) {
-      $checkKeys(json, requiredKeys: const ['text']);
       final val = SendMessageRequest(
-        text: $checkedConvert('text', (v) => v as String),
+        text: $checkedConvert('text', (v) => v as String? ?? ''),
+        attachments: $checkedConvert(
+          'attachments',
+          (v) => (v as List<dynamic>?)
+              ?.map(
+                (e) => MessageAttachment.fromJson(e as Map<String, dynamic>),
+              )
+              .toList(),
+        ),
       );
       return val;
     });
 
 Map<String, dynamic> _$SendMessageRequestToJson(SendMessageRequest instance) =>
-    <String, dynamic>{'text': instance.text};
+    <String, dynamic>{
+      'text': ?instance.text,
+      'attachments': ?instance.attachments?.map((e) => e.toJson()).toList(),
+    };

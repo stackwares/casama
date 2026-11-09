@@ -64,7 +64,20 @@ export function reasoningOptions(
 
 export function toModelMessages(messages: ChatMessage[]): ModelMessage[] {
   return messages.map((m): ModelMessage => {
-    if (m.role === "user") return { role: "user", content: m.content };
+    if (m.role === "user") {
+      if (!m.images?.length) return { role: "user", content: m.content };
+      return {
+        role: "user",
+        content: [
+          { type: "text" as const, text: m.content },
+          ...m.images.map((img) => ({
+            type: "image" as const,
+            image: img.data,
+            mediaType: img.mediaType,
+          })),
+        ],
+      };
+    }
     if (m.role === "tool") {
       return {
         role: "tool",

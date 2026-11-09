@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_app/core/providers.dart';
 import 'package:kasama_app/l10n/generated/app_localizations.dart';
@@ -85,6 +86,33 @@ void main() {
     expect(backend.readNotifications, ['n3']);
   });
 
+  testWidgets('routines: a one-time routine is the default, and routines can be deleted', (tester) async {
+    await setSize(tester, const Size(600, 1000));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const RoutinesScreen(botId: botId)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('newRoutine')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('routineName')), 'Water');
+    await tester.enterText(find.byKey(const Key('routineInstructions')), 'Remind me to drink water');
+    await tester.tap(find.text('In 15 min'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('createRoutine')));
+    await tester.pumpAndSettle();
+    final r = backend.routineList.single;
+    expect(r.trigger, RoutineTrigger.once);
+    expect(r.scheduleCron, isNull);
+    expect(r.nextRunAt!.difference(DateTime.now()).inMinutes, inInclusiveRange(13, 15));
+
+    await tester.tap(find.byKey(Key('routineMenu-${r.id}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key('deleteRoutine-${r.id}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+    expect(backend.deletedRoutines, [r.id]);
+  });
+
   testWidgets('task board groups tasks and changes status', (tester) async {
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const InboxScreen(initialTab: 2)));
@@ -108,6 +136,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('routineName')), 'Morning summary');
     await tester.enterText(find.byKey(const Key('routineInstructions')), 'Prepare the morning summary');
+    await tester.tap(find.text('Repeats'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Weekdays at 9:00'));
     await tester.enterText(find.byKey(const Key('routineTimezone')), 'America/Chicago');
     await tester.pumpAndSettle();
@@ -115,9 +145,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.routineList.single.scheduleCron, '0 9 * * 1-5');
     expect(backend.routineList.single.timezone, 'America/Chicago');
-    expect(find.text('0 9 * * 1-5 (America/Chicago)', findRichText: true), findsNothing); // shown with next run on its own line
     expect(find.textContaining('0 9 * * 1-5 (America/Chicago)'), findsOneWidget);
 
+    await tester.tap(find.byKey(const Key('routineMenu-r1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('runRoutine-r1')));
     await tester.pump();
     expect(backend.routinesRun, ['r1']);

@@ -26,6 +26,8 @@ class UpdateRoutineRequest {
 
      this.scheduleCron,
 
+     this.runAt,
+
      this.timezone,
 
      this.notify,
@@ -66,6 +68,18 @@ class UpdateRoutineRequest {
 
 
   final String? scheduleCron;
+
+
+
+  @JsonKey(
+    
+    name: r'run_at',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final DateTime? runAt;
 
 
 
@@ -112,6 +126,7 @@ class UpdateRoutineRequest {
       other.name == name &&
       other.instructions == instructions &&
       other.scheduleCron == scheduleCron &&
+      other.runAt == runAt &&
       other.timezone == timezone &&
       other.notify == notify &&
       other.enabled == enabled;
@@ -121,6 +136,7 @@ class UpdateRoutineRequest {
         name.hashCode +
         instructions.hashCode +
         scheduleCron.hashCode +
+        runAt.hashCode +
         timezone.hashCode +
         notify.hashCode +
         enabled.hashCode;

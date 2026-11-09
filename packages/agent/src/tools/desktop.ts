@@ -163,9 +163,10 @@ export function registerDesktopTools(registry: ToolRegistry) {
   registry.register({
     name: TAKEOVER_TOOL,
     description:
-      "Ask a person to take over your computer's screen (for example to sign in, solve a CAPTCHA or approve something only they can). You wait until they hand back control or decline.",
+      "Ask a person to take over your computer's screen (for example to sign in, solve a CAPTCHA or approve something only they can). The page you have open in the browser opens on a visible desktop for them. You wait until they hand back control or decline.",
     risk: "low",
-    requires,
+    // Offered on headless computers too: the run switches the computer to a desktop first.
+    requires: { computer: true },
     schema: z.object({ reason: z.string().min(1).max(1000) }),
     async execute() {
       // Handled by the run loop so the wait is durable.

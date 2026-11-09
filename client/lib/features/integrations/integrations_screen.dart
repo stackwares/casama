@@ -4,6 +4,9 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
 
 String integrationKindLabel(BuildContext context, IntegrationKind kind) => switch (kind) {
       IntegrationKind.mcp => context.l10n.kindMcp,
@@ -24,12 +27,7 @@ class IntegrationsScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('addIntegration'),
         onPressed: () async {
-          final added = await showModalBottomSheet<bool>(
-            context: context,
-            isScrollControlled: true,
-            showDragHandle: true,
-            builder: (_) => const AddIntegrationSheet(),
-          );
+          final added = await showAdaptiveSheet<bool>(context: context, builder: (_) => const AddIntegrationSheet());
           if (added == true) ref.invalidate(integrationsProvider);
         },
         icon: const Icon(Icons.add),
@@ -104,6 +102,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
 
   List<String> _list(String s) => s.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
 
+
   Map<String, Object?> _config() => switch (_kind) {
         IntegrationKind.mcp => {'url': _primary.text.trim()},
         IntegrationKind.openapi => {
@@ -129,13 +128,19 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
       IntegrationKind.composio => (l10n.composioToolkits, null, l10n.apiKey),
       IntegrationKind.pipedream => (l10n.pipedreamProject, l10n.pipedreamClientId, l10n.pipedreamClientSecret),
     };
-    final nameOk = RegExp(r'^[a-z][a-z0-9_]{0,39}$').hasMatch(_name.text);
+    final name = integrationSlug(_name.text);
+    final nameOk = RegExp(r'^[a-z][a-z0-9_]{0,39}$').hasMatch(name);
+    final primary = _primary.text.trim();
+    final needsUrl = _kind == IntegrationKind.mcp || _kind == IntegrationKind.openapi;
+    final primaryOk = primary.isNotEmpty && (!needsUrl || RegExp(r'^https?://').hasMatch(primary));
+    // Say what is missing instead of leaving a disabled button unexplained.
+    final missing = !nameOk ? l10n.integrationNeedsName : (!primaryOk ? l10n.integrationNeedsField(primaryLabel) : null);
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(context).bottom + 16),
+      padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.md),
       child: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text(l10n.addIntegration, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
+          Text(l10n.addIntegration, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+          const SizedBox(height: AppSpace.md),
           DropdownButtonFormField<IntegrationKind>(
             key: const Key('integrationKind'),
             initialValue: _kind,
@@ -147,14 +152,21 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
           TextField(
             key: const Key('integrationName'),
             controller: _name,
-            decoration: InputDecoration(labelText: l10n.integrationName, helperText: l10n.integrationNameHelp),
+            decoration: InputDecoration(
+              labelText: l10n.integrationName,
+              helperText: _name.text.trim().isEmpty ? l10n.integrationNameHelp : (nameOk ? l10n.integrationSavedAs(name) : l10n.integrationNeedsName),
+            ),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 8),
           TextField(
             key: const Key('integrationPrimary'),
             controller: _primary,
-            decoration: InputDecoration(labelText: primaryLabel),
+            keyboardType: needsUrl ? TextInputType.url : TextInputType.text,
+            decoration: InputDecoration(
+              labelText: primaryLabel,
+              errorText: primary.isNotEmpty && !primaryOk ? l10n.integrationUrlInvalid : null,
+            ),
             onChanged: (_) => setState(() {}),
           ),
           if (secondaryLabel != null) ...[
@@ -175,10 +187,16 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
               helperText: _kind == IntegrationKind.openapi ? l10n.authSecretNameHelp : l10n.storedEncrypted,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.md),
+          if (missing != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpace.xs),
+              child: Text(missing, textAlign: TextAlign.center, style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+            ),
           FilledButton(
             key: const Key('saveIntegration'),
-            onPressed: _busy || !nameOk || _primary.text.trim().isEmpty
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+            onPressed: _busy || missing != null
                 ? null
                 : () async {
                     setState(() => _busy = true);
@@ -188,7 +206,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
                       final i = await backend.createIntegration(
                         org.id,
                         kind: _kind.value,
-                        name: _name.text,
+                        name: name,
                         config: _config(),
                         secret: _secret.text.isEmpty || _kind == IntegrationKind.openapi ? null : _secret.text,
                       );
@@ -208,6 +226,15 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
       ),
     );
   }
+}
+
+/// Tool names are prefixed with the integration's name, so it must be a short identifier:
+/// "GitHub tools" is saved as "github_tools".
+String integrationSlug(String name) {
+  var out = name.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_').replaceAll(RegExp(r'_+'), '_');
+  out = out.replaceAll(RegExp(r'^_+|_+$'), '');
+  if (out.isNotEmpty && !RegExp(r'^[a-z]').hasMatch(out)) out = 'x_$out';
+  return out.length > 40 ? out.substring(0, 40).replaceAll(RegExp(r'_+$'), '') : out;
 }
 
 /// Which integrations one bot may use.

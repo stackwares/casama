@@ -214,58 +214,186 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
   registry.register({
     name: "routines.create",
     description:
-      "Schedule a recurring job for yourself (5-field cron in the user's timezone). Results arrive in a dedicated conversation.",
+      "Schedule work for yourself later. For something that should happen once (a reminder, a follow-up), pass in_minutes or run_at; it runs a single time and switches itself off. Use schedule_cron (5-field cron in the user's timezone) only for work that repeats. Results arrive in a dedicated conversation.",
     risk: "medium",
     schema: z.object({
       name: z.string().min(1).max(120),
-      instructions: z.string().min(1).max(10_000),
-      schedule_cron: z.string().max(100),
+      instructions: z
+        .string()
+        .min(1)
+        .max(10_000)
+        .describe("What to do when it runs, written as a message to yourself"),
+      in_minutes: z
+        .number()
+        .int()
+        .min(1)
+        .max(60 * 24 * 365)
+        .optional()
+        .describe("Run once, this many minutes from now"),
+      run_at: z
+        .string()
+        .max(40)
+        .optional()
+        .describe("Run once at this ISO 8601 time (with offset)"),
+      schedule_cron: z.string().max(100).optional().describe("Repeat on this 5-field cron"),
       timezone: z.string().max(64).optional(),
       notify: z.boolean().optional(),
     }),
     async execute(args, ctx) {
-      if (!isValidCron(args.schedule_cron))
+      const kinds = [args.in_minutes != null, !!args.run_at, !!args.schedule_cron].filter(
+        Boolean,
+      ).length;
+      if (kinds !== 1)
+        throw new ToolError(
+          "invalid_schedule",
+          "Pass exactly one of in_minutes, run_at (once) or schedule_cron (repeating).",
+        );
+      if (args.schedule_cron && !isValidCron(args.schedule_cron))
         throw new ToolError("invalid_cron", "Use a 5-field cron expression like '0 8 * * *'.");
       const [owner] = await db.execute<{ user_id: string | null; timezone: string | null }>(sql`
         select coalesce(r.created_by, b.created_by) as user_id, p.timezone from public.runs r join public.bots b on b.id = r.bot_id
         left join public.profiles p on p.user_id = coalesce(r.created_by, b.created_by) where r.id = ${ctx.runId}::uuid`);
       const tz = args.timezone ?? owner?.timezone ?? "UTC";
       if (!isValidTimezone(tz)) throw new ToolError("invalid_timezone", `Unknown timezone ${tz}.`);
-      const next = nextRunAt(args.schedule_cron, tz);
+      let next: Date;
+      if (args.schedule_cron) {
+        next = nextRunAt(args.schedule_cron, tz);
+      } else if (args.in_minutes != null) {
+        next = new Date(Date.now() + args.in_minutes * 60_000);
+      } else {
+        next = new Date(args.run_at as string);
+        if (Number.isNaN(next.getTime()))
+          throw new ToolError("invalid_time", "run_at must be an ISO 8601 time.");
+        if (next.getTime() < Date.now() - 60_000)
+          throw new ToolError("invalid_time", "run_at is in the past.");
+      }
+      const once = !args.schedule_cron;
+      const trigger = JSON.stringify({ type: once ? "once" : "schedule" });
       const [r] = await db.execute<{ id: string }>(sql`
-        insert into public.routines (org_id, bot_id, created_by, name, instructions_md, schedule_cron, timezone, notify, next_run_at)
+        insert into public.routines (org_id, bot_id, created_by, name, instructions_md, schedule_cron, timezone, trigger, notify, next_run_at)
         values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${owner?.user_id ?? null}::uuid, ${args.name}, ${args.instructions},
-                ${args.schedule_cron}, ${tz}, ${args.notify ?? true}, ${next.toISOString()}::timestamptz) returning id`);
+                ${args.schedule_cron ?? null}, ${tz}, ${trigger}::jsonb, ${args.notify ?? true}, ${next.toISOString()}::timestamptz) returning id`);
       return {
-        content: `Scheduled routine ${r?.id}; next run ${next.toISOString()} (${tz}).`,
-        preview: `${args.name} · ${args.schedule_cron}`,
+        content: once
+          ? `Scheduled one-time routine ${r?.id} for ${next.toISOString()}. It runs once, then switches itself off.`
+          : `Scheduled repeating routine ${r?.id}; next run ${next.toISOString()} (${tz}).`,
+        preview: once
+          ? `${args.name} · once at ${next.toISOString()}`
+          : `${args.name} · ${args.schedule_cron}`,
+      };
+    },
+  });
+
+  registry.register({
+    name: "routines.list",
+    description:
+      "List your routines (id, name, schedule, whether it is on, next run). Use it before changing or deleting one.",
+    risk: "low",
+    readOnly: true,
+    schema: z.object({}),
+    async execute(_args, ctx) {
+      const rows = await db.execute<{
+        id: string;
+        name: string;
+        schedule_cron: string | null;
+        trigger: { type?: string };
+        timezone: string;
+        enabled: boolean;
+        next_run_at: string | null;
+        last_run_at: string | null;
+      }>(sql`
+        select id, name, schedule_cron, trigger, timezone, enabled, next_run_at, last_run_at from public.routines
+        where bot_id = ${ctx.botId}::uuid order by created_at`);
+      if (!rows.length) return { content: "You have no routines.", preview: "none" };
+      const lines = rows.map((r) => {
+        const when =
+          r.trigger?.type === "once"
+            ? "once"
+            : r.schedule_cron
+              ? `cron ${r.schedule_cron} (${r.timezone})`
+              : (r.trigger?.type ?? "schedule");
+        const next = r.next_run_at ? new Date(r.next_run_at).toISOString() : "none";
+        return `- ${r.id} · ${r.name} · ${when} · ${r.enabled ? "on" : "off"} · next ${next}`;
+      });
+      return {
+        content: lines.join("\n"),
+        preview: `${rows.length} routine${rows.length === 1 ? "" : "s"}`,
       };
     },
   });
 
   registry.register({
     name: "routines.update",
-    description: "Change or pause one of your routines.",
+    description:
+      "Change, pause (enabled: false) or resume one of your routines. Find its id with routines.list.",
     risk: "medium",
     schema: z.object({
       routine_id: z.uuid(),
       enabled: z.boolean().optional(),
       schedule_cron: z.string().max(100).optional(),
+      run_at: z.string().max(40).optional(),
       instructions: z.string().max(10_000).optional(),
     }),
     async execute(args, ctx) {
-      const [r] = await db.execute<{ schedule_cron: string | null; timezone: string }>(sql`
-        select schedule_cron, timezone from public.routines where id = ${args.routine_id}::uuid and bot_id = ${ctx.botId}::uuid`);
-      if (!r) throw new ToolError("routine_not_found", "No such routine for this bot.");
+      const [r] = await db.execute<{
+        schedule_cron: string | null;
+        timezone: string;
+        trigger: { type?: string };
+        next_run_at: string | null;
+      }>(sql`
+        select schedule_cron, timezone, trigger, next_run_at from public.routines where id = ${args.routine_id}::uuid and bot_id = ${ctx.botId}::uuid`);
+      if (!r)
+        throw new ToolError(
+          "routine_not_found",
+          "No such routine for this bot. Check routines.list.",
+        );
+      const once = r.trigger?.type === "once";
       if (args.schedule_cron && !isValidCron(args.schedule_cron))
         throw new ToolError("invalid_cron", "Invalid cron expression.");
-      const cron = args.schedule_cron ?? r.schedule_cron;
-      const next = cron ? nextRunAt(cron, r.timezone).toISOString() : null;
+      const cron = once ? null : (args.schedule_cron ?? r.schedule_cron);
+      let next: string | null = null;
+      if (once) {
+        const at = args.run_at
+          ? new Date(args.run_at)
+          : r.next_run_at
+            ? new Date(r.next_run_at)
+            : null;
+        if (args.run_at && (!at || Number.isNaN(at.getTime())))
+          throw new ToolError("invalid_time", "run_at must be an ISO 8601 time.");
+        next = at ? at.toISOString() : null;
+      } else if (cron) {
+        next = nextRunAt(cron, r.timezone).toISOString();
+      }
       await db.execute(sql`
         update public.routines set enabled = coalesce(${args.enabled ?? null}, enabled), schedule_cron = ${cron},
-          instructions_md = coalesce(${args.instructions ?? null}, instructions_md), next_run_at = ${next}::timestamptz
+          instructions_md = coalesce(${args.instructions ?? null}, instructions_md),
+          next_run_at = case when coalesce(${args.enabled ?? null}, enabled) then ${next}::timestamptz else null end
         where id = ${args.routine_id}::uuid`);
-      return { content: "Routine updated.", preview: "updated" };
+      return {
+        content: "Routine updated.",
+        preview: args.enabled === false ? "paused" : "updated",
+      };
+    },
+  });
+
+  registry.register({
+    name: "routines.delete",
+    description:
+      "Delete one of your routines for good (its past results stay). Find its id with routines.list.",
+    risk: "medium",
+    schema: z.object({ routine_id: z.uuid() }),
+    async execute(args, ctx) {
+      const rows = await db.execute<{ name: string }>(sql`
+        delete from public.routines where id = ${args.routine_id}::uuid and bot_id = ${ctx.botId}::uuid returning name`);
+      if (!rows.length)
+        throw new ToolError(
+          "routine_not_found",
+          "No such routine for this bot. Check routines.list.",
+        );
+      return {
+        content: `Deleted routine "${rows[0]?.name}".`,
+        preview: `deleted ${rows[0]?.name}`,
+      };
     },
   });
 

@@ -1459,7 +1459,7 @@ abstract class AppLocalizations {
   /// No description provided for @triggerSchedule.
   ///
   /// In en, this message translates to:
-  /// **'Schedule'**
+  /// **'Repeats'**
   String get triggerSchedule;
 
   /// No description provided for @triggerWebhook.
@@ -2913,6 +2913,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'voice'**
   String get providerHintVoice;
+
+  /// No description provided for @noRoutinesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A routine is work a bot does later on its own: once at a time you pick, on a schedule, or when a webhook arrives.'**
+  String get noRoutinesHelp;
+
+  /// No description provided for @routineOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Once'**
+  String get routineOnce;
+
+  /// No description provided for @lastRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Last: {when}'**
+  String lastRun(String when);
+
+  /// No description provided for @routineOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get routineOff;
+
+  /// No description provided for @deleteRoutineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String deleteRoutineTitle(String name);
+
+  /// No description provided for @deleteRoutineBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It won\'t run again. Results it already posted stay in their conversation.'**
+  String get deleteRoutineBody;
+
+  /// No description provided for @triggerOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Once'**
+  String get triggerOnce;
+
+  /// No description provided for @inMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'In {n} min'**
+  String inMinutes(int n);
+
+  /// No description provided for @inHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{In 1 hour} other{In {n} hours}}'**
+  String inHours(int n);
+
+  /// No description provided for @tomorrowAt9.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow 9:00'**
+  String get tomorrowAt9;
+
+  /// No description provided for @integrationNeedsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Give it a name with at least one letter.'**
+  String get integrationNeedsName;
+
+  /// No description provided for @integrationNeedsField.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in {field} to save.'**
+  String integrationNeedsField(String field);
+
+  /// No description provided for @integrationSavedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as {name}'**
+  String integrationSavedAs(String name);
+
+  /// No description provided for @integrationUrlInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a full address starting with https://'**
+  String get integrationUrlInvalid;
+
+  /// No description provided for @openFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openFile;
+
+  /// No description provided for @saveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveFile;
+
+  /// No description provided for @shareFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get shareFile;
+
+  /// No description provided for @savedFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String savedFile(String name);
+
+  /// No description provided for @noAppToOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'No app on this device opens {name}. Save it instead.'**
+  String noAppToOpen(String name);
+
+  /// No description provided for @previewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No preview for this kind of file. Open or save it to view it.'**
+  String get previewUnavailable;
+
+  /// No description provided for @openFileInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open file'**
+  String get openFileInChat;
+
+  /// No description provided for @attach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach'**
+  String get attach;
+
+  /// No description provided for @attachFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get attachFiles;
+
+  /// No description provided for @attachPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo library'**
+  String get attachPhotos;
+
+  /// No description provided for @attachCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get attachCamera;
+
+  /// No description provided for @dropToAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop files to attach'**
+  String get dropToAttach;
+
+  /// No description provided for @uploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload {name}'**
+  String uploadFailed(String name);
+
+  /// No description provided for @removeAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeAttachment;
+
+  /// No description provided for @noComputerForFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'This bot has no computer to keep files on.'**
+  String get noComputerForFiles;
+
+  /// No description provided for @fileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is over 25 MB, too large to attach.'**
+  String fileTooLarge(String name);
+
+  /// No description provided for @toolRoutineCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled a routine'**
+  String get toolRoutineCreate;
+
+  /// No description provided for @toolRoutineDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted a routine'**
+  String get toolRoutineDelete;
+
+  /// No description provided for @toolRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked routines'**
+  String get toolRoutines;
+
+  /// No description provided for @toolTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated the task board'**
+  String get toolTasks;
+
+  /// No description provided for @toolNotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent you a notification'**
+  String get toolNotify;
+
+  /// No description provided for @toolHttp.
+  ///
+  /// In en, this message translates to:
+  /// **'Called a web API'**
+  String get toolHttp;
+
+  /// No description provided for @toolMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Made an image'**
+  String get toolMedia;
+
+  /// No description provided for @toolTakeover.
+  ///
+  /// In en, this message translates to:
+  /// **'Asked you to take over'**
+  String get toolTakeover;
 }
 
 class _AppLocalizationsDelegate
