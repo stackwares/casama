@@ -61,7 +61,7 @@ export const CreateComputerRequest = z
     kind: z.enum(["team", "private"]),
     owner_bot_id: Uuid.optional().openapi({ description: "Required for private computers" }),
     profile: z.enum(["headless", "desktop"]).optional(),
-    provider: z.enum(["docker", "e2b", "daytona"]).optional(),
+    provider: z.enum(["docker", "e2b", "daytona", "kasama-cloud"]).optional(),
   })
   .openapi("CreateComputerRequest");
 

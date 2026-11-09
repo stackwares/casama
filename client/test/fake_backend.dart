@@ -364,6 +364,93 @@ class FakeBackend implements Backend {
   @override
   Future<UpdateNotice> adminUpdates() async => UpdateNotice(current: '0.6.0', latest: '0.9.1', updateAvailable: true, url: 'https://example.com/r');
 
+  // --- Phase 7: billing -----------------------------------------------------
+
+  var billingEnabled = false;
+  var planCode = 'free';
+  var billingSource = BillingSummarySource_Enum.default_;
+  final checkouts = <String>[];
+  final verified = <String>[];
+  final connectKeyNames = <String>[];
+
+  @override
+  Future<BillingSummary> billing(String orgId) async => BillingSummary(
+        enabled: billingEnabled,
+        planCode: billingEnabled ? planCode : 'selfhost',
+        planName: billingEnabled ? (planCode == 'pro' ? 'Pro' : 'Free') : 'Self-hosted',
+        interval: planCode == 'pro' ? 'month' : 'none',
+        limits: planCode == 'pro' ? const {'max_bots': 20, 'computer_hours': 100, 'monthly_credits_usd': 20} : const {'max_bots': 2},
+        unlimited: !billingEnabled,
+        validUntil: planCode == 'pro' ? DateTime.utc(2026, 12, 10) : null,
+        source_: billingSource,
+        cancelAtPeriodEnd: false,
+        creditsUsd: billingEnabled ? 1.0 : 0,
+        subscriptions: const [],
+        providers: const [BillingSource.dodo, BillingSource.appStore, BillingSource.googlePlay],
+      );
+  @override
+  Future<PlanCatalog> plans() async => PlanCatalog(
+        enabled: billingEnabled,
+        plans: [
+          Plan(code: 'free', name: 'Free', interval: PlanIntervalEnum.none, limits: const {'max_bots': 2}, priceLabel: null, web: false, storeProductIds: const {}),
+          Plan(
+            code: 'pro',
+            name: 'Pro',
+            interval: PlanIntervalEnum.month,
+            limits: const {'max_bots': 20, 'computer_hours': 100, 'monthly_credits_usd': 20},
+            priceLabel: null,
+            web: true,
+            storeProductIds: const {'app_store': 'dev.kasama.pro.monthly', 'google_play': 'kasama_pro:monthly'},
+          ),
+        ],
+        packs: [CreditPack(code: 'credits_10', name: r'$10 of credits', creditsUsd: 10, web: true)],
+      );
+  @override
+  Future<String> checkoutUrl(String orgId, {String? planCode, String? packCode}) async {
+    checkouts.add(planCode ?? packCode!);
+    return 'https://checkout.example.com/${planCode ?? packCode}';
+  }
+
+  @override
+  Future<String> billingPortalUrl(String orgId) async => 'https://portal.example.com/cus_1';
+  @override
+  Future<BillingSummary> verifyPurchase(String orgId,
+      {required String source, required String productId, String? transactionId, String? purchaseToken}) async {
+    verified.add('$source:$productId:${transactionId ?? purchaseToken}');
+    planCode = 'pro';
+    billingSource = source == 'app_store' ? BillingSummarySource_Enum.appStore : BillingSummarySource_Enum.googlePlay;
+    return billing(orgId);
+  }
+
+  @override
+  Future<BillingUsage> billingUsage(String orgId) async => BillingUsage(
+        periodStart: DateTime.utc(2026, 11),
+        items: [BillingUsageItem(kind: 'computer_seconds', instance: 'home-server', quantity: 7200, costUsd: 0.1)],
+        totalUsd: 0.1,
+        credits: const [],
+      );
+  @override
+  Future<List<ConnectKey>> connectKeys(String orgId) async => [
+        for (final (i, n) in connectKeyNames.indexed)
+          ConnectKey(id: 'k$i', instanceName: n, keyHint: 'kcc_abcd…wxyz', scopes: const ['computers', 'models'], lastUsedAt: null, createdAt: DateTime(2026)),
+      ];
+  @override
+  Future<CreatedConnectKey> createConnectKey(String orgId, String instanceName) async {
+    connectKeyNames.add(instanceName);
+    return CreatedConnectKey(
+      id: 'k${connectKeyNames.length - 1}',
+      instanceName: instanceName,
+      keyHint: 'kcc_abcd…wxyz',
+      scopes: const ['computers', 'models'],
+      lastUsedAt: null,
+      createdAt: DateTime(2026),
+      key: 'kcc_secret_shown_once',
+    );
+  }
+
+  @override
+  Future<void> revokeConnectKey(String orgId, String keyId) async => connectKeyNames.removeAt(int.parse(keyId.substring(1)));
+
   // --- Phase 6: companion ---------------------------------------------------
 
   LocalDevice? device;

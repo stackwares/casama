@@ -14,7 +14,39 @@ export const EnvSchema = z.object({
   PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
   /** Extra comma-separated origins allowed to call the API from a browser. */
   CORS_ORIGINS: z.string().default(""),
+  /** Kasama Cloud only (D-070). Self-hosted servers keep it off: no paywall, unlimited use. */
   BILLING_ENABLED: bool.default(false),
+  /** Dodo Payments (web, desktop, credit packs). */
+  DODO_API_KEY: z.string().optional(),
+  DODO_WEBHOOK_SECRET: z.string().optional(),
+  DODO_ENVIRONMENT: z.enum(["test", "live"]).default("test"),
+  DODO_API_URL: z.url().optional(),
+  /** App Store Server API (iOS). The private key is PEM text or a path to the .p8 file. */
+  APP_STORE_ISSUER_ID: z.string().optional(),
+  APP_STORE_KEY_ID: z.string().optional(),
+  APP_STORE_PRIVATE_KEY: z.string().optional(),
+  APP_STORE_BUNDLE_ID: z.string().default("dev.kasama.app"),
+  APP_STORE_ENVIRONMENT: z.enum(["production", "sandbox"]).default("production"),
+  APP_STORE_API_URL: z.url().optional(),
+  /** Extra trusted roots (PEM text, or PEM paths comma-separated); Apple Root CA - G3 is built in. */
+  APP_STORE_ROOT_CA: z.string().optional(),
+  /** Google Play Developer API (Android). The service account is JSON text or a path. */
+  GOOGLE_PLAY_PACKAGE_NAME: z.string().default("dev.kasama.app"),
+  GOOGLE_PLAY_SERVICE_ACCOUNT: z.string().optional(),
+  GOOGLE_PLAY_API_URL: z.url().optional(),
+  /** RTDN push auth: a secret ?token= on the push URL and/or the push subscription's OIDC audience. */
+  GOOGLE_PLAY_RTDN_TOKEN: z.string().min(16).optional(),
+  GOOGLE_PLAY_RTDN_AUDIENCE: z.string().optional(),
+  GOOGLE_PLAY_RTDN_EMAIL: z.string().optional(),
+  /** Cloud Connect, cloud side (D-071): on whenever billing is on, unless turned off. */
+  CLOUD_CONNECT: bool.default(true),
+  CLOUD_MODEL_UPSTREAM_URL: z.url().default("https://openrouter.ai/api/v1"),
+  CLOUD_MODEL_UPSTREAM_KEY: z.string().optional(),
+  CLOUD_MODEL_MARKUP: z.coerce.number().positive().default(1),
+  CLOUD_COMPUTER_USD_PER_HOUR: z.coerce.number().nonnegative().default(0.05),
+  /** Cloud Connect, self-hosted side: use Kasama Cloud computers with this key. Unset = off. */
+  KASAMA_CLOUD_URL: z.url().optional(),
+  KASAMA_CLOUD_KEY: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Kasama <no-reply@localhost>"),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(120),

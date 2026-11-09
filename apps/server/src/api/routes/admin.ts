@@ -128,8 +128,10 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await requireOwner(requireClaims(c.get("claims")));
     const { id } = c.req.valid("param");
     const { limits } = c.req.valid("json");
+    // Owner overrides sit on top of the plan's limits and survive billing changes (D-070).
     const updated = await db.execute<{ id: string }>(sql`
-      update public.entitlements set limits = ${JSON.stringify(limits)}::jsonb
+      update public.entitlements set overrides = ${JSON.stringify(limits)}::jsonb,
+        limits = (select p.limits from public.plans p where p.code = plan_code) || ${JSON.stringify(limits)}::jsonb
       where id = (select id from public.entitlements where org_id = ${id}::uuid order by created_at desc limit 1)
       returning id`);
     if (!updated.length) throw new ApiError(404, "org_not_found", "Workspace not found");

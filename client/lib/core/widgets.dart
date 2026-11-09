@@ -80,11 +80,21 @@ class EmptyState extends StatelessWidget {
 }
 
 /// Runs an async action with a progress state and error snackbar.
+/// Called instead of the error snackbar when the server answers 402 Payment Required (plan limit or
+/// out of credits, Kasama Cloud only). The app sets it to the paywall at startup.
+Future<void> Function(BuildContext context, String message)? onPaymentRequired;
+
 Future<T?> runGuarded<T>(BuildContext context, Future<T> Function() action) async {
   try {
     return await action();
   } catch (e) {
-    if (context.mounted) showError(context, e);
+    if (!context.mounted) return null;
+    final paywall = onPaymentRequired;
+    if (paywall != null && e is DioException && e.response?.statusCode == 402) {
+      await paywall(context, errorText(context, e));
+    } else {
+      showError(context, e);
+    }
     return null;
   }
 }

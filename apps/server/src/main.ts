@@ -11,6 +11,7 @@ import { attachStream, liveConfigFromEnv } from "./api/routes/live.ts";
 import { attachLocalConnect, DeviceRegistry, internalToken } from "./api/routes/local.ts";
 import { pgRunEventHub } from "./api/run-event-hub.ts";
 import { dbosWorkflows } from "./api/workflows.ts";
+import { billingFromEnv, connectFromEnv, kasamaCloudProvider } from "./billing/index.ts";
 import { loadEnv } from "./env.ts";
 import { disabledEmail, resendEmail } from "./services/email.ts";
 
@@ -21,6 +22,11 @@ const localOpts = {
   internalToken: internalToken(env),
 };
 const logger = createLogger(`server-${env.MODE}`, env.LOG_LEVEL);
+// Cloud Connect, self-hosted side: computers on Kasama Cloud (D-071).
+const cloud =
+  env.KASAMA_CLOUD_URL && env.KASAMA_CLOUD_KEY
+    ? { url: env.KASAMA_CLOUD_URL, key: env.KASAMA_CLOUD_KEY }
+    : undefined;
 initObservability({
   service: `kasama-${env.MODE}`,
   environment: env.NODE_ENV,
@@ -52,15 +58,20 @@ if (env.MODE === "api") {
     workflows,
     hub,
     computers:
-      (env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN) || env.LOCAL_COMPUTERS
+      (env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN) || env.LOCAL_COMPUTERS || cloud
         ? new ComputerService(
             handle.db,
             env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN
               ? new SupervisorProvider(env.SUPERVISOR_URL, env.SUPERVISOR_TOKEN)
               : unavailableProvider(),
-            env.LOCAL_COMPUTERS ? { local: new LocalProvider(localOpts) } : {},
+            {
+              ...(env.LOCAL_COMPUTERS ? { local: new LocalProvider(localOpts) } : {}),
+              ...(cloud ? { "kasama-cloud": kasamaCloudProvider(cloud) } : {}),
+            },
           )
         : undefined,
+    billing: billingFromEnv(env, handle.db, logger),
+    connect: connectFromEnv(env),
     devices: env.LOCAL_COMPUTERS ? new DeviceRegistry() : undefined,
     live: liveConfigFromEnv(env),
     env,
@@ -83,7 +94,11 @@ if (env.MODE === "api") {
   stoppers.push(() => new Promise((r) => server.close(r)));
 } else {
   const { startWorker } = await import("./worker/index.ts");
+  const handle = env.BILLING_ENABLED ? createDb(env.DATABASE_URL, { max: 3 }) : undefined;
+  if (handle) stoppers.push(handle.close);
   const worker = await startWorker({
+    billing: handle ? billingFromEnv(env, handle.db, logger) : undefined,
+    cloud,
     databaseUrl: env.DATABASE_URL,
     logger,
     logLevel: env.LOG_LEVEL,

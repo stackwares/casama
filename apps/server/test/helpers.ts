@@ -12,7 +12,9 @@ import { createApp } from "../src/api/app.ts";
 import { createTokenVerifier } from "../src/api/auth.ts";
 import { attachLocalConnect, DeviceRegistry, internalToken } from "../src/api/routes/local.ts";
 import { pgRunEventHub, type RunEventHub } from "../src/api/run-event-hub.ts";
+import type { AppDeps } from "../src/api/types.ts";
 import { dbosWorkflows, type Workflows } from "../src/api/workflows.ts";
+import { billingFromEnv, kasamaCloudProvider } from "../src/billing/index.ts";
 import { loadEnv } from "../src/env.ts";
 import type { EmailMessage, EmailSender } from "../src/services/email.ts";
 
@@ -67,6 +69,14 @@ export async function startHarness(
     sandbox?: SandboxStack;
     /** Desktop companion: serve the app on a real port with the device WebSocket (D-066). */
     local?: boolean;
+    /** Extra environment (billing, Cloud Connect). */
+    env?: Record<string, string>;
+    /** Serve on a real port (Cloud Connect cloud side). */
+    serve?: boolean;
+    /** Cloud Connect proxy targets (cloud side). */
+    connect?: AppDeps["connect"];
+    /** Cloud Connect, self-hosted side. */
+    cloud?: { url: string; key: string };
   } = {},
 ): Promise<Harness> {
   const tdb = await startTestDatabase();
@@ -79,10 +89,12 @@ export async function startHarness(
     NODE_ENV: "test",
     RATE_LIMIT_PER_MINUTE: String(opts.rateLimit ?? 10_000),
     UPDATE_CHECK_URL: process.env.TEST_UPDATE_CHECK_URL,
+    ...opts.env,
   });
+  const billing = billingFromEnv(env, handle.db);
   const outbox: EmailMessage[] = [];
   // A real port for the companion tunnel, chosen before the worker starts.
-  const localPort = opts.local ? await freePort() : 0;
+  const localPort = opts.local || opts.serve ? await freePort() : 0;
   const localOpts = opts.local
     ? { apiUrl: `http://127.0.0.1:${localPort}`, internalToken: internalToken(env) }
     : undefined;
@@ -108,18 +120,19 @@ export async function startHarness(
       egressExemptCidrs: opts.worker.egressExemptCidrs,
       providerBases: opts.worker.providerBases,
       local: localOpts,
+      billing: billing.enabled ? billing : undefined,
+      cloud: opts.cloud,
     });
     workflows = await dbosWorkflows(tdb.url);
   } else if (opts.workflowsClient) {
     workflows = await dbosWorkflows(tdb.url);
   }
   const computers =
-    opts.sandbox || localOpts
-      ? new ComputerService(
-          handle.db,
-          opts.sandbox?.provider ?? unavailableProvider(),
-          localOpts ? { local: new LocalProvider(localOpts) } : {},
-        )
+    opts.sandbox || localOpts || opts.cloud
+      ? new ComputerService(handle.db, opts.sandbox?.provider ?? unavailableProvider(), {
+          ...(localOpts ? { local: new LocalProvider(localOpts) } : {}),
+          ...(opts.cloud ? { "kasama-cloud": kasamaCloudProvider(opts.cloud) } : {}),
+        })
       : undefined;
   const live = opts.sandbox
     ? {
@@ -135,6 +148,8 @@ export async function startHarness(
     computers,
     live,
     devices: opts.local ? new DeviceRegistry() : undefined,
+    billing,
+    connect: opts.connect,
     env,
     db: handle.db,
     logger: createLogger("test", "error"),
@@ -144,17 +159,17 @@ export async function startHarness(
   };
   const app = createApp(deps);
   let server: Server | undefined;
-  if (opts.local) {
+  if (opts.local || opts.serve) {
     server = serve({
       fetch: app.fetch,
       port: localPort,
       hostname: "127.0.0.1",
     }) as unknown as Server;
     await new Promise((r) => server?.once("listening", r));
-    attachLocalConnect(server, deps);
+    if (opts.local) attachLocalConnect(server, deps);
   }
   return {
-    serverUrl: localOpts?.apiUrl,
+    serverUrl: localPort ? `http://127.0.0.1:${localPort}` : undefined,
     deps,
     computers,
     tdb,

@@ -36,6 +36,7 @@ let runtime:
       computers?: ComputerService;
       fetch?: typeof fetch;
       voice?: VoiceRuntime;
+      billing?: import("../billing/service.ts").BillingService;
     }
   | undefined;
 export function configureWorkflows(r: NonNullable<typeof runtime>) {
@@ -284,4 +285,14 @@ export const computersIdleWorkflow = DBOS.registerWorkflow(
     await DBOS.runStep(() => computers.sleepIdle(), { name: "sleep-idle" });
   },
   { name: "computersIdle" },
+);
+
+/** Every minute on Kasama Cloud: usage becomes credit deductions; expired plans fall back (D-070). */
+export const billingSettleWorkflow = DBOS.registerWorkflow(
+  async (_scheduledAt: Date, _context: unknown) => {
+    const billing = rt().billing;
+    if (!billing?.enabled) return;
+    await DBOS.runStep(() => billing.settle(), { name: "settle" });
+  },
+  { name: "billingSettle" },
 );

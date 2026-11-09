@@ -18,14 +18,20 @@ import {
 /** SandboxProvider backed by the supervisor's HTTP API. Used by the API and the worker. */
 export class SupervisorProvider implements SandboxProvider {
   readonly id: ProviderId;
-  readonly capabilities = { desktop: true, snapshots: true, liveStream: true };
+  readonly capabilities: { desktop: boolean; snapshots: boolean; liveStream: boolean };
   readonly baseUrl: string;
   private readonly token: string;
 
-  constructor(baseUrl: string, token: string, provider: ProviderId = "docker") {
+  constructor(
+    baseUrl: string,
+    token: string,
+    provider: ProviderId = "docker",
+    capabilities = { desktop: true, snapshots: true, liveStream: true },
+  ) {
     this.baseUrl = baseUrl.replace(/\/$/, "");
     this.token = token;
     this.id = provider;
+    this.capabilities = capabilities;
   }
 
   /** The same supervisor, routing to another provider (E2B, Daytona); see D-056. */

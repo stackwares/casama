@@ -174,4 +174,5 @@ const _$CreateComputerRequestProviderEnumEnumMap = {
   CreateComputerRequestProviderEnum.docker: 'docker',
   CreateComputerRequestProviderEnum.e2b: 'e2b',
   CreateComputerRequestProviderEnum.daytona: 'daytona',
+  CreateComputerRequestProviderEnum.kasamaCloud: 'kasama-cloud',
 };

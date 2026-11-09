@@ -5,6 +5,7 @@ import { templateById } from "@kasama/domain";
 import { withSpan } from "@kasama/observability";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { streamSSE } from "hono/streaming";
+import { enforceLimit } from "../../billing/limits.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -161,6 +162,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!(org[0] as { ok?: boolean } | undefined)?.ok)
       throw new ApiError(404, "org_not_found", "Organization not found");
     await checkPolicy(claims, body.org_id, body.model_policy);
+    await enforceLimit(db, body.org_id, "max_bots");
     const [bot] = await withUserSession(db, claims, (tx) =>
       tx
         .insert(bots)

@@ -541,6 +541,44 @@ class SupabaseBackend implements Backend {
   @override
   Future<UpdateNotice> adminUpdates() async => (await api.admin.adminUpdates()).data!;
 
+  // --- billing (Phase 7) ---------------------------------------------------
+
+  @override
+  Future<BillingSummary> billing(String orgId) async => (await api.billing.getBilling(id: orgId)).data!;
+  @override
+  Future<PlanCatalog> plans() async => (await api.billing.listPlans()).data!;
+  @override
+  Future<String> checkoutUrl(String orgId, {String? planCode, String? packCode}) async =>
+      (await api.billing.createCheckout(id: orgId, checkoutRequest: CheckoutRequest(planCode: planCode, packCode: packCode)))
+          .data!
+          .url;
+  @override
+  Future<String> billingPortalUrl(String orgId) async =>
+      (await api.billing.billingPortal(id: orgId, portalRequest: PortalRequest())).data!.url;
+  @override
+  Future<BillingSummary> verifyPurchase(String orgId,
+          {required String source, required String productId, String? transactionId, String? purchaseToken}) async =>
+      (await api.billing.verifyPurchase(
+        id: orgId,
+        purchaseRequest: PurchaseRequest(
+          source_: source == 'app_store' ? PurchaseRequestSource_Enum.appStore : PurchaseRequestSource_Enum.googlePlay,
+          productId: productId,
+          transactionId: transactionId,
+          purchaseToken: purchaseToken,
+        ),
+      ))
+          .data!;
+  @override
+  Future<BillingUsage> billingUsage(String orgId) async => (await api.billing.billingUsage(id: orgId)).data!;
+  @override
+  Future<List<ConnectKey>> connectKeys(String orgId) async => (await api.billing.listConnectKeys(id: orgId)).data!.items;
+  @override
+  Future<CreatedConnectKey> createConnectKey(String orgId, String instanceName) async =>
+      (await api.billing.createConnectKey(id: orgId, createConnectKeyRequest: CreateConnectKeyRequest(instanceName: instanceName)))
+          .data!;
+  @override
+  Future<void> revokeConnectKey(String orgId, String keyId) => api.billing.revokeConnectKey(id: orgId, keyId: keyId);
+
   // --- desktop companion (Phase 6) -----------------------------------------
 
   @override

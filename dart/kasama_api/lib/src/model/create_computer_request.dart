@@ -176,7 +176,9 @@ docker(r'docker'),
 @JsonValue(r'e2b')
 e2b(r'e2b'),
 @JsonValue(r'daytona')
-daytona(r'daytona');
+daytona(r'daytona'),
+@JsonValue(r'kasama-cloud')
+kasamaCloud(r'kasama-cloud');
 
 const CreateComputerRequestProviderEnum(this.value);
 

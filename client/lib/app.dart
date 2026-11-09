@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/widgets.dart';
+import 'features/billing/billing_screen.dart';
+
 import 'core/mobile_extras.dart';
 import 'core/push.dart';
 import 'features/companion/companion_controller.dart';
@@ -15,6 +18,8 @@ class KasamaApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 402 from the server (plan limit, out of credits) opens the paywall (Kasama Cloud only).
+    onPaymentRequired ??= showPaywall;
     ref.watch(pushProvider);
     // Desktop: the companion resumes if this computer is paired and on; tray and global shortcut.
     ref.watch(companionControllerProvider);

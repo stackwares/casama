@@ -140,6 +140,18 @@ abstract class Backend {
   Future<List<AdminService>> adminServices();
   Future<UpdateNotice> adminUpdates();
 
+  // Billing (Phase 7). `BillingSummary.enabled` is false on self-hosted servers (no paywall).
+  Future<BillingSummary> billing(String orgId);
+  Future<PlanCatalog> plans();
+  Future<String> checkoutUrl(String orgId, {String? planCode, String? packCode});
+  Future<String> billingPortalUrl(String orgId);
+  Future<BillingSummary> verifyPurchase(String orgId,
+      {required String source, required String productId, String? transactionId, String? purchaseToken});
+  Future<BillingUsage> billingUsage(String orgId);
+  Future<List<ConnectKey>> connectKeys(String orgId);
+  Future<CreatedConnectKey> createConnectKey(String orgId, String instanceName);
+  Future<void> revokeConnectKey(String orgId, String keyId);
+
   // Desktop companion (Phase 6)
   /// The API's base URL (the companion opens its WebSocket there).
   String get apiUrl;

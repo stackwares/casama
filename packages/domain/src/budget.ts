@@ -9,13 +9,23 @@ export interface BudgetState {
   /** The org's cost in the current quota period. */
   orgPeriod: number;
   quotaLimit?: number | null;
+  /** Prepaid credit balance when the plan is credit-gated (Kasama Cloud, D-070); null = no gate. */
+  credits?: number | null;
+  /** Computer-seconds this month and the plan's monthly computer hours. */
+  computerSeconds?: number;
+  computerHours?: number | null;
 }
 
 export type BudgetVerdict =
   | { ok: true }
   | {
       ok: false;
-      code: "budget_exceeded" | "daily_budget_exceeded" | "quota_exceeded";
+      code:
+        | "budget_exceeded"
+        | "daily_budget_exceeded"
+        | "quota_exceeded"
+        | "out_of_credits"
+        | "computer_hours_exceeded";
       message: string;
     };
 
@@ -24,6 +34,18 @@ const over = (spent: number, limit?: number | null) =>
 
 /** Checked at run start and after every model step. */
 export function checkBudget(s: BudgetState): BudgetVerdict {
+  if (s.credits != null && s.credits <= 0)
+    return {
+      ok: false,
+      code: "out_of_credits",
+      message: "The workspace is out of credits. Add credits or change plans in Billing.",
+    };
+  if (over((s.computerSeconds ?? 0) / 3600, s.computerHours))
+    return {
+      ok: false,
+      code: "computer_hours_exceeded",
+      message: `The workspace used its ${s.computerHours} computer hours for this month.`,
+    };
   if (over(s.orgPeriod, s.quotaLimit))
     return {
       ok: false,

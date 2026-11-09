@@ -1,5 +1,6 @@
 export * from "./admin.ts";
 export * from "./autonomy.ts";
+export * from "./billing.ts";
 export * from "./bots.ts";
 export * from "./brand.ts";
 export * from "./common.ts";

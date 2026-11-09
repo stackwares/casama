@@ -629,6 +629,9 @@ async function spend(db: Database, info: RunInfo) {
     bot_today: string;
     org_period: string;
     quota: string | null;
+    limits: Record<string, unknown> | null;
+    credits: string | null;
+    computer_seconds: string;
   }>(sql`
     select
       (select cost_usd from public.runs where id = ${info.runId}::uuid) as run_cost,
@@ -636,14 +639,28 @@ async function spend(db: Database, info: RunInfo) {
         where bot_id = ${info.botId}::uuid and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') as bot_today,
       (select coalesce(sum(cost_usd), 0) from public.usage_ledger
         where org_id = ${info.orgId}::uuid and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') as org_period,
-      (select max_cost_usd from public.quotas where org_id = ${info.orgId}::uuid and period = 'month') as quota`);
+      (select max_cost_usd from public.quotas where org_id = ${info.orgId}::uuid and period = 'month') as quota,
+      (select limits from public.entitlements where org_id = ${info.orgId}::uuid order by created_at desc limit 1) as limits,
+      (select balance_after from public.credit_ledger where org_id = ${info.orgId}::uuid order by seq desc limit 1) as credits,
+      (select coalesce(sum(quantity), 0) from public.usage_ledger
+        where org_id = ${info.orgId}::uuid and kind = 'computer_seconds'
+          and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') as computer_seconds`);
+  // Entitlements are the only billing input (D-070): a monthly cost cap, credits, computer hours.
+  const limits = row?.limits ?? {};
+  const num = (v: unknown) => (typeof v === "number" ? v : null);
+  const caps = [row?.quota == null ? null : Number(row.quota), num(limits.monthly_usd)].filter(
+    (v): v is number => v != null,
+  );
   return checkBudget({
     runCost: Number(row?.run_cost ?? 0),
     perRunLimit: info.perRunLimit,
     botToday: Number(row?.bot_today ?? 0),
     dailyLimit: info.dailyLimit,
     orgPeriod: Number(row?.org_period ?? 0),
-    quotaLimit: row?.quota == null ? null : Number(row.quota),
+    quotaLimit: caps.length ? Math.min(...caps) : null,
+    credits: limits.credit_gate === true ? Number(row?.credits ?? 0) : null,
+    computerSeconds: Number(row?.computer_seconds ?? 0),
+    computerHours: num(limits.computer_hours),
   });
 }
 

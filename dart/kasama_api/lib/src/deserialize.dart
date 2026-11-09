@@ -14,9 +14,13 @@ import 'package:kasama_api/src/model/approval_requested_event_payload.dart';
 import 'package:kasama_api/src/model/approval_resolved_event.dart';
 import 'package:kasama_api/src/model/approval_resolved_event_payload.dart';
 import 'package:kasama_api/src/model/attach_integration_request.dart';
+import 'package:kasama_api/src/model/billing_summary.dart';
+import 'package:kasama_api/src/model/billing_usage.dart';
+import 'package:kasama_api/src/model/billing_usage_item.dart';
 import 'package:kasama_api/src/model/bot.dart';
 import 'package:kasama_api/src/model/bot_budget.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
+import 'package:kasama_api/src/model/checkout_request.dart';
 import 'package:kasama_api/src/model/checkpoint.dart';
 import 'package:kasama_api/src/model/checkpoint_created_event.dart';
 import 'package:kasama_api/src/model/checkpoint_created_event_payload.dart';
@@ -28,11 +32,14 @@ import 'package:kasama_api/src/model/computer_list.dart';
 import 'package:kasama_api/src/model/computer_size.dart';
 import 'package:kasama_api/src/model/computer_state_event.dart';
 import 'package:kasama_api/src/model/computer_state_event_payload.dart';
+import 'package:kasama_api/src/model/connect_key.dart';
+import 'package:kasama_api/src/model/connect_key_list.dart';
 import 'package:kasama_api/src/model/conversation.dart';
 import 'package:kasama_api/src/model/conversation_list.dart';
 import 'package:kasama_api/src/model/create_bot_request.dart';
 import 'package:kasama_api/src/model/create_checkpoint_request.dart';
 import 'package:kasama_api/src/model/create_computer_request.dart';
+import 'package:kasama_api/src/model/create_connect_key_request.dart';
 import 'package:kasama_api/src/model/create_conversation_request.dart';
 import 'package:kasama_api/src/model/create_credential_request.dart';
 import 'package:kasama_api/src/model/create_integration_request.dart';
@@ -41,11 +48,14 @@ import 'package:kasama_api/src/model/create_local_device_request.dart';
 import 'package:kasama_api/src/model/create_organization_request.dart';
 import 'package:kasama_api/src/model/create_routine_request.dart';
 import 'package:kasama_api/src/model/create_secret_request.dart';
+import 'package:kasama_api/src/model/created_connect_key.dart';
 import 'package:kasama_api/src/model/created_local_device.dart';
 import 'package:kasama_api/src/model/created_routine.dart';
 import 'package:kasama_api/src/model/credential.dart';
 import 'package:kasama_api/src/model/credential_list.dart';
 import 'package:kasama_api/src/model/credential_test_result.dart';
+import 'package:kasama_api/src/model/credit_entry.dart';
+import 'package:kasama_api/src/model/credit_pack.dart';
 import 'package:kasama_api/src/model/delete_result.dart';
 import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
@@ -79,10 +89,16 @@ import 'package:kasama_api/src/model/ok.dart';
 import 'package:kasama_api/src/model/organization.dart';
 import 'package:kasama_api/src/model/organization_list.dart';
 import 'package:kasama_api/src/model/organization_with_role.dart';
+import 'package:kasama_api/src/model/plan.dart';
+import 'package:kasama_api/src/model/plan_catalog.dart';
+import 'package:kasama_api/src/model/portal_request.dart';
 import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/problem_errors_inner.dart';
 import 'package:kasama_api/src/model/public_config.dart';
+import 'package:kasama_api/src/model/purchase_request.dart';
+import 'package:kasama_api/src/model/redirect_url.dart';
 import 'package:kasama_api/src/model/release_lease_request.dart';
+import 'package:kasama_api/src/model/revoked_connect_key.dart';
 import 'package:kasama_api/src/model/routine.dart';
 import 'package:kasama_api/src/model/routine_list.dart';
 import 'package:kasama_api/src/model/run.dart';
@@ -112,6 +128,7 @@ import 'package:kasama_api/src/model/subrun_completed_event.dart';
 import 'package:kasama_api/src/model/subrun_completed_event_payload.dart';
 import 'package:kasama_api/src/model/subrun_started_event.dart';
 import 'package:kasama_api/src/model/subrun_started_event_payload.dart';
+import 'package:kasama_api/src/model/subscription.dart';
 import 'package:kasama_api/src/model/take_lease_request.dart';
 import 'package:kasama_api/src/model/takeover_request.dart';
 import 'package:kasama_api/src/model/takeover_request_list.dart';
@@ -203,12 +220,23 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'Autonomy':
           
           
+        case 'BillingSource':
+          
+          
+        case 'BillingSummary':
+          return BillingSummary.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BillingUsage':
+          return BillingUsage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BillingUsageItem':
+          return BillingUsageItem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Bot':
           return Bot.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotBudget':
           return BotBudget.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotList':
           return BotList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CheckoutRequest':
+          return CheckoutRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Checkpoint':
           return Checkpoint.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CheckpointCreatedEvent':
@@ -234,6 +262,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ComputerStateEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerStateEventPayload':
           return ComputerStateEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ConnectKey':
+          return ConnectKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ConnectKeyList':
+          return ConnectKeyList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Conversation':
           return Conversation.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConversationList':
@@ -244,6 +276,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateCheckpointRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateComputerRequest':
           return CreateComputerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateConnectKeyRequest':
+          return CreateConnectKeyRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateConversationRequest':
           return CreateConversationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateCredentialRequest':
@@ -260,6 +294,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateRoutineRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateSecretRequest':
           return CreateSecretRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreatedConnectKey':
+          return CreatedConnectKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedLocalDevice':
           return CreatedLocalDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedRoutine':
@@ -270,6 +306,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CredentialList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CredentialTestResult':
           return CredentialTestResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreditEntry':
+          return CreditEntry.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreditPack':
+          return CreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteResult':
           return DeleteResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedComputer':
@@ -345,6 +385,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return OrganizationList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'OrganizationWithRole':
           return OrganizationWithRole.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Plan':
+          return Plan.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PlanCatalog':
+          return PlanCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PortalRequest':
+          return PortalRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Problem':
           return Problem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ProblemErrorsInner':
@@ -354,11 +400,17 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           
         case 'PublicConfig':
           return PublicConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PurchaseRequest':
+          return PurchaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReasoningEffort':
           
           
+        case 'RedirectUrl':
+          return RedirectUrl.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReleaseLeaseRequest':
           return ReleaseLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RevokedConnectKey':
+          return RevokedConnectKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Risk':
           
           
@@ -429,6 +481,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SubrunStartedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SubrunStartedEventPayload':
           return SubrunStartedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Subscription':
+          return Subscription.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TakeLeaseRequest':
           return TakeLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TakeoverRequest':

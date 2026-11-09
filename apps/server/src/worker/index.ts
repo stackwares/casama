@@ -30,7 +30,9 @@ import { createDb, type Database } from "@kasama/db";
 import type { Logger } from "@kasama/observability";
 import { LocalProvider, SupervisorProvider, unavailableProvider } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
+import { kasamaCloudProvider } from "../billing/index.ts";
 import {
+  billingSettleWorkflow,
   computersIdleWorkflow,
   configureWorkflows,
   maintenanceWorkflow,
@@ -71,6 +73,10 @@ export interface WorkerOptions {
     cartesia?: string;
     fish_audio?: string;
   };
+  /** Billing (Kasama Cloud only); settles usage into credits every minute. */
+  billing?: import("../billing/service.ts").BillingService;
+  /** Cloud Connect (self-hosted side): the `kasama-cloud` computer provider. */
+  cloud?: { url: string; key: string };
   /** Realtime voice model (default gpt-realtime-2.1). */
   realtimeModel?: string;
 }
@@ -119,9 +125,12 @@ export async function startWorker(opts: WorkerOptions) {
     return cred ? openAiEmbedder(cred) : null;
   };
   // Bot computers: the sandbox supervisor, plus personal computers through the API (D-066).
-  const extra = opts.local ? { local: new LocalProvider(opts.local) } : undefined;
+  const extra = {
+    ...(opts.local ? { local: new LocalProvider(opts.local) } : {}),
+    ...(opts.cloud ? { "kasama-cloud": kasamaCloudProvider(opts.cloud) } : {}),
+  };
   const computers =
-    opts.supervisor || extra
+    opts.supervisor || Object.keys(extra).length
       ? new ComputerService(
           db,
           opts.supervisor
@@ -189,6 +198,7 @@ export async function startWorker(opts: WorkerOptions) {
   });
   configureWorkflows({
     db,
+    billing: opts.billing,
     gateway,
     computers,
     fetch: fetchOut,
@@ -241,6 +251,15 @@ export async function startWorker(opts: WorkerOptions) {
     { scheduleName: "maintenance-hourly", workflowFn: maintenanceWorkflow, schedule: "0 * * * *" },
     { scheduleName: "computers-idle", workflowFn: computersIdleWorkflow, schedule: "* * * * *" },
     { scheduleName: "routines-tick", workflowFn: routinesTickWorkflow, schedule: "* * * * *" },
+    ...(opts.billing?.enabled
+      ? [
+          {
+            scheduleName: "billing-settle",
+            workflowFn: billingSettleWorkflow,
+            schedule: "* * * * *",
+          },
+        ]
+      : []),
   ]);
   opts.logger.info("worker started", { fixtures: !!opts.modelFixtures });
   return {

@@ -2181,6 +2181,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check your connection, or that the server at {url} is running.'**
   String cannotReachServerHelp(String url);
+
+  /// No description provided for @upgradeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade your plan'**
+  String get upgradeTitle;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
+
+  /// No description provided for @seePlans.
+  ///
+  /// In en, this message translates to:
+  /// **'See plans'**
+  String get seePlans;
+
+  /// No description provided for @billing.
+  ///
+  /// In en, this message translates to:
+  /// **'Billing'**
+  String get billing;
+
+  /// No description provided for @billingOffSelfHosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Billing is off on this server. Self-hosted Kasama has no limits.'**
+  String get billingOffSelfHosted;
+
+  /// No description provided for @restorePurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchases'**
+  String get restorePurchases;
+
+  /// No description provided for @restoreStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your purchases…'**
+  String get restoreStarted;
+
+  /// No description provided for @plans.
+  ///
+  /// In en, this message translates to:
+  /// **'Plans'**
+  String get plans;
+
+  /// No description provided for @currentPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Current plan'**
+  String get currentPlan;
+
+  /// No description provided for @subscribeFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe for {price}'**
+  String subscribeFor(String price);
+
+  /// No description provided for @subscribeOnWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe on the web'**
+  String get subscribeOnWeb;
+
+  /// No description provided for @credits.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get credits;
+
+  /// No description provided for @limitBots.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 bot} other{{count} bots}}'**
+  String limitBots(int count);
+
+  /// No description provided for @limitComputerHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} computer hours a month'**
+  String limitComputerHours(int hours);
+
+  /// No description provided for @limitCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'\${amount} credits a month'**
+  String limitCredits(String amount);
+
+  /// No description provided for @viaWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed on the web'**
+  String get viaWeb;
+
+  /// No description provided for @viaAppStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed through the App Store'**
+  String get viaAppStore;
+
+  /// No description provided for @viaGooglePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed through Google Play'**
+  String get viaGooglePlay;
+
+  /// No description provided for @yourPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan'**
+  String get yourPlan;
+
+  /// No description provided for @planEndsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends on {date}'**
+  String planEndsOn(String date);
+
+  /// No description provided for @planRenewsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews on {date}'**
+  String planRenewsOn(String date);
+
+  /// No description provided for @creditsBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits: \${amount}'**
+  String creditsBalance(String amount);
+
+  /// No description provided for @manageSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get manageSubscription;
+
+  /// No description provided for @usageComputerHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud computers: {hours} h'**
+  String usageComputerHours(String hours);
+
+  /// No description provided for @usageLiveViewMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Live view: {minutes} min'**
+  String usageLiveViewMinutes(String minutes);
+
+  /// No description provided for @usageTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Model credits: {count} tokens'**
+  String usageTokens(int count);
+
+  /// No description provided for @thisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get thisMonth;
+
+  /// No description provided for @noBillableUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'No billable usage yet.'**
+  String get noBillableUsage;
+
+  /// No description provided for @cloudConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Connect'**
+  String get cloudConnect;
+
+  /// No description provided for @cloudConnectHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Let a self-hosted Kasama use cloud computers and model credits, billed to this workspace.'**
+  String get cloudConnectHelp;
+
+  /// No description provided for @cloudConnectNewKey.
+  ///
+  /// In en, this message translates to:
+  /// **'New Cloud Connect key'**
+  String get cloudConnectNewKey;
+
+  /// No description provided for @cloudConnectKeyCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Key created'**
+  String get cloudConnectKeyCreated;
+
+  /// No description provided for @cloudConnectKeyOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy it now; it is shown only once. Set it on your server with KASAMA_CLOUD_URL.'**
+  String get cloudConnectKeyOnce;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @revoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get revoke;
+
+  /// No description provided for @instanceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Server name'**
+  String get instanceName;
 }
 
 class _AppLocalizationsDelegate

@@ -1221,4 +1221,141 @@ class AppLocalizationsEn extends AppLocalizations {
   String cannotReachServerHelp(String url) {
     return 'Check your connection, or that the server at $url is running.';
   }
+
+  @override
+  String get upgradeTitle => 'Upgrade your plan';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get seePlans => 'See plans';
+
+  @override
+  String get billing => 'Billing';
+
+  @override
+  String get billingOffSelfHosted =>
+      'Billing is off on this server. Self-hosted Kasama has no limits.';
+
+  @override
+  String get restorePurchases => 'Restore purchases';
+
+  @override
+  String get restoreStarted => 'Checking your purchases…';
+
+  @override
+  String get plans => 'Plans';
+
+  @override
+  String get currentPlan => 'Current plan';
+
+  @override
+  String subscribeFor(String price) {
+    return 'Subscribe for $price';
+  }
+
+  @override
+  String get subscribeOnWeb => 'Subscribe on the web';
+
+  @override
+  String get credits => 'Credits';
+
+  @override
+  String limitBots(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bots',
+      one: '1 bot',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String limitComputerHours(int hours) {
+    return '$hours computer hours a month';
+  }
+
+  @override
+  String limitCredits(String amount) {
+    return '\$$amount credits a month';
+  }
+
+  @override
+  String get viaWeb => 'Billed on the web';
+
+  @override
+  String get viaAppStore => 'Billed through the App Store';
+
+  @override
+  String get viaGooglePlay => 'Billed through Google Play';
+
+  @override
+  String get yourPlan => 'Your plan';
+
+  @override
+  String planEndsOn(String date) {
+    return 'Ends on $date';
+  }
+
+  @override
+  String planRenewsOn(String date) {
+    return 'Renews on $date';
+  }
+
+  @override
+  String creditsBalance(String amount) {
+    return 'Credits: \$$amount';
+  }
+
+  @override
+  String get manageSubscription => 'Manage subscription';
+
+  @override
+  String usageComputerHours(String hours) {
+    return 'Cloud computers: $hours h';
+  }
+
+  @override
+  String usageLiveViewMinutes(String minutes) {
+    return 'Live view: $minutes min';
+  }
+
+  @override
+  String usageTokens(int count) {
+    return 'Model credits: $count tokens';
+  }
+
+  @override
+  String get thisMonth => 'This month';
+
+  @override
+  String get noBillableUsage => 'No billable usage yet.';
+
+  @override
+  String get cloudConnect => 'Cloud Connect';
+
+  @override
+  String get cloudConnectHelp =>
+      'Let a self-hosted Kasama use cloud computers and model credits, billed to this workspace.';
+
+  @override
+  String get cloudConnectNewKey => 'New Cloud Connect key';
+
+  @override
+  String get cloudConnectKeyCreated => 'Key created';
+
+  @override
+  String get cloudConnectKeyOnce =>
+      'Copy it now; it is shown only once. Set it on your server with KASAMA_CLOUD_URL.';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get revoke => 'Revoke';
+
+  @override
+  String get instanceName => 'Server name';
 }

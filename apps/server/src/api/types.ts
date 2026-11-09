@@ -20,6 +20,13 @@ export interface AppDeps {
   devices?: import("./routes/local.ts").DeviceRegistry;
   /** Live view (Phase 5); unset when no TURN relay is configured. */
   live?: import("./routes/live.ts").LiveConfig;
+  /** Billing (Phase 7, D-070); off on self-hosted servers. */
+  billing?: import("../billing/service.ts").BillingService;
+  /** Cloud Connect proxy targets (cloud side, D-071). */
+  connect?: {
+    supervisor?: { url: string; token: string };
+    models?: { url: string; key: string; markup?: number };
+  };
   /** Readiness checks by name; each throws when unhealthy. */
   readiness: Record<string, () => Promise<void>>;
 }

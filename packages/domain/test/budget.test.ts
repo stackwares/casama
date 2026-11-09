@@ -18,4 +18,26 @@ describe("checkBudget", () => {
     });
     expect(checkBudget({ ...base, runCost: 0.5, perRunLimit: 1 })).toEqual({ ok: true });
   });
+
+  it("credit-gated plans stop at zero credits; no gate means no check (self-hosted)", () => {
+    expect(checkBudget({ ...base, credits: 0 })).toMatchObject({
+      ok: false,
+      code: "out_of_credits",
+    });
+    expect(checkBudget({ ...base, credits: -0.2 })).toMatchObject({
+      ok: false,
+      code: "out_of_credits",
+    });
+    expect(checkBudget({ ...base, credits: 0.01 })).toEqual({ ok: true });
+    expect(checkBudget({ ...base, credits: null })).toEqual({ ok: true });
+  });
+
+  it("monthly computer hours from the plan", () => {
+    expect(checkBudget({ ...base, computerSeconds: 5 * 3600, computerHours: 5 })).toMatchObject({
+      ok: false,
+      code: "computer_hours_exceeded",
+    });
+    expect(checkBudget({ ...base, computerSeconds: 3600, computerHours: 5 })).toEqual({ ok: true });
+    expect(checkBudget({ ...base, computerSeconds: 1e9 })).toEqual({ ok: true });
+  });
 });

@@ -87,6 +87,8 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
             ),
           );
           if (!row) throw new Error("create_organization returned nothing");
+          // Kasama Cloud: new workspaces start on the free plan with its included credits.
+          if (deps.billing?.enabled) row.plan = (await deps.billing.recompute(row.id)).planCode;
           return c.json(orgOut({ ...row, createdAt: row.created_at }), 201);
         } catch (err) {
           if (pgErrorCode(err) !== "23505") throw err;

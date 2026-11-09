@@ -73,6 +73,15 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**setOrgLimits**](doc/AdminApi.md#setorglimits) | **PATCH** /v1/admin/orgs/{id}/limits | Set a workspace&#39;s quotas
 [*ApprovalsApi*](doc/ApprovalsApi.md) | [**decideApproval**](doc/ApprovalsApi.md#decideapproval) | **POST** /v1/approvals/{id}/decision | Approve or deny; denying cancels that step only
 [*ApprovalsApi*](doc/ApprovalsApi.md) | [**listApprovals**](doc/ApprovalsApi.md#listapprovals) | **GET** /v1/approvals | 
+[*BillingApi*](doc/BillingApi.md) | [**billingPortal**](doc/BillingApi.md#billingportal) | **POST** /v1/orgs/{id}/billing/portal | Open the customer portal for a web subscription
+[*BillingApi*](doc/BillingApi.md) | [**billingUsage**](doc/BillingApi.md#billingusage) | **GET** /v1/orgs/{id}/billing/usage | This month&#39;s bill: billable usage by kind and instance, and recent credit entries
+[*BillingApi*](doc/BillingApi.md) | [**createCheckout**](doc/BillingApi.md#createcheckout) | **POST** /v1/orgs/{id}/billing/checkout | Start a web checkout (Dodo Payments) for a plan or credit pack
+[*BillingApi*](doc/BillingApi.md) | [**createConnectKey**](doc/BillingApi.md#createconnectkey) | **POST** /v1/orgs/{id}/cloud-connect/keys | Create a Cloud Connect key (shown once)
+[*BillingApi*](doc/BillingApi.md) | [**getBilling**](doc/BillingApi.md#getbilling) | **GET** /v1/orgs/{id}/billing | The workspace&#39;s plan, entitlement, subscriptions and credits
+[*BillingApi*](doc/BillingApi.md) | [**listConnectKeys**](doc/BillingApi.md#listconnectkeys) | **GET** /v1/orgs/{id}/cloud-connect/keys | Cloud Connect keys for self-hosted instances
+[*BillingApi*](doc/BillingApi.md) | [**listPlans**](doc/BillingApi.md#listplans) | **GET** /v1/billing/plans | Plans and credit packs on this server
+[*BillingApi*](doc/BillingApi.md) | [**revokeConnectKey**](doc/BillingApi.md#revokeconnectkey) | **DELETE** /v1/orgs/{id}/cloud-connect/keys/{key_id} | 
+[*BillingApi*](doc/BillingApi.md) | [**verifyPurchase**](doc/BillingApi.md#verifypurchase) | **POST** /v1/orgs/{id}/billing/purchases | Verify an App Store or Google Play purchase (also used by Restore Purchases)
 [*BotsApi*](doc/BotsApi.md) | [**createBot**](doc/BotsApi.md#createbot) | **POST** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listBots**](doc/BotsApi.md#listbots) | **GET** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listTemplates**](doc/BotsApi.md#listtemplates) | **GET** /v1/templates | 
@@ -164,9 +173,14 @@ Class | Method | HTTP request | Description
  - [ApprovalResolvedEventPayload](doc/ApprovalResolvedEventPayload.md)
  - [AttachIntegrationRequest](doc/AttachIntegrationRequest.md)
  - [Autonomy](doc/Autonomy.md)
+ - [BillingSource](doc/BillingSource.md)
+ - [BillingSummary](doc/BillingSummary.md)
+ - [BillingUsage](doc/BillingUsage.md)
+ - [BillingUsageItem](doc/BillingUsageItem.md)
  - [Bot](doc/Bot.md)
  - [BotBudget](doc/BotBudget.md)
  - [BotList](doc/BotList.md)
+ - [CheckoutRequest](doc/CheckoutRequest.md)
  - [Checkpoint](doc/Checkpoint.md)
  - [CheckpointCreatedEvent](doc/CheckpointCreatedEvent.md)
  - [CheckpointCreatedEventPayload](doc/CheckpointCreatedEventPayload.md)
@@ -179,11 +193,14 @@ Class | Method | HTTP request | Description
  - [ComputerState](doc/ComputerState.md)
  - [ComputerStateEvent](doc/ComputerStateEvent.md)
  - [ComputerStateEventPayload](doc/ComputerStateEventPayload.md)
+ - [ConnectKey](doc/ConnectKey.md)
+ - [ConnectKeyList](doc/ConnectKeyList.md)
  - [Conversation](doc/Conversation.md)
  - [ConversationList](doc/ConversationList.md)
  - [CreateBotRequest](doc/CreateBotRequest.md)
  - [CreateCheckpointRequest](doc/CreateCheckpointRequest.md)
  - [CreateComputerRequest](doc/CreateComputerRequest.md)
+ - [CreateConnectKeyRequest](doc/CreateConnectKeyRequest.md)
  - [CreateConversationRequest](doc/CreateConversationRequest.md)
  - [CreateCredentialRequest](doc/CreateCredentialRequest.md)
  - [CreateIntegrationRequest](doc/CreateIntegrationRequest.md)
@@ -192,11 +209,14 @@ Class | Method | HTTP request | Description
  - [CreateOrganizationRequest](doc/CreateOrganizationRequest.md)
  - [CreateRoutineRequest](doc/CreateRoutineRequest.md)
  - [CreateSecretRequest](doc/CreateSecretRequest.md)
+ - [CreatedConnectKey](doc/CreatedConnectKey.md)
  - [CreatedLocalDevice](doc/CreatedLocalDevice.md)
  - [CreatedRoutine](doc/CreatedRoutine.md)
  - [Credential](doc/Credential.md)
  - [CredentialList](doc/CredentialList.md)
  - [CredentialTestResult](doc/CredentialTestResult.md)
+ - [CreditEntry](doc/CreditEntry.md)
+ - [CreditPack](doc/CreditPack.md)
  - [DeleteResult](doc/DeleteResult.md)
  - [DeletedComputer](doc/DeletedComputer.md)
  - [DeletedDevice](doc/DeletedDevice.md)
@@ -233,12 +253,18 @@ Class | Method | HTTP request | Description
  - [Organization](doc/Organization.md)
  - [OrganizationList](doc/OrganizationList.md)
  - [OrganizationWithRole](doc/OrganizationWithRole.md)
+ - [Plan](doc/Plan.md)
+ - [PlanCatalog](doc/PlanCatalog.md)
+ - [PortalRequest](doc/PortalRequest.md)
  - [Problem](doc/Problem.md)
  - [ProblemErrorsInner](doc/ProblemErrorsInner.md)
  - [ProviderId](doc/ProviderId.md)
  - [PublicConfig](doc/PublicConfig.md)
+ - [PurchaseRequest](doc/PurchaseRequest.md)
  - [ReasoningEffort](doc/ReasoningEffort.md)
+ - [RedirectUrl](doc/RedirectUrl.md)
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
+ - [RevokedConnectKey](doc/RevokedConnectKey.md)
  - [Risk](doc/Risk.md)
  - [Routine](doc/Routine.md)
  - [RoutineList](doc/RoutineList.md)
@@ -272,6 +298,7 @@ Class | Method | HTTP request | Description
  - [SubrunCompletedEventPayload](doc/SubrunCompletedEventPayload.md)
  - [SubrunStartedEvent](doc/SubrunStartedEvent.md)
  - [SubrunStartedEventPayload](doc/SubrunStartedEventPayload.md)
+ - [Subscription](doc/Subscription.md)
  - [TakeLeaseRequest](doc/TakeLeaseRequest.md)
  - [TakeoverRequest](doc/TakeoverRequest.md)
  - [TakeoverRequestList](doc/TakeoverRequestList.md)

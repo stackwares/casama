@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
+import '../../core/billing.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../admin/admin_screen.dart';
@@ -104,6 +105,14 @@ class SettingsScreen extends ConsumerWidget {
           title: Text(l10n.secrets),
           onTap: () => context.push('/settings/secrets'),
         ),
+        if (ref.watch(billingProvider).value?.enabled ?? false)
+          ListTile(
+            key: const Key('settingsBilling'),
+            leading: const Icon(Icons.workspace_premium_outlined),
+            title: Text(l10n.billing),
+            subtitle: Text(ref.watch(billingProvider).value!.planName),
+            onTap: () => context.push('/settings/billing'),
+          ),
         ListTile(
           leading: const Icon(Icons.payments_outlined),
           title: Text(l10n.usage),

@@ -82,6 +82,9 @@ class KasamaClient {
   LocalComputerApi get localComputer => api.getLocalComputerApi();
   AdminApi get admin => api.getAdminApi();
 
+  /// Plans, entitlements, purchases and Cloud Connect keys (Phase 7).
+  BillingApi get billing => api.getBillingApi();
+
   Future<Map<String, String>> _authHeader() async {
     final session = await currentSession();
     return {if (session != null) 'authorization': 'Bearer ${session.accessToken}'};

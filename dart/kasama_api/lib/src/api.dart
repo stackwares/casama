@@ -9,6 +9,7 @@ import 'package:kasama_api/src/auth/bearer_auth.dart';
 import 'package:kasama_api/src/auth/oauth.dart';
 import 'package:kasama_api/src/api/admin_api.dart';
 import 'package:kasama_api/src/api/approvals_api.dart';
+import 'package:kasama_api/src/api/billing_api.dart';
 import 'package:kasama_api/src/api/bots_api.dart';
 import 'package:kasama_api/src/api/chat_api.dart';
 import 'package:kasama_api/src/api/computers_api.dart';
@@ -87,6 +88,12 @@ class KasamaApi {
   /// by doing that all interceptors will not be executed
   ApprovalsApi getApprovalsApi() {
     return ApprovalsApi(dio);
+  }
+
+  /// Get BillingApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  BillingApi getBillingApi() {
+    return BillingApi(dio);
   }
 
   /// Get BotsApi instance, base route and serializer can be overridden by a given but be careful,

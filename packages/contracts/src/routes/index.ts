@@ -1,5 +1,6 @@
 import * as admin from "./admin.ts";
 import * as autonomy from "./autonomy.ts";
+import * as billing from "./billing.ts";
 import * as bots from "./bots.ts";
 import * as computers from "./computers.ts";
 import * as local from "./local.ts";
@@ -16,5 +17,6 @@ export const routes = {
   ...voice,
   ...local,
   ...admin,
+  ...billing,
 };
-export { admin, autonomy, bots, computers, local, system, voice, workspaces };
+export { admin, autonomy, billing, bots, computers, local, system, voice, workspaces };

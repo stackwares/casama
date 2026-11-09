@@ -7,6 +7,7 @@ import { type JwtClaims, schema, withUserSession } from "@kasama/db";
 import { SandboxError } from "@kasama/sandbox";
 import { desc, eq, sql } from "drizzle-orm";
 import { WebSocket, WebSocketServer } from "ws";
+import { enforceLimit } from "../../billing/limits.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -279,6 +280,13 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         throw new ApiError(400, "bad_owner", "That bot is not in this workspace");
     }
     await canManage(claims, body.org_id, owner);
+    await enforceLimit(db, body.org_id, "max_computers");
+    if (body.provider === "kasama-cloud" && !deps.env.KASAMA_CLOUD_KEY)
+      throw new ApiError(
+        409,
+        "cloud_connect_off",
+        "Cloud computers need a Cloud Connect key (KASAMA_CLOUD_URL and KASAMA_CLOUD_KEY)",
+      );
     const inserted = await db
       .insert(computers)
       .values({

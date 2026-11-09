@@ -697,5 +697,111 @@
         "type": "String"
       }
     }
-  }
+  },
+  "upgradeTitle": "Upgrade your plan",
+  "notNow": "Not now",
+  "seePlans": "See plans",
+  "billing": "Billing",
+  "billingOffSelfHosted": "Billing is off on this server. Self-hosted Kasama has no limits.",
+  "restorePurchases": "Restore purchases",
+  "restoreStarted": "Checking your purchases…",
+  "plans": "Plans",
+  "currentPlan": "Current plan",
+  "subscribeFor": "Subscribe for {price}",
+  "@subscribeFor": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "subscribeOnWeb": "Subscribe on the web",
+  "credits": "Credits",
+  "limitBots": "{count, plural, =1{1 bot} other{{count} bots}}",
+  "@limitBots": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "limitComputerHours": "{hours} computer hours a month",
+  "@limitComputerHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "limitCredits": "${amount} credits a month",
+  "@limitCredits": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "viaWeb": "Billed on the web",
+  "viaAppStore": "Billed through the App Store",
+  "viaGooglePlay": "Billed through Google Play",
+  "yourPlan": "Your plan",
+  "planEndsOn": "Ends on {date}",
+  "@planEndsOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "planRenewsOn": "Renews on {date}",
+  "@planRenewsOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsBalance": "Credits: ${amount}",
+  "@creditsBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "manageSubscription": "Manage subscription",
+  "usageComputerHours": "Cloud computers: {hours} h",
+  "@usageComputerHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "usageLiveViewMinutes": "Live view: {minutes} min",
+  "@usageLiveViewMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "usageTokens": "Model credits: {count} tokens",
+  "@usageTokens": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "thisMonth": "This month",
+  "noBillableUsage": "No billable usage yet.",
+  "cloudConnect": "Cloud Connect",
+  "cloudConnectHelp": "Let a self-hosted Kasama use cloud computers and model credits, billed to this workspace.",
+  "cloudConnectNewKey": "New Cloud Connect key",
+  "cloudConnectKeyCreated": "Key created",
+  "cloudConnectKeyOnce": "Copy it now; it is shown only once. Set it on your server with KASAMA_CLOUD_URL.",
+  "copy": "Copy",
+  "revoke": "Revoke",
+  "instanceName": "Server name"
 }
