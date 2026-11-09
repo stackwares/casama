@@ -4,8 +4,10 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import {
+  CreateBucketCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadBucketCommand,
   ListObjectsV2Command,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -114,6 +116,15 @@ export class S3ObjectStore implements ObjectStore {
           ? { accessKeyId: opts.accessKeyId, secretAccessKey: opts.secretAccessKey }
           : undefined,
     });
+  }
+
+  /** Creates the bucket if it does not exist (self-hosted S3 such as SeaweedFS). */
+  async ensureBucket() {
+    try {
+      await this.s3.send(new HeadBucketCommand({ Bucket: this.bucket }));
+    } catch {
+      await this.s3.send(new CreateBucketCommand({ Bucket: this.bucket }));
+    }
   }
 
   async put(key: string, body: ReadableStream<Uint8Array> | Uint8Array) {

@@ -39,7 +39,9 @@ export async function startHarness(
     email?: boolean;
     rateLimit?: number;
     worker?: {
-      fixtures: string;
+      /** Recorded model responses; omit only in live checks (real provider calls). */
+      fixtures?: string;
+      maxOutputTokens?: number;
       push?: import("@kasama/agent").PushSender;
       egressExemptCidrs?: string[];
       providerBases?: { fal?: string; brave?: string; tavily?: string };
@@ -72,6 +74,7 @@ export async function startHarness(
       logger: createLogger("worker", "error"),
       logLevel: "error",
       modelFixtures: opts.worker.fixtures,
+      maxOutputTokens: opts.worker.maxOutputTokens,
       embeddings: "hash",
       supervisor: opts.sandbox
         ? { url: opts.sandbox.supervisorUrl, token: opts.sandbox.token }

@@ -1,4 +1,5 @@
 import type { Database } from "@kasama/db";
+import { DEFAULT_MODELS, DEFAULT_REASONING_EFFORT } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import type { ModelChoice, ProviderId, ResolvedModel } from "./gateway/types.ts";
 
@@ -27,6 +28,12 @@ export class CredentialResolver {
       apiKey: row.key ?? undefined,
       baseUrl: row.base_url ?? undefined,
       credentialId: choice.credential_id,
+      // The default model runs at the default effort unless the bot says otherwise (D-064).
+      reasoningEffort:
+        choice.reasoning_effort ??
+        (Object.values(DEFAULT_MODELS).includes(choice.model)
+          ? DEFAULT_REASONING_EFFORT
+          : undefined),
     };
   }
 

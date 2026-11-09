@@ -20,6 +20,23 @@ const DEFAULT: ModelCapabilities = {
 
 // Prices are list prices at the time of writing; the cost meter is checked against provider bills.
 const KNOWN: Array<[RegExp, Partial<ModelCapabilities>]> = [
+  // GPT-6 family (OpenRouter list prices, 2026-11-09); the default model is GPT-6 Luna (D-064).
+  [
+    /gpt-6(\.\d+)?-luna/,
+    { contextWindow: 1_050_000, vision: true, caching: true, inputPrice: 0.1, outputPrice: 0.5 },
+  ],
+  [
+    /gpt-6(\.\d+)?-terra/,
+    { contextWindow: 1_050_000, vision: true, caching: true, inputPrice: 1, outputPrice: 5 },
+  ],
+  [
+    /gpt-6(\.\d+)?-sol/,
+    { contextWindow: 1_050_000, vision: true, caching: true, inputPrice: 2, outputPrice: 10 },
+  ],
+  [
+    /gpt-6(\.\d+)?-astra/,
+    { contextWindow: 1_050_000, vision: true, caching: true, inputPrice: 10, outputPrice: 50 },
+  ],
   [
     /claude-(opus|fable)/,
     { contextWindow: 200_000, vision: true, caching: true, inputPrice: 15, outputPrice: 75 },

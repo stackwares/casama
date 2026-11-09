@@ -31,6 +31,8 @@ const store =
       })
     : new FsObjectStore(env.OBJECT_STORE_DIR ?? "/data/objects");
 
+if (store instanceof S3ObjectStore && env.S3_CREATE_BUCKET === "true") await store.ensureBucket();
+
 const provider = new DockerProvider({
   docker: new DockerApi(env.DOCKER_SOCKET ?? "/var/run/docker.sock"),
   store,

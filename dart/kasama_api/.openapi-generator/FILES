@@ -102,6 +102,7 @@ lib/src/model/problem.dart
 lib/src/model/problem_errors_inner.dart
 lib/src/model/provider_id.dart
 lib/src/model/public_config.dart
+lib/src/model/reasoning_effort.dart
 lib/src/model/release_lease_request.dart
 lib/src/model/risk.dart
 lib/src/model/routine.dart

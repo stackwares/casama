@@ -5,6 +5,7 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createXai } from "@ai-sdk/xai";
 import {
   APICallError,
+  type JSONValue,
   jsonSchema,
   type LanguageModel,
   type ModelMessage,
@@ -48,6 +49,17 @@ export function languageModel(m: ResolvedModel): LanguageModel {
         includeUsage: true,
       })(m.model);
   }
+}
+
+/** Reasoning effort in each provider's request format. */
+export function reasoningOptions(
+  m: ResolvedModel,
+): Record<string, Record<string, JSONValue>> | undefined {
+  if (!m.reasoningEffort) return undefined;
+  if (m.provider === "openai") return { openai: { reasoningEffort: m.reasoningEffort } };
+  if (m.provider === "openrouter")
+    return { openrouter: { reasoning: { effort: m.reasoningEffort } } };
+  return undefined;
 }
 
 export function toModelMessages(messages: ChatMessage[]): ModelMessage[] {
@@ -120,6 +132,7 @@ export class AiSdkGateway implements ModelGateway {
         messages: toModelMessages(req.messages),
         tools: req.tools?.length ? tools : undefined,
         maxOutputTokens: req.maxOutputTokens,
+        providerOptions: reasoningOptions(req.model),
         abortSignal: req.abortSignal,
         maxRetries: 0,
       });

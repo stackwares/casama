@@ -4,11 +4,11 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 
 ## Keys and accounts
 
-| Item                                                                        | Needed for                                                     | Where it plugs in                                                         | Status                                                         |
-| --------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| A model key (OpenRouter is simplest; any of OpenAI, Anthropic, Google, xAI) | Real bot replies instead of recorded fixtures                  | `kasama credential add`, or `POST /v1/credentials`                        | Gateway wired for all providers; only replayed fixtures tested |
-| An OpenAI key (optional)                                                    | Vector embeddings for memory (otherwise full-text search only) | Same as above, provider `openai`                                          | Hybrid search tested with an offline hash embedder             |
-| Resend API key and a sending domain                                         | Invite emails (bot email channel is post-v1)                   | `RESEND_API_KEY`, `EMAIL_FROM`                                            | Invites fall back to returning the token                       |
+| Item                                                                        | Needed for                                                     | Where it plugs in                                                         | Status                                                                                                                                                                                                                              |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A model key (OpenRouter is simplest; any of OpenAI, Anthropic, Google, xAI) | Real bot replies instead of recorded fixtures                  | `kasama credential add`, or `POST /v1/credentials`                        | **Provided (OpenRouter, 2026-11-09)** in `~/.config/kasama/openrouter.env`. Live checks pass: key test, a live tool call on a Docker computer, a live chat in the app (`scripts/live-check.sh`). Other providers still fixture-only |
+| An OpenAI key (optional)                                                    | Vector embeddings for memory (otherwise full-text search only) | Same as above, provider `openai`                                          | Hybrid search tested with an offline hash embedder                                                                                                                                                                                  |
+| Resend API key and a sending domain                                         | Invite emails (bot email channel is post-v1)                   | `RESEND_API_KEY`, `EMAIL_FROM`                                            | Invites fall back to returning the token                                                                                                                                                                                            |
 | Composio API key (free tier)                                                | Composio integration tools (Phase 4)                           | Integration credentials in Vault; built against a mock until a key is set |
 | Pipedream Connect project (client id and secret, free tier)                 | Pipedream Connect integration tools (Phase 4)                  | Same as above                                                             |
 | fal.ai API key                                                              | `media.image.generate` / `media.video.generate` (Phase 4)      | `MediaProvider` fal.ai adapter; tested against a mock                     |
@@ -29,7 +29,7 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 | Supabase (local via `supabase start`, which needs Docker) | Testing against real Supabase Auth, Realtime and Vault instead of the local shim | Migrations and all pgTAP tests verified on the real Supabase Postgres image; app tests use the shim |
 
 | A Linux sandbox host with XFS project quotas | Enforcing the 10 GB per-computer disk limit (D-032) | Free disk is reported; no hard cap on Docker Desktop |
-| Object storage bucket (Cloudflare R2 free tier or Supabase Storage) | Computer snapshots and checkpoints off the sandbox host | `OBJECT_STORE=s3` + `S3_*` variables; tested only with the filesystem store |
+| Cloudflare R2 bucket and API token (hosted installs, D-062) | Snapshots and checkpoints off the sandbox host with no egress fees | `OBJECT_STORE=s3` + `S3_*` variables; S3 store tested against SeaweedFS locally |
 
 | A public TURN relay: a host with UDP 3478 and the relay port range open, plus a TLS certificate for `turns:` on 5349 | Live view from outside this Mac (phones on 4G, networks that block UDP) | `infra/turn` image and `TURN_*` settings; tested only on Docker Desktop (D-055) |
 | A phone on a mobile network | The Phase 5 gate "live view under 500 ms on 4G" | Measured 1–3 ms data-channel RTT locally (D-060) |
@@ -38,14 +38,14 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 
 ## Phase 3 app distribution and testers
 
-| Item                                                           | Needed for                                             | Status                                                                       |
-| -------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| Apple Developer account (TestFlight) and signing identity      | iOS tester builds                                      | `flutter build ios --no-codesign` succeeds; not signed                       |
-| Google Play Console account (internal testing track)           | Android tester builds                                  | Debug APK builds; no release signing key                                     |
-| A place to host the web preview                                | Web testers                                            | `flutter build web` succeeds; nothing deployed (no deploys per instructions) |
-| 10 testers for a week                                          | The Phase 3 gate ("80% of runs finish without errors") | Replaced by automated end-to-end runs on 4 platforms                         |
-| Google and Apple OAuth credentials configured in Supabase Auth | "Continue with Google/Apple" buttons                   | Buttons call Supabase OAuth; providers not configured locally                |
-| Sentry DSN (optional)                                          | Crash reporting from the app                           | `--dart-define=SENTRY_DSN=...` turns it on                                   |
+| Item                                                                                     | Needed for                                             | Status                                                                               |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Apple Developer account (TestFlight) and signing identity                                | iOS tester builds                                      | `flutter build ios --no-codesign` succeeds; not signed                               |
+| Google Play Console account (internal testing track)                                     | Android tester builds                                  | Debug APK builds; no release signing key                                             |
+| A place to host the web preview                                                          | Web testers                                            | `flutter build web` succeeds; nothing deployed (no deploys per instructions)         |
+| 10 testers for a week                                                                    | The Phase 3 gate ("80% of runs finish without errors") | Replaced by automated end-to-end runs on 4 platforms                                 |
+| Google and Apple OAuth credentials configured in Supabase Auth                           | "Continue with Google/Apple" buttons                   | Buttons call Supabase OAuth; providers not configured locally                        |
+| Error reporting (optional): a Sentry or GlitchTip DSN, or a PostHog project key and host | Errors from server, supervisor and app (D-063)         | `SENTRY_DSN` or `POSTHOG_API_KEY`/`POSTHOG_HOST`; app `--dart-define` the same names |
 
 ## Decisions only Oliver can make
 

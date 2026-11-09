@@ -10,10 +10,17 @@ const _terminal = {'run.completed', 'run.failed', 'run.cancelled'};
 
 /// Backend on Supabase (auth, reads, simple writes, Realtime) and the Kasama API (commands).
 class SupabaseBackend implements Backend {
-  SupabaseBackend(this.supabase, this.api);
+  SupabaseBackend(this.supabase, this.api, {this.config});
 
   final sb.SupabaseClient supabase;
   final KasamaClient api;
+  final PublicConfig? config;
+
+  /// Used when the server is older than the default-model setting (D-064).
+  static const _fallbackModels = {'openrouter': 'openai/gpt-6-luna', 'openai': 'gpt-6-luna'};
+
+  @override
+  String? defaultModelFor(String provider) => config?.defaultModels[provider] ?? _fallbackModels[provider];
 
   /// How run events arrived (Realtime broadcast vs API catch-up); used by integration tests.
   int realtimeEvents = 0;

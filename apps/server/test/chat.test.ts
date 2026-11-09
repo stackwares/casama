@@ -78,7 +78,7 @@ describe("model keys", () => {
       token: owner.token,
       json: {},
     });
-    expect(await j(res)).toMatchObject({ ok: true, model: "openai/gpt-4o-mini" });
+    expect(await j(res)).toMatchObject({ ok: true, model: "openai/gpt-6-luna" });
     const list = await j(await call(`/v1/credentials?org_id=${orgId}`, { token: owner.token }));
     expect(list.items[0]).toMatchObject({ id: credentialId, last_test_ok: true });
   });

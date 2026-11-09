@@ -46,6 +46,8 @@ export interface WorkerOptions {
   modelFixtures?: string;
   /** Append every real model exchange to this file as fixture turns. */
   modelRecord?: string;
+  /** Cap on output tokens per model call (live checks). */
+  maxOutputTokens?: number;
   embeddings?: "auto" | "none" | "hash";
   runConcurrency?: number;
   db?: Database;
@@ -75,11 +77,17 @@ function loadFixtures(paths: string): FixtureFile[] {
 }
 
 export function buildGateway(
-  opts: Pick<WorkerOptions, "modelFixtures" | "modelRecord">,
+  opts: Pick<WorkerOptions, "modelFixtures" | "modelRecord" | "maxOutputTokens">,
 ): ModelGateway {
   if (opts.modelFixtures) return new ReplayGateway(loadFixtures(opts.modelFixtures));
   const real = new AiSdkGateway();
-  return opts.modelRecord ? recordingGateway(real, opts.modelRecord) : real;
+  const inner = opts.modelRecord ? recordingGateway(real, opts.modelRecord) : real;
+  const cap = opts.maxOutputTokens;
+  if (!cap) return inner;
+  return {
+    stream: (req) =>
+      inner.stream({ ...req, maxOutputTokens: Math.min(req.maxOutputTokens ?? cap, cap) }),
+  };
 }
 
 /** Launches DBOS on the application Postgres, in its own `dbos` schema. */

@@ -16,3 +16,9 @@ supabase/.branches
 supabase/.temp
 # test databases
 .pgdata*/
+# Anything that could hold a real key for live checks (never commit these)
+*.secret
+*.secrets.json
+dart-defines*.json
+.live/
+live-check*.log

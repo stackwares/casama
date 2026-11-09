@@ -1549,6 +1549,24 @@
           },
           "billing_enabled": {
             "type": "boolean"
+          },
+          "default_models": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Default model id per provider (for example openrouter, openai)"
+          },
+          "default_reasoning_effort": {
+            "type": "string",
+            "enum": [
+              "none",
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max"
+            ]
           }
         },
         "required": [
@@ -1556,7 +1574,9 @@
           "api_version",
           "supabase_url",
           "supabase_anon_key",
-          "billing_enabled"
+          "billing_enabled",
+          "default_models",
+          "default_reasoning_effort"
         ]
       },
       "Health": {
@@ -2072,12 +2092,27 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 200
+          },
+          "reasoning_effort": {
+            "$ref": "#/components/schemas/ReasoningEffort"
           }
         },
         "required": [
           "credential_id",
           "model"
         ]
+      },
+      "ReasoningEffort": {
+        "type": "string",
+        "enum": [
+          "none",
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ],
+        "description": "For reasoning models; the server default applies to the default model when unset"
       },
       "Autonomy": {
         "type": "string",

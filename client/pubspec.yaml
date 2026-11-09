@@ -29,6 +29,7 @@ dependencies:
   firebase_core: ^5.1.0
   firebase_messaging: ^17.0.1
   flutter_webrtc: ^1.6.3
+  posthog_flutter: ^5.60.0
 
 dev_dependencies:
   integration_test:

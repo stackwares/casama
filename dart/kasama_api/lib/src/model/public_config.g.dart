@@ -17,6 +17,12 @@ abstract class _$PublicConfigCWProxy {
 
   PublicConfig billingEnabled(bool billingEnabled);
 
+  PublicConfig defaultModels(Map<String, String> defaultModels);
+
+  PublicConfig defaultReasoningEffort(
+    PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort,
+  );
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
@@ -31,6 +37,8 @@ abstract class _$PublicConfigCWProxy {
     String supabaseUrl,
     String supabaseAnonKey,
     bool billingEnabled,
+    Map<String, String> defaultModels,
+    PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort,
   });
 }
 
@@ -60,6 +68,15 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
   PublicConfig billingEnabled(bool billingEnabled) =>
       call(billingEnabled: billingEnabled);
 
+  @override
+  PublicConfig defaultModels(Map<String, String> defaultModels) =>
+      call(defaultModels: defaultModels);
+
+  @override
+  PublicConfig defaultReasoningEffort(
+    PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort,
+  ) => call(defaultReasoningEffort: defaultReasoningEffort);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
@@ -75,6 +92,8 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? supabaseUrl = const $CopyWithPlaceholder(),
     Object? supabaseAnonKey = const $CopyWithPlaceholder(),
     Object? billingEnabled = const $CopyWithPlaceholder(),
+    Object? defaultModels = const $CopyWithPlaceholder(),
+    Object? defaultReasoningEffort = const $CopyWithPlaceholder(),
   }) {
     return PublicConfig(
       productName:
@@ -104,6 +123,17 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
           ? _value.billingEnabled
           // ignore: cast_nullable_to_non_nullable
           : billingEnabled as bool,
+      defaultModels:
+          defaultModels == const $CopyWithPlaceholder() || defaultModels == null
+          ? _value.defaultModels
+          // ignore: cast_nullable_to_non_nullable
+          : defaultModels as Map<String, String>,
+      defaultReasoningEffort:
+          defaultReasoningEffort == const $CopyWithPlaceholder() ||
+              defaultReasoningEffort == null
+          ? _value.defaultReasoningEffort
+          // ignore: cast_nullable_to_non_nullable
+          : defaultReasoningEffort as PublicConfigDefaultReasoningEffortEnum,
     );
   }
 }
@@ -132,6 +162,8 @@ PublicConfig _$PublicConfigFromJson(Map<String, dynamic> json) =>
             'supabase_url',
             'supabase_anon_key',
             'billing_enabled',
+            'default_models',
+            'default_reasoning_effort',
           ],
         );
         final val = PublicConfig(
@@ -143,6 +175,15 @@ PublicConfig _$PublicConfigFromJson(Map<String, dynamic> json) =>
             (v) => v as String,
           ),
           billingEnabled: $checkedConvert('billing_enabled', (v) => v as bool),
+          defaultModels: $checkedConvert(
+            'default_models',
+            (v) => Map<String, String>.from(v as Map),
+          ),
+          defaultReasoningEffort: $checkedConvert(
+            'default_reasoning_effort',
+            (v) =>
+                $enumDecode(_$PublicConfigDefaultReasoningEffortEnumEnumMap, v),
+          ),
         );
         return val;
       },
@@ -152,6 +193,8 @@ PublicConfig _$PublicConfigFromJson(Map<String, dynamic> json) =>
         'supabaseUrl': 'supabase_url',
         'supabaseAnonKey': 'supabase_anon_key',
         'billingEnabled': 'billing_enabled',
+        'defaultModels': 'default_models',
+        'defaultReasoningEffort': 'default_reasoning_effort',
       },
     );
 
@@ -162,4 +205,17 @@ Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
       'supabase_url': instance.supabaseUrl,
       'supabase_anon_key': instance.supabaseAnonKey,
       'billing_enabled': instance.billingEnabled,
+      'default_models': instance.defaultModels,
+      'default_reasoning_effort':
+          _$PublicConfigDefaultReasoningEffortEnumEnumMap[instance
+              .defaultReasoningEffort]!,
     };
+
+const _$PublicConfigDefaultReasoningEffortEnumEnumMap = {
+  PublicConfigDefaultReasoningEffortEnum.none: 'none',
+  PublicConfigDefaultReasoningEffortEnum.low: 'low',
+  PublicConfigDefaultReasoningEffortEnum.medium: 'medium',
+  PublicConfigDefaultReasoningEffortEnum.high: 'high',
+  PublicConfigDefaultReasoningEffortEnum.xhigh: 'xhigh',
+  PublicConfigDefaultReasoningEffortEnum.max: 'max',
+};

@@ -4,8 +4,19 @@ import { RunEventEnvelope } from "./events.ts";
 
 const ts = z.iso.datetime({ offset: true });
 
+export const ReasoningEffort = z
+  .enum(["none", "low", "medium", "high", "xhigh", "max"])
+  .openapi("ReasoningEffort");
+
 export const ModelChoice = z
-  .object({ credential_id: Uuid, model: z.string().min(1).max(200) })
+  .object({
+    credential_id: Uuid,
+    model: z.string().min(1).max(200),
+    reasoning_effort: ReasoningEffort.optional().openapi({
+      description:
+        "For reasoning models; the server default applies to the default model when unset",
+    }),
+  })
   .openapi("ModelChoice");
 
 export const ModelPolicy = z

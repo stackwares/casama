@@ -33,6 +33,9 @@ class FakeBackend implements Backend {
   List<RunEventItem> storedEvents = [];
 
   @override
+  String? defaultModelFor(String provider) => const {'openrouter': 'openai/gpt-6-luna', 'openai': 'gpt-6-luna'}[provider];
+
+  @override
   Stream<bool> get signedInChanges => _auth.stream;
   @override
   bool get isSignedIn => signedIn;

@@ -93,6 +93,19 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - **Computers**: `POST/PATCH/DELETE /v1/computers` (private computers per bot, profile switch with restart, delete with archives); a bot's computer is `bots.default_computer_id`.
 - **App**: live view (`/computer/live?c=&takeover=`) with flutter_webrtc over TURN, pinch zoom, mouse, touch and keyboard input on the data channel, take control and hand back with a note, lease renewal on input, latency display, screenshot fallback, pause in the background; takeover cards in the inbox and chat; Computers screen; a computer picker in bot settings.
 
+## Self-hosting defaults and optional services
+
+Everything hosted is optional, behind an interface, with a default that runs in `docker compose`:
+
+| Concern                   | Self-hosted default              | Optional                                                                         | Decision     |
+| ------------------------- | -------------------------------- | -------------------------------------------------------------------------------- | ------------ |
+| Snapshots and checkpoints | Filesystem volume                | SeaweedFS (`--profile s3`), Cloudflare R2 (hosted), AWS S3, Supabase Storage     | D-062        |
+| Error reporting           | Off                              | Sentry protocol (sentry.io, self-hosted Sentry, GlitchTip) or PostHog (any host) | D-063        |
+| Product analytics         | Off                              | PostHog (any host)                                                               | D-063        |
+| Computers                 | Docker                           | E2B, Daytona                                                                     | D-056, D-057 |
+| Live view relay           | coturn container                 | any TURN service                                                                 | D-055        |
+| Default model             | GPT-6 Luna via the org's own key | any provider and model                                                           | D-064        |
+
 ## Model keys
 
 Keys go into Supabase Vault through the API's server role and are never returned. Only the worker reads `vault.decrypted_secrets`. The credential test is a worker workflow. Every event, message and tool result passes through a redactor seeded with the bot's model keys.
@@ -107,6 +120,7 @@ Keys go into Supabase Vault through the API's server role and are never returned
 - Model calls in tests replay recorded fixtures (`apps/server/test/fixtures/chat.json`, `packages/agent/test/run.test.ts`). Turns are matched by request content, so re-executed steps get the same answer. Set `KASAMA_MODEL_RECORD=file.jsonl` on a worker with real keys to record new fixtures.
 - `apps/server/test/crash-resume.test.ts` kills a real worker process mid-run with SIGKILL and proves a new worker finishes it without repeating finished steps.
 - `scripts/e2e-cli.sh` runs the Phase 0 and Phase 1 gates through the real CLI.
+- `scripts/live-check.sh` runs the few live checks against a real model (key from `~/.config/kasama/openrouter.env`); everything else uses fixtures.
 - `apps/server/test/live.test.ts` is the Phase 5 gate (desktop computer, TURN relay and a werift WebRTC client); `packages/sandbox/test/live.test.ts` and `hosted.test.ts` cover the streamer and the E2B/Daytona adapters; `client/integration_test/live_flow_test.dart` runs the live view in the real app.
 - `apps/server/test/autonomy.test.ts` is the Phase 4 gate (fixtures in `test/fixtures/autonomy.json`, a local MCP server and a fal.ai mock).
 

@@ -102,6 +102,7 @@ export 'package:kasama_api/src/model/problem.dart';
 export 'package:kasama_api/src/model/problem_errors_inner.dart';
 export 'package:kasama_api/src/model/provider_id.dart';
 export 'package:kasama_api/src/model/public_config.dart';
+export 'package:kasama_api/src/model/reasoning_effort.dart';
 export 'package:kasama_api/src/model/release_lease_request.dart';
 export 'package:kasama_api/src/model/risk.dart';
 export 'package:kasama_api/src/model/routine.dart';

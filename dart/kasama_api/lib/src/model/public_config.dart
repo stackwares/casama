@@ -29,6 +29,10 @@ class PublicConfig {
     required  this.supabaseAnonKey,
 
     required  this.billingEnabled,
+
+    required  this.defaultModels,
+
+    required  this.defaultReasoningEffort,
   });
 
   @JsonKey(
@@ -91,6 +95,31 @@ class PublicConfig {
 
 
 
+      /// Default model id per provider (for example openrouter, openai)
+  @JsonKey(
+    
+    name: r'default_models',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final Map<String, String> defaultModels;
+
+
+
+  @JsonKey(
+    
+    name: r'default_reasoning_effort',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort;
+
+
+
 
 
     @override
@@ -99,7 +128,9 @@ class PublicConfig {
       other.apiVersion == apiVersion &&
       other.supabaseUrl == supabaseUrl &&
       other.supabaseAnonKey == supabaseAnonKey &&
-      other.billingEnabled == billingEnabled;
+      other.billingEnabled == billingEnabled &&
+      other.defaultModels == defaultModels &&
+      other.defaultReasoningEffort == defaultReasoningEffort;
 
     @override
     int get hashCode =>
@@ -107,7 +138,9 @@ class PublicConfig {
         apiVersion.hashCode +
         supabaseUrl.hashCode +
         supabaseAnonKey.hashCode +
-        billingEnabled.hashCode;
+        billingEnabled.hashCode +
+        defaultModels.hashCode +
+        defaultReasoningEffort.hashCode;
 
   factory PublicConfig.fromJson(Map<String, dynamic> json) => _$PublicConfigFromJson(json);
 
@@ -119,4 +152,28 @@ class PublicConfig {
   }
 
 }
+
+
+enum PublicConfigDefaultReasoningEffortEnum {
+@JsonValue(r'none')
+none(r'none'),
+@JsonValue(r'low')
+low(r'low'),
+@JsonValue(r'medium')
+medium(r'medium'),
+@JsonValue(r'high')
+high(r'high'),
+@JsonValue(r'xhigh')
+xhigh(r'xhigh'),
+@JsonValue(r'max')
+max(r'max');
+
+const PublicConfigDefaultReasoningEffortEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
 

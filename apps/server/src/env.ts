@@ -18,7 +18,12 @@ export const EnvSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Kasama <no-reply@localhost>"),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(120),
+  /** Error reporting (D-063): auto = Sentry if SENTRY_DSN, else PostHog if POSTHOG_API_KEY. */
+  ERROR_REPORTING: z.enum(["auto", "sentry", "posthog", "none"]).default("auto"),
+  /** Sentry protocol: sentry.io, self-hosted Sentry or GlitchTip. */
   SENTRY_DSN: z.string().optional(),
+  POSTHOG_API_KEY: z.string().optional(),
+  POSTHOG_HOST: z.url().optional(),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   /** Worker: replay recorded model responses (comma-separated fixture files) instead of calling providers. */
@@ -27,6 +32,14 @@ export const EnvSchema = z.object({
   KASAMA_MODEL_RECORD: z.string().optional(),
   /** Worker: memory embeddings. auto = the org's OpenAI key when present, else full-text search only. */
   EMBEDDINGS: z.enum(["auto", "none", "hash"]).default("auto"),
+  /** Default models (D-064): GPT-6 Luna on OpenRouter and OpenAI unless overridden. */
+  DEFAULT_MODEL_OPENROUTER: z.string().optional(),
+  DEFAULT_MODEL_OPENAI: z.string().optional(),
+  DEFAULT_REASONING_EFFORT: z
+    .enum(["none", "low", "medium", "high", "xhigh", "max"])
+    .default("medium"),
+  /** Worker: cap on output tokens per model call (live checks use a small cap). */
+  KASAMA_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().optional(),
   RUN_CONCURRENCY: z.coerce.number().int().positive().default(20),
   /** Sandbox supervisor (computers). Both unset: bots have no computers. */
   SUPERVISOR_URL: z.url().optional(),
@@ -40,6 +53,12 @@ export const EnvSchema = z.object({
   PUBLIC_API_URL: z.url().optional(),
 });
 export type Env = z.infer<typeof EnvSchema>;
+
+/** Per-server overrides of the default models. */
+export const modelOverrides = (env: Env) => ({
+  openrouter: env.DEFAULT_MODEL_OPENROUTER,
+  openai: env.DEFAULT_MODEL_OPENAI,
+});
 
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
   const parsed = EnvSchema.safeParse(source);

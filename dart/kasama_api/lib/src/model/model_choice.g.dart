@@ -11,6 +11,8 @@ abstract class _$ModelChoiceCWProxy {
 
   ModelChoice model(String model);
 
+  ModelChoice reasoningEffort(ReasoningEffort? reasoningEffort);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `ModelChoice(...).copyWith.fieldName(value)`.
@@ -19,7 +21,11 @@ abstract class _$ModelChoiceCWProxy {
   /// ```dart
   /// ModelChoice(...).copyWith(id: 12, name: "My name")
   /// ```
-  ModelChoice call({String credentialId, String model});
+  ModelChoice call({
+    String credentialId,
+    String model,
+    ReasoningEffort? reasoningEffort,
+  });
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -36,6 +42,10 @@ class _$ModelChoiceCWProxyImpl implements _$ModelChoiceCWProxy {
   @override
   ModelChoice model(String model) => call(model: model);
 
+  @override
+  ModelChoice reasoningEffort(ReasoningEffort? reasoningEffort) =>
+      call(reasoningEffort: reasoningEffort);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `ModelChoice(...).copyWith.fieldName(value)`.
@@ -48,6 +58,7 @@ class _$ModelChoiceCWProxyImpl implements _$ModelChoiceCWProxy {
   ModelChoice call({
     Object? credentialId = const $CopyWithPlaceholder(),
     Object? model = const $CopyWithPlaceholder(),
+    Object? reasoningEffort = const $CopyWithPlaceholder(),
   }) {
     return ModelChoice(
       credentialId:
@@ -59,6 +70,10 @@ class _$ModelChoiceCWProxyImpl implements _$ModelChoiceCWProxy {
           ? _value.model
           // ignore: cast_nullable_to_non_nullable
           : model as String,
+      reasoningEffort: reasoningEffort == const $CopyWithPlaceholder()
+          ? _value.reasoningEffort
+          // ignore: cast_nullable_to_non_nullable
+          : reasoningEffort as ReasoningEffort?,
     );
   }
 }
@@ -74,18 +89,39 @@ extension $ModelChoiceCopyWith on ModelChoice {
 // JsonSerializableGenerator
 // **************************************************************************
 
-ModelChoice _$ModelChoiceFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('ModelChoice', json, ($checkedConvert) {
-      $checkKeys(json, requiredKeys: const ['credential_id', 'model']);
-      final val = ModelChoice(
-        credentialId: $checkedConvert('credential_id', (v) => v as String),
-        model: $checkedConvert('model', (v) => v as String),
-      );
-      return val;
-    }, fieldKeyMap: const {'credentialId': 'credential_id'});
+ModelChoice _$ModelChoiceFromJson(Map<String, dynamic> json) => $checkedCreate(
+  'ModelChoice',
+  json,
+  ($checkedConvert) {
+    $checkKeys(json, requiredKeys: const ['credential_id', 'model']);
+    final val = ModelChoice(
+      credentialId: $checkedConvert('credential_id', (v) => v as String),
+      model: $checkedConvert('model', (v) => v as String),
+      reasoningEffort: $checkedConvert(
+        'reasoning_effort',
+        (v) => $enumDecodeNullable(_$ReasoningEffortEnumMap, v),
+      ),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'credentialId': 'credential_id',
+    'reasoningEffort': 'reasoning_effort',
+  },
+);
 
 Map<String, dynamic> _$ModelChoiceToJson(ModelChoice instance) =>
     <String, dynamic>{
       'credential_id': instance.credentialId,
       'model': instance.model,
+      'reasoning_effort': ?_$ReasoningEffortEnumMap[instance.reasoningEffort],
     };
+
+const _$ReasoningEffortEnumMap = {
+  ReasoningEffort.none: 'none',
+  ReasoningEffort.low: 'low',
+  ReasoningEffort.medium: 'medium',
+  ReasoningEffort.high: 'high',
+  ReasoningEffort.xhigh: 'xhigh',
+  ReasoningEffort.max: 'max',
+};

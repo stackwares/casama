@@ -81,6 +81,26 @@ services:
     networks: [control]
     restart: unless-stopped
 
+  # Optional S3-compatible storage for snapshots and checkpoints (D-062): `--profile s3`, then set
+  # OBJECT_STORE=s3 S3_ENDPOINT=http://kasama-s3:8333 S3_BUCKET=kasama S3_CREATE_BUCKET=true and keys.
+  # Without it the supervisor keeps archives on the `objects` volume. Hosted installs can point the
+  # same settings at Cloudflare R2, AWS S3 or Supabase Storage's S3 endpoint instead.
+  s3:
+    image: chrislusf/seaweedfs:4.53
+    container_name: kasama-s3
+    profiles: [s3]
+    env_file: ../../.env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        printf '{"identities":[{"name":"kasama","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Read","Write","List","Admin"]}]}'
+        "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" > /tmp/s3.json
+        && exec weed server -s3 -s3.config=/tmp/s3.json -dir=/data
+    volumes:
+      - s3data:/data
+    networks: [control]
+    restart: unless-stopped
+
   # Build-only services so `compose build` also builds the computer images.
   computer-headless:
     build:
@@ -104,3 +124,4 @@ networks:
 
 volumes:
   objects: {}
+  s3data: {}

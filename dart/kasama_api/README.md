@@ -210,6 +210,7 @@ Class | Method | HTTP request | Description
  - [ProblemErrorsInner](doc/ProblemErrorsInner.md)
  - [ProviderId](doc/ProviderId.md)
  - [PublicConfig](doc/PublicConfig.md)
+ - [ReasoningEffort](doc/ReasoningEffort.md)
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
  - [Risk](doc/Risk.md)
  - [Routine](doc/Routine.md)

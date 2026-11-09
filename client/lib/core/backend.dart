@@ -63,6 +63,9 @@ abstract class Backend {
   Future<void> signInWithProvider(String provider);
   Future<void> signOut();
 
+  /// The server's default model for a provider (GPT-6 Luna on OpenRouter and OpenAI), if any.
+  String? defaultModelFor(String provider);
+
   // Workspaces
   Future<List<OrganizationWithRole>> organizations();
   Future<Organization> createOrganization(String name);

@@ -1,0 +1,47 @@
+// Live chat against a real model (D-064). Run only through scripts/live-check.sh, which passes the
+// key with a temporary --dart-define-from-file and points the worker at the real provider.
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+import 'package:kasama_app/core/config.dart';
+import 'package:kasama_app/main.dart';
+
+import 'app_flow_test.dart' show tap, typeMessage, waitFor;
+
+const _key = String.fromEnvironment('KASAMA_LIVE_OPENROUTER_KEY');
+
+void main() {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('live: onboard with an OpenRouter key and chat with GPT-6 Luna', (tester) async {
+    expect(_key, isNotEmpty, reason: 'run through scripts/live-check.sh');
+    final (app, backend) = await bootstrap(AppConfig.fromEnvironment);
+    if (backend.isSignedIn) await backend.signOut();
+    await tester.pumpWidget(app);
+    await waitFor(tester, find.byKey(const Key('email')));
+    await tap(tester, find.byKey(const Key('toggleMode')));
+    await tester.enterText(find.byKey(const Key('email')), 'live-chat-${Random().nextInt(1 << 30)}@example.com');
+    await tester.enterText(find.byKey(const Key('password')), 'pw-123456');
+    await tap(tester, find.byKey(const Key('submit')));
+    await waitFor(tester, find.byKey(const Key('workspaceName')).hitTestable());
+    await tester.enterText(find.byKey(const Key('workspaceName')), 'Live Chat');
+    await tap(tester, find.byKey(const Key('createWorkspace')));
+    await waitFor(tester, find.byKey(const Key('apiKey')).hitTestable());
+    await tester.enterText(find.byKey(const Key('apiKey')), _key);
+    await tap(tester, find.byKey(const Key('addKey')));
+    await waitFor(tester, find.byKey(const Key('botName')).hitTestable());
+
+    // The model is preselected: GPT-6 Luna for an OpenRouter key.
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.widget<TextField>(find.byKey(const Key('model'))).controller!.text, 'openai/gpt-6-luna');
+    await tap(tester, find.byKey(const Key('createBot')));
+
+    await waitFor(tester, find.byKey(const Key('messageInput')).hitTestable());
+    await typeMessage(tester, 'What is 6 times 7? Reply with only the digits followed by the word kasama, for example: 12 kasama');
+    await tap(tester, find.byKey(const Key('sendButton')));
+    await waitFor(tester, find.textContaining('42 kasama', findRichText: true), timeout: const Duration(seconds: 120));
+    await waitFor(tester, find.byKey(const Key('sendButton')), timeout: const Duration(seconds: 60));
+  });
+}

@@ -12,6 +12,7 @@ export type ProviderId =
 export interface ModelChoice {
   credential_id: string;
   model: string;
+  reasoning_effort?: "none" | "low" | "medium" | "high" | "xhigh" | "max";
 }
 
 /** A model choice with its credential resolved (the key never leaves the worker). */
@@ -21,6 +22,8 @@ export interface ResolvedModel {
   apiKey?: string;
   baseUrl?: string;
   credentialId?: string;
+  /** Reasoning effort for reasoning models (OpenAI and OpenRouter). */
+  reasoningEffort?: "none" | "low" | "medium" | "high" | "xhigh" | "max";
 }
 
 export type ChatMessage =

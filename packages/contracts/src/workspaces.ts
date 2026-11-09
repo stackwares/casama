@@ -83,5 +83,9 @@ export const PublicConfig = z
     supabase_url: z.string(),
     supabase_anon_key: z.string(),
     billing_enabled: z.boolean(),
+    default_models: z
+      .record(z.string(), z.string())
+      .openapi({ description: "Default model id per provider (for example openrouter, openai)" }),
+    default_reasoning_effort: z.enum(["none", "low", "medium", "high", "xhigh", "max"]),
   })
   .openapi("PublicConfig");

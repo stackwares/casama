@@ -18,7 +18,10 @@ const logger = createLogger(`server-${env.MODE}`, env.LOG_LEVEL);
 initObservability({
   service: `kasama-${env.MODE}`,
   environment: env.NODE_ENV,
+  errorReporting: env.ERROR_REPORTING,
   sentryDsn: env.SENTRY_DSN,
+  posthogKey: env.POSTHOG_API_KEY,
+  posthogHost: env.POSTHOG_HOST,
   otlpEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
 });
 
@@ -75,6 +78,7 @@ if (env.MODE === "api") {
     logLevel: env.LOG_LEVEL,
     modelFixtures: env.KASAMA_MODEL_FIXTURES,
     modelRecord: env.KASAMA_MODEL_RECORD,
+    maxOutputTokens: env.KASAMA_MAX_OUTPUT_TOKENS,
     embeddings: env.EMBEDDINGS,
     runConcurrency: env.RUN_CONCURRENCY,
     supervisor:

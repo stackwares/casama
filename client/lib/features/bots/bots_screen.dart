@@ -95,7 +95,8 @@ class CreateBotSheet extends ConsumerStatefulWidget {
 
 class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
   final _name = TextEditingController();
-  final _model = TextEditingController(text: 'openai/gpt-4o-mini');
+  final _model = TextEditingController();
+  var _modelEdited = false;
   final _persona = TextEditingController();
   String? _credentialId;
   String? _templateId;
@@ -109,11 +110,27 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
     super.dispose();
   }
 
+  /// Suggests the server's default model for the chosen key until the user types their own.
+  void _fillDefaultModel(List<Credential> keys) {
+    if (_modelEdited) return;
+    for (final k in keys) {
+      if (k.id == _credentialId) {
+        final model = ref.read(backendProvider).defaultModelFor(k.provider.value) ?? '';
+        if (_model.text != model) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && !_modelEdited) _model.text = model;
+          });
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final keys = ref.watch(credentialsProvider).value ?? const <Credential>[];
     _credentialId ??= keys.isEmpty ? null : keys.first.id;
+    _fillDefaultModel(keys);
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(context).bottom + 16),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -133,10 +150,13 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
           initialValue: _credentialId,
           decoration: InputDecoration(labelText: l10n.modelKey),
           items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} (${k.provider.value})'))],
-          onChanged: (v) => setState(() => _credentialId = v),
+          onChanged: (v) => setState(() {
+            _credentialId = v;
+            _fillDefaultModel(keys);
+          }),
         ),
         const SizedBox(height: 8),
-        TextField(controller: _model, decoration: InputDecoration(labelText: l10n.model)),
+        TextField(controller: _model, decoration: InputDecoration(labelText: l10n.model), onChanged: (_) => _modelEdited = true),
         const SizedBox(height: 8),
         TextField(controller: _persona, decoration: InputDecoration(labelText: l10n.persona, hintText: l10n.personaHint), maxLines: 3),
         const SizedBox(height: 12),

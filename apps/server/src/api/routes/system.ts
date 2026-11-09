@@ -1,5 +1,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { API_VERSION, PRODUCT_NAME, routes } from "@kasama/contracts";
+import { DEFAULT_MODELS, defaultModelFor } from "@kasama/domain";
+import { modelOverrides } from "../../env.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 
 export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
@@ -30,6 +32,13 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         supabase_url: deps.env.SUPABASE_URL,
         supabase_anon_key: deps.env.SUPABASE_ANON_KEY,
         billing_enabled: deps.env.BILLING_ENABLED,
+        default_models: Object.fromEntries(
+          Object.keys(DEFAULT_MODELS).map((p) => [
+            p,
+            defaultModelFor(p, modelOverrides(deps.env)) as string,
+          ]),
+        ),
+        default_reasoning_effort: deps.env.DEFAULT_REASONING_EFFORT,
       },
       200,
     ),

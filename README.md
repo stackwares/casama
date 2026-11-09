@@ -46,7 +46,7 @@ dart run bin/kasama.dart login --email you@example.com
 dart run bin/kasama.dart org create "My team"
 dart run bin/kasama.dart org use my-team
 dart run bin/kasama.dart credential add --provider openrouter --label Main      # prompts for the key
-dart run bin/kasama.dart bot create Ada --credential <id> --model openai/gpt-4o-mini
+dart run bin/kasama.dart bot create Ada --credential <id>   # model defaults to openai/gpt-6-luna for OpenRouter keys
 dart run bin/kasama.dart chat Ada "What can you do?"
 ```
 

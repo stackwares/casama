@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:kasama_api/src/model/reasoning_effort.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -23,6 +24,8 @@ class ModelChoice {
     required  this.credentialId,
 
     required  this.model,
+
+     this.reasoningEffort,
   });
 
   @JsonKey(
@@ -49,17 +52,31 @@ class ModelChoice {
 
 
 
+  @JsonKey(
+    
+    name: r'reasoning_effort',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final ReasoningEffort? reasoningEffort;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is ModelChoice &&
       other.credentialId == credentialId &&
-      other.model == model;
+      other.model == model &&
+      other.reasoningEffort == reasoningEffort;
 
     @override
     int get hashCode =>
         credentialId.hashCode +
-        model.hashCode;
+        model.hashCode +
+        reasoningEffort.hashCode;
 
   factory ModelChoice.fromJson(Map<String, dynamic> json) => _$ModelChoiceFromJson(json);
 

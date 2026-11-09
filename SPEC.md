@@ -23,7 +23,7 @@ This doc is the single source of truth for building Kasama: build every phase in
 - New endpoints are in the OpenAPI spec, and the regenerated Dart client compiles.
 - Every new table has row-level security policy tests.
 - User-facing strings live in Flutter ARB files, never hard-coded.
-- Errors report to Sentry, and key actions emit OpenTelemetry spans.
+- Errors report to one configurable reporter (Sentry protocol, so Sentry or self-hosted GlitchTip; or PostHog), off unless configured, and key actions emit OpenTelemetry spans (D-063).
 
 ## Product overview
 
@@ -115,7 +115,7 @@ Reads go straight to Supabase; every command, run and tool call flows from API t
 - **Sandbox supervisor:** the only service with Docker access. Creates, sleeps, restores and checkpoints computers, and runs the egress proxy. Talks to `computerd`, a small daemon inside each computer.
 - **Remote providers:** E2B and Daytona adapters behind the same sandbox interface.
 - **Streaming:** each desktop computer runs a WebRTC streamer; media relays through coturn; signaling goes through the API.
-- **Object storage** (S3-compatible: Supabase Storage or Cloudflare R2): computer snapshots, checkpoints, attachments.
+- **Object storage** behind the `ObjectStore` interface: the filesystem by default for a single self-hosted host, SeaweedFS (S3-compatible, optional compose profile) for self-hosted S3, and Cloudflare R2 recommended for hosted installs (no egress fees); AWS S3 and Supabase Storage's S3 endpoint also work. Holds computer snapshots, checkpoints and attachments (D-062).
 - **External services:** model providers, FCM, Resend, Twilio, Telegram, Slack, Meta (WhatsApp, Messenger), Sentry, Langfuse, PostHog.
 - **Local computer companion:** the Flutter desktop app connects to the API over WebSocket and runs tools on the user's machine.
 
@@ -426,6 +426,7 @@ Tools are registered in one registry with a Zod schema, a risk level, a capabili
 ### Model gateway
 
 - Providers at launch: OpenAI, Anthropic, Google, xAI, OpenRouter, and any OpenAI-compatible endpoint (Ollama, vLLM).
+- Default model: GPT-6 Luna at medium reasoning effort (`openai/gpt-6-luna` on OpenRouter, `gpt-6-luna` on OpenAI), preselected in onboarding, new bots and the CLI, configurable per server and never applied over a model the user picked (D-064).
 - Each bot has a primary model, an ordered fallback list and a cheap model for internal steps (memory extraction, summaries, titles).
 - Failover on 429, 5xx or timeout, with exponential backoff; every attempt is logged to Langfuse.
 - Capabilities per model (tools, vision, context window, caching) live in a registry, which decides which tools and context strategy apply.
@@ -682,9 +683,9 @@ A nightly eval suite is the quality gate: no prompt, model, tool or context chan
 ### Observability
 
 - **Traces:** OpenTelemetry spans from API to worker to supervisor to computerd, with run\_id and org\_id as attributes; export to an OTel collector.
-- **Errors:** Sentry on server, supervisor and Flutter.
+- **Errors:** one reporter on server, supervisor and Flutter: the Sentry SDKs (to Sentry or GlitchTip by DSN) or PostHog error tracking (cloud or self-hosted by host). Off by default; payloads never carry secrets, prompts or message contents (D-063).
 - **LLM traces:** Langfuse (self-hosted) for every model call, with token counts and cost.
-- **Product analytics and flags:** PostHog; risky features ship behind flags to 10% of users first.
+- **Product analytics and flags:** PostHog, optional (off without a key, any host); risky features ship behind flags to 10% of users first.
 - **Dashboards and alerts:** run success rate, time to first token (p50, p95), computer start time, sleeping vs running computers, cost per run, queue depth, error rate. Alert when run failures exceed 5% over 15 minutes or the sandbox host passes 85% memory.
 
 ### Testing
@@ -712,13 +713,13 @@ Production for 100 users runs on one app server and one sandbox server in a regi
 
 ### Hosted production (about 100 active users, 200 bots)
 
-| Component      | Spec                                                                                         | Approx. USD per month |
-| -------------- | -------------------------------------------------------------------------------------------- | --------------------- |
-| App server     | Cloud VPS, 4 to 8 vCPU, 16 GB RAM: Caddy, API, worker, coturn, egress proxy                  | 30 to 60              |
-| Supabase       | Supabase Cloud (your region) or self-hosted on the app server                                | Plan dependent        |
-| Sandbox server | Dedicated, 16+ cores, 64 to 128 GB RAM, NVMe: supervisor and computers (30 to 40 concurrent) | 150 to 350            |
-| Object storage | S3-compatible (Cloudflare R2 has no egress fees) for snapshots and files                     | 10 to 20              |
-| Overflow       | E2B or Daytona, per-second billing, only when the sandbox server is full                     | Usage based           |
+| Component      | Spec                                                                                                                                 | Approx. USD per month |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------- |
+| App server     | Cloud VPS, 4 to 8 vCPU, 16 GB RAM: Caddy, API, worker, coturn, egress proxy                                                          | 30 to 60              |
+| Supabase       | Supabase Cloud (your region) or self-hosted on the app server                                                                        | Plan dependent        |
+| Sandbox server | Dedicated, 16+ cores, 64 to 128 GB RAM, NVMe: supervisor and computers (30 to 40 concurrent)                                         | 150 to 350            |
+| Object storage | Cloudflare R2 for hosted (no egress fees; every wake downloads a whole home directory); self-hosted uses the filesystem or SeaweedFS | 10 to 20              |
+| Overflow       | E2B or Daytona, per-second billing, only when the sandbox server is full                                                             | Usage based           |
 
 Prices are estimates and providers raised prices several times in 2026; confirm current pricing before ordering. Pick cloud regions close to your users.
 

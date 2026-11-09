@@ -20,6 +20,7 @@ import '../features/skills/skills_screen.dart';
 import '../features/timeline/timeline_screen.dart';
 import '../features/workspaces/onboarding_screen.dart';
 import 'providers.dart';
+import 'telemetry.dart';
 
 /// Re-evaluates redirects when sign-in or workspace state changes.
 class _RouterRefresh extends ChangeNotifier {
@@ -35,6 +36,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refresh.dispose);
   return GoRouter(
     initialLocation: '/bots',
+    observers: Telemetry.observers,
     refreshListenable: refresh,
     redirect: (context, state) {
       final signedIn = ref.read(signedInProvider);

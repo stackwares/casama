@@ -164,7 +164,7 @@ class BotCreateCommand extends KCommand {
     addOrgOption(this);
     argParser
       ..addOption('credential', abbr: 'k', help: 'Model key id for the bot\'s models.', mandatory: true)
-      ..addOption('model', abbr: 'm', help: 'Primary model id.', mandatory: true)
+      ..addOption('model', abbr: 'm', help: "Primary model id (default: the server's default for the key's provider, GPT-6 Luna on OpenRouter and OpenAI).")
       ..addMultiOption('fallback', help: 'Fallback model ids, in order (same key).')
       ..addOption('cheap-model', help: 'Model for memory extraction and summaries (default: primary).')
       ..addOption('persona', help: 'Persona text, or @file to read it from a file.')
@@ -178,7 +178,7 @@ class BotCreateCommand extends KCommand {
   @override
   String get description => 'Create a bot.';
   @override
-  String get invocation => 'kasama bot create <name> --credential <id> --model <model>';
+  String get invocation => 'kasama bot create <name> --credential <id> [--model <model>]';
   @override
   Future<int> run() async {
     final rest = argResults!.rest;
@@ -199,6 +199,15 @@ class BotCreateCommand extends KCommand {
       return d;
     }
 
+    var model = argResults!['model'] as String?;
+    if (model == null) {
+      final keys = (await c.credentials.listCredentials(orgId: org.id)).data!.items;
+      final key = keys.where((k) => k.id == cred).firstOrNull;
+      if (key == null) throw UsageException('No model key $cred in this workspace.', usage);
+      model = c.config.defaultModels[key.provider.value];
+      if (model == null) throw UsageException('No default model for ${key.provider.value} keys; pass --model.', usage);
+    }
+
     final runBudget = money('run-budget');
     final dailyBudget = money('daily-budget');
     final bot = (await c.bots.createBot(
@@ -209,7 +218,7 @@ class BotCreateCommand extends KCommand {
         autonomy: Autonomy.values.firstWhere((a) => a.value == argResults!['autonomy']),
         visibility: argResults!['private'] as bool ? Visibility.private : Visibility.team,
         modelPolicy: ModelPolicy(
-          primary: choice(argResults!['model'] as String),
+          primary: choice(model),
           fallbacks: fallbacks.isEmpty ? null : fallbacks.map(choice).toList(),
           cheap: cheap == null ? null : choice(cheap),
         ),

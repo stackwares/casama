@@ -212,4 +212,16 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Approved'), findsWidgets);
   });
+
+  testWidgets('new bots default to GPT-6 Luna for an OpenRouter key, but keep a typed model', (tester) async {
+    await setSize(tester, const Size(600, 1000));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const Scaffold(body: CreateBotSheet())));
+    await tester.pumpAndSettle();
+    final field = find.widgetWithText(TextField, 'Model');
+    expect(tester.widget<TextField>(field).controller!.text, 'openai/gpt-6-luna');
+    await tester.enterText(field, 'anthropic/claude-sonnet-5-5');
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(field).controller!.text, 'anthropic/claude-sonnet-5-5');
+  });
 }

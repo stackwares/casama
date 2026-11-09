@@ -304,6 +304,9 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           
         case 'PublicConfig':
           return PublicConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReasoningEffort':
+          
+          
         case 'ReleaseLeaseRequest':
           return ReleaseLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Risk':

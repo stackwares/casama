@@ -10,6 +10,7 @@ import {
   safeFetch,
 } from "@kasama/agent";
 import type { Database } from "@kasama/db";
+import { DEFAULT_MODELS } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { claimDueRoutines, handleRoutineWebhook } from "./routines.ts";
 
@@ -131,11 +132,10 @@ export const testIntegrationWorkflow = DBOS.registerWorkflow(
 );
 
 export const DEFAULT_TEST_MODELS: Record<string, string> = {
-  openai: "gpt-4o-mini",
+  ...DEFAULT_MODELS,
   anthropic: "claude-haiku-5-5",
   google: "gemini-2.5-flash",
   xai: "grok-3-mini",
-  openrouter: "openai/gpt-4o-mini",
 };
 
 export interface CredentialTestOutcome {
@@ -179,13 +179,15 @@ export async function testCredential(
       const resolved = await new CredentialResolver(db).resolve(orgId, {
         credential_id: credentialId,
         model: chosen,
+        // A key check needs no reasoning; it keeps the call to a few tokens.
+        reasoning_effort: "none",
       });
       await collect(
         gateway.stream({
           model: resolved,
           system: ["Reply with OK."],
           messages: [{ role: "user", content: "ping" }],
-          maxOutputTokens: 1,
+          maxOutputTokens: 16,
         }),
       );
       outcome = { ok: true, model: chosen, latency_ms: Date.now() - started };

@@ -27,6 +27,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | hono                                    | @kasama/contracts (runtime), @kasama/server (runtime) | MIT               |
 | jose                                    | @kasama/server (runtime)                              | MIT               |
 | postgres                                | @kasama/db (runtime), @kasama/server (runtime)        | Unlicense         |
+| posthog-node                            | @kasama/observability (runtime)                       | MIT               |
 | turbo                                   | kasama (tooling)                                      | MIT               |
 | typescript                              | kasama (tooling)                                      | Apache-2.0        |
 | undici                                  | @kasama/agent (runtime)                               | MIT               |
@@ -56,6 +57,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | sentry_flutter                               | client                             | MIT          |
 | firebase_core, firebase_messaging            | client                             | BSD-3-Clause |
 | flutter_webrtc                               | client                             | MIT          |
+| posthog_flutter                              | client                             | MIT          |
 | mocktail                                     | client (tooling)                   | MIT          |
 
 ## Other software
@@ -65,6 +67,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | PostgreSQL                             | database                       | PostgreSQL License                             |
 | Neko (m1k1o/neko), built from source   | desktop image: WebRTC streamer | Apache-2.0                                     |
 | coturn                                 | TURN relay image               | BSD-3-Clause                                   |
+| SeaweedFS (optional compose profile)   | self-hosted S3 storage         | Apache-2.0                                     |
 | X.Org server, Openbox, Mousepad        | desktop image                  | MIT/X11, GPL-2.0 (system packages, unmodified) |
 | pgvector                               | database extension             | PostgreSQL License                             |
 | pgTAP                                  | database tests                 | PostgreSQL License                             |
