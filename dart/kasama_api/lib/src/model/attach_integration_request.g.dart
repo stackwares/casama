@@ -11,19 +11,22 @@ abstract class _$AttachIntegrationRequestCWProxy {
 
   AttachIntegrationRequest toolAllowlist(List<String>? toolAllowlist);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `AttachIntegrationRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `AttachIntegrationRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// AttachIntegrationRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   AttachIntegrationRequest call({
     String integrationId,
     List<String>? toolAllowlist,
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfAttachIntegrationRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfAttachIntegrationRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfAttachIntegrationRequest.copyWith(...)` or call `instanceOfAttachIntegrationRequest.copyWith.fieldName(value)` for a single field.
 class _$AttachIntegrationRequestCWProxyImpl
     implements _$AttachIntegrationRequestCWProxy {
   const _$AttachIntegrationRequestCWProxyImpl(this._value);
@@ -32,25 +35,28 @@ class _$AttachIntegrationRequestCWProxyImpl
 
   @override
   AttachIntegrationRequest integrationId(String integrationId) =>
-      this(integrationId: integrationId);
+      call(integrationId: integrationId);
 
   @override
   AttachIntegrationRequest toolAllowlist(List<String>? toolAllowlist) =>
-      this(toolAllowlist: toolAllowlist);
+      call(toolAllowlist: toolAllowlist);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `AttachIntegrationRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `AttachIntegrationRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// AttachIntegrationRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   AttachIntegrationRequest call({
     Object? integrationId = const $CopyWithPlaceholder(),
     Object? toolAllowlist = const $CopyWithPlaceholder(),
   }) {
     return AttachIntegrationRequest(
-      integrationId: integrationId == const $CopyWithPlaceholder()
+      integrationId:
+          integrationId == const $CopyWithPlaceholder() || integrationId == null
           ? _value.integrationId
           // ignore: cast_nullable_to_non_nullable
           : integrationId as String,
@@ -63,7 +69,8 @@ class _$AttachIntegrationRequestCWProxyImpl
 }
 
 extension $AttachIntegrationRequestCopyWith on AttachIntegrationRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfAttachIntegrationRequest.copyWith(...)` or like so:`instanceOfAttachIntegrationRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfAttachIntegrationRequest.copyWith(...)` or `instanceOfAttachIntegrationRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$AttachIntegrationRequestCWProxy get copyWith =>
       _$AttachIntegrationRequestCWProxyImpl(this);

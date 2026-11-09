@@ -9,34 +9,39 @@ part of 'delete_result.dart';
 abstract class _$DeleteResultCWProxy {
   DeleteResult deleted(String deleted);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `DeleteResult(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `DeleteResult(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// DeleteResult(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   DeleteResult call({String deleted});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfDeleteResult.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfDeleteResult.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfDeleteResult.copyWith(...)` or call `instanceOfDeleteResult.copyWith.fieldName(value)` for a single field.
 class _$DeleteResultCWProxyImpl implements _$DeleteResultCWProxy {
   const _$DeleteResultCWProxyImpl(this._value);
 
   final DeleteResult _value;
 
   @override
-  DeleteResult deleted(String deleted) => this(deleted: deleted);
+  DeleteResult deleted(String deleted) => call(deleted: deleted);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `DeleteResult(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `DeleteResult(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// DeleteResult(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   DeleteResult call({Object? deleted = const $CopyWithPlaceholder()}) {
     return DeleteResult(
-      deleted: deleted == const $CopyWithPlaceholder()
+      deleted: deleted == const $CopyWithPlaceholder() || deleted == null
           ? _value.deleted
           // ignore: cast_nullable_to_non_nullable
           : deleted as String,
@@ -45,7 +50,8 @@ class _$DeleteResultCWProxyImpl implements _$DeleteResultCWProxy {
 }
 
 extension $DeleteResultCopyWith on DeleteResult {
-  /// Returns a callable class that can be used as follows: `instanceOfDeleteResult.copyWith(...)` or like so:`instanceOfDeleteResult.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfDeleteResult.copyWith(...)` or `instanceOfDeleteResult.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$DeleteResultCWProxy get copyWith => _$DeleteResultCWProxyImpl(this);
 }

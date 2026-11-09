@@ -19,12 +19,14 @@ abstract class _$OrganizationCWProxy {
 
   Organization createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Organization(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Organization(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Organization(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Organization call({
     String id,
     String name,
@@ -35,37 +37,40 @@ abstract class _$OrganizationCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfOrganization.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfOrganization.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfOrganization.copyWith(...)` or call `instanceOfOrganization.copyWith.fieldName(value)` for a single field.
 class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
   const _$OrganizationCWProxyImpl(this._value);
 
   final Organization _value;
 
   @override
-  Organization id(String id) => this(id: id);
+  Organization id(String id) => call(id: id);
 
   @override
-  Organization name(String name) => this(name: name);
+  Organization name(String name) => call(name: name);
 
   @override
-  Organization slug(String slug) => this(slug: slug);
+  Organization slug(String slug) => call(slug: slug);
 
   @override
-  Organization plan(String plan) => this(plan: plan);
+  Organization plan(String plan) => call(plan: plan);
 
   @override
-  Organization region(String region) => this(region: region);
+  Organization region(String region) => call(region: region);
 
   @override
-  Organization createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Organization createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Organization(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Organization(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Organization(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Organization call({
     Object? id = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
@@ -75,27 +80,27 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Organization(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      slug: slug == const $CopyWithPlaceholder()
+      slug: slug == const $CopyWithPlaceholder() || slug == null
           ? _value.slug
           // ignore: cast_nullable_to_non_nullable
           : slug as String,
-      plan: plan == const $CopyWithPlaceholder()
+      plan: plan == const $CopyWithPlaceholder() || plan == null
           ? _value.plan
           // ignore: cast_nullable_to_non_nullable
           : plan as String,
-      region: region == const $CopyWithPlaceholder()
+      region: region == const $CopyWithPlaceholder() || region == null
           ? _value.region
           // ignore: cast_nullable_to_non_nullable
           : region as String,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -104,7 +109,8 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
 }
 
 extension $OrganizationCopyWith on Organization {
-  /// Returns a callable class that can be used as follows: `instanceOfOrganization.copyWith(...)` or like so:`instanceOfOrganization.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfOrganization.copyWith(...)` or `instanceOfOrganization.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$OrganizationCWProxy get copyWith => _$OrganizationCWProxyImpl(this);
 }

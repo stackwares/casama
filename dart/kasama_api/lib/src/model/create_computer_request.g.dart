@@ -19,12 +19,14 @@ abstract class _$CreateComputerRequestCWProxy {
 
   CreateComputerRequest provider(CreateComputerRequestProviderEnum? provider);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateComputerRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateComputerRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateComputerRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CreateComputerRequest call({
     String orgId,
     String name,
@@ -35,7 +37,8 @@ abstract class _$CreateComputerRequestCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCreateComputerRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCreateComputerRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCreateComputerRequest.copyWith(...)` or call `instanceOfCreateComputerRequest.copyWith.fieldName(value)` for a single field.
 class _$CreateComputerRequestCWProxyImpl
     implements _$CreateComputerRequestCWProxy {
   const _$CreateComputerRequestCWProxyImpl(this._value);
@@ -43,34 +46,36 @@ class _$CreateComputerRequestCWProxyImpl
   final CreateComputerRequest _value;
 
   @override
-  CreateComputerRequest orgId(String orgId) => this(orgId: orgId);
+  CreateComputerRequest orgId(String orgId) => call(orgId: orgId);
 
   @override
-  CreateComputerRequest name(String name) => this(name: name);
+  CreateComputerRequest name(String name) => call(name: name);
 
   @override
   CreateComputerRequest kind(CreateComputerRequestKindEnum kind) =>
-      this(kind: kind);
+      call(kind: kind);
 
   @override
   CreateComputerRequest ownerBotId(String? ownerBotId) =>
-      this(ownerBotId: ownerBotId);
+      call(ownerBotId: ownerBotId);
 
   @override
   CreateComputerRequest profile(CreateComputerRequestProfileEnum? profile) =>
-      this(profile: profile);
+      call(profile: profile);
 
   @override
   CreateComputerRequest provider(CreateComputerRequestProviderEnum? provider) =>
-      this(provider: provider);
+      call(provider: provider);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateComputerRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateComputerRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateComputerRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CreateComputerRequest call({
     Object? orgId = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
@@ -80,15 +85,15 @@ class _$CreateComputerRequestCWProxyImpl
     Object? provider = const $CopyWithPlaceholder(),
   }) {
     return CreateComputerRequest(
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      kind: kind == const $CopyWithPlaceholder()
+      kind: kind == const $CopyWithPlaceholder() || kind == null
           ? _value.kind
           // ignore: cast_nullable_to_non_nullable
           : kind as CreateComputerRequestKindEnum,
@@ -109,7 +114,8 @@ class _$CreateComputerRequestCWProxyImpl
 }
 
 extension $CreateComputerRequestCopyWith on CreateComputerRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfCreateComputerRequest.copyWith(...)` or like so:`instanceOfCreateComputerRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCreateComputerRequest.copyWith(...)` or `instanceOfCreateComputerRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CreateComputerRequestCWProxy get copyWith =>
       _$CreateComputerRequestCWProxyImpl(this);
@@ -121,34 +127,27 @@ extension $CreateComputerRequestCopyWith on CreateComputerRequest {
 
 CreateComputerRequest _$CreateComputerRequestFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'CreateComputerRequest',
-  json,
-  ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['org_id', 'name', 'kind']);
-    final val = CreateComputerRequest(
-      orgId: $checkedConvert('org_id', (v) => v as String),
-      name: $checkedConvert('name', (v) => v as String),
-      kind: $checkedConvert(
-        'kind',
-        (v) => $enumDecode(_$CreateComputerRequestKindEnumEnumMap, v),
-      ),
-      ownerBotId: $checkedConvert('owner_bot_id', (v) => v as String?),
-      profile: $checkedConvert(
-        'profile',
-        (v) =>
-            $enumDecodeNullable(_$CreateComputerRequestProfileEnumEnumMap, v),
-      ),
-      provider: $checkedConvert(
-        'provider',
-        (v) =>
-            $enumDecodeNullable(_$CreateComputerRequestProviderEnumEnumMap, v),
-      ),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'orgId': 'org_id', 'ownerBotId': 'owner_bot_id'},
-);
+) => $checkedCreate('CreateComputerRequest', json, ($checkedConvert) {
+  $checkKeys(json, requiredKeys: const ['org_id', 'name', 'kind']);
+  final val = CreateComputerRequest(
+    orgId: $checkedConvert('org_id', (v) => v as String),
+    name: $checkedConvert('name', (v) => v as String),
+    kind: $checkedConvert(
+      'kind',
+      (v) => $enumDecode(_$CreateComputerRequestKindEnumEnumMap, v),
+    ),
+    ownerBotId: $checkedConvert('owner_bot_id', (v) => v as String?),
+    profile: $checkedConvert(
+      'profile',
+      (v) => $enumDecodeNullable(_$CreateComputerRequestProfileEnumEnumMap, v),
+    ),
+    provider: $checkedConvert(
+      'provider',
+      (v) => $enumDecodeNullable(_$CreateComputerRequestProviderEnumEnumMap, v),
+    ),
+  );
+  return val;
+}, fieldKeyMap: const {'orgId': 'org_id', 'ownerBotId': 'owner_bot_id'});
 
 Map<String, dynamic> _$CreateComputerRequestToJson(
   CreateComputerRequest instance,

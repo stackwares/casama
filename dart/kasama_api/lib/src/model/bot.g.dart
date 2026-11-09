@@ -31,12 +31,14 @@ abstract class _$BotCWProxy {
 
   Bot createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Bot(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Bot(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Bot(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Bot call({
     String id,
     String orgId,
@@ -53,56 +55,59 @@ abstract class _$BotCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfBot.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfBot.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfBot.copyWith(...)` or call `instanceOfBot.copyWith.fieldName(value)` for a single field.
 class _$BotCWProxyImpl implements _$BotCWProxy {
   const _$BotCWProxyImpl(this._value);
 
   final Bot _value;
 
   @override
-  Bot id(String id) => this(id: id);
+  Bot id(String id) => call(id: id);
 
   @override
-  Bot orgId(String orgId) => this(orgId: orgId);
+  Bot orgId(String orgId) => call(orgId: orgId);
 
   @override
-  Bot name(String name) => this(name: name);
+  Bot name(String name) => call(name: name);
 
   @override
-  Bot avatarUrl(String? avatarUrl) => this(avatarUrl: avatarUrl);
+  Bot avatarUrl(String? avatarUrl) => call(avatarUrl: avatarUrl);
 
   @override
-  Bot personaMd(String personaMd) => this(personaMd: personaMd);
+  Bot personaMd(String personaMd) => call(personaMd: personaMd);
 
   @override
-  Bot modelPolicy(ModelPolicy modelPolicy) => this(modelPolicy: modelPolicy);
+  Bot modelPolicy(ModelPolicy modelPolicy) => call(modelPolicy: modelPolicy);
 
   @override
-  Bot autonomy(Autonomy autonomy) => this(autonomy: autonomy);
+  Bot autonomy(Autonomy autonomy) => call(autonomy: autonomy);
 
   @override
-  Bot visibility(Visibility visibility) => this(visibility: visibility);
+  Bot visibility(Visibility visibility) => call(visibility: visibility);
 
   @override
-  Bot budget(BotBudget budget) => this(budget: budget);
+  Bot budget(BotBudget budget) => call(budget: budget);
 
   @override
-  Bot status(BotStatusEnum status) => this(status: status);
+  Bot status(BotStatusEnum status) => call(status: status);
 
   @override
   Bot defaultComputerId(String? defaultComputerId) =>
-      this(defaultComputerId: defaultComputerId);
+      call(defaultComputerId: defaultComputerId);
 
   @override
-  Bot createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Bot createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Bot(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Bot(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Bot(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Bot call({
     Object? id = const $CopyWithPlaceholder(),
     Object? orgId = const $CopyWithPlaceholder(),
@@ -118,15 +123,15 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Bot(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
@@ -134,27 +139,29 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
           ? _value.avatarUrl
           // ignore: cast_nullable_to_non_nullable
           : avatarUrl as String?,
-      personaMd: personaMd == const $CopyWithPlaceholder()
+      personaMd: personaMd == const $CopyWithPlaceholder() || personaMd == null
           ? _value.personaMd
           // ignore: cast_nullable_to_non_nullable
           : personaMd as String,
-      modelPolicy: modelPolicy == const $CopyWithPlaceholder()
+      modelPolicy:
+          modelPolicy == const $CopyWithPlaceholder() || modelPolicy == null
           ? _value.modelPolicy
           // ignore: cast_nullable_to_non_nullable
           : modelPolicy as ModelPolicy,
-      autonomy: autonomy == const $CopyWithPlaceholder()
+      autonomy: autonomy == const $CopyWithPlaceholder() || autonomy == null
           ? _value.autonomy
           // ignore: cast_nullable_to_non_nullable
           : autonomy as Autonomy,
-      visibility: visibility == const $CopyWithPlaceholder()
+      visibility:
+          visibility == const $CopyWithPlaceholder() || visibility == null
           ? _value.visibility
           // ignore: cast_nullable_to_non_nullable
           : visibility as Visibility,
-      budget: budget == const $CopyWithPlaceholder()
+      budget: budget == const $CopyWithPlaceholder() || budget == null
           ? _value.budget
           // ignore: cast_nullable_to_non_nullable
           : budget as BotBudget,
-      status: status == const $CopyWithPlaceholder()
+      status: status == const $CopyWithPlaceholder() || status == null
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as BotStatusEnum,
@@ -162,7 +169,7 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
           ? _value.defaultComputerId
           // ignore: cast_nullable_to_non_nullable
           : defaultComputerId as String?,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -171,7 +178,8 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
 }
 
 extension $BotCopyWith on Bot {
-  /// Returns a callable class that can be used as follows: `instanceOfBot.copyWith(...)` or like so:`instanceOfBot.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfBot.copyWith(...)` or `instanceOfBot.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$BotCWProxy get copyWith => _$BotCWProxyImpl(this);
 }

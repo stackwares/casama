@@ -29,12 +29,14 @@ abstract class _$ApprovalCWProxy {
 
   Approval createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Approval(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Approval(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Approval(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Approval call({
     String id,
     String botId,
@@ -50,53 +52,56 @@ abstract class _$ApprovalCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfApproval.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfApproval.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfApproval.copyWith(...)` or call `instanceOfApproval.copyWith.fieldName(value)` for a single field.
 class _$ApprovalCWProxyImpl implements _$ApprovalCWProxy {
   const _$ApprovalCWProxyImpl(this._value);
 
   final Approval _value;
 
   @override
-  Approval id(String id) => this(id: id);
+  Approval id(String id) => call(id: id);
 
   @override
-  Approval botId(String botId) => this(botId: botId);
+  Approval botId(String botId) => call(botId: botId);
 
   @override
-  Approval runId(String runId) => this(runId: runId);
+  Approval runId(String runId) => call(runId: runId);
 
   @override
-  Approval toolName(String toolName) => this(toolName: toolName);
+  Approval toolName(String toolName) => call(toolName: toolName);
 
   @override
   Approval argsRedacted(Map<String, Object?> argsRedacted) =>
-      this(argsRedacted: argsRedacted);
+      call(argsRedacted: argsRedacted);
 
   @override
-  Approval summary(String summary) => this(summary: summary);
+  Approval summary(String summary) => call(summary: summary);
 
   @override
-  Approval risk(Risk risk) => this(risk: risk);
+  Approval risk(Risk risk) => call(risk: risk);
 
   @override
-  Approval status(ApprovalStatusEnum status) => this(status: status);
+  Approval status(ApprovalStatusEnum status) => call(status: status);
 
   @override
-  Approval decidedAt(DateTime? decidedAt) => this(decidedAt: decidedAt);
+  Approval decidedAt(DateTime? decidedAt) => call(decidedAt: decidedAt);
 
   @override
-  Approval expiresAt(DateTime expiresAt) => this(expiresAt: expiresAt);
+  Approval expiresAt(DateTime expiresAt) => call(expiresAt: expiresAt);
 
   @override
-  Approval createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Approval createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Approval(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Approval(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Approval(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Approval call({
     Object? id = const $CopyWithPlaceholder(),
     Object? botId = const $CopyWithPlaceholder(),
@@ -111,35 +116,36 @@ class _$ApprovalCWProxyImpl implements _$ApprovalCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Approval(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
-      runId: runId == const $CopyWithPlaceholder()
+      runId: runId == const $CopyWithPlaceholder() || runId == null
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String,
-      toolName: toolName == const $CopyWithPlaceholder()
+      toolName: toolName == const $CopyWithPlaceholder() || toolName == null
           ? _value.toolName
           // ignore: cast_nullable_to_non_nullable
           : toolName as String,
-      argsRedacted: argsRedacted == const $CopyWithPlaceholder()
+      argsRedacted:
+          argsRedacted == const $CopyWithPlaceholder() || argsRedacted == null
           ? _value.argsRedacted
           // ignore: cast_nullable_to_non_nullable
           : argsRedacted as Map<String, Object?>,
-      summary: summary == const $CopyWithPlaceholder()
+      summary: summary == const $CopyWithPlaceholder() || summary == null
           ? _value.summary
           // ignore: cast_nullable_to_non_nullable
           : summary as String,
-      risk: risk == const $CopyWithPlaceholder()
+      risk: risk == const $CopyWithPlaceholder() || risk == null
           ? _value.risk
           // ignore: cast_nullable_to_non_nullable
           : risk as Risk,
-      status: status == const $CopyWithPlaceholder()
+      status: status == const $CopyWithPlaceholder() || status == null
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as ApprovalStatusEnum,
@@ -147,11 +153,11 @@ class _$ApprovalCWProxyImpl implements _$ApprovalCWProxy {
           ? _value.decidedAt
           // ignore: cast_nullable_to_non_nullable
           : decidedAt as DateTime?,
-      expiresAt: expiresAt == const $CopyWithPlaceholder()
+      expiresAt: expiresAt == const $CopyWithPlaceholder() || expiresAt == null
           ? _value.expiresAt
           // ignore: cast_nullable_to_non_nullable
           : expiresAt as DateTime,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -160,7 +166,8 @@ class _$ApprovalCWProxyImpl implements _$ApprovalCWProxy {
 }
 
 extension $ApprovalCopyWith on Approval {
-  /// Returns a callable class that can be used as follows: `instanceOfApproval.copyWith(...)` or like so:`instanceOfApproval.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfApproval.copyWith(...)` or `instanceOfApproval.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ApprovalCWProxy get copyWith => _$ApprovalCWProxyImpl(this);
 }

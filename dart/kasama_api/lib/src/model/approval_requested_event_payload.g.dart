@@ -19,12 +19,14 @@ abstract class _$ApprovalRequestedEventPayloadCWProxy {
 
   ApprovalRequestedEventPayload expiresAt(DateTime expiresAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ApprovalRequestedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ApprovalRequestedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ApprovalRequestedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ApprovalRequestedEventPayload call({
     String approvalId,
     String tool,
@@ -34,7 +36,8 @@ abstract class _$ApprovalRequestedEventPayloadCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfApprovalRequestedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfApprovalRequestedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfApprovalRequestedEventPayload.copyWith(...)` or call `instanceOfApprovalRequestedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$ApprovalRequestedEventPayloadCWProxyImpl
     implements _$ApprovalRequestedEventPayloadCWProxy {
   const _$ApprovalRequestedEventPayloadCWProxyImpl(this._value);
@@ -43,32 +46,34 @@ class _$ApprovalRequestedEventPayloadCWProxyImpl
 
   @override
   ApprovalRequestedEventPayload approvalId(String approvalId) =>
-      this(approvalId: approvalId);
+      call(approvalId: approvalId);
 
   @override
-  ApprovalRequestedEventPayload tool(String tool) => this(tool: tool);
+  ApprovalRequestedEventPayload tool(String tool) => call(tool: tool);
 
   @override
   ApprovalRequestedEventPayload argsRedacted(
     Map<String, Object?> argsRedacted,
-  ) => this(argsRedacted: argsRedacted);
+  ) => call(argsRedacted: argsRedacted);
 
   @override
   ApprovalRequestedEventPayload risk(
     ApprovalRequestedEventPayloadRiskEnum risk,
-  ) => this(risk: risk);
+  ) => call(risk: risk);
 
   @override
   ApprovalRequestedEventPayload expiresAt(DateTime expiresAt) =>
-      this(expiresAt: expiresAt);
+      call(expiresAt: expiresAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ApprovalRequestedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ApprovalRequestedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ApprovalRequestedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ApprovalRequestedEventPayload call({
     Object? approvalId = const $CopyWithPlaceholder(),
     Object? tool = const $CopyWithPlaceholder(),
@@ -77,23 +82,25 @@ class _$ApprovalRequestedEventPayloadCWProxyImpl
     Object? expiresAt = const $CopyWithPlaceholder(),
   }) {
     return ApprovalRequestedEventPayload(
-      approvalId: approvalId == const $CopyWithPlaceholder()
+      approvalId:
+          approvalId == const $CopyWithPlaceholder() || approvalId == null
           ? _value.approvalId
           // ignore: cast_nullable_to_non_nullable
           : approvalId as String,
-      tool: tool == const $CopyWithPlaceholder()
+      tool: tool == const $CopyWithPlaceholder() || tool == null
           ? _value.tool
           // ignore: cast_nullable_to_non_nullable
           : tool as String,
-      argsRedacted: argsRedacted == const $CopyWithPlaceholder()
+      argsRedacted:
+          argsRedacted == const $CopyWithPlaceholder() || argsRedacted == null
           ? _value.argsRedacted
           // ignore: cast_nullable_to_non_nullable
           : argsRedacted as Map<String, Object?>,
-      risk: risk == const $CopyWithPlaceholder()
+      risk: risk == const $CopyWithPlaceholder() || risk == null
           ? _value.risk
           // ignore: cast_nullable_to_non_nullable
           : risk as ApprovalRequestedEventPayloadRiskEnum,
-      expiresAt: expiresAt == const $CopyWithPlaceholder()
+      expiresAt: expiresAt == const $CopyWithPlaceholder() || expiresAt == null
           ? _value.expiresAt
           // ignore: cast_nullable_to_non_nullable
           : expiresAt as DateTime,
@@ -103,7 +110,8 @@ class _$ApprovalRequestedEventPayloadCWProxyImpl
 
 extension $ApprovalRequestedEventPayloadCopyWith
     on ApprovalRequestedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfApprovalRequestedEventPayload.copyWith(...)` or like so:`instanceOfApprovalRequestedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfApprovalRequestedEventPayload.copyWith(...)` or `instanceOfApprovalRequestedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ApprovalRequestedEventPayloadCWProxy get copyWith =>
       _$ApprovalRequestedEventPayloadCWProxyImpl(this);

@@ -9,34 +9,39 @@ part of 'template_list.dart';
 abstract class _$TemplateListCWProxy {
   TemplateList items(List<Template> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TemplateList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TemplateList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TemplateList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   TemplateList call({List<Template> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfTemplateList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfTemplateList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfTemplateList.copyWith(...)` or call `instanceOfTemplateList.copyWith.fieldName(value)` for a single field.
 class _$TemplateListCWProxyImpl implements _$TemplateListCWProxy {
   const _$TemplateListCWProxyImpl(this._value);
 
   final TemplateList _value;
 
   @override
-  TemplateList items(List<Template> items) => this(items: items);
+  TemplateList items(List<Template> items) => call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TemplateList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TemplateList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TemplateList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   TemplateList call({Object? items = const $CopyWithPlaceholder()}) {
     return TemplateList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<Template>,
@@ -45,7 +50,8 @@ class _$TemplateListCWProxyImpl implements _$TemplateListCWProxy {
 }
 
 extension $TemplateListCopyWith on TemplateList {
-  /// Returns a callable class that can be used as follows: `instanceOfTemplateList.copyWith(...)` or like so:`instanceOfTemplateList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfTemplateList.copyWith(...)` or `instanceOfTemplateList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$TemplateListCWProxy get copyWith => _$TemplateListCWProxyImpl(this);
 }

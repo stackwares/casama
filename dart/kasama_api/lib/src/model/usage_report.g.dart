@@ -15,12 +15,14 @@ abstract class _$UsageReportCWProxy {
 
   UsageReport byBot(List<UsageReportByBotInner> byBot);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UsageReport(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageReport(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UsageReport(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   UsageReport call({
     UsageReportPeriodEnum period,
     DateTime since,
@@ -29,32 +31,35 @@ abstract class _$UsageReportCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfUsageReport.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfUsageReport.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfUsageReport.copyWith(...)` or call `instanceOfUsageReport.copyWith.fieldName(value)` for a single field.
 class _$UsageReportCWProxyImpl implements _$UsageReportCWProxy {
   const _$UsageReportCWProxyImpl(this._value);
 
   final UsageReport _value;
 
   @override
-  UsageReport period(UsageReportPeriodEnum period) => this(period: period);
+  UsageReport period(UsageReportPeriodEnum period) => call(period: period);
 
   @override
-  UsageReport since(DateTime since) => this(since: since);
+  UsageReport since(DateTime since) => call(since: since);
 
   @override
   UsageReport totalCostUsd(num totalCostUsd) =>
-      this(totalCostUsd: totalCostUsd);
+      call(totalCostUsd: totalCostUsd);
 
   @override
-  UsageReport byBot(List<UsageReportByBotInner> byBot) => this(byBot: byBot);
+  UsageReport byBot(List<UsageReportByBotInner> byBot) => call(byBot: byBot);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UsageReport(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageReport(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UsageReport(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   UsageReport call({
     Object? period = const $CopyWithPlaceholder(),
     Object? since = const $CopyWithPlaceholder(),
@@ -62,19 +67,20 @@ class _$UsageReportCWProxyImpl implements _$UsageReportCWProxy {
     Object? byBot = const $CopyWithPlaceholder(),
   }) {
     return UsageReport(
-      period: period == const $CopyWithPlaceholder()
+      period: period == const $CopyWithPlaceholder() || period == null
           ? _value.period
           // ignore: cast_nullable_to_non_nullable
           : period as UsageReportPeriodEnum,
-      since: since == const $CopyWithPlaceholder()
+      since: since == const $CopyWithPlaceholder() || since == null
           ? _value.since
           // ignore: cast_nullable_to_non_nullable
           : since as DateTime,
-      totalCostUsd: totalCostUsd == const $CopyWithPlaceholder()
+      totalCostUsd:
+          totalCostUsd == const $CopyWithPlaceholder() || totalCostUsd == null
           ? _value.totalCostUsd
           // ignore: cast_nullable_to_non_nullable
           : totalCostUsd as num,
-      byBot: byBot == const $CopyWithPlaceholder()
+      byBot: byBot == const $CopyWithPlaceholder() || byBot == null
           ? _value.byBot
           // ignore: cast_nullable_to_non_nullable
           : byBot as List<UsageReportByBotInner>,
@@ -83,7 +89,8 @@ class _$UsageReportCWProxyImpl implements _$UsageReportCWProxy {
 }
 
 extension $UsageReportCopyWith on UsageReport {
-  /// Returns a callable class that can be used as follows: `instanceOfUsageReport.copyWith(...)` or like so:`instanceOfUsageReport.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfUsageReport.copyWith(...)` or `instanceOfUsageReport.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$UsageReportCWProxy get copyWith => _$UsageReportCWProxyImpl(this);
 }
@@ -92,34 +99,29 @@ extension $UsageReportCopyWith on UsageReport {
 // JsonSerializableGenerator
 // **************************************************************************
 
-UsageReport _$UsageReportFromJson(Map<String, dynamic> json) => $checkedCreate(
-  'UsageReport',
-  json,
-  ($checkedConvert) {
-    $checkKeys(
-      json,
-      requiredKeys: const ['period', 'since', 'total_cost_usd', 'by_bot'],
-    );
-    final val = UsageReport(
-      period: $checkedConvert(
-        'period',
-        (v) => $enumDecode(_$UsageReportPeriodEnumEnumMap, v),
-      ),
-      since: $checkedConvert('since', (v) => DateTime.parse(v as String)),
-      totalCostUsd: $checkedConvert('total_cost_usd', (v) => v as num),
-      byBot: $checkedConvert(
-        'by_bot',
-        (v) => (v as List<dynamic>)
-            .map(
-              (e) => UsageReportByBotInner.fromJson(e as Map<String, dynamic>),
-            )
-            .toList(),
-      ),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'totalCostUsd': 'total_cost_usd', 'byBot': 'by_bot'},
-);
+UsageReport _$UsageReportFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate('UsageReport', json, ($checkedConvert) {
+  $checkKeys(
+    json,
+    requiredKeys: const ['period', 'since', 'total_cost_usd', 'by_bot'],
+  );
+  final val = UsageReport(
+    period: $checkedConvert(
+      'period',
+      (v) => $enumDecode(_$UsageReportPeriodEnumEnumMap, v),
+    ),
+    since: $checkedConvert('since', (v) => DateTime.parse(v as String)),
+    totalCostUsd: $checkedConvert('total_cost_usd', (v) => v as num),
+    byBot: $checkedConvert(
+      'by_bot',
+      (v) => (v as List<dynamic>)
+          .map((e) => UsageReportByBotInner.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    ),
+  );
+  return val;
+}, fieldKeyMap: const {'totalCostUsd': 'total_cost_usd', 'byBot': 'by_bot'});
 
 Map<String, dynamic> _$UsageReportToJson(UsageReport instance) =>
     <String, dynamic>{

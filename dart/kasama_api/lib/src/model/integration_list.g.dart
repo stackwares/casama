@@ -9,34 +9,39 @@ part of 'integration_list.dart';
 abstract class _$IntegrationListCWProxy {
   IntegrationList items(List<Integration> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `IntegrationList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `IntegrationList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// IntegrationList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   IntegrationList call({List<Integration> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfIntegrationList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfIntegrationList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfIntegrationList.copyWith(...)` or call `instanceOfIntegrationList.copyWith.fieldName(value)` for a single field.
 class _$IntegrationListCWProxyImpl implements _$IntegrationListCWProxy {
   const _$IntegrationListCWProxyImpl(this._value);
 
   final IntegrationList _value;
 
   @override
-  IntegrationList items(List<Integration> items) => this(items: items);
+  IntegrationList items(List<Integration> items) => call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `IntegrationList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `IntegrationList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// IntegrationList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   IntegrationList call({Object? items = const $CopyWithPlaceholder()}) {
     return IntegrationList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<Integration>,
@@ -45,7 +50,8 @@ class _$IntegrationListCWProxyImpl implements _$IntegrationListCWProxy {
 }
 
 extension $IntegrationListCopyWith on IntegrationList {
-  /// Returns a callable class that can be used as follows: `instanceOfIntegrationList.copyWith(...)` or like so:`instanceOfIntegrationList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfIntegrationList.copyWith(...)` or `instanceOfIntegrationList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$IntegrationListCWProxy get copyWith => _$IntegrationListCWProxyImpl(this);
 }

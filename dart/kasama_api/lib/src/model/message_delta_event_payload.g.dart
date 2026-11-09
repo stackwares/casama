@@ -11,16 +11,19 @@ abstract class _$MessageDeltaEventPayloadCWProxy {
 
   MessageDeltaEventPayload text(String text);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `MessageDeltaEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `MessageDeltaEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// MessageDeltaEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   MessageDeltaEventPayload call({String messageId, String text});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfMessageDeltaEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfMessageDeltaEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfMessageDeltaEventPayload.copyWith(...)` or call `instanceOfMessageDeltaEventPayload.copyWith.fieldName(value)` for a single field.
 class _$MessageDeltaEventPayloadCWProxyImpl
     implements _$MessageDeltaEventPayloadCWProxy {
   const _$MessageDeltaEventPayloadCWProxyImpl(this._value);
@@ -29,28 +32,30 @@ class _$MessageDeltaEventPayloadCWProxyImpl
 
   @override
   MessageDeltaEventPayload messageId(String messageId) =>
-      this(messageId: messageId);
+      call(messageId: messageId);
 
   @override
-  MessageDeltaEventPayload text(String text) => this(text: text);
+  MessageDeltaEventPayload text(String text) => call(text: text);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `MessageDeltaEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `MessageDeltaEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// MessageDeltaEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   MessageDeltaEventPayload call({
     Object? messageId = const $CopyWithPlaceholder(),
     Object? text = const $CopyWithPlaceholder(),
   }) {
     return MessageDeltaEventPayload(
-      messageId: messageId == const $CopyWithPlaceholder()
+      messageId: messageId == const $CopyWithPlaceholder() || messageId == null
           ? _value.messageId
           // ignore: cast_nullable_to_non_nullable
           : messageId as String,
-      text: text == const $CopyWithPlaceholder()
+      text: text == const $CopyWithPlaceholder() || text == null
           ? _value.text
           // ignore: cast_nullable_to_non_nullable
           : text as String,
@@ -59,7 +64,8 @@ class _$MessageDeltaEventPayloadCWProxyImpl
 }
 
 extension $MessageDeltaEventPayloadCopyWith on MessageDeltaEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfMessageDeltaEventPayload.copyWith(...)` or like so:`instanceOfMessageDeltaEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfMessageDeltaEventPayload.copyWith(...)` or `instanceOfMessageDeltaEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$MessageDeltaEventPayloadCWProxy get copyWith =>
       _$MessageDeltaEventPayloadCWProxyImpl(this);

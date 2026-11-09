@@ -23,12 +23,14 @@ abstract class _$TaskCWProxy {
 
   Task updatedAt(DateTime updatedAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Task(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Task(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Task(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Task call({
     String id,
     String title,
@@ -41,45 +43,48 @@ abstract class _$TaskCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfTask.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfTask.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfTask.copyWith(...)` or call `instanceOfTask.copyWith.fieldName(value)` for a single field.
 class _$TaskCWProxyImpl implements _$TaskCWProxy {
   const _$TaskCWProxyImpl(this._value);
 
   final Task _value;
 
   @override
-  Task id(String id) => this(id: id);
+  Task id(String id) => call(id: id);
 
   @override
-  Task title(String title) => this(title: title);
+  Task title(String title) => call(title: title);
 
   @override
-  Task detailsMd(String detailsMd) => this(detailsMd: detailsMd);
+  Task detailsMd(String detailsMd) => call(detailsMd: detailsMd);
 
   @override
-  Task status(TaskStatusEnum status) => this(status: status);
+  Task status(TaskStatusEnum status) => call(status: status);
 
   @override
   Task assigneeBotId(String? assigneeBotId) =>
-      this(assigneeBotId: assigneeBotId);
+      call(assigneeBotId: assigneeBotId);
 
   @override
   Task createdByBotId(String? createdByBotId) =>
-      this(createdByBotId: createdByBotId);
+      call(createdByBotId: createdByBotId);
 
   @override
-  Task resultMd(String? resultMd) => this(resultMd: resultMd);
+  Task resultMd(String? resultMd) => call(resultMd: resultMd);
 
   @override
-  Task updatedAt(DateTime updatedAt) => this(updatedAt: updatedAt);
+  Task updatedAt(DateTime updatedAt) => call(updatedAt: updatedAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Task(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Task(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Task(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Task call({
     Object? id = const $CopyWithPlaceholder(),
     Object? title = const $CopyWithPlaceholder(),
@@ -91,19 +96,19 @@ class _$TaskCWProxyImpl implements _$TaskCWProxy {
     Object? updatedAt = const $CopyWithPlaceholder(),
   }) {
     return Task(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      title: title == const $CopyWithPlaceholder()
+      title: title == const $CopyWithPlaceholder() || title == null
           ? _value.title
           // ignore: cast_nullable_to_non_nullable
           : title as String,
-      detailsMd: detailsMd == const $CopyWithPlaceholder()
+      detailsMd: detailsMd == const $CopyWithPlaceholder() || detailsMd == null
           ? _value.detailsMd
           // ignore: cast_nullable_to_non_nullable
           : detailsMd as String,
-      status: status == const $CopyWithPlaceholder()
+      status: status == const $CopyWithPlaceholder() || status == null
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as TaskStatusEnum,
@@ -119,7 +124,7 @@ class _$TaskCWProxyImpl implements _$TaskCWProxy {
           ? _value.resultMd
           // ignore: cast_nullable_to_non_nullable
           : resultMd as String?,
-      updatedAt: updatedAt == const $CopyWithPlaceholder()
+      updatedAt: updatedAt == const $CopyWithPlaceholder() || updatedAt == null
           ? _value.updatedAt
           // ignore: cast_nullable_to_non_nullable
           : updatedAt as DateTime,
@@ -128,7 +133,8 @@ class _$TaskCWProxyImpl implements _$TaskCWProxy {
 }
 
 extension $TaskCopyWith on Task {
-  /// Returns a callable class that can be used as follows: `instanceOfTask.copyWith(...)` or like so:`instanceOfTask.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfTask.copyWith(...)` or `instanceOfTask.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$TaskCWProxy get copyWith => _$TaskCWProxyImpl(this);
 }

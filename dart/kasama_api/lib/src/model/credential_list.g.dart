@@ -9,34 +9,39 @@ part of 'credential_list.dart';
 abstract class _$CredentialListCWProxy {
   CredentialList items(List<Credential> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CredentialList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CredentialList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CredentialList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CredentialList call({List<Credential> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCredentialList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCredentialList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCredentialList.copyWith(...)` or call `instanceOfCredentialList.copyWith.fieldName(value)` for a single field.
 class _$CredentialListCWProxyImpl implements _$CredentialListCWProxy {
   const _$CredentialListCWProxyImpl(this._value);
 
   final CredentialList _value;
 
   @override
-  CredentialList items(List<Credential> items) => this(items: items);
+  CredentialList items(List<Credential> items) => call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CredentialList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CredentialList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CredentialList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CredentialList call({Object? items = const $CopyWithPlaceholder()}) {
     return CredentialList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<Credential>,
@@ -45,7 +50,8 @@ class _$CredentialListCWProxyImpl implements _$CredentialListCWProxy {
 }
 
 extension $CredentialListCopyWith on CredentialList {
-  /// Returns a callable class that can be used as follows: `instanceOfCredentialList.copyWith(...)` or like so:`instanceOfCredentialList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCredentialList.copyWith(...)` or `instanceOfCredentialList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CredentialListCWProxy get copyWith => _$CredentialListCWProxyImpl(this);
 }

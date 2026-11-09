@@ -33,12 +33,14 @@ abstract class _$ComputerCWProxy {
 
   Computer createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Computer(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Computer(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Computer(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Computer call({
     String id,
     String orgId,
@@ -56,59 +58,62 @@ abstract class _$ComputerCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfComputer.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfComputer.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfComputer.copyWith(...)` or call `instanceOfComputer.copyWith.fieldName(value)` for a single field.
 class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
   const _$ComputerCWProxyImpl(this._value);
 
   final Computer _value;
 
   @override
-  Computer id(String id) => this(id: id);
+  Computer id(String id) => call(id: id);
 
   @override
-  Computer orgId(String orgId) => this(orgId: orgId);
+  Computer orgId(String orgId) => call(orgId: orgId);
 
   @override
-  Computer kind(ComputerKindEnum kind) => this(kind: kind);
+  Computer kind(ComputerKindEnum kind) => call(kind: kind);
 
   @override
-  Computer name(String name) => this(name: name);
+  Computer name(String name) => call(name: name);
 
   @override
-  Computer ownerBotId(String? ownerBotId) => this(ownerBotId: ownerBotId);
+  Computer ownerBotId(String? ownerBotId) => call(ownerBotId: ownerBotId);
 
   @override
-  Computer provider(String provider) => this(provider: provider);
+  Computer provider(String provider) => call(provider: provider);
 
   @override
-  Computer profile(ComputerProfileEnum profile) => this(profile: profile);
+  Computer profile(ComputerProfileEnum profile) => call(profile: profile);
 
   @override
-  Computer state(ComputerState state) => this(state: state);
+  Computer state(ComputerState state) => call(state: state);
 
   @override
-  Computer size(ComputerSize size) => this(size: size);
+  Computer size(ComputerSize size) => call(size: size);
 
   @override
-  Computer hasSnapshot(bool hasSnapshot) => this(hasSnapshot: hasSnapshot);
+  Computer hasSnapshot(bool hasSnapshot) => call(hasSnapshot: hasSnapshot);
 
   @override
   Computer lastActiveAt(DateTime? lastActiveAt) =>
-      this(lastActiveAt: lastActiveAt);
+      call(lastActiveAt: lastActiveAt);
 
   @override
-  Computer error(String? error) => this(error: error);
+  Computer error(String? error) => call(error: error);
 
   @override
-  Computer createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Computer createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Computer(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Computer(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Computer(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Computer call({
     Object? id = const $CopyWithPlaceholder(),
     Object? orgId = const $CopyWithPlaceholder(),
@@ -125,19 +130,19 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Computer(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      kind: kind == const $CopyWithPlaceholder()
+      kind: kind == const $CopyWithPlaceholder() || kind == null
           ? _value.kind
           // ignore: cast_nullable_to_non_nullable
           : kind as ComputerKindEnum,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
@@ -145,23 +150,24 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
           ? _value.ownerBotId
           // ignore: cast_nullable_to_non_nullable
           : ownerBotId as String?,
-      provider: provider == const $CopyWithPlaceholder()
+      provider: provider == const $CopyWithPlaceholder() || provider == null
           ? _value.provider
           // ignore: cast_nullable_to_non_nullable
           : provider as String,
-      profile: profile == const $CopyWithPlaceholder()
+      profile: profile == const $CopyWithPlaceholder() || profile == null
           ? _value.profile
           // ignore: cast_nullable_to_non_nullable
           : profile as ComputerProfileEnum,
-      state: state == const $CopyWithPlaceholder()
+      state: state == const $CopyWithPlaceholder() || state == null
           ? _value.state
           // ignore: cast_nullable_to_non_nullable
           : state as ComputerState,
-      size: size == const $CopyWithPlaceholder()
+      size: size == const $CopyWithPlaceholder() || size == null
           ? _value.size
           // ignore: cast_nullable_to_non_nullable
           : size as ComputerSize,
-      hasSnapshot: hasSnapshot == const $CopyWithPlaceholder()
+      hasSnapshot:
+          hasSnapshot == const $CopyWithPlaceholder() || hasSnapshot == null
           ? _value.hasSnapshot
           // ignore: cast_nullable_to_non_nullable
           : hasSnapshot as bool,
@@ -173,7 +179,7 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
           ? _value.error
           // ignore: cast_nullable_to_non_nullable
           : error as String?,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -182,7 +188,8 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
 }
 
 extension $ComputerCopyWith on Computer {
-  /// Returns a callable class that can be used as follows: `instanceOfComputer.copyWith(...)` or like so:`instanceOfComputer.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfComputer.copyWith(...)` or `instanceOfComputer.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ComputerCWProxy get copyWith => _$ComputerCWProxyImpl(this);
 }

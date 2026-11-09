@@ -9,16 +9,19 @@ part of 'stream_session_request.dart';
 abstract class _$StreamSessionRequestCWProxy {
   StreamSessionRequest mode(StreamMode? mode);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `StreamSessionRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `StreamSessionRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// StreamSessionRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   StreamSessionRequest call({StreamMode? mode});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfStreamSessionRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfStreamSessionRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfStreamSessionRequest.copyWith(...)` or call `instanceOfStreamSessionRequest.copyWith.fieldName(value)` for a single field.
 class _$StreamSessionRequestCWProxyImpl
     implements _$StreamSessionRequestCWProxy {
   const _$StreamSessionRequestCWProxyImpl(this._value);
@@ -26,15 +29,17 @@ class _$StreamSessionRequestCWProxyImpl
   final StreamSessionRequest _value;
 
   @override
-  StreamSessionRequest mode(StreamMode? mode) => this(mode: mode);
+  StreamSessionRequest mode(StreamMode? mode) => call(mode: mode);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `StreamSessionRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `StreamSessionRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// StreamSessionRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   StreamSessionRequest call({Object? mode = const $CopyWithPlaceholder()}) {
     return StreamSessionRequest(
       mode: mode == const $CopyWithPlaceholder()
@@ -46,7 +51,8 @@ class _$StreamSessionRequestCWProxyImpl
 }
 
 extension $StreamSessionRequestCopyWith on StreamSessionRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfStreamSessionRequest.copyWith(...)` or like so:`instanceOfStreamSessionRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfStreamSessionRequest.copyWith(...)` or `instanceOfStreamSessionRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$StreamSessionRequestCWProxy get copyWith =>
       _$StreamSessionRequestCWProxyImpl(this);

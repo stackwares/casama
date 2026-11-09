@@ -17,12 +17,14 @@ abstract class _$CreateCredentialRequestCWProxy {
 
   CreateCredentialRequest baseUrl(String? baseUrl);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateCredentialRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateCredentialRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateCredentialRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CreateCredentialRequest call({
     String orgId,
     ProviderId provider,
@@ -32,7 +34,8 @@ abstract class _$CreateCredentialRequestCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCreateCredentialRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCreateCredentialRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCreateCredentialRequest.copyWith(...)` or call `instanceOfCreateCredentialRequest.copyWith.fieldName(value)` for a single field.
 class _$CreateCredentialRequestCWProxyImpl
     implements _$CreateCredentialRequestCWProxy {
   const _$CreateCredentialRequestCWProxyImpl(this._value);
@@ -40,28 +43,30 @@ class _$CreateCredentialRequestCWProxyImpl
   final CreateCredentialRequest _value;
 
   @override
-  CreateCredentialRequest orgId(String orgId) => this(orgId: orgId);
+  CreateCredentialRequest orgId(String orgId) => call(orgId: orgId);
 
   @override
   CreateCredentialRequest provider(ProviderId provider) =>
-      this(provider: provider);
+      call(provider: provider);
 
   @override
-  CreateCredentialRequest label(String label) => this(label: label);
+  CreateCredentialRequest label(String label) => call(label: label);
 
   @override
-  CreateCredentialRequest apiKey(String? apiKey) => this(apiKey: apiKey);
+  CreateCredentialRequest apiKey(String? apiKey) => call(apiKey: apiKey);
 
   @override
-  CreateCredentialRequest baseUrl(String? baseUrl) => this(baseUrl: baseUrl);
+  CreateCredentialRequest baseUrl(String? baseUrl) => call(baseUrl: baseUrl);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateCredentialRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateCredentialRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateCredentialRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CreateCredentialRequest call({
     Object? orgId = const $CopyWithPlaceholder(),
     Object? provider = const $CopyWithPlaceholder(),
@@ -70,15 +75,15 @@ class _$CreateCredentialRequestCWProxyImpl
     Object? baseUrl = const $CopyWithPlaceholder(),
   }) {
     return CreateCredentialRequest(
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      provider: provider == const $CopyWithPlaceholder()
+      provider: provider == const $CopyWithPlaceholder() || provider == null
           ? _value.provider
           // ignore: cast_nullable_to_non_nullable
           : provider as ProviderId,
-      label: label == const $CopyWithPlaceholder()
+      label: label == const $CopyWithPlaceholder() || label == null
           ? _value.label
           // ignore: cast_nullable_to_non_nullable
           : label as String,
@@ -95,7 +100,8 @@ class _$CreateCredentialRequestCWProxyImpl
 }
 
 extension $CreateCredentialRequestCopyWith on CreateCredentialRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfCreateCredentialRequest.copyWith(...)` or like so:`instanceOfCreateCredentialRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCreateCredentialRequest.copyWith(...)` or `instanceOfCreateCredentialRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CreateCredentialRequestCWProxy get copyWith =>
       _$CreateCredentialRequestCWProxyImpl(this);

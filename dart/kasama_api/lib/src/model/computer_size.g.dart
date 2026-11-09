@@ -13,37 +13,42 @@ abstract class _$ComputerSizeCWProxy {
 
   ComputerSize diskGb(num? diskGb);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ComputerSize(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ComputerSize(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ComputerSize(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ComputerSize call({num? cpus, num? memoryMb, num? diskGb});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfComputerSize.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfComputerSize.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfComputerSize.copyWith(...)` or call `instanceOfComputerSize.copyWith.fieldName(value)` for a single field.
 class _$ComputerSizeCWProxyImpl implements _$ComputerSizeCWProxy {
   const _$ComputerSizeCWProxyImpl(this._value);
 
   final ComputerSize _value;
 
   @override
-  ComputerSize cpus(num? cpus) => this(cpus: cpus);
+  ComputerSize cpus(num? cpus) => call(cpus: cpus);
 
   @override
-  ComputerSize memoryMb(num? memoryMb) => this(memoryMb: memoryMb);
+  ComputerSize memoryMb(num? memoryMb) => call(memoryMb: memoryMb);
 
   @override
-  ComputerSize diskGb(num? diskGb) => this(diskGb: diskGb);
+  ComputerSize diskGb(num? diskGb) => call(diskGb: diskGb);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ComputerSize(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ComputerSize(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ComputerSize(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ComputerSize call({
     Object? cpus = const $CopyWithPlaceholder(),
     Object? memoryMb = const $CopyWithPlaceholder(),
@@ -67,7 +72,8 @@ class _$ComputerSizeCWProxyImpl implements _$ComputerSizeCWProxy {
 }
 
 extension $ComputerSizeCopyWith on ComputerSize {
-  /// Returns a callable class that can be used as follows: `instanceOfComputerSize.copyWith(...)` or like so:`instanceOfComputerSize.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfComputerSize.copyWith(...)` or `instanceOfComputerSize.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ComputerSizeCWProxy get copyWith => _$ComputerSizeCWProxyImpl(this);
 }
@@ -77,19 +83,14 @@ extension $ComputerSizeCopyWith on ComputerSize {
 // **************************************************************************
 
 ComputerSize _$ComputerSizeFromJson(Map<String, dynamic> json) =>
-    $checkedCreate(
-      'ComputerSize',
-      json,
-      ($checkedConvert) {
-        final val = ComputerSize(
-          cpus: $checkedConvert('cpus', (v) => v as num?),
-          memoryMb: $checkedConvert('memory_mb', (v) => v as num?),
-          diskGb: $checkedConvert('disk_gb', (v) => v as num?),
-        );
-        return val;
-      },
-      fieldKeyMap: const {'memoryMb': 'memory_mb', 'diskGb': 'disk_gb'},
-    );
+    $checkedCreate('ComputerSize', json, ($checkedConvert) {
+      final val = ComputerSize(
+        cpus: $checkedConvert('cpus', (v) => v as num?),
+        memoryMb: $checkedConvert('memory_mb', (v) => v as num?),
+        diskGb: $checkedConvert('disk_gb', (v) => v as num?),
+      );
+      return val;
+    }, fieldKeyMap: const {'memoryMb': 'memory_mb', 'diskGb': 'disk_gb'});
 
 Map<String, dynamic> _$ComputerSizeToJson(ComputerSize instance) =>
     <String, dynamic>{

@@ -11,16 +11,19 @@ abstract class _$SkillLoadedEventPayloadCWProxy {
 
   SkillLoadedEventPayload name(String name);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SkillLoadedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SkillLoadedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SkillLoadedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   SkillLoadedEventPayload call({String skillId, String name});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfSkillLoadedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfSkillLoadedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfSkillLoadedEventPayload.copyWith(...)` or call `instanceOfSkillLoadedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$SkillLoadedEventPayloadCWProxyImpl
     implements _$SkillLoadedEventPayloadCWProxy {
   const _$SkillLoadedEventPayloadCWProxyImpl(this._value);
@@ -28,28 +31,30 @@ class _$SkillLoadedEventPayloadCWProxyImpl
   final SkillLoadedEventPayload _value;
 
   @override
-  SkillLoadedEventPayload skillId(String skillId) => this(skillId: skillId);
+  SkillLoadedEventPayload skillId(String skillId) => call(skillId: skillId);
 
   @override
-  SkillLoadedEventPayload name(String name) => this(name: name);
+  SkillLoadedEventPayload name(String name) => call(name: name);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SkillLoadedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SkillLoadedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SkillLoadedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   SkillLoadedEventPayload call({
     Object? skillId = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
   }) {
     return SkillLoadedEventPayload(
-      skillId: skillId == const $CopyWithPlaceholder()
+      skillId: skillId == const $CopyWithPlaceholder() || skillId == null
           ? _value.skillId
           // ignore: cast_nullable_to_non_nullable
           : skillId as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
@@ -58,7 +63,8 @@ class _$SkillLoadedEventPayloadCWProxyImpl
 }
 
 extension $SkillLoadedEventPayloadCopyWith on SkillLoadedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfSkillLoadedEventPayload.copyWith(...)` or like so:`instanceOfSkillLoadedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfSkillLoadedEventPayload.copyWith(...)` or `instanceOfSkillLoadedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$SkillLoadedEventPayloadCWProxy get copyWith =>
       _$SkillLoadedEventPayloadCWProxyImpl(this);

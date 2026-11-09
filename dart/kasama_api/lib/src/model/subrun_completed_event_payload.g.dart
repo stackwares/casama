@@ -15,12 +15,14 @@ abstract class _$SubrunCompletedEventPayloadCWProxy {
 
   SubrunCompletedEventPayload summary(String summary);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SubrunCompletedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SubrunCompletedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SubrunCompletedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   SubrunCompletedEventPayload call({
     String childRunId,
     SubrunCompletedEventPayloadStatusEnum status,
@@ -28,7 +30,8 @@ abstract class _$SubrunCompletedEventPayloadCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfSubrunCompletedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfSubrunCompletedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfSubrunCompletedEventPayload.copyWith(...)` or call `instanceOfSubrunCompletedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$SubrunCompletedEventPayloadCWProxyImpl
     implements _$SubrunCompletedEventPayloadCWProxy {
   const _$SubrunCompletedEventPayloadCWProxyImpl(this._value);
@@ -37,38 +40,41 @@ class _$SubrunCompletedEventPayloadCWProxyImpl
 
   @override
   SubrunCompletedEventPayload childRunId(String childRunId) =>
-      this(childRunId: childRunId);
+      call(childRunId: childRunId);
 
   @override
   SubrunCompletedEventPayload status(
     SubrunCompletedEventPayloadStatusEnum status,
-  ) => this(status: status);
+  ) => call(status: status);
 
   @override
-  SubrunCompletedEventPayload summary(String summary) => this(summary: summary);
+  SubrunCompletedEventPayload summary(String summary) => call(summary: summary);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SubrunCompletedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SubrunCompletedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SubrunCompletedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   SubrunCompletedEventPayload call({
     Object? childRunId = const $CopyWithPlaceholder(),
     Object? status = const $CopyWithPlaceholder(),
     Object? summary = const $CopyWithPlaceholder(),
   }) {
     return SubrunCompletedEventPayload(
-      childRunId: childRunId == const $CopyWithPlaceholder()
+      childRunId:
+          childRunId == const $CopyWithPlaceholder() || childRunId == null
           ? _value.childRunId
           // ignore: cast_nullable_to_non_nullable
           : childRunId as String,
-      status: status == const $CopyWithPlaceholder()
+      status: status == const $CopyWithPlaceholder() || status == null
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as SubrunCompletedEventPayloadStatusEnum,
-      summary: summary == const $CopyWithPlaceholder()
+      summary: summary == const $CopyWithPlaceholder() || summary == null
           ? _value.summary
           // ignore: cast_nullable_to_non_nullable
           : summary as String,
@@ -77,7 +83,8 @@ class _$SubrunCompletedEventPayloadCWProxyImpl
 }
 
 extension $SubrunCompletedEventPayloadCopyWith on SubrunCompletedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfSubrunCompletedEventPayload.copyWith(...)` or like so:`instanceOfSubrunCompletedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfSubrunCompletedEventPayload.copyWith(...)` or `instanceOfSubrunCompletedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$SubrunCompletedEventPayloadCWProxy get copyWith =>
       _$SubrunCompletedEventPayloadCWProxyImpl(this);
@@ -89,23 +96,18 @@ extension $SubrunCompletedEventPayloadCopyWith on SubrunCompletedEventPayload {
 
 SubrunCompletedEventPayload _$SubrunCompletedEventPayloadFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'SubrunCompletedEventPayload',
-  json,
-  ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['child_run_id', 'status', 'summary']);
-    final val = SubrunCompletedEventPayload(
-      childRunId: $checkedConvert('child_run_id', (v) => v as String),
-      status: $checkedConvert(
-        'status',
-        (v) => $enumDecode(_$SubrunCompletedEventPayloadStatusEnumEnumMap, v),
-      ),
-      summary: $checkedConvert('summary', (v) => v as String),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'childRunId': 'child_run_id'},
-);
+) => $checkedCreate('SubrunCompletedEventPayload', json, ($checkedConvert) {
+  $checkKeys(json, requiredKeys: const ['child_run_id', 'status', 'summary']);
+  final val = SubrunCompletedEventPayload(
+    childRunId: $checkedConvert('child_run_id', (v) => v as String),
+    status: $checkedConvert(
+      'status',
+      (v) => $enumDecode(_$SubrunCompletedEventPayloadStatusEnumEnumMap, v),
+    ),
+    summary: $checkedConvert('summary', (v) => v as String),
+  );
+  return val;
+}, fieldKeyMap: const {'childRunId': 'child_run_id'});
 
 Map<String, dynamic> _$SubrunCompletedEventPayloadToJson(
   SubrunCompletedEventPayload instance,

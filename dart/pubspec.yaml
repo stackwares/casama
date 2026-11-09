@@ -1,11 +1,11 @@
 name: kasama_dart_workspace
 publish_to: none
 environment:
-  sdk: ^3.9.0
+  sdk: ^3.13.0
 workspace:
   - kasama_api
   - kasama_sdk
   - cli
   - computerd
 dev_dependencies:
-  lints: ^6.0.0
+  lints: ^6.1.0

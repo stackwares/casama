@@ -21,12 +21,14 @@ abstract class _$OrganizationWithRoleCWProxy {
 
   OrganizationWithRole role(OrgRole role);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OrganizationWithRole(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `OrganizationWithRole(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// OrganizationWithRole(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   OrganizationWithRole call({
     String id,
     String name,
@@ -38,7 +40,8 @@ abstract class _$OrganizationWithRoleCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfOrganizationWithRole.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfOrganizationWithRole.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfOrganizationWithRole.copyWith(...)` or call `instanceOfOrganizationWithRole.copyWith.fieldName(value)` for a single field.
 class _$OrganizationWithRoleCWProxyImpl
     implements _$OrganizationWithRoleCWProxy {
   const _$OrganizationWithRoleCWProxyImpl(this._value);
@@ -46,34 +49,36 @@ class _$OrganizationWithRoleCWProxyImpl
   final OrganizationWithRole _value;
 
   @override
-  OrganizationWithRole id(String id) => this(id: id);
+  OrganizationWithRole id(String id) => call(id: id);
 
   @override
-  OrganizationWithRole name(String name) => this(name: name);
+  OrganizationWithRole name(String name) => call(name: name);
 
   @override
-  OrganizationWithRole slug(String slug) => this(slug: slug);
+  OrganizationWithRole slug(String slug) => call(slug: slug);
 
   @override
-  OrganizationWithRole plan(String plan) => this(plan: plan);
+  OrganizationWithRole plan(String plan) => call(plan: plan);
 
   @override
-  OrganizationWithRole region(String region) => this(region: region);
+  OrganizationWithRole region(String region) => call(region: region);
 
   @override
   OrganizationWithRole createdAt(DateTime createdAt) =>
-      this(createdAt: createdAt);
+      call(createdAt: createdAt);
 
   @override
-  OrganizationWithRole role(OrgRole role) => this(role: role);
+  OrganizationWithRole role(OrgRole role) => call(role: role);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OrganizationWithRole(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `OrganizationWithRole(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// OrganizationWithRole(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   OrganizationWithRole call({
     Object? id = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
@@ -84,31 +89,31 @@ class _$OrganizationWithRoleCWProxyImpl
     Object? role = const $CopyWithPlaceholder(),
   }) {
     return OrganizationWithRole(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      slug: slug == const $CopyWithPlaceholder()
+      slug: slug == const $CopyWithPlaceholder() || slug == null
           ? _value.slug
           // ignore: cast_nullable_to_non_nullable
           : slug as String,
-      plan: plan == const $CopyWithPlaceholder()
+      plan: plan == const $CopyWithPlaceholder() || plan == null
           ? _value.plan
           // ignore: cast_nullable_to_non_nullable
           : plan as String,
-      region: region == const $CopyWithPlaceholder()
+      region: region == const $CopyWithPlaceholder() || region == null
           ? _value.region
           // ignore: cast_nullable_to_non_nullable
           : region as String,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
-      role: role == const $CopyWithPlaceholder()
+      role: role == const $CopyWithPlaceholder() || role == null
           ? _value.role
           // ignore: cast_nullable_to_non_nullable
           : role as OrgRole,
@@ -117,7 +122,8 @@ class _$OrganizationWithRoleCWProxyImpl
 }
 
 extension $OrganizationWithRoleCopyWith on OrganizationWithRole {
-  /// Returns a callable class that can be used as follows: `instanceOfOrganizationWithRole.copyWith(...)` or like so:`instanceOfOrganizationWithRole.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfOrganizationWithRole.copyWith(...)` or `instanceOfOrganizationWithRole.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$OrganizationWithRoleCWProxy get copyWith =>
       _$OrganizationWithRoleCWProxyImpl(this);

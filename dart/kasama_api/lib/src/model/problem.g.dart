@@ -21,12 +21,14 @@ abstract class _$ProblemCWProxy {
 
   Problem errors(List<ProblemErrorsInner>? errors);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Problem(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Problem(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Problem(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Problem call({
     String type,
     String title,
@@ -38,40 +40,43 @@ abstract class _$ProblemCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfProblem.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfProblem.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfProblem.copyWith(...)` or call `instanceOfProblem.copyWith.fieldName(value)` for a single field.
 class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
   const _$ProblemCWProxyImpl(this._value);
 
   final Problem _value;
 
   @override
-  Problem type(String type) => this(type: type);
+  Problem type(String type) => call(type: type);
 
   @override
-  Problem title(String title) => this(title: title);
+  Problem title(String title) => call(title: title);
 
   @override
-  Problem status(int status) => this(status: status);
+  Problem status(int status) => call(status: status);
 
   @override
-  Problem code(String code) => this(code: code);
+  Problem code(String code) => call(code: code);
 
   @override
-  Problem detail(String? detail) => this(detail: detail);
+  Problem detail(String? detail) => call(detail: detail);
 
   @override
-  Problem instance(String? instance) => this(instance: instance);
+  Problem instance(String? instance) => call(instance: instance);
 
   @override
-  Problem errors(List<ProblemErrorsInner>? errors) => this(errors: errors);
+  Problem errors(List<ProblemErrorsInner>? errors) => call(errors: errors);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Problem(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Problem(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Problem(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Problem call({
     Object? type = const $CopyWithPlaceholder(),
     Object? title = const $CopyWithPlaceholder(),
@@ -82,19 +87,19 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
     Object? errors = const $CopyWithPlaceholder(),
   }) {
     return Problem(
-      type: type == const $CopyWithPlaceholder()
+      type: type == const $CopyWithPlaceholder() || type == null
           ? _value.type
           // ignore: cast_nullable_to_non_nullable
           : type as String,
-      title: title == const $CopyWithPlaceholder()
+      title: title == const $CopyWithPlaceholder() || title == null
           ? _value.title
           // ignore: cast_nullable_to_non_nullable
           : title as String,
-      status: status == const $CopyWithPlaceholder()
+      status: status == const $CopyWithPlaceholder() || status == null
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as int,
-      code: code == const $CopyWithPlaceholder()
+      code: code == const $CopyWithPlaceholder() || code == null
           ? _value.code
           // ignore: cast_nullable_to_non_nullable
           : code as String,
@@ -115,7 +120,8 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
 }
 
 extension $ProblemCopyWith on Problem {
-  /// Returns a callable class that can be used as follows: `instanceOfProblem.copyWith(...)` or like so:`instanceOfProblem.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfProblem.copyWith(...)` or `instanceOfProblem.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ProblemCWProxy get copyWith => _$ProblemCWProxyImpl(this);
 }

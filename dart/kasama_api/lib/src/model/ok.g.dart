@@ -9,34 +9,39 @@ part of 'ok.dart';
 abstract class _$OkCWProxy {
   Ok ok(bool ok);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Ok(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Ok(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Ok(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Ok call({bool ok});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfOk.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfOk.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfOk.copyWith(...)` or call `instanceOfOk.copyWith.fieldName(value)` for a single field.
 class _$OkCWProxyImpl implements _$OkCWProxy {
   const _$OkCWProxyImpl(this._value);
 
   final Ok _value;
 
   @override
-  Ok ok(bool ok) => this(ok: ok);
+  Ok ok(bool ok) => call(ok: ok);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Ok(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Ok(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Ok(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Ok call({Object? ok = const $CopyWithPlaceholder()}) {
     return Ok(
-      ok: ok == const $CopyWithPlaceholder()
+      ok: ok == const $CopyWithPlaceholder() || ok == null
           ? _value.ok
           // ignore: cast_nullable_to_non_nullable
           : ok as bool,
@@ -45,7 +50,8 @@ class _$OkCWProxyImpl implements _$OkCWProxy {
 }
 
 extension $OkCopyWith on Ok {
-  /// Returns a callable class that can be used as follows: `instanceOfOk.copyWith(...)` or like so:`instanceOfOk.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfOk.copyWith(...)` or `instanceOfOk.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$OkCWProxy get copyWith => _$OkCWProxyImpl(this);
 }

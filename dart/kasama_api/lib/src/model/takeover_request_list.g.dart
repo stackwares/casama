@@ -9,34 +9,39 @@ part of 'takeover_request_list.dart';
 abstract class _$TakeoverRequestListCWProxy {
   TakeoverRequestList items(List<TakeoverRequest> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TakeoverRequestList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TakeoverRequestList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TakeoverRequestList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   TakeoverRequestList call({List<TakeoverRequest> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfTakeoverRequestList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfTakeoverRequestList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfTakeoverRequestList.copyWith(...)` or call `instanceOfTakeoverRequestList.copyWith.fieldName(value)` for a single field.
 class _$TakeoverRequestListCWProxyImpl implements _$TakeoverRequestListCWProxy {
   const _$TakeoverRequestListCWProxyImpl(this._value);
 
   final TakeoverRequestList _value;
 
   @override
-  TakeoverRequestList items(List<TakeoverRequest> items) => this(items: items);
+  TakeoverRequestList items(List<TakeoverRequest> items) => call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TakeoverRequestList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TakeoverRequestList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TakeoverRequestList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   TakeoverRequestList call({Object? items = const $CopyWithPlaceholder()}) {
     return TakeoverRequestList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<TakeoverRequest>,
@@ -45,7 +50,8 @@ class _$TakeoverRequestListCWProxyImpl implements _$TakeoverRequestListCWProxy {
 }
 
 extension $TakeoverRequestListCopyWith on TakeoverRequestList {
-  /// Returns a callable class that can be used as follows: `instanceOfTakeoverRequestList.copyWith(...)` or like so:`instanceOfTakeoverRequestList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfTakeoverRequestList.copyWith(...)` or `instanceOfTakeoverRequestList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$TakeoverRequestListCWProxy get copyWith =>
       _$TakeoverRequestListCWProxyImpl(this);

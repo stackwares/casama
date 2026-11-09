@@ -11,44 +11,49 @@ abstract class _$ProblemErrorsInnerCWProxy {
 
   ProblemErrorsInner message(String message);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ProblemErrorsInner(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ProblemErrorsInner(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ProblemErrorsInner(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ProblemErrorsInner call({String path, String message});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfProblemErrorsInner.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfProblemErrorsInner.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfProblemErrorsInner.copyWith(...)` or call `instanceOfProblemErrorsInner.copyWith.fieldName(value)` for a single field.
 class _$ProblemErrorsInnerCWProxyImpl implements _$ProblemErrorsInnerCWProxy {
   const _$ProblemErrorsInnerCWProxyImpl(this._value);
 
   final ProblemErrorsInner _value;
 
   @override
-  ProblemErrorsInner path(String path) => this(path: path);
+  ProblemErrorsInner path(String path) => call(path: path);
 
   @override
-  ProblemErrorsInner message(String message) => this(message: message);
+  ProblemErrorsInner message(String message) => call(message: message);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ProblemErrorsInner(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ProblemErrorsInner(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ProblemErrorsInner(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ProblemErrorsInner call({
     Object? path = const $CopyWithPlaceholder(),
     Object? message = const $CopyWithPlaceholder(),
   }) {
     return ProblemErrorsInner(
-      path: path == const $CopyWithPlaceholder()
+      path: path == const $CopyWithPlaceholder() || path == null
           ? _value.path
           // ignore: cast_nullable_to_non_nullable
           : path as String,
-      message: message == const $CopyWithPlaceholder()
+      message: message == const $CopyWithPlaceholder() || message == null
           ? _value.message
           // ignore: cast_nullable_to_non_nullable
           : message as String,
@@ -57,7 +62,8 @@ class _$ProblemErrorsInnerCWProxyImpl implements _$ProblemErrorsInnerCWProxy {
 }
 
 extension $ProblemErrorsInnerCopyWith on ProblemErrorsInner {
-  /// Returns a callable class that can be used as follows: `instanceOfProblemErrorsInner.copyWith(...)` or like so:`instanceOfProblemErrorsInner.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfProblemErrorsInner.copyWith(...)` or `instanceOfProblemErrorsInner.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ProblemErrorsInnerCWProxy get copyWith =>
       _$ProblemErrorsInnerCWProxyImpl(this);

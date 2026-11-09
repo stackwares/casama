@@ -17,12 +17,14 @@ abstract class _$CreateIntegrationRequestCWProxy {
 
   CreateIntegrationRequest secret(String? secret);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateIntegrationRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateIntegrationRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateIntegrationRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CreateIntegrationRequest call({
     String orgId,
     IntegrationKind kind,
@@ -32,7 +34,8 @@ abstract class _$CreateIntegrationRequestCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCreateIntegrationRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCreateIntegrationRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCreateIntegrationRequest.copyWith(...)` or call `instanceOfCreateIntegrationRequest.copyWith.fieldName(value)` for a single field.
 class _$CreateIntegrationRequestCWProxyImpl
     implements _$CreateIntegrationRequestCWProxy {
   const _$CreateIntegrationRequestCWProxyImpl(this._value);
@@ -40,28 +43,30 @@ class _$CreateIntegrationRequestCWProxyImpl
   final CreateIntegrationRequest _value;
 
   @override
-  CreateIntegrationRequest orgId(String orgId) => this(orgId: orgId);
+  CreateIntegrationRequest orgId(String orgId) => call(orgId: orgId);
 
   @override
-  CreateIntegrationRequest kind(IntegrationKind kind) => this(kind: kind);
+  CreateIntegrationRequest kind(IntegrationKind kind) => call(kind: kind);
 
   @override
-  CreateIntegrationRequest name(String name) => this(name: name);
+  CreateIntegrationRequest name(String name) => call(name: name);
 
   @override
   CreateIntegrationRequest config(Map<String, Object?> config) =>
-      this(config: config);
+      call(config: config);
 
   @override
-  CreateIntegrationRequest secret(String? secret) => this(secret: secret);
+  CreateIntegrationRequest secret(String? secret) => call(secret: secret);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateIntegrationRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateIntegrationRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateIntegrationRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CreateIntegrationRequest call({
     Object? orgId = const $CopyWithPlaceholder(),
     Object? kind = const $CopyWithPlaceholder(),
@@ -70,19 +75,19 @@ class _$CreateIntegrationRequestCWProxyImpl
     Object? secret = const $CopyWithPlaceholder(),
   }) {
     return CreateIntegrationRequest(
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      kind: kind == const $CopyWithPlaceholder()
+      kind: kind == const $CopyWithPlaceholder() || kind == null
           ? _value.kind
           // ignore: cast_nullable_to_non_nullable
           : kind as IntegrationKind,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      config: config == const $CopyWithPlaceholder()
+      config: config == const $CopyWithPlaceholder() || config == null
           ? _value.config
           // ignore: cast_nullable_to_non_nullable
           : config as Map<String, Object?>,
@@ -95,7 +100,8 @@ class _$CreateIntegrationRequestCWProxyImpl
 }
 
 extension $CreateIntegrationRequestCopyWith on CreateIntegrationRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfCreateIntegrationRequest.copyWith(...)` or like so:`instanceOfCreateIntegrationRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCreateIntegrationRequest.copyWith(...)` or `instanceOfCreateIntegrationRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CreateIntegrationRequestCWProxy get copyWith =>
       _$CreateIntegrationRequestCWProxyImpl(this);

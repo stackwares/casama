@@ -21,12 +21,14 @@ abstract class _$ToolCompletedEventCWProxy {
 
   ToolCompletedEvent payload(ToolCompletedEventPayload payload);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ToolCompletedEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ToolCompletedEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ToolCompletedEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ToolCompletedEvent call({
     int v,
     String runId,
@@ -38,41 +40,44 @@ abstract class _$ToolCompletedEventCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfToolCompletedEvent.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfToolCompletedEvent.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfToolCompletedEvent.copyWith(...)` or call `instanceOfToolCompletedEvent.copyWith.fieldName(value)` for a single field.
 class _$ToolCompletedEventCWProxyImpl implements _$ToolCompletedEventCWProxy {
   const _$ToolCompletedEventCWProxyImpl(this._value);
 
   final ToolCompletedEvent _value;
 
   @override
-  ToolCompletedEvent v(int v) => this(v: v);
+  ToolCompletedEvent v(int v) => call(v: v);
 
   @override
-  ToolCompletedEvent runId(String runId) => this(runId: runId);
+  ToolCompletedEvent runId(String runId) => call(runId: runId);
 
   @override
-  ToolCompletedEvent seq(int seq) => this(seq: seq);
+  ToolCompletedEvent seq(int seq) => call(seq: seq);
 
   @override
-  ToolCompletedEvent ts(DateTime ts) => this(ts: ts);
+  ToolCompletedEvent ts(DateTime ts) => call(ts: ts);
 
   @override
-  ToolCompletedEvent botId(String botId) => this(botId: botId);
+  ToolCompletedEvent botId(String botId) => call(botId: botId);
 
   @override
-  ToolCompletedEvent type(ToolCompletedEventTypeEnum type) => this(type: type);
+  ToolCompletedEvent type(ToolCompletedEventTypeEnum type) => call(type: type);
 
   @override
   ToolCompletedEvent payload(ToolCompletedEventPayload payload) =>
-      this(payload: payload);
+      call(payload: payload);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ToolCompletedEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ToolCompletedEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ToolCompletedEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ToolCompletedEvent call({
     Object? v = const $CopyWithPlaceholder(),
     Object? runId = const $CopyWithPlaceholder(),
@@ -83,31 +88,31 @@ class _$ToolCompletedEventCWProxyImpl implements _$ToolCompletedEventCWProxy {
     Object? payload = const $CopyWithPlaceholder(),
   }) {
     return ToolCompletedEvent(
-      v: v == const $CopyWithPlaceholder()
+      v: v == const $CopyWithPlaceholder() || v == null
           ? _value.v
           // ignore: cast_nullable_to_non_nullable
           : v as int,
-      runId: runId == const $CopyWithPlaceholder()
+      runId: runId == const $CopyWithPlaceholder() || runId == null
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String,
-      seq: seq == const $CopyWithPlaceholder()
+      seq: seq == const $CopyWithPlaceholder() || seq == null
           ? _value.seq
           // ignore: cast_nullable_to_non_nullable
           : seq as int,
-      ts: ts == const $CopyWithPlaceholder()
+      ts: ts == const $CopyWithPlaceholder() || ts == null
           ? _value.ts
           // ignore: cast_nullable_to_non_nullable
           : ts as DateTime,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
-      type: type == const $CopyWithPlaceholder()
+      type: type == const $CopyWithPlaceholder() || type == null
           ? _value.type
           // ignore: cast_nullable_to_non_nullable
           : type as ToolCompletedEventTypeEnum,
-      payload: payload == const $CopyWithPlaceholder()
+      payload: payload == const $CopyWithPlaceholder() || payload == null
           ? _value.payload
           // ignore: cast_nullable_to_non_nullable
           : payload as ToolCompletedEventPayload,
@@ -116,7 +121,8 @@ class _$ToolCompletedEventCWProxyImpl implements _$ToolCompletedEventCWProxy {
 }
 
 extension $ToolCompletedEventCopyWith on ToolCompletedEvent {
-  /// Returns a callable class that can be used as follows: `instanceOfToolCompletedEvent.copyWith(...)` or like so:`instanceOfToolCompletedEvent.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfToolCompletedEvent.copyWith(...)` or `instanceOfToolCompletedEvent.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ToolCompletedEventCWProxy get copyWith =>
       _$ToolCompletedEventCWProxyImpl(this);

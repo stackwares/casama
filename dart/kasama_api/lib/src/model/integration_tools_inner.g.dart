@@ -13,16 +13,19 @@ abstract class _$IntegrationToolsInnerCWProxy {
 
   IntegrationToolsInner risk(Risk? risk);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `IntegrationToolsInner(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `IntegrationToolsInner(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// IntegrationToolsInner(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   IntegrationToolsInner call({String name, String description, Risk? risk});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfIntegrationToolsInner.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfIntegrationToolsInner.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfIntegrationToolsInner.copyWith(...)` or call `instanceOfIntegrationToolsInner.copyWith.fieldName(value)` for a single field.
 class _$IntegrationToolsInnerCWProxyImpl
     implements _$IntegrationToolsInnerCWProxy {
   const _$IntegrationToolsInnerCWProxyImpl(this._value);
@@ -30,33 +33,36 @@ class _$IntegrationToolsInnerCWProxyImpl
   final IntegrationToolsInner _value;
 
   @override
-  IntegrationToolsInner name(String name) => this(name: name);
+  IntegrationToolsInner name(String name) => call(name: name);
 
   @override
   IntegrationToolsInner description(String description) =>
-      this(description: description);
+      call(description: description);
 
   @override
-  IntegrationToolsInner risk(Risk? risk) => this(risk: risk);
+  IntegrationToolsInner risk(Risk? risk) => call(risk: risk);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `IntegrationToolsInner(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `IntegrationToolsInner(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// IntegrationToolsInner(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   IntegrationToolsInner call({
     Object? name = const $CopyWithPlaceholder(),
     Object? description = const $CopyWithPlaceholder(),
     Object? risk = const $CopyWithPlaceholder(),
   }) {
     return IntegrationToolsInner(
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      description: description == const $CopyWithPlaceholder()
+      description:
+          description == const $CopyWithPlaceholder() || description == null
           ? _value.description
           // ignore: cast_nullable_to_non_nullable
           : description as String,
@@ -69,7 +75,8 @@ class _$IntegrationToolsInnerCWProxyImpl
 }
 
 extension $IntegrationToolsInnerCopyWith on IntegrationToolsInner {
-  /// Returns a callable class that can be used as follows: `instanceOfIntegrationToolsInner.copyWith(...)` or like so:`instanceOfIntegrationToolsInner.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfIntegrationToolsInner.copyWith(...)` or `instanceOfIntegrationToolsInner.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$IntegrationToolsInnerCWProxy get copyWith =>
       _$IntegrationToolsInnerCWProxyImpl(this);

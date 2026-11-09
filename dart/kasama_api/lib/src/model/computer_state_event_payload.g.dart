@@ -11,19 +11,22 @@ abstract class _$ComputerStateEventPayloadCWProxy {
 
   ComputerStateEventPayload state(ComputerStateEventPayloadStateEnum state);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ComputerStateEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ComputerStateEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ComputerStateEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ComputerStateEventPayload call({
     String computerId,
     ComputerStateEventPayloadStateEnum state,
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfComputerStateEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfComputerStateEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfComputerStateEventPayload.copyWith(...)` or call `instanceOfComputerStateEventPayload.copyWith.fieldName(value)` for a single field.
 class _$ComputerStateEventPayloadCWProxyImpl
     implements _$ComputerStateEventPayloadCWProxy {
   const _$ComputerStateEventPayloadCWProxyImpl(this._value);
@@ -32,29 +35,32 @@ class _$ComputerStateEventPayloadCWProxyImpl
 
   @override
   ComputerStateEventPayload computerId(String computerId) =>
-      this(computerId: computerId);
+      call(computerId: computerId);
 
   @override
   ComputerStateEventPayload state(ComputerStateEventPayloadStateEnum state) =>
-      this(state: state);
+      call(state: state);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ComputerStateEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ComputerStateEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ComputerStateEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ComputerStateEventPayload call({
     Object? computerId = const $CopyWithPlaceholder(),
     Object? state = const $CopyWithPlaceholder(),
   }) {
     return ComputerStateEventPayload(
-      computerId: computerId == const $CopyWithPlaceholder()
+      computerId:
+          computerId == const $CopyWithPlaceholder() || computerId == null
           ? _value.computerId
           // ignore: cast_nullable_to_non_nullable
           : computerId as String,
-      state: state == const $CopyWithPlaceholder()
+      state: state == const $CopyWithPlaceholder() || state == null
           ? _value.state
           // ignore: cast_nullable_to_non_nullable
           : state as ComputerStateEventPayloadStateEnum,
@@ -63,7 +69,8 @@ class _$ComputerStateEventPayloadCWProxyImpl
 }
 
 extension $ComputerStateEventPayloadCopyWith on ComputerStateEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfComputerStateEventPayload.copyWith(...)` or like so:`instanceOfComputerStateEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfComputerStateEventPayload.copyWith(...)` or `instanceOfComputerStateEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ComputerStateEventPayloadCWProxy get copyWith =>
       _$ComputerStateEventPayloadCWProxyImpl(this);

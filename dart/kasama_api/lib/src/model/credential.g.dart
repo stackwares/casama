@@ -25,12 +25,14 @@ abstract class _$CredentialCWProxy {
 
   Credential createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Credential(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Credential(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Credential(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Credential call({
     String id,
     String orgId,
@@ -44,47 +46,50 @@ abstract class _$CredentialCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCredential.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCredential.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCredential.copyWith(...)` or call `instanceOfCredential.copyWith.fieldName(value)` for a single field.
 class _$CredentialCWProxyImpl implements _$CredentialCWProxy {
   const _$CredentialCWProxyImpl(this._value);
 
   final Credential _value;
 
   @override
-  Credential id(String id) => this(id: id);
+  Credential id(String id) => call(id: id);
 
   @override
-  Credential orgId(String orgId) => this(orgId: orgId);
+  Credential orgId(String orgId) => call(orgId: orgId);
 
   @override
-  Credential provider(ProviderId provider) => this(provider: provider);
+  Credential provider(ProviderId provider) => call(provider: provider);
 
   @override
-  Credential label(String label) => this(label: label);
+  Credential label(String label) => call(label: label);
 
   @override
-  Credential baseUrl(String? baseUrl) => this(baseUrl: baseUrl);
+  Credential baseUrl(String? baseUrl) => call(baseUrl: baseUrl);
 
   @override
-  Credential keyHint(String? keyHint) => this(keyHint: keyHint);
+  Credential keyHint(String? keyHint) => call(keyHint: keyHint);
 
   @override
   Credential lastTestedAt(DateTime? lastTestedAt) =>
-      this(lastTestedAt: lastTestedAt);
+      call(lastTestedAt: lastTestedAt);
 
   @override
-  Credential lastTestOk(bool? lastTestOk) => this(lastTestOk: lastTestOk);
+  Credential lastTestOk(bool? lastTestOk) => call(lastTestOk: lastTestOk);
 
   @override
-  Credential createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Credential createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Credential(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Credential(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Credential(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Credential call({
     Object? id = const $CopyWithPlaceholder(),
     Object? orgId = const $CopyWithPlaceholder(),
@@ -97,19 +102,19 @@ class _$CredentialCWProxyImpl implements _$CredentialCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Credential(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      provider: provider == const $CopyWithPlaceholder()
+      provider: provider == const $CopyWithPlaceholder() || provider == null
           ? _value.provider
           // ignore: cast_nullable_to_non_nullable
           : provider as ProviderId,
-      label: label == const $CopyWithPlaceholder()
+      label: label == const $CopyWithPlaceholder() || label == null
           ? _value.label
           // ignore: cast_nullable_to_non_nullable
           : label as String,
@@ -129,7 +134,7 @@ class _$CredentialCWProxyImpl implements _$CredentialCWProxy {
           ? _value.lastTestOk
           // ignore: cast_nullable_to_non_nullable
           : lastTestOk as bool?,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -138,7 +143,8 @@ class _$CredentialCWProxyImpl implements _$CredentialCWProxy {
 }
 
 extension $CredentialCopyWith on Credential {
-  /// Returns a callable class that can be used as follows: `instanceOfCredential.copyWith(...)` or like so:`instanceOfCredential.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCredential.copyWith(...)` or `instanceOfCredential.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CredentialCWProxy get copyWith => _$CredentialCWProxyImpl(this);
 }

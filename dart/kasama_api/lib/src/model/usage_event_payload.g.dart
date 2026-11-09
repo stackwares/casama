@@ -13,52 +13,57 @@ abstract class _$UsageEventPayloadCWProxy {
 
   UsageEventPayload costUsd(num costUsd);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UsageEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UsageEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   UsageEventPayload call({int tokensIn, int tokensOut, num costUsd});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfUsageEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfUsageEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfUsageEventPayload.copyWith(...)` or call `instanceOfUsageEventPayload.copyWith.fieldName(value)` for a single field.
 class _$UsageEventPayloadCWProxyImpl implements _$UsageEventPayloadCWProxy {
   const _$UsageEventPayloadCWProxyImpl(this._value);
 
   final UsageEventPayload _value;
 
   @override
-  UsageEventPayload tokensIn(int tokensIn) => this(tokensIn: tokensIn);
+  UsageEventPayload tokensIn(int tokensIn) => call(tokensIn: tokensIn);
 
   @override
-  UsageEventPayload tokensOut(int tokensOut) => this(tokensOut: tokensOut);
+  UsageEventPayload tokensOut(int tokensOut) => call(tokensOut: tokensOut);
 
   @override
-  UsageEventPayload costUsd(num costUsd) => this(costUsd: costUsd);
+  UsageEventPayload costUsd(num costUsd) => call(costUsd: costUsd);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UsageEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UsageEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   UsageEventPayload call({
     Object? tokensIn = const $CopyWithPlaceholder(),
     Object? tokensOut = const $CopyWithPlaceholder(),
     Object? costUsd = const $CopyWithPlaceholder(),
   }) {
     return UsageEventPayload(
-      tokensIn: tokensIn == const $CopyWithPlaceholder()
+      tokensIn: tokensIn == const $CopyWithPlaceholder() || tokensIn == null
           ? _value.tokensIn
           // ignore: cast_nullable_to_non_nullable
           : tokensIn as int,
-      tokensOut: tokensOut == const $CopyWithPlaceholder()
+      tokensOut: tokensOut == const $CopyWithPlaceholder() || tokensOut == null
           ? _value.tokensOut
           // ignore: cast_nullable_to_non_nullable
           : tokensOut as int,
-      costUsd: costUsd == const $CopyWithPlaceholder()
+      costUsd: costUsd == const $CopyWithPlaceholder() || costUsd == null
           ? _value.costUsd
           // ignore: cast_nullable_to_non_nullable
           : costUsd as num,
@@ -67,7 +72,8 @@ class _$UsageEventPayloadCWProxyImpl implements _$UsageEventPayloadCWProxy {
 }
 
 extension $UsageEventPayloadCopyWith on UsageEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfUsageEventPayload.copyWith(...)` or like so:`instanceOfUsageEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfUsageEventPayload.copyWith(...)` or `instanceOfUsageEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$UsageEventPayloadCWProxy get copyWith =>
       _$UsageEventPayloadCWProxyImpl(this);

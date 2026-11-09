@@ -15,12 +15,14 @@ abstract class _$ApprovalResolvedEventPayloadCWProxy {
 
   ApprovalResolvedEventPayload decidedBy(String? decidedBy);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ApprovalResolvedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ApprovalResolvedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ApprovalResolvedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ApprovalResolvedEventPayload call({
     String approvalId,
     ApprovalResolvedEventPayloadDecisionEnum decision,
@@ -28,7 +30,8 @@ abstract class _$ApprovalResolvedEventPayloadCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfApprovalResolvedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfApprovalResolvedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfApprovalResolvedEventPayload.copyWith(...)` or call `instanceOfApprovalResolvedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$ApprovalResolvedEventPayloadCWProxyImpl
     implements _$ApprovalResolvedEventPayloadCWProxy {
   const _$ApprovalResolvedEventPayloadCWProxyImpl(this._value);
@@ -37,35 +40,38 @@ class _$ApprovalResolvedEventPayloadCWProxyImpl
 
   @override
   ApprovalResolvedEventPayload approvalId(String approvalId) =>
-      this(approvalId: approvalId);
+      call(approvalId: approvalId);
 
   @override
   ApprovalResolvedEventPayload decision(
     ApprovalResolvedEventPayloadDecisionEnum decision,
-  ) => this(decision: decision);
+  ) => call(decision: decision);
 
   @override
   ApprovalResolvedEventPayload decidedBy(String? decidedBy) =>
-      this(decidedBy: decidedBy);
+      call(decidedBy: decidedBy);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ApprovalResolvedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ApprovalResolvedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ApprovalResolvedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ApprovalResolvedEventPayload call({
     Object? approvalId = const $CopyWithPlaceholder(),
     Object? decision = const $CopyWithPlaceholder(),
     Object? decidedBy = const $CopyWithPlaceholder(),
   }) {
     return ApprovalResolvedEventPayload(
-      approvalId: approvalId == const $CopyWithPlaceholder()
+      approvalId:
+          approvalId == const $CopyWithPlaceholder() || approvalId == null
           ? _value.approvalId
           // ignore: cast_nullable_to_non_nullable
           : approvalId as String,
-      decision: decision == const $CopyWithPlaceholder()
+      decision: decision == const $CopyWithPlaceholder() || decision == null
           ? _value.decision
           // ignore: cast_nullable_to_non_nullable
           : decision as ApprovalResolvedEventPayloadDecisionEnum,
@@ -79,7 +85,8 @@ class _$ApprovalResolvedEventPayloadCWProxyImpl
 
 extension $ApprovalResolvedEventPayloadCopyWith
     on ApprovalResolvedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfApprovalResolvedEventPayload.copyWith(...)` or like so:`instanceOfApprovalResolvedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfApprovalResolvedEventPayload.copyWith(...)` or `instanceOfApprovalResolvedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ApprovalResolvedEventPayloadCWProxy get copyWith =>
       _$ApprovalResolvedEventPayloadCWProxyImpl(this);
@@ -91,27 +98,21 @@ extension $ApprovalResolvedEventPayloadCopyWith
 
 ApprovalResolvedEventPayload _$ApprovalResolvedEventPayloadFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'ApprovalResolvedEventPayload',
-  json,
-  ($checkedConvert) {
-    $checkKeys(
-      json,
-      requiredKeys: const ['approval_id', 'decision', 'decided_by'],
-    );
-    final val = ApprovalResolvedEventPayload(
-      approvalId: $checkedConvert('approval_id', (v) => v as String),
-      decision: $checkedConvert(
-        'decision',
-        (v) =>
-            $enumDecode(_$ApprovalResolvedEventPayloadDecisionEnumEnumMap, v),
-      ),
-      decidedBy: $checkedConvert('decided_by', (v) => v as String?),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'approvalId': 'approval_id', 'decidedBy': 'decided_by'},
-);
+) => $checkedCreate('ApprovalResolvedEventPayload', json, ($checkedConvert) {
+  $checkKeys(
+    json,
+    requiredKeys: const ['approval_id', 'decision', 'decided_by'],
+  );
+  final val = ApprovalResolvedEventPayload(
+    approvalId: $checkedConvert('approval_id', (v) => v as String),
+    decision: $checkedConvert(
+      'decision',
+      (v) => $enumDecode(_$ApprovalResolvedEventPayloadDecisionEnumEnumMap, v),
+    ),
+    decidedBy: $checkedConvert('decided_by', (v) => v as String?),
+  );
+  return val;
+}, fieldKeyMap: const {'approvalId': 'approval_id', 'decidedBy': 'decided_by'});
 
 Map<String, dynamic> _$ApprovalResolvedEventPayloadToJson(
   ApprovalResolvedEventPayload instance,

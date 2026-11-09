@@ -19,12 +19,14 @@ abstract class _$LeaseCWProxy {
 
   Lease you(bool you);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Lease(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Lease(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Lease(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Lease call({
     String computerId,
     LeaseHolderTypeEnum holderType,
@@ -35,38 +37,41 @@ abstract class _$LeaseCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfLease.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfLease.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfLease.copyWith(...)` or call `instanceOfLease.copyWith.fieldName(value)` for a single field.
 class _$LeaseCWProxyImpl implements _$LeaseCWProxy {
   const _$LeaseCWProxyImpl(this._value);
 
   final Lease _value;
 
   @override
-  Lease computerId(String computerId) => this(computerId: computerId);
+  Lease computerId(String computerId) => call(computerId: computerId);
 
   @override
   Lease holderType(LeaseHolderTypeEnum holderType) =>
-      this(holderType: holderType);
+      call(holderType: holderType);
 
   @override
-  Lease holderId(String? holderId) => this(holderId: holderId);
+  Lease holderId(String? holderId) => call(holderId: holderId);
 
   @override
-  Lease mode(LeaseModeEnum mode) => this(mode: mode);
+  Lease mode(LeaseModeEnum mode) => call(mode: mode);
 
   @override
-  Lease expiresAt(DateTime? expiresAt) => this(expiresAt: expiresAt);
+  Lease expiresAt(DateTime? expiresAt) => call(expiresAt: expiresAt);
 
   @override
-  Lease you(bool you) => this(you: you);
+  Lease you(bool you) => call(you: you);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Lease(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Lease(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Lease(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Lease call({
     Object? computerId = const $CopyWithPlaceholder(),
     Object? holderType = const $CopyWithPlaceholder(),
@@ -76,11 +81,13 @@ class _$LeaseCWProxyImpl implements _$LeaseCWProxy {
     Object? you = const $CopyWithPlaceholder(),
   }) {
     return Lease(
-      computerId: computerId == const $CopyWithPlaceholder()
+      computerId:
+          computerId == const $CopyWithPlaceholder() || computerId == null
           ? _value.computerId
           // ignore: cast_nullable_to_non_nullable
           : computerId as String,
-      holderType: holderType == const $CopyWithPlaceholder()
+      holderType:
+          holderType == const $CopyWithPlaceholder() || holderType == null
           ? _value.holderType
           // ignore: cast_nullable_to_non_nullable
           : holderType as LeaseHolderTypeEnum,
@@ -88,7 +95,7 @@ class _$LeaseCWProxyImpl implements _$LeaseCWProxy {
           ? _value.holderId
           // ignore: cast_nullable_to_non_nullable
           : holderId as String?,
-      mode: mode == const $CopyWithPlaceholder()
+      mode: mode == const $CopyWithPlaceholder() || mode == null
           ? _value.mode
           // ignore: cast_nullable_to_non_nullable
           : mode as LeaseModeEnum,
@@ -96,7 +103,7 @@ class _$LeaseCWProxyImpl implements _$LeaseCWProxy {
           ? _value.expiresAt
           // ignore: cast_nullable_to_non_nullable
           : expiresAt as DateTime?,
-      you: you == const $CopyWithPlaceholder()
+      you: you == const $CopyWithPlaceholder() || you == null
           ? _value.you
           // ignore: cast_nullable_to_non_nullable
           : you as bool,
@@ -105,7 +112,8 @@ class _$LeaseCWProxyImpl implements _$LeaseCWProxy {
 }
 
 extension $LeaseCopyWith on Lease {
-  /// Returns a callable class that can be used as follows: `instanceOfLease.copyWith(...)` or like so:`instanceOfLease.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfLease.copyWith(...)` or `instanceOfLease.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$LeaseCWProxy get copyWith => _$LeaseCWProxyImpl(this);
 }

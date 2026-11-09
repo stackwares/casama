@@ -13,12 +13,14 @@ abstract class _$ModelPolicyCWProxy {
 
   ModelPolicy cheap(ModelChoice? cheap);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ModelPolicy(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ModelPolicy(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ModelPolicy(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ModelPolicy call({
     ModelChoice? primary,
     List<ModelChoice>? fallbacks,
@@ -26,29 +28,32 @@ abstract class _$ModelPolicyCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfModelPolicy.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfModelPolicy.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfModelPolicy.copyWith(...)` or call `instanceOfModelPolicy.copyWith.fieldName(value)` for a single field.
 class _$ModelPolicyCWProxyImpl implements _$ModelPolicyCWProxy {
   const _$ModelPolicyCWProxyImpl(this._value);
 
   final ModelPolicy _value;
 
   @override
-  ModelPolicy primary(ModelChoice? primary) => this(primary: primary);
+  ModelPolicy primary(ModelChoice? primary) => call(primary: primary);
 
   @override
   ModelPolicy fallbacks(List<ModelChoice>? fallbacks) =>
-      this(fallbacks: fallbacks);
+      call(fallbacks: fallbacks);
 
   @override
-  ModelPolicy cheap(ModelChoice? cheap) => this(cheap: cheap);
+  ModelPolicy cheap(ModelChoice? cheap) => call(cheap: cheap);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ModelPolicy(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ModelPolicy(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ModelPolicy(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ModelPolicy call({
     Object? primary = const $CopyWithPlaceholder(),
     Object? fallbacks = const $CopyWithPlaceholder(),
@@ -72,7 +77,8 @@ class _$ModelPolicyCWProxyImpl implements _$ModelPolicyCWProxy {
 }
 
 extension $ModelPolicyCopyWith on ModelPolicy {
-  /// Returns a callable class that can be used as follows: `instanceOfModelPolicy.copyWith(...)` or like so:`instanceOfModelPolicy.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfModelPolicy.copyWith(...)` or `instanceOfModelPolicy.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ModelPolicyCWProxy get copyWith => _$ModelPolicyCWProxyImpl(this);
 }

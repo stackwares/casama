@@ -37,12 +37,14 @@ abstract class _$CreatedRoutineCWProxy {
 
   CreatedRoutine webhookSecret(String? webhookSecret);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreatedRoutine(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreatedRoutine(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreatedRoutine(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CreatedRoutine call({
     String id,
     String botId,
@@ -62,68 +64,71 @@ abstract class _$CreatedRoutineCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCreatedRoutine.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCreatedRoutine.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCreatedRoutine.copyWith(...)` or call `instanceOfCreatedRoutine.copyWith.fieldName(value)` for a single field.
 class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
   const _$CreatedRoutineCWProxyImpl(this._value);
 
   final CreatedRoutine _value;
 
   @override
-  CreatedRoutine id(String id) => this(id: id);
+  CreatedRoutine id(String id) => call(id: id);
 
   @override
-  CreatedRoutine botId(String botId) => this(botId: botId);
+  CreatedRoutine botId(String botId) => call(botId: botId);
 
   @override
-  CreatedRoutine name(String name) => this(name: name);
+  CreatedRoutine name(String name) => call(name: name);
 
   @override
   CreatedRoutine instructionsMd(String instructionsMd) =>
-      this(instructionsMd: instructionsMd);
+      call(instructionsMd: instructionsMd);
 
   @override
   CreatedRoutine scheduleCron(String? scheduleCron) =>
-      this(scheduleCron: scheduleCron);
+      call(scheduleCron: scheduleCron);
 
   @override
-  CreatedRoutine timezone(String timezone) => this(timezone: timezone);
+  CreatedRoutine timezone(String timezone) => call(timezone: timezone);
 
   @override
-  CreatedRoutine trigger(RoutineTrigger trigger) => this(trigger: trigger);
+  CreatedRoutine trigger(RoutineTrigger trigger) => call(trigger: trigger);
 
   @override
-  CreatedRoutine notify(bool notify) => this(notify: notify);
+  CreatedRoutine notify(bool notify) => call(notify: notify);
 
   @override
-  CreatedRoutine enabled(bool enabled) => this(enabled: enabled);
+  CreatedRoutine enabled(bool enabled) => call(enabled: enabled);
 
   @override
-  CreatedRoutine nextRunAt(DateTime? nextRunAt) => this(nextRunAt: nextRunAt);
+  CreatedRoutine nextRunAt(DateTime? nextRunAt) => call(nextRunAt: nextRunAt);
 
   @override
-  CreatedRoutine lastRunAt(DateTime? lastRunAt) => this(lastRunAt: lastRunAt);
+  CreatedRoutine lastRunAt(DateTime? lastRunAt) => call(lastRunAt: lastRunAt);
 
   @override
   CreatedRoutine conversationId(String? conversationId) =>
-      this(conversationId: conversationId);
+      call(conversationId: conversationId);
 
   @override
-  CreatedRoutine createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  CreatedRoutine createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   @override
-  CreatedRoutine webhookUrl(String? webhookUrl) => this(webhookUrl: webhookUrl);
+  CreatedRoutine webhookUrl(String? webhookUrl) => call(webhookUrl: webhookUrl);
 
   @override
   CreatedRoutine webhookSecret(String? webhookSecret) =>
-      this(webhookSecret: webhookSecret);
+      call(webhookSecret: webhookSecret);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreatedRoutine(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreatedRoutine(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreatedRoutine(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CreatedRoutine call({
     Object? id = const $CopyWithPlaceholder(),
     Object? botId = const $CopyWithPlaceholder(),
@@ -142,19 +147,21 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
     Object? webhookSecret = const $CopyWithPlaceholder(),
   }) {
     return CreatedRoutine(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      instructionsMd: instructionsMd == const $CopyWithPlaceholder()
+      instructionsMd:
+          instructionsMd == const $CopyWithPlaceholder() ||
+              instructionsMd == null
           ? _value.instructionsMd
           // ignore: cast_nullable_to_non_nullable
           : instructionsMd as String,
@@ -162,19 +169,19 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
           ? _value.scheduleCron
           // ignore: cast_nullable_to_non_nullable
           : scheduleCron as String?,
-      timezone: timezone == const $CopyWithPlaceholder()
+      timezone: timezone == const $CopyWithPlaceholder() || timezone == null
           ? _value.timezone
           // ignore: cast_nullable_to_non_nullable
           : timezone as String,
-      trigger: trigger == const $CopyWithPlaceholder()
+      trigger: trigger == const $CopyWithPlaceholder() || trigger == null
           ? _value.trigger
           // ignore: cast_nullable_to_non_nullable
           : trigger as RoutineTrigger,
-      notify: notify == const $CopyWithPlaceholder()
+      notify: notify == const $CopyWithPlaceholder() || notify == null
           ? _value.notify
           // ignore: cast_nullable_to_non_nullable
           : notify as bool,
-      enabled: enabled == const $CopyWithPlaceholder()
+      enabled: enabled == const $CopyWithPlaceholder() || enabled == null
           ? _value.enabled
           // ignore: cast_nullable_to_non_nullable
           : enabled as bool,
@@ -190,7 +197,7 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
           ? _value.conversationId
           // ignore: cast_nullable_to_non_nullable
           : conversationId as String?,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -207,7 +214,8 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
 }
 
 extension $CreatedRoutineCopyWith on CreatedRoutine {
-  /// Returns a callable class that can be used as follows: `instanceOfCreatedRoutine.copyWith(...)` or like so:`instanceOfCreatedRoutine.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCreatedRoutine.copyWith(...)` or `instanceOfCreatedRoutine.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CreatedRoutineCWProxy get copyWith => _$CreatedRoutineCWProxyImpl(this);
 }

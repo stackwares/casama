@@ -17,12 +17,14 @@ abstract class _$PublicConfigCWProxy {
 
   PublicConfig billingEnabled(bool billingEnabled);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `PublicConfig(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// PublicConfig(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   PublicConfig call({
     String productName,
     String apiVersion,
@@ -32,7 +34,8 @@ abstract class _$PublicConfigCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfPublicConfig.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfPublicConfig.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfPublicConfig.copyWith(...)` or call `instanceOfPublicConfig.copyWith.fieldName(value)` for a single field.
 class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
   const _$PublicConfigCWProxyImpl(this._value);
 
@@ -40,30 +43,32 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
 
   @override
   PublicConfig productName(String productName) =>
-      this(productName: productName);
+      call(productName: productName);
 
   @override
-  PublicConfig apiVersion(String apiVersion) => this(apiVersion: apiVersion);
+  PublicConfig apiVersion(String apiVersion) => call(apiVersion: apiVersion);
 
   @override
   PublicConfig supabaseUrl(String supabaseUrl) =>
-      this(supabaseUrl: supabaseUrl);
+      call(supabaseUrl: supabaseUrl);
 
   @override
   PublicConfig supabaseAnonKey(String supabaseAnonKey) =>
-      this(supabaseAnonKey: supabaseAnonKey);
+      call(supabaseAnonKey: supabaseAnonKey);
 
   @override
   PublicConfig billingEnabled(bool billingEnabled) =>
-      this(billingEnabled: billingEnabled);
+      call(billingEnabled: billingEnabled);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `PublicConfig(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// PublicConfig(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   PublicConfig call({
     Object? productName = const $CopyWithPlaceholder(),
     Object? apiVersion = const $CopyWithPlaceholder(),
@@ -72,23 +77,30 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? billingEnabled = const $CopyWithPlaceholder(),
   }) {
     return PublicConfig(
-      productName: productName == const $CopyWithPlaceholder()
+      productName:
+          productName == const $CopyWithPlaceholder() || productName == null
           ? _value.productName
           // ignore: cast_nullable_to_non_nullable
           : productName as String,
-      apiVersion: apiVersion == const $CopyWithPlaceholder()
+      apiVersion:
+          apiVersion == const $CopyWithPlaceholder() || apiVersion == null
           ? _value.apiVersion
           // ignore: cast_nullable_to_non_nullable
           : apiVersion as String,
-      supabaseUrl: supabaseUrl == const $CopyWithPlaceholder()
+      supabaseUrl:
+          supabaseUrl == const $CopyWithPlaceholder() || supabaseUrl == null
           ? _value.supabaseUrl
           // ignore: cast_nullable_to_non_nullable
           : supabaseUrl as String,
-      supabaseAnonKey: supabaseAnonKey == const $CopyWithPlaceholder()
+      supabaseAnonKey:
+          supabaseAnonKey == const $CopyWithPlaceholder() ||
+              supabaseAnonKey == null
           ? _value.supabaseAnonKey
           // ignore: cast_nullable_to_non_nullable
           : supabaseAnonKey as String,
-      billingEnabled: billingEnabled == const $CopyWithPlaceholder()
+      billingEnabled:
+          billingEnabled == const $CopyWithPlaceholder() ||
+              billingEnabled == null
           ? _value.billingEnabled
           // ignore: cast_nullable_to_non_nullable
           : billingEnabled as bool,
@@ -97,7 +109,8 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
 }
 
 extension $PublicConfigCopyWith on PublicConfig {
-  /// Returns a callable class that can be used as follows: `instanceOfPublicConfig.copyWith(...)` or like so:`instanceOfPublicConfig.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfPublicConfig.copyWith(...)` or `instanceOfPublicConfig.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$PublicConfigCWProxy get copyWith => _$PublicConfigCWProxyImpl(this);
 }

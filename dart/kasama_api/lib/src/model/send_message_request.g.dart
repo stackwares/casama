@@ -9,34 +9,39 @@ part of 'send_message_request.dart';
 abstract class _$SendMessageRequestCWProxy {
   SendMessageRequest text(String text);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SendMessageRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SendMessageRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SendMessageRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   SendMessageRequest call({String text});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfSendMessageRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfSendMessageRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfSendMessageRequest.copyWith(...)` or call `instanceOfSendMessageRequest.copyWith.fieldName(value)` for a single field.
 class _$SendMessageRequestCWProxyImpl implements _$SendMessageRequestCWProxy {
   const _$SendMessageRequestCWProxyImpl(this._value);
 
   final SendMessageRequest _value;
 
   @override
-  SendMessageRequest text(String text) => this(text: text);
+  SendMessageRequest text(String text) => call(text: text);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SendMessageRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SendMessageRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SendMessageRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   SendMessageRequest call({Object? text = const $CopyWithPlaceholder()}) {
     return SendMessageRequest(
-      text: text == const $CopyWithPlaceholder()
+      text: text == const $CopyWithPlaceholder() || text == null
           ? _value.text
           // ignore: cast_nullable_to_non_nullable
           : text as String,
@@ -45,7 +50,8 @@ class _$SendMessageRequestCWProxyImpl implements _$SendMessageRequestCWProxy {
 }
 
 extension $SendMessageRequestCopyWith on SendMessageRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfSendMessageRequest.copyWith(...)` or like so:`instanceOfSendMessageRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfSendMessageRequest.copyWith(...)` or `instanceOfSendMessageRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$SendMessageRequestCWProxy get copyWith =>
       _$SendMessageRequestCWProxyImpl(this);

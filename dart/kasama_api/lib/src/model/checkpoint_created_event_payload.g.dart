@@ -11,16 +11,19 @@ abstract class _$CheckpointCreatedEventPayloadCWProxy {
 
   CheckpointCreatedEventPayload label(String label);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CheckpointCreatedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CheckpointCreatedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CheckpointCreatedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CheckpointCreatedEventPayload call({String checkpointId, String label});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCheckpointCreatedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCheckpointCreatedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCheckpointCreatedEventPayload.copyWith(...)` or call `instanceOfCheckpointCreatedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$CheckpointCreatedEventPayloadCWProxyImpl
     implements _$CheckpointCreatedEventPayloadCWProxy {
   const _$CheckpointCreatedEventPayloadCWProxyImpl(this._value);
@@ -29,28 +32,31 @@ class _$CheckpointCreatedEventPayloadCWProxyImpl
 
   @override
   CheckpointCreatedEventPayload checkpointId(String checkpointId) =>
-      this(checkpointId: checkpointId);
+      call(checkpointId: checkpointId);
 
   @override
-  CheckpointCreatedEventPayload label(String label) => this(label: label);
+  CheckpointCreatedEventPayload label(String label) => call(label: label);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CheckpointCreatedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CheckpointCreatedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CheckpointCreatedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CheckpointCreatedEventPayload call({
     Object? checkpointId = const $CopyWithPlaceholder(),
     Object? label = const $CopyWithPlaceholder(),
   }) {
     return CheckpointCreatedEventPayload(
-      checkpointId: checkpointId == const $CopyWithPlaceholder()
+      checkpointId:
+          checkpointId == const $CopyWithPlaceholder() || checkpointId == null
           ? _value.checkpointId
           // ignore: cast_nullable_to_non_nullable
           : checkpointId as String,
-      label: label == const $CopyWithPlaceholder()
+      label: label == const $CopyWithPlaceholder() || label == null
           ? _value.label
           // ignore: cast_nullable_to_non_nullable
           : label as String,
@@ -60,7 +66,8 @@ class _$CheckpointCreatedEventPayloadCWProxyImpl
 
 extension $CheckpointCreatedEventPayloadCopyWith
     on CheckpointCreatedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfCheckpointCreatedEventPayload.copyWith(...)` or like so:`instanceOfCheckpointCreatedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCheckpointCreatedEventPayload.copyWith(...)` or `instanceOfCheckpointCreatedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CheckpointCreatedEventPayloadCWProxy get copyWith =>
       _$CheckpointCreatedEventPayloadCWProxyImpl(this);
@@ -72,19 +79,14 @@ extension $CheckpointCreatedEventPayloadCopyWith
 
 CheckpointCreatedEventPayload _$CheckpointCreatedEventPayloadFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'CheckpointCreatedEventPayload',
-  json,
-  ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['checkpoint_id', 'label']);
-    final val = CheckpointCreatedEventPayload(
-      checkpointId: $checkedConvert('checkpoint_id', (v) => v as String),
-      label: $checkedConvert('label', (v) => v as String),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'checkpointId': 'checkpoint_id'},
-);
+) => $checkedCreate('CheckpointCreatedEventPayload', json, ($checkedConvert) {
+  $checkKeys(json, requiredKeys: const ['checkpoint_id', 'label']);
+  final val = CheckpointCreatedEventPayload(
+    checkpointId: $checkedConvert('checkpoint_id', (v) => v as String),
+    label: $checkedConvert('label', (v) => v as String),
+  );
+  return val;
+}, fieldKeyMap: const {'checkpointId': 'checkpoint_id'});
 
 Map<String, dynamic> _$CheckpointCreatedEventPayloadToJson(
   CheckpointCreatedEventPayload instance,

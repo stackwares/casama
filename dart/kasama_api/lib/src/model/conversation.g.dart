@@ -17,12 +17,14 @@ abstract class _$ConversationCWProxy {
 
   Conversation createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Conversation(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Conversation(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Conversation(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Conversation call({
     String id,
     String botId,
@@ -32,35 +34,38 @@ abstract class _$ConversationCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfConversation.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfConversation.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfConversation.copyWith(...)` or call `instanceOfConversation.copyWith.fieldName(value)` for a single field.
 class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
   const _$ConversationCWProxyImpl(this._value);
 
   final Conversation _value;
 
   @override
-  Conversation id(String id) => this(id: id);
+  Conversation id(String id) => call(id: id);
 
   @override
-  Conversation botId(String botId) => this(botId: botId);
+  Conversation botId(String botId) => call(botId: botId);
 
   @override
-  Conversation title(String? title) => this(title: title);
+  Conversation title(String? title) => call(title: title);
 
   @override
   Conversation lastMessageAt(DateTime? lastMessageAt) =>
-      this(lastMessageAt: lastMessageAt);
+      call(lastMessageAt: lastMessageAt);
 
   @override
-  Conversation createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Conversation createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Conversation(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Conversation(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Conversation(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Conversation call({
     Object? id = const $CopyWithPlaceholder(),
     Object? botId = const $CopyWithPlaceholder(),
@@ -69,11 +74,11 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Conversation(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
@@ -85,7 +90,7 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
           ? _value.lastMessageAt
           // ignore: cast_nullable_to_non_nullable
           : lastMessageAt as DateTime?,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -94,7 +99,8 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
 }
 
 extension $ConversationCopyWith on Conversation {
-  /// Returns a callable class that can be used as follows: `instanceOfConversation.copyWith(...)` or like so:`instanceOfConversation.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfConversation.copyWith(...)` or `instanceOfConversation.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ConversationCWProxy get copyWith => _$ConversationCWProxyImpl(this);
 }

@@ -9,16 +9,19 @@ part of 'run_completed_event_payload.dart';
 abstract class _$RunCompletedEventPayloadCWProxy {
   RunCompletedEventPayload finalMessageId(String? finalMessageId);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunCompletedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunCompletedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunCompletedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   RunCompletedEventPayload call({String? finalMessageId});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfRunCompletedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfRunCompletedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfRunCompletedEventPayload.copyWith(...)` or call `instanceOfRunCompletedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$RunCompletedEventPayloadCWProxyImpl
     implements _$RunCompletedEventPayloadCWProxy {
   const _$RunCompletedEventPayloadCWProxyImpl(this._value);
@@ -27,15 +30,17 @@ class _$RunCompletedEventPayloadCWProxyImpl
 
   @override
   RunCompletedEventPayload finalMessageId(String? finalMessageId) =>
-      this(finalMessageId: finalMessageId);
+      call(finalMessageId: finalMessageId);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunCompletedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunCompletedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunCompletedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   RunCompletedEventPayload call({
     Object? finalMessageId = const $CopyWithPlaceholder(),
   }) {
@@ -49,7 +54,8 @@ class _$RunCompletedEventPayloadCWProxyImpl
 }
 
 extension $RunCompletedEventPayloadCopyWith on RunCompletedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfRunCompletedEventPayload.copyWith(...)` or like so:`instanceOfRunCompletedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfRunCompletedEventPayload.copyWith(...)` or `instanceOfRunCompletedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$RunCompletedEventPayloadCWProxy get copyWith =>
       _$RunCompletedEventPayloadCWProxyImpl(this);
@@ -61,18 +67,13 @@ extension $RunCompletedEventPayloadCopyWith on RunCompletedEventPayload {
 
 RunCompletedEventPayload _$RunCompletedEventPayloadFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'RunCompletedEventPayload',
-  json,
-  ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['final_message_id']);
-    final val = RunCompletedEventPayload(
-      finalMessageId: $checkedConvert('final_message_id', (v) => v as String?),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'finalMessageId': 'final_message_id'},
-);
+) => $checkedCreate('RunCompletedEventPayload', json, ($checkedConvert) {
+  $checkKeys(json, requiredKeys: const ['final_message_id']);
+  final val = RunCompletedEventPayload(
+    finalMessageId: $checkedConvert('final_message_id', (v) => v as String?),
+  );
+  return val;
+}, fieldKeyMap: const {'finalMessageId': 'final_message_id'});
 
 Map<String, dynamic> _$RunCompletedEventPayloadToJson(
   RunCompletedEventPayload instance,

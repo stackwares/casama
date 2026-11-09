@@ -11,44 +11,49 @@ abstract class _$RunErrorCWProxy {
 
   RunError message(String message);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunError(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunError(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunError(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   RunError call({String code, String message});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfRunError.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfRunError.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfRunError.copyWith(...)` or call `instanceOfRunError.copyWith.fieldName(value)` for a single field.
 class _$RunErrorCWProxyImpl implements _$RunErrorCWProxy {
   const _$RunErrorCWProxyImpl(this._value);
 
   final RunError _value;
 
   @override
-  RunError code(String code) => this(code: code);
+  RunError code(String code) => call(code: code);
 
   @override
-  RunError message(String message) => this(message: message);
+  RunError message(String message) => call(message: message);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunError(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunError(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunError(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   RunError call({
     Object? code = const $CopyWithPlaceholder(),
     Object? message = const $CopyWithPlaceholder(),
   }) {
     return RunError(
-      code: code == const $CopyWithPlaceholder()
+      code: code == const $CopyWithPlaceholder() || code == null
           ? _value.code
           // ignore: cast_nullable_to_non_nullable
           : code as String,
-      message: message == const $CopyWithPlaceholder()
+      message: message == const $CopyWithPlaceholder() || message == null
           ? _value.message
           // ignore: cast_nullable_to_non_nullable
           : message as String,
@@ -57,7 +62,8 @@ class _$RunErrorCWProxyImpl implements _$RunErrorCWProxy {
 }
 
 extension $RunErrorCopyWith on RunError {
-  /// Returns a callable class that can be used as follows: `instanceOfRunError.copyWith(...)` or like so:`instanceOfRunError.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfRunError.copyWith(...)` or `instanceOfRunError.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$RunErrorCWProxy get copyWith => _$RunErrorCWProxyImpl(this);
 }

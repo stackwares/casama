@@ -33,3 +33,12 @@ pnpm lint && pnpm typecheck && pnpm test
 supabase test db              # RLS tests
 (cd dart && dart analyze && dart test cli)
 ```
+
+## Dependencies
+
+Add new dependencies at their latest compatible version and keep constraints tight (D-061):
+
+- Dart and Flutter: `dart pub add <pkg>` / `flutter pub add <pkg>`; to upgrade, `pub upgrade --major-versions` then `pub upgrade --tighten`.
+- Node: `pnpm add <pkg>@latest`.
+- Upgrade in its own commit, and run analyze, all tests and the web, Android, iOS and macOS builds before merging.
+- If a package cannot reach its latest version, pin the newest that works and record why in `docs/DECISIONS.md`.

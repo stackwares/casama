@@ -23,12 +23,14 @@ abstract class _$CreateRoutineRequestCWProxy {
 
   CreateRoutineRequest events(List<String>? events);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateRoutineRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateRoutineRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateRoutineRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CreateRoutineRequest call({
     String botId,
     String name,
@@ -41,7 +43,8 @@ abstract class _$CreateRoutineRequestCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCreateRoutineRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCreateRoutineRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCreateRoutineRequest.copyWith(...)` or call `instanceOfCreateRoutineRequest.copyWith.fieldName(value)` for a single field.
 class _$CreateRoutineRequestCWProxyImpl
     implements _$CreateRoutineRequestCWProxy {
   const _$CreateRoutineRequestCWProxyImpl(this._value);
@@ -49,39 +52,41 @@ class _$CreateRoutineRequestCWProxyImpl
   final CreateRoutineRequest _value;
 
   @override
-  CreateRoutineRequest botId(String botId) => this(botId: botId);
+  CreateRoutineRequest botId(String botId) => call(botId: botId);
 
   @override
-  CreateRoutineRequest name(String name) => this(name: name);
+  CreateRoutineRequest name(String name) => call(name: name);
 
   @override
   CreateRoutineRequest instructions(String instructions) =>
-      this(instructions: instructions);
+      call(instructions: instructions);
 
   @override
   CreateRoutineRequest trigger(RoutineTrigger? trigger) =>
-      this(trigger: trigger);
+      call(trigger: trigger);
 
   @override
   CreateRoutineRequest scheduleCron(String? scheduleCron) =>
-      this(scheduleCron: scheduleCron);
+      call(scheduleCron: scheduleCron);
 
   @override
-  CreateRoutineRequest timezone(String? timezone) => this(timezone: timezone);
+  CreateRoutineRequest timezone(String? timezone) => call(timezone: timezone);
 
   @override
-  CreateRoutineRequest notify(bool? notify) => this(notify: notify);
+  CreateRoutineRequest notify(bool? notify) => call(notify: notify);
 
   @override
-  CreateRoutineRequest events(List<String>? events) => this(events: events);
+  CreateRoutineRequest events(List<String>? events) => call(events: events);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateRoutineRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateRoutineRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateRoutineRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CreateRoutineRequest call({
     Object? botId = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
@@ -93,15 +98,16 @@ class _$CreateRoutineRequestCWProxyImpl
     Object? events = const $CopyWithPlaceholder(),
   }) {
     return CreateRoutineRequest(
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      instructions: instructions == const $CopyWithPlaceholder()
+      instructions:
+          instructions == const $CopyWithPlaceholder() || instructions == null
           ? _value.instructions
           // ignore: cast_nullable_to_non_nullable
           : instructions as String,
@@ -130,7 +136,8 @@ class _$CreateRoutineRequestCWProxyImpl
 }
 
 extension $CreateRoutineRequestCopyWith on CreateRoutineRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfCreateRoutineRequest.copyWith(...)` or like so:`instanceOfCreateRoutineRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCreateRoutineRequest.copyWith(...)` or `instanceOfCreateRoutineRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CreateRoutineRequestCWProxy get copyWith =>
       _$CreateRoutineRequestCWProxyImpl(this);
@@ -142,31 +149,26 @@ extension $CreateRoutineRequestCopyWith on CreateRoutineRequest {
 
 CreateRoutineRequest _$CreateRoutineRequestFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'CreateRoutineRequest',
-  json,
-  ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['bot_id', 'name', 'instructions']);
-    final val = CreateRoutineRequest(
-      botId: $checkedConvert('bot_id', (v) => v as String),
-      name: $checkedConvert('name', (v) => v as String),
-      instructions: $checkedConvert('instructions', (v) => v as String),
-      trigger: $checkedConvert(
-        'trigger',
-        (v) => $enumDecodeNullable(_$RoutineTriggerEnumMap, v),
-      ),
-      scheduleCron: $checkedConvert('schedule_cron', (v) => v as String?),
-      timezone: $checkedConvert('timezone', (v) => v as String?),
-      notify: $checkedConvert('notify', (v) => v as bool?),
-      events: $checkedConvert(
-        'events',
-        (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
-      ),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'botId': 'bot_id', 'scheduleCron': 'schedule_cron'},
-);
+) => $checkedCreate('CreateRoutineRequest', json, ($checkedConvert) {
+  $checkKeys(json, requiredKeys: const ['bot_id', 'name', 'instructions']);
+  final val = CreateRoutineRequest(
+    botId: $checkedConvert('bot_id', (v) => v as String),
+    name: $checkedConvert('name', (v) => v as String),
+    instructions: $checkedConvert('instructions', (v) => v as String),
+    trigger: $checkedConvert(
+      'trigger',
+      (v) => $enumDecodeNullable(_$RoutineTriggerEnumMap, v),
+    ),
+    scheduleCron: $checkedConvert('schedule_cron', (v) => v as String?),
+    timezone: $checkedConvert('timezone', (v) => v as String?),
+    notify: $checkedConvert('notify', (v) => v as bool?),
+    events: $checkedConvert(
+      'events',
+      (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+    ),
+  );
+  return val;
+}, fieldKeyMap: const {'botId': 'bot_id', 'scheduleCron': 'schedule_cron'});
 
 Map<String, dynamic> _$CreateRoutineRequestToJson(
   CreateRoutineRequest instance,

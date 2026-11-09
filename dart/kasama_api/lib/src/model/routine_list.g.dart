@@ -9,34 +9,39 @@ part of 'routine_list.dart';
 abstract class _$RoutineListCWProxy {
   RoutineList items(List<Routine> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RoutineList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RoutineList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RoutineList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   RoutineList call({List<Routine> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfRoutineList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfRoutineList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfRoutineList.copyWith(...)` or call `instanceOfRoutineList.copyWith.fieldName(value)` for a single field.
 class _$RoutineListCWProxyImpl implements _$RoutineListCWProxy {
   const _$RoutineListCWProxyImpl(this._value);
 
   final RoutineList _value;
 
   @override
-  RoutineList items(List<Routine> items) => this(items: items);
+  RoutineList items(List<Routine> items) => call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RoutineList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RoutineList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RoutineList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   RoutineList call({Object? items = const $CopyWithPlaceholder()}) {
     return RoutineList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<Routine>,
@@ -45,7 +50,8 @@ class _$RoutineListCWProxyImpl implements _$RoutineListCWProxy {
 }
 
 extension $RoutineListCopyWith on RoutineList {
-  /// Returns a callable class that can be used as follows: `instanceOfRoutineList.copyWith(...)` or like so:`instanceOfRoutineList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfRoutineList.copyWith(...)` or `instanceOfRoutineList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$RoutineListCWProxy get copyWith => _$RoutineListCWProxyImpl(this);
 }

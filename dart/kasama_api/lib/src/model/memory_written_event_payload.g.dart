@@ -11,19 +11,22 @@ abstract class _$MemoryWrittenEventPayloadCWProxy {
 
   MemoryWrittenEventPayload kind(MemoryWrittenEventPayloadKindEnum kind);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `MemoryWrittenEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `MemoryWrittenEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// MemoryWrittenEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   MemoryWrittenEventPayload call({
     String memoryId,
     MemoryWrittenEventPayloadKindEnum kind,
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfMemoryWrittenEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfMemoryWrittenEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfMemoryWrittenEventPayload.copyWith(...)` or call `instanceOfMemoryWrittenEventPayload.copyWith.fieldName(value)` for a single field.
 class _$MemoryWrittenEventPayloadCWProxyImpl
     implements _$MemoryWrittenEventPayloadCWProxy {
   const _$MemoryWrittenEventPayloadCWProxyImpl(this._value);
@@ -32,29 +35,31 @@ class _$MemoryWrittenEventPayloadCWProxyImpl
 
   @override
   MemoryWrittenEventPayload memoryId(String memoryId) =>
-      this(memoryId: memoryId);
+      call(memoryId: memoryId);
 
   @override
   MemoryWrittenEventPayload kind(MemoryWrittenEventPayloadKindEnum kind) =>
-      this(kind: kind);
+      call(kind: kind);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `MemoryWrittenEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `MemoryWrittenEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// MemoryWrittenEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   MemoryWrittenEventPayload call({
     Object? memoryId = const $CopyWithPlaceholder(),
     Object? kind = const $CopyWithPlaceholder(),
   }) {
     return MemoryWrittenEventPayload(
-      memoryId: memoryId == const $CopyWithPlaceholder()
+      memoryId: memoryId == const $CopyWithPlaceholder() || memoryId == null
           ? _value.memoryId
           // ignore: cast_nullable_to_non_nullable
           : memoryId as String,
-      kind: kind == const $CopyWithPlaceholder()
+      kind: kind == const $CopyWithPlaceholder() || kind == null
           ? _value.kind
           // ignore: cast_nullable_to_non_nullable
           : kind as MemoryWrittenEventPayloadKindEnum,
@@ -63,7 +68,8 @@ class _$MemoryWrittenEventPayloadCWProxyImpl
 }
 
 extension $MemoryWrittenEventPayloadCopyWith on MemoryWrittenEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfMemoryWrittenEventPayload.copyWith(...)` or like so:`instanceOfMemoryWrittenEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfMemoryWrittenEventPayload.copyWith(...)` or `instanceOfMemoryWrittenEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$MemoryWrittenEventPayloadCWProxy get copyWith =>
       _$MemoryWrittenEventPayloadCWProxyImpl(this);

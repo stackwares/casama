@@ -25,12 +25,14 @@ abstract class _$IntegrationCWProxy {
 
   Integration createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Integration(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Integration(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Integration(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Integration call({
     String id,
     String orgId,
@@ -44,47 +46,50 @@ abstract class _$IntegrationCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfIntegration.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfIntegration.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfIntegration.copyWith(...)` or call `instanceOfIntegration.copyWith.fieldName(value)` for a single field.
 class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
   const _$IntegrationCWProxyImpl(this._value);
 
   final Integration _value;
 
   @override
-  Integration id(String id) => this(id: id);
+  Integration id(String id) => call(id: id);
 
   @override
-  Integration orgId(String orgId) => this(orgId: orgId);
+  Integration orgId(String orgId) => call(orgId: orgId);
 
   @override
-  Integration kind(IntegrationKind kind) => this(kind: kind);
+  Integration kind(IntegrationKind kind) => call(kind: kind);
 
   @override
-  Integration name(String name) => this(name: name);
+  Integration name(String name) => call(name: name);
 
   @override
-  Integration status(IntegrationStatusEnum status) => this(status: status);
+  Integration status(IntegrationStatusEnum status) => call(status: status);
 
   @override
-  Integration error(String? error) => this(error: error);
+  Integration error(String? error) => call(error: error);
 
   @override
-  Integration tools(List<IntegrationToolsInner> tools) => this(tools: tools);
+  Integration tools(List<IntegrationToolsInner> tools) => call(tools: tools);
 
   @override
   Integration toolsCachedAt(DateTime? toolsCachedAt) =>
-      this(toolsCachedAt: toolsCachedAt);
+      call(toolsCachedAt: toolsCachedAt);
 
   @override
-  Integration createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Integration createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Integration(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Integration(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Integration(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Integration call({
     Object? id = const $CopyWithPlaceholder(),
     Object? orgId = const $CopyWithPlaceholder(),
@@ -97,23 +102,23 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Integration(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      kind: kind == const $CopyWithPlaceholder()
+      kind: kind == const $CopyWithPlaceholder() || kind == null
           ? _value.kind
           // ignore: cast_nullable_to_non_nullable
           : kind as IntegrationKind,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      status: status == const $CopyWithPlaceholder()
+      status: status == const $CopyWithPlaceholder() || status == null
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as IntegrationStatusEnum,
@@ -121,7 +126,7 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
           ? _value.error
           // ignore: cast_nullable_to_non_nullable
           : error as String?,
-      tools: tools == const $CopyWithPlaceholder()
+      tools: tools == const $CopyWithPlaceholder() || tools == null
           ? _value.tools
           // ignore: cast_nullable_to_non_nullable
           : tools as List<IntegrationToolsInner>,
@@ -129,7 +134,7 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
           ? _value.toolsCachedAt
           // ignore: cast_nullable_to_non_nullable
           : toolsCachedAt as DateTime?,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -138,7 +143,8 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
 }
 
 extension $IntegrationCopyWith on Integration {
-  /// Returns a callable class that can be used as follows: `instanceOfIntegration.copyWith(...)` or like so:`instanceOfIntegration.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfIntegration.copyWith(...)` or `instanceOfIntegration.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$IntegrationCWProxy get copyWith => _$IntegrationCWProxyImpl(this);
 }

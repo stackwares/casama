@@ -11,34 +11,39 @@ abstract class _$BotBudgetCWProxy {
 
   BotBudget dailyUsd(num? dailyUsd);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `BotBudget(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `BotBudget(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// BotBudget(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   BotBudget call({num? perRunUsd, num? dailyUsd});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfBotBudget.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfBotBudget.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfBotBudget.copyWith(...)` or call `instanceOfBotBudget.copyWith.fieldName(value)` for a single field.
 class _$BotBudgetCWProxyImpl implements _$BotBudgetCWProxy {
   const _$BotBudgetCWProxyImpl(this._value);
 
   final BotBudget _value;
 
   @override
-  BotBudget perRunUsd(num? perRunUsd) => this(perRunUsd: perRunUsd);
+  BotBudget perRunUsd(num? perRunUsd) => call(perRunUsd: perRunUsd);
 
   @override
-  BotBudget dailyUsd(num? dailyUsd) => this(dailyUsd: dailyUsd);
+  BotBudget dailyUsd(num? dailyUsd) => call(dailyUsd: dailyUsd);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `BotBudget(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `BotBudget(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// BotBudget(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   BotBudget call({
     Object? perRunUsd = const $CopyWithPlaceholder(),
     Object? dailyUsd = const $CopyWithPlaceholder(),
@@ -57,7 +62,8 @@ class _$BotBudgetCWProxyImpl implements _$BotBudgetCWProxy {
 }
 
 extension $BotBudgetCopyWith on BotBudget {
-  /// Returns a callable class that can be used as follows: `instanceOfBotBudget.copyWith(...)` or like so:`instanceOfBotBudget.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfBotBudget.copyWith(...)` or `instanceOfBotBudget.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$BotBudgetCWProxy get copyWith => _$BotBudgetCWProxyImpl(this);
 }

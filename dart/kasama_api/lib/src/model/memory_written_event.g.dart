@@ -21,12 +21,14 @@ abstract class _$MemoryWrittenEventCWProxy {
 
   MemoryWrittenEvent payload(MemoryWrittenEventPayload payload);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `MemoryWrittenEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `MemoryWrittenEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// MemoryWrittenEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   MemoryWrittenEvent call({
     int v,
     String runId,
@@ -38,41 +40,44 @@ abstract class _$MemoryWrittenEventCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfMemoryWrittenEvent.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfMemoryWrittenEvent.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfMemoryWrittenEvent.copyWith(...)` or call `instanceOfMemoryWrittenEvent.copyWith.fieldName(value)` for a single field.
 class _$MemoryWrittenEventCWProxyImpl implements _$MemoryWrittenEventCWProxy {
   const _$MemoryWrittenEventCWProxyImpl(this._value);
 
   final MemoryWrittenEvent _value;
 
   @override
-  MemoryWrittenEvent v(int v) => this(v: v);
+  MemoryWrittenEvent v(int v) => call(v: v);
 
   @override
-  MemoryWrittenEvent runId(String runId) => this(runId: runId);
+  MemoryWrittenEvent runId(String runId) => call(runId: runId);
 
   @override
-  MemoryWrittenEvent seq(int seq) => this(seq: seq);
+  MemoryWrittenEvent seq(int seq) => call(seq: seq);
 
   @override
-  MemoryWrittenEvent ts(DateTime ts) => this(ts: ts);
+  MemoryWrittenEvent ts(DateTime ts) => call(ts: ts);
 
   @override
-  MemoryWrittenEvent botId(String botId) => this(botId: botId);
+  MemoryWrittenEvent botId(String botId) => call(botId: botId);
 
   @override
-  MemoryWrittenEvent type(MemoryWrittenEventTypeEnum type) => this(type: type);
+  MemoryWrittenEvent type(MemoryWrittenEventTypeEnum type) => call(type: type);
 
   @override
   MemoryWrittenEvent payload(MemoryWrittenEventPayload payload) =>
-      this(payload: payload);
+      call(payload: payload);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `MemoryWrittenEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `MemoryWrittenEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// MemoryWrittenEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   MemoryWrittenEvent call({
     Object? v = const $CopyWithPlaceholder(),
     Object? runId = const $CopyWithPlaceholder(),
@@ -83,31 +88,31 @@ class _$MemoryWrittenEventCWProxyImpl implements _$MemoryWrittenEventCWProxy {
     Object? payload = const $CopyWithPlaceholder(),
   }) {
     return MemoryWrittenEvent(
-      v: v == const $CopyWithPlaceholder()
+      v: v == const $CopyWithPlaceholder() || v == null
           ? _value.v
           // ignore: cast_nullable_to_non_nullable
           : v as int,
-      runId: runId == const $CopyWithPlaceholder()
+      runId: runId == const $CopyWithPlaceholder() || runId == null
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String,
-      seq: seq == const $CopyWithPlaceholder()
+      seq: seq == const $CopyWithPlaceholder() || seq == null
           ? _value.seq
           // ignore: cast_nullable_to_non_nullable
           : seq as int,
-      ts: ts == const $CopyWithPlaceholder()
+      ts: ts == const $CopyWithPlaceholder() || ts == null
           ? _value.ts
           // ignore: cast_nullable_to_non_nullable
           : ts as DateTime,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
-      type: type == const $CopyWithPlaceholder()
+      type: type == const $CopyWithPlaceholder() || type == null
           ? _value.type
           // ignore: cast_nullable_to_non_nullable
           : type as MemoryWrittenEventTypeEnum,
-      payload: payload == const $CopyWithPlaceholder()
+      payload: payload == const $CopyWithPlaceholder() || payload == null
           ? _value.payload
           // ignore: cast_nullable_to_non_nullable
           : payload as MemoryWrittenEventPayload,
@@ -116,7 +121,8 @@ class _$MemoryWrittenEventCWProxyImpl implements _$MemoryWrittenEventCWProxy {
 }
 
 extension $MemoryWrittenEventCopyWith on MemoryWrittenEvent {
-  /// Returns a callable class that can be used as follows: `instanceOfMemoryWrittenEvent.copyWith(...)` or like so:`instanceOfMemoryWrittenEvent.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfMemoryWrittenEvent.copyWith(...)` or `instanceOfMemoryWrittenEvent.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$MemoryWrittenEventCWProxy get copyWith =>
       _$MemoryWrittenEventCWProxyImpl(this);

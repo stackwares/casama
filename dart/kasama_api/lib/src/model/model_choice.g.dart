@@ -11,16 +11,19 @@ abstract class _$ModelChoiceCWProxy {
 
   ModelChoice model(String model);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ModelChoice(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ModelChoice(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ModelChoice(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ModelChoice call({String credentialId, String model});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfModelChoice.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfModelChoice.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfModelChoice.copyWith(...)` or call `instanceOfModelChoice.copyWith.fieldName(value)` for a single field.
 class _$ModelChoiceCWProxyImpl implements _$ModelChoiceCWProxy {
   const _$ModelChoiceCWProxyImpl(this._value);
 
@@ -28,28 +31,31 @@ class _$ModelChoiceCWProxyImpl implements _$ModelChoiceCWProxy {
 
   @override
   ModelChoice credentialId(String credentialId) =>
-      this(credentialId: credentialId);
+      call(credentialId: credentialId);
 
   @override
-  ModelChoice model(String model) => this(model: model);
+  ModelChoice model(String model) => call(model: model);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ModelChoice(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ModelChoice(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ModelChoice(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ModelChoice call({
     Object? credentialId = const $CopyWithPlaceholder(),
     Object? model = const $CopyWithPlaceholder(),
   }) {
     return ModelChoice(
-      credentialId: credentialId == const $CopyWithPlaceholder()
+      credentialId:
+          credentialId == const $CopyWithPlaceholder() || credentialId == null
           ? _value.credentialId
           // ignore: cast_nullable_to_non_nullable
           : credentialId as String,
-      model: model == const $CopyWithPlaceholder()
+      model: model == const $CopyWithPlaceholder() || model == null
           ? _value.model
           // ignore: cast_nullable_to_non_nullable
           : model as String,
@@ -58,7 +64,8 @@ class _$ModelChoiceCWProxyImpl implements _$ModelChoiceCWProxy {
 }
 
 extension $ModelChoiceCopyWith on ModelChoice {
-  /// Returns a callable class that can be used as follows: `instanceOfModelChoice.copyWith(...)` or like so:`instanceOfModelChoice.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfModelChoice.copyWith(...)` or `instanceOfModelChoice.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ModelChoiceCWProxy get copyWith => _$ModelChoiceCWProxyImpl(this);
 }

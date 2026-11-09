@@ -21,12 +21,14 @@ abstract class _$SubrunCompletedEventCWProxy {
 
   SubrunCompletedEvent payload(SubrunCompletedEventPayload payload);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SubrunCompletedEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SubrunCompletedEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SubrunCompletedEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   SubrunCompletedEvent call({
     int v,
     String runId,
@@ -38,7 +40,8 @@ abstract class _$SubrunCompletedEventCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfSubrunCompletedEvent.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfSubrunCompletedEvent.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfSubrunCompletedEvent.copyWith(...)` or call `instanceOfSubrunCompletedEvent.copyWith.fieldName(value)` for a single field.
 class _$SubrunCompletedEventCWProxyImpl
     implements _$SubrunCompletedEventCWProxy {
   const _$SubrunCompletedEventCWProxyImpl(this._value);
@@ -46,35 +49,37 @@ class _$SubrunCompletedEventCWProxyImpl
   final SubrunCompletedEvent _value;
 
   @override
-  SubrunCompletedEvent v(int v) => this(v: v);
+  SubrunCompletedEvent v(int v) => call(v: v);
 
   @override
-  SubrunCompletedEvent runId(String runId) => this(runId: runId);
+  SubrunCompletedEvent runId(String runId) => call(runId: runId);
 
   @override
-  SubrunCompletedEvent seq(int seq) => this(seq: seq);
+  SubrunCompletedEvent seq(int seq) => call(seq: seq);
 
   @override
-  SubrunCompletedEvent ts(DateTime ts) => this(ts: ts);
+  SubrunCompletedEvent ts(DateTime ts) => call(ts: ts);
 
   @override
-  SubrunCompletedEvent botId(String botId) => this(botId: botId);
+  SubrunCompletedEvent botId(String botId) => call(botId: botId);
 
   @override
   SubrunCompletedEvent type(SubrunCompletedEventTypeEnum type) =>
-      this(type: type);
+      call(type: type);
 
   @override
   SubrunCompletedEvent payload(SubrunCompletedEventPayload payload) =>
-      this(payload: payload);
+      call(payload: payload);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SubrunCompletedEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SubrunCompletedEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SubrunCompletedEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   SubrunCompletedEvent call({
     Object? v = const $CopyWithPlaceholder(),
     Object? runId = const $CopyWithPlaceholder(),
@@ -85,31 +90,31 @@ class _$SubrunCompletedEventCWProxyImpl
     Object? payload = const $CopyWithPlaceholder(),
   }) {
     return SubrunCompletedEvent(
-      v: v == const $CopyWithPlaceholder()
+      v: v == const $CopyWithPlaceholder() || v == null
           ? _value.v
           // ignore: cast_nullable_to_non_nullable
           : v as int,
-      runId: runId == const $CopyWithPlaceholder()
+      runId: runId == const $CopyWithPlaceholder() || runId == null
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String,
-      seq: seq == const $CopyWithPlaceholder()
+      seq: seq == const $CopyWithPlaceholder() || seq == null
           ? _value.seq
           // ignore: cast_nullable_to_non_nullable
           : seq as int,
-      ts: ts == const $CopyWithPlaceholder()
+      ts: ts == const $CopyWithPlaceholder() || ts == null
           ? _value.ts
           // ignore: cast_nullable_to_non_nullable
           : ts as DateTime,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
-      type: type == const $CopyWithPlaceholder()
+      type: type == const $CopyWithPlaceholder() || type == null
           ? _value.type
           // ignore: cast_nullable_to_non_nullable
           : type as SubrunCompletedEventTypeEnum,
-      payload: payload == const $CopyWithPlaceholder()
+      payload: payload == const $CopyWithPlaceholder() || payload == null
           ? _value.payload
           // ignore: cast_nullable_to_non_nullable
           : payload as SubrunCompletedEventPayload,
@@ -118,7 +123,8 @@ class _$SubrunCompletedEventCWProxyImpl
 }
 
 extension $SubrunCompletedEventCopyWith on SubrunCompletedEvent {
-  /// Returns a callable class that can be used as follows: `instanceOfSubrunCompletedEvent.copyWith(...)` or like so:`instanceOfSubrunCompletedEvent.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfSubrunCompletedEvent.copyWith(...)` or `instanceOfSubrunCompletedEvent.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$SubrunCompletedEventCWProxy get copyWith =>
       _$SubrunCompletedEventCWProxyImpl(this);
@@ -130,41 +136,36 @@ extension $SubrunCompletedEventCopyWith on SubrunCompletedEvent {
 
 SubrunCompletedEvent _$SubrunCompletedEventFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'SubrunCompletedEvent',
-  json,
-  ($checkedConvert) {
-    $checkKeys(
-      json,
-      requiredKeys: const [
-        'v',
-        'run_id',
-        'seq',
-        'ts',
-        'bot_id',
-        'type',
-        'payload',
-      ],
-    );
-    final val = SubrunCompletedEvent(
-      v: $checkedConvert('v', (v) => (v as num).toInt()),
-      runId: $checkedConvert('run_id', (v) => v as String),
-      seq: $checkedConvert('seq', (v) => (v as num).toInt()),
-      ts: $checkedConvert('ts', (v) => DateTime.parse(v as String)),
-      botId: $checkedConvert('bot_id', (v) => v as String),
-      type: $checkedConvert(
-        'type',
-        (v) => $enumDecode(_$SubrunCompletedEventTypeEnumEnumMap, v),
-      ),
-      payload: $checkedConvert(
-        'payload',
-        (v) => SubrunCompletedEventPayload.fromJson(v as Map<String, dynamic>),
-      ),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'runId': 'run_id', 'botId': 'bot_id'},
-);
+) => $checkedCreate('SubrunCompletedEvent', json, ($checkedConvert) {
+  $checkKeys(
+    json,
+    requiredKeys: const [
+      'v',
+      'run_id',
+      'seq',
+      'ts',
+      'bot_id',
+      'type',
+      'payload',
+    ],
+  );
+  final val = SubrunCompletedEvent(
+    v: $checkedConvert('v', (v) => (v as num).toInt()),
+    runId: $checkedConvert('run_id', (v) => v as String),
+    seq: $checkedConvert('seq', (v) => (v as num).toInt()),
+    ts: $checkedConvert('ts', (v) => DateTime.parse(v as String)),
+    botId: $checkedConvert('bot_id', (v) => v as String),
+    type: $checkedConvert(
+      'type',
+      (v) => $enumDecode(_$SubrunCompletedEventTypeEnumEnumMap, v),
+    ),
+    payload: $checkedConvert(
+      'payload',
+      (v) => SubrunCompletedEventPayload.fromJson(v as Map<String, dynamic>),
+    ),
+  );
+  return val;
+}, fieldKeyMap: const {'runId': 'run_id', 'botId': 'bot_id'});
 
 Map<String, dynamic> _$SubrunCompletedEventToJson(
   SubrunCompletedEvent instance,

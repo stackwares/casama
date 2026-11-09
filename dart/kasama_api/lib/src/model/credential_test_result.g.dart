@@ -15,12 +15,14 @@ abstract class _$CredentialTestResultCWProxy {
 
   CredentialTestResult error(String? error);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CredentialTestResult(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CredentialTestResult(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CredentialTestResult(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CredentialTestResult call({
     bool ok,
     String model,
@@ -29,7 +31,8 @@ abstract class _$CredentialTestResultCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCredentialTestResult.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCredentialTestResult.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCredentialTestResult.copyWith(...)` or call `instanceOfCredentialTestResult.copyWith.fieldName(value)` for a single field.
 class _$CredentialTestResultCWProxyImpl
     implements _$CredentialTestResultCWProxy {
   const _$CredentialTestResultCWProxyImpl(this._value);
@@ -37,24 +40,26 @@ class _$CredentialTestResultCWProxyImpl
   final CredentialTestResult _value;
 
   @override
-  CredentialTestResult ok(bool ok) => this(ok: ok);
+  CredentialTestResult ok(bool ok) => call(ok: ok);
 
   @override
-  CredentialTestResult model(String model) => this(model: model);
+  CredentialTestResult model(String model) => call(model: model);
 
   @override
-  CredentialTestResult latencyMs(int latencyMs) => this(latencyMs: latencyMs);
+  CredentialTestResult latencyMs(int latencyMs) => call(latencyMs: latencyMs);
 
   @override
-  CredentialTestResult error(String? error) => this(error: error);
+  CredentialTestResult error(String? error) => call(error: error);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CredentialTestResult(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CredentialTestResult(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CredentialTestResult(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CredentialTestResult call({
     Object? ok = const $CopyWithPlaceholder(),
     Object? model = const $CopyWithPlaceholder(),
@@ -62,15 +67,15 @@ class _$CredentialTestResultCWProxyImpl
     Object? error = const $CopyWithPlaceholder(),
   }) {
     return CredentialTestResult(
-      ok: ok == const $CopyWithPlaceholder()
+      ok: ok == const $CopyWithPlaceholder() || ok == null
           ? _value.ok
           // ignore: cast_nullable_to_non_nullable
           : ok as bool,
-      model: model == const $CopyWithPlaceholder()
+      model: model == const $CopyWithPlaceholder() || model == null
           ? _value.model
           // ignore: cast_nullable_to_non_nullable
           : model as String,
-      latencyMs: latencyMs == const $CopyWithPlaceholder()
+      latencyMs: latencyMs == const $CopyWithPlaceholder() || latencyMs == null
           ? _value.latencyMs
           // ignore: cast_nullable_to_non_nullable
           : latencyMs as int,
@@ -83,7 +88,8 @@ class _$CredentialTestResultCWProxyImpl
 }
 
 extension $CredentialTestResultCopyWith on CredentialTestResult {
-  /// Returns a callable class that can be used as follows: `instanceOfCredentialTestResult.copyWith(...)` or like so:`instanceOfCredentialTestResult.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCredentialTestResult.copyWith(...)` or `instanceOfCredentialTestResult.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CredentialTestResultCWProxy get copyWith =>
       _$CredentialTestResultCWProxyImpl(this);

@@ -13,12 +13,14 @@ abstract class _$ToolFailedEventPayloadCWProxy {
 
   ToolFailedEventPayload message(String message);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ToolFailedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ToolFailedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ToolFailedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ToolFailedEventPayload call({
     String callId,
     String errorCode,
@@ -26,7 +28,8 @@ abstract class _$ToolFailedEventPayloadCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfToolFailedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfToolFailedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfToolFailedEventPayload.copyWith(...)` or call `instanceOfToolFailedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$ToolFailedEventPayloadCWProxyImpl
     implements _$ToolFailedEventPayloadCWProxy {
   const _$ToolFailedEventPayloadCWProxyImpl(this._value);
@@ -34,37 +37,39 @@ class _$ToolFailedEventPayloadCWProxyImpl
   final ToolFailedEventPayload _value;
 
   @override
-  ToolFailedEventPayload callId(String callId) => this(callId: callId);
+  ToolFailedEventPayload callId(String callId) => call(callId: callId);
 
   @override
   ToolFailedEventPayload errorCode(String errorCode) =>
-      this(errorCode: errorCode);
+      call(errorCode: errorCode);
 
   @override
-  ToolFailedEventPayload message(String message) => this(message: message);
+  ToolFailedEventPayload message(String message) => call(message: message);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ToolFailedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ToolFailedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ToolFailedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ToolFailedEventPayload call({
     Object? callId = const $CopyWithPlaceholder(),
     Object? errorCode = const $CopyWithPlaceholder(),
     Object? message = const $CopyWithPlaceholder(),
   }) {
     return ToolFailedEventPayload(
-      callId: callId == const $CopyWithPlaceholder()
+      callId: callId == const $CopyWithPlaceholder() || callId == null
           ? _value.callId
           // ignore: cast_nullable_to_non_nullable
           : callId as String,
-      errorCode: errorCode == const $CopyWithPlaceholder()
+      errorCode: errorCode == const $CopyWithPlaceholder() || errorCode == null
           ? _value.errorCode
           // ignore: cast_nullable_to_non_nullable
           : errorCode as String,
-      message: message == const $CopyWithPlaceholder()
+      message: message == const $CopyWithPlaceholder() || message == null
           ? _value.message
           // ignore: cast_nullable_to_non_nullable
           : message as String,
@@ -73,7 +78,8 @@ class _$ToolFailedEventPayloadCWProxyImpl
 }
 
 extension $ToolFailedEventPayloadCopyWith on ToolFailedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfToolFailedEventPayload.copyWith(...)` or like so:`instanceOfToolFailedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfToolFailedEventPayload.copyWith(...)` or `instanceOfToolFailedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ToolFailedEventPayloadCWProxy get copyWith =>
       _$ToolFailedEventPayloadCWProxyImpl(this);
@@ -85,20 +91,15 @@ extension $ToolFailedEventPayloadCopyWith on ToolFailedEventPayload {
 
 ToolFailedEventPayload _$ToolFailedEventPayloadFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'ToolFailedEventPayload',
-  json,
-  ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['call_id', 'error_code', 'message']);
-    final val = ToolFailedEventPayload(
-      callId: $checkedConvert('call_id', (v) => v as String),
-      errorCode: $checkedConvert('error_code', (v) => v as String),
-      message: $checkedConvert('message', (v) => v as String),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'callId': 'call_id', 'errorCode': 'error_code'},
-);
+) => $checkedCreate('ToolFailedEventPayload', json, ($checkedConvert) {
+  $checkKeys(json, requiredKeys: const ['call_id', 'error_code', 'message']);
+  final val = ToolFailedEventPayload(
+    callId: $checkedConvert('call_id', (v) => v as String),
+    errorCode: $checkedConvert('error_code', (v) => v as String),
+    message: $checkedConvert('message', (v) => v as String),
+  );
+  return val;
+}, fieldKeyMap: const {'callId': 'call_id', 'errorCode': 'error_code'});
 
 Map<String, dynamic> _$ToolFailedEventPayloadToJson(
   ToolFailedEventPayload instance,

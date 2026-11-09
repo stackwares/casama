@@ -13,16 +13,19 @@ abstract class _$IntegrationTestResultCWProxy {
 
   IntegrationTestResult error(String? error);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `IntegrationTestResult(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `IntegrationTestResult(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// IntegrationTestResult(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   IntegrationTestResult call({bool ok, List<String> tools, String? error});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfIntegrationTestResult.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfIntegrationTestResult.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfIntegrationTestResult.copyWith(...)` or call `instanceOfIntegrationTestResult.copyWith.fieldName(value)` for a single field.
 class _$IntegrationTestResultCWProxyImpl
     implements _$IntegrationTestResultCWProxy {
   const _$IntegrationTestResultCWProxyImpl(this._value);
@@ -30,32 +33,34 @@ class _$IntegrationTestResultCWProxyImpl
   final IntegrationTestResult _value;
 
   @override
-  IntegrationTestResult ok(bool ok) => this(ok: ok);
+  IntegrationTestResult ok(bool ok) => call(ok: ok);
 
   @override
-  IntegrationTestResult tools(List<String> tools) => this(tools: tools);
+  IntegrationTestResult tools(List<String> tools) => call(tools: tools);
 
   @override
-  IntegrationTestResult error(String? error) => this(error: error);
+  IntegrationTestResult error(String? error) => call(error: error);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `IntegrationTestResult(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `IntegrationTestResult(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// IntegrationTestResult(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   IntegrationTestResult call({
     Object? ok = const $CopyWithPlaceholder(),
     Object? tools = const $CopyWithPlaceholder(),
     Object? error = const $CopyWithPlaceholder(),
   }) {
     return IntegrationTestResult(
-      ok: ok == const $CopyWithPlaceholder()
+      ok: ok == const $CopyWithPlaceholder() || ok == null
           ? _value.ok
           // ignore: cast_nullable_to_non_nullable
           : ok as bool,
-      tools: tools == const $CopyWithPlaceholder()
+      tools: tools == const $CopyWithPlaceholder() || tools == null
           ? _value.tools
           // ignore: cast_nullable_to_non_nullable
           : tools as List<String>,
@@ -68,7 +73,8 @@ class _$IntegrationTestResultCWProxyImpl
 }
 
 extension $IntegrationTestResultCopyWith on IntegrationTestResult {
-  /// Returns a callable class that can be used as follows: `instanceOfIntegrationTestResult.copyWith(...)` or like so:`instanceOfIntegrationTestResult.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfIntegrationTestResult.copyWith(...)` or `instanceOfIntegrationTestResult.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$IntegrationTestResultCWProxy get copyWith =>
       _$IntegrationTestResultCWProxyImpl(this);

@@ -4,16 +4,16 @@ version: 0.1.0
 publish_to: none
 resolution: workspace
 environment:
-  sdk: ^3.9.0
+  sdk: ^3.13.0
 executables:
   kasama: kasama
 dependencies:
-  args: ^2.6.0
-  dio: ^5.7.0
+  args: ^2.7.0
+  dio: ^5.11.1
   kasama_api:
     path: ../kasama_api
   kasama_sdk:
     path: ../kasama_sdk
-  path: ^1.9.0
+  path: ^1.9.1
 dev_dependencies:
-  test: ^1.25.0
+  test: ^1.33.0

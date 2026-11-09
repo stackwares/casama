@@ -9,16 +9,19 @@ part of 'create_checkpoint_request.dart';
 abstract class _$CreateCheckpointRequestCWProxy {
   CreateCheckpointRequest label(String label);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateCheckpointRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateCheckpointRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateCheckpointRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CreateCheckpointRequest call({String label});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCreateCheckpointRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCreateCheckpointRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCreateCheckpointRequest.copyWith(...)` or call `instanceOfCreateCheckpointRequest.copyWith.fieldName(value)` for a single field.
 class _$CreateCheckpointRequestCWProxyImpl
     implements _$CreateCheckpointRequestCWProxy {
   const _$CreateCheckpointRequestCWProxyImpl(this._value);
@@ -26,18 +29,20 @@ class _$CreateCheckpointRequestCWProxyImpl
   final CreateCheckpointRequest _value;
 
   @override
-  CreateCheckpointRequest label(String label) => this(label: label);
+  CreateCheckpointRequest label(String label) => call(label: label);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateCheckpointRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateCheckpointRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateCheckpointRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CreateCheckpointRequest call({Object? label = const $CopyWithPlaceholder()}) {
     return CreateCheckpointRequest(
-      label: label == const $CopyWithPlaceholder()
+      label: label == const $CopyWithPlaceholder() || label == null
           ? _value.label
           // ignore: cast_nullable_to_non_nullable
           : label as String,
@@ -46,7 +51,8 @@ class _$CreateCheckpointRequestCWProxyImpl
 }
 
 extension $CreateCheckpointRequestCopyWith on CreateCheckpointRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfCreateCheckpointRequest.copyWith(...)` or like so:`instanceOfCreateCheckpointRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCreateCheckpointRequest.copyWith(...)` or `instanceOfCreateCheckpointRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CreateCheckpointRequestCWProxy get copyWith =>
       _$CreateCheckpointRequestCWProxyImpl(this);

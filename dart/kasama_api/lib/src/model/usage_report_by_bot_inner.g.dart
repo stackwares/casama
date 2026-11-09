@@ -17,12 +17,14 @@ abstract class _$UsageReportByBotInnerCWProxy {
 
   UsageReportByBotInner tokensOut(int tokensOut);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UsageReportByBotInner(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageReportByBotInner(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UsageReportByBotInner(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   UsageReportByBotInner call({
     String? botId,
     String? name,
@@ -32,7 +34,8 @@ abstract class _$UsageReportByBotInnerCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfUsageReportByBotInner.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfUsageReportByBotInner.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfUsageReportByBotInner.copyWith(...)` or call `instanceOfUsageReportByBotInner.copyWith.fieldName(value)` for a single field.
 class _$UsageReportByBotInnerCWProxyImpl
     implements _$UsageReportByBotInnerCWProxy {
   const _$UsageReportByBotInnerCWProxyImpl(this._value);
@@ -40,27 +43,29 @@ class _$UsageReportByBotInnerCWProxyImpl
   final UsageReportByBotInner _value;
 
   @override
-  UsageReportByBotInner botId(String? botId) => this(botId: botId);
+  UsageReportByBotInner botId(String? botId) => call(botId: botId);
 
   @override
-  UsageReportByBotInner name(String? name) => this(name: name);
+  UsageReportByBotInner name(String? name) => call(name: name);
 
   @override
-  UsageReportByBotInner costUsd(num costUsd) => this(costUsd: costUsd);
+  UsageReportByBotInner costUsd(num costUsd) => call(costUsd: costUsd);
 
   @override
-  UsageReportByBotInner tokensIn(int tokensIn) => this(tokensIn: tokensIn);
+  UsageReportByBotInner tokensIn(int tokensIn) => call(tokensIn: tokensIn);
 
   @override
-  UsageReportByBotInner tokensOut(int tokensOut) => this(tokensOut: tokensOut);
+  UsageReportByBotInner tokensOut(int tokensOut) => call(tokensOut: tokensOut);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UsageReportByBotInner(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageReportByBotInner(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UsageReportByBotInner(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   UsageReportByBotInner call({
     Object? botId = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
@@ -77,15 +82,15 @@ class _$UsageReportByBotInnerCWProxyImpl
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String?,
-      costUsd: costUsd == const $CopyWithPlaceholder()
+      costUsd: costUsd == const $CopyWithPlaceholder() || costUsd == null
           ? _value.costUsd
           // ignore: cast_nullable_to_non_nullable
           : costUsd as num,
-      tokensIn: tokensIn == const $CopyWithPlaceholder()
+      tokensIn: tokensIn == const $CopyWithPlaceholder() || tokensIn == null
           ? _value.tokensIn
           // ignore: cast_nullable_to_non_nullable
           : tokensIn as int,
-      tokensOut: tokensOut == const $CopyWithPlaceholder()
+      tokensOut: tokensOut == const $CopyWithPlaceholder() || tokensOut == null
           ? _value.tokensOut
           // ignore: cast_nullable_to_non_nullable
           : tokensOut as int,
@@ -94,7 +99,8 @@ class _$UsageReportByBotInnerCWProxyImpl
 }
 
 extension $UsageReportByBotInnerCopyWith on UsageReportByBotInner {
-  /// Returns a callable class that can be used as follows: `instanceOfUsageReportByBotInner.copyWith(...)` or like so:`instanceOfUsageReportByBotInner.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfUsageReportByBotInner.copyWith(...)` or `instanceOfUsageReportByBotInner.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$UsageReportByBotInnerCWProxy get copyWith =>
       _$UsageReportByBotInnerCWProxyImpl(this);

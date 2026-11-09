@@ -11,16 +11,19 @@ abstract class _$TemplateRoutinesInnerCWProxy {
 
   TemplateRoutinesInner scheduleCron(String scheduleCron);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TemplateRoutinesInner(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TemplateRoutinesInner(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TemplateRoutinesInner(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   TemplateRoutinesInner call({String name, String scheduleCron});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfTemplateRoutinesInner.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfTemplateRoutinesInner.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfTemplateRoutinesInner.copyWith(...)` or call `instanceOfTemplateRoutinesInner.copyWith.fieldName(value)` for a single field.
 class _$TemplateRoutinesInnerCWProxyImpl
     implements _$TemplateRoutinesInnerCWProxy {
   const _$TemplateRoutinesInnerCWProxyImpl(this._value);
@@ -28,29 +31,32 @@ class _$TemplateRoutinesInnerCWProxyImpl
   final TemplateRoutinesInner _value;
 
   @override
-  TemplateRoutinesInner name(String name) => this(name: name);
+  TemplateRoutinesInner name(String name) => call(name: name);
 
   @override
   TemplateRoutinesInner scheduleCron(String scheduleCron) =>
-      this(scheduleCron: scheduleCron);
+      call(scheduleCron: scheduleCron);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TemplateRoutinesInner(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TemplateRoutinesInner(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TemplateRoutinesInner(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   TemplateRoutinesInner call({
     Object? name = const $CopyWithPlaceholder(),
     Object? scheduleCron = const $CopyWithPlaceholder(),
   }) {
     return TemplateRoutinesInner(
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      scheduleCron: scheduleCron == const $CopyWithPlaceholder()
+      scheduleCron:
+          scheduleCron == const $CopyWithPlaceholder() || scheduleCron == null
           ? _value.scheduleCron
           // ignore: cast_nullable_to_non_nullable
           : scheduleCron as String,
@@ -59,7 +65,8 @@ class _$TemplateRoutinesInnerCWProxyImpl
 }
 
 extension $TemplateRoutinesInnerCopyWith on TemplateRoutinesInner {
-  /// Returns a callable class that can be used as follows: `instanceOfTemplateRoutinesInner.copyWith(...)` or like so:`instanceOfTemplateRoutinesInner.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfTemplateRoutinesInner.copyWith(...)` or `instanceOfTemplateRoutinesInner.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$TemplateRoutinesInnerCWProxy get copyWith =>
       _$TemplateRoutinesInnerCWProxyImpl(this);

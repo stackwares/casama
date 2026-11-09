@@ -9,34 +9,39 @@ part of 'deleted_id.dart';
 abstract class _$DeletedIdCWProxy {
   DeletedId deleted(String deleted);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `DeletedId(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `DeletedId(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// DeletedId(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   DeletedId call({String deleted});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfDeletedId.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfDeletedId.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfDeletedId.copyWith(...)` or call `instanceOfDeletedId.copyWith.fieldName(value)` for a single field.
 class _$DeletedIdCWProxyImpl implements _$DeletedIdCWProxy {
   const _$DeletedIdCWProxyImpl(this._value);
 
   final DeletedId _value;
 
   @override
-  DeletedId deleted(String deleted) => this(deleted: deleted);
+  DeletedId deleted(String deleted) => call(deleted: deleted);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `DeletedId(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `DeletedId(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// DeletedId(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   DeletedId call({Object? deleted = const $CopyWithPlaceholder()}) {
     return DeletedId(
-      deleted: deleted == const $CopyWithPlaceholder()
+      deleted: deleted == const $CopyWithPlaceholder() || deleted == null
           ? _value.deleted
           // ignore: cast_nullable_to_non_nullable
           : deleted as String,
@@ -45,7 +50,8 @@ class _$DeletedIdCWProxyImpl implements _$DeletedIdCWProxy {
 }
 
 extension $DeletedIdCopyWith on DeletedId {
-  /// Returns a callable class that can be used as follows: `instanceOfDeletedId.copyWith(...)` or like so:`instanceOfDeletedId.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfDeletedId.copyWith(...)` or `instanceOfDeletedId.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$DeletedIdCWProxy get copyWith => _$DeletedIdCWProxyImpl(this);
 }

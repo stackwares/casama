@@ -19,12 +19,14 @@ abstract class _$CheckpointCWProxy {
 
   Checkpoint createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Checkpoint(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Checkpoint(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Checkpoint(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Checkpoint call({
     String id,
     String computerId,
@@ -35,37 +37,40 @@ abstract class _$CheckpointCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCheckpoint.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCheckpoint.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCheckpoint.copyWith(...)` or call `instanceOfCheckpoint.copyWith.fieldName(value)` for a single field.
 class _$CheckpointCWProxyImpl implements _$CheckpointCWProxy {
   const _$CheckpointCWProxyImpl(this._value);
 
   final Checkpoint _value;
 
   @override
-  Checkpoint id(String id) => this(id: id);
+  Checkpoint id(String id) => call(id: id);
 
   @override
-  Checkpoint computerId(String computerId) => this(computerId: computerId);
+  Checkpoint computerId(String computerId) => call(computerId: computerId);
 
   @override
-  Checkpoint runId(String? runId) => this(runId: runId);
+  Checkpoint runId(String? runId) => call(runId: runId);
 
   @override
-  Checkpoint label(String label) => this(label: label);
+  Checkpoint label(String label) => call(label: label);
 
   @override
-  Checkpoint size(int size) => this(size: size);
+  Checkpoint size(int size) => call(size: size);
 
   @override
-  Checkpoint createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Checkpoint createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Checkpoint(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Checkpoint(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Checkpoint(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Checkpoint call({
     Object? id = const $CopyWithPlaceholder(),
     Object? computerId = const $CopyWithPlaceholder(),
@@ -75,11 +80,12 @@ class _$CheckpointCWProxyImpl implements _$CheckpointCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Checkpoint(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      computerId: computerId == const $CopyWithPlaceholder()
+      computerId:
+          computerId == const $CopyWithPlaceholder() || computerId == null
           ? _value.computerId
           // ignore: cast_nullable_to_non_nullable
           : computerId as String,
@@ -87,15 +93,15 @@ class _$CheckpointCWProxyImpl implements _$CheckpointCWProxy {
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String?,
-      label: label == const $CopyWithPlaceholder()
+      label: label == const $CopyWithPlaceholder() || label == null
           ? _value.label
           // ignore: cast_nullable_to_non_nullable
           : label as String,
-      size: size == const $CopyWithPlaceholder()
+      size: size == const $CopyWithPlaceholder() || size == null
           ? _value.size
           // ignore: cast_nullable_to_non_nullable
           : size as int,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -104,7 +110,8 @@ class _$CheckpointCWProxyImpl implements _$CheckpointCWProxy {
 }
 
 extension $CheckpointCopyWith on Checkpoint {
-  /// Returns a callable class that can be used as follows: `instanceOfCheckpoint.copyWith(...)` or like so:`instanceOfCheckpoint.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCheckpoint.copyWith(...)` or `instanceOfCheckpoint.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CheckpointCWProxy get copyWith => _$CheckpointCWProxyImpl(this);
 }

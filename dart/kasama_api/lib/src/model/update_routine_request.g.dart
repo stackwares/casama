@@ -19,12 +19,14 @@ abstract class _$UpdateRoutineRequestCWProxy {
 
   UpdateRoutineRequest enabled(bool? enabled);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UpdateRoutineRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateRoutineRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UpdateRoutineRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   UpdateRoutineRequest call({
     String? name,
     String? instructions,
@@ -35,7 +37,8 @@ abstract class _$UpdateRoutineRequestCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfUpdateRoutineRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfUpdateRoutineRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfUpdateRoutineRequest.copyWith(...)` or call `instanceOfUpdateRoutineRequest.copyWith.fieldName(value)` for a single field.
 class _$UpdateRoutineRequestCWProxyImpl
     implements _$UpdateRoutineRequestCWProxy {
   const _$UpdateRoutineRequestCWProxyImpl(this._value);
@@ -43,32 +46,34 @@ class _$UpdateRoutineRequestCWProxyImpl
   final UpdateRoutineRequest _value;
 
   @override
-  UpdateRoutineRequest name(String? name) => this(name: name);
+  UpdateRoutineRequest name(String? name) => call(name: name);
 
   @override
   UpdateRoutineRequest instructions(String? instructions) =>
-      this(instructions: instructions);
+      call(instructions: instructions);
 
   @override
   UpdateRoutineRequest scheduleCron(String? scheduleCron) =>
-      this(scheduleCron: scheduleCron);
+      call(scheduleCron: scheduleCron);
 
   @override
-  UpdateRoutineRequest timezone(String? timezone) => this(timezone: timezone);
+  UpdateRoutineRequest timezone(String? timezone) => call(timezone: timezone);
 
   @override
-  UpdateRoutineRequest notify(bool? notify) => this(notify: notify);
+  UpdateRoutineRequest notify(bool? notify) => call(notify: notify);
 
   @override
-  UpdateRoutineRequest enabled(bool? enabled) => this(enabled: enabled);
+  UpdateRoutineRequest enabled(bool? enabled) => call(enabled: enabled);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UpdateRoutineRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateRoutineRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UpdateRoutineRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   UpdateRoutineRequest call({
     Object? name = const $CopyWithPlaceholder(),
     Object? instructions = const $CopyWithPlaceholder(),
@@ -107,7 +112,8 @@ class _$UpdateRoutineRequestCWProxyImpl
 }
 
 extension $UpdateRoutineRequestCopyWith on UpdateRoutineRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfUpdateRoutineRequest.copyWith(...)` or like so:`instanceOfUpdateRoutineRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfUpdateRoutineRequest.copyWith(...)` or `instanceOfUpdateRoutineRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$UpdateRoutineRequestCWProxy get copyWith =>
       _$UpdateRoutineRequestCWProxyImpl(this);

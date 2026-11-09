@@ -15,12 +15,14 @@ abstract class _$ToolCompletedEventPayloadCWProxy {
 
   ToolCompletedEventPayload durationMs(int durationMs);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ToolCompletedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ToolCompletedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ToolCompletedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ToolCompletedEventPayload call({
     String callId,
     String resultPreview,
@@ -29,7 +31,8 @@ abstract class _$ToolCompletedEventPayloadCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfToolCompletedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfToolCompletedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfToolCompletedEventPayload.copyWith(...)` or call `instanceOfToolCompletedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$ToolCompletedEventPayloadCWProxyImpl
     implements _$ToolCompletedEventPayloadCWProxy {
   const _$ToolCompletedEventPayloadCWProxyImpl(this._value);
@@ -37,27 +40,29 @@ class _$ToolCompletedEventPayloadCWProxyImpl
   final ToolCompletedEventPayload _value;
 
   @override
-  ToolCompletedEventPayload callId(String callId) => this(callId: callId);
+  ToolCompletedEventPayload callId(String callId) => call(callId: callId);
 
   @override
   ToolCompletedEventPayload resultPreview(String resultPreview) =>
-      this(resultPreview: resultPreview);
+      call(resultPreview: resultPreview);
 
   @override
   ToolCompletedEventPayload artifactPath(String? artifactPath) =>
-      this(artifactPath: artifactPath);
+      call(artifactPath: artifactPath);
 
   @override
   ToolCompletedEventPayload durationMs(int durationMs) =>
-      this(durationMs: durationMs);
+      call(durationMs: durationMs);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ToolCompletedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ToolCompletedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ToolCompletedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ToolCompletedEventPayload call({
     Object? callId = const $CopyWithPlaceholder(),
     Object? resultPreview = const $CopyWithPlaceholder(),
@@ -65,11 +70,12 @@ class _$ToolCompletedEventPayloadCWProxyImpl
     Object? durationMs = const $CopyWithPlaceholder(),
   }) {
     return ToolCompletedEventPayload(
-      callId: callId == const $CopyWithPlaceholder()
+      callId: callId == const $CopyWithPlaceholder() || callId == null
           ? _value.callId
           // ignore: cast_nullable_to_non_nullable
           : callId as String,
-      resultPreview: resultPreview == const $CopyWithPlaceholder()
+      resultPreview:
+          resultPreview == const $CopyWithPlaceholder() || resultPreview == null
           ? _value.resultPreview
           // ignore: cast_nullable_to_non_nullable
           : resultPreview as String,
@@ -77,7 +83,8 @@ class _$ToolCompletedEventPayloadCWProxyImpl
           ? _value.artifactPath
           // ignore: cast_nullable_to_non_nullable
           : artifactPath as String?,
-      durationMs: durationMs == const $CopyWithPlaceholder()
+      durationMs:
+          durationMs == const $CopyWithPlaceholder() || durationMs == null
           ? _value.durationMs
           // ignore: cast_nullable_to_non_nullable
           : durationMs as int,
@@ -86,7 +93,8 @@ class _$ToolCompletedEventPayloadCWProxyImpl
 }
 
 extension $ToolCompletedEventPayloadCopyWith on ToolCompletedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfToolCompletedEventPayload.copyWith(...)` or like so:`instanceOfToolCompletedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfToolCompletedEventPayload.copyWith(...)` or `instanceOfToolCompletedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ToolCompletedEventPayloadCWProxy get copyWith =>
       _$ToolCompletedEventPayloadCWProxyImpl(this);

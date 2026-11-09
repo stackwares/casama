@@ -21,12 +21,14 @@ abstract class _$InviteCWProxy {
 
   Invite acceptToken(String? acceptToken);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Invite(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Invite(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Invite(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Invite call({
     String id,
     String orgId,
@@ -38,40 +40,43 @@ abstract class _$InviteCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfInvite.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfInvite.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfInvite.copyWith(...)` or call `instanceOfInvite.copyWith.fieldName(value)` for a single field.
 class _$InviteCWProxyImpl implements _$InviteCWProxy {
   const _$InviteCWProxyImpl(this._value);
 
   final Invite _value;
 
   @override
-  Invite id(String id) => this(id: id);
+  Invite id(String id) => call(id: id);
 
   @override
-  Invite orgId(String orgId) => this(orgId: orgId);
+  Invite orgId(String orgId) => call(orgId: orgId);
 
   @override
-  Invite email(String email) => this(email: email);
+  Invite email(String email) => call(email: email);
 
   @override
-  Invite role(OrgRole role) => this(role: role);
+  Invite role(OrgRole role) => call(role: role);
 
   @override
-  Invite expiresAt(DateTime expiresAt) => this(expiresAt: expiresAt);
+  Invite expiresAt(DateTime expiresAt) => call(expiresAt: expiresAt);
 
   @override
-  Invite emailSent(bool emailSent) => this(emailSent: emailSent);
+  Invite emailSent(bool emailSent) => call(emailSent: emailSent);
 
   @override
-  Invite acceptToken(String? acceptToken) => this(acceptToken: acceptToken);
+  Invite acceptToken(String? acceptToken) => call(acceptToken: acceptToken);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Invite(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Invite(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Invite(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Invite call({
     Object? id = const $CopyWithPlaceholder(),
     Object? orgId = const $CopyWithPlaceholder(),
@@ -82,27 +87,27 @@ class _$InviteCWProxyImpl implements _$InviteCWProxy {
     Object? acceptToken = const $CopyWithPlaceholder(),
   }) {
     return Invite(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      email: email == const $CopyWithPlaceholder()
+      email: email == const $CopyWithPlaceholder() || email == null
           ? _value.email
           // ignore: cast_nullable_to_non_nullable
           : email as String,
-      role: role == const $CopyWithPlaceholder()
+      role: role == const $CopyWithPlaceholder() || role == null
           ? _value.role
           // ignore: cast_nullable_to_non_nullable
           : role as OrgRole,
-      expiresAt: expiresAt == const $CopyWithPlaceholder()
+      expiresAt: expiresAt == const $CopyWithPlaceholder() || expiresAt == null
           ? _value.expiresAt
           // ignore: cast_nullable_to_non_nullable
           : expiresAt as DateTime,
-      emailSent: emailSent == const $CopyWithPlaceholder()
+      emailSent: emailSent == const $CopyWithPlaceholder() || emailSent == null
           ? _value.emailSent
           // ignore: cast_nullable_to_non_nullable
           : emailSent as bool,
@@ -115,7 +120,8 @@ class _$InviteCWProxyImpl implements _$InviteCWProxy {
 }
 
 extension $InviteCopyWith on Invite {
-  /// Returns a callable class that can be used as follows: `instanceOfInvite.copyWith(...)` or like so:`instanceOfInvite.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfInvite.copyWith(...)` or `instanceOfInvite.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$InviteCWProxy get copyWith => _$InviteCWProxyImpl(this);
 }

@@ -9,34 +9,39 @@ part of 'accepted.dart';
 abstract class _$AcceptedCWProxy {
   Accepted accepted(bool accepted);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Accepted(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Accepted(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Accepted(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Accepted call({bool accepted});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfAccepted.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfAccepted.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfAccepted.copyWith(...)` or call `instanceOfAccepted.copyWith.fieldName(value)` for a single field.
 class _$AcceptedCWProxyImpl implements _$AcceptedCWProxy {
   const _$AcceptedCWProxyImpl(this._value);
 
   final Accepted _value;
 
   @override
-  Accepted accepted(bool accepted) => this(accepted: accepted);
+  Accepted accepted(bool accepted) => call(accepted: accepted);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Accepted(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Accepted(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Accepted(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Accepted call({Object? accepted = const $CopyWithPlaceholder()}) {
     return Accepted(
-      accepted: accepted == const $CopyWithPlaceholder()
+      accepted: accepted == const $CopyWithPlaceholder() || accepted == null
           ? _value.accepted
           // ignore: cast_nullable_to_non_nullable
           : accepted as bool,
@@ -45,7 +50,8 @@ class _$AcceptedCWProxyImpl implements _$AcceptedCWProxy {
 }
 
 extension $AcceptedCopyWith on Accepted {
-  /// Returns a callable class that can be used as follows: `instanceOfAccepted.copyWith(...)` or like so:`instanceOfAccepted.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfAccepted.copyWith(...)` or `instanceOfAccepted.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$AcceptedCWProxy get copyWith => _$AcceptedCWProxyImpl(this);
 }

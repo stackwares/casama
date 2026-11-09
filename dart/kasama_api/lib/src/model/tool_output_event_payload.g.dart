@@ -11,16 +11,19 @@ abstract class _$ToolOutputEventPayloadCWProxy {
 
   ToolOutputEventPayload chunk(String chunk);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ToolOutputEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ToolOutputEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ToolOutputEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ToolOutputEventPayload call({String callId, String chunk});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfToolOutputEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfToolOutputEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfToolOutputEventPayload.copyWith(...)` or call `instanceOfToolOutputEventPayload.copyWith.fieldName(value)` for a single field.
 class _$ToolOutputEventPayloadCWProxyImpl
     implements _$ToolOutputEventPayloadCWProxy {
   const _$ToolOutputEventPayloadCWProxyImpl(this._value);
@@ -28,28 +31,30 @@ class _$ToolOutputEventPayloadCWProxyImpl
   final ToolOutputEventPayload _value;
 
   @override
-  ToolOutputEventPayload callId(String callId) => this(callId: callId);
+  ToolOutputEventPayload callId(String callId) => call(callId: callId);
 
   @override
-  ToolOutputEventPayload chunk(String chunk) => this(chunk: chunk);
+  ToolOutputEventPayload chunk(String chunk) => call(chunk: chunk);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ToolOutputEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ToolOutputEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ToolOutputEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ToolOutputEventPayload call({
     Object? callId = const $CopyWithPlaceholder(),
     Object? chunk = const $CopyWithPlaceholder(),
   }) {
     return ToolOutputEventPayload(
-      callId: callId == const $CopyWithPlaceholder()
+      callId: callId == const $CopyWithPlaceholder() || callId == null
           ? _value.callId
           // ignore: cast_nullable_to_non_nullable
           : callId as String,
-      chunk: chunk == const $CopyWithPlaceholder()
+      chunk: chunk == const $CopyWithPlaceholder() || chunk == null
           ? _value.chunk
           // ignore: cast_nullable_to_non_nullable
           : chunk as String,
@@ -58,7 +63,8 @@ class _$ToolOutputEventPayloadCWProxyImpl
 }
 
 extension $ToolOutputEventPayloadCopyWith on ToolOutputEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfToolOutputEventPayload.copyWith(...)` or like so:`instanceOfToolOutputEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfToolOutputEventPayload.copyWith(...)` or `instanceOfToolOutputEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ToolOutputEventPayloadCWProxy get copyWith =>
       _$ToolOutputEventPayloadCWProxyImpl(this);

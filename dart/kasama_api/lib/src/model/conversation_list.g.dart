@@ -9,34 +9,39 @@ part of 'conversation_list.dart';
 abstract class _$ConversationListCWProxy {
   ConversationList items(List<Conversation> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ConversationList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ConversationList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ConversationList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ConversationList call({List<Conversation> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfConversationList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfConversationList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfConversationList.copyWith(...)` or call `instanceOfConversationList.copyWith.fieldName(value)` for a single field.
 class _$ConversationListCWProxyImpl implements _$ConversationListCWProxy {
   const _$ConversationListCWProxyImpl(this._value);
 
   final ConversationList _value;
 
   @override
-  ConversationList items(List<Conversation> items) => this(items: items);
+  ConversationList items(List<Conversation> items) => call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ConversationList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ConversationList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ConversationList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ConversationList call({Object? items = const $CopyWithPlaceholder()}) {
     return ConversationList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<Conversation>,
@@ -45,7 +50,8 @@ class _$ConversationListCWProxyImpl implements _$ConversationListCWProxy {
 }
 
 extension $ConversationListCopyWith on ConversationList {
-  /// Returns a callable class that can be used as follows: `instanceOfConversationList.copyWith(...)` or like so:`instanceOfConversationList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfConversationList.copyWith(...)` or `instanceOfConversationList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ConversationListCWProxy get copyWith => _$ConversationListCWProxyImpl(this);
 }

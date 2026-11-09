@@ -19,12 +19,14 @@ abstract class _$TemplateCWProxy {
 
   Template routines(List<TemplateRoutinesInner> routines);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Template(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Template(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Template(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Template call({
     String id,
     String name,
@@ -35,38 +37,41 @@ abstract class _$TemplateCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfTemplate.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfTemplate.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfTemplate.copyWith(...)` or call `instanceOfTemplate.copyWith.fieldName(value)` for a single field.
 class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
   const _$TemplateCWProxyImpl(this._value);
 
   final Template _value;
 
   @override
-  Template id(String id) => this(id: id);
+  Template id(String id) => call(id: id);
 
   @override
-  Template name(String name) => this(name: name);
+  Template name(String name) => call(name: name);
 
   @override
-  Template description(String description) => this(description: description);
+  Template description(String description) => call(description: description);
 
   @override
-  Template autonomy(TemplateAutonomyEnum autonomy) => this(autonomy: autonomy);
+  Template autonomy(TemplateAutonomyEnum autonomy) => call(autonomy: autonomy);
 
   @override
-  Template skills(List<String> skills) => this(skills: skills);
+  Template skills(List<String> skills) => call(skills: skills);
 
   @override
   Template routines(List<TemplateRoutinesInner> routines) =>
-      this(routines: routines);
+      call(routines: routines);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Template(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Template(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Template(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Template call({
     Object? id = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
@@ -76,27 +81,28 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
     Object? routines = const $CopyWithPlaceholder(),
   }) {
     return Template(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      description: description == const $CopyWithPlaceholder()
+      description:
+          description == const $CopyWithPlaceholder() || description == null
           ? _value.description
           // ignore: cast_nullable_to_non_nullable
           : description as String,
-      autonomy: autonomy == const $CopyWithPlaceholder()
+      autonomy: autonomy == const $CopyWithPlaceholder() || autonomy == null
           ? _value.autonomy
           // ignore: cast_nullable_to_non_nullable
           : autonomy as TemplateAutonomyEnum,
-      skills: skills == const $CopyWithPlaceholder()
+      skills: skills == const $CopyWithPlaceholder() || skills == null
           ? _value.skills
           // ignore: cast_nullable_to_non_nullable
           : skills as List<String>,
-      routines: routines == const $CopyWithPlaceholder()
+      routines: routines == const $CopyWithPlaceholder() || routines == null
           ? _value.routines
           // ignore: cast_nullable_to_non_nullable
           : routines as List<TemplateRoutinesInner>,
@@ -105,7 +111,8 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
 }
 
 extension $TemplateCopyWith on Template {
-  /// Returns a callable class that can be used as follows: `instanceOfTemplate.copyWith(...)` or like so:`instanceOfTemplate.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfTemplate.copyWith(...)` or `instanceOfTemplate.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$TemplateCWProxy get copyWith => _$TemplateCWProxyImpl(this);
 }

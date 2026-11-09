@@ -11,16 +11,19 @@ abstract class _$RunFailedEventPayloadCWProxy {
 
   RunFailedEventPayload message(String message);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunFailedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunFailedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunFailedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   RunFailedEventPayload call({String errorCode, String message});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfRunFailedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfRunFailedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfRunFailedEventPayload.copyWith(...)` or call `instanceOfRunFailedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$RunFailedEventPayloadCWProxyImpl
     implements _$RunFailedEventPayloadCWProxy {
   const _$RunFailedEventPayloadCWProxyImpl(this._value);
@@ -29,28 +32,30 @@ class _$RunFailedEventPayloadCWProxyImpl
 
   @override
   RunFailedEventPayload errorCode(String errorCode) =>
-      this(errorCode: errorCode);
+      call(errorCode: errorCode);
 
   @override
-  RunFailedEventPayload message(String message) => this(message: message);
+  RunFailedEventPayload message(String message) => call(message: message);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunFailedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunFailedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunFailedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   RunFailedEventPayload call({
     Object? errorCode = const $CopyWithPlaceholder(),
     Object? message = const $CopyWithPlaceholder(),
   }) {
     return RunFailedEventPayload(
-      errorCode: errorCode == const $CopyWithPlaceholder()
+      errorCode: errorCode == const $CopyWithPlaceholder() || errorCode == null
           ? _value.errorCode
           // ignore: cast_nullable_to_non_nullable
           : errorCode as String,
-      message: message == const $CopyWithPlaceholder()
+      message: message == const $CopyWithPlaceholder() || message == null
           ? _value.message
           // ignore: cast_nullable_to_non_nullable
           : message as String,
@@ -59,7 +64,8 @@ class _$RunFailedEventPayloadCWProxyImpl
 }
 
 extension $RunFailedEventPayloadCopyWith on RunFailedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfRunFailedEventPayload.copyWith(...)` or like so:`instanceOfRunFailedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfRunFailedEventPayload.copyWith(...)` or `instanceOfRunFailedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$RunFailedEventPayloadCWProxy get copyWith =>
       _$RunFailedEventPayloadCWProxyImpl(this);

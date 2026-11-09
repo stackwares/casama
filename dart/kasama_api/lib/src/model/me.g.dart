@@ -19,12 +19,14 @@ abstract class _$MeCWProxy {
 
   Me organizations(List<OrganizationWithRole> organizations);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Me(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Me(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Me(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Me call({
     String userId,
     String? email,
@@ -35,38 +37,41 @@ abstract class _$MeCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfMe.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfMe.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfMe.copyWith(...)` or call `instanceOfMe.copyWith.fieldName(value)` for a single field.
 class _$MeCWProxyImpl implements _$MeCWProxy {
   const _$MeCWProxyImpl(this._value);
 
   final Me _value;
 
   @override
-  Me userId(String userId) => this(userId: userId);
+  Me userId(String userId) => call(userId: userId);
 
   @override
-  Me email(String? email) => this(email: email);
+  Me email(String? email) => call(email: email);
 
   @override
-  Me displayName(String? displayName) => this(displayName: displayName);
+  Me displayName(String? displayName) => call(displayName: displayName);
 
   @override
-  Me locale(String locale) => this(locale: locale);
+  Me locale(String locale) => call(locale: locale);
 
   @override
-  Me timezone(String timezone) => this(timezone: timezone);
+  Me timezone(String timezone) => call(timezone: timezone);
 
   @override
   Me organizations(List<OrganizationWithRole> organizations) =>
-      this(organizations: organizations);
+      call(organizations: organizations);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Me(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Me(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Me(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Me call({
     Object? userId = const $CopyWithPlaceholder(),
     Object? email = const $CopyWithPlaceholder(),
@@ -76,7 +81,7 @@ class _$MeCWProxyImpl implements _$MeCWProxy {
     Object? organizations = const $CopyWithPlaceholder(),
   }) {
     return Me(
-      userId: userId == const $CopyWithPlaceholder()
+      userId: userId == const $CopyWithPlaceholder() || userId == null
           ? _value.userId
           // ignore: cast_nullable_to_non_nullable
           : userId as String,
@@ -88,15 +93,16 @@ class _$MeCWProxyImpl implements _$MeCWProxy {
           ? _value.displayName
           // ignore: cast_nullable_to_non_nullable
           : displayName as String?,
-      locale: locale == const $CopyWithPlaceholder()
+      locale: locale == const $CopyWithPlaceholder() || locale == null
           ? _value.locale
           // ignore: cast_nullable_to_non_nullable
           : locale as String,
-      timezone: timezone == const $CopyWithPlaceholder()
+      timezone: timezone == const $CopyWithPlaceholder() || timezone == null
           ? _value.timezone
           // ignore: cast_nullable_to_non_nullable
           : timezone as String,
-      organizations: organizations == const $CopyWithPlaceholder()
+      organizations:
+          organizations == const $CopyWithPlaceholder() || organizations == null
           ? _value.organizations
           // ignore: cast_nullable_to_non_nullable
           : organizations as List<OrganizationWithRole>,
@@ -105,7 +111,8 @@ class _$MeCWProxyImpl implements _$MeCWProxy {
 }
 
 extension $MeCopyWith on Me {
-  /// Returns a callable class that can be used as follows: `instanceOfMe.copyWith(...)` or like so:`instanceOfMe.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfMe.copyWith(...)` or `instanceOfMe.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$MeCWProxy get copyWith => _$MeCWProxyImpl(this);
 }

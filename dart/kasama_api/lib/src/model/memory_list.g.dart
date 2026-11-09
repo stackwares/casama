@@ -9,34 +9,39 @@ part of 'memory_list.dart';
 abstract class _$MemoryListCWProxy {
   MemoryList items(List<Memory> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `MemoryList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `MemoryList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// MemoryList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   MemoryList call({List<Memory> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfMemoryList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfMemoryList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfMemoryList.copyWith(...)` or call `instanceOfMemoryList.copyWith.fieldName(value)` for a single field.
 class _$MemoryListCWProxyImpl implements _$MemoryListCWProxy {
   const _$MemoryListCWProxyImpl(this._value);
 
   final MemoryList _value;
 
   @override
-  MemoryList items(List<Memory> items) => this(items: items);
+  MemoryList items(List<Memory> items) => call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `MemoryList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `MemoryList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// MemoryList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   MemoryList call({Object? items = const $CopyWithPlaceholder()}) {
     return MemoryList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<Memory>,
@@ -45,7 +50,8 @@ class _$MemoryListCWProxyImpl implements _$MemoryListCWProxy {
 }
 
 extension $MemoryListCopyWith on MemoryList {
-  /// Returns a callable class that can be used as follows: `instanceOfMemoryList.copyWith(...)` or like so:`instanceOfMemoryList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfMemoryList.copyWith(...)` or `instanceOfMemoryList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$MemoryListCWProxy get copyWith => _$MemoryListCWProxyImpl(this);
 }

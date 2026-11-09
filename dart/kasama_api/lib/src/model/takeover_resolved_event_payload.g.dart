@@ -15,12 +15,14 @@ abstract class _$TakeoverResolvedEventPayloadCWProxy {
 
   TakeoverResolvedEventPayload note(String? note);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TakeoverResolvedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TakeoverResolvedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TakeoverResolvedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   TakeoverResolvedEventPayload call({
     String computerId,
     TakeoverResolvedEventPayloadOutcomeEnum outcome,
@@ -28,7 +30,8 @@ abstract class _$TakeoverResolvedEventPayloadCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfTakeoverResolvedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfTakeoverResolvedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfTakeoverResolvedEventPayload.copyWith(...)` or call `instanceOfTakeoverResolvedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$TakeoverResolvedEventPayloadCWProxyImpl
     implements _$TakeoverResolvedEventPayloadCWProxy {
   const _$TakeoverResolvedEventPayloadCWProxyImpl(this._value);
@@ -37,34 +40,37 @@ class _$TakeoverResolvedEventPayloadCWProxyImpl
 
   @override
   TakeoverResolvedEventPayload computerId(String computerId) =>
-      this(computerId: computerId);
+      call(computerId: computerId);
 
   @override
   TakeoverResolvedEventPayload outcome(
     TakeoverResolvedEventPayloadOutcomeEnum outcome,
-  ) => this(outcome: outcome);
+  ) => call(outcome: outcome);
 
   @override
-  TakeoverResolvedEventPayload note(String? note) => this(note: note);
+  TakeoverResolvedEventPayload note(String? note) => call(note: note);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TakeoverResolvedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TakeoverResolvedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TakeoverResolvedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   TakeoverResolvedEventPayload call({
     Object? computerId = const $CopyWithPlaceholder(),
     Object? outcome = const $CopyWithPlaceholder(),
     Object? note = const $CopyWithPlaceholder(),
   }) {
     return TakeoverResolvedEventPayload(
-      computerId: computerId == const $CopyWithPlaceholder()
+      computerId:
+          computerId == const $CopyWithPlaceholder() || computerId == null
           ? _value.computerId
           // ignore: cast_nullable_to_non_nullable
           : computerId as String,
-      outcome: outcome == const $CopyWithPlaceholder()
+      outcome: outcome == const $CopyWithPlaceholder() || outcome == null
           ? _value.outcome
           // ignore: cast_nullable_to_non_nullable
           : outcome as TakeoverResolvedEventPayloadOutcomeEnum,
@@ -78,7 +84,8 @@ class _$TakeoverResolvedEventPayloadCWProxyImpl
 
 extension $TakeoverResolvedEventPayloadCopyWith
     on TakeoverResolvedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfTakeoverResolvedEventPayload.copyWith(...)` or like so:`instanceOfTakeoverResolvedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfTakeoverResolvedEventPayload.copyWith(...)` or `instanceOfTakeoverResolvedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$TakeoverResolvedEventPayloadCWProxy get copyWith =>
       _$TakeoverResolvedEventPayloadCWProxyImpl(this);
@@ -90,23 +97,18 @@ extension $TakeoverResolvedEventPayloadCopyWith
 
 TakeoverResolvedEventPayload _$TakeoverResolvedEventPayloadFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'TakeoverResolvedEventPayload',
-  json,
-  ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['computer_id', 'outcome', 'note']);
-    final val = TakeoverResolvedEventPayload(
-      computerId: $checkedConvert('computer_id', (v) => v as String),
-      outcome: $checkedConvert(
-        'outcome',
-        (v) => $enumDecode(_$TakeoverResolvedEventPayloadOutcomeEnumEnumMap, v),
-      ),
-      note: $checkedConvert('note', (v) => v as String?),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'computerId': 'computer_id'},
-);
+) => $checkedCreate('TakeoverResolvedEventPayload', json, ($checkedConvert) {
+  $checkKeys(json, requiredKeys: const ['computer_id', 'outcome', 'note']);
+  final val = TakeoverResolvedEventPayload(
+    computerId: $checkedConvert('computer_id', (v) => v as String),
+    outcome: $checkedConvert(
+      'outcome',
+      (v) => $enumDecode(_$TakeoverResolvedEventPayloadOutcomeEnumEnumMap, v),
+    ),
+    note: $checkedConvert('note', (v) => v as String?),
+  );
+  return val;
+}, fieldKeyMap: const {'computerId': 'computer_id'});
 
 Map<String, dynamic> _$TakeoverResolvedEventPayloadToJson(
   TakeoverResolvedEventPayload instance,

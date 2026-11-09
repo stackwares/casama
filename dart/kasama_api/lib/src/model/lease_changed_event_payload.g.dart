@@ -15,12 +15,14 @@ abstract class _$LeaseChangedEventPayloadCWProxy {
 
   LeaseChangedEventPayload mode(LeaseChangedEventPayloadModeEnum mode);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `LeaseChangedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `LeaseChangedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// LeaseChangedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   LeaseChangedEventPayload call({
     String computerId,
     LeaseChangedEventPayloadHolderTypeEnum holderType,
@@ -28,7 +30,8 @@ abstract class _$LeaseChangedEventPayloadCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfLeaseChangedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfLeaseChangedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfLeaseChangedEventPayload.copyWith(...)` or call `instanceOfLeaseChangedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$LeaseChangedEventPayloadCWProxyImpl
     implements _$LeaseChangedEventPayloadCWProxy {
   const _$LeaseChangedEventPayloadCWProxyImpl(this._value);
@@ -37,39 +40,43 @@ class _$LeaseChangedEventPayloadCWProxyImpl
 
   @override
   LeaseChangedEventPayload computerId(String computerId) =>
-      this(computerId: computerId);
+      call(computerId: computerId);
 
   @override
   LeaseChangedEventPayload holderType(
     LeaseChangedEventPayloadHolderTypeEnum holderType,
-  ) => this(holderType: holderType);
+  ) => call(holderType: holderType);
 
   @override
   LeaseChangedEventPayload mode(LeaseChangedEventPayloadModeEnum mode) =>
-      this(mode: mode);
+      call(mode: mode);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `LeaseChangedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `LeaseChangedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// LeaseChangedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   LeaseChangedEventPayload call({
     Object? computerId = const $CopyWithPlaceholder(),
     Object? holderType = const $CopyWithPlaceholder(),
     Object? mode = const $CopyWithPlaceholder(),
   }) {
     return LeaseChangedEventPayload(
-      computerId: computerId == const $CopyWithPlaceholder()
+      computerId:
+          computerId == const $CopyWithPlaceholder() || computerId == null
           ? _value.computerId
           // ignore: cast_nullable_to_non_nullable
           : computerId as String,
-      holderType: holderType == const $CopyWithPlaceholder()
+      holderType:
+          holderType == const $CopyWithPlaceholder() || holderType == null
           ? _value.holderType
           // ignore: cast_nullable_to_non_nullable
           : holderType as LeaseChangedEventPayloadHolderTypeEnum,
-      mode: mode == const $CopyWithPlaceholder()
+      mode: mode == const $CopyWithPlaceholder() || mode == null
           ? _value.mode
           // ignore: cast_nullable_to_non_nullable
           : mode as LeaseChangedEventPayloadModeEnum,
@@ -78,7 +85,8 @@ class _$LeaseChangedEventPayloadCWProxyImpl
 }
 
 extension $LeaseChangedEventPayloadCopyWith on LeaseChangedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfLeaseChangedEventPayload.copyWith(...)` or like so:`instanceOfLeaseChangedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfLeaseChangedEventPayload.copyWith(...)` or `instanceOfLeaseChangedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$LeaseChangedEventPayloadCWProxy get copyWith =>
       _$LeaseChangedEventPayloadCWProxyImpl(this);

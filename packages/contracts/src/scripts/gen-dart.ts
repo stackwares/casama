@@ -54,9 +54,20 @@ let pubspec = readFileSync(pubspecPath, "utf8")
     /^description:.*$/m,
     "description: Generated REST client for the Kasama API. Do not edit.",
   )
-  .replace(/sdk: '.*'/, "sdk: ^3.9.0")
-  .replace(/build_runner: any/, "build_runner: ^2.4.0")
-  .replace(/test: '.*'/, "test: ^1.25.0");
+  .replace(/sdk: '.*'/, "sdk: ^3.13.0");
+// Pin generated dependencies at their latest versions (policy: new deps at latest compatible).
+const PINS: Record<string, string> = {
+  dio: "^5.11.1",
+  copy_with_extension: "^18.0.0",
+  json_annotation: "^4.12.0",
+  // build_runner 2.17 needs build 5; copy_with_extension_gen 18 still needs build 4 (D-061).
+  build_runner: "^2.16.2",
+  copy_with_extension_gen: "^18.0.0",
+  json_serializable: "^6.15.2",
+  test: "^1.33.0",
+};
+for (const [name, version] of Object.entries(PINS))
+  pubspec = pubspec.replace(new RegExp(`^(\\s+${name}:).*$`, "m"), `$1 ${version}`);
 if (!pubspec.includes("resolution: workspace"))
   pubspec = pubspec.replace(/environment:/, "resolution: workspace\n\nenvironment:");
 writeFileSync(pubspecPath, pubspec);

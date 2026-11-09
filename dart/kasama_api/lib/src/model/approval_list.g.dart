@@ -9,34 +9,39 @@ part of 'approval_list.dart';
 abstract class _$ApprovalListCWProxy {
   ApprovalList items(List<Approval> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ApprovalList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ApprovalList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ApprovalList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ApprovalList call({List<Approval> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfApprovalList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfApprovalList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfApprovalList.copyWith(...)` or call `instanceOfApprovalList.copyWith.fieldName(value)` for a single field.
 class _$ApprovalListCWProxyImpl implements _$ApprovalListCWProxy {
   const _$ApprovalListCWProxyImpl(this._value);
 
   final ApprovalList _value;
 
   @override
-  ApprovalList items(List<Approval> items) => this(items: items);
+  ApprovalList items(List<Approval> items) => call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ApprovalList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ApprovalList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ApprovalList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ApprovalList call({Object? items = const $CopyWithPlaceholder()}) {
     return ApprovalList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<Approval>,
@@ -45,7 +50,8 @@ class _$ApprovalListCWProxyImpl implements _$ApprovalListCWProxy {
 }
 
 extension $ApprovalListCopyWith on ApprovalList {
-  /// Returns a callable class that can be used as follows: `instanceOfApprovalList.copyWith(...)` or like so:`instanceOfApprovalList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfApprovalList.copyWith(...)` or `instanceOfApprovalList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ApprovalListCWProxy get copyWith => _$ApprovalListCWProxyImpl(this);
 }

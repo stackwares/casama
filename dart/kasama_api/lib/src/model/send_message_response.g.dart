@@ -13,12 +13,14 @@ abstract class _$SendMessageResponseCWProxy {
 
   SendMessageResponse conversationId(String conversationId);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SendMessageResponse(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SendMessageResponse(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SendMessageResponse(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   SendMessageResponse call({
     String messageId,
     String runId,
@@ -26,44 +28,49 @@ abstract class _$SendMessageResponseCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfSendMessageResponse.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfSendMessageResponse.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfSendMessageResponse.copyWith(...)` or call `instanceOfSendMessageResponse.copyWith.fieldName(value)` for a single field.
 class _$SendMessageResponseCWProxyImpl implements _$SendMessageResponseCWProxy {
   const _$SendMessageResponseCWProxyImpl(this._value);
 
   final SendMessageResponse _value;
 
   @override
-  SendMessageResponse messageId(String messageId) => this(messageId: messageId);
+  SendMessageResponse messageId(String messageId) => call(messageId: messageId);
 
   @override
-  SendMessageResponse runId(String runId) => this(runId: runId);
+  SendMessageResponse runId(String runId) => call(runId: runId);
 
   @override
   SendMessageResponse conversationId(String conversationId) =>
-      this(conversationId: conversationId);
+      call(conversationId: conversationId);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SendMessageResponse(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SendMessageResponse(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SendMessageResponse(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   SendMessageResponse call({
     Object? messageId = const $CopyWithPlaceholder(),
     Object? runId = const $CopyWithPlaceholder(),
     Object? conversationId = const $CopyWithPlaceholder(),
   }) {
     return SendMessageResponse(
-      messageId: messageId == const $CopyWithPlaceholder()
+      messageId: messageId == const $CopyWithPlaceholder() || messageId == null
           ? _value.messageId
           // ignore: cast_nullable_to_non_nullable
           : messageId as String,
-      runId: runId == const $CopyWithPlaceholder()
+      runId: runId == const $CopyWithPlaceholder() || runId == null
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String,
-      conversationId: conversationId == const $CopyWithPlaceholder()
+      conversationId:
+          conversationId == const $CopyWithPlaceholder() ||
+              conversationId == null
           ? _value.conversationId
           // ignore: cast_nullable_to_non_nullable
           : conversationId as String,
@@ -72,7 +79,8 @@ class _$SendMessageResponseCWProxyImpl implements _$SendMessageResponseCWProxy {
 }
 
 extension $SendMessageResponseCopyWith on SendMessageResponse {
-  /// Returns a callable class that can be used as follows: `instanceOfSendMessageResponse.copyWith(...)` or like so:`instanceOfSendMessageResponse.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfSendMessageResponse.copyWith(...)` or `instanceOfSendMessageResponse.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$SendMessageResponseCWProxy get copyWith =>
       _$SendMessageResponseCWProxyImpl(this);

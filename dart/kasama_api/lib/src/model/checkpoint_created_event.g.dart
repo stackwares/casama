@@ -21,12 +21,14 @@ abstract class _$CheckpointCreatedEventCWProxy {
 
   CheckpointCreatedEvent payload(CheckpointCreatedEventPayload payload);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CheckpointCreatedEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CheckpointCreatedEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CheckpointCreatedEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CheckpointCreatedEvent call({
     int v,
     String runId,
@@ -38,7 +40,8 @@ abstract class _$CheckpointCreatedEventCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCheckpointCreatedEvent.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCheckpointCreatedEvent.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCheckpointCreatedEvent.copyWith(...)` or call `instanceOfCheckpointCreatedEvent.copyWith.fieldName(value)` for a single field.
 class _$CheckpointCreatedEventCWProxyImpl
     implements _$CheckpointCreatedEventCWProxy {
   const _$CheckpointCreatedEventCWProxyImpl(this._value);
@@ -46,35 +49,37 @@ class _$CheckpointCreatedEventCWProxyImpl
   final CheckpointCreatedEvent _value;
 
   @override
-  CheckpointCreatedEvent v(int v) => this(v: v);
+  CheckpointCreatedEvent v(int v) => call(v: v);
 
   @override
-  CheckpointCreatedEvent runId(String runId) => this(runId: runId);
+  CheckpointCreatedEvent runId(String runId) => call(runId: runId);
 
   @override
-  CheckpointCreatedEvent seq(int seq) => this(seq: seq);
+  CheckpointCreatedEvent seq(int seq) => call(seq: seq);
 
   @override
-  CheckpointCreatedEvent ts(DateTime ts) => this(ts: ts);
+  CheckpointCreatedEvent ts(DateTime ts) => call(ts: ts);
 
   @override
-  CheckpointCreatedEvent botId(String botId) => this(botId: botId);
+  CheckpointCreatedEvent botId(String botId) => call(botId: botId);
 
   @override
   CheckpointCreatedEvent type(CheckpointCreatedEventTypeEnum type) =>
-      this(type: type);
+      call(type: type);
 
   @override
   CheckpointCreatedEvent payload(CheckpointCreatedEventPayload payload) =>
-      this(payload: payload);
+      call(payload: payload);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CheckpointCreatedEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CheckpointCreatedEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CheckpointCreatedEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CheckpointCreatedEvent call({
     Object? v = const $CopyWithPlaceholder(),
     Object? runId = const $CopyWithPlaceholder(),
@@ -85,31 +90,31 @@ class _$CheckpointCreatedEventCWProxyImpl
     Object? payload = const $CopyWithPlaceholder(),
   }) {
     return CheckpointCreatedEvent(
-      v: v == const $CopyWithPlaceholder()
+      v: v == const $CopyWithPlaceholder() || v == null
           ? _value.v
           // ignore: cast_nullable_to_non_nullable
           : v as int,
-      runId: runId == const $CopyWithPlaceholder()
+      runId: runId == const $CopyWithPlaceholder() || runId == null
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String,
-      seq: seq == const $CopyWithPlaceholder()
+      seq: seq == const $CopyWithPlaceholder() || seq == null
           ? _value.seq
           // ignore: cast_nullable_to_non_nullable
           : seq as int,
-      ts: ts == const $CopyWithPlaceholder()
+      ts: ts == const $CopyWithPlaceholder() || ts == null
           ? _value.ts
           // ignore: cast_nullable_to_non_nullable
           : ts as DateTime,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
-      type: type == const $CopyWithPlaceholder()
+      type: type == const $CopyWithPlaceholder() || type == null
           ? _value.type
           // ignore: cast_nullable_to_non_nullable
           : type as CheckpointCreatedEventTypeEnum,
-      payload: payload == const $CopyWithPlaceholder()
+      payload: payload == const $CopyWithPlaceholder() || payload == null
           ? _value.payload
           // ignore: cast_nullable_to_non_nullable
           : payload as CheckpointCreatedEventPayload,
@@ -118,7 +123,8 @@ class _$CheckpointCreatedEventCWProxyImpl
 }
 
 extension $CheckpointCreatedEventCopyWith on CheckpointCreatedEvent {
-  /// Returns a callable class that can be used as follows: `instanceOfCheckpointCreatedEvent.copyWith(...)` or like so:`instanceOfCheckpointCreatedEvent.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCheckpointCreatedEvent.copyWith(...)` or `instanceOfCheckpointCreatedEvent.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CheckpointCreatedEventCWProxy get copyWith =>
       _$CheckpointCreatedEventCWProxyImpl(this);
@@ -130,42 +136,36 @@ extension $CheckpointCreatedEventCopyWith on CheckpointCreatedEvent {
 
 CheckpointCreatedEvent _$CheckpointCreatedEventFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'CheckpointCreatedEvent',
-  json,
-  ($checkedConvert) {
-    $checkKeys(
-      json,
-      requiredKeys: const [
-        'v',
-        'run_id',
-        'seq',
-        'ts',
-        'bot_id',
-        'type',
-        'payload',
-      ],
-    );
-    final val = CheckpointCreatedEvent(
-      v: $checkedConvert('v', (v) => (v as num).toInt()),
-      runId: $checkedConvert('run_id', (v) => v as String),
-      seq: $checkedConvert('seq', (v) => (v as num).toInt()),
-      ts: $checkedConvert('ts', (v) => DateTime.parse(v as String)),
-      botId: $checkedConvert('bot_id', (v) => v as String),
-      type: $checkedConvert(
-        'type',
-        (v) => $enumDecode(_$CheckpointCreatedEventTypeEnumEnumMap, v),
-      ),
-      payload: $checkedConvert(
-        'payload',
-        (v) =>
-            CheckpointCreatedEventPayload.fromJson(v as Map<String, dynamic>),
-      ),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'runId': 'run_id', 'botId': 'bot_id'},
-);
+) => $checkedCreate('CheckpointCreatedEvent', json, ($checkedConvert) {
+  $checkKeys(
+    json,
+    requiredKeys: const [
+      'v',
+      'run_id',
+      'seq',
+      'ts',
+      'bot_id',
+      'type',
+      'payload',
+    ],
+  );
+  final val = CheckpointCreatedEvent(
+    v: $checkedConvert('v', (v) => (v as num).toInt()),
+    runId: $checkedConvert('run_id', (v) => v as String),
+    seq: $checkedConvert('seq', (v) => (v as num).toInt()),
+    ts: $checkedConvert('ts', (v) => DateTime.parse(v as String)),
+    botId: $checkedConvert('bot_id', (v) => v as String),
+    type: $checkedConvert(
+      'type',
+      (v) => $enumDecode(_$CheckpointCreatedEventTypeEnumEnumMap, v),
+    ),
+    payload: $checkedConvert(
+      'payload',
+      (v) => CheckpointCreatedEventPayload.fromJson(v as Map<String, dynamic>),
+    ),
+  );
+  return val;
+}, fieldKeyMap: const {'runId': 'run_id', 'botId': 'bot_id'});
 
 Map<String, dynamic> _$CheckpointCreatedEventToJson(
   CheckpointCreatedEvent instance,

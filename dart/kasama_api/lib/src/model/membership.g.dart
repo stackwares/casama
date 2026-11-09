@@ -17,12 +17,14 @@ abstract class _$MembershipCWProxy {
 
   Membership createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Membership(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Membership(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Membership(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Membership call({
     String id,
     String orgId,
@@ -32,34 +34,37 @@ abstract class _$MembershipCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfMembership.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfMembership.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfMembership.copyWith(...)` or call `instanceOfMembership.copyWith.fieldName(value)` for a single field.
 class _$MembershipCWProxyImpl implements _$MembershipCWProxy {
   const _$MembershipCWProxyImpl(this._value);
 
   final Membership _value;
 
   @override
-  Membership id(String id) => this(id: id);
+  Membership id(String id) => call(id: id);
 
   @override
-  Membership orgId(String orgId) => this(orgId: orgId);
+  Membership orgId(String orgId) => call(orgId: orgId);
 
   @override
-  Membership userId(String userId) => this(userId: userId);
+  Membership userId(String userId) => call(userId: userId);
 
   @override
-  Membership role(OrgRole role) => this(role: role);
+  Membership role(OrgRole role) => call(role: role);
 
   @override
-  Membership createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Membership createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Membership(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Membership(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Membership(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Membership call({
     Object? id = const $CopyWithPlaceholder(),
     Object? orgId = const $CopyWithPlaceholder(),
@@ -68,23 +73,23 @@ class _$MembershipCWProxyImpl implements _$MembershipCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Membership(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      userId: userId == const $CopyWithPlaceholder()
+      userId: userId == const $CopyWithPlaceholder() || userId == null
           ? _value.userId
           // ignore: cast_nullable_to_non_nullable
           : userId as String,
-      role: role == const $CopyWithPlaceholder()
+      role: role == const $CopyWithPlaceholder() || role == null
           ? _value.role
           // ignore: cast_nullable_to_non_nullable
           : role as OrgRole,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -93,7 +98,8 @@ class _$MembershipCWProxyImpl implements _$MembershipCWProxy {
 }
 
 extension $MembershipCopyWith on Membership {
-  /// Returns a callable class that can be used as follows: `instanceOfMembership.copyWith(...)` or like so:`instanceOfMembership.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfMembership.copyWith(...)` or `instanceOfMembership.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$MembershipCWProxy get copyWith => _$MembershipCWProxyImpl(this);
 }

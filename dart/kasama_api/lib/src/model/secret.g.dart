@@ -19,12 +19,14 @@ abstract class _$SecretCWProxy {
 
   Secret createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Secret(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Secret(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Secret(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Secret call({
     String id,
     String orgId,
@@ -35,39 +37,42 @@ abstract class _$SecretCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfSecret.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfSecret.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfSecret.copyWith(...)` or call `instanceOfSecret.copyWith.fieldName(value)` for a single field.
 class _$SecretCWProxyImpl implements _$SecretCWProxy {
   const _$SecretCWProxyImpl(this._value);
 
   final Secret _value;
 
   @override
-  Secret id(String id) => this(id: id);
+  Secret id(String id) => call(id: id);
 
   @override
-  Secret orgId(String orgId) => this(orgId: orgId);
+  Secret orgId(String orgId) => call(orgId: orgId);
 
   @override
-  Secret name(String name) => this(name: name);
+  Secret name(String name) => call(name: name);
 
   @override
   Secret allowedHosts(List<String> allowedHosts) =>
-      this(allowedHosts: allowedHosts);
+      call(allowedHosts: allowedHosts);
 
   @override
   Secret allowedBotIds(List<String>? allowedBotIds) =>
-      this(allowedBotIds: allowedBotIds);
+      call(allowedBotIds: allowedBotIds);
 
   @override
-  Secret createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Secret createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Secret(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Secret(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Secret(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Secret call({
     Object? id = const $CopyWithPlaceholder(),
     Object? orgId = const $CopyWithPlaceholder(),
@@ -77,19 +82,20 @@ class _$SecretCWProxyImpl implements _$SecretCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Secret(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      allowedHosts: allowedHosts == const $CopyWithPlaceholder()
+      allowedHosts:
+          allowedHosts == const $CopyWithPlaceholder() || allowedHosts == null
           ? _value.allowedHosts
           // ignore: cast_nullable_to_non_nullable
           : allowedHosts as List<String>,
@@ -97,7 +103,7 @@ class _$SecretCWProxyImpl implements _$SecretCWProxy {
           ? _value.allowedBotIds
           // ignore: cast_nullable_to_non_nullable
           : allowedBotIds as List<String>?,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -106,7 +112,8 @@ class _$SecretCWProxyImpl implements _$SecretCWProxy {
 }
 
 extension $SecretCopyWith on Secret {
-  /// Returns a callable class that can be used as follows: `instanceOfSecret.copyWith(...)` or like so:`instanceOfSecret.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfSecret.copyWith(...)` or `instanceOfSecret.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$SecretCWProxy get copyWith => _$SecretCWProxyImpl(this);
 }

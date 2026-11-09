@@ -25,12 +25,14 @@ abstract class _$CreateBotRequestCWProxy {
 
   CreateBotRequest templateId(String? templateId);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateBotRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateBotRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateBotRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CreateBotRequest call({
     String orgId,
     String name,
@@ -44,49 +46,52 @@ abstract class _$CreateBotRequestCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCreateBotRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCreateBotRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCreateBotRequest.copyWith(...)` or call `instanceOfCreateBotRequest.copyWith.fieldName(value)` for a single field.
 class _$CreateBotRequestCWProxyImpl implements _$CreateBotRequestCWProxy {
   const _$CreateBotRequestCWProxyImpl(this._value);
 
   final CreateBotRequest _value;
 
   @override
-  CreateBotRequest orgId(String orgId) => this(orgId: orgId);
+  CreateBotRequest orgId(String orgId) => call(orgId: orgId);
 
   @override
-  CreateBotRequest name(String name) => this(name: name);
+  CreateBotRequest name(String name) => call(name: name);
 
   @override
-  CreateBotRequest personaMd(String? personaMd) => this(personaMd: personaMd);
+  CreateBotRequest personaMd(String? personaMd) => call(personaMd: personaMd);
 
   @override
-  CreateBotRequest avatarUrl(String? avatarUrl) => this(avatarUrl: avatarUrl);
+  CreateBotRequest avatarUrl(String? avatarUrl) => call(avatarUrl: avatarUrl);
 
   @override
   CreateBotRequest modelPolicy(ModelPolicy? modelPolicy) =>
-      this(modelPolicy: modelPolicy);
+      call(modelPolicy: modelPolicy);
 
   @override
-  CreateBotRequest autonomy(Autonomy? autonomy) => this(autonomy: autonomy);
+  CreateBotRequest autonomy(Autonomy? autonomy) => call(autonomy: autonomy);
 
   @override
   CreateBotRequest visibility(Visibility? visibility) =>
-      this(visibility: visibility);
+      call(visibility: visibility);
 
   @override
-  CreateBotRequest budget(BotBudget? budget) => this(budget: budget);
+  CreateBotRequest budget(BotBudget? budget) => call(budget: budget);
 
   @override
   CreateBotRequest templateId(String? templateId) =>
-      this(templateId: templateId);
+      call(templateId: templateId);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateBotRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateBotRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateBotRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CreateBotRequest call({
     Object? orgId = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
@@ -99,11 +104,11 @@ class _$CreateBotRequestCWProxyImpl implements _$CreateBotRequestCWProxy {
     Object? templateId = const $CopyWithPlaceholder(),
   }) {
     return CreateBotRequest(
-      orgId: orgId == const $CopyWithPlaceholder()
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
           ? _value.orgId
           // ignore: cast_nullable_to_non_nullable
           : orgId as String,
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
@@ -140,7 +145,8 @@ class _$CreateBotRequestCWProxyImpl implements _$CreateBotRequestCWProxy {
 }
 
 extension $CreateBotRequestCopyWith on CreateBotRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfCreateBotRequest.copyWith(...)` or like so:`instanceOfCreateBotRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCreateBotRequest.copyWith(...)` or `instanceOfCreateBotRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CreateBotRequestCWProxy get copyWith => _$CreateBotRequestCWProxyImpl(this);
 }

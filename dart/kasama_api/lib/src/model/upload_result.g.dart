@@ -11,44 +11,49 @@ abstract class _$UploadResultCWProxy {
 
   UploadResult size(int size);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UploadResult(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UploadResult(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UploadResult(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   UploadResult call({String path, int size});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfUploadResult.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfUploadResult.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfUploadResult.copyWith(...)` or call `instanceOfUploadResult.copyWith.fieldName(value)` for a single field.
 class _$UploadResultCWProxyImpl implements _$UploadResultCWProxy {
   const _$UploadResultCWProxyImpl(this._value);
 
   final UploadResult _value;
 
   @override
-  UploadResult path(String path) => this(path: path);
+  UploadResult path(String path) => call(path: path);
 
   @override
-  UploadResult size(int size) => this(size: size);
+  UploadResult size(int size) => call(size: size);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UploadResult(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UploadResult(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UploadResult(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   UploadResult call({
     Object? path = const $CopyWithPlaceholder(),
     Object? size = const $CopyWithPlaceholder(),
   }) {
     return UploadResult(
-      path: path == const $CopyWithPlaceholder()
+      path: path == const $CopyWithPlaceholder() || path == null
           ? _value.path
           // ignore: cast_nullable_to_non_nullable
           : path as String,
-      size: size == const $CopyWithPlaceholder()
+      size: size == const $CopyWithPlaceholder() || size == null
           ? _value.size
           // ignore: cast_nullable_to_non_nullable
           : size as int,
@@ -57,7 +62,8 @@ class _$UploadResultCWProxyImpl implements _$UploadResultCWProxy {
 }
 
 extension $UploadResultCopyWith on UploadResult {
-  /// Returns a callable class that can be used as follows: `instanceOfUploadResult.copyWith(...)` or like so:`instanceOfUploadResult.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfUploadResult.copyWith(...)` or `instanceOfUploadResult.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$UploadResultCWProxy get copyWith => _$UploadResultCWProxyImpl(this);
 }

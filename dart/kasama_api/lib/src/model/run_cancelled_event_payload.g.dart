@@ -9,16 +9,19 @@ part of 'run_cancelled_event_payload.dart';
 abstract class _$RunCancelledEventPayloadCWProxy {
   RunCancelledEventPayload cancelledBy(String? cancelledBy);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunCancelledEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunCancelledEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunCancelledEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   RunCancelledEventPayload call({String? cancelledBy});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfRunCancelledEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfRunCancelledEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfRunCancelledEventPayload.copyWith(...)` or call `instanceOfRunCancelledEventPayload.copyWith.fieldName(value)` for a single field.
 class _$RunCancelledEventPayloadCWProxyImpl
     implements _$RunCancelledEventPayloadCWProxy {
   const _$RunCancelledEventPayloadCWProxyImpl(this._value);
@@ -27,15 +30,17 @@ class _$RunCancelledEventPayloadCWProxyImpl
 
   @override
   RunCancelledEventPayload cancelledBy(String? cancelledBy) =>
-      this(cancelledBy: cancelledBy);
+      call(cancelledBy: cancelledBy);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunCancelledEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunCancelledEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunCancelledEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   RunCancelledEventPayload call({
     Object? cancelledBy = const $CopyWithPlaceholder(),
   }) {
@@ -49,7 +54,8 @@ class _$RunCancelledEventPayloadCWProxyImpl
 }
 
 extension $RunCancelledEventPayloadCopyWith on RunCancelledEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfRunCancelledEventPayload.copyWith(...)` or like so:`instanceOfRunCancelledEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfRunCancelledEventPayload.copyWith(...)` or `instanceOfRunCancelledEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$RunCancelledEventPayloadCWProxy get copyWith =>
       _$RunCancelledEventPayloadCWProxyImpl(this);
@@ -61,18 +67,13 @@ extension $RunCancelledEventPayloadCopyWith on RunCancelledEventPayload {
 
 RunCancelledEventPayload _$RunCancelledEventPayloadFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'RunCancelledEventPayload',
-  json,
-  ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['cancelled_by']);
-    final val = RunCancelledEventPayload(
-      cancelledBy: $checkedConvert('cancelled_by', (v) => v as String?),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'cancelledBy': 'cancelled_by'},
-);
+) => $checkedCreate('RunCancelledEventPayload', json, ($checkedConvert) {
+  $checkKeys(json, requiredKeys: const ['cancelled_by']);
+  final val = RunCancelledEventPayload(
+    cancelledBy: $checkedConvert('cancelled_by', (v) => v as String?),
+  );
+  return val;
+}, fieldKeyMap: const {'cancelledBy': 'cancelled_by'});
 
 Map<String, dynamic> _$RunCancelledEventPayloadToJson(
   RunCancelledEventPayload instance,

@@ -11,40 +11,45 @@ abstract class _$CreateInviteRequestCWProxy {
 
   CreateInviteRequest role(InviteRole? role);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateInviteRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateInviteRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateInviteRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   CreateInviteRequest call({String email, InviteRole? role});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfCreateInviteRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfCreateInviteRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCreateInviteRequest.copyWith(...)` or call `instanceOfCreateInviteRequest.copyWith.fieldName(value)` for a single field.
 class _$CreateInviteRequestCWProxyImpl implements _$CreateInviteRequestCWProxy {
   const _$CreateInviteRequestCWProxyImpl(this._value);
 
   final CreateInviteRequest _value;
 
   @override
-  CreateInviteRequest email(String email) => this(email: email);
+  CreateInviteRequest email(String email) => call(email: email);
 
   @override
-  CreateInviteRequest role(InviteRole? role) => this(role: role);
+  CreateInviteRequest role(InviteRole? role) => call(role: role);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `CreateInviteRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateInviteRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// CreateInviteRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   CreateInviteRequest call({
     Object? email = const $CopyWithPlaceholder(),
     Object? role = const $CopyWithPlaceholder(),
   }) {
     return CreateInviteRequest(
-      email: email == const $CopyWithPlaceholder()
+      email: email == const $CopyWithPlaceholder() || email == null
           ? _value.email
           // ignore: cast_nullable_to_non_nullable
           : email as String,
@@ -57,7 +62,8 @@ class _$CreateInviteRequestCWProxyImpl implements _$CreateInviteRequestCWProxy {
 }
 
 extension $CreateInviteRequestCopyWith on CreateInviteRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfCreateInviteRequest.copyWith(...)` or like so:`instanceOfCreateInviteRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCreateInviteRequest.copyWith(...)` or `instanceOfCreateInviteRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$CreateInviteRequestCWProxy get copyWith =>
       _$CreateInviteRequestCWProxyImpl(this);

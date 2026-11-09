@@ -35,12 +35,14 @@ abstract class _$RunCWProxy {
 
   Run createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Run(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Run(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Run(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Run call({
     String id,
     String botId,
@@ -59,62 +61,65 @@ abstract class _$RunCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfRun.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfRun.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfRun.copyWith(...)` or call `instanceOfRun.copyWith.fieldName(value)` for a single field.
 class _$RunCWProxyImpl implements _$RunCWProxy {
   const _$RunCWProxyImpl(this._value);
 
   final Run _value;
 
   @override
-  Run id(String id) => this(id: id);
+  Run id(String id) => call(id: id);
 
   @override
-  Run botId(String botId) => this(botId: botId);
+  Run botId(String botId) => call(botId: botId);
 
   @override
   Run conversationId(String? conversationId) =>
-      this(conversationId: conversationId);
+      call(conversationId: conversationId);
 
   @override
-  Run parentRunId(String? parentRunId) => this(parentRunId: parentRunId);
+  Run parentRunId(String? parentRunId) => call(parentRunId: parentRunId);
 
   @override
-  Run trigger(String trigger) => this(trigger: trigger);
+  Run trigger(String trigger) => call(trigger: trigger);
 
   @override
-  Run status(RunStatus status) => this(status: status);
+  Run status(RunStatus status) => call(status: status);
 
   @override
-  Run tokensIn(int tokensIn) => this(tokensIn: tokensIn);
+  Run tokensIn(int tokensIn) => call(tokensIn: tokensIn);
 
   @override
-  Run tokensOut(int tokensOut) => this(tokensOut: tokensOut);
+  Run tokensOut(int tokensOut) => call(tokensOut: tokensOut);
 
   @override
-  Run costUsd(num costUsd) => this(costUsd: costUsd);
+  Run costUsd(num costUsd) => call(costUsd: costUsd);
 
   @override
-  Run lastSeq(int lastSeq) => this(lastSeq: lastSeq);
+  Run lastSeq(int lastSeq) => call(lastSeq: lastSeq);
 
   @override
-  Run startedAt(DateTime? startedAt) => this(startedAt: startedAt);
+  Run startedAt(DateTime? startedAt) => call(startedAt: startedAt);
 
   @override
-  Run endedAt(DateTime? endedAt) => this(endedAt: endedAt);
+  Run endedAt(DateTime? endedAt) => call(endedAt: endedAt);
 
   @override
-  Run error(RunError? error) => this(error: error);
+  Run error(RunError? error) => call(error: error);
 
   @override
-  Run createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Run createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Run(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Run(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Run(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Run call({
     Object? id = const $CopyWithPlaceholder(),
     Object? botId = const $CopyWithPlaceholder(),
@@ -132,11 +137,11 @@ class _$RunCWProxyImpl implements _$RunCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Run(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
@@ -148,27 +153,27 @@ class _$RunCWProxyImpl implements _$RunCWProxy {
           ? _value.parentRunId
           // ignore: cast_nullable_to_non_nullable
           : parentRunId as String?,
-      trigger: trigger == const $CopyWithPlaceholder()
+      trigger: trigger == const $CopyWithPlaceholder() || trigger == null
           ? _value.trigger
           // ignore: cast_nullable_to_non_nullable
           : trigger as String,
-      status: status == const $CopyWithPlaceholder()
+      status: status == const $CopyWithPlaceholder() || status == null
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as RunStatus,
-      tokensIn: tokensIn == const $CopyWithPlaceholder()
+      tokensIn: tokensIn == const $CopyWithPlaceholder() || tokensIn == null
           ? _value.tokensIn
           // ignore: cast_nullable_to_non_nullable
           : tokensIn as int,
-      tokensOut: tokensOut == const $CopyWithPlaceholder()
+      tokensOut: tokensOut == const $CopyWithPlaceholder() || tokensOut == null
           ? _value.tokensOut
           // ignore: cast_nullable_to_non_nullable
           : tokensOut as int,
-      costUsd: costUsd == const $CopyWithPlaceholder()
+      costUsd: costUsd == const $CopyWithPlaceholder() || costUsd == null
           ? _value.costUsd
           // ignore: cast_nullable_to_non_nullable
           : costUsd as num,
-      lastSeq: lastSeq == const $CopyWithPlaceholder()
+      lastSeq: lastSeq == const $CopyWithPlaceholder() || lastSeq == null
           ? _value.lastSeq
           // ignore: cast_nullable_to_non_nullable
           : lastSeq as int,
@@ -184,7 +189,7 @@ class _$RunCWProxyImpl implements _$RunCWProxy {
           ? _value.error
           // ignore: cast_nullable_to_non_nullable
           : error as RunError?,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -193,7 +198,8 @@ class _$RunCWProxyImpl implements _$RunCWProxy {
 }
 
 extension $RunCopyWith on Run {
-  /// Returns a callable class that can be used as follows: `instanceOfRun.copyWith(...)` or like so:`instanceOfRun.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfRun.copyWith(...)` or `instanceOfRun.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$RunCWProxy get copyWith => _$RunCWProxyImpl(this);
 }

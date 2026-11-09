@@ -11,19 +11,22 @@ abstract class _$UpdateComputerRequestCWProxy {
 
   UpdateComputerRequest profile(UpdateComputerRequestProfileEnum? profile);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UpdateComputerRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateComputerRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UpdateComputerRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   UpdateComputerRequest call({
     String? name,
     UpdateComputerRequestProfileEnum? profile,
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfUpdateComputerRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfUpdateComputerRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfUpdateComputerRequest.copyWith(...)` or call `instanceOfUpdateComputerRequest.copyWith.fieldName(value)` for a single field.
 class _$UpdateComputerRequestCWProxyImpl
     implements _$UpdateComputerRequestCWProxy {
   const _$UpdateComputerRequestCWProxyImpl(this._value);
@@ -31,19 +34,21 @@ class _$UpdateComputerRequestCWProxyImpl
   final UpdateComputerRequest _value;
 
   @override
-  UpdateComputerRequest name(String? name) => this(name: name);
+  UpdateComputerRequest name(String? name) => call(name: name);
 
   @override
   UpdateComputerRequest profile(UpdateComputerRequestProfileEnum? profile) =>
-      this(profile: profile);
+      call(profile: profile);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UpdateComputerRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateComputerRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UpdateComputerRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   UpdateComputerRequest call({
     Object? name = const $CopyWithPlaceholder(),
     Object? profile = const $CopyWithPlaceholder(),
@@ -62,7 +67,8 @@ class _$UpdateComputerRequestCWProxyImpl
 }
 
 extension $UpdateComputerRequestCopyWith on UpdateComputerRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfUpdateComputerRequest.copyWith(...)` or like so:`instanceOfUpdateComputerRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfUpdateComputerRequest.copyWith(...)` or `instanceOfUpdateComputerRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$UpdateComputerRequestCWProxy get copyWith =>
       _$UpdateComputerRequestCWProxyImpl(this);

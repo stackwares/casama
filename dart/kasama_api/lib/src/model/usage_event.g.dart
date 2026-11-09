@@ -21,12 +21,14 @@ abstract class _$UsageEventCWProxy {
 
   UsageEvent payload(UsageEventPayload payload);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UsageEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UsageEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   UsageEvent call({
     int v,
     String runId,
@@ -38,40 +40,43 @@ abstract class _$UsageEventCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfUsageEvent.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfUsageEvent.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfUsageEvent.copyWith(...)` or call `instanceOfUsageEvent.copyWith.fieldName(value)` for a single field.
 class _$UsageEventCWProxyImpl implements _$UsageEventCWProxy {
   const _$UsageEventCWProxyImpl(this._value);
 
   final UsageEvent _value;
 
   @override
-  UsageEvent v(int v) => this(v: v);
+  UsageEvent v(int v) => call(v: v);
 
   @override
-  UsageEvent runId(String runId) => this(runId: runId);
+  UsageEvent runId(String runId) => call(runId: runId);
 
   @override
-  UsageEvent seq(int seq) => this(seq: seq);
+  UsageEvent seq(int seq) => call(seq: seq);
 
   @override
-  UsageEvent ts(DateTime ts) => this(ts: ts);
+  UsageEvent ts(DateTime ts) => call(ts: ts);
 
   @override
-  UsageEvent botId(String botId) => this(botId: botId);
+  UsageEvent botId(String botId) => call(botId: botId);
 
   @override
-  UsageEvent type(UsageEventTypeEnum type) => this(type: type);
+  UsageEvent type(UsageEventTypeEnum type) => call(type: type);
 
   @override
-  UsageEvent payload(UsageEventPayload payload) => this(payload: payload);
+  UsageEvent payload(UsageEventPayload payload) => call(payload: payload);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `UsageEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// UsageEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   UsageEvent call({
     Object? v = const $CopyWithPlaceholder(),
     Object? runId = const $CopyWithPlaceholder(),
@@ -82,31 +87,31 @@ class _$UsageEventCWProxyImpl implements _$UsageEventCWProxy {
     Object? payload = const $CopyWithPlaceholder(),
   }) {
     return UsageEvent(
-      v: v == const $CopyWithPlaceholder()
+      v: v == const $CopyWithPlaceholder() || v == null
           ? _value.v
           // ignore: cast_nullable_to_non_nullable
           : v as int,
-      runId: runId == const $CopyWithPlaceholder()
+      runId: runId == const $CopyWithPlaceholder() || runId == null
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String,
-      seq: seq == const $CopyWithPlaceholder()
+      seq: seq == const $CopyWithPlaceholder() || seq == null
           ? _value.seq
           // ignore: cast_nullable_to_non_nullable
           : seq as int,
-      ts: ts == const $CopyWithPlaceholder()
+      ts: ts == const $CopyWithPlaceholder() || ts == null
           ? _value.ts
           // ignore: cast_nullable_to_non_nullable
           : ts as DateTime,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
-      type: type == const $CopyWithPlaceholder()
+      type: type == const $CopyWithPlaceholder() || type == null
           ? _value.type
           // ignore: cast_nullable_to_non_nullable
           : type as UsageEventTypeEnum,
-      payload: payload == const $CopyWithPlaceholder()
+      payload: payload == const $CopyWithPlaceholder() || payload == null
           ? _value.payload
           // ignore: cast_nullable_to_non_nullable
           : payload as UsageEventPayload,
@@ -115,7 +120,8 @@ class _$UsageEventCWProxyImpl implements _$UsageEventCWProxy {
 }
 
 extension $UsageEventCopyWith on UsageEvent {
-  /// Returns a callable class that can be used as follows: `instanceOfUsageEvent.copyWith(...)` or like so:`instanceOfUsageEvent.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfUsageEvent.copyWith(...)` or `instanceOfUsageEvent.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$UsageEventCWProxy get copyWith => _$UsageEventCWProxyImpl(this);
 }

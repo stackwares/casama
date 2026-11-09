@@ -9,34 +9,39 @@ part of 'task_list.dart';
 abstract class _$TaskListCWProxy {
   TaskList items(List<Task> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TaskList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TaskList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TaskList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   TaskList call({List<Task> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfTaskList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfTaskList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfTaskList.copyWith(...)` or call `instanceOfTaskList.copyWith.fieldName(value)` for a single field.
 class _$TaskListCWProxyImpl implements _$TaskListCWProxy {
   const _$TaskListCWProxyImpl(this._value);
 
   final TaskList _value;
 
   @override
-  TaskList items(List<Task> items) => this(items: items);
+  TaskList items(List<Task> items) => call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TaskList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TaskList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TaskList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   TaskList call({Object? items = const $CopyWithPlaceholder()}) {
     return TaskList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<Task>,
@@ -45,7 +50,8 @@ class _$TaskListCWProxyImpl implements _$TaskListCWProxy {
 }
 
 extension $TaskListCopyWith on TaskList {
-  /// Returns a callable class that can be used as follows: `instanceOfTaskList.copyWith(...)` or like so:`instanceOfTaskList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfTaskList.copyWith(...)` or `instanceOfTaskList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$TaskListCWProxy get copyWith => _$TaskListCWProxyImpl(this);
 }

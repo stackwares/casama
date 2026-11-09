@@ -13,19 +13,22 @@ abstract class _$ApprovalDecisionRequestCWProxy {
 
   ApprovalDecisionRequest alwaysAllow(bool? alwaysAllow);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ApprovalDecisionRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ApprovalDecisionRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ApprovalDecisionRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ApprovalDecisionRequest call({
     ApprovalDecisionRequestDecisionEnum decision,
     bool? alwaysAllow,
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfApprovalDecisionRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfApprovalDecisionRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfApprovalDecisionRequest.copyWith(...)` or call `instanceOfApprovalDecisionRequest.copyWith.fieldName(value)` for a single field.
 class _$ApprovalDecisionRequestCWProxyImpl
     implements _$ApprovalDecisionRequestCWProxy {
   const _$ApprovalDecisionRequestCWProxyImpl(this._value);
@@ -35,25 +38,27 @@ class _$ApprovalDecisionRequestCWProxyImpl
   @override
   ApprovalDecisionRequest decision(
     ApprovalDecisionRequestDecisionEnum decision,
-  ) => this(decision: decision);
+  ) => call(decision: decision);
 
   @override
   ApprovalDecisionRequest alwaysAllow(bool? alwaysAllow) =>
-      this(alwaysAllow: alwaysAllow);
+      call(alwaysAllow: alwaysAllow);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ApprovalDecisionRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ApprovalDecisionRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ApprovalDecisionRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ApprovalDecisionRequest call({
     Object? decision = const $CopyWithPlaceholder(),
     Object? alwaysAllow = const $CopyWithPlaceholder(),
   }) {
     return ApprovalDecisionRequest(
-      decision: decision == const $CopyWithPlaceholder()
+      decision: decision == const $CopyWithPlaceholder() || decision == null
           ? _value.decision
           // ignore: cast_nullable_to_non_nullable
           : decision as ApprovalDecisionRequestDecisionEnum,
@@ -66,7 +71,8 @@ class _$ApprovalDecisionRequestCWProxyImpl
 }
 
 extension $ApprovalDecisionRequestCopyWith on ApprovalDecisionRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfApprovalDecisionRequest.copyWith(...)` or like so:`instanceOfApprovalDecisionRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfApprovalDecisionRequest.copyWith(...)` or `instanceOfApprovalDecisionRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ApprovalDecisionRequestCWProxy get copyWith =>
       _$ApprovalDecisionRequestCWProxyImpl(this);

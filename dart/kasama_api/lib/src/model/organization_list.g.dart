@@ -9,16 +9,19 @@ part of 'organization_list.dart';
 abstract class _$OrganizationListCWProxy {
   OrganizationList items(List<OrganizationWithRole> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OrganizationList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `OrganizationList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// OrganizationList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   OrganizationList call({List<OrganizationWithRole> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfOrganizationList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfOrganizationList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfOrganizationList.copyWith(...)` or call `instanceOfOrganizationList.copyWith.fieldName(value)` for a single field.
 class _$OrganizationListCWProxyImpl implements _$OrganizationListCWProxy {
   const _$OrganizationListCWProxyImpl(this._value);
 
@@ -26,18 +29,20 @@ class _$OrganizationListCWProxyImpl implements _$OrganizationListCWProxy {
 
   @override
   OrganizationList items(List<OrganizationWithRole> items) =>
-      this(items: items);
+      call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `OrganizationList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `OrganizationList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// OrganizationList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   OrganizationList call({Object? items = const $CopyWithPlaceholder()}) {
     return OrganizationList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<OrganizationWithRole>,
@@ -46,7 +51,8 @@ class _$OrganizationListCWProxyImpl implements _$OrganizationListCWProxy {
 }
 
 extension $OrganizationListCopyWith on OrganizationList {
-  /// Returns a callable class that can be used as follows: `instanceOfOrganizationList.copyWith(...)` or like so:`instanceOfOrganizationList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfOrganizationList.copyWith(...)` or `instanceOfOrganizationList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$OrganizationListCWProxy get copyWith => _$OrganizationListCWProxyImpl(this);
 }

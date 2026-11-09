@@ -21,12 +21,14 @@ abstract class _$RunStartedEventCWProxy {
 
   RunStartedEvent payload(RunStartedEventPayload payload);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunStartedEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunStartedEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunStartedEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   RunStartedEvent call({
     int v,
     String runId,
@@ -38,41 +40,44 @@ abstract class _$RunStartedEventCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfRunStartedEvent.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfRunStartedEvent.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfRunStartedEvent.copyWith(...)` or call `instanceOfRunStartedEvent.copyWith.fieldName(value)` for a single field.
 class _$RunStartedEventCWProxyImpl implements _$RunStartedEventCWProxy {
   const _$RunStartedEventCWProxyImpl(this._value);
 
   final RunStartedEvent _value;
 
   @override
-  RunStartedEvent v(int v) => this(v: v);
+  RunStartedEvent v(int v) => call(v: v);
 
   @override
-  RunStartedEvent runId(String runId) => this(runId: runId);
+  RunStartedEvent runId(String runId) => call(runId: runId);
 
   @override
-  RunStartedEvent seq(int seq) => this(seq: seq);
+  RunStartedEvent seq(int seq) => call(seq: seq);
 
   @override
-  RunStartedEvent ts(DateTime ts) => this(ts: ts);
+  RunStartedEvent ts(DateTime ts) => call(ts: ts);
 
   @override
-  RunStartedEvent botId(String botId) => this(botId: botId);
+  RunStartedEvent botId(String botId) => call(botId: botId);
 
   @override
-  RunStartedEvent type(RunStartedEventTypeEnum type) => this(type: type);
+  RunStartedEvent type(RunStartedEventTypeEnum type) => call(type: type);
 
   @override
   RunStartedEvent payload(RunStartedEventPayload payload) =>
-      this(payload: payload);
+      call(payload: payload);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunStartedEvent(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunStartedEvent(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunStartedEvent(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   RunStartedEvent call({
     Object? v = const $CopyWithPlaceholder(),
     Object? runId = const $CopyWithPlaceholder(),
@@ -83,31 +88,31 @@ class _$RunStartedEventCWProxyImpl implements _$RunStartedEventCWProxy {
     Object? payload = const $CopyWithPlaceholder(),
   }) {
     return RunStartedEvent(
-      v: v == const $CopyWithPlaceholder()
+      v: v == const $CopyWithPlaceholder() || v == null
           ? _value.v
           // ignore: cast_nullable_to_non_nullable
           : v as int,
-      runId: runId == const $CopyWithPlaceholder()
+      runId: runId == const $CopyWithPlaceholder() || runId == null
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String,
-      seq: seq == const $CopyWithPlaceholder()
+      seq: seq == const $CopyWithPlaceholder() || seq == null
           ? _value.seq
           // ignore: cast_nullable_to_non_nullable
           : seq as int,
-      ts: ts == const $CopyWithPlaceholder()
+      ts: ts == const $CopyWithPlaceholder() || ts == null
           ? _value.ts
           // ignore: cast_nullable_to_non_nullable
           : ts as DateTime,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
-      type: type == const $CopyWithPlaceholder()
+      type: type == const $CopyWithPlaceholder() || type == null
           ? _value.type
           // ignore: cast_nullable_to_non_nullable
           : type as RunStartedEventTypeEnum,
-      payload: payload == const $CopyWithPlaceholder()
+      payload: payload == const $CopyWithPlaceholder() || payload == null
           ? _value.payload
           // ignore: cast_nullable_to_non_nullable
           : payload as RunStartedEventPayload,
@@ -116,7 +121,8 @@ class _$RunStartedEventCWProxyImpl implements _$RunStartedEventCWProxy {
 }
 
 extension $RunStartedEventCopyWith on RunStartedEvent {
-  /// Returns a callable class that can be used as follows: `instanceOfRunStartedEvent.copyWith(...)` or like so:`instanceOfRunStartedEvent.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfRunStartedEvent.copyWith(...)` or `instanceOfRunStartedEvent.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$RunStartedEventCWProxy get copyWith => _$RunStartedEventCWProxyImpl(this);
 }

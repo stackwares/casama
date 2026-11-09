@@ -17,12 +17,14 @@ abstract class _$ComputerFileEntryCWProxy {
 
   ComputerFileEntry modified(String modified);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ComputerFileEntry(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ComputerFileEntry(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ComputerFileEntry(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ComputerFileEntry call({
     String name,
     String path,
@@ -32,34 +34,37 @@ abstract class _$ComputerFileEntryCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfComputerFileEntry.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfComputerFileEntry.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfComputerFileEntry.copyWith(...)` or call `instanceOfComputerFileEntry.copyWith.fieldName(value)` for a single field.
 class _$ComputerFileEntryCWProxyImpl implements _$ComputerFileEntryCWProxy {
   const _$ComputerFileEntryCWProxyImpl(this._value);
 
   final ComputerFileEntry _value;
 
   @override
-  ComputerFileEntry name(String name) => this(name: name);
+  ComputerFileEntry name(String name) => call(name: name);
 
   @override
-  ComputerFileEntry path(String path) => this(path: path);
+  ComputerFileEntry path(String path) => call(path: path);
 
   @override
-  ComputerFileEntry type(ComputerFileEntryTypeEnum type) => this(type: type);
+  ComputerFileEntry type(ComputerFileEntryTypeEnum type) => call(type: type);
 
   @override
-  ComputerFileEntry size(int size) => this(size: size);
+  ComputerFileEntry size(int size) => call(size: size);
 
   @override
-  ComputerFileEntry modified(String modified) => this(modified: modified);
+  ComputerFileEntry modified(String modified) => call(modified: modified);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ComputerFileEntry(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ComputerFileEntry(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ComputerFileEntry(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ComputerFileEntry call({
     Object? name = const $CopyWithPlaceholder(),
     Object? path = const $CopyWithPlaceholder(),
@@ -68,23 +73,23 @@ class _$ComputerFileEntryCWProxyImpl implements _$ComputerFileEntryCWProxy {
     Object? modified = const $CopyWithPlaceholder(),
   }) {
     return ComputerFileEntry(
-      name: name == const $CopyWithPlaceholder()
+      name: name == const $CopyWithPlaceholder() || name == null
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
-      path: path == const $CopyWithPlaceholder()
+      path: path == const $CopyWithPlaceholder() || path == null
           ? _value.path
           // ignore: cast_nullable_to_non_nullable
           : path as String,
-      type: type == const $CopyWithPlaceholder()
+      type: type == const $CopyWithPlaceholder() || type == null
           ? _value.type
           // ignore: cast_nullable_to_non_nullable
           : type as ComputerFileEntryTypeEnum,
-      size: size == const $CopyWithPlaceholder()
+      size: size == const $CopyWithPlaceholder() || size == null
           ? _value.size
           // ignore: cast_nullable_to_non_nullable
           : size as int,
-      modified: modified == const $CopyWithPlaceholder()
+      modified: modified == const $CopyWithPlaceholder() || modified == null
           ? _value.modified
           // ignore: cast_nullable_to_non_nullable
           : modified as String,
@@ -93,7 +98,8 @@ class _$ComputerFileEntryCWProxyImpl implements _$ComputerFileEntryCWProxy {
 }
 
 extension $ComputerFileEntryCopyWith on ComputerFileEntry {
-  /// Returns a callable class that can be used as follows: `instanceOfComputerFileEntry.copyWith(...)` or like so:`instanceOfComputerFileEntry.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfComputerFileEntry.copyWith(...)` or `instanceOfComputerFileEntry.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ComputerFileEntryCWProxy get copyWith =>
       _$ComputerFileEntryCWProxyImpl(this);

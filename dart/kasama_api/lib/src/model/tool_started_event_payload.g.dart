@@ -13,12 +13,14 @@ abstract class _$ToolStartedEventPayloadCWProxy {
 
   ToolStartedEventPayload argsRedacted(Map<String, Object?> argsRedacted);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ToolStartedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ToolStartedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ToolStartedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ToolStartedEventPayload call({
     String callId,
     String tool,
@@ -26,7 +28,8 @@ abstract class _$ToolStartedEventPayloadCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfToolStartedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfToolStartedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfToolStartedEventPayload.copyWith(...)` or call `instanceOfToolStartedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$ToolStartedEventPayloadCWProxyImpl
     implements _$ToolStartedEventPayloadCWProxy {
   const _$ToolStartedEventPayloadCWProxyImpl(this._value);
@@ -34,37 +37,40 @@ class _$ToolStartedEventPayloadCWProxyImpl
   final ToolStartedEventPayload _value;
 
   @override
-  ToolStartedEventPayload callId(String callId) => this(callId: callId);
+  ToolStartedEventPayload callId(String callId) => call(callId: callId);
 
   @override
-  ToolStartedEventPayload tool(String tool) => this(tool: tool);
+  ToolStartedEventPayload tool(String tool) => call(tool: tool);
 
   @override
   ToolStartedEventPayload argsRedacted(Map<String, Object?> argsRedacted) =>
-      this(argsRedacted: argsRedacted);
+      call(argsRedacted: argsRedacted);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ToolStartedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ToolStartedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ToolStartedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ToolStartedEventPayload call({
     Object? callId = const $CopyWithPlaceholder(),
     Object? tool = const $CopyWithPlaceholder(),
     Object? argsRedacted = const $CopyWithPlaceholder(),
   }) {
     return ToolStartedEventPayload(
-      callId: callId == const $CopyWithPlaceholder()
+      callId: callId == const $CopyWithPlaceholder() || callId == null
           ? _value.callId
           // ignore: cast_nullable_to_non_nullable
           : callId as String,
-      tool: tool == const $CopyWithPlaceholder()
+      tool: tool == const $CopyWithPlaceholder() || tool == null
           ? _value.tool
           // ignore: cast_nullable_to_non_nullable
           : tool as String,
-      argsRedacted: argsRedacted == const $CopyWithPlaceholder()
+      argsRedacted:
+          argsRedacted == const $CopyWithPlaceholder() || argsRedacted == null
           ? _value.argsRedacted
           // ignore: cast_nullable_to_non_nullable
           : argsRedacted as Map<String, Object?>,
@@ -73,7 +79,8 @@ class _$ToolStartedEventPayloadCWProxyImpl
 }
 
 extension $ToolStartedEventPayloadCopyWith on ToolStartedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfToolStartedEventPayload.copyWith(...)` or like so:`instanceOfToolStartedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfToolStartedEventPayload.copyWith(...)` or `instanceOfToolStartedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ToolStartedEventPayloadCWProxy get copyWith =>
       _$ToolStartedEventPayloadCWProxyImpl(this);
@@ -85,23 +92,18 @@ extension $ToolStartedEventPayloadCopyWith on ToolStartedEventPayload {
 
 ToolStartedEventPayload _$ToolStartedEventPayloadFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'ToolStartedEventPayload',
-  json,
-  ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['call_id', 'tool', 'args_redacted']);
-    final val = ToolStartedEventPayload(
-      callId: $checkedConvert('call_id', (v) => v as String),
-      tool: $checkedConvert('tool', (v) => v as String),
-      argsRedacted: $checkedConvert(
-        'args_redacted',
-        (v) => v as Map<String, dynamic>,
-      ),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'callId': 'call_id', 'argsRedacted': 'args_redacted'},
-);
+) => $checkedCreate('ToolStartedEventPayload', json, ($checkedConvert) {
+  $checkKeys(json, requiredKeys: const ['call_id', 'tool', 'args_redacted']);
+  final val = ToolStartedEventPayload(
+    callId: $checkedConvert('call_id', (v) => v as String),
+    tool: $checkedConvert('tool', (v) => v as String),
+    argsRedacted: $checkedConvert(
+      'args_redacted',
+      (v) => v as Map<String, dynamic>,
+    ),
+  );
+  return val;
+}, fieldKeyMap: const {'callId': 'call_id', 'argsRedacted': 'args_redacted'});
 
 Map<String, dynamic> _$ToolStartedEventPayloadToJson(
   ToolStartedEventPayload instance,

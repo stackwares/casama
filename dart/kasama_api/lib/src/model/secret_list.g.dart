@@ -9,34 +9,39 @@ part of 'secret_list.dart';
 abstract class _$SecretListCWProxy {
   SecretList items(List<Secret> items);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SecretList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SecretList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SecretList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   SecretList call({List<Secret> items});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfSecretList.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfSecretList.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfSecretList.copyWith(...)` or call `instanceOfSecretList.copyWith.fieldName(value)` for a single field.
 class _$SecretListCWProxyImpl implements _$SecretListCWProxy {
   const _$SecretListCWProxyImpl(this._value);
 
   final SecretList _value;
 
   @override
-  SecretList items(List<Secret> items) => this(items: items);
+  SecretList items(List<Secret> items) => call(items: items);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `SecretList(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `SecretList(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// SecretList(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   SecretList call({Object? items = const $CopyWithPlaceholder()}) {
     return SecretList(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<Secret>,
@@ -45,7 +50,8 @@ class _$SecretListCWProxyImpl implements _$SecretListCWProxy {
 }
 
 extension $SecretListCopyWith on SecretList {
-  /// Returns a callable class that can be used as follows: `instanceOfSecretList.copyWith(...)` or like so:`instanceOfSecretList.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfSecretList.copyWith(...)` or `instanceOfSecretList.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$SecretListCWProxy get copyWith => _$SecretListCWProxyImpl(this);
 }

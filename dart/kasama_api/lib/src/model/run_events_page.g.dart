@@ -11,44 +11,49 @@ abstract class _$RunEventsPageCWProxy {
 
   RunEventsPage runStatus(RunStatus runStatus);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunEventsPage(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunEventsPage(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunEventsPage(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   RunEventsPage call({List<RunEventEnvelope> items, RunStatus runStatus});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfRunEventsPage.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfRunEventsPage.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfRunEventsPage.copyWith(...)` or call `instanceOfRunEventsPage.copyWith.fieldName(value)` for a single field.
 class _$RunEventsPageCWProxyImpl implements _$RunEventsPageCWProxy {
   const _$RunEventsPageCWProxyImpl(this._value);
 
   final RunEventsPage _value;
 
   @override
-  RunEventsPage items(List<RunEventEnvelope> items) => this(items: items);
+  RunEventsPage items(List<RunEventEnvelope> items) => call(items: items);
 
   @override
-  RunEventsPage runStatus(RunStatus runStatus) => this(runStatus: runStatus);
+  RunEventsPage runStatus(RunStatus runStatus) => call(runStatus: runStatus);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunEventsPage(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunEventsPage(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunEventsPage(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   RunEventsPage call({
     Object? items = const $CopyWithPlaceholder(),
     Object? runStatus = const $CopyWithPlaceholder(),
   }) {
     return RunEventsPage(
-      items: items == const $CopyWithPlaceholder()
+      items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<RunEventEnvelope>,
-      runStatus: runStatus == const $CopyWithPlaceholder()
+      runStatus: runStatus == const $CopyWithPlaceholder() || runStatus == null
           ? _value.runStatus
           // ignore: cast_nullable_to_non_nullable
           : runStatus as RunStatus,
@@ -57,7 +62,8 @@ class _$RunEventsPageCWProxyImpl implements _$RunEventsPageCWProxy {
 }
 
 extension $RunEventsPageCopyWith on RunEventsPage {
-  /// Returns a callable class that can be used as follows: `instanceOfRunEventsPage.copyWith(...)` or like so:`instanceOfRunEventsPage.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfRunEventsPage.copyWith(...)` or `instanceOfRunEventsPage.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$RunEventsPageCWProxy get copyWith => _$RunEventsPageCWProxyImpl(this);
 }

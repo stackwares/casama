@@ -13,12 +13,14 @@ abstract class _$RunStartedEventPayloadCWProxy {
 
   RunStartedEventPayload computerId(String? computerId);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunStartedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunStartedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunStartedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   RunStartedEventPayload call({
     String trigger,
     String model,
@@ -26,7 +28,8 @@ abstract class _$RunStartedEventPayloadCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfRunStartedEventPayload.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfRunStartedEventPayload.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfRunStartedEventPayload.copyWith(...)` or call `instanceOfRunStartedEventPayload.copyWith.fieldName(value)` for a single field.
 class _$RunStartedEventPayloadCWProxyImpl
     implements _$RunStartedEventPayloadCWProxy {
   const _$RunStartedEventPayloadCWProxyImpl(this._value);
@@ -34,33 +37,35 @@ class _$RunStartedEventPayloadCWProxyImpl
   final RunStartedEventPayload _value;
 
   @override
-  RunStartedEventPayload trigger(String trigger) => this(trigger: trigger);
+  RunStartedEventPayload trigger(String trigger) => call(trigger: trigger);
 
   @override
-  RunStartedEventPayload model(String model) => this(model: model);
+  RunStartedEventPayload model(String model) => call(model: model);
 
   @override
   RunStartedEventPayload computerId(String? computerId) =>
-      this(computerId: computerId);
+      call(computerId: computerId);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `RunStartedEventPayload(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `RunStartedEventPayload(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// RunStartedEventPayload(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   RunStartedEventPayload call({
     Object? trigger = const $CopyWithPlaceholder(),
     Object? model = const $CopyWithPlaceholder(),
     Object? computerId = const $CopyWithPlaceholder(),
   }) {
     return RunStartedEventPayload(
-      trigger: trigger == const $CopyWithPlaceholder()
+      trigger: trigger == const $CopyWithPlaceholder() || trigger == null
           ? _value.trigger
           // ignore: cast_nullable_to_non_nullable
           : trigger as String,
-      model: model == const $CopyWithPlaceholder()
+      model: model == const $CopyWithPlaceholder() || model == null
           ? _value.model
           // ignore: cast_nullable_to_non_nullable
           : model as String,
@@ -73,7 +78,8 @@ class _$RunStartedEventPayloadCWProxyImpl
 }
 
 extension $RunStartedEventPayloadCopyWith on RunStartedEventPayload {
-  /// Returns a callable class that can be used as follows: `instanceOfRunStartedEventPayload.copyWith(...)` or like so:`instanceOfRunStartedEventPayload.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfRunStartedEventPayload.copyWith(...)` or `instanceOfRunStartedEventPayload.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$RunStartedEventPayloadCWProxy get copyWith =>
       _$RunStartedEventPayloadCWProxyImpl(this);

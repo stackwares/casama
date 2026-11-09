@@ -9,31 +9,36 @@ part of 'release_lease_request.dart';
 abstract class _$ReleaseLeaseRequestCWProxy {
   ReleaseLeaseRequest note(String? note);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ReleaseLeaseRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ReleaseLeaseRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ReleaseLeaseRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   ReleaseLeaseRequest call({String? note});
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfReleaseLeaseRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfReleaseLeaseRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfReleaseLeaseRequest.copyWith(...)` or call `instanceOfReleaseLeaseRequest.copyWith.fieldName(value)` for a single field.
 class _$ReleaseLeaseRequestCWProxyImpl implements _$ReleaseLeaseRequestCWProxy {
   const _$ReleaseLeaseRequestCWProxyImpl(this._value);
 
   final ReleaseLeaseRequest _value;
 
   @override
-  ReleaseLeaseRequest note(String? note) => this(note: note);
+  ReleaseLeaseRequest note(String? note) => call(note: note);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `ReleaseLeaseRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `ReleaseLeaseRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// ReleaseLeaseRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   ReleaseLeaseRequest call({Object? note = const $CopyWithPlaceholder()}) {
     return ReleaseLeaseRequest(
       note: note == const $CopyWithPlaceholder()
@@ -45,7 +50,8 @@ class _$ReleaseLeaseRequestCWProxyImpl implements _$ReleaseLeaseRequestCWProxy {
 }
 
 extension $ReleaseLeaseRequestCopyWith on ReleaseLeaseRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfReleaseLeaseRequest.copyWith(...)` or like so:`instanceOfReleaseLeaseRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfReleaseLeaseRequest.copyWith(...)` or `instanceOfReleaseLeaseRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$ReleaseLeaseRequestCWProxy get copyWith =>
       _$ReleaseLeaseRequestCWProxyImpl(this);

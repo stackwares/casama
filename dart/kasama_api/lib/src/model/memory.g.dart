@@ -21,12 +21,14 @@ abstract class _$MemoryCWProxy {
 
   Memory updatedAt(DateTime updatedAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Memory(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Memory(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Memory(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   Memory call({
     String id,
     MemoryKindEnum kind,
@@ -38,40 +40,43 @@ abstract class _$MemoryCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfMemory.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfMemory.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfMemory.copyWith(...)` or call `instanceOfMemory.copyWith.fieldName(value)` for a single field.
 class _$MemoryCWProxyImpl implements _$MemoryCWProxy {
   const _$MemoryCWProxyImpl(this._value);
 
   final Memory _value;
 
   @override
-  Memory id(String id) => this(id: id);
+  Memory id(String id) => call(id: id);
 
   @override
-  Memory kind(MemoryKindEnum kind) => this(kind: kind);
+  Memory kind(MemoryKindEnum kind) => call(kind: kind);
 
   @override
-  Memory content(String content) => this(content: content);
+  Memory content(String content) => call(content: content);
 
   @override
-  Memory importance(num importance) => this(importance: importance);
+  Memory importance(num importance) => call(importance: importance);
 
   @override
-  Memory pinned(bool pinned) => this(pinned: pinned);
+  Memory pinned(bool pinned) => call(pinned: pinned);
 
   @override
-  Memory createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  Memory createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   @override
-  Memory updatedAt(DateTime updatedAt) => this(updatedAt: updatedAt);
+  Memory updatedAt(DateTime updatedAt) => call(updatedAt: updatedAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `Memory(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `Memory(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// Memory(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   Memory call({
     Object? id = const $CopyWithPlaceholder(),
     Object? kind = const $CopyWithPlaceholder(),
@@ -82,31 +87,32 @@ class _$MemoryCWProxyImpl implements _$MemoryCWProxy {
     Object? updatedAt = const $CopyWithPlaceholder(),
   }) {
     return Memory(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      kind: kind == const $CopyWithPlaceholder()
+      kind: kind == const $CopyWithPlaceholder() || kind == null
           ? _value.kind
           // ignore: cast_nullable_to_non_nullable
           : kind as MemoryKindEnum,
-      content: content == const $CopyWithPlaceholder()
+      content: content == const $CopyWithPlaceholder() || content == null
           ? _value.content
           // ignore: cast_nullable_to_non_nullable
           : content as String,
-      importance: importance == const $CopyWithPlaceholder()
+      importance:
+          importance == const $CopyWithPlaceholder() || importance == null
           ? _value.importance
           // ignore: cast_nullable_to_non_nullable
           : importance as num,
-      pinned: pinned == const $CopyWithPlaceholder()
+      pinned: pinned == const $CopyWithPlaceholder() || pinned == null
           ? _value.pinned
           // ignore: cast_nullable_to_non_nullable
           : pinned as bool,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
-      updatedAt: updatedAt == const $CopyWithPlaceholder()
+      updatedAt: updatedAt == const $CopyWithPlaceholder() || updatedAt == null
           ? _value.updatedAt
           // ignore: cast_nullable_to_non_nullable
           : updatedAt as DateTime,
@@ -115,7 +121,8 @@ class _$MemoryCWProxyImpl implements _$MemoryCWProxy {
 }
 
 extension $MemoryCopyWith on Memory {
-  /// Returns a callable class that can be used as follows: `instanceOfMemory.copyWith(...)` or like so:`instanceOfMemory.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfMemory.copyWith(...)` or `instanceOfMemory.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$MemoryCWProxy get copyWith => _$MemoryCWProxyImpl(this);
 }

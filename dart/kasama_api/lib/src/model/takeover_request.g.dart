@@ -25,12 +25,14 @@ abstract class _$TakeoverRequestCWProxy {
 
   TakeoverRequest createdAt(DateTime createdAt);
 
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TakeoverRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TakeoverRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TakeoverRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
   TakeoverRequest call({
     String id,
     String botId,
@@ -44,47 +46,50 @@ abstract class _$TakeoverRequestCWProxy {
   });
 }
 
-/// Proxy class for `copyWith` functionality. This is a callable class and can be used as follows: `instanceOfTakeoverRequest.copyWith(...)`. Additionally contains functions for specific fields e.g. `instanceOfTakeoverRequest.copyWith.fieldName(...)`
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfTakeoverRequest.copyWith(...)` or call `instanceOfTakeoverRequest.copyWith.fieldName(value)` for a single field.
 class _$TakeoverRequestCWProxyImpl implements _$TakeoverRequestCWProxy {
   const _$TakeoverRequestCWProxyImpl(this._value);
 
   final TakeoverRequest _value;
 
   @override
-  TakeoverRequest id(String id) => this(id: id);
+  TakeoverRequest id(String id) => call(id: id);
 
   @override
-  TakeoverRequest botId(String botId) => this(botId: botId);
+  TakeoverRequest botId(String botId) => call(botId: botId);
 
   @override
-  TakeoverRequest runId(String runId) => this(runId: runId);
+  TakeoverRequest runId(String runId) => call(runId: runId);
 
   @override
-  TakeoverRequest computerId(String computerId) => this(computerId: computerId);
+  TakeoverRequest computerId(String computerId) => call(computerId: computerId);
 
   @override
-  TakeoverRequest reason(String reason) => this(reason: reason);
+  TakeoverRequest reason(String reason) => call(reason: reason);
 
   @override
   TakeoverRequest status(TakeoverRequestStatusEnum status) =>
-      this(status: status);
+      call(status: status);
 
   @override
-  TakeoverRequest note(String? note) => this(note: note);
+  TakeoverRequest note(String? note) => call(note: note);
 
   @override
-  TakeoverRequest expiresAt(DateTime expiresAt) => this(expiresAt: expiresAt);
+  TakeoverRequest expiresAt(DateTime expiresAt) => call(expiresAt: expiresAt);
 
   @override
-  TakeoverRequest createdAt(DateTime createdAt) => this(createdAt: createdAt);
+  TakeoverRequest createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
-  @override
-  /// This function **does support** nullification of nullable fields. All `null` values passed to `non-nullable` fields will be ignored. You can also use `TakeoverRequest(...).copyWith.fieldName(...)` to override fields one at a time with nullification support.
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `TakeoverRequest(...).copyWith.fieldName(value)`.
   ///
-  /// Usage
+  /// Example:
   /// ```dart
   /// TakeoverRequest(...).copyWith(id: 12, name: "My name")
-  /// ````
+  /// ```
+  @override
   TakeoverRequest call({
     Object? id = const $CopyWithPlaceholder(),
     Object? botId = const $CopyWithPlaceholder(),
@@ -97,27 +102,28 @@ class _$TakeoverRequestCWProxyImpl implements _$TakeoverRequestCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return TakeoverRequest(
-      id: id == const $CopyWithPlaceholder()
+      id: id == const $CopyWithPlaceholder() || id == null
           ? _value.id
           // ignore: cast_nullable_to_non_nullable
           : id as String,
-      botId: botId == const $CopyWithPlaceholder()
+      botId: botId == const $CopyWithPlaceholder() || botId == null
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String,
-      runId: runId == const $CopyWithPlaceholder()
+      runId: runId == const $CopyWithPlaceholder() || runId == null
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String,
-      computerId: computerId == const $CopyWithPlaceholder()
+      computerId:
+          computerId == const $CopyWithPlaceholder() || computerId == null
           ? _value.computerId
           // ignore: cast_nullable_to_non_nullable
           : computerId as String,
-      reason: reason == const $CopyWithPlaceholder()
+      reason: reason == const $CopyWithPlaceholder() || reason == null
           ? _value.reason
           // ignore: cast_nullable_to_non_nullable
           : reason as String,
-      status: status == const $CopyWithPlaceholder()
+      status: status == const $CopyWithPlaceholder() || status == null
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as TakeoverRequestStatusEnum,
@@ -125,11 +131,11 @@ class _$TakeoverRequestCWProxyImpl implements _$TakeoverRequestCWProxy {
           ? _value.note
           // ignore: cast_nullable_to_non_nullable
           : note as String?,
-      expiresAt: expiresAt == const $CopyWithPlaceholder()
+      expiresAt: expiresAt == const $CopyWithPlaceholder() || expiresAt == null
           ? _value.expiresAt
           // ignore: cast_nullable_to_non_nullable
           : expiresAt as DateTime,
-      createdAt: createdAt == const $CopyWithPlaceholder()
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
@@ -138,7 +144,8 @@ class _$TakeoverRequestCWProxyImpl implements _$TakeoverRequestCWProxy {
 }
 
 extension $TakeoverRequestCopyWith on TakeoverRequest {
-  /// Returns a callable class that can be used as follows: `instanceOfTakeoverRequest.copyWith(...)` or like so:`instanceOfTakeoverRequest.copyWith.fieldName(...)`.
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfTakeoverRequest.copyWith(...)` or `instanceOfTakeoverRequest.copyWith.fieldName(...)`.
   // ignore: library_private_types_in_public_api
   _$TakeoverRequestCWProxy get copyWith => _$TakeoverRequestCWProxyImpl(this);
 }
