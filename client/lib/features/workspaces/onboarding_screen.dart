@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
-import '../bots/template_picker.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/app_card.dart';
+import '../../ui/kasama_mark.dart';
+import '../bots/bots_screen.dart';
 import '../settings/model_keys_screen.dart';
 
-/// First run: create or join a workspace, add a model key, create a bot.
+/// First run: create or join a workspace, add a model key, create a bot. One step at a time, with
+/// progress across the top.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -19,19 +24,12 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _workspace = TextEditingController();
   final _invite = TextEditingController();
-  final _botName = TextEditingController(text: 'Assistant');
-  final _model = TextEditingController();
-  var _modelEdited = false;
-  final _persona = TextEditingController();
-  String? _templateId;
-  String? _credentialId;
   var _busy = false;
 
   @override
   void dispose() {
-    for (final c in [_workspace, _invite, _botName, _model, _persona]) {
-      c.dispose();
-    }
+    _workspace.dispose();
+    _invite.dispose();
     super.dispose();
   }
 
@@ -47,142 +45,246 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return 2;
   }
 
-  /// Suggests the server's default model for the chosen key until the user types their own.
-  void _fillDefaultModel(List<Credential> keys) {
-    if (_modelEdited) return;
-    for (final k in keys) {
-      if (k.id == _credentialId) {
-        final model = ref.read(backendProvider).defaultModelFor(k.provider.value) ?? '';
-        if (_model.text != model) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && !_modelEdited) _model.text = model;
-          });
-        }
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final orgs = ref.watch(organizationsProvider).value ?? const [];
     final keys = ref.watch(credentialsProvider).value ?? const [];
     final step = _step(orgs, keys);
-    _credentialId ??= keys.isEmpty ? null : keys.first.id;
-    _fillDefaultModel(keys);
+    final titles = [l10n.createWorkspace, l10n.addModelKeyTitle, l10n.createFirstBot];
+    final scheme = context.colorScheme;
+
+    final Widget content = switch (step) {
+      0 => _StepCard(
+          key: const ValueKey(0),
+          icon: Icons.workspaces_outline,
+          title: l10n.createWorkspace,
+          body: l10n.createWorkspaceBody,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            TextField(
+              key: const Key('workspaceName'),
+              controller: _workspace,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(labelText: l10n.workspaceName, hintText: l10n.workspaceNameHint),
+            ),
+            const SizedBox(height: AppSpace.sm),
+            FilledButton(
+              key: const Key('createWorkspace'),
+              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+              onPressed: _busy
+                  ? null
+                  : () => _guard(() async {
+                        if (_workspace.text.trim().isEmpty) return;
+                        final org = await ref.read(backendProvider).createOrganization(_workspace.text.trim());
+                        ref.read(selectedOrgIdProvider.notifier).select(org.id);
+                        ref.invalidate(organizationsProvider);
+                      }),
+              child: Text(l10n.create),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpace.lg),
+              child: Row(children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+                  child: Text(l10n.orJoinWithCode, style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                ),
+                const Expanded(child: Divider()),
+              ]),
+            ),
+            Row(children: [
+              Expanded(child: TextField(controller: _invite, decoration: InputDecoration(labelText: l10n.inviteCode))),
+              const SizedBox(width: AppSpace.xs),
+              SizedBox(
+                height: 52,
+                child: OutlinedButton(
+                  onPressed: _busy
+                      ? null
+                      : () => _guard(() async {
+                            await ref.read(backendProvider).acceptInvite(_invite.text.trim());
+                            ref.invalidate(organizationsProvider);
+                          }),
+                  child: Text(l10n.join),
+                ),
+              ),
+            ]),
+          ]),
+        ),
+      1 => _StepCard(
+          key: const ValueKey(1),
+          icon: Icons.key_rounded,
+          title: l10n.addModelKeyTitle,
+          body: l10n.addModelKeyBody,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
+            const SizedBox(height: AppSpace.xs),
+            Center(
+              child: TextButton.icon(
+                onPressed: () => launchUrl(Uri.parse('https://openrouter.ai/keys'), mode: LaunchMode.externalApplication),
+                icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                label: Text(l10n.getOpenRouterKey),
+              ),
+            ),
+          ]),
+        ),
+      _ => _StepCard(
+          key: const ValueKey(2),
+          icon: Icons.smart_toy_outlined,
+          title: l10n.createFirstBot,
+          body: l10n.createFirstBotBody,
+          child: const CreateBotSheet(embedded: true),
+        ),
+    };
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.onboardingTitle), actions: [
-        TextButton(onPressed: () => ref.read(backendProvider).signOut(), child: Text(l10n.signOut)),
-      ]),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: Stepper(
-            currentStep: step,
-            controlsBuilder: (context, details) => const SizedBox.shrink(),
-            steps: [
-              Step(
-                title: Text(l10n.createWorkspace),
-                isActive: step == 0,
-                state: step > 0 ? StepState.complete : StepState.indexed,
-                content: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  TextField(key: const Key('workspaceName'), controller: _workspace, decoration: InputDecoration(labelText: l10n.workspaceName)),
-                  const SizedBox(height: 8),
-                  FilledButton(
-                    key: const Key('createWorkspace'),
-                    onPressed: _busy
-                        ? null
-                        : () => _guard(() async {
-                              if (_workspace.text.trim().isEmpty) return;
-                              final org = await ref.read(backendProvider).createOrganization(_workspace.text.trim());
-                              ref.read(selectedOrgIdProvider.notifier).select(org.id);
-                              ref.invalidate(organizationsProvider);
-                            }),
-                    child: Text(l10n.create),
-                  ),
-                  const Divider(height: 32),
-                  Row(children: [
-                    Expanded(child: TextField(controller: _invite, decoration: InputDecoration(labelText: l10n.inviteCode))),
-                    const SizedBox(width: 8),
-                    OutlinedButton(
-                      onPressed: _busy
-                          ? null
-                          : () => _guard(() async {
-                                await ref.read(backendProvider).acceptInvite(_invite.text.trim());
-                                ref.invalidate(organizationsProvider);
-                              }),
-                      child: Text(l10n.join),
+      body: SafeArea(
+        child: Column(children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.sm, AppSpace.xs, 0),
+            child: Row(children: [
+              const KasamaMark(size: 30),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(child: Text(l10n.onboardingTitle, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
+              TextButton(onPressed: () => ref.read(backendProvider).signOut(), child: Text(l10n.signOut)),
+            ]),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.md, AppSpace.lg, 0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: _Progress(step: step, titles: titles),
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(AppSpace.gutter, AppSpace.lg, AppSpace.gutter, AppSpace.xl),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: AnimatedSwitcher(
+                    duration: AppMotion.of(context, const Duration(milliseconds: 320)),
+                    switchInCurve: AppMotion.curve,
+                    transitionBuilder: (child, a) => FadeTransition(
+                      opacity: a,
+                      child: SlideTransition(position: Tween(begin: const Offset(0.06, 0), end: Offset.zero).animate(a), child: child),
                     ),
-                  ]),
-                ]),
+                    child: content,
+                  ),
+                ),
               ),
-              Step(
-                title: Text(l10n.addModelKeyTitle),
-                isActive: step == 1,
-                state: step > 1 ? StepState.complete : StepState.indexed,
-                content: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Text(l10n.addModelKeyBody),
-                  const SizedBox(height: 12),
-                  AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
-                ]),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+/// Three segments that fill as steps complete, with the current step's name.
+class _Progress extends StatelessWidget {
+  const _Progress({required this.step, required this.titles});
+  final int step;
+  final List<String> titles;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        for (var i = 0; i < titles.length; i++) ...[
+          if (i > 0) const SizedBox(width: 6),
+          Expanded(
+            child: AnimatedContainer(
+              duration: AppMotion.of(context, const Duration(milliseconds: 400)),
+              curve: AppMotion.curve,
+              height: 6,
+              decoration: BoxDecoration(
+                color: i <= step ? scheme.primary : scheme.primary.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
-              Step(
-                title: Text(l10n.createFirstBot),
-                isActive: step == 2,
-                content: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  TemplatePicker(
-                    selected: _templateId,
-                    onChanged: (t) => setState(() {
-                      _templateId = t?.id;
-                      if (t != null) _botName.text = t.name;
-                    }),
+            ),
+          ),
+        ],
+      ]),
+      const SizedBox(height: AppSpace.sm),
+      LayoutBuilder(builder: (context, constraints) {
+        Widget marker(int i) => AnimatedSwitcher(
+              duration: AppMotion.of(context, AppMotion.fast),
+              child: i < step
+                  ? Icon(Icons.check, key: const ValueKey('done'), size: 16, color: context.appColors.positive)
+                  : Text(
+                      '${i + 1}',
+                      key: const ValueKey('n'),
+                      style: context.textTheme.labelMedium?.copyWith(color: i == step ? scheme.primary : scheme.onSurfaceVariant, fontWeight: FontWeight.w800),
+                    ),
+            );
+        // Phones: the current step only; wider windows name all three.
+        if (constraints.maxWidth < 480) {
+          return Row(children: [
+            for (var i = 0; i < step; i++) Padding(padding: const EdgeInsets.only(right: 4), child: marker(i)),
+            if (step > 0) const SizedBox(width: 4),
+            Text(
+              context.l10n.stepOf(step + 1, titles.length),
+              style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+            ),
+          ]);
+        }
+        return Row(children: [
+          for (var i = 0; i < titles.length; i++)
+            Expanded(
+              child: Row(children: [
+                marker(i),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    titles[i],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.labelMedium?.copyWith(
+                      color: i == step ? scheme.onSurface : scheme.onSurfaceVariant,
+                      fontWeight: i == step ? FontWeight.w700 : FontWeight.w500,
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  TextField(key: const Key('botName'), controller: _botName, decoration: InputDecoration(labelText: l10n.botName)),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    initialValue: _credentialId,
-                    decoration: InputDecoration(labelText: l10n.modelKey),
-                    items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} (${k.provider.value})'))],
-                    onChanged: (v) => setState(() {
-            _credentialId = v;
-            _fillDefaultModel(keys);
-          }),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(key: const Key('model'), controller: _model, decoration: InputDecoration(labelText: l10n.model), onChanged: (_) => _modelEdited = true),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _persona,
-                    decoration: InputDecoration(labelText: l10n.persona, hintText: l10n.personaHint),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton(
-                    key: const Key('createBot'),
-                    onPressed: _busy || _credentialId == null
-                        ? null
-                        : () => _guard(() async {
-                              final org = ref.read(currentOrgProvider)!;
-                              final bot = await ref.read(backendProvider).createBot(
-                                    org.id,
-                                    name: _botName.text.trim(),
-                                    credentialId: _credentialId!,
-                                    model: _model.text.trim(),
-                                    persona: _persona.text.trim(),
-                                    templateId: _templateId,
-                                  );
-                              ref.invalidate(botsProvider);
-                              if (context.mounted) context.go('/bots/${bot.id}/chat');
-                            }),
-                    child: Text(l10n.create),
-                  ),
-                ]),
-              ),
-            ],
+                ),
+              ]),
+            ),
+        ]);
+      }),
+    ]);
+  }
+}
+
+class _StepCard extends StatelessWidget {
+  const _StepCard({super.key, required this.icon, required this.title, required this.body, required this.child});
+  final IconData icon;
+  final String title;
+  final String body;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpace.lg),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
+            alignment: Alignment.center,
+            child: Icon(icon, color: scheme.primary, size: 24),
           ),
         ),
-      ),
+        const SizedBox(height: AppSpace.md),
+        Text(title, style: context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4, fontSize: 24)),
+        const SizedBox(height: AppSpace.xs),
+        Text(body, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.45)),
+        const SizedBox(height: AppSpace.lg),
+        child,
+      ]),
     );
   }
 }

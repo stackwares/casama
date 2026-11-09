@@ -175,7 +175,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newBot => 'New bot';
 
   @override
-  String get noBots => 'No bots yet. Create one to start.';
+  String get noBots => 'No bots yet';
 
   @override
   String get botStatusIdle => 'Idle';
@@ -1473,4 +1473,203 @@ class AppLocalizationsEn extends AppLocalizations {
   String accountDeletedBody(String date) {
     return 'You have been signed out. Your data will be erased on $date.';
   }
+
+  @override
+  String get selectBotHelp =>
+      'Pick a bot on the left, or create one to get started.';
+
+  @override
+  String get toolShell => 'Ran a command';
+
+  @override
+  String get toolFileRead => 'Read a file';
+
+  @override
+  String get toolFileWrite => 'Wrote a file';
+
+  @override
+  String get toolFiles => 'Worked with files';
+
+  @override
+  String get toolBrowser => 'Used the browser';
+
+  @override
+  String get toolSearch => 'Searched the web';
+
+  @override
+  String get toolMemory => 'Checked memory';
+
+  @override
+  String get toolSkill => 'Used a skill';
+
+  @override
+  String get toolCheckpoint => 'Saved a checkpoint';
+
+  @override
+  String get toolDesktop => 'Used the desktop';
+
+  @override
+  String get toolDelegate => 'Asked another bot';
+
+  @override
+  String toolOther(String tool) {
+    return 'Used $tool';
+  }
+
+  @override
+  String toolSteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count steps',
+      one: '1 step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String showMoreSteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Show $count earlier steps',
+      one: 'Show 1 earlier step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get jumpToLatest => 'Jump to latest';
+
+  @override
+  String chatEmptySubtitle(String bot) {
+    return '$bot has its own computer, memory and tools. Ask for something you want done.';
+  }
+
+  @override
+  String get suggestResearch => 'Research a topic and write me a short summary';
+
+  @override
+  String get suggestFiles =>
+      'Make a project folder with a to-do list in my workspace';
+
+  @override
+  String get suggestWebsite => 'Check a website and tell me what\'s new';
+
+  @override
+  String get suggestCapabilities => 'What can you do on your computer?';
+
+  @override
+  String get showComputer => 'Show computer';
+
+  @override
+  String get hideComputer => 'Hide computer';
+
+  @override
+  String get moreActions => 'More';
+
+  @override
+  String get noConversations => 'No conversations yet';
+
+  @override
+  String get untitledChat => 'New conversation';
+
+  @override
+  String get listening => 'Listening…';
+
+  @override
+  String get orLabel => 'or';
+
+  @override
+  String get signInTagline =>
+      'Your AI teammates, each with its own computer, memory and tools.';
+
+  @override
+  String get noBotsHelp =>
+      'A bot is a teammate with its own computer. Create one to start chatting.';
+
+  @override
+  String get newBotSubtitle => 'A teammate with its own computer and memory.';
+
+  @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get settingsBotsSection => 'What your bots can use';
+
+  @override
+  String get settingsMoreSection => 'Privacy and more';
+
+  @override
+  String get modelKeysHelp =>
+      'OpenRouter, OpenAI, Anthropic, Google, xAI or your own server';
+
+  @override
+  String get signOutConfirm =>
+      'You can sign back in any time; your bots keep working.';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get roleMember => 'Member';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get accentColor => 'Accent color';
+
+  @override
+  String get noApprovalsHelp =>
+      'When a bot wants to do something risky, it asks here first.';
+
+  @override
+  String get createWorkspaceBody =>
+      'A workspace holds your bots, their computers and the people you work with.';
+
+  @override
+  String get workspaceNameHint => 'My team';
+
+  @override
+  String get orJoinWithCode => 'or join with an invite code';
+
+  @override
+  String get getOpenRouterKey => 'Get an OpenRouter key';
+
+  @override
+  String get createFirstBotBody =>
+      'Give it a name and a model. You can change both later.';
+
+  @override
+  String stepOf(int step, int total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get providerHintOpenRouter => 'recommended';
+
+  @override
+  String get providerHintCompatible => 'Ollama, LM Studio, vLLM';
+
+  @override
+  String get providerHintImages => 'images';
+
+  @override
+  String get providerHintSearch => 'web search';
+
+  @override
+  String get providerHintVoice => 'voice';
 }

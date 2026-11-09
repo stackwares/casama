@@ -1,0 +1,163 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../theme/app_colors.dart';
+
+/// Floating bottom tab bar for phones: a slim stadium-shaped pill on a neutral surface with a
+/// hairline border. The selected tab sits on an accent-tinted indicator that glides between slots.
+class FloatingTabChrome extends StatelessWidget {
+  const FloatingTabChrome({super.key, required this.destinations, required this.currentIndex, required this.onDestinationSelected});
+
+  final List<FloatingTabDestination> destinations;
+  final int currentIndex;
+  final ValueChanged<int> onDestinationSelected;
+
+  static const double barHeight = 64;
+  static const double tabSlotWidth = 78;
+  static const Duration motionDuration = Duration(milliseconds: 250);
+  static const Curve motionCurve = Curves.easeOutCubic;
+
+  /// Bottom space a tab screen reserves so the bar never covers its last item.
+  static double bottomInset(BuildContext context) => barHeight + 16 + MediaQuery.paddingOf(context).bottom;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Center(child: _PillBar(destinations: destinations, currentIndex: currentIndex, onSelected: onDestinationSelected)),
+      ),
+    );
+  }
+}
+
+class FloatingTabDestination {
+  const FloatingTabDestination({required this.icon, required this.selectedIcon, required this.label, this.badge = 0});
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+
+  /// Count shown on the icon (unread inbox items).
+  final int badge;
+}
+
+class _PillBar extends StatelessWidget {
+  const _PillBar({required this.destinations, required this.currentIndex, required this.onSelected});
+
+  final List<FloatingTabDestination> destinations;
+  final int currentIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final dark = context.isDark;
+    final background = dark ? scheme.surfaceContainer : scheme.surfaceContainerLowest;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: const StadiumBorder(),
+        shadows: [BoxShadow(color: Colors.black.withValues(alpha: dark ? 0.45 : 0.10), blurRadius: 24, offset: const Offset(0, 8))],
+      ),
+      child: Material(
+        color: background.withValues(alpha: 0.96),
+        shape: StadiumBorder(side: BorderSide(color: scheme.outlineVariant.withValues(alpha: dark ? 1 : 0.9))),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          height: FloatingTabChrome.barHeight,
+          padding: const EdgeInsets.all(6),
+          child: Stack(children: [
+            AnimatedPositionedDirectional(
+              duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 380),
+              curve: Curves.easeOutBack,
+              start: currentIndex * FloatingTabChrome.tabSlotWidth,
+              top: 0,
+              bottom: 0,
+              width: FloatingTabChrome.tabSlotWidth,
+              child: DecoratedBox(decoration: ShapeDecoration(shape: const StadiumBorder(), color: scheme.primary.withValues(alpha: 0.16))),
+            ),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              for (var i = 0; i < destinations.length; i++)
+                SizedBox(
+                  width: FloatingTabChrome.tabSlotWidth,
+                  child: _TabButton(
+                    spec: destinations[i],
+                    selected: i == currentIndex,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      onSelected(i);
+                    },
+                  ),
+                ),
+            ]),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+class _TabButton extends StatelessWidget {
+  const _TabButton({required this.spec, required this.selected, required this.onTap});
+
+  final FloatingTabDestination spec;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final color = selected ? scheme.primary : scheme.onSurfaceVariant;
+    final duration = MediaQuery.disableAnimationsOf(context) ? Duration.zero : FloatingTabChrome.motionDuration;
+    return Tooltip(
+      message: spec.label,
+      excludeFromSemantics: true,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: spec.badge > 0 ? '${spec.label}, ${spec.badge}' : spec.label,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            customBorder: const StadiumBorder(),
+            child: TweenAnimationBuilder<Color?>(
+              tween: ColorTween(end: color),
+              duration: duration,
+              curve: FloatingTabChrome.motionCurve,
+              builder: (context, tint, _) => Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                AnimatedScale(
+                  scale: selected ? 1 : 0.92,
+                  duration: duration,
+                  curve: Curves.easeOutBack,
+                  child: Badge(
+                    isLabelVisible: spec.badge > 0,
+                    label: Text(spec.badge > 99 ? '99+' : '${spec.badge}'),
+                    backgroundColor: scheme.primary,
+                    textColor: scheme.onPrimary,
+                    child: Icon(selected ? spec.selectedIcon : spec.icon, size: 22, color: tint),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  spec.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: tint,
+                    fontSize: 11,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    height: 1.1,
+                  ),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

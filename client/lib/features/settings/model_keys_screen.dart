@@ -5,6 +5,32 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 
+/// A provider's name as people know it, with what it is for when that isn't obvious.
+String providerLabel(ProviderId p) => switch (p) {
+      ProviderId.openrouter => 'OpenRouter',
+      ProviderId.openai => 'OpenAI',
+      ProviderId.anthropic => 'Anthropic',
+      ProviderId.google => 'Google Gemini',
+      ProviderId.xai => 'xAI',
+      ProviderId.openaiCompatible => 'OpenAI-compatible server',
+      ProviderId.fal => 'fal.ai',
+      ProviderId.braveSearch => 'Brave Search',
+      ProviderId.tavily => 'Tavily',
+      ProviderId.deepgram => 'Deepgram',
+      ProviderId.elevenlabs => 'ElevenLabs',
+      ProviderId.cartesia => 'Cartesia',
+      ProviderId.fishAudio => 'Fish Audio',
+    };
+
+String? _providerHint(BuildContext context, ProviderId p) => switch (p) {
+      ProviderId.openrouter => context.l10n.providerHintOpenRouter,
+      ProviderId.openaiCompatible => context.l10n.providerHintCompatible,
+      ProviderId.fal => context.l10n.providerHintImages,
+      ProviderId.braveSearch || ProviderId.tavily => context.l10n.providerHintSearch,
+      ProviderId.deepgram || ProviderId.elevenlabs || ProviderId.cartesia || ProviderId.fishAudio => context.l10n.providerHintVoice,
+      _ => null,
+    };
+
 /// Form to add a model key; the key goes to Vault and is never shown again.
 class AddKeyForm extends ConsumerStatefulWidget {
   const AddKeyForm({super.key, required this.onAdded});
@@ -58,7 +84,17 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
       DropdownButtonFormField<ProviderId>(
         initialValue: _provider,
         decoration: InputDecoration(labelText: l10n.provider),
-        items: [for (final p in ProviderId.values) DropdownMenuItem(value: p, child: Text(p.value))],
+        items: [
+          for (final p in ProviderId.values)
+            DropdownMenuItem(
+              value: p,
+              child: Text.rich(TextSpan(text: providerLabel(p), children: [
+                if (_providerHint(context, p) case final hint?)
+                  TextSpan(text: '  $hint', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
+              ])),
+            ),
+        ],
+        selectedItemBuilder: (context) => [for (final p in ProviderId.values) Text(providerLabel(p))],
         onChanged: (v) => setState(() => _provider = v ?? _provider),
       ),
       const SizedBox(height: 8),
@@ -67,7 +103,7 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
       TextField(
         key: const Key('apiKey'),
         controller: _key,
-        decoration: InputDecoration(labelText: l10n.apiKey),
+        decoration: InputDecoration(labelText: l10n.apiKey, prefixIcon: const Icon(Icons.key_rounded, size: 20)),
         obscureText: true,
         autocorrect: false,
         enableSuggestions: false,

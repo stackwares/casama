@@ -39,41 +39,68 @@ class AsyncView<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return value.when(
       data: data,
-      loading: () => Center(child: Semantics(label: context.l10n.loading, child: const CircularProgressIndicator())),
-      error: (e, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(errorText(context, e), textAlign: TextAlign.center),
-            if (onRetry != null) ...[
-              const SizedBox(height: 12),
-              OutlinedButton(onPressed: onRetry, child: Text(context.l10n.retry)),
-            ],
-          ]),
+      loading: () => Center(
+        child: Semantics(
+          label: context.l10n.loading,
+          child: const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)),
         ),
+      ),
+      error: (e, _) => EmptyState(
+        icon: Icons.cloud_off_outlined,
+        title: context.l10n.somethingWentWrong,
+        message: errorText(context, e),
+        isError: true,
+        action: onRetry == null
+            ? null
+            : FilledButton.tonalIcon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded, size: 18), label: Text(context.l10n.retry)),
       ),
     );
   }
 }
 
+/// Centered empty or error state: a soft circle with the icon, a title, a muted line and an action.
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, required this.icon, required this.message, this.action});
+  const EmptyState({super.key, required this.icon, required this.message, this.title, this.action, this.isError = false});
   final IconData icon;
+
+  /// Bold line above [message]; when null, [message] is shown as the title.
+  final String? title;
   final String message;
   final Widget? action;
+  final bool isError;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final accent = isError ? scheme.error : scheme.primary;
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 40, color: theme.colorScheme.outline),
-          const SizedBox(height: 12),
-          Text(message, textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
-          if (action != null) ...[const SizedBox(height: 16), action!],
-        ]),
+      child: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), shape: BoxShape.circle),
+                child: Icon(icon, size: 32, color: accent),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                title ?? message,
+                textAlign: TextAlign.center,
+                style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+              ),
+              if (title != null) ...[
+                const SizedBox(height: 8),
+                Text(message, textAlign: TextAlign.center, style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+              ],
+              if (action != null) ...[const SizedBox(height: 24), action!],
+            ]),
+          ),
+        ),
       ),
     );
   }

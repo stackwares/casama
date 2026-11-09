@@ -13,6 +13,10 @@ import 'package:xterm/xterm.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/app_card.dart';
+import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
 
 String computerStateLabel(ComputerState s) => s.value;
@@ -37,7 +41,10 @@ class ComputerScreen extends ConsumerWidget {
       },
     );
     if (embedded) return body;
-    return Scaffold(appBar: AppBar(title: Text(l10n.computerTitle)), body: body);
+    return Scaffold(
+      appBar: ShellHeader(title: l10n.computerTitle),
+      body: body,
+    );
   }
 }
 
@@ -51,54 +58,111 @@ class ComputerPanel extends ConsumerWidget {
     final running = computer.state == ComputerState.running || computer.state == ComputerState.idle;
     return DefaultTabController(
       length: 4,
-      child: Column(children: [
-        ListTile(
-          leading: Icon(Icons.computer, color: running ? Colors.green : Theme.of(context).colorScheme.outline),
-          title: Text(computer.name),
-          subtitle: Text(computerStateLabel(computer.state)),
-          trailing: Wrap(spacing: 8, children: [
-            if (!running)
-              FilledButton.tonal(
-                onPressed: () async {
-                  await runGuarded(context, () => ref.read(backendProvider).startComputer(computer.id));
-                  ref.invalidate(computersProvider);
-                },
-                child: Text(l10n.computerStart),
-              )
-            else
-              OutlinedButton(
-                onPressed: () async {
-                  await runGuarded(context, () => ref.read(backendProvider).stopComputer(computer.id));
-                  ref.invalidate(computersProvider);
-                },
-                child: Text(l10n.computerSleep),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.sm, AppSpace.sm),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: (running ? context.appColors.working : context.colorScheme.onSurfaceVariant).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.icon),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    computer.profile == ComputerProfileEnum.desktop ? Icons.desktop_windows_rounded : Icons.terminal_rounded,
+                    size: 20,
+                    color: running ? context.appColors.working : context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: AppSpace.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        computer.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 2),
+                      StatusLabel(
+                        text: computerStateLabel(computer.state),
+                        color: running ? context.appColors.working : context.colorScheme.onSurfaceVariant,
+                        pill: true,
+                      ),
+                    ],
+                  ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    if (!running)
+                      FilledButton.tonal(
+                        onPressed: () async {
+                          await runGuarded(context, () => ref.read(backendProvider).startComputer(computer.id));
+                          ref.invalidate(computersProvider);
+                        },
+                        child: Text(l10n.computerStart),
+                      )
+                    else
+                      OutlinedButton(
+                        onPressed: () async {
+                          await runGuarded(context, () => ref.read(backendProvider).stopComputer(computer.id));
+                          ref.invalidate(computersProvider);
+                        },
+                        child: Text(l10n.computerSleep),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                padding: EdgeInsets.zero,
+                tabs: [
+                  Tab(text: l10n.screen),
+                  Tab(text: l10n.terminal),
+                  Tab(text: l10n.files),
+                  Tab(text: l10n.checkpoints),
+                ],
               ),
-          ]),
-        ),
-        TabBar(isScrollable: true, tabs: [
-          Tab(text: l10n.screen),
-          Tab(text: l10n.terminal),
-          Tab(text: l10n.files),
-          Tab(text: l10n.checkpoints),
-        ]),
-        Expanded(
-          child: TabBarView(children: [
-            computer.profile == ComputerProfileEnum.desktop
-                ? _LiveEntry(computer: computer)
-                : Column(children: [
-                    _DesktopSwitch(computer: computer),
-                    Expanded(
-                      child: running
-                          ? _ScreenTab(computerId: computer.id)
-                          : EmptyState(icon: Icons.bedtime_outlined, message: l10n.computerAsleep),
-                    ),
-                  ]),
-            TerminalTab(computerId: computer.id),
-            FilesTab(computerId: computer.id),
-            CheckpointsTab(computerId: computer.id),
-          ]),
-        ),
-      ]),
+            ),
+          ),
+          const SizedBox(height: AppSpace.xs),
+          Expanded(
+            child: TabBarView(
+              children: [
+                computer.profile == ComputerProfileEnum.desktop
+                    ? _LiveEntry(computer: computer)
+                    : Column(
+                        children: [
+                          _DesktopSwitch(computer: computer),
+                          Expanded(
+                            child: running
+                                ? _ScreenTab(computerId: computer.id)
+                                : EmptyState(icon: Icons.bedtime_outlined, message: l10n.computerAsleep),
+                          ),
+                        ],
+                      ),
+                TerminalTab(computerId: computer.id),
+                FilesTab(computerId: computer.id),
+                CheckpointsTab(computerId: computer.id),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -139,25 +203,38 @@ class _DesktopSwitchState extends ConsumerState<_DesktopSwitch> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = context.colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Row(children: [
-        Expanded(child: Text(l10n.headlessScreenNote, style: Theme.of(context).textTheme.bodySmall)),
-        const SizedBox(width: 12),
-        FilledButton.tonalIcon(
-          key: const Key('switchToDesktop'),
-          icon: const Icon(Icons.desktop_windows_outlined),
-          label: Text(l10n.switchToDesktop),
-          onPressed: _busy
-              ? null
-              : () async {
-                  setState(() => _busy = true);
-                  await runGuarded(context, () => ref.read(backendProvider).updateComputer(widget.computer.id, profile: 'desktop'));
-                  ref.invalidate(computersProvider);
-                  if (mounted) setState(() => _busy = false);
-                },
-        ),
-      ]),
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, AppSpace.xxs),
+      child: AppCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Icon(Icons.info_outline_rounded, size: 18, color: scheme.primary),
+            const SizedBox(width: AppSpace.xs),
+            Expanded(
+              child: Text(l10n.headlessScreenNote, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+            ),
+          ]),
+          const SizedBox(height: AppSpace.sm),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: FilledButton.tonalIcon(
+              key: const Key('switchToDesktop'),
+              icon: const Icon(Icons.desktop_windows_outlined, size: 18),
+              label: Text(l10n.switchToDesktop),
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      setState(() => _busy = true);
+                      await runGuarded(context, () => ref.read(backendProvider).updateComputer(widget.computer.id, profile: 'desktop'));
+                      ref.invalidate(computersProvider);
+                      if (mounted) setState(() => _busy = false);
+                    },
+            ),
+          ),
+        ]),
+      ),
     );
   }
 }
@@ -323,53 +400,64 @@ class _FilesTabState extends ConsumerState<FilesTab> {
   Future<void> _download(ComputerFileEntry e) async {
     final bytes = await runGuarded(context, () => ref.read(backendProvider).downloadFile(widget.computerId, e.path));
     if (bytes == null) return;
-    await SharePlus.instance.share(ShareParams(files: [XFile.fromData(bytes, name: e.name)], fileNameOverrides: [e.name]));
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile.fromData(bytes, name: e.name)],
+        fileNameOverrides: [e.name],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(children: [
-      Row(children: [
-        IconButton(onPressed: _path.isEmpty ? null : () => _open(_parent), icon: const Icon(Icons.arrow_upward)),
-        Expanded(child: Text(_path.isEmpty ? '~/workspace' : '~/workspace/$_path', overflow: TextOverflow.ellipsis)),
-        IconButton(tooltip: l10n.refresh, onPressed: _reload, icon: const Icon(Icons.refresh)),
-        IconButton(tooltip: l10n.upload, onPressed: _upload, icon: const Icon(Icons.upload_file)),
-      ]),
-      Expanded(
-        child: FutureBuilder<List<ComputerFileEntry>>(
-          future: _entries,
-          builder: (context, snap) {
-            if (snap.hasError) return Center(child: Text(errorText(context, snap.error!)));
-            if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-            final items = snap.data!;
-            if (items.isEmpty) return EmptyState(icon: Icons.folder_open, message: l10n.emptyFolder);
-            return ListView(children: [
-              for (final e in items)
-                ListTile(
-                  leading: Icon(e.type.name == 'dir' ? Icons.folder : Icons.insert_drive_file_outlined),
-                  title: Text(e.name),
-                  subtitle: e.type.name == 'dir' ? null : Text('${e.size} bytes'),
-                  onTap: e.type.name == 'dir' ? () => _open(_path.isEmpty ? e.name : '$_path/${e.name}') : () => _download(e),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (v) async {
-                      if (v == 'download') await _download(e);
-                      if (v == 'delete' && context.mounted) {
-                        await runGuarded(context, () => ref.read(backendProvider).deleteFile(widget.computerId, e.path));
-                        _reload();
-                      }
-                    },
-                    itemBuilder: (_) => [
-                      if (e.type.name != 'dir') PopupMenuItem(value: 'download', child: Text(l10n.download)),
-                      PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
-                    ],
-                  ),
-                ),
-            ]);
-          },
+    return Column(
+      children: [
+        Row(
+          children: [
+            IconButton(onPressed: _path.isEmpty ? null : () => _open(_parent), icon: const Icon(Icons.arrow_upward)),
+            Expanded(child: Text(_path.isEmpty ? '~/workspace' : '~/workspace/$_path', overflow: TextOverflow.ellipsis)),
+            IconButton(tooltip: l10n.refresh, onPressed: _reload, icon: const Icon(Icons.refresh)),
+            IconButton(tooltip: l10n.upload, onPressed: _upload, icon: const Icon(Icons.upload_file)),
+          ],
         ),
-      ),
-    ]);
+        Expanded(
+          child: FutureBuilder<List<ComputerFileEntry>>(
+            future: _entries,
+            builder: (context, snap) {
+              if (snap.hasError) return Center(child: Text(errorText(context, snap.error!)));
+              if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+              final items = snap.data!;
+              if (items.isEmpty) return EmptyState(icon: Icons.folder_open, message: l10n.emptyFolder);
+              return ListView(
+                children: [
+                  for (final e in items)
+                    ListTile(
+                      leading: Icon(e.type.name == 'dir' ? Icons.folder : Icons.insert_drive_file_outlined),
+                      title: Text(e.name),
+                      subtitle: e.type.name == 'dir' ? null : Text('${e.size} bytes'),
+                      onTap: e.type.name == 'dir' ? () => _open(_path.isEmpty ? e.name : '$_path/${e.name}') : () => _download(e),
+                      trailing: PopupMenuButton<String>(
+                        onSelected: (v) async {
+                          if (v == 'download') await _download(e);
+                          if (v == 'delete' && context.mounted) {
+                            await runGuarded(context, () => ref.read(backendProvider).deleteFile(widget.computerId, e.path));
+                            _reload();
+                          }
+                        },
+                        itemBuilder: (_) => [
+                          if (e.type.name != 'dir') PopupMenuItem(value: 'download', child: Text(l10n.download)),
+                          PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
+                        ],
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -399,18 +487,20 @@ class _CheckpointsTabState extends ConsumerState<CheckpointsTab> {
         if (!snap.hasData) return const Center(child: CircularProgressIndicator());
         final items = snap.data!;
         if (items.isEmpty) return EmptyState(icon: Icons.restore, message: context.l10n.noCheckpoints);
-        return ListView(children: [
-          for (final cp in items)
-            ListTile(
-              leading: const Icon(Icons.restore),
-              title: Text(cp.label),
-              subtitle: Text(relativeTime(cp.createdAt, context)),
-              trailing: TextButton(
-                onPressed: () => confirmRestore(context, ref, widget.computerId, cp.id),
-                child: Text(context.l10n.restore),
+        return ListView(
+          children: [
+            for (final cp in items)
+              ListTile(
+                leading: const Icon(Icons.restore),
+                title: Text(cp.label),
+                subtitle: Text(relativeTime(cp.createdAt, context)),
+                trailing: TextButton(
+                  onPressed: () => confirmRestore(context, ref, widget.computerId, cp.id),
+                  child: Text(context.l10n.restore),
+                ),
               ),
-            ),
-        ]);
+          ],
+        );
       },
     );
   }

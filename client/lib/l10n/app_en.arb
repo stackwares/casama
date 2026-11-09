@@ -70,7 +70,7 @@
   "navSettings": "Settings",
   "bots": "Bots",
   "newBot": "New bot",
-  "noBots": "No bots yet. Create one to start.",
+  "noBots": "No bots yet",
   "botStatusIdle": "Idle",
   "botStatusWorking": "Working",
   "botStatusWaiting": "Waiting for you",
@@ -302,9 +302,21 @@
   "recommendedModels": "Recommended",
   "allModels": "All models",
   "useCustomModel": "Use \"{id}\"",
-  "@useCustomModel": { "placeholders": { "id": { "type": "String" } } },
+  "@useCustomModel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "modelListFallback": "Showing suggested models. {reason} You can still type any model id.",
-  "@modelListFallback": { "placeholders": { "reason": { "type": "String" } } },
+  "@modelListFallback": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "noModelsFound": "No models match.",
   "addModelKeyFirst": "Add a model key first. Your bot uses it to think; it's stored encrypted and never shown again.",
   "botIntegrations": "Integrations for this bot",
@@ -870,5 +882,99 @@
         "type": "String"
       }
     }
-  }
+  },
+  "selectBotHelp": "Pick a bot on the left, or create one to get started.",
+  "toolShell": "Ran a command",
+  "toolFileRead": "Read a file",
+  "toolFileWrite": "Wrote a file",
+  "toolFiles": "Worked with files",
+  "toolBrowser": "Used the browser",
+  "toolSearch": "Searched the web",
+  "toolMemory": "Checked memory",
+  "toolSkill": "Used a skill",
+  "toolCheckpoint": "Saved a checkpoint",
+  "toolDesktop": "Used the desktop",
+  "toolDelegate": "Asked another bot",
+  "toolOther": "Used {tool}",
+  "@toolOther": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "toolSteps": "{count, plural, =1{1 step} other{{count} steps}}",
+  "@toolSteps": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "showMoreSteps": "{count, plural, =1{Show 1 earlier step} other{Show {count} earlier steps}}",
+  "@showMoreSteps": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "copied": "Copied",
+  "jumpToLatest": "Jump to latest",
+  "chatEmptySubtitle": "{bot} has its own computer, memory and tools. Ask for something you want done.",
+  "@chatEmptySubtitle": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestResearch": "Research a topic and write me a short summary",
+  "suggestFiles": "Make a project folder with a to-do list in my workspace",
+  "suggestWebsite": "Check a website and tell me what's new",
+  "suggestCapabilities": "What can you do on your computer?",
+  "showComputer": "Show computer",
+  "hideComputer": "Hide computer",
+  "moreActions": "More",
+  "noConversations": "No conversations yet",
+  "untitledChat": "New conversation",
+  "listening": "Listening…",
+  "orLabel": "or",
+  "signInTagline": "Your AI teammates, each with its own computer, memory and tools.",
+  "noBotsHelp": "A bot is a teammate with its own computer. Create one to start chatting.",
+  "newBotSubtitle": "A teammate with its own computer and memory.",
+  "appearance": "Appearance",
+  "settingsBotsSection": "What your bots can use",
+  "settingsMoreSection": "Privacy and more",
+  "modelKeysHelp": "OpenRouter, OpenAI, Anthropic, Google, xAI or your own server",
+  "signOutConfirm": "You can sign back in any time; your bots keep working.",
+  "roleOwner": "Owner",
+  "roleAdmin": "Admin",
+  "roleMember": "Member",
+  "themeLight": "Light",
+  "themeSystem": "System",
+  "themeDark": "Dark",
+  "accentColor": "Accent color",
+  "noApprovalsHelp": "When a bot wants to do something risky, it asks here first.",
+  "createWorkspaceBody": "A workspace holds your bots, their computers and the people you work with.",
+  "workspaceNameHint": "My team",
+  "orJoinWithCode": "or join with an invite code",
+  "getOpenRouterKey": "Get an OpenRouter key",
+  "createFirstBotBody": "Give it a name and a model. You can change both later.",
+  "stepOf": "Step {step} of {total}",
+  "@stepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "providerHintOpenRouter": "recommended",
+  "providerHintCompatible": "Ollama, LM Studio, vLLM",
+  "providerHintImages": "images",
+  "providerHintSearch": "web search",
+  "providerHintVoice": "voice"
 }

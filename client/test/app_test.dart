@@ -9,6 +9,7 @@ import 'package:kasama_app/features/chat/chat_controller.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
 import 'package:kasama_app/features/timeline/timeline_screen.dart';
 import 'package:kasama_app/l10n/generated/app_localizations.dart';
+import 'package:kasama_app/ui/floating_tab_chrome.dart';
 
 import 'fake_backend.dart';
 
@@ -47,6 +48,8 @@ void main() {
     expect(find.text('Say hello to Ada.'), findsOneWidget);
 
     await tester.enterText(find.byKey(const Key('messageInput')), 'Research example.com');
+
+    await tester.pump();
     await tester.tap(find.byKey(const Key('sendButton')));
     await tester.pump();
     expect(backend.sent, ['Research example.com']);
@@ -62,13 +65,14 @@ void main() {
       ..add(ev(6, 'message.delta', {'message_id': 'a1', 'text': 'the **report**.'}))
       ..add(ev(7, 'usage', {'tokens_in': 1000, 'tokens_out': 50, 'cost_usd': 0.0021}));
     await tester.pump();
-    expect(find.text('shell.exec'), findsOneWidget);
+    // Tool steps read in plain words, with the command and how long it took.
+    expect(find.text('Ran a command'), findsOneWidget);
     expect(find.textContaining('ls -la'), findsOneWidget);
-    expect(find.textContaining('Done in 42 ms'), findsOneWidget);
+    expect(find.text('42 ms'), findsOneWidget);
     expect(find.textContaining('\$0.0021 · 1050 tokens'), findsOneWidget);
 
     // Expanding the card shows the streamed output.
-    await tester.tap(find.text('shell.exec'));
+    await tester.tap(find.text('Ran a command'));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.textContaining('report.md'), findsWidgets);
 
@@ -130,11 +134,11 @@ void main() {
     expect(find.text('checkpoint.created'), findsOneWidget);
   });
 
-  testWidgets('phone layout uses a bottom navigation bar and lists bots with cost', (tester) async {
+  testWidgets('phone layout uses the floating tab bar and lists bots with cost', (tester) async {
     await setSize(tester, const Size(400, 800));
     await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(FakeBackend())], child: const KasamaApp()));
     await tester.pumpAndSettle();
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(FloatingTabChrome), findsOneWidget);
     expect(find.text('Ada'), findsOneWidget);
     expect(find.textContaining('\$0.0123 today'), findsOneWidget);
   });
@@ -143,7 +147,8 @@ void main() {
     await setSize(tester, const Size(1600, 1000));
     await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(FakeBackend())], child: const KasamaApp()));
     await tester.pumpAndSettle();
-    expect(find.byType(NavigationRail), findsOneWidget);
+    // The sidebar lists the bots; the content asks to pick one.
+    expect(find.byKey(const Key('sidebar-bot-$botId')), findsOneWidget);
     expect(find.text('Select a bot to chat'), findsOneWidget);
     await tester.tap(find.text('Ada'));
     await tester.pumpAndSettle();

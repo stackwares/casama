@@ -415,7 +415,7 @@ abstract class AppLocalizations {
   /// No description provided for @noBots.
   ///
   /// In en, this message translates to:
-  /// **'No bots yet. Create one to start.'**
+  /// **'No bots yet'**
   String get noBots;
 
   /// No description provided for @botStatusIdle.
@@ -2577,6 +2577,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have been signed out. Your data will be erased on {date}.'**
   String accountDeletedBody(String date);
+
+  /// No description provided for @selectBotHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a bot on the left, or create one to get started.'**
+  String get selectBotHelp;
+
+  /// No description provided for @toolShell.
+  ///
+  /// In en, this message translates to:
+  /// **'Ran a command'**
+  String get toolShell;
+
+  /// No description provided for @toolFileRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read a file'**
+  String get toolFileRead;
+
+  /// No description provided for @toolFileWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrote a file'**
+  String get toolFileWrite;
+
+  /// No description provided for @toolFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Worked with files'**
+  String get toolFiles;
+
+  /// No description provided for @toolBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Used the browser'**
+  String get toolBrowser;
+
+  /// No description provided for @toolSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Searched the web'**
+  String get toolSearch;
+
+  /// No description provided for @toolMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked memory'**
+  String get toolMemory;
+
+  /// No description provided for @toolSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Used a skill'**
+  String get toolSkill;
+
+  /// No description provided for @toolCheckpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved a checkpoint'**
+  String get toolCheckpoint;
+
+  /// No description provided for @toolDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Used the desktop'**
+  String get toolDesktop;
+
+  /// No description provided for @toolDelegate.
+  ///
+  /// In en, this message translates to:
+  /// **'Asked another bot'**
+  String get toolDelegate;
+
+  /// No description provided for @toolOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {tool}'**
+  String toolOther(String tool);
+
+  /// No description provided for @toolSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 step} other{{count} steps}}'**
+  String toolSteps(int count);
+
+  /// No description provided for @showMoreSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Show 1 earlier step} other{Show {count} earlier steps}}'**
+  String showMoreSteps(int count);
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get copied;
+
+  /// No description provided for @jumpToLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to latest'**
+  String get jumpToLatest;
+
+  /// No description provided for @chatEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} has its own computer, memory and tools. Ask for something you want done.'**
+  String chatEmptySubtitle(String bot);
+
+  /// No description provided for @suggestResearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Research a topic and write me a short summary'**
+  String get suggestResearch;
+
+  /// No description provided for @suggestFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a project folder with a to-do list in my workspace'**
+  String get suggestFiles;
+
+  /// No description provided for @suggestWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Check a website and tell me what\'s new'**
+  String get suggestWebsite;
+
+  /// No description provided for @suggestCapabilities.
+  ///
+  /// In en, this message translates to:
+  /// **'What can you do on your computer?'**
+  String get suggestCapabilities;
+
+  /// No description provided for @showComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Show computer'**
+  String get showComputer;
+
+  /// No description provided for @hideComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide computer'**
+  String get hideComputer;
+
+  /// No description provided for @moreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get moreActions;
+
+  /// No description provided for @noConversations.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet'**
+  String get noConversations;
+
+  /// No description provided for @untitledChat.
+  ///
+  /// In en, this message translates to:
+  /// **'New conversation'**
+  String get untitledChat;
+
+  /// No description provided for @listening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening…'**
+  String get listening;
+
+  /// No description provided for @orLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get orLabel;
+
+  /// No description provided for @signInTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your AI teammates, each with its own computer, memory and tools.'**
+  String get signInTagline;
+
+  /// No description provided for @noBotsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A bot is a teammate with its own computer. Create one to start chatting.'**
+  String get noBotsHelp;
+
+  /// No description provided for @newBotSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A teammate with its own computer and memory.'**
+  String get newBotSubtitle;
+
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @settingsBotsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'What your bots can use'**
+  String get settingsBotsSection;
+
+  /// No description provided for @settingsMoreSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy and more'**
+  String get settingsMoreSection;
+
+  /// No description provided for @modelKeysHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter, OpenAI, Anthropic, Google, xAI or your own server'**
+  String get modelKeysHelp;
+
+  /// No description provided for @signOutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'You can sign back in any time; your bots keep working.'**
+  String get signOutConfirm;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get roleOwner;
+
+  /// No description provided for @roleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get roleAdmin;
+
+  /// No description provided for @roleMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get roleMember;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @accentColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color'**
+  String get accentColor;
+
+  /// No description provided for @noApprovalsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'When a bot wants to do something risky, it asks here first.'**
+  String get noApprovalsHelp;
+
+  /// No description provided for @createWorkspaceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A workspace holds your bots, their computers and the people you work with.'**
+  String get createWorkspaceBody;
+
+  /// No description provided for @workspaceNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'My team'**
+  String get workspaceNameHint;
+
+  /// No description provided for @orJoinWithCode.
+  ///
+  /// In en, this message translates to:
+  /// **'or join with an invite code'**
+  String get orJoinWithCode;
+
+  /// No description provided for @getOpenRouterKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Get an OpenRouter key'**
+  String get getOpenRouterKey;
+
+  /// No description provided for @createFirstBotBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Give it a name and a model. You can change both later.'**
+  String get createFirstBotBody;
+
+  /// No description provided for @stepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String stepOf(int step, int total);
+
+  /// No description provided for @providerHintOpenRouter.
+  ///
+  /// In en, this message translates to:
+  /// **'recommended'**
+  String get providerHintOpenRouter;
+
+  /// No description provided for @providerHintCompatible.
+  ///
+  /// In en, this message translates to:
+  /// **'Ollama, LM Studio, vLLM'**
+  String get providerHintCompatible;
+
+  /// No description provided for @providerHintImages.
+  ///
+  /// In en, this message translates to:
+  /// **'images'**
+  String get providerHintImages;
+
+  /// No description provided for @providerHintSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'web search'**
+  String get providerHintSearch;
+
+  /// No description provided for @providerHintVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'voice'**
+  String get providerHintVoice;
 }
 
 class _AppLocalizationsDelegate

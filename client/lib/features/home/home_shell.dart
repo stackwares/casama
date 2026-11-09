@@ -1,16 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/bot_avatar.dart';
+import '../../ui/floating_tab_chrome.dart';
+import '../../ui/kasama_mark.dart';
 import '../bots/bots_screen.dart';
 import '../computer/computer_screen.dart';
 
-/// Breakpoints: phone < 700 (bottom navigation), tablet < 1200 (rail), desktop (three panes).
+/// Phone: floating tab bar. Tablet: navigation rail. Desktop: a sidebar with the bot list, the
+/// chat, and the bot's computer beside it.
 enum LayoutSize { phone, tablet, desktop }
 
-LayoutSize layoutFor(double width) => width < 700 ? LayoutSize.phone : (width < 1200 ? LayoutSize.tablet : LayoutSize.desktop);
+LayoutSize layoutFor(double width) => switch (AppBreakpoints.of(width)) {
+      WindowSize.compact => LayoutSize.phone,
+      WindowSize.medium => LayoutSize.tablet,
+      WindowSize.expanded => LayoutSize.desktop,
+    };
+
+/// Whether the computer panel is open beside the chat on wide windows.
+class ComputerPanelOpen extends Notifier<bool> {
+  @override
+  bool build() => true;
+  void toggle() => state = !state;
+}
+
+final computerPanelProvider = NotifierProvider<ComputerPanelOpen, bool>(ComputerPanelOpen.new);
+
+class _Dest {
+  const _Dest(this.path, this.icon, this.selectedIcon, this.label);
+  final String path;
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+}
 
 class HomeShell extends ConsumerWidget {
   const HomeShell({super.key, required this.location, required this.child});
@@ -26,80 +54,385 @@ class HomeShell extends ConsumerWidget {
 
   String? get _botId => RegExp(r'^/bots/([^/]+)').firstMatch(location)?.group(1);
 
-  void _go(BuildContext context, int i) => context.go(const ['/bots', '/inbox', '/computer', '/settings'][i]);
+  /// Screens opened from a tab (a chat, a settings page): on phones they take the whole screen.
+  bool get _isDetail =>
+      _botId != null ||
+      location.startsWith('/computer/') ||
+      RegExp(r'^/settings/.+').hasMatch(location) ||
+      location.startsWith('/approvals/') ||
+      location.startsWith('/quick-ask');
+
+  List<_Dest> _destinations(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      _Dest('/bots', Icons.forum_outlined, Icons.forum_rounded, l10n.navBots),
+      _Dest('/inbox', Icons.inbox_outlined, Icons.inbox_rounded, l10n.inbox),
+      _Dest('/computer', Icons.desktop_windows_outlined, Icons.desktop_windows_rounded, l10n.navComputer),
+      _Dest('/settings', Icons.settings_outlined, Icons.settings_rounded, l10n.navSettings),
+    ];
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
     final size = layoutFor(MediaQuery.sizeOf(context).width);
     final badge = ref.watch(inboxBadgeProvider);
-    Widget inboxIcon(IconData icon) => Badge(isLabelVisible: badge > 0, label: Text('$badge'), child: Icon(icon));
-    final destinations = [
-      (Icons.smart_toy_outlined, Icons.smart_toy, l10n.navBots),
-      (Icons.inbox_outlined, Icons.inbox, l10n.inbox),
-      (Icons.computer_outlined, Icons.computer, l10n.navComputer),
-      (Icons.settings_outlined, Icons.settings, l10n.navSettings),
-    ];
+    final dests = _destinations(context);
+    void go(int i) => context.go(dests[i].path);
 
     if (size == LayoutSize.phone) {
+      final showBar = !_isDetail;
+      final media = MediaQuery.of(context);
       return Scaffold(
-        body: child,
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _index,
-          onDestinationSelected: (i) => _go(context, i),
-          destinations: [
-            for (final d in destinations)
-              NavigationDestination(
-                icon: d.$1 == Icons.inbox_outlined ? inboxIcon(d.$1) : Icon(d.$1),
-                selectedIcon: d.$2 == Icons.inbox ? inboxIcon(d.$2) : Icon(d.$2),
-                label: d.$3,
-              ),
-          ],
-        ),
-      );
-    }
-
-    final rail = NavigationRail(
-      selectedIndex: _index,
-      onDestinationSelected: (i) => _go(context, i),
-      labelType: NavigationRailLabelType.all,
-      destinations: [
-        for (final d in destinations)
-          NavigationRailDestination(
-            icon: d.$1 == Icons.inbox_outlined ? inboxIcon(d.$1) : Icon(d.$1),
-            selectedIcon: d.$2 == Icons.inbox ? inboxIcon(d.$2) : Icon(d.$2),
-            label: Text(d.$3),
+        extendBody: true,
+        resizeToAvoidBottomInset: false,
+        body: Stack(children: [
+          Positioned.fill(
+            // Tab screens scroll under the floating bar; their lists end above it.
+            child: MediaQuery(
+              data: showBar ? media.copyWith(padding: media.padding.copyWith(bottom: FloatingTabChrome.bottomInset(context))) : media,
+              child: child,
+            ),
           ),
-      ],
-    );
-
-    final inChat = _botId != null && location.contains('/chat');
-    if (size == LayoutSize.desktop && _index == 0) {
-      // Three panes: bots, chat, computer.
-      return Scaffold(
-        body: Row(children: [
-          rail,
-          const VerticalDivider(width: 1),
-          SizedBox(
-            width: 300,
-            child: Column(children: [
-              ListTile(
-                title: Text(l10n.bots, style: Theme.of(context).textTheme.titleMedium),
-                trailing: IconButton(icon: const Icon(Icons.add), tooltip: l10n.newBot, onPressed: () => showCreateBot(context, ref)),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: IgnorePointer(
+              ignoring: !showBar,
+              child: AnimatedSlide(
+                offset: showBar ? Offset.zero : const Offset(0, 1.4),
+                duration: AppMotion.of(context, const Duration(milliseconds: 280)),
+                curve: AppMotion.curve,
+                child: FloatingTabChrome(
+                  currentIndex: _index,
+                  onDestinationSelected: go,
+                  destinations: [
+                    for (final d in dests)
+                      FloatingTabDestination(icon: d.icon, selectedIcon: d.selectedIcon, label: d.label, badge: d.path == '/inbox' ? badge : 0),
+                  ],
+                ),
               ),
-              Expanded(child: BotsList(selectedBotId: _botId)),
-            ]),
+            ),
           ),
-          const VerticalDivider(width: 1),
-          Expanded(child: _botId == null && location == '/bots' ? Center(child: Text(l10n.selectBot)) : child),
-          if (inChat) ...[
-            const VerticalDivider(width: 1),
-            SizedBox(width: 420, child: ComputerScreen(botId: _botId, embedded: true)),
-          ],
         ]),
       );
     }
 
-    return Scaffold(body: Row(children: [rail, const VerticalDivider(width: 1), Expanded(child: child)]));
+    if (size == LayoutSize.tablet) {
+      return Scaffold(
+        body: Row(children: [
+          _NavSurface(child: _Rail(dests: dests, index: _index, badge: badge, onSelected: go)),
+          Expanded(child: MediaQuery.removePadding(context: context, removeLeft: true, child: child)),
+        ]),
+      );
+    }
+
+    final inChat = _botId != null && location.contains('/chat');
+    final panelOpen = ref.watch(computerPanelProvider);
+    final Widget content;
+    if (_index == 0 && _botId == null) {
+      content = _SelectBotPlaceholder(onCreate: () => showCreateBot(context, ref));
+    } else {
+      content = child;
+    }
+    return Scaffold(
+      body: Row(children: [
+        _NavSurface(
+          child: _Sidebar(dests: dests, index: _index, badge: badge, selectedBotId: _botId, onSelected: go),
+        ),
+        Expanded(child: MediaQuery.removePadding(context: context, removeLeft: true, child: content)),
+        if (inChat)
+          AnimatedSize(
+            duration: AppMotion.of(context, const Duration(milliseconds: 260)),
+            curve: AppMotion.curve,
+            alignment: Alignment.centerLeft,
+            child: panelOpen
+                ? DecoratedBox(
+                    decoration: BoxDecoration(border: Border(left: BorderSide(color: context.appColors.hairline))),
+                    child: SizedBox(width: 420, child: ComputerScreen(botId: _botId, embedded: true)),
+                  )
+                : const SizedBox(width: 0, height: double.infinity),
+          ),
+      ]),
+    );
+  }
+}
+
+/// Hairline-edged column the rail and sidebar sit on.
+class _NavSurface extends StatelessWidget {
+  const _NavSurface({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: context.colorScheme.surfaceContainerLow,
+          border: Border(right: BorderSide(color: context.appColors.hairline)),
+        ),
+        child: child,
+      );
+}
+
+class _Rail extends StatelessWidget {
+  const _Rail({required this.dests, required this.index, required this.badge, required this.onSelected});
+  final List<_Dest> dests;
+  final int index;
+  final int badge;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final tt = context.textTheme;
+    return NavigationRail(
+      backgroundColor: Colors.transparent,
+      selectedIndex: index,
+      onDestinationSelected: onSelected,
+      labelType: NavigationRailLabelType.all,
+      indicatorColor: scheme.primary.withValues(alpha: 0.16),
+      selectedIconTheme: IconThemeData(color: scheme.primary),
+      unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
+      selectedLabelTextStyle: tt.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
+      unselectedLabelTextStyle: tt.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+      leading: const Padding(padding: EdgeInsets.only(top: 12, bottom: 20), child: KasamaMark(size: 36)),
+      destinations: [
+        for (final d in dests)
+          NavigationRailDestination(
+            icon: Badge(isLabelVisible: d.path == '/inbox' && badge > 0, label: Text('$badge'), child: Icon(d.icon)),
+            selectedIcon: Badge(isLabelVisible: d.path == '/inbox' && badge > 0, label: Text('$badge'), child: Icon(d.selectedIcon)),
+            label: Text(d.label),
+          ),
+      ],
+    );
+  }
+}
+
+/// Wide windows: the mark and workspace, the main sections, the bots, and who is signed in.
+class _Sidebar extends ConsumerWidget {
+  const _Sidebar({required this.dests, required this.index, required this.badge, required this.selectedBotId, required this.onSelected});
+  final List<_Dest> dests;
+  final int index;
+  final int badge;
+  final String? selectedBotId;
+  final ValueChanged<int> onSelected;
+
+  static const double width = 272;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final org = ref.watch(currentOrgProvider);
+    final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    final scheme = context.colorScheme;
+    return SafeArea(
+      right: false,
+      child: SizedBox(
+        width: width,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
+            child: Row(children: [
+              const KasamaMark(size: 34),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(l10n.appTitle, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, height: 1.1)),
+                  if (org != null)
+                    Text(
+                      org.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                ]),
+              ),
+            ]),
+          ),
+          for (var i = 0; i < dests.length; i++)
+            _SidebarItem(
+              leading: Icon(i == index ? dests[i].selectedIcon : dests[i].icon, size: 22, color: i == index ? scheme.primary : scheme.onSurfaceVariant),
+              label: dests[i].label,
+              selected: i == index && (i != 0 || selectedBotId == null),
+              trailing: dests[i].path == '/inbox' && badge > 0 ? _CountPill(badge) : null,
+              onTap: () => onSelected(i),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 22, 12, 6),
+            child: Row(children: [
+              Expanded(
+                child: Text(
+                  l10n.bots,
+                  style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700, letterSpacing: 0.2),
+                ),
+              ),
+              IconButton(
+                tooltip: l10n.newBot,
+                visualDensity: VisualDensity.compact,
+                iconSize: 20,
+                icon: const Icon(Icons.add_rounded),
+                onPressed: () => showCreateBot(context, ref),
+              ),
+            ]),
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: 12),
+              children: [
+                for (final b in bots)
+                  _SidebarItem(
+                    key: Key('sidebar-bot-${b.id}'),
+                    height: 48,
+                    leading: BotAvatar(name: b.name, size: 30, status: b.status, ringColor: scheme.surfaceContainerLow),
+                    label: b.name,
+                    subtitle: b.status == BotStatusEnum.idle ? null : botStatusLabel(context, b.status),
+                    selected: b.id == selectedBotId,
+                    onTap: () => context.go('/bots/${b.id}/chat'),
+                  ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          _SidebarAccount(email: ref.watch(backendProvider).userEmail),
+        ]),
+      ),
+    );
+  }
+}
+
+class _SidebarItem extends StatelessWidget {
+  const _SidebarItem({super.key, required this.leading, required this.label, required this.selected, required this.onTap, this.trailing, this.subtitle, this.height = 44});
+
+  final Widget leading;
+  final String label;
+  final String? subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+  final Widget? trailing;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final tt = context.textTheme;
+    final radius = AppRadius.rowAll;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: Semantics(
+        selected: selected,
+        button: true,
+        child: AnimatedContainer(
+          duration: AppMotion.of(context, AppMotion.fast),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(color: selected ? scheme.primary.withValues(alpha: 0.14) : Colors.transparent, borderRadius: radius),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: radius,
+              child: SizedBox(
+                height: height,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(children: [
+                    leading,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.bodyLarge?.copyWith(
+                            color: selected ? scheme.primary : scheme.onSurface,
+                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                            height: 1.2,
+                          ),
+                        ),
+                        if (subtitle != null)
+                          Text(subtitle!, maxLines: 1, style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.2)),
+                      ]),
+                    ),
+                    ?trailing,
+                  ]),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CountPill extends StatelessWidget {
+  const _CountPill(this.count);
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+        decoration: BoxDecoration(color: context.colorScheme.primary, borderRadius: BorderRadius.circular(AppRadius.pill)),
+        child: Text(
+          count > 99 ? '99+' : '$count',
+          style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onPrimary, fontWeight: FontWeight.w800, fontFeatures: AppText.tabular),
+        ),
+      );
+}
+
+class _SidebarAccount extends StatelessWidget {
+  const _SidebarAccount({required this.email});
+  final String? email;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final initial = (email == null || email!.isEmpty) ? '' : email!.characters.first.toUpperCase();
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: () => context.go('/settings'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 16, 16),
+          child: Row(children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.16), shape: BoxShape.circle),
+              alignment: Alignment.center,
+              child: initial.isEmpty
+                  ? Icon(Icons.person_rounded, size: 20, color: scheme.primary)
+                  : Text(initial, style: context.textTheme.labelLarge?.copyWith(color: scheme.primary, fontWeight: FontWeight.w800)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                email ?? context.l10n.navSettings,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+            Icon(Icons.settings_outlined, size: 18, color: scheme.onSurfaceVariant),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectBotPlaceholder extends ConsumerWidget {
+  const _SelectBotPlaceholder({required this.onCreate});
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final hasBots = (ref.watch(botsProvider).value ?? const []).isNotEmpty;
+    return EmptyState(
+      icon: Icons.forum_outlined,
+      title: hasBots ? l10n.selectBot : l10n.noBots,
+      message: l10n.selectBotHelp,
+      action: FilledButton.icon(onPressed: onCreate, icon: const Icon(Icons.add_rounded), label: Text(l10n.newBot)),
+    );
   }
 }

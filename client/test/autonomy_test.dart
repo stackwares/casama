@@ -218,6 +218,7 @@ void main() {
     await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('messageInput')), 'clean the system folder');
+    await tester.pump();
     await tester.tap(find.byKey(const Key('sendButton')));
     await tester.pump();
     backend.runEventsController

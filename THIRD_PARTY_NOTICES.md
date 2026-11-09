@@ -49,6 +49,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | test, lints                                            | all Dart packages (tooling)        | BSD-3-Clause                  |
 | supabase_flutter                                       | client                             | MIT                           |
 | flutter_riverpod                                       | client                             | MIT                           |
+| flex_color_scheme                                      | client                             | BSD-3-Clause                  |
 | go_router, flutter_localizations, intl                 | client                             | BSD-3-Clause                  |
 | xterm                                                  | client                             | MIT                           |
 | markdown_widget                                        | client                             | MIT                           |
@@ -79,3 +80,9 @@ Update this file in the same pull request that adds or removes a dependency.
 | pgTAP                                  | database tests                 | PostgreSQL License                             |
 | Supabase (self-hosted services)        | platform                       | Apache-2.0 / MIT (per component)               |
 | OpenAPI Generator (dart-dio templates) | code generation                | Apache-2.0                                     |
+
+## Fonts
+
+| Font   | Used in                                   | License                                      |
+| ------ | ----------------------------------------- | -------------------------------------------- |
+| Nunito | client (headlines; `client/assets/fonts`) | SIL Open Font License 1.1 (`Nunito-OFL.txt`) |

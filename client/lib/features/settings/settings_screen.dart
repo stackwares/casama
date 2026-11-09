@@ -6,6 +6,14 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 import '../../core/billing.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/app_tokens.dart';
+import '../../theme/appearance.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/segmented.dart';
+import '../../ui/shell_header.dart';
 import '../admin/admin_screen.dart';
 import '../companion/companion.dart';
 
@@ -52,85 +60,209 @@ class SettingsScreen extends ConsumerWidget {
     final orgs = ref.watch(organizationsProvider).value ?? const <OrganizationWithRole>[];
     final month = ref.watch(usageMonthProvider).value;
     final isAdmin = org != null && org.role != OrgRole.member;
+    final billing = ref.watch(billingProvider).value;
+    final scheme = context.colorScheme;
+    final email = backend.userEmail ?? '';
+    final colors = context.appColors;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settings)),
-      body: ListView(children: [
-        ListTile(leading: const Icon(Icons.person_outline), title: Text(l10n.signedInAs(backend.userEmail ?? ''))),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.workspaces_outline),
-          title: Text(l10n.workspace),
-          subtitle: Text(org?.name ?? ''),
-          trailing: orgs.length > 1
-              ? PopupMenuButton<String>(
-                  tooltip: l10n.switchWorkspace,
-                  onSelected: (id) => ref.read(selectedOrgIdProvider.notifier).select(id),
-                  itemBuilder: (_) => [for (final o in orgs) PopupMenuItem(value: o.id, child: Text(o.name))],
-                )
-              : null,
+      appBar: ShellHeader(title: l10n.settings),
+      body: LayoutBuilder(builder: (context, constraints) {
+        final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: 640);
+        return ListView(
+          padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom),
+          children: [
+            AppCard(
+              padding: const EdgeInsets.all(AppSpace.md),
+              child: Row(children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.16), shape: BoxShape.circle),
+                  alignment: Alignment.center,
+                  child: Text(
+                    email.isEmpty ? '?' : email.characters.first.toUpperCase(),
+                    style: context.textTheme.titleLarge?.copyWith(color: scheme.primary, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(email, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(
+                      [org?.name ?? '', if (org != null) _roleLabel(context, org.role)].where((s) => s.isNotEmpty).join(' · '),
+                      style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ]),
+                ),
+              ]),
+            ).appCardEntrance(),
+            SectionHeader(title: l10n.workspace),
+            GroupedCard(children: [
+              GroupedTile(
+                icon: Icons.workspaces_outline,
+                title: org?.name ?? l10n.workspace,
+                subtitle: orgs.length > 1 ? l10n.switchWorkspace : null,
+                trailing: orgs.length > 1
+                    ? PopupMenuButton<String>(
+                        tooltip: l10n.switchWorkspace,
+                        icon: Icon(Icons.unfold_more_rounded, color: scheme.onSurfaceVariant),
+                        onSelected: (id) => ref.read(selectedOrgIdProvider.notifier).select(id),
+                        itemBuilder: (_) => [for (final o in orgs) PopupMenuItem(value: o.id, child: Text(o.name))],
+                      )
+                    : null,
+              ),
+              if (isAdmin) GroupedTile(icon: Icons.person_add_alt_1_outlined, title: l10n.inviteMember, onTap: () => _invite(context, ref)),
+              GroupedTile(
+                icon: Icons.payments_outlined,
+                iconColor: colors.positive,
+                title: l10n.usage,
+                trailing: Text(
+                  formatUsd(month?.totalCostUsd ?? 0),
+                  style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontFeatures: AppText.tabular),
+                ),
+                subtitle: l10n.usageMonth(formatUsd(month?.totalCostUsd ?? 0)),
+              ),
+              if (billing?.enabled ?? false)
+                GroupedTile(
+                  key: const Key('settingsBilling'),
+                  icon: Icons.workspace_premium_outlined,
+                  iconColor: colors.warning,
+                  title: l10n.billing,
+                  subtitle: billing!.planName,
+                  onTap: () => context.push('/settings/billing'),
+                ),
+            ]),
+            SectionHeader(title: l10n.settingsBotsSection),
+            GroupedCard(children: [
+              GroupedTile(icon: Icons.key_outlined, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => context.push('/settings/keys')),
+              GroupedTile(icon: Icons.menu_book_outlined, title: l10n.skills, onTap: () => context.push('/settings/skills')),
+              GroupedTile(
+                key: const Key('settingsIntegrations'),
+                icon: Icons.extension_outlined,
+                title: l10n.integrations,
+                onTap: () => context.push('/settings/integrations'),
+              ),
+              GroupedTile(key: const Key('settingsSecrets'), icon: Icons.lock_outline_rounded, title: l10n.secrets, onTap: () => context.push('/settings/secrets')),
+              GroupedTile(
+                key: const Key('settingsComputers'),
+                icon: Icons.desktop_windows_outlined,
+                title: l10n.computers,
+                onTap: () => context.push('/settings/computers'),
+              ),
+              if (ref.watch(companionProvider).supported)
+                GroupedTile(
+                  key: const Key('settingsCompanion'),
+                  icon: Icons.laptop_mac_rounded,
+                  title: l10n.useThisComputer,
+                  onTap: () => context.push('/settings/companion'),
+                ),
+            ]),
+            SectionHeader(title: l10n.appearance),
+            const _AppearanceCard(),
+            SectionHeader(title: l10n.settingsMoreSection),
+            GroupedCard(children: [
+              GroupedTile(
+                key: const Key('settingsPrivacy'),
+                icon: Icons.privacy_tip_outlined,
+                title: l10n.privacy,
+                onTap: () => context.push('/settings/privacy'),
+              ),
+              if (ref.watch(adminOverviewProvider).value != null)
+                GroupedTile(
+                  key: const Key('settingsAdmin'),
+                  icon: Icons.admin_panel_settings_outlined,
+                  title: l10n.adminConsole,
+                  onTap: () => context.push('/settings/admin'),
+                ),
+              GroupedTile(
+                icon: Icons.translate_rounded,
+                title: l10n.language,
+                trailing: Text(
+                  Localizations.localeOf(context).toLanguageTag(),
+                  style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ),
+            ]),
+            const SizedBox(height: AppSpace.lg),
+            GroupedCard(children: [
+              GroupedTile(
+                icon: Icons.logout_rounded,
+                title: l10n.signOut,
+                destructive: true,
+                showChevron: false,
+                onTap: () async {
+                  final ok = await showConfirm(context: context, title: l10n.signOut, message: l10n.signOutConfirm, confirmLabel: l10n.signOut, destructive: true);
+                  if (ok && context.mounted) await runGuarded(context, backend.signOut);
+                },
+              ),
+            ]),
+          ],
+        );
+      }),
+    );
+  }
+}
+
+String _roleLabel(BuildContext context, OrgRole role) => switch (role) {
+      OrgRole.owner => context.l10n.roleOwner,
+      OrgRole.admin => context.l10n.roleAdmin,
+      _ => context.l10n.roleMember,
+    };
+
+/// Theme mode and accent color, kept on this device.
+class _AppearanceCard extends ConsumerWidget {
+  const _AppearanceCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final appearance = ref.watch(appearanceProvider);
+    final notifier = ref.read(appearanceProvider.notifier);
+    final scheme = context.colorScheme;
+    return AppCard(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        AppSegmentedControl<ThemeMode>(
+          values: const [ThemeMode.light, ThemeMode.system, ThemeMode.dark],
+          labels: {ThemeMode.light: l10n.themeLight, ThemeMode.system: l10n.themeSystem, ThemeMode.dark: l10n.themeDark},
+          icons: const {ThemeMode.light: Icons.light_mode_outlined, ThemeMode.system: Icons.brightness_auto_outlined, ThemeMode.dark: Icons.dark_mode_outlined},
+          groupValue: appearance.mode,
+          onValueChanged: notifier.setMode,
         ),
-        if (isAdmin)
-          ListTile(leading: const Icon(Icons.person_add_alt), title: Text(l10n.inviteMember), onTap: () => _invite(context, ref)),
-        ListTile(leading: const Icon(Icons.key_outlined), title: Text(l10n.modelKeys), onTap: () => context.push('/settings/keys')),
-        ListTile(leading: const Icon(Icons.menu_book_outlined), title: Text(l10n.skills), onTap: () => context.push('/settings/skills')),
-        ListTile(
-          key: const Key('settingsIntegrations'),
-          leading: const Icon(Icons.extension_outlined),
-          title: Text(l10n.integrations),
-          onTap: () => context.push('/settings/integrations'),
-        ),
-        ListTile(
-          key: const Key('settingsComputers'),
-          leading: const Icon(Icons.computer_outlined),
-          title: Text(l10n.computers),
-          onTap: () => context.push('/settings/computers'),
-        ),
-        if (ref.watch(adminOverviewProvider).value != null)
-          ListTile(
-            key: const Key('settingsAdmin'),
-            leading: const Icon(Icons.admin_panel_settings_outlined),
-            title: Text(l10n.adminConsole),
-            onTap: () => context.push('/settings/admin'),
-          ),
-        if (ref.watch(companionProvider).supported)
-          ListTile(
-            key: const Key('settingsCompanion'),
-            leading: const Icon(Icons.laptop_mac),
-            title: Text(l10n.useThisComputer),
-            onTap: () => context.push('/settings/companion'),
-          ),
-        ListTile(
-          key: const Key('settingsSecrets'),
-          leading: const Icon(Icons.lock_outline),
-          title: Text(l10n.secrets),
-          onTap: () => context.push('/settings/secrets'),
-        ),
-        if (ref.watch(billingProvider).value?.enabled ?? false)
-          ListTile(
-            key: const Key('settingsBilling'),
-            leading: const Icon(Icons.workspace_premium_outlined),
-            title: Text(l10n.billing),
-            subtitle: Text(ref.watch(billingProvider).value!.planName),
-            onTap: () => context.push('/settings/billing'),
-          ),
-        ListTile(
-          leading: const Icon(Icons.payments_outlined),
-          title: Text(l10n.usage),
-          subtitle: Text(l10n.usageMonth(formatUsd(month?.totalCostUsd ?? 0))),
-        ),
-        ListTile(
-          key: const Key('settingsPrivacy'),
-          leading: const Icon(Icons.privacy_tip_outlined),
-          title: Text(l10n.privacy),
-          onTap: () => context.push('/settings/privacy'),
-        ),
-        ListTile(leading: const Icon(Icons.translate), title: Text(l10n.language), subtitle: Text(Localizations.localeOf(context).toLanguageTag())),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.logout),
-          title: Text(l10n.signOut),
-          onTap: () => runGuarded(context, backend.signOut),
-        ),
+        const SizedBox(height: AppSpace.md),
+        Text(l10n.accentColor, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
+        const SizedBox(height: AppSpace.sm),
+        Wrap(spacing: 12, runSpacing: 12, children: [
+          for (final a in AppAccent.values)
+            Tooltip(
+              message: a.label,
+              excludeFromSemantics: true,
+              child: Semantics(
+                button: true,
+                selected: a == appearance.accent,
+                label: a.label,
+                child: InkResponse(
+                  key: Key('accent-${a.name}'),
+                  onTap: () => notifier.setAccent(a),
+                  radius: 22,
+                  child: AnimatedContainer(
+                    duration: AppMotion.of(context, AppMotion.fast),
+                    width: 36,
+                    height: 36,
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: a == appearance.accent ? a.seed : Colors.transparent, width: 2),
+                    ),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(color: a.seed, shape: BoxShape.circle),
+                      child: a == appearance.accent ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ]),
       ]),
     );
   }

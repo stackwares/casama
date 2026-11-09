@@ -11,6 +11,7 @@ import 'features/companion/companion_overlay.dart';
 import 'features/companion/desktop_shell.dart';
 import 'core/router.dart';
 import 'core/theme.dart';
+import 'theme/appearance.dart';
 import 'l10n/generated/app_localizations.dart';
 
 class KasamaApp extends ConsumerWidget {
@@ -27,10 +28,13 @@ class KasamaApp extends ConsumerWidget {
     // Mobile: home-screen widget data and share to bot.
     ref.watch(homeWidgetSyncProvider);
     ref.watch(shareToBotProvider);
+    final appearance = ref.watch(appearanceProvider);
     return MaterialApp.router(
       onGenerateTitle: (c) => AppLocalizations.of(c).appTitle,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      theme: AppTheme.light(appearance.accent),
+      darkTheme: AppTheme.dark(appearance.accent),
+      themeMode: appearance.mode,
+      themeAnimationDuration: const Duration(milliseconds: 250),
       routerConfig: ref.watch(routerProvider),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
