@@ -85,7 +85,14 @@ class ComputerPanel extends ConsumerWidget {
           child: TabBarView(children: [
             computer.profile == ComputerProfileEnum.desktop
                 ? _LiveEntry(computer: computer)
-                : (running ? _ScreenTab(computerId: computer.id) : EmptyState(icon: Icons.bedtime_outlined, message: l10n.computerAsleep)),
+                : Column(children: [
+                    _DesktopSwitch(computer: computer),
+                    Expanded(
+                      child: running
+                          ? _ScreenTab(computerId: computer.id)
+                          : EmptyState(icon: Icons.bedtime_outlined, message: l10n.computerAsleep),
+                    ),
+                  ]),
             TerminalTab(computerId: computer.id),
             FilesTab(computerId: computer.id),
             CheckpointsTab(computerId: computer.id),
@@ -113,6 +120,44 @@ class _LiveEntry extends StatelessWidget {
         icon: const Icon(Icons.play_arrow),
         label: Text(l10n.openLiveView),
       ),
+    );
+  }
+}
+
+/// Headless computers only have a browser; offer the desktop profile (restarts, files are kept).
+class _DesktopSwitch extends ConsumerStatefulWidget {
+  const _DesktopSwitch({required this.computer});
+  final Computer computer;
+
+  @override
+  ConsumerState<_DesktopSwitch> createState() => _DesktopSwitchState();
+}
+
+class _DesktopSwitchState extends ConsumerState<_DesktopSwitch> {
+  var _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(children: [
+        Expanded(child: Text(l10n.headlessScreenNote, style: Theme.of(context).textTheme.bodySmall)),
+        const SizedBox(width: 12),
+        FilledButton.tonalIcon(
+          key: const Key('switchToDesktop'),
+          icon: const Icon(Icons.desktop_windows_outlined),
+          label: Text(l10n.switchToDesktop),
+          onPressed: _busy
+              ? null
+              : () async {
+                  setState(() => _busy = true);
+                  await runGuarded(context, () => ref.read(backendProvider).updateComputer(widget.computer.id, profile: 'desktop'));
+                  ref.invalidate(computersProvider);
+                  if (mounted) setState(() => _busy = false);
+                },
+        ),
+      ]),
     );
   }
 }
@@ -244,7 +289,13 @@ class _FilesTabState extends ConsumerState<FilesTab> {
     _reload();
   }
 
-  void _reload() => setState(() => _entries = ref.read(backendProvider).listFiles(widget.computerId, _path));
+  void _reload() {
+    // Start the request first; the setState callback must not return the Future.
+    final next = ref.read(backendProvider).listFiles(widget.computerId, _path);
+    setState(() {
+      _entries = next;
+    });
+  }
 
   void _open(String path) {
     _path = path;

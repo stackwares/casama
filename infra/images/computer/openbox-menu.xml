@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Right-click the desktop for this menu. -->
+<openbox_menu xmlns="http://openbox.org/3.4/menu">
+  <menu id="root-menu" label="Kasama">
+    <item label="Terminal"><action name="Execute"><command>xterm -fa 'DejaVu Sans Mono' -fs 11</command></action></item>
+    <item label="Browser"><action name="Execute"><command>chrome --no-first-run --no-default-browser-check</command></action></item>
+    <item label="Text editor"><action name="Execute"><command>mousepad</command></action></item>
+    <separator />
+    <item label="Reconfigure"><action name="Reconfigure" /></item>
+  </menu>
+</openbox_menu>

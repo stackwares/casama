@@ -9,5 +9,8 @@ for _ in $(seq 1 100); do xdpyinfo >/dev/null 2>&1 && break; sleep 0.1; done
 eval "$(dbus-launch --sh-syntax)"
 export NO_AT_BRIDGE=0 GTK_MODULES=gail:atk-bridge
 /usr/libexec/at-spi-bus-launcher --launch-immediately >/dev/null 2>&1 &
+# A plain background and a taskbar, so an empty desktop doesn't look like a dead screen.
+xsetroot -solid '#23303f' || true
 openbox >/dev/null 2>&1 &
+tint2 >/dev/null 2>&1 &
 exec computerd

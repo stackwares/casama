@@ -670,6 +670,12 @@ abstract class AppLocalizations {
   /// **'Checkpoints'**
   String get checkpoints;
 
+  /// No description provided for @headlessScreenNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This computer has no desktop, so this shows its browser (blank until the bot opens a page). Switch to a desktop to watch and control apps live.'**
+  String get headlessScreenNote;
+
   /// No description provided for @noScreen.
   ///
   /// In en, this message translates to:

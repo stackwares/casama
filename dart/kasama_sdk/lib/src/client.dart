@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:kasama_api/kasama_api.dart';
 
@@ -171,7 +173,18 @@ class KasamaClient {
 /// Extracts the problem+json body from a failed API call, if any.
 Problem? problemOf(Object error) {
   if (error is DioException) {
-    final data = error.response?.data;
+    var data = error.response?.data;
+    // Binary endpoints (audio, files) receive the error body as bytes or text; decode it too.
+    if (data is List<int>) {
+      try {
+        data = utf8.decode(data);
+      } catch (_) {}
+    }
+    if (data is String && data.startsWith('{')) {
+      try {
+        data = jsonDecode(data);
+      } catch (_) {}
+    }
     if (data is Map<String, dynamic> && data['code'] is String) {
       try {
         return Problem.fromJson(data);

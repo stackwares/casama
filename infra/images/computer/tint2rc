@@ -1,0 +1,26 @@
+# Minimal bottom taskbar: launchers, open windows and a clock.
+panel_items = LTC
+panel_position = bottom center horizontal
+panel_size = 100% 36
+panel_background_id = 1
+panel_padding = 6 4 6
+rounded = 0
+border_width = 0
+background_color = #111827 95
+border_color = #000000 0
+launcher_padding = 4 4 6
+launcher_item_size = 26
+launcher_icon_theme = hicolor
+launcher_item_app = /usr/share/applications/xterm.desktop
+launcher_item_app = /usr/share/applications/org.xfce.mousepad.desktop
+taskbar_mode = single_desktop
+task_text = 1
+task_maximum_size = 220 30
+task_padding = 6 3 6
+task_font = DejaVu Sans 10
+task_font_color = #e5e7eb 100
+task_active_background_id = 0
+time1_format = %H:%M
+time1_font = DejaVu Sans 10
+clock_font_color = #e5e7eb 100
+clock_padding = 8 0

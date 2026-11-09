@@ -186,6 +186,7 @@
   "terminal": "Terminal",
   "files": "Files",
   "checkpoints": "Checkpoints",
+  "headlessScreenNote": "This computer has no desktop, so this shows its browser (blank until the bot opens a page). Switch to a desktop to watch and control apps live.",
   "noScreen": "Nothing on screen yet. The bot's browser page appears here.",
   "refresh": "Refresh",
   "upload": "Upload",

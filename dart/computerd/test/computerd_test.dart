@@ -115,6 +115,22 @@ void main() {
     expect((await http.get(base.resolve('/files?path=extra.txt'), headers: auth)).statusCode, 404);
   });
 
+  test('restore finishes even when an old file in the home cannot be removed', () async {
+    await http.put(base.resolve('/files?path=workspace/report.md'), headers: auth, body: 'mine');
+    final archive = await http.post(base.resolve('/archive'), headers: {...auth, 'content-type': 'application/json'}, body: '{}');
+    // A folder whose contents this user can't delete (like root-owned npm files from an old image).
+    final locked = Directory('${home.path}/.locked')..createSync();
+    File('${locked.path}/old.txt').writeAsStringSync('stuck');
+    await Process.run('chmod', ['555', locked.path]);
+    addTearDown(() => Process.runSync('chmod', ['755', locked.path]));
+    await http.delete(base.resolve('/files?path=workspace'), headers: auth);
+
+    final restore = await http.post(base.resolve('/restore'), headers: auth, body: archive.bodyBytes);
+    expect(restore.statusCode, 200, reason: restore.body);
+    expect((await http.get(base.resolve('/files?path=workspace/report.md'), headers: auth)).body, 'mine');
+    expect(home.listSync().where((e) => e.path.contains('.kasama-restore-')), isEmpty);
+  });
+
   test('terminal runs an interactive shell over WebSocket', () async {
     final ws = await WebSocket.connect('ws://127.0.0.1:${server.port}/terminal', headers: auth);
     final output = StringBuffer();

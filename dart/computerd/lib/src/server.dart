@@ -446,6 +446,28 @@ class Computerd {
     await res.close();
   }
 
+  /// Moves [from] to [to]; when [to] survived the clean-up, merges directories entry by entry and
+  /// skips what can't be replaced.
+  void _moveInto(FileSystemEntity from, String to) {
+    final existing = FileSystemEntity.typeSync(to, followLinks: false);
+    if (existing == FileSystemEntityType.notFound) {
+      from.renameSync(to);
+      return;
+    }
+    if (from is Directory && existing == FileSystemEntityType.directory) {
+      for (final child in from.listSync(followLinks: false)) {
+        _moveInto(child, p.join(to, p.basename(child.path)));
+      }
+      return;
+    }
+    try {
+      File(to).deleteSync();
+      from.renameSync(to);
+    } on FileSystemException catch (err) {
+      stderr.writeln('restore: skipped $to: ${err.osError?.message ?? err.message}');
+    }
+  }
+
   /// POST /restore?path=: replaces a directory's contents with the uploaded gzip tarball.
   Future<void> _restore(HttpRequest req) async {
     final path = _resolve(req.uri.queryParameters['path'] ?? config.home);
@@ -462,19 +484,29 @@ class Computerd {
       staging.deleteSync(recursive: true);
       throw _ApiError(400, 'restore_failed', err.trim());
     }
-    // Swap contents in place (the directory itself may be a mount point).
+    // Swap contents in place (the directory itself may be a mount point). Entries that can't be
+    // removed (for example root-owned files from an older image) are kept and merged into, so a
+    // restore never stops halfway with the user's files left in staging.
     if (dir.existsSync()) {
       for (final e in dir.listSync(followLinks: false)) {
         if (e.path == staging.path) continue;
-        e.deleteSync(recursive: true);
+        try {
+          e.deleteSync(recursive: true);
+        } on FileSystemException catch (err) {
+          stderr.writeln('restore: kept ${e.path}: ${err.osError?.message ?? err.message}');
+        }
       }
     } else {
       dir.createSync(recursive: true);
     }
     for (final e in staging.listSync(followLinks: false)) {
-      e.renameSync(p.join(path, p.basename(e.path)));
+      _moveInto(e, p.join(path, p.basename(e.path)));
     }
-    staging.deleteSync(recursive: true);
+    try {
+      staging.deleteSync(recursive: true);
+    } on FileSystemException catch (err) {
+      stderr.writeln('restore: could not remove ${staging.path}: ${err.message}');
+    }
     Directory(config.workspace).createSync(recursive: true);
     await _json(req.response, 200, {'restored': path});
   }

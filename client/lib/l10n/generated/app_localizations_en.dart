@@ -325,6 +325,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkpoints => 'Checkpoints';
 
   @override
+  String get headlessScreenNote =>
+      'This computer has no desktop, so this shows its browser (blank until the bot opens a page). Switch to a desktop to watch and control apps live.';
+
+  @override
   String get noScreen =>
       'Nothing on screen yet. The bot\'s browser page appears here.';
 
