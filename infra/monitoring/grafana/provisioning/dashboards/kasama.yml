@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: kasama
+    folder: Kasama
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

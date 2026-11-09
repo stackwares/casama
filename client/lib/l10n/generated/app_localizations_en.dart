@@ -1358,4 +1358,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get instanceName => 'Server name';
+
+  @override
+  String get server => 'Server';
+
+  @override
+  String get serverAddress => 'Server address';
+
+  @override
+  String get connect => 'Connect';
+
+  @override
+  String get changeServer => 'Use a different server';
+
+  @override
+  String serverIs(String host) {
+    return 'Server: $host';
+  }
+
+  @override
+  String get continueWithSso => 'Continue with SSO';
+
+  @override
+  String get workEmail => 'Work email';
+
+  @override
+  String get privacy => 'Privacy';
+
+  @override
+  String get exportMyData => 'Export my data';
+
+  @override
+  String get exportMyDataHelp =>
+      'A ZIP of everything you can see: bots, chats, runs, memories and settings. Secrets and keys are never included.';
+
+  @override
+  String exportReady(String kb) {
+    return 'Export ready ($kb KB)';
+  }
+
+  @override
+  String get runHistoryRetention => 'Keep run history for';
+
+  @override
+  String get runHistoryRetentionHelp =>
+      'Older run events are deleted automatically.';
+
+  @override
+  String days(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAccount => 'Delete my account';
+
+  @override
+  String get deleteAccountHelp =>
+      'Signs you out now and erases your data and the workspaces you solely own after a short grace period.';
+
+  @override
+  String get deleteAccountQuestion => 'Delete your account?';
+
+  @override
+  String deleteAccountConfirm(String email) {
+    return 'Workspaces where you are the only owner are deleted with your account, including their bots and computers. Type $email to confirm.';
+  }
+
+  @override
+  String get accountDeleted => 'Account scheduled for deletion';
+
+  @override
+  String accountDeletedBody(String date) {
+    return 'You have been signed out. Your data will be erased on $date.';
+  }
 }

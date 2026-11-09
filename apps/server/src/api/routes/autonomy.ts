@@ -235,6 +235,9 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       throw new ApiError(404, "secret_not_found", "Secret not found (or you are not an admin)");
     const vaultId = rows[0]?.vaultSecretId;
     if (vaultId) await db.execute(sql`delete from vault.secrets where id = ${vaultId}::uuid`);
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${rows[0]?.orgId}::uuid, 'user', ${claims.sub}::uuid, 'secret.deleted', 'secret', ${id}::uuid,
+              ${JSON.stringify({ name: rows[0]?.name })}::jsonb)`);
     return c.json({ deleted: id }, 200);
   });
 

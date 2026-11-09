@@ -1,0 +1,1 @@
+ai agent,assistant,automation,self-hosted,openrouter,llm,bots,workflow,computer use,mcp

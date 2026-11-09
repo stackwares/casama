@@ -141,7 +141,8 @@ export class DockerProvider implements SandboxProvider {
       pids: 512,
       tmpMb: 1024,
       shmMb: 512,
-      ...this.opts.defaults,
+      // Unset overrides must not erase a default (an undefined memory limit means unlimited).
+      ...Object.fromEntries(Object.entries(this.opts.defaults ?? {}).filter(([, v]) => v != null)),
     };
     const cpus = spec.size?.cpus ?? def.cpus;
     const memoryMb = spec.size?.memoryMb ?? def.memoryMb;

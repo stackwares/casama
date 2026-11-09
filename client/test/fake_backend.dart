@@ -364,6 +364,32 @@ class FakeBackend implements Backend {
   @override
   Future<UpdateNotice> adminUpdates() async => UpdateNotice(current: '0.6.0', latest: '0.9.1', updateAvailable: true, url: 'https://example.com/r');
 
+  // --- Phase 8: privacy and SSO --------------------------------------------
+
+  var exported = 0;
+  String? deletedWith;
+  var retention = 180;
+  String? ssoEmail;
+
+  @override
+  Future<Uint8List> exportMyData() async {
+    exported++;
+    return Uint8List.fromList(List.filled(2048, 7));
+  }
+
+  @override
+  Future<AccountDeletion> deleteAccount(String confirmEmail) async {
+    deletedWith = confirmEmail;
+    return AccountDeletion(purgeAfter: DateTime.utc(2026, 11, 17), workspacesDeleted: const ['Test Org']);
+  }
+
+  @override
+  Future<int> retentionDays(String orgId) async => retention;
+  @override
+  Future<int> setRetentionDays(String orgId, int days) async => retention = days;
+  @override
+  Future<void> signInWithSso(String email) async => ssoEmail = email;
+
   // --- Phase 7: billing -----------------------------------------------------
 
   var billingEnabled = false;

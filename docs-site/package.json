@@ -1,0 +1,15 @@
+{
+  "name": "@kasama/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "node scripts/sync.ts && vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}

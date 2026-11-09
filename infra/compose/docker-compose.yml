@@ -1,0 +1,362 @@
+# Kasama self-host stack (SPEC "Self-host"): Supabase (Postgres, Auth, REST, Realtime, gateway),
+# the Kasama API and worker, the sandbox supervisor, egress proxy, TURN relay and Caddy.
+# Run ./install.sh from the repository root (it writes infra/compose/.env and starts this file).
+#   docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env up -d
+# Optional profiles: s3 (SeaweedFS object storage), monitoring (Prometheus, Grafana),
+# web (the Flutter web app), images (build-only computer images).
+name: kasama
+
+x-kasama: &kasama
+  image: kasama/server:${KASAMA_VERSION:-local}
+  build:
+    context: ../..
+    dockerfile: apps/server/Dockerfile
+  restart: unless-stopped
+  networks: [internal]
+  environment: &kasama-env
+    NODE_ENV: production
+    DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+    SUPABASE_URL: ${KASAMA_PUBLIC_URL}
+    SUPABASE_ANON_KEY: ${ANON_KEY}
+    SUPABASE_JWT_SECRET: ${JWT_SECRET}
+    PUBLIC_APP_URL: ${KASAMA_PUBLIC_URL}
+    PUBLIC_API_URL: ${KASAMA_PUBLIC_URL}
+    SUPERVISOR_URL: http://kasama-supervisor:8788
+    SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
+    INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+    API_INTERNAL_URL: http://api:8787
+    TURN_SECRET: ${TURN_SECRET}
+    TURN_PUBLIC_HOST: ${TURN_PUBLIC_HOST}
+    METRICS_TOKEN: ${METRICS_TOKEN}
+    TELEMETRY: ${TELEMETRY:-off}
+    INSTANCE_ADMIN_EMAILS: ${INSTANCE_ADMIN_EMAILS:-}
+    RESEND_API_KEY: ${RESEND_API_KEY:-}
+    EMAIL_FROM: ${EMAIL_FROM:-Kasama <no-reply@localhost>}
+    ERROR_REPORTING: ${ERROR_REPORTING:-auto}
+    SENTRY_DSN: ${SENTRY_DSN:-}
+    POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
+    KASAMA_CLOUD_URL: ${KASAMA_CLOUD_URL:-}
+    KASAMA_CLOUD_KEY: ${KASAMA_CLOUD_KEY:-}
+    KASAMA_LICENSE_KEY: ${KASAMA_LICENSE_KEY:-}
+    SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+    BILLING_ENABLED: "false"
+
+services:
+  # ---------------------------------------------------------------- Supabase
+  db:
+    image: public.ecr.aws/supabase/postgres:17.11.0.011
+    restart: unless-stopped
+    networks: [internal]
+    command:
+      [
+        "postgres",
+        "-c",
+        "config_file=/etc/postgresql/postgresql.conf",
+        "-c",
+        "log_min_messages=fatal",
+      ]
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: 3600
+    volumes:
+      - ./selfhost/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+      - ./selfhost/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./selfhost/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - db-data:/var/lib/postgresql/data
+      - db-config:/etc/postgresql-custom
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  auth:
+    image: public.ecr.aws/supabase/gotrue:v2.197.0
+    restart: unless-stopped
+    networks: [internal]
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${KASAMA_PUBLIC_URL}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      GOTRUE_SITE_URL: ${KASAMA_PUBLIC_URL}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-}
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: ${EMAIL_AUTOCONFIRM:-true}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-587}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-}
+      # SAML SSO (enterprise, ee/): workspaces register their identity provider through the API.
+      GOTRUE_SAML_ENABLED: ${SAML_ENABLED:-true}
+      GOTRUE_SAML_PRIVATE_KEY: ${SAML_PRIVATE_KEY}
+
+  rest:
+    image: public.ecr.aws/supabase/postgrest:v16.5
+    restart: unless-stopped
+    networks: [internal]
+    depends_on: { db: { condition: service_healthy } }
+    command: ["postgrest"]
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+
+  realtime:
+    # The tenant id comes from this name (realtime-dev); keep it.
+    container_name: realtime-dev.supabase-realtime
+    image: public.ecr.aws/supabase/realtime:v2.151.3
+    restart: unless-stopped
+    networks: [internal]
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: SET search_path TO _realtime
+      DB_ENC_KEY: ${REALTIME_ENC_KEY}
+      API_JWT_SECRET: ${JWT_SECRET}
+      METRICS_JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      APP_NAME: realtime
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
+
+  kong:
+    image: public.ecr.aws/supabase/kong:2.8.1
+    restart: unless-stopped
+    networks: [internal]
+    depends_on: [auth, rest, realtime]
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    volumes:
+      - ./selfhost/kong.yml:/home/kong/temp.yml:ro
+
+  # ---------------------------------------------------------------- Kasama
+  migrate:
+    image: public.ecr.aws/supabase/postgres:17.11.0.011
+    networks: [internal]
+    depends_on: { db: { condition: service_healthy } }
+    entrypoint: ["/bin/sh", "/migrate.sh"]
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./selfhost/migrate.sh:/migrate.sh:ro
+      - ../../supabase/migrations:/migrations:ro
+    restart: "no"
+
+  api:
+    <<: *kasama
+    environment:
+      <<: *kasama-env
+      MODE: api
+    depends_on: { migrate: { condition: service_completed_successfully } }
+
+  worker:
+    <<: *kasama
+    environment:
+      <<: *kasama-env
+      MODE: worker
+      RUN_CONCURRENCY: ${RUN_CONCURRENCY:-20}
+    depends_on: { migrate: { condition: service_completed_successfully } }
+
+  # The only service with Docker access. It joins each computer's private network to reach computerd.
+  supervisor:
+    image: kasama/supervisor:${KASAMA_VERSION:-local}
+    build:
+      context: ../..
+      dockerfile: apps/supervisor/Dockerfile
+    container_name: kasama-supervisor
+    restart: unless-stopped
+    networks: [internal]
+    environment:
+      SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
+      COMPUTER_TOKEN_SECRET: ${COMPUTER_TOKEN_SECRET}
+      EGRESS_CONTAINER: kasama-egress
+      EGRESS_CONTROL_URL: http://kasama-egress:3129
+      EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
+      SUPERVISOR_CONTAINER: kasama-supervisor
+      COMPUTER_IMAGE_HEADLESS: kasama/computer-headless:${KASAMA_VERSION:-local}
+      COMPUTER_IMAGE_DESKTOP: kasama/computer-desktop:${KASAMA_VERSION:-local}
+      COMPUTER_MEMORY_MB: ${COMPUTER_MEMORY_MB:-2048}
+      OBJECT_STORE_DIR: /data/objects
+      TURN_CONTAINER: kasama-turn
+      TURN_SECRET: ${TURN_SECRET}
+      TURN_PUBLIC_HOST: ${TURN_PUBLIC_HOST}
+      SANDBOX_RUNTIME: ${SANDBOX_RUNTIME:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - objects:/data/objects
+
+  # The only route from computers to the internet; blocks private and metadata addresses.
+  egress:
+    image: kasama/egress-proxy:${KASAMA_VERSION:-local}
+    build:
+      context: ../..
+      dockerfile: infra/egress-proxy/Dockerfile
+    container_name: kasama-egress
+    restart: unless-stopped
+    networks: [internal, egress]
+    environment:
+      EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
+
+  # TURN relay for live view (D-055). Production also wants TLS on 5349 (turns:).
+  turn:
+    image: kasama/turn:${KASAMA_VERSION:-local}
+    build:
+      context: ../..
+      dockerfile: infra/turn/Dockerfile
+    container_name: kasama-turn
+    restart: unless-stopped
+    networks: [internal]
+    environment:
+      TURN_SECRET: ${TURN_SECRET}
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    networks: [internal]
+    depends_on: [api, kong]
+    environment:
+      KASAMA_SITE: ${KASAMA_SITE}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./selfhost/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+
+  # ---------------------------------------------------------------- optional
+  web:
+    image: kasama/web:${KASAMA_VERSION:-local}
+    profiles: [web]
+    build:
+      context: ../..
+      dockerfile: client/Dockerfile.web
+    restart: unless-stopped
+    networks: [internal]
+
+  s3:
+    image: chrislusf/seaweedfs:4.53
+    container_name: kasama-s3
+    profiles: [s3]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        printf '{"identities":[{"name":"kasama","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Read","Write","List","Admin"]}]}'
+        "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" > /tmp/s3.json
+        && exec weed server -s3 -s3.config=/tmp/s3.json -dir=/data
+    environment:
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+    volumes:
+      - s3data:/data
+    networks: [internal]
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: [monitoring]
+    restart: unless-stopped
+    networks: [internal]
+    entrypoint:
+      [
+        "/bin/sh",
+        "-c",
+        'printf ''%s'' "$$METRICS_TOKEN" > /tmp/metrics_token && exec /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.retention.time=30d',
+      ]
+    environment:
+      METRICS_TOKEN: ${METRICS_TOKEN}
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    profiles: [monitoring]
+    restart: unless-stopped
+    networks: [internal]
+    command: ["--path.rootfs=/host"]
+    volumes:
+      - /:/host:ro,rslave
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    profiles: [monitoring]
+    restart: unless-stopped
+    networks: [internal]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+
+  # Build-only services so `compose --profile images build` builds the computer images.
+  computer-headless:
+    build:
+      context: ../..
+      dockerfile: infra/images/computer/Dockerfile.headless
+    image: kasama/computer-headless:${KASAMA_VERSION:-local}
+    profiles: [images]
+
+  computer-desktop:
+    build:
+      context: ../..
+      dockerfile: infra/images/computer/Dockerfile.desktop
+      args:
+        BASE: kasama/computer-headless:${KASAMA_VERSION:-local}
+    image: kasama/computer-desktop:${KASAMA_VERSION:-local}
+    profiles: [images]
+
+networks:
+  internal: {}
+  egress: {}
+
+volumes:
+  db-data: {}
+  db-config: {}
+  objects: {}
+  caddy-data: {}
+  s3data: {}
+  prometheus-data: {}
+  grafana-data: {}

@@ -1,0 +1,5 @@
+# Shorebird code push for urgent Dart-only fixes (SPEC "Releases"). Replace app_id with the id from
+# `shorebird init` once a Shorebird account exists (docs/NEEDS-FROM-OLIVER.md); see
+# scripts/shorebird-release.sh.
+app_id: REPLACE_WITH_SHOREBIRD_APP_ID
+auto_update: true

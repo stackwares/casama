@@ -1,4 +1,5 @@
 import 'package:kasama_api/src/model/accepted.dart';
+import 'package:kasama_api/src/model/account_deletion.dart';
 import 'package:kasama_api/src/model/admin_org.dart';
 import 'package:kasama_api/src/model/admin_org_list.dart';
 import 'package:kasama_api/src/model/admin_overview.dart';
@@ -56,6 +57,7 @@ import 'package:kasama_api/src/model/credential_list.dart';
 import 'package:kasama_api/src/model/credential_test_result.dart';
 import 'package:kasama_api/src/model/credit_entry.dart';
 import 'package:kasama_api/src/model/credit_pack.dart';
+import 'package:kasama_api/src/model/delete_account_request.dart';
 import 'package:kasama_api/src/model/delete_result.dart';
 import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
@@ -86,6 +88,7 @@ import 'package:kasama_api/src/model/message_delta_event_payload.dart';
 import 'package:kasama_api/src/model/model_choice.dart';
 import 'package:kasama_api/src/model/model_policy.dart';
 import 'package:kasama_api/src/model/ok.dart';
+import 'package:kasama_api/src/model/org_settings.dart';
 import 'package:kasama_api/src/model/organization.dart';
 import 'package:kasama_api/src/model/organization_list.dart';
 import 'package:kasama_api/src/model/organization_with_role.dart';
@@ -154,6 +157,7 @@ import 'package:kasama_api/src/model/transcription.dart';
 import 'package:kasama_api/src/model/update_computer_request.dart';
 import 'package:kasama_api/src/model/update_local_device_request.dart';
 import 'package:kasama_api/src/model/update_notice.dart';
+import 'package:kasama_api/src/model/update_org_settings_request.dart';
 import 'package:kasama_api/src/model/update_routine_request.dart';
 import 'package:kasama_api/src/model/upload_result.dart';
 import 'package:kasama_api/src/model/usage_event.dart';
@@ -187,6 +191,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return (value is double ? value : double.parse('$value')) as ReturnType;
         case 'Accepted':
           return Accepted.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AccountDeletion':
+          return AccountDeletion.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOrg':
           return AdminOrg.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOrgList':
@@ -310,6 +316,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreditEntry.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreditPack':
           return CreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeleteAccountRequest':
+          return DeleteAccountRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteResult':
           return DeleteResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedComputer':
@@ -379,6 +387,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'OrgRole':
           
           
+        case 'OrgSettings':
+          return OrgSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Organization':
           return Organization.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'OrganizationList':
@@ -533,6 +543,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateLocalDeviceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateNotice':
           return UpdateNotice.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateOrgSettingsRequest':
+          return UpdateOrgSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateRoutineRequest':
           return UpdateRoutineRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UploadResult':

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'core/config.dart';
 import 'core/providers.dart';
+import 'core/server_address.dart';
 import 'core/supabase_backend.dart';
 import 'core/telemetry.dart';
 import 'core/theme.dart';
@@ -44,21 +45,35 @@ class StartupGate extends StatefulWidget {
 class _StartupGateState extends State<StartupGate> {
   Widget? _app;
   Object? _error;
+  late AppConfig _config = widget.config;
 
   @override
   void initState() {
     super.initState();
+    // Self-hosters point the app at their own server (D-076); the choice is remembered.
+    onChangeServer = _switchServer;
     _start();
   }
 
   Future<void> _start() async {
     setState(() => _error = null);
     try {
-      final app = await widget.connect(widget.config).timeout(const Duration(seconds: 20));
+      _config = await ServerAddress.load(fallback: widget.config);
+      final app = await widget.connect(_config).timeout(const Duration(seconds: 20));
       if (mounted) setState(() => _app = app);
     } catch (e) {
       if (mounted) setState(() => _error = e);
     }
+  }
+
+  Future<void> _switchServer(String url) async {
+    await ServerAddress.save(url);
+    try {
+      await Supabase.instance.dispose();
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _app = null);
+    await _start();
   }
 
   @override
@@ -89,9 +104,15 @@ class _StartupGateState extends State<StartupGate> {
                         const SizedBox(height: 16),
                         Text(l10n.cannotReachServer, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
                         const SizedBox(height: 8),
-                        Text(l10n.cannotReachServerHelp(widget.config.apiUrl), textAlign: TextAlign.center),
+                        Text(l10n.cannotReachServerHelp(_config.apiUrl), textAlign: TextAlign.center),
                         const SizedBox(height: 16),
                         FilledButton(key: const Key('startupRetry'), onPressed: _start, child: Text(l10n.retry)),
+                        TextButton(
+                          key: const Key('startupChangeServer'),
+                          onPressed: () => changeServerDialog(context, _config.apiUrl,
+                              title: l10n.server, label: l10n.serverAddress, cancel: l10n.cancel, connect: l10n.connect),
+                          child: Text(l10n.changeServer),
+                        ),
                       ]),
               ),
             ),

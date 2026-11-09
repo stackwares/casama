@@ -37,6 +37,7 @@ let runtime:
       fetch?: typeof fetch;
       voice?: VoiceRuntime;
       billing?: import("../billing/service.ts").BillingService;
+      telemetry?: { url: string; version: string };
     }
   | undefined;
 export function configureWorkflows(r: NonNullable<typeof runtime>) {
@@ -295,4 +296,27 @@ export const billingSettleWorkflow = DBOS.registerWorkflow(
     await DBOS.runStep(() => billing.settle(), { name: "settle" });
   },
   { name: "billingSettle" },
+);
+
+/** Daily: purge deleted accounts after their grace period; drop run events past retention (D-072). */
+export const privacyWorkflow = DBOS.registerWorkflow(
+  async (_scheduledAt: Date, _context: unknown) => {
+    const { purgeDueAccounts, applyRetention } = await import("../services/privacy.ts");
+    await DBOS.runStep(() => purgeDueAccounts(rt().db, rt().computers), { name: "purge-accounts" });
+    await DBOS.runStep(() => applyRetention(rt().db), { name: "retention" });
+  },
+  { name: "privacy" },
+);
+
+/** Weekly, only with TELEMETRY=on: anonymous counts (D-074). */
+export const telemetryWorkflow = DBOS.registerWorkflow(
+  async (_scheduledAt: Date, _context: unknown) => {
+    const t = rt().telemetry;
+    if (!t) return;
+    const { sendTelemetry } = await import("../services/telemetry.ts");
+    await DBOS.runStep(() => sendTelemetry(rt().db, t.url, t.version).catch(() => null), {
+      name: "ping",
+    });
+  },
+  { name: "telemetry" },
 );

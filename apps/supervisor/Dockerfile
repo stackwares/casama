@@ -1,8 +1,8 @@
 # Sandbox supervisor: the only service with Docker access.
 #   docker build -f apps/supervisor/Dockerfile -t kasama/supervisor:dev .
-FROM node:24-slim AS base
+FROM node:26-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NODE_ENV=production
-RUN corepack enable
+RUN npm install -g pnpm@12.18.0 --no-fund --no-audit
 WORKDIR /app
 
 FROM base AS deps

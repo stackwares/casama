@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
+import '../../core/server_address.dart';
 import '../../core/widgets.dart';
 
 /// Email and password, magic link, Google and Apple sign-in.
@@ -56,6 +57,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   static bool _validEmail(String v) => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v);
+
+  Future<void> _sso() async {
+    final l10n = context.l10n;
+    final email = await showDialog<String>(context: context, builder: (_) => _SsoDialog(title: l10n.continueWithSso, label: l10n.workEmail, cancel: l10n.cancel, ok: l10n.continueLabel));
+    if (email == null || !email.contains('@') || !mounted) return;
+    await runGuarded(context, () => ref.read(backendProvider).signInWithSso(email));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,6 +132,24 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       label: Text(l10n.continueWithApple),
                     ),
                   ],
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    key: const Key('ssoSignIn'),
+                    onPressed: _busy ? null : _sso,
+                    icon: const Icon(Icons.business_outlined),
+                    label: Text(l10n.continueWithSso),
+                  ),
+                  const SizedBox(height: 16),
+                  // Self-hosted servers: point the app at your own Kasama (D-076).
+                  TextButton.icon(
+                    key: const Key('changeServer'),
+                    onPressed: _busy
+                        ? null
+                        : () => changeServerDialog(context, ref.read(backendProvider).apiUrl,
+                            title: l10n.server, label: l10n.serverAddress, cancel: l10n.cancel, connect: l10n.connect),
+                    icon: const Icon(Icons.dns_outlined, size: 18),
+                    label: Text(l10n.serverIs(Uri.tryParse(ref.read(backendProvider).apiUrl)?.host ?? ref.read(backendProvider).apiUrl)),
+                  ),
                 ]),
               ),
             ),
@@ -132,4 +158,36 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       ),
     );
   }
+}
+
+class _SsoDialog extends StatefulWidget {
+  const _SsoDialog({required this.title, required this.label, required this.cancel, required this.ok});
+  final String title, label, cancel, ok;
+  @override
+  State<_SsoDialog> createState() => _SsoDialogState();
+}
+
+class _SsoDialogState extends State<_SsoDialog> {
+  final _c = TextEditingController();
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(widget.title),
+        content: TextField(
+          key: const Key('ssoEmail'),
+          controller: _c,
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          decoration: InputDecoration(labelText: widget.label),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(widget.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, _c.text.trim()), child: Text(widget.ok)),
+        ],
+      );
 }

@@ -218,6 +218,9 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       insert into public.cloud_connect_keys (org_id, key_hash, key_hint, instance_name, scopes, created_by)
       values (${id}::uuid, ${k.hash}, ${k.hint}, ${body.instance_name}, ${`{${scopes.join(",")}}`}::text[], ${claims.sub}::uuid)
       returning id, instance_name, key_hint, scopes, last_used_at, created_at`);
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${id}::uuid, 'user', ${claims.sub}::uuid, 'cloud_connect.key_created', 'cloud_connect_key', ${row?.id}::uuid,
+              ${JSON.stringify({ instance_name: body.instance_name, scopes })}::jsonb)`);
     return c.json({ ...keyOut(row as Parameters<typeof keyOut>[0]), key: k.key }, 201);
   });
 
@@ -229,6 +232,8 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       update public.cloud_connect_keys set revoked_at = now()
       where id = ${key_id}::uuid and org_id = ${id}::uuid and revoked_at is null returning id`);
     if (!rows.length) throw new ApiError(404, "key_not_found", "Key not found");
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id)
+      values (${id}::uuid, 'user', ${claims.sub}::uuid, 'cloud_connect.key_revoked', 'cloud_connect_key', ${key_id}::uuid)`);
     return c.json({ revoked: key_id }, 200);
   });
 

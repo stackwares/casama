@@ -803,5 +803,60 @@
   "cloudConnectKeyOnce": "Copy it now; it is shown only once. Set it on your server with KASAMA_CLOUD_URL.",
   "copy": "Copy",
   "revoke": "Revoke",
-  "instanceName": "Server name"
+  "instanceName": "Server name",
+  "server": "Server",
+  "serverAddress": "Server address",
+  "connect": "Connect",
+  "changeServer": "Use a different server",
+  "serverIs": "Server: {host}",
+  "@serverIs": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "continueWithSso": "Continue with SSO",
+  "workEmail": "Work email",
+  "privacy": "Privacy",
+  "exportMyData": "Export my data",
+  "exportMyDataHelp": "A ZIP of everything you can see: bots, chats, runs, memories and settings. Secrets and keys are never included.",
+  "exportReady": "Export ready ({kb} KB)",
+  "@exportReady": {
+    "placeholders": {
+      "kb": {
+        "type": "String"
+      }
+    }
+  },
+  "runHistoryRetention": "Keep run history for",
+  "runHistoryRetentionHelp": "Older run events are deleted automatically.",
+  "days": "{count, plural, =1{1 day} other{{count} days}}",
+  "@days": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteAccount": "Delete my account",
+  "deleteAccountHelp": "Signs you out now and erases your data and the workspaces you solely own after a short grace period.",
+  "deleteAccountQuestion": "Delete your account?",
+  "deleteAccountConfirm": "Workspaces where you are the only owner are deleted with your account, including their bots and computers. Type {email} to confirm.",
+  "@deleteAccountConfirm": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "accountDeleted": "Account scheduled for deletion",
+  "accountDeletedBody": "You have been signed out. Your data will be erased on {date}.",
+  "@accountDeletedBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

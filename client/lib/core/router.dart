@@ -20,6 +20,7 @@ import '../features/skills/skills_screen.dart';
 import '../features/timeline/timeline_screen.dart';
 import '../features/admin/admin_screen.dart';
 import '../features/billing/billing_screen.dart';
+import '../features/privacy/privacy_screen.dart';
 import '../features/companion/companion_screen.dart';
 import '../features/quick_ask/quick_ask_screen.dart';
 import '../features/voice/call_screen.dart';
@@ -123,6 +124,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'companion', builder: (_, _) => const CompanionScreen()),
               GoRoute(path: 'admin', builder: (_, _) => const AdminScreen()),
               GoRoute(path: 'billing', builder: (_, _) => const BillingScreen()),
+              GoRoute(path: 'privacy', builder: (_, _) => const PrivacyScreen()),
             ],
           ),
         ],

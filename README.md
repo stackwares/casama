@@ -2,13 +2,25 @@
 
 **Persistent AI teammates you can self-host.** Each bot has its own chats, memory, routines and a sandboxed computer. You reach it from Kasama's own apps (web, iOS, Android, desktop) and the terminal, and it runs on your own model keys.
 
-> Status: early development. Phases 0 to 3 (backend, bots and chat, computers, the Flutter app) are built. See [SPEC.md](SPEC.md) for the plan and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what exists.
+> Status: v1 feature-complete (Phases 0 to 8 built), public launch pending. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what exists and [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md) for the launch gate.
+
+## Self-host in about 15 minutes
+
+```sh
+git clone https://github.com/stackwares/kasama && cd kasama
+./install.sh --domain kasama.example.com    # or --local for a trial on this machine
+```
+
+Then open the app, choose **Use a different server**, and create the first account (the instance owner). Details: [docs/SELF_HOST.md](docs/SELF_HOST.md).
 
 ## Why Kasama
 
 - **Self-hosted**: one command brings up the whole stack on your own server.
 - **Any model**: OpenAI, Anthropic, Google, xAI, OpenRouter or any OpenAI-compatible endpoint, including local models via Ollama.
-- **Your own computers**: every bot gets an isolated Linux computer that sleeps when idle.
+- **Real computers**: every bot gets an isolated Linux computer that sleeps when idle; watch it live and take control, or lend your own machine through the desktop app.
+- **You stay in charge**: autonomy levels, approvals for risky steps, checkpoints, budgets and a full run timeline.
+- **Everywhere**: apps for iOS, Android, macOS, Windows, Linux and web, a CLI, a Dart SDK and an MCP server for coding tools.
+- **No paywall when self-hosted**; Kasama Cloud and Cloud Connect are optional.
 
 ## Repository layout
 
@@ -18,15 +30,25 @@
 | `packages/contracts`     | Zod schemas, OpenAPI spec, run event schema (source of truth) |
 | `packages/db`            | Drizzle schema and the RLS session helper                     |
 | `packages/domain`        | Pure domain logic                                             |
-| `packages/observability` | OpenTelemetry and Sentry setup                                |
+| `packages/observability` | OpenTelemetry and error reporting                             |
+| `packages/agent`         | Agent runtime, tools, model gateway                           |
+| `packages/sandbox`       | Computer providers (Docker, E2B, Daytona, local, cloud)       |
+| `packages/evals`         | Eval suite and baseline                                       |
+| `packages/mcp`           | Kasama MCP server                                             |
+| `apps/supervisor`        | Sandbox supervisor (the only service with Docker access)      |
+| `client`                 | Flutter app                                                   |
+| `ee`                     | Enterprise features (commercial license)                      |
+| `docs-site`              | Documentation site (VitePress)                                |
+| `deploy`                 | One-click deploy templates                                    |
 | `dart/cli`               | `kasama` command-line client                                  |
 | `dart/kasama_sdk`        | Generated Dart API client                                     |
 | `supabase/`              | SQL migrations with row-level security, pgTAP tests           |
 | `infra/compose`          | Docker Compose for local development and self-hosting         |
+| `infra/monitoring`       | Prometheus, alert rules and Grafana dashboard                 |
 
 ## Local development
 
-Requirements: Node.js 24+, pnpm, Dart 3, the Supabase CLI and Docker.
+Requirements: Node.js 26+, pnpm, Dart 3, the Supabase CLI and Docker.
 
 ```sh
 pnpm install
@@ -67,4 +89,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Every commit needs a DCO sign-off (`git 
 
 ## License
 
-Apache-2.0 for everything outside `ee/`. See [LICENSE](LICENSE).
+Apache-2.0 for everything outside `ee/`, which is under the [Kasama Enterprise License](ee/LICENSE) (source-available; production use needs a license key). See [LICENSE](LICENSE).
+
+Telemetry is off by default; see [docs/SELF_HOST.md](docs/SELF_HOST.md#privacy) for the opt-in ping.

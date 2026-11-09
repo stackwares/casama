@@ -541,6 +541,31 @@ class SupabaseBackend implements Backend {
   @override
   Future<UpdateNotice> adminUpdates() async => (await api.admin.adminUpdates()).data!;
 
+  // --- privacy and SSO (Phase 8) ------------------------------------------
+
+  @override
+  Future<Uint8List> exportMyData() async => (await api.privacy.exportMyData()).data!;
+  @override
+  Future<AccountDeletion> deleteAccount(String confirmEmail) async {
+    final r = (await api.privacy.deleteMyAccount(deleteAccountRequest: DeleteAccountRequest(confirmEmail: confirmEmail))).data!;
+    await supabase.auth.signOut().catchError((_) {});
+    return r;
+  }
+
+  @override
+  Future<int> retentionDays(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.runEventRetentionDays;
+  @override
+  Future<int> setRetentionDays(String orgId, int days) async => (await api.privacy.updateOrgSettings(
+        id: orgId,
+        updateOrgSettingsRequest: UpdateOrgSettingsRequest(runEventRetentionDays: days),
+      ))
+          .data!
+          .runEventRetentionDays;
+  @override
+  Future<void> signInWithSso(String email) async {
+    await supabase.auth.signInWithSSO(domain: email.split('@').last.trim().toLowerCase());
+  }
+
   // --- billing (Phase 7) ---------------------------------------------------
 
   @override

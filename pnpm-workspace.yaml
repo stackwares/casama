@@ -2,3 +2,12 @@ packages:
   - apps/*
   - packages/*
   - infra/egress-proxy
+  - ee
+  - docs-site
+
+# Install scripts stay off (as before); none of these are needed: protobufjs only checks versions,
+# esbuild ships its binary as an optional dependency, and the OpenAPI generator fetches its JAR on use.
+allowBuilds:
+  protobufjs: false
+  esbuild: false
+  "@openapitools/openapi-generator-cli": false

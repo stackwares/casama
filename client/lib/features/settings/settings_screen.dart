@@ -118,6 +118,12 @@ class SettingsScreen extends ConsumerWidget {
           title: Text(l10n.usage),
           subtitle: Text(l10n.usageMonth(formatUsd(month?.totalCostUsd ?? 0))),
         ),
+        ListTile(
+          key: const Key('settingsPrivacy'),
+          leading: const Icon(Icons.privacy_tip_outlined),
+          title: Text(l10n.privacy),
+          onTap: () => context.push('/settings/privacy'),
+        ),
         ListTile(leading: const Icon(Icons.translate), title: Text(l10n.language), subtitle: Text(Localizations.localeOf(context).toLanguageTag())),
         const Divider(),
         ListTile(

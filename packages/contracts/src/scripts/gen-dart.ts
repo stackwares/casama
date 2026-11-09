@@ -42,7 +42,7 @@ execFileSync(
     "-o",
     apiDir,
     "--global-property=apiTests=false,modelTests=false,apiDocs=false,modelDocs=false",
-    "--additional-properties=pubName=kasama_api,pubVersion=0.6.0,serializationLibrary=json_serializable",
+    "--additional-properties=pubName=kasama_api,pubVersion=0.8.0,serializationLibrary=json_serializable",
   ],
   { stdio: ["ignore", "ignore", "inherit"], cwd: fileURLToPath(new URL("../..", import.meta.url)) },
 );

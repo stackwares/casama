@@ -5,9 +5,9 @@ environment:
   sdk: ^3.13.0
 dependencies:
   # As published on pub.dev.
-  kasama_sdk: ^0.6.0
+  kasama_sdk: ^0.8.0
   args: ^2.7.0
-# Until 0.6.0 is on pub.dev (see docs/NEEDS-FROM-OLIVER.md), resolve the same versions from this
+# Until 0.8.0 is on pub.dev (see docs/NEEDS-FROM-OLIVER.md), resolve the same versions from this
 # repository. Delete this block to use the published packages.
 dependency_overrides:
   kasama_sdk:

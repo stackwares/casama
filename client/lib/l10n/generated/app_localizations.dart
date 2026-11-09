@@ -2397,6 +2397,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Server name'**
   String get instanceName;
+
+  /// No description provided for @server.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get server;
+
+  /// No description provided for @serverAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Server address'**
+  String get serverAddress;
+
+  /// No description provided for @connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connect;
+
+  /// No description provided for @changeServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different server'**
+  String get changeServer;
+
+  /// No description provided for @serverIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Server: {host}'**
+  String serverIs(String host);
+
+  /// No description provided for @continueWithSso.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with SSO'**
+  String get continueWithSso;
+
+  /// No description provided for @workEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Work email'**
+  String get workEmail;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacy;
+
+  /// No description provided for @exportMyData.
+  ///
+  /// In en, this message translates to:
+  /// **'Export my data'**
+  String get exportMyData;
+
+  /// No description provided for @exportMyDataHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A ZIP of everything you can see: bots, chats, runs, memories and settings. Secrets and keys are never included.'**
+  String get exportMyDataHelp;
+
+  /// No description provided for @exportReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Export ready ({kb} KB)'**
+  String exportReady(String kb);
+
+  /// No description provided for @runHistoryRetention.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep run history for'**
+  String get runHistoryRetention;
+
+  /// No description provided for @runHistoryRetentionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Older run events are deleted automatically.'**
+  String get runHistoryRetentionHelp;
+
+  /// No description provided for @days.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String days(int count);
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Signs you out now and erases your data and the workspaces you solely own after a short grace period.'**
+  String get deleteAccountHelp;
+
+  /// No description provided for @deleteAccountQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get deleteAccountQuestion;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspaces where you are the only owner are deleted with your account, including their bots and computers. Type {email} to confirm.'**
+  String deleteAccountConfirm(String email);
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account scheduled for deletion'**
+  String get accountDeleted;
+
+  /// No description provided for @accountDeletedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have been signed out. Your data will be erased on {date}.'**
+  String accountDeletedBody(String date);
 }
 
 class _AppLocalizationsDelegate

@@ -140,6 +140,14 @@ abstract class Backend {
   Future<List<AdminService>> adminServices();
   Future<UpdateNotice> adminUpdates();
 
+  // Privacy and SSO (Phase 8)
+  Future<Uint8List> exportMyData();
+  Future<AccountDeletion> deleteAccount(String confirmEmail);
+  Future<int> retentionDays(String orgId);
+  Future<int> setRetentionDays(String orgId, int days);
+  /// Enterprise SSO: opens the identity provider for the email's domain.
+  Future<void> signInWithSso(String email);
+
   // Billing (Phase 7). `BillingSummary.enabled` is false on self-hosted servers (no paywall).
   Future<BillingSummary> billing(String orgId);
   Future<PlanCatalog> plans();

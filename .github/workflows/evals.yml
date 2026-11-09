@@ -1,0 +1,46 @@
+name: Evals
+# Nightly: the full suite against the default model in real computers (live mode, needs the
+# OPENROUTER_API_KEY secret). On pull requests that touch the agent or prompts: the quick 10-task
+# subset, which fails the PR if it drops below the stored baseline (packages/evals/baseline.json).
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "packages/agent/**"
+      - "packages/evals/**"
+
+jobs:
+  evals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 26, cache: pnpm }
+      - uses: supabase/setup-cli@v1
+      - run: pnpm install --frozen-lockfile
+      - name: Local Supabase and migrations
+        run: supabase start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector
+      - name: Computer and sandbox images
+        run: docker compose -f infra/compose/docker-compose.dev.yml --profile images build supervisor egress computer-headless
+      - name: Start API and worker
+        env:
+          MODE_FIXTURES: ${{ github.event_name == 'pull_request' && 'packages/evals/fixtures/quick.json' || '' }}
+        run: |
+          supabase status -o env > .env.supabase
+          scripts/evals-stack.sh "$MODE_FIXTURES"
+      - name: Quick subset (pull requests)
+        if: github.event_name == 'pull_request'
+        run: node --env-file=.env packages/evals/src/run.ts --mode fixtures --subset quick
+      - name: Full suite, live (nightly)
+        if: github.event_name != 'pull_request'
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          EVAL_CAPABILITIES: internet
+        run: node --env-file=.env packages/evals/src/run.ts --mode live --subset all --out packages/evals/results/nightly.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: eval-results, path: packages/evals/results/ }

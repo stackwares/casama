@@ -6,6 +6,7 @@ import { LocalProvider, SupervisorProvider, unavailableProvider } from "@kasama/
 import { sql } from "drizzle-orm";
 import { createApp } from "./api/app.ts";
 import { createTokenVerifier } from "./api/auth.ts";
+import { KASAMA_VERSION } from "./api/routes/admin.ts";
 import { attachTerminal } from "./api/routes/computers.ts";
 import { attachStream, liveConfigFromEnv } from "./api/routes/live.ts";
 import { attachLocalConnect, DeviceRegistry, internalToken } from "./api/routes/local.ts";
@@ -98,6 +99,8 @@ if (env.MODE === "api") {
   if (handle) stoppers.push(handle.close);
   const worker = await startWorker({
     billing: handle ? billingFromEnv(env, handle.db, logger) : undefined,
+    telemetry:
+      env.TELEMETRY === "on" ? { url: env.TELEMETRY_URL, version: KASAMA_VERSION } : undefined,
     cloud,
     databaseUrl: env.DATABASE_URL,
     logger,

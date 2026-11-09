@@ -2,12 +2,14 @@ import { randomUUID } from "node:crypto";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { openApiConfig, registerComponents } from "@kasama/contracts";
 import { pgErrorCode, pgErrorMessage } from "@kasama/db";
+import { registerEnterpriseRoutes } from "@kasama/ee";
 import { captureError } from "@kasama/observability";
 import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { registerConnectRoutes } from "../billing/connect.ts";
 import { ApiError, problem } from "./errors.ts";
+import { httpMetrics, renderMetrics } from "./metrics.ts";
 import { idempotency } from "./middleware/idempotency.ts";
 import { rateLimit } from "./middleware/rate-limit.ts";
 import { registerAdminRoutes } from "./routes/admin.ts";
@@ -17,6 +19,7 @@ import { registerBotRoutes } from "./routes/bots.ts";
 import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
+import { registerPrivacyRoutes } from "./routes/privacy.ts";
 import { registerSystemRoutes } from "./routes/system.ts";
 import { registerVoiceRoutes } from "./routes/voice.ts";
 import { registerWorkspaceRoutes } from "./routes/workspaces.ts";
@@ -116,6 +119,17 @@ export function createApp(deps: AppDeps) {
     }
     await next();
   });
+  app.use("/v1/*", httpMetrics);
+  app.get("/metrics", async (c) => {
+    const token = deps.env.METRICS_TOKEN;
+    if (token && c.req.header("authorization") !== `Bearer ${token}`)
+      throw new ApiError(401, "unauthorized", "Metrics need the metrics token");
+    if (!token && deps.env.NODE_ENV === "production")
+      throw new ApiError(404, "not_found", "Set METRICS_TOKEN to enable metrics");
+    return c.text(await renderMetrics(deps.db), 200, {
+      "content-type": "text/plain; version=0.0.4",
+    });
+  });
   app.use("/v1/*", rateLimit({ perMinute: deps.env.RATE_LIMIT_PER_MINUTE }));
   app.use("/hooks/*", rateLimit({ perMinute: deps.env.RATE_LIMIT_PER_MINUTE }));
   app.use("/connect/*", rateLimit({ perMinute: deps.env.RATE_LIMIT_PER_MINUTE * 10 }));
@@ -132,6 +146,20 @@ export function createApp(deps: AppDeps) {
   registerInternalRoutes(app as never, deps);
   registerAutonomyRoutes(app, deps);
   registerBillingRoutes(app, deps);
+  registerPrivacyRoutes(app, deps);
+  // Enterprise features (ee/, commercial license, D-073); inert without a license key.
+  registerEnterpriseRoutes(app as never, {
+    db: deps.db,
+    licenseKey: deps.env.KASAMA_LICENSE_KEY,
+    licensePublicKey: deps.env.NODE_ENV === "test" ? deps.env.KASAMA_LICENSE_PUBLIC_KEY : undefined,
+    authAdmin: deps.env.SUPABASE_SERVICE_ROLE_KEY
+      ? {
+          url: `${deps.env.SUPABASE_URL}/auth/v1`,
+          serviceRoleKey: deps.env.SUPABASE_SERVICE_ROLE_KEY,
+        }
+      : undefined,
+    claims: (c) => c.get("claims" as never),
+  });
   const billing = billingFor(deps);
   if (billing.enabled && deps.connect)
     registerConnectRoutes(app as never, { db: deps.db, billing, ...deps.connect });

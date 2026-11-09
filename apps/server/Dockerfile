@@ -1,26 +1,36 @@
 # One image, two modes: MODE=api or MODE=worker. Build from the repo root:
-#   docker build -f apps/server/Dockerfile -t ghcr.io/kasama-dev/server .
-FROM node:24-slim AS base
+#   docker build -f apps/server/Dockerfile -t kasama/server:local .
+# Node runs the TypeScript sources directly (type stripping); there is no build step.
+FROM node:26-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NODE_ENV=production
-RUN corepack enable
+RUN npm install -g pnpm@12.18.0 --no-fund --no-audit
 WORKDIR /app
 
 FROM base AS deps
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/server/package.json apps/server/
+COPY packages/agent/package.json packages/agent/
 COPY packages/contracts/package.json packages/contracts/
 COPY packages/db/package.json packages/db/
 COPY packages/domain/package.json packages/domain/
 COPY packages/observability/package.json packages/observability/
+COPY packages/sandbox/package.json packages/sandbox/
+COPY ee/package.json ee/
 RUN pnpm install --frozen-lockfile --prod --filter @kasama/server...
 
 FROM base AS runtime
 COPY --from=deps /app /app
+COPY packages/agent/src packages/agent/src
 COPY packages/contracts/src packages/contracts/src
 COPY packages/db/src packages/db/src
 COPY packages/domain/src packages/domain/src
 COPY packages/observability/src packages/observability/src
+COPY packages/sandbox/src packages/sandbox/src
+COPY ee/server ee/server
+COPY ee/LICENSE ee/LICENSE
 COPY apps/server/src apps/server/src
+# Migrations, applied by the one-shot `migrate` service in the self-host stack.
+COPY supabase/migrations /app/supabase/migrations
 USER node
 WORKDIR /app/apps/server
 EXPOSE 8787

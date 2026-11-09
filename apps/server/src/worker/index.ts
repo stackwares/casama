@@ -36,8 +36,10 @@ import {
   computersIdleWorkflow,
   configureWorkflows,
   maintenanceWorkflow,
+  privacyWorkflow,
   QUEUES,
   routinesTickWorkflow,
+  telemetryWorkflow,
 } from "./workflows.ts";
 
 export interface WorkerOptions {
@@ -75,6 +77,8 @@ export interface WorkerOptions {
   };
   /** Billing (Kasama Cloud only); settles usage into credits every minute. */
   billing?: import("../billing/service.ts").BillingService;
+  /** Opt-in anonymous telemetry (D-074); unset = off. */
+  telemetry?: { url: string; version: string };
   /** Cloud Connect (self-hosted side): the `kasama-cloud` computer provider. */
   cloud?: { url: string; key: string };
   /** Realtime voice model (default gpt-realtime-2.1). */
@@ -199,6 +203,7 @@ export async function startWorker(opts: WorkerOptions) {
   configureWorkflows({
     db,
     billing: opts.billing,
+    telemetry: opts.telemetry,
     gateway,
     computers,
     fetch: fetchOut,
@@ -251,6 +256,16 @@ export async function startWorker(opts: WorkerOptions) {
     { scheduleName: "maintenance-hourly", workflowFn: maintenanceWorkflow, schedule: "0 * * * *" },
     { scheduleName: "computers-idle", workflowFn: computersIdleWorkflow, schedule: "* * * * *" },
     { scheduleName: "routines-tick", workflowFn: routinesTickWorkflow, schedule: "* * * * *" },
+    { scheduleName: "privacy-daily", workflowFn: privacyWorkflow, schedule: "17 3 * * *" },
+    ...(opts.telemetry
+      ? [
+          {
+            scheduleName: "telemetry-weekly",
+            workflowFn: telemetryWorkflow,
+            schedule: "23 4 * * 1",
+          },
+        ]
+      : []),
     ...(opts.billing?.enabled
       ? [
           {

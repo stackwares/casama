@@ -14,6 +14,7 @@ lib/src/api/credentials_api.dart
 lib/src/api/integrations_api.dart
 lib/src/api/local_computer_api.dart
 lib/src/api/memory_api.dart
+lib/src/api/privacy_api.dart
 lib/src/api/routines_api.dart
 lib/src/api/runs_api.dart
 lib/src/api/secrets_api.dart
@@ -30,6 +31,7 @@ lib/src/auth/bearer_auth.dart
 lib/src/auth/oauth.dart
 lib/src/deserialize.dart
 lib/src/model/accepted.dart
+lib/src/model/account_deletion.dart
 lib/src/model/admin_org.dart
 lib/src/model/admin_org_list.dart
 lib/src/model/admin_overview.dart
@@ -90,6 +92,7 @@ lib/src/model/credential_list.dart
 lib/src/model/credential_test_result.dart
 lib/src/model/credit_entry.dart
 lib/src/model/credit_pack.dart
+lib/src/model/delete_account_request.dart
 lib/src/model/delete_result.dart
 lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
@@ -123,6 +126,7 @@ lib/src/model/model_choice.dart
 lib/src/model/model_policy.dart
 lib/src/model/ok.dart
 lib/src/model/org_role.dart
+lib/src/model/org_settings.dart
 lib/src/model/organization.dart
 lib/src/model/organization_list.dart
 lib/src/model/organization_with_role.dart
@@ -197,6 +201,7 @@ lib/src/model/transcription.dart
 lib/src/model/update_computer_request.dart
 lib/src/model/update_local_device_request.dart
 lib/src/model/update_notice.dart
+lib/src/model/update_org_settings_request.dart
 lib/src/model/update_routine_request.dart
 lib/src/model/upload_result.dart
 lib/src/model/usage_event.dart

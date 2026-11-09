@@ -1,0 +1,14 @@
+# The Flutter web app for the self-host stack (compose profile `web`). The build points the app at
+# the server that serves the page (empty KASAMA_API_URL means "this origin"); users can still pick
+# another server at sign-in. Build from the repo root:
+#   docker build -f client/Dockerfile.web -t kasama/web:local .
+FROM ghcr.io/cirruslabs/flutter:3.47.9 AS build
+WORKDIR /src
+COPY dart dart
+COPY client client
+WORKDIR /src/client
+RUN flutter pub get && flutter build web --release --dart-define=KASAMA_API_URL=
+
+FROM caddy:2.10.2-alpine
+COPY --from=build /src/client/build/web /srv
+RUN printf ':80 {\n\troot * /srv\n\ttry_files {path} /index.html\n\tfile_server\n\theader Content-Security-Policy "default-src '"'"'self'"'"'; script-src '"'"'self'"'"' '"'"'wasm-unsafe-eval'"'"'; style-src '"'"'self'"'"' '"'"'unsafe-inline'"'"'; img-src '"'"'self'"'"' data: blob: https:; connect-src '"'"'self'"'"' wss: https:; font-src '"'"'self'"'"' data:; media-src '"'"'self'"'"' blob:; frame-ancestors '"'"'none'"'"'"\n}\n' > /etc/caddy/Caddyfile

@@ -85,6 +85,9 @@ class KasamaClient {
   /// Plans, entitlements, purchases and Cloud Connect keys (Phase 7).
   BillingApi get billing => api.getBillingApi();
 
+  /// Data export, account deletion and workspace retention (Phase 8).
+  PrivacyApi get privacy => api.getPrivacyApi();
+
   Future<Map<String, String>> _authHeader() async {
     final session = await currentSession();
     return {if (session != null) 'authorization': 'Bearer ${session.accessToken}'};

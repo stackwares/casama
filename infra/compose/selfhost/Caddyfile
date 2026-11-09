@@ -1,0 +1,26 @@
+# One public address for everything: the Kasama API and the Supabase gateway (Auth, REST,
+# Realtime), plus the web app when the `web` profile is on. KASAMA_SITE is a domain (automatic
+# HTTPS) or ":80" for plain HTTP behind another proxy or for local trials.
+{$KASAMA_SITE} {
+	encode zstd gzip
+	@supabase path /auth/v1/* /rest/v1/* /realtime/v1/*
+	handle @supabase {
+		reverse_proxy kong:8000
+	}
+	@api path /v1/* /hooks/* /connect/* /telemetry/* /openapi.json /docs /docs/* /healthz /readyz
+	handle @api {
+		reverse_proxy api:8787
+	}
+	handle {
+		reverse_proxy web:80
+	}
+	# Without the web app (compose profile: web) the root answers with a short note.
+	handle_errors 502 {
+		respond "Kasama is running. Point the Kasama app or CLI at this address, or start the web app (compose profile: web)." 200
+	}
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+	}
+}

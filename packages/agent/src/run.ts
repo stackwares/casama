@@ -799,7 +799,17 @@ async function modelStep(
           error: a.error,
         }),
     })({ system: req.system, messages: req.messages, tools: req.tools, abortSignal: ctrl.signal });
+    let first = true;
     for await (const ev of stream) {
+      // Time to first token (text or tool call), for dashboards and the load test.
+      if (first && (ev.type === "text" || ev.type === "tool_call")) {
+        first = false;
+        void deps.db
+          .execute(
+            sql`update public.runs set first_token_at = coalesce(first_token_at, now()) where id = ${info.runId}::uuid`,
+          )
+          .catch(() => {});
+      }
       if (ev.type === "text") {
         text += ev.text;
         coalescer.push(redactor.text(ev.text));

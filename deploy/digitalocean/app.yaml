@@ -1,0 +1,36 @@
+# DigitalOcean App Platform spec: `doctl apps create --spec deploy/digitalocean/app.yaml`
+name: kasama
+services:
+  - name: api
+    github: { repo: stackwares/kasama, branch: main, deploy_on_push: false }
+    dockerfile_path: apps/server/Dockerfile
+    http_port: 8787
+    health_check: { http_path: /healthz }
+    instance_size_slug: apps-s-1vcpu-1gb
+    envs: &envs
+      - { key: NODE_ENV, value: production }
+      - { key: DATABASE_URL, type: SECRET }
+      - { key: SUPABASE_URL }
+      - { key: SUPABASE_ANON_KEY, type: SECRET }
+      - { key: SUPABASE_JWT_SECRET, type: SECRET }
+      - { key: PUBLIC_APP_URL }
+      - { key: INTERNAL_TOKEN, type: SECRET }
+      - { key: KASAMA_CLOUD_URL }
+      - { key: KASAMA_CLOUD_KEY, type: SECRET }
+      - { key: MODE, value: api }
+workers:
+  - name: worker
+    github: { repo: stackwares/kasama, branch: main, deploy_on_push: false }
+    dockerfile_path: apps/server/Dockerfile
+    instance_size_slug: apps-s-1vcpu-1gb
+    envs:
+      - { key: NODE_ENV, value: production }
+      - { key: DATABASE_URL, type: SECRET }
+      - { key: SUPABASE_URL }
+      - { key: SUPABASE_ANON_KEY, type: SECRET }
+      - { key: SUPABASE_JWT_SECRET, type: SECRET }
+      - { key: INTERNAL_TOKEN, type: SECRET }
+      - { key: KASAMA_CLOUD_URL }
+      - { key: KASAMA_CLOUD_KEY, type: SECRET }
+      - { key: MODE, value: worker }
+      - { key: API_INTERNAL_URL, value: "http://api:8787" }

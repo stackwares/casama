@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kasama: AI teammates with their own computers</title>
+<meta name="description" content="Self-hostable AI bots that remember, work on real computers and ask before risky steps. Any model, your server, Apache-2.0.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'">
+<style>
+  :root { --bg:#f6f4ef; --ink:#1d1f1c; --muted:#5c625b; --line:#dcd8cf; --accent:#0f6b5c; --accent-ink:#fff; --card:#fffdf8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#121412; --ink:#ecebe6; --muted:#a3a8a0; --line:#2a2e2a; --accent:#5cc4ae; --accent-ink:#0b1210; --card:#181b18; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font: 17px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Inter, system-ui, sans-serif; }
+  a { color: inherit; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  header.top { display:flex; justify-content:space-between; align-items:center; padding: 22px 0; }
+  .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 20px; text-decoration:none; }
+  nav a { margin-left: 22px; text-decoration: none; color: var(--muted); font-size: 15px; }
+  .hero { display:grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items:center; padding: 56px 0 72px; }
+  h1 { font-size: clamp(38px, 5.4vw, 64px); line-height: 1.02; letter-spacing: -0.035em; margin: 0 0 22px; font-weight: 700; }
+  .lede { font-size: 20px; color: var(--muted); max-width: 34ch; margin: 0 0 30px; }
+  .cmd { display:flex; align-items:center; gap: 12px; background: var(--card); border:1px solid var(--line); border-radius: 12px; padding: 12px 14px; font: 14.5px ui-monospace, SFMono-Regular, Menlo, monospace; max-width: 520px; overflow-x:auto; white-space: nowrap; }
+  .cmd span { color: var(--muted); }
+  .ctas { display:flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .btn { display:inline-block; padding: 12px 18px; border-radius: 10px; text-decoration:none; font-weight: 600; font-size: 15px; border:1px solid var(--line); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  .phone { justify-self: center; width: min(320px, 100%); border-radius: 36px; border: 1px solid var(--line); overflow: hidden; background: var(--card); box-shadow: 0 30px 60px -30px rgba(0,0,0,.35); }
+  .phone video, .phone img { display:block; width:100%; height:auto; }
+  section { padding: 64px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0 0 28px; max-width: 24ch; line-height: 1.15; }
+  .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .grid h3 { font-size: 18px; margin: 0 0 8px; }
+  .grid p { margin: 0; color: var(--muted); font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 16px; }
+  th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 14px; }
+  td.yes { color: var(--accent); font-weight: 600; }
+  .split { display:grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px; }
+  .panel h3 { margin: 0 0 6px; }
+  .panel p { color: var(--muted); margin: 0 0 14px; }
+  .panel ul { margin: 0; padding-left: 18px; color: var(--muted); }
+  footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; border-top:1px solid var(--line); }
+  @media (max-width: 820px) { .hero, .split { grid-template-columns: 1fr; } .grid { grid-template-columns: 1fr; } nav a:not(.gh) { display:none; } .hero { padding-top: 24px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="/">kasama</a>
+    <nav><a href="https://docs.kasama.dev">Docs</a><a href="#self-host">Self-host</a><a href="#cloud">Cloud</a><a class="gh" href="https://github.com/stackwares/kasama">GitHub</a></nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>AI teammates with their own computers.</h1>
+      <p class="lede">Bots that remember, work on real computers, and ask before risky steps. On your server, with any model.</p>
+      <div class="cmd"><span>$</span> git clone https://github.com/stackwares/kasama &amp;&amp; ./kasama/install.sh</div>
+      <div class="ctas">
+        <a class="btn primary" href="https://docs.kasama.dev/quick-start">Get started</a>
+        <a class="btn" href="https://github.com/stackwares/kasama">Star on GitHub</a>
+      </div>
+    </div>
+    <div class="phone">
+      <video src="assets/demo-app-flow.mp4" poster="assets/chat-recall.png" autoplay muted loop playsinline aria-label="Signing up, creating a bot, and the bot recalling a fact from an earlier chat"></video>
+    </div>
+  </div>
+
+  <section>
+    <h2>Not a chat window. A colleague with a desk.</h2>
+    <div class="grid">
+      <div><h3>Remembers</h3><p>Facts, preferences and past work carry across conversations. Skills and personas make each bot good at its job.</p></div>
+      <div><h3>Works on a real computer</h3><p>A sandboxed Linux machine with shell, files and a browser. Watch live and take control whenever you like.</p></div>
+      <div><h3>Keeps going without you</h3><p>Schedules and webhooks start work while you sleep. Results land in your inbox with what it did and what it cost.</p></div>
+      <div><h3>Asks before it acts</h3><p>Autonomy levels, approvals for risky steps, checkpoints before destructive commands, budgets per run and per day.</p></div>
+      <div><h3>Any model</h3><p>OpenRouter, OpenAI, Anthropic, Google, xAI, or a local model through Ollama. Fallbacks when a provider is down.</p></div>
+      <div><h3>Everywhere you are</h3><p>Apps for iPhone, Android, Mac, Windows, Linux and the web, a CLI, a Dart SDK, and an MCP server for coding tools.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What closed agent products don't give you</h2>
+    <table>
+      <thead><tr><th></th><th>Kasama</th><th>Typical hosted agent</th></tr></thead>
+      <tbody>
+        <tr><td>Run it on your own server</td><td class="yes">Yes, one script</td><td>No</td></tr>
+        <tr><td>Choose any model, including local</td><td class="yes">Yes</td><td>Their models</td></tr>
+        <tr><td>Use your own machine as the bot's computer</td><td class="yes">Yes, folders you choose</td><td>No</td></tr>
+        <tr><td>Source code</td><td class="yes">Apache-2.0</td><td>Closed</td></tr>
+        <tr><td>Your data, exportable, deletable</td><td class="yes">ZIP export, account deletion</td><td>Varies</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="self-host">
+    <div class="split">
+      <div class="panel">
+        <h3>Self-hosted</h3>
+        <p>Free, no limits, no paywall. Everything runs in Docker on one machine.</p>
+        <ul><li>Install in about 15 minutes</li><li>Backups, upgrades and monitoring built in</li><li>Optional Cloud Connect for cloud computers and model credits</li></ul>
+      </div>
+      <div class="panel" id="cloud">
+        <h3>Kasama Cloud</h3>
+        <p>We run it for you. Plans with included computer hours and credits.</p>
+        <ul><li>Same apps, nothing to install</li><li>Pay on the web or in the app stores</li><li>Coming soon</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>Kasama is open source (Apache-2.0; enterprise features in <code>ee/</code> under a commercial license). Privacy and security: <a href="https://github.com/stackwares/kasama/blob/main/SECURITY.md">SECURITY.md</a>.</footer>
+</div>
+</body>
+</html>

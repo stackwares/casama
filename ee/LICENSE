@@ -1,0 +1,28 @@
+Kasama Enterprise License
+Copyright (c) 2026 Stackwares. All rights reserved.
+
+DRAFT for legal review. This license applies to everything in the "ee/" directory of this
+repository ("Enterprise Features"). Everything outside "ee/" is licensed under Apache-2.0.
+
+1. Reading and modifying. You may read the Enterprise Features' source code and change it, and you
+   may run it for development, testing and evaluation, without a license key.
+
+2. Production use. Using the Enterprise Features in production (serving real users or real
+   workloads) requires a valid, paid Kasama Enterprise license key for the number of seats and the
+   features you use, issued by Stackwares. The software checks the key; you may not remove,
+   disable or circumvent that check.
+
+3. Redistribution. You may not sell, sublicense, or offer the Enterprise Features (modified or not)
+   as a hosted service to third parties, and you may not redistribute them except as part of an
+   unmodified copy of this repository.
+
+4. Contributions. Contributions to "ee/" are accepted under the Developer Certificate of Origin,
+   and you agree Stackwares may license them under these terms and others.
+
+5. No warranty. THE ENTERPRISE FEATURES ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. IN NO
+   EVENT SHALL STACKWARES BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THEIR USE.
+
+6. Termination. These rights end automatically if you breach this license. Sections 3, 5 and 6
+   survive termination.
+
+Contact: enterprise@kasama.dev

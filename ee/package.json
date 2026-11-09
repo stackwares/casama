@@ -1,0 +1,19 @@
+{
+  "name": "@kasama/ee",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "SEE LICENSE IN LICENSE",
+  "exports": {
+    ".": "./server/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kasama/db": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.17",
+    "jose": "^6.2.15"
+  }
+}

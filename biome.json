@@ -7,7 +7,16 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/generated", "!**/openapi.json", "!dart", "!client", "!supabase"]
+    "includes": [
+      "**",
+      "!**/generated",
+      "!**/openapi.json",
+      "!dart",
+      "!client",
+      "!supabase",
+      "!docs-site/**/*.md",
+      "!site"
+    ]
   },
   "formatter": {
     "enabled": true,

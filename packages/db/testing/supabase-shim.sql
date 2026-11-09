@@ -23,6 +23,7 @@ create table if not exists auth.users (
   encrypted_password varchar(255),
   email_confirmed_at timestamptz,
   last_sign_in_at timestamptz,
+  banned_until timestamptz,
   raw_app_meta_data jsonb default '{}'::jsonb,
   raw_user_meta_data jsonb default '{}'::jsonb,
   created_at timestamptz default now(),

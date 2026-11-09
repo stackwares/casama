@@ -2,12 +2,13 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { routes } from "@kasama/contracts";
 import type { JwtClaims } from "@kasama/db";
+import { verifyLicense } from "@kasama/ee";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
 
-export const KASAMA_VERSION = "0.6.0";
+export const KASAMA_VERSION = "0.8.0";
 
 const num = (v: unknown) => Number(v ?? 0);
 
@@ -125,9 +126,13 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   });
 
   app.openapi(routes.setOrgLimits, async (c) => {
-    await requireOwner(requireClaims(c.get("claims")));
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
     const { id } = c.req.valid("param");
     const { limits } = c.req.valid("json");
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      select o.id, 'user', ${claims.sub}::uuid, 'admin.limits', 'organization', o.id, ${JSON.stringify({ limits })}::jsonb
+      from public.organizations o where o.id = ${id}::uuid`);
     // Owner overrides sit on top of the plan's limits and survive billing changes (D-070).
     const updated = await db.execute<{ id: string }>(sql`
       update public.entitlements set overrides = ${JSON.stringify(limits)}::jsonb,
@@ -157,6 +162,10 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           if (!r.ok) throw new Error();
         })
       : null;
+    const license = await verifyLicense(
+      env.KASAMA_LICENSE_KEY,
+      env.NODE_ENV === "test" ? env.KASAMA_LICENSE_PUBLIC_KEY : undefined,
+    );
     const items = [
       {
         name: "Database",
@@ -204,6 +213,20 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         configured: !!(env.SENTRY_DSN || env.POSTHOG_API_KEY),
         healthy: null,
         detail: env.SENTRY_DSN ? "Sentry protocol" : env.POSTHOG_API_KEY ? "PostHog" : "Off",
+      },
+      {
+        name: "Enterprise license",
+        configured: !!license,
+        healthy: license ? license.expiresAt > new Date() : null,
+        detail: license
+          ? `${license.customer}: ${license.features.join(", ")} until ${license.expiresAt.toISOString().slice(0, 10)}`
+          : "None (Apache-2.0 features only)",
+      },
+      {
+        name: "Telemetry",
+        configured: env.TELEMETRY === "on",
+        healthy: null,
+        detail: env.TELEMETRY === "on" ? "On: weekly anonymous counts" : "Off",
       },
       {
         name: "Billing",

@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 
 import 'commands_bots.dart';
 import 'commands_computers.dart';
+import 'commands_selfhost.dart';
 import 'store.dart';
 
 const defaultApiUrl = 'http://localhost:8787';
@@ -32,7 +33,9 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
     ..addCommand(RunsCommand(ctx))
     ..addCommand(MemoryCommand(ctx))
     ..addCommand(UsageCommand(ctx))
-    ..addCommand(ComputerCommand(ctx));
+    ..addCommand(ComputerCommand(ctx))
+    ..addCommand(AccountCommand(ctx))
+    ..addCommand(SelfhostCommand(ctx));
   try {
     final top = runner.parse(args);
     if (top['version'] as bool) {
@@ -57,7 +60,7 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
 }
 
 /// Kept in step with pubspec.yaml by scripts/release-cli.sh.
-const cliVersion = '0.6.0';
+const cliVersion = '0.8.0';
 
 class CliError implements Exception {
   CliError(this.code, this.message);

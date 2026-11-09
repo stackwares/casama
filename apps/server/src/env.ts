@@ -91,6 +91,19 @@ export const EnvSchema = z.object({
   API_INTERNAL_URL: z.url().optional(),
   /** Shared secret for /internal/*; derived from DATABASE_URL when unset. */
   INTERNAL_TOKEN: z.string().min(32).optional(),
+  /** Days between an account deletion request and the purge (D-072). */
+  ACCOUNT_DELETION_GRACE_DAYS: z.coerce.number().int().min(0).max(30).default(7),
+  /** Opt-in anonymous telemetry (D-074): off unless set to "on". */
+  TELEMETRY: z.enum(["on", "off"]).default("off"),
+  TELEMETRY_URL: z.url().default("https://telemetry.kasama.dev/v1/ping"),
+  /** Enterprise features in ee/ (D-073): a signed license key. */
+  KASAMA_LICENSE_KEY: z.string().optional(),
+  /** Tests only (ignored unless NODE_ENV=test): another license public key. */
+  KASAMA_LICENSE_PUBLIC_KEY: z.string().optional(),
+  /** Supabase service role key: SSO provider admin (ee). */
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  /** Prometheus metrics at /metrics (D-075); protect with a bearer token in production. */
+  METRICS_TOKEN: z.string().min(16).optional(),
   /** Public base URL of this API (signaling URLs); defaults to the request's origin. */
   PUBLIC_API_URL: z.url().optional(),
 });
@@ -103,7 +116,9 @@ export const modelOverrides = (env: Env) => ({
 });
 
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
-  const parsed = EnvSchema.safeParse(source);
+  // An empty value means "not set" (compose files and .env templates write KEY= for optional keys).
+  const cleaned = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== ""));
+  const parsed = EnvSchema.safeParse(cleaned);
   if (!parsed.success) {
     const fields = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
     throw new Error(`Invalid environment: ${fields}`);
