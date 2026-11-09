@@ -12,7 +12,12 @@ import { attachStream, liveConfigFromEnv } from "./api/routes/live.ts";
 import { attachLocalConnect, DeviceRegistry, internalToken } from "./api/routes/local.ts";
 import { pgRunEventHub } from "./api/run-event-hub.ts";
 import { dbosWorkflows } from "./api/workflows.ts";
-import { billingFromEnv, connectFromEnv, kasamaCloudProvider } from "./billing/index.ts";
+import {
+  billingFromEnv,
+  connectFromEnv,
+  inlineOrFile,
+  kasamaCloudProvider,
+} from "./billing/index.ts";
 import { loadEnv } from "./env.ts";
 import { disabledEmail, resendEmail } from "./services/email.ts";
 
@@ -103,6 +108,9 @@ if (env.MODE === "api") {
       env.TELEMETRY === "on" ? { url: env.TELEMETRY_URL, version: KASAMA_VERSION } : undefined,
     cloud,
     databaseUrl: env.DATABASE_URL,
+    fcmServiceAccountJson: env.FCM_SERVICE_ACCOUNT
+      ? inlineOrFile(env.FCM_SERVICE_ACCOUNT)
+      : undefined,
     logger,
     logLevel: env.LOG_LEVEL,
     modelFixtures: env.KASAMA_MODEL_FIXTURES,

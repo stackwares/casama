@@ -59,6 +59,32 @@ void main() {
     expect(find.text('Mark all as read'), findsNothing);
   });
 
+  testWidgets('opening a notification marks it read and lowers the inbox badge', (tester) async {
+    final backend = FakeBackend()
+      ..storedNotifications = [
+        NotificationView(id: 'n3', kind: 'routine', title: 'Morning summary is ready', body: 'Three things changed', createdAt: DateTime.now()),
+        NotificationView(id: 'n4', kind: 'budget', title: 'Budget at 80%', body: 'Ada used most of today', createdAt: DateTime.now()),
+      ];
+    late WidgetRef refOut;
+    await tester.pumpWidget(harness(
+      backend,
+      Consumer(builder: (context, ref, _) {
+        refOut = ref;
+        return const InboxScreen(initialTab: 1);
+      }),
+    ));
+    await tester.pumpAndSettle();
+    final before = refOut.read(inboxBadgeProvider);
+    await tester.tap(find.byKey(const Key('notification-n3')));
+    await tester.pumpAndSettle();
+    expect(backend.readNotifications, ['n3']);
+    expect(refOut.read(inboxBadgeProvider), before - 1);
+    // Already read: tapping again doesn't call the server.
+    await tester.tap(find.byKey(const Key('notification-n3')));
+    await tester.pumpAndSettle();
+    expect(backend.readNotifications, ['n3']);
+  });
+
   testWidgets('task board groups tasks and changes status', (tester) async {
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const InboxScreen(initialTab: 2)));
@@ -213,7 +239,7 @@ void main() {
     expect(find.text('Approved'), findsWidgets);
   });
 
-  testWidgets('new bots are named Chief and default to GPT-6 Luna; the model comes from a searchable picker', (tester) async {
+  testWidgets('blank bots start unnamed (Chief if left empty) and default to GPT-6 Luna; the model comes from a searchable picker', (tester) async {
     await setSize(tester, const Size(600, 1000));
     final backend = FakeBackend();
     final router = GoRouter(routes: [
@@ -235,18 +261,20 @@ void main() {
     ));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, 'Chief');
+    // Blank starts empty, with Chief as the placeholder.
+    expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, '');
+    expect(find.text('Chief'), findsOneWidget);
     // The picker shows the model's name with its id underneath.
     expect(find.text('OpenAI: GPT-6 Luna'), findsOneWidget);
     expect(find.text('openai/gpt-6-luna'), findsOneWidget);
 
-    // A template renames the bot; going back to Blank restores Chief.
+    // A template fills in its name; going back to Blank empties the field again.
     await tester.tap(find.byKey(const Key('template-daily-briefing')));
     await tester.pumpAndSettle();
-    expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, isNot('Chief'));
+    expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, isNotEmpty);
     await tester.tap(find.text('Blank'));
     await tester.pumpAndSettle();
-    expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, 'Chief');
+    expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, '');
 
     await tester.tap(find.byKey(const Key('modelPicker')));
     await tester.pumpAndSettle();

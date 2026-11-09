@@ -277,7 +277,10 @@ export async function startWorker(opts: WorkerOptions) {
         ]
       : []),
   ]);
-  opts.logger.info("worker started", { fixtures: !!opts.modelFixtures });
+  opts.logger.info("worker started", {
+    fixtures: !!opts.modelFixtures,
+    push: push instanceof FcmPushSender ? "fcm" : opts.push ? "custom" : "off",
+  });
   return {
     async stop() {
       await client?.destroy();

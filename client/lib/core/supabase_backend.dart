@@ -397,6 +397,11 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<void> markNotificationRead(String id) async {
+    await supabase.from('notifications').update({'read_at': DateTime.now().toUtc().toIso8601String()}).eq('id', id).isFilter('read_at', null);
+  }
+
+  @override
   Stream<NotificationView> watchNotifications() {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return const Stream.empty();

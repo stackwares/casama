@@ -127,12 +127,14 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
     super.dispose();
   }
 
-  /// The name follows the starting point (Chief for a blank bot, else the template's name) until
-  /// the user types their own.
-  void _setAutoName(String name) {
-    if (_name.text.trim().isEmpty || _name.text == _autoName) _name.text = name;
+  /// A template fills in its name until the user types their own; a blank bot starts empty and is
+  /// named Chief (shown as the placeholder) if the field is left empty.
+  void _setAutoName(String? name) {
+    if (_name.text.trim().isEmpty || _name.text == _autoName) _name.text = name ?? '';
     _autoName = name;
   }
+
+  String _finalName(BuildContext context) => _name.text.trim().isEmpty ? context.l10n.defaultBotName : _name.text.trim();
 
   /// Suggests the server's default model for the chosen key until the user picks one.
   void _fillDefaultModel(List<Credential> keys) {
@@ -151,7 +153,6 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
       _credentialId = keys.isEmpty ? null : keys.first.id;
       _fillDefaultModel(keys);
     }
-    if (_autoName == null) _setAutoName(l10n.defaultBotName);
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.viewInsetsOf(context).bottom + 16),
       child: SingleChildScrollView(
@@ -165,13 +166,13 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
               selected: _templateId,
               onChanged: (t) => setState(() {
                 _templateId = t?.id;
-                _setAutoName(t?.name ?? l10n.defaultBotName);
+                _setAutoName(t?.name);
               }),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _name,
-              decoration: InputDecoration(labelText: l10n.botName),
+              decoration: InputDecoration(labelText: l10n.botName, hintText: l10n.defaultBotName),
               autofocus: true,
               onChanged: (_) => setState(() {}),
             ),
@@ -210,7 +211,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
             ),
             const SizedBox(height: 12),
             FilledButton(
-              onPressed: _busy || _credentialId == null || _model.isEmpty || _name.text.trim().isEmpty
+              onPressed: _busy || _credentialId == null || _model.isEmpty
                   ? null
                   : () async {
                       setState(() => _busy = true);
@@ -221,7 +222,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                             .read(backendProvider)
                             .createBot(
                               org.id,
-                              name: _name.text.trim(),
+                              name: _finalName(context),
                               credentialId: _credentialId!,
                               model: _model,
                               persona: _persona.text.trim(),

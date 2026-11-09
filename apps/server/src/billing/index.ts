@@ -14,7 +14,7 @@ export * from "./service.ts";
 export * from "./types.ts";
 
 /** PEM/JSON given inline or as a file path. */
-const inlineOrFile = (v: string) =>
+export const inlineOrFile = (v: string) =>
   !v.trim().startsWith("{") && !v.includes("-----BEGIN") && existsSync(v)
     ? readFileSync(v, "utf8")
     : v;

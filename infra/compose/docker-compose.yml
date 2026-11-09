@@ -190,6 +190,8 @@ services:
       <<: *kasama-env
       MODE: worker
       RUN_CONCURRENCY: ${RUN_CONCURRENCY:-20}
+      # Push notifications: the Firebase service account JSON on one line (optional).
+      FCM_SERVICE_ACCOUNT: ${FCM_SERVICE_ACCOUNT:-}
     depends_on: { migrate: { condition: service_completed_successfully } }
 
   # The only service with Docker access. It joins each computer's private network to reach computerd.

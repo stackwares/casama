@@ -110,6 +110,7 @@ abstract class Backend {
   Future<Approval> decideApproval(String approvalId, {required bool approve, bool alwaysAllow = false});
   Future<List<NotificationView>> notifications();
   Future<void> markNotificationsRead();
+  Future<void> markNotificationRead(String id);
   /// New notifications for the signed-in user, live.
   Stream<NotificationView> watchNotifications();
   Future<void> registerDevice(String platform, String token);

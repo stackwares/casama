@@ -261,6 +261,9 @@ class FakeBackend implements Backend {
   Future<List<NotificationView>> notifications() async => storedNotifications;
   @override
   Future<void> markNotificationsRead() async => notificationsRead = true;
+  final readNotifications = <String>[];
+  @override
+  Future<void> markNotificationRead(String id) async => readNotifications.add(id);
   @override
   Stream<NotificationView> watchNotifications() => notificationsController.stream;
   @override

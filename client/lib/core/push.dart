@@ -9,21 +9,46 @@ import 'backend.dart';
 import 'providers.dart';
 import 'router.dart';
 
-/// Firebase settings come from --dart-define so no Firebase config files live in the repo.
-/// Without FIREBASE_PROJECT_ID push is off and the in-app inbox (Realtime) still works.
+/// Firebase settings come from --dart-define (official builds: `--dart-define-from-file=config/firebase.json`,
+/// the public client identifiers of the `kasama-ai` project). Self-hosters building their own apps
+/// point this at their own Firebase project. Without a project id push is off and the in-app inbox
+/// (Realtime) still works.
 class PushConfig {
   const PushConfig._();
 
-  static const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
-  static const appId = String.fromEnvironment('FIREBASE_APP_ID');
-  static const senderId = String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
   static const projectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
+  static const senderId = String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
   static const vapidKey = String.fromEnvironment('FIREBASE_VAPID_KEY');
+  // Generic values (one app for every platform) are the fallback for per-platform ones.
+  static const _apiKey = String.fromEnvironment('FIREBASE_API_KEY');
+  static const _appId = String.fromEnvironment('FIREBASE_APP_ID');
+  static const _iosApiKey = String.fromEnvironment('FIREBASE_IOS_API_KEY', defaultValue: _apiKey);
+  static const _iosAppId = String.fromEnvironment('FIREBASE_IOS_APP_ID', defaultValue: _appId);
+  static const _iosBundleId = String.fromEnvironment('FIREBASE_IOS_BUNDLE_ID');
+  static const _androidApiKey = String.fromEnvironment('FIREBASE_ANDROID_API_KEY', defaultValue: _apiKey);
+  static const _androidAppId = String.fromEnvironment('FIREBASE_ANDROID_APP_ID', defaultValue: _appId);
+  static const _webApiKey = String.fromEnvironment('FIREBASE_WEB_API_KEY', defaultValue: _apiKey);
+  static const _webAppId = String.fromEnvironment('FIREBASE_WEB_APP_ID', defaultValue: _appId);
+  static const _webAuthDomain = String.fromEnvironment('FIREBASE_WEB_AUTH_DOMAIN');
 
-  static bool get enabled => projectId.isNotEmpty && apiKey.isNotEmpty && appId.isNotEmpty && senderId.isNotEmpty;
+  static (String apiKey, String appId) get _keys {
+    if (kIsWeb) return (_webApiKey, _webAppId);
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => (_androidApiKey, _androidAppId),
+      _ => (_iosApiKey, _iosAppId), // iOS and macOS share the Apple app.
+    };
+  }
 
-  static FirebaseOptions get options =>
-      const FirebaseOptions(apiKey: apiKey, appId: appId, messagingSenderId: senderId, projectId: projectId);
+  static bool get enabled => projectId.isNotEmpty && senderId.isNotEmpty && _keys.$1.isNotEmpty && _keys.$2.isNotEmpty;
+
+  static FirebaseOptions get options => FirebaseOptions(
+        apiKey: _keys.$1,
+        appId: _keys.$2,
+        messagingSenderId: senderId,
+        projectId: projectId,
+        iosBundleId: _iosBundleId.isEmpty ? null : _iosBundleId,
+        authDomain: kIsWeb && _webAuthDomain.isNotEmpty ? _webAuthDomain : null,
+      );
 }
 
 String _platform() {
@@ -39,10 +64,13 @@ String _platform() {
 
 /// Registers this device for push after sign-in and opens deep links from tapped notifications.
 class PushRegistrar {
-  PushRegistrar(this._backend, this._openLink);
+  PushRegistrar(this._backend, this._openLink, {this.onOpened});
 
   final Backend _backend;
   final void Function(String link) _openLink;
+
+  /// Called with the notification id when a push is tapped, so the inbox marks it read.
+  final void Function(String notificationId)? onOpened;
   final _subs = <StreamSubscription<Object?>>[];
   var _started = false;
 
@@ -75,6 +103,8 @@ class PushRegistrar {
   }
 
   void _open(RemoteMessage message) {
+    final id = message.data['notification_id'];
+    if (id is String && id.isNotEmpty) onOpened?.call(id);
     final link = message.data['link'];
     if (link is String && link.startsWith('/')) _openLink(link);
   }
@@ -88,7 +118,11 @@ class PushRegistrar {
 
 /// Starts push once signed in; watched by the app root.
 final pushProvider = Provider<PushRegistrar>((ref) {
-  final registrar = PushRegistrar(ref.watch(backendProvider), (link) => ref.read(routerProvider).go(link));
+  final registrar = PushRegistrar(
+    ref.watch(backendProvider),
+    (link) => ref.read(routerProvider).go(link),
+    onOpened: (id) => unawaited(ref.read(notificationsProvider.notifier).markRead(id).catchError((_) {})),
+  );
   ref.onDispose(registrar.dispose);
   ref.listen(signedInProvider, (_, next) {
     if (next.value == true) unawaited(registrar.start());

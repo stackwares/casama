@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -209,7 +211,10 @@ class NotificationsList extends ConsumerWidget {
                       title: Text(n.title, style: n.readAt == null ? const TextStyle(fontWeight: FontWeight.w600) : null),
                       subtitle: Text(n.body, maxLines: 2, overflow: TextOverflow.ellipsis),
                       trailing: Text(relativeTime(n.createdAt, context), style: Theme.of(context).textTheme.bodySmall),
-                      onTap: n.link == null || !n.link!.startsWith('/') ? null : () => context.go(n.link!),
+                      onTap: () {
+                        if (n.readAt == null) unawaited(ref.read(notificationsProvider.notifier).markRead(n.id).catchError((_) {}));
+                        if (n.link != null && n.link!.startsWith('/')) context.go(n.link!);
+                      },
                     ),
                 ]),
               ),

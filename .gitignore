@@ -22,3 +22,8 @@ supabase/.temp
 dart-defines*.json
 .live/
 live-check*.log
+
+# Firebase / Google credentials and native config files (never commit)
+*service-account*.json
+GoogleService-Info.plist
+google-services.json

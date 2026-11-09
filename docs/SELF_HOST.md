@@ -58,17 +58,18 @@ that are running; they are archived and stopped by the idle timer.
 
 All settings live in `infra/compose/.env`. Common ones:
 
-| Setting                                                                              | Purpose                                                        |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| `KASAMA_SITE`, `KASAMA_PUBLIC_URL`                                                   | The domain (automatic HTTPS) or `:80` behind another proxy     |
-| `INSTANCE_ADMIN_EMAILS`                                                              | Comma-separated owners (default: the first account)            |
-| `DISABLE_SIGNUP=true`                                                                | Invite-only after the first accounts exist                     |
-| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ADMIN_EMAIL`, `EMAIL_AUTOCONFIRM=false` | Email confirmation and password reset through your SMTP server |
-| `RESEND_API_KEY`                                                                     | Invite emails (otherwise invites return a code to share)       |
-| `COMPUTER_MEMORY_MB`, `RUN_CONCURRENCY`                                              | Computer size and worker parallelism                           |
-| `SENTRY_DSN` or `POSTHOG_API_KEY`                                                    | Error reporting (off by default)                               |
-| `TELEMETRY=on`                                                                       | Opt-in anonymous counts (see below; off by default)            |
-| `KASAMA_CLOUD_URL`, `KASAMA_CLOUD_KEY`                                               | Cloud Connect: cloud computers and model credits               |
+| Setting                                                                              | Purpose                                                              |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| `KASAMA_SITE`, `KASAMA_PUBLIC_URL`                                                   | The domain (automatic HTTPS) or `:80` behind another proxy           |
+| `INSTANCE_ADMIN_EMAILS`                                                              | Comma-separated owners (default: the first account)                  |
+| `DISABLE_SIGNUP=true`                                                                | Invite-only after the first accounts exist                           |
+| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ADMIN_EMAIL`, `EMAIL_AUTOCONFIRM=false` | Email confirmation and password reset through your SMTP server       |
+| `FCM_SERVICE_ACCOUNT`                                                                | Push: Firebase service account JSON (one line) for the apps' project |
+| `RESEND_API_KEY`                                                                     | Invite emails (otherwise invites return a code to share)             |
+| `COMPUTER_MEMORY_MB`, `RUN_CONCURRENCY`                                              | Computer size and worker parallelism                                 |
+| `SENTRY_DSN` or `POSTHOG_API_KEY`                                                    | Error reporting (off by default)                                     |
+| `TELEMETRY=on`                                                                       | Opt-in anonymous counts (see below; off by default)                  |
+| `KASAMA_CLOUD_URL`, `KASAMA_CLOUD_KEY`                                               | Cloud Connect: cloud computers and model credits                     |
 
 Object storage defaults to a Docker volume; `--profile s3` adds SeaweedFS, and any S3-compatible
 store (Cloudflare R2, AWS S3) works with the `OBJECT_STORE=s3` settings described in

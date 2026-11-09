@@ -47,6 +47,11 @@ export const EnvSchema = z.object({
   /** Cloud Connect, self-hosted side: use Kasama Cloud computers with this key. Unset = off. */
   KASAMA_CLOUD_URL: z.url().optional(),
   KASAMA_CLOUD_KEY: z.string().optional(),
+  /**
+   * Push notifications: a Firebase service account (JSON text, or a path to the JSON file) for the
+   * Firebase project the apps are built with. Unset: no push; the in-app inbox still works.
+   */
+  FCM_SERVICE_ACCOUNT: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Kasama <no-reply@localhost>"),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(120),

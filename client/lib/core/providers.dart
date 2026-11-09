@@ -130,6 +130,19 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
     return backend.notifications();
   }
 
+  /// Marks one notification read (opened from the inbox or from a push).
+  Future<void> markRead(String id) async {
+    final current = state.value ?? const <NotificationView>[];
+    final now = DateTime.now();
+    state = AsyncData([
+      for (final n in current)
+        n.id == id && n.readAt == null
+            ? NotificationView(id: n.id, kind: n.kind, title: n.title, body: n.body, link: n.link, createdAt: n.createdAt, readAt: now)
+            : n,
+    ]);
+    await ref.read(backendProvider).markNotificationRead(id);
+  }
+
   Future<void> markAllRead() async {
     await ref.read(backendProvider).markNotificationsRead();
     final now = DateTime.now();
