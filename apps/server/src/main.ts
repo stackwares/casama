@@ -1,13 +1,13 @@
 import { serve } from "@hono/node-server";
 import { ComputerService } from "@kasama/agent";
 import { createDb } from "@kasama/db";
-import { SupervisorProvider } from "@kasama/sandbox";
 import { createLogger, initObservability, shutdownObservability } from "@kasama/observability";
+import { SupervisorProvider } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
 import { createApp } from "./api/app.ts";
 import { createTokenVerifier } from "./api/auth.ts";
-import { pgRunEventHub } from "./api/run-event-hub.ts";
 import { attachTerminal } from "./api/routes/computers.ts";
+import { pgRunEventHub } from "./api/run-event-hub.ts";
 import { dbosWorkflows } from "./api/workflows.ts";
 import { loadEnv } from "./env.ts";
 import { disabledEmail, resendEmail } from "./services/email.ts";
@@ -43,7 +43,10 @@ if (env.MODE === "api") {
     hub,
     computers:
       env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN
-        ? new ComputerService(handle.db, new SupervisorProvider(env.SUPERVISOR_URL, env.SUPERVISOR_TOKEN))
+        ? new ComputerService(
+            handle.db,
+            new SupervisorProvider(env.SUPERVISOR_URL, env.SUPERVISOR_TOKEN),
+          )
         : undefined,
     env,
     db: handle.db,
@@ -72,7 +75,9 @@ if (env.MODE === "api") {
     embeddings: env.EMBEDDINGS,
     runConcurrency: env.RUN_CONCURRENCY,
     supervisor:
-      env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN ? { url: env.SUPERVISOR_URL, token: env.SUPERVISOR_TOKEN } : undefined,
+      env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN
+        ? { url: env.SUPERVISOR_URL, token: env.SUPERVISOR_TOKEN }
+        : undefined,
   });
   stoppers.push(worker.stop);
 }

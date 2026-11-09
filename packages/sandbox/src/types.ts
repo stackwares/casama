@@ -99,7 +99,10 @@ export interface SandboxHandle {
   input(event: InputEvent): Promise<void>; // mouse and keyboard
   streamEndpoint(): Promise<StreamEndpoint>; // WebRTC signaling target
   /** Opens an interactive terminal (WebSocket URL plus auth headers). */
-  terminalEndpoint(opts?: { cols?: number; rows?: number }): Promise<{ url: string; headers: Record<string, string> }>;
+  terminalEndpoint(opts?: {
+    cols?: number;
+    rows?: number;
+  }): Promise<{ url: string; headers: Record<string, string> }>;
   checkpoint(label: string): Promise<CheckpointRef>;
   restore(id: CheckpointRef): Promise<void>;
   health(): Promise<HealthStatus>;
@@ -127,5 +130,13 @@ export async function collectExec(stream: AsyncIterable<ExecChunk>) {
     else if (c.type === "stderr") stderr += c.data;
     else if (c.type === "exit") exit = c;
   }
-  return { execId, stdout, stderr, code: exit?.code ?? -1, timedOut: exit?.timedOut ?? false, killed: exit?.killed ?? false, truncated: exit?.truncated ?? false };
+  return {
+    execId,
+    stdout,
+    stderr,
+    code: exit?.code ?? -1,
+    timedOut: exit?.timedOut ?? false,
+    killed: exit?.killed ?? false,
+    truncated: exit?.truncated ?? false,
+  };
 }

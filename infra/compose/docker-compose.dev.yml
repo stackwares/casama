@@ -2,6 +2,7 @@
 # (Postgres :54322, API :54321); this file adds the Kasama services next to it.
 #   supabase start
 #   docker compose -f infra/compose/docker-compose.dev.yml up --build
+# Secrets come from ../../.env (see .env.example).
 name: kasama-dev
 
 x-server: &server
@@ -9,11 +10,9 @@ x-server: &server
     context: ../..
     dockerfile: apps/server/Dockerfile
   env_file: ../../.env
-  environment:
-    DATABASE_URL: postgres://postgres:postgres@host.docker.internal:54322/postgres
-    SUPABASE_URL: http://host.docker.internal:54321
   extra_hosts:
     - host.docker.internal:host-gateway
+  networks: [control]
   restart: unless-stopped
 
 services:
@@ -23,8 +22,9 @@ services:
       MODE: api
       DATABASE_URL: postgres://postgres:postgres@host.docker.internal:54322/postgres
       SUPABASE_URL: http://host.docker.internal:54321
+      SUPERVISOR_URL: http://kasama-supervisor:8788
     ports:
-      - "8787:8787"
+      - "127.0.0.1:8787:8787"
 
   worker:
     <<: *server
@@ -32,3 +32,50 @@ services:
       MODE: worker
       DATABASE_URL: postgres://postgres:postgres@host.docker.internal:54322/postgres
       SUPABASE_URL: http://host.docker.internal:54321
+      SUPERVISOR_URL: http://kasama-supervisor:8788
+
+  # The only service with Docker access. It joins each computer's private network to reach computerd.
+  supervisor:
+    build:
+      context: ../..
+      dockerfile: apps/supervisor/Dockerfile
+    container_name: kasama-supervisor
+    env_file: ../../.env
+    environment:
+      EGRESS_CONTAINER: kasama-egress
+      EGRESS_CONTROL_URL: http://kasama-egress:3129
+      SUPERVISOR_CONTAINER: kasama-supervisor
+      COMPUTER_IMAGE_HEADLESS: kasama/computer-headless:dev
+      COMPUTER_IMAGE_DESKTOP: kasama/computer-desktop:dev
+      OBJECT_STORE_DIR: /data/objects
+      # SANDBOX_RUNTIME: runsc   # gVisor on a Linux host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - objects:/data/objects
+    networks: [control]
+    restart: unless-stopped
+
+  # The only route from computers to the internet; blocks private and metadata addresses.
+  egress:
+    build:
+      context: ../..
+      dockerfile: infra/egress-proxy/Dockerfile
+    container_name: kasama-egress
+    env_file: ../../.env
+    networks: [control, egress]
+    restart: unless-stopped
+
+  # Build-only services so `compose build` also builds the computer images.
+  computer-headless:
+    build:
+      context: ../..
+      dockerfile: infra/images/computer/Dockerfile.headless
+    image: kasama/computer-headless:dev
+    profiles: [images]
+
+networks:
+  control: {}
+  egress: {}
+
+volumes:
+  objects: {}

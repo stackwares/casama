@@ -1,10 +1,10 @@
+import { ComputerService } from "@kasama/agent";
 import { createDb, type DbHandle } from "@kasama/db";
 import { createAuthUser, startTestDatabase, type TestDatabase } from "@kasama/db/testing";
 import { createLogger } from "@kasama/observability";
+import type { SandboxStack } from "@kasama/sandbox/testing";
 import { SignJWT } from "jose";
 import { createApp } from "../src/api/app.ts";
-import { ComputerService } from "@kasama/agent";
-import type { SandboxStack } from "@kasama/sandbox/testing";
 import { createTokenVerifier } from "../src/api/auth.ts";
 import { pgRunEventHub, type RunEventHub } from "../src/api/run-event-hub.ts";
 import { dbosWorkflows, type Workflows } from "../src/api/workflows.ts";
@@ -64,13 +64,17 @@ export async function startHarness(
       logLevel: "error",
       modelFixtures: opts.worker.fixtures,
       embeddings: "hash",
-      supervisor: opts.sandbox ? { url: opts.sandbox.supervisorUrl, token: opts.sandbox.token } : undefined,
+      supervisor: opts.sandbox
+        ? { url: opts.sandbox.supervisorUrl, token: opts.sandbox.token }
+        : undefined,
     });
     workflows = await dbosWorkflows(tdb.url);
   } else if (opts.workflowsClient) {
     workflows = await dbosWorkflows(tdb.url);
   }
-  const computers = opts.sandbox ? new ComputerService(handle.db, opts.sandbox.provider) : undefined;
+  const computers = opts.sandbox
+    ? new ComputerService(handle.db, opts.sandbox.provider)
+    : undefined;
   const app = createApp({
     workflows,
     hub,

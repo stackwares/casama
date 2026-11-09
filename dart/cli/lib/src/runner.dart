@@ -7,6 +7,7 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:path/path.dart' as p;
 
 import 'commands_bots.dart';
+import 'commands_computers.dart';
 import 'store.dart';
 
 const defaultApiUrl = 'http://localhost:8787';
@@ -29,7 +30,8 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
     ..addCommand(ChatCommand(ctx))
     ..addCommand(RunsCommand(ctx))
     ..addCommand(MemoryCommand(ctx))
-    ..addCommand(UsageCommand(ctx));
+    ..addCommand(UsageCommand(ctx))
+    ..addCommand(ComputerCommand(ctx));
   try {
     final top = runner.parse(args);
     ctx.json = top['json'] as bool;

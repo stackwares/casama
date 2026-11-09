@@ -42,9 +42,14 @@ async function sandbox<T>(fn: () => Promise<T>): Promise<T> {
     return await fn();
   } catch (err) {
     if (err instanceof SandboxError) {
-      if (err.status === 404 || err.code === "not_found") throw new ApiError(404, "not_found", err.message);
+      if (err.status === 404 || err.code === "not_found")
+        throw new ApiError(404, "not_found", err.message);
       if (err.status === 400) throw new ApiError(400, err.code, err.message);
-      throw new ApiError(503, "computer_unavailable", "The computer could not be reached. Try again shortly.");
+      throw new ApiError(
+        503,
+        "computer_unavailable",
+        "The computer could not be reached. Try again shortly.",
+      );
     }
     throw err;
   }
@@ -53,13 +58,20 @@ async function sandbox<T>(fn: () => Promise<T>): Promise<T> {
 export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db } = deps;
   const service = (): ComputerService => {
-    if (!deps.computers) throw new ApiError(503, "computers_unavailable", "Computers are not configured on this server");
+    if (!deps.computers)
+      throw new ApiError(
+        503,
+        "computers_unavailable",
+        "Computers are not configured on this server",
+      );
     return deps.computers;
   };
 
   /** Loads a computer the caller can see (RLS), or 404. */
   const visible = async (claims: JwtClaims, id: string) => {
-    const [c] = await withUserSession(db, claims, (tx) => tx.select().from(computers).where(eq(computers.id, id)));
+    const [c] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(computers).where(eq(computers.id, id)),
+    );
     if (!c) throw new ApiError(404, "computer_not_found", "Computer not found");
     return c;
   };
@@ -139,9 +151,11 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const { id } = c.req.valid("param");
     const { path } = c.req.valid("query");
     const length = Number(c.req.header("content-length") ?? 0);
-    if (length > MAX_UPLOAD) throw new ApiError(400, "file_too_large", "Uploads are limited to 100 MB");
+    if (length > MAX_UPLOAD)
+      throw new ApiError(400, "file_too_large", "Uploads are limited to 100 MB");
     const data = new Uint8Array(await c.req.arrayBuffer());
-    if (data.length > MAX_UPLOAD) throw new ApiError(400, "file_too_large", "Uploads are limited to 100 MB");
+    if (data.length > MAX_UPLOAD)
+      throw new ApiError(400, "file_too_large", "Uploads are limited to 100 MB");
     const h = await handle(claims, id);
     await sandbox(() => h.writeFile(path, data));
     return c.json({ path, size: data.length }, 200);
@@ -170,7 +184,11 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const { id } = c.req.valid("param");
     await visible(claims, id);
     const rows = await withUserSession(db, claims, (tx) =>
-      tx.select().from(checkpoints).where(eq(checkpoints.computerId, id)).orderBy(desc(checkpoints.createdAt)),
+      tx
+        .select()
+        .from(checkpoints)
+        .where(eq(checkpoints.computerId, id))
+        .orderBy(desc(checkpoints.createdAt)),
     );
     return c.json({ items: rows.map(cpOut) }, 200);
   });
@@ -189,8 +207,11 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const claims = requireClaims(c.get("claims"));
     const { id, cid } = c.req.valid("param");
     await visible(claims, id);
-    const [cp] = await withUserSession(db, claims, (tx) => tx.select().from(checkpoints).where(eq(checkpoints.id, cid)));
-    if (!cp || cp.computerId !== id) throw new ApiError(404, "checkpoint_not_found", "Checkpoint not found");
+    const [cp] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(checkpoints).where(eq(checkpoints.id, cid)),
+    );
+    if (!cp || cp.computerId !== id)
+      throw new ApiError(404, "checkpoint_not_found", "Checkpoint not found");
     await sandbox(() => service().restoreCheckpoint(cid));
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${cp.orgId}::uuid, 'user', ${claims.sub}::uuid, 'checkpoint.restored', 'computer', ${id}::uuid, ${JSON.stringify({ checkpoint_id: cid })}::jsonb)`);
@@ -213,11 +234,15 @@ export function attachTerminal(server: Server, deps: AppDeps) {
     try {
       if (!deps.computers) return reject("503 Service Unavailable");
       const header = req.headers.authorization;
-      const token = header?.startsWith("Bearer ") ? header.slice(7) : url.searchParams.get("access_token");
+      const token = header?.startsWith("Bearer ")
+        ? header.slice(7)
+        : url.searchParams.get("access_token");
       if (!token) return reject("401 Unauthorized");
       const claims = await deps.verifyToken(token).catch(() => null);
       if (!claims) return reject("401 Unauthorized");
-      const [c] = await withUserSession(deps.db, claims, (tx) => tx.select().from(computers).where(eq(computers.id, id)));
+      const [c] = await withUserSession(deps.db, claims, (tx) =>
+        tx.select().from(computers).where(eq(computers.id, id)),
+      );
       if (!c) return reject("404 Not Found");
       const h = await deps.computers.ensureRunning(id);
       const target = await h.terminalEndpoint({
@@ -236,7 +261,11 @@ export function attachTerminal(server: Server, deps: AppDeps) {
         upstream.on("open", () => {
           for (const p of pending.splice(0)) upstream.send(p.data as Buffer, { binary: p.binary });
         });
-        upstream.on("message", (data, binary) => client.readyState === WebSocket.OPEN && client.send(data as Buffer, { binary }));
+        upstream.on(
+          "message",
+          (data, binary) =>
+            client.readyState === WebSocket.OPEN && client.send(data as Buffer, { binary }),
+        );
         const close = () => {
           clearInterval(keepAlive);
           client.close();

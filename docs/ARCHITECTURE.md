@@ -4,7 +4,7 @@ This is the as-built view. [SPEC.md](../SPEC.md) is the target; this file tracks
 
 ## Status
 
-**Phases 0 (backend foundations) and 1 (bots and chat): built.** See "Build status" at the end.
+**Phases 0 (backend foundations), 1 (bots and chat) and 2 (computers): built.** See "Build status" at the end.
 
 ## Components today
 
@@ -44,6 +44,26 @@ Dart CLI ──(kasama_sdk)──▶ API (Hono, MODE=api) ── enqueue (DBOSCl
 5. On the final answer: the assistant message is saved, memories are extracted with the cheap model, usage is recorded, and `run.completed` is emitted.
 6. Cancel: `POST /v1/runs/{id}/cancel` sets `cancel_requested_at`; the worker notices within 500 ms (mid-stream) or at the next step boundary and emits `run.cancelled`.
 
+## Computers (Phase 2)
+
+```
+Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor container (Docker socket, stateless)
+                                                          │ joins each computer network
+                                                          ▼
+              per-computer internal network:  computer container (computerd :7070, user 1000, read-only root)
+                                                          │ HTTPS_PROXY (per-computer credentials)
+                                                          ▼
+                                              Egress proxy container ──▶ internet (private ranges blocked)
+```
+
+- **dart/computerd**: HTTP daemon inside each computer: streamed exec with kill and timeouts (process groups), files, search, home-directory archive and restore, a WebSocket terminal, screenshots and input when a display exists. Compiled to one native binary.
+- **infra/images/computer**: `Dockerfile.headless` (Ubuntu 24.04, Node.js 24, Python, Playwright's Chromium, agent-browser, computerd) and `Dockerfile.desktop` (adds Xvfb, Openbox, AT-SPI, agent-desktop, xdotool). Both build for arm64 and amd64.
+- **packages/sandbox**: the `SandboxProvider` interface, the `computerd` client, object stores (filesystem and S3), the Docker provider, the supervisor client, the provider contract suite (`sandboxContract`) and a throwaway test stack.
+- **apps/supervisor**: the supervisor HTTP API and terminal WebSocket proxy.
+- **infra/egress-proxy**: the egress proxy with its control API.
+- **packages/agent/src/computers.ts**: `ComputerService` (which computer a bot uses, start or restore under an advisory lock, idle sleep, checkpoints with retention, usage seconds). **tools/computer.ts**: `shell.exec`, `files.*`, `browser.*`, `checkpoint.create`.
+- **API**: `/v1/computers` list, get, start, stop, restart, files (list, download, upload, delete), checkpoints (list, create, restore) and the terminal WebSocket. **CLI**: `kasama computer status|start|stop|shell|files|checkpoints|restore`.
+
 ## Model keys
 
 Keys go into Supabase Vault through the API's server role and are never returned. Only the worker reads `vault.decrypted_secrets`. The credential test is a worker workflow. Every event, message and tool result passes through a redactor seeded with the bot's model keys.
@@ -65,6 +85,7 @@ Keys go into Supabase Vault through the API's server role and are never returned
 | --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 0 Backend foundations | Built       | CLI signup, login, workspace, invite and join; RLS isolation; CI config                                                                                                               |
 | 1 Backend MVP         | Built       | Gate verified locally with recorded model fixtures: CLI chat streams; killing the worker mid-run resumes; a fact from one chat is recalled in another; no API response contains a key |
-| 2 to 8                | Not started |                                                                                                                                                                                       |
+| 2 Computers | Built | Gate verified locally on Docker Desktop (runc): from the CLI a bot researches a web page and writes a report; sleep and restore keep files and browser logins; restoring a checkpoint reverts files; metadata and internal addresses are blocked. gVisor not verified (needs a Linux host) |
+| 3 to 8 | Not started | |
 
 Known gaps carried forward: attachments have a table but no upload flow yet (Phase 3 app); the worker uses the server's database connection instead of a dedicated least-privilege role (D-016); live provider calls are wired but only exercised with recorded fixtures here.

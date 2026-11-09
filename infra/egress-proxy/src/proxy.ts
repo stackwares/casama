@@ -1,7 +1,19 @@
 import { lookup } from "node:dns/promises";
-import { createServer, type IncomingMessage, request as httpRequest, type Server, type ServerResponse } from "node:http";
-import { isIP, connect, type Socket } from "node:net";
-import { type DomainRules, domainAllowed, isBlocked, makeBlockList, makeExemptList } from "./policy.ts";
+import {
+  createServer,
+  request as httpRequest,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from "node:http";
+import { connect, isIP, type Socket } from "node:net";
+import {
+  type DomainRules,
+  domainAllowed,
+  isBlocked,
+  makeBlockList,
+  makeExemptList,
+} from "./policy.ts";
 
 export interface ComputerRegistration {
   ref: string;
@@ -48,7 +60,10 @@ export class EgressProxy {
     this.blockList = makeBlockList(opts.blockedCidrs);
     this.exempt = opts.exemptCidrs?.length ? makeExemptList(opts.exemptCidrs) : null;
     this.controlToken = opts.controlToken;
-    this.resolve = opts.resolve ?? (async (host: string) => (await lookup(host, { all: true, verbatim: true })).map((a) => a.address));
+    this.resolve =
+      opts.resolve ??
+      (async (host: string) =>
+        (await lookup(host, { all: true, verbatim: true })).map((a) => a.address));
     this.log = opts.log ?? (() => {});
   }
 
@@ -72,12 +87,16 @@ export class EgressProxy {
     u.connections += connections;
     u.bytes += bytes;
     return (
-      u.connections <= (c.connectionsPerMinute ?? 600) && u.bytes <= (c.bytesPerMinute ?? 2 * 1024 * 1024 * 1024)
+      u.connections <= (c.connectionsPerMinute ?? 600) &&
+      u.bytes <= (c.bytesPerMinute ?? 2 * 1024 * 1024 * 1024)
     );
   }
 
   /** Resolves and vets a destination; returns the address to connect to. */
-  async vet(c: ComputerRegistration, host: string): Promise<{ ok: true; address: string } | { ok: false; reason: string }> {
+  async vet(
+    c: ComputerRegistration,
+    host: string,
+  ): Promise<{ ok: true; address: string } | { ok: false; reason: string }> {
     const bare = host.replace(/^\[|\]$/g, "");
     if (!domainAllowed(bare, c.rules ?? {})) return { ok: false, reason: "domain_not_allowed" };
     let addresses: string[];
@@ -88,7 +107,8 @@ export class EgressProxy {
     }
     if (addresses.length === 0) return { ok: false, reason: "dns_failed" };
     // Refuse if any address is internal: a mixed answer is a rebinding attempt.
-    const blocked = (a: string) => isBlocked(this.blockList, a) && !(this.exempt && isBlocked(this.exempt, a));
+    const blocked = (a: string) =>
+      isBlocked(this.blockList, a) && !(this.exempt && isBlocked(this.exempt, a));
     if (addresses.some(blocked)) return { ok: false, reason: "blocked_address" };
     return { ok: true, address: addresses[0] as string };
   }
@@ -111,7 +131,9 @@ export class EgressProxy {
     const c = this.authenticate(req);
     const target = req.url ?? "";
     if (!c) {
-      socket.end("HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm=\"kasama\"\r\n\r\n");
+      socket.end(
+        'HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm="kasama"\r\n\r\n',
+      );
       return this.deny(null, target, "unauthenticated");
     }
     const m = target.match(/^(\[[^\]]+\]|[^:]+):(\d+)$/);
@@ -164,7 +186,9 @@ export class EgressProxy {
     }
     const verdict = await this.vet(c, url.hostname);
     if (!verdict.ok) {
-      res.writeHead(403, { "x-kasama-egress": verdict.reason }).end(`Blocked by egress policy: ${verdict.reason}\n`);
+      res
+        .writeHead(403, { "x-kasama-egress": verdict.reason })
+        .end(`Blocked by egress policy: ${verdict.reason}\n`);
       return this.deny(c, url.host, verdict.reason);
     }
     const headers = { ...req.headers };
@@ -172,7 +196,13 @@ export class EgressProxy {
     delete headers["proxy-connection"];
     headers.host = url.host;
     const upstream = httpRequest(
-      { host: verdict.address, port: Number(url.port || 80), method: req.method, path: `${url.pathname}${url.search}`, headers },
+      {
+        host: verdict.address,
+        port: Number(url.port || 80),
+        method: req.method,
+        path: `${url.pathname}${url.search}`,
+        headers,
+      },
       (up) => {
         res.writeHead(up.statusCode ?? 502, up.headers);
         up.on("data", (b: Buffer) => this.meter(c, 0, b.length));
@@ -189,17 +219,24 @@ export class EgressProxy {
   /** Control API for the supervisor: register and unregister computers. */
   createControlServer(): Server {
     return createServer(async (req, res) => {
-      if (req.headers.authorization !== `Bearer ${this.controlToken}`) return void res.writeHead(401).end();
+      if (req.headers.authorization !== `Bearer ${this.controlToken}`)
+        return void res.writeHead(401).end();
       const url = new URL(req.url ?? "/", "http://control");
-      const json = (status: number, body: unknown) => res.writeHead(status, { "content-type": "application/json" }).end(JSON.stringify(body));
-      if (req.method === "GET" && url.pathname === "/healthz") return json(200, { ok: true, computers: this.computers.size });
+      const json = (status: number, body: unknown) =>
+        res.writeHead(status, { "content-type": "application/json" }).end(JSON.stringify(body));
+      if (req.method === "GET" && url.pathname === "/healthz")
+        return json(200, { ok: true, computers: this.computers.size });
       const ref = url.pathname.match(/^\/computers\/([\w-]+)$/)?.[1];
       if (!ref) return json(404, { code: "not_found" });
       if (req.method === "PUT") {
         const chunks: Buffer[] = [];
         for await (const c of req) chunks.push(c as Buffer);
-        const body = JSON.parse(Buffer.concat(chunks).toString() || "{}") as Omit<ComputerRegistration, "ref">;
-        if (!body.token || body.token.length < 16) return json(400, { code: "bad_request", message: "token required" });
+        const body = JSON.parse(Buffer.concat(chunks).toString() || "{}") as Omit<
+          ComputerRegistration,
+          "ref"
+        >;
+        if (!body.token || body.token.length < 16)
+          return json(400, { code: "bad_request", message: "token required" });
         this.computers.set(ref, { ...body, ref });
         return json(200, { ok: true });
       }

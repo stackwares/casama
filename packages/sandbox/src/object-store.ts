@@ -3,7 +3,12 @@ import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 
 export interface StoredObject {
@@ -32,7 +37,8 @@ export class FsObjectStore implements ObjectStore {
 
   private path(key: string) {
     const p = resolve(this.root, key);
-    if (p !== this.root && !p.startsWith(this.root + sep)) throw new Error("object key escapes the store");
+    if (p !== this.root && !p.startsWith(this.root + sep))
+      throw new Error("object key escapes the store");
     return p;
   }
 
@@ -103,7 +109,10 @@ export class S3ObjectStore implements ObjectStore {
       region: opts.region ?? "auto",
       endpoint: opts.endpoint,
       forcePathStyle: opts.forcePathStyle ?? !!opts.endpoint,
-      credentials: opts.accessKeyId && opts.secretAccessKey ? { accessKeyId: opts.accessKeyId, secretAccessKey: opts.secretAccessKey } : undefined,
+      credentials:
+        opts.accessKeyId && opts.secretAccessKey
+          ? { accessKeyId: opts.accessKeyId, secretAccessKey: opts.secretAccessKey }
+          : undefined,
     });
   }
 
@@ -112,12 +121,17 @@ export class S3ObjectStore implements ObjectStore {
     const counted = toNodeStream(body).on("data", (c: Buffer) => {
       size += c.length;
     });
-    await new Upload({ client: this.s3, params: { Bucket: this.bucket, Key: this.prefix + key, Body: counted } }).done();
+    await new Upload({
+      client: this.s3,
+      params: { Bucket: this.bucket, Key: this.prefix + key, Body: counted },
+    }).done();
     return { size };
   }
 
   async get(key: string) {
-    const r = await this.s3.send(new GetObjectCommand({ Bucket: this.bucket, Key: this.prefix + key }));
+    const r = await this.s3.send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: this.prefix + key }),
+    );
     if (!r.Body) throw new Error(`object ${key} has no body`);
     return r.Body.transformToWebStream() as ReadableStream<Uint8Array>;
   }
@@ -130,9 +144,20 @@ export class S3ObjectStore implements ObjectStore {
     const out: StoredObject[] = [];
     let token: string | undefined;
     do {
-      const r = await this.s3.send(new ListObjectsV2Command({ Bucket: this.bucket, Prefix: this.prefix + prefix, ContinuationToken: token }));
+      const r = await this.s3.send(
+        new ListObjectsV2Command({
+          Bucket: this.bucket,
+          Prefix: this.prefix + prefix,
+          ContinuationToken: token,
+        }),
+      );
       for (const o of r.Contents ?? []) {
-        if (o.Key) out.push({ key: o.Key.slice(this.prefix.length), size: o.Size ?? 0, lastModified: o.LastModified ?? new Date(0) });
+        if (o.Key)
+          out.push({
+            key: o.Key.slice(this.prefix.length),
+            size: o.Size ?? 0,
+            lastModified: o.LastModified ?? new Date(0),
+          });
       }
       token = r.IsTruncated ? r.NextContinuationToken : undefined;
     } while (token);

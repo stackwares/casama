@@ -72,6 +72,19 @@ Class | Method | HTTP request | Description
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
+[*ComputersApi*](doc/ComputersApi.md) | [**computerTerminal**](doc/ComputersApi.md#computerterminal) | **GET** /v1/computers/{id}/terminal | WebSocket terminal. Binary frames carry terminal bytes both ways. Browsers may pass the access token as ?access_token&#x3D;.
+[*ComputersApi*](doc/ComputersApi.md) | [**createCheckpoint**](doc/ComputersApi.md#createcheckpoint) | **POST** /v1/computers/{id}/checkpoints | 
+[*ComputersApi*](doc/ComputersApi.md) | [**deleteComputerFile**](doc/ComputersApi.md#deletecomputerfile) | **DELETE** /v1/computers/{id}/files | 
+[*ComputersApi*](doc/ComputersApi.md) | [**downloadComputerFile**](doc/ComputersApi.md#downloadcomputerfile) | **GET** /v1/computers/{id}/files | Download a file
+[*ComputersApi*](doc/ComputersApi.md) | [**getComputer**](doc/ComputersApi.md#getcomputer) | **GET** /v1/computers/{id} | 
+[*ComputersApi*](doc/ComputersApi.md) | [**listCheckpoints**](doc/ComputersApi.md#listcheckpoints) | **GET** /v1/computers/{id}/checkpoints | 
+[*ComputersApi*](doc/ComputersApi.md) | [**listComputerFiles**](doc/ComputersApi.md#listcomputerfiles) | **GET** /v1/computers/{id}/files/list | List a directory (default ~/workspace)
+[*ComputersApi*](doc/ComputersApi.md) | [**listComputers**](doc/ComputersApi.md#listcomputers) | **GET** /v1/computers | 
+[*ComputersApi*](doc/ComputersApi.md) | [**restartComputer**](doc/ComputersApi.md#restartcomputer) | **POST** /v1/computers/{id}/restart | Sleep and start again with the same files
+[*ComputersApi*](doc/ComputersApi.md) | [**restoreCheckpoint**](doc/ComputersApi.md#restorecheckpoint) | **POST** /v1/computers/{id}/checkpoints/{cid}/restore | Undo to a checkpoint (replaces the home directory)
+[*ComputersApi*](doc/ComputersApi.md) | [**startComputer**](doc/ComputersApi.md#startcomputer) | **POST** /v1/computers/{id}/start | Start or restore the computer
+[*ComputersApi*](doc/ComputersApi.md) | [**stopComputer**](doc/ComputersApi.md#stopcomputer) | **POST** /v1/computers/{id}/stop | Save the home directory to storage and stop (sleep)
+[*ComputersApi*](doc/ComputersApi.md) | [**uploadComputerFile**](doc/ComputersApi.md#uploadcomputerfile) | **PUT** /v1/computers/{id}/files | Upload a file (request body is the raw contents, up to 100 MB)
 [*CredentialsApi*](doc/CredentialsApi.md) | [**createCredential**](doc/CredentialsApi.md#createcredential) | **POST** /v1/credentials | Store a model key in Vault; returns metadata only
 [*CredentialsApi*](doc/CredentialsApi.md) | [**listCredentials**](doc/CredentialsApi.md#listcredentials) | **GET** /v1/credentials | 
 [*CredentialsApi*](doc/CredentialsApi.md) | [**testCredential**](doc/CredentialsApi.md#testcredential) | **POST** /v1/credentials/{id}/test | Validate a key with a 1-token call
@@ -100,13 +113,22 @@ Class | Method | HTTP request | Description
  - [Bot](doc/Bot.md)
  - [BotBudget](doc/BotBudget.md)
  - [BotList](doc/BotList.md)
+ - [Checkpoint](doc/Checkpoint.md)
  - [CheckpointCreatedEvent](doc/CheckpointCreatedEvent.md)
  - [CheckpointCreatedEventPayload](doc/CheckpointCreatedEventPayload.md)
+ - [CheckpointList](doc/CheckpointList.md)
+ - [Computer](doc/Computer.md)
+ - [ComputerFileEntry](doc/ComputerFileEntry.md)
+ - [ComputerFileList](doc/ComputerFileList.md)
+ - [ComputerList](doc/ComputerList.md)
+ - [ComputerSize](doc/ComputerSize.md)
+ - [ComputerState](doc/ComputerState.md)
  - [ComputerStateEvent](doc/ComputerStateEvent.md)
  - [ComputerStateEventPayload](doc/ComputerStateEventPayload.md)
  - [Conversation](doc/Conversation.md)
  - [ConversationList](doc/ConversationList.md)
  - [CreateBotRequest](doc/CreateBotRequest.md)
+ - [CreateCheckpointRequest](doc/CreateCheckpointRequest.md)
  - [CreateConversationRequest](doc/CreateConversationRequest.md)
  - [CreateCredentialRequest](doc/CreateCredentialRequest.md)
  - [CreateInviteRequest](doc/CreateInviteRequest.md)
@@ -114,6 +136,7 @@ Class | Method | HTTP request | Description
  - [Credential](doc/Credential.md)
  - [CredentialList](doc/CredentialList.md)
  - [CredentialTestResult](doc/CredentialTestResult.md)
+ - [DeleteResult](doc/DeleteResult.md)
  - [Health](doc/Health.md)
  - [Invite](doc/Invite.md)
  - [InviteRole](doc/InviteRole.md)
@@ -171,6 +194,7 @@ Class | Method | HTTP request | Description
  - [ToolOutputEventPayload](doc/ToolOutputEventPayload.md)
  - [ToolStartedEvent](doc/ToolStartedEvent.md)
  - [ToolStartedEventPayload](doc/ToolStartedEventPayload.md)
+ - [UploadResult](doc/UploadResult.md)
  - [UsageEvent](doc/UsageEvent.md)
  - [UsageEventPayload](doc/UsageEventPayload.md)
  - [UsageReport](doc/UsageReport.md)

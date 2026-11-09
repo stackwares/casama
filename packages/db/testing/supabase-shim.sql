@@ -96,6 +96,7 @@ create or replace function realtime.send(payload jsonb, event text, topic text, 
 returns void language sql as $$
   insert into realtime.messages (topic, extension, event, payload, private) values (topic, 'broadcast', event, payload, private)
 $$;
+alter table realtime.messages enable row level security;
 grant usage on schema realtime to authenticated;
 grant select on realtime.messages to authenticated;
 grant execute on function realtime.topic() to authenticated;

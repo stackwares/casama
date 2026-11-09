@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
-  "exports": { ".": "./src/proxy.ts" },
-  "scripts": { "start": "node src/main.ts", "typecheck": "tsc --noEmit", "test": "vitest run" }
+  "exports": {
+    ".": "./src/proxy.ts"
+  },
+  "scripts": {
+    "start": "node src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
 }

@@ -224,7 +224,7 @@ begin
 end;
 $$;
 
-alter table realtime.messages enable row level security;
+-- Supabase enables RLS on realtime.messages itself (the table belongs to the Realtime admin role).
 create policy kasama_broadcast_read on realtime.messages
   for select to authenticated
   using (realtime.messages.extension = 'broadcast' and public.realtime_topic_allowed((select realtime.topic())));

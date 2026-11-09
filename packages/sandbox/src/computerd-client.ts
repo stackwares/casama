@@ -1,5 +1,13 @@
 import { ndjson } from "./ndjson.ts";
-import { type ExecChunk, type ExecOptions, type FileEntry, type HealthStatus, type InputEvent, SandboxError, type SearchMatch } from "./types.ts";
+import {
+  type ExecChunk,
+  type ExecOptions,
+  type FileEntry,
+  type HealthStatus,
+  type InputEvent,
+  SandboxError,
+  type SearchMatch,
+} from "./types.ts";
 
 type RawChunk =
   | { type: "start"; exec_id: string }
@@ -22,13 +30,23 @@ export class ComputerdClient {
   private async call(path: string, init: RequestInit = {}, expectOk = true) {
     let res: Response;
     try {
-      res = await fetch(`${this.baseUrl}${path}`, { ...init, headers: { ...this.authHeaders, ...(init.headers as Record<string, string>) } });
+      res = await fetch(`${this.baseUrl}${path}`, {
+        ...init,
+        headers: { ...this.authHeaders, ...(init.headers as Record<string, string>) },
+      });
     } catch (err) {
-      throw new SandboxError("computer_unreachable", `computerd unreachable: ${(err as Error).message}`);
+      throw new SandboxError(
+        "computer_unreachable",
+        `computerd unreachable: ${(err as Error).message}`,
+      );
     }
     if (expectOk && !res.ok) {
       const body = (await res.json().catch(() => ({}))) as { code?: string; message?: string };
-      throw new SandboxError(body.code ?? "computerd_error", body.message ?? `computerd returned ${res.status}`, res.status);
+      throw new SandboxError(
+        body.code ?? "computerd_error",
+        body.message ?? `computerd returned ${res.status}`,
+        res.status,
+      );
     }
     return res;
   }
@@ -37,13 +55,26 @@ export class ComputerdClient {
     const res = await this.call("/exec", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ cmd, cwd: opts.cwd, env: opts.env, timeout_ms: opts.timeoutMs, stdin: opts.stdin }),
+      body: JSON.stringify({
+        cmd,
+        cwd: opts.cwd,
+        env: opts.env,
+        timeout_ms: opts.timeoutMs,
+        stdin: opts.stdin,
+      }),
       signal: opts.signal,
     });
     if (!res.body) throw new SandboxError("computerd_error", "exec returned no body");
     for await (const c of ndjson<RawChunk>(res.body)) {
       if (c.type === "start") yield { type: "start", execId: c.exec_id };
-      else if (c.type === "exit") yield { type: "exit", code: c.code, timedOut: c.timed_out, killed: c.killed, truncated: c.truncated };
+      else if (c.type === "exit")
+        yield {
+          type: "exit",
+          code: c.code,
+          timedOut: c.timed_out,
+          killed: c.killed,
+          truncated: c.truncated,
+        };
       else yield c;
     }
   }
@@ -81,7 +112,11 @@ export class ComputerdClient {
 
   /** Streams a gzip tarball of the home directory. */
   async archive(): Promise<ReadableStream<Uint8Array>> {
-    const res = await this.call("/archive", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+    const res = await this.call("/archive", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
     if (!res.body) throw new SandboxError("computerd_error", "archive returned no body");
     return res.body;
   }
@@ -111,7 +146,11 @@ export class ComputerdClient {
   }
 
   async input(event: InputEvent) {
-    await this.call("/input", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(event) });
+    await this.call("/input", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(event),
+    });
   }
 
   terminalUrl(opts: { cols?: number; rows?: number } = {}) {
@@ -127,7 +166,8 @@ export class ComputerdClient {
         const res = await fetch(`${this.baseUrl}/health`);
         if (res.ok) return;
       } catch {}
-      if (Date.now() > until) throw new SandboxError("computer_start_timeout", "computerd did not become ready");
+      if (Date.now() > until)
+        throw new SandboxError("computer_start_timeout", "computerd did not become ready");
       await new Promise((r) => setTimeout(r, 150));
     }
   }

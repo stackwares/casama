@@ -27,7 +27,12 @@ const needComputer = async (ctx: ToolContext): Promise<SandboxHandle> => {
 };
 
 /** Streams exec output to tool.output events, at most every 250 ms. */
-async function runStreaming(ctx: ToolContext, h: SandboxHandle, cmd: string, opts: { cwd?: string; timeoutMs?: number }) {
+async function runStreaming(
+  ctx: ToolContext,
+  h: SandboxHandle,
+  cmd: string,
+  opts: { cwd?: string; timeoutMs?: number },
+) {
   let pending = "";
   let out = "";
   let code = -1;
@@ -73,8 +78,13 @@ export function registerComputerTools(registry: ToolRegistry) {
       if (isDestructive(args.command) && ctx.checkpoint) {
         await ctx.checkpoint(`Before: ${args.command.slice(0, 120)}`);
       }
-      const r = await runStreaming(ctx, h, args.command, { cwd: args.cwd, timeoutMs: (args.timeout_s ?? 600) * 1000 });
-      const status = r.timedOut ? `timed out after ${args.timeout_s ?? 600}s` : `exit code ${r.code}`;
+      const r = await runStreaming(ctx, h, args.command, {
+        cwd: args.cwd,
+        timeoutMs: (args.timeout_s ?? 600) * 1000,
+      });
+      const status = r.timedOut
+        ? `timed out after ${args.timeout_s ?? 600}s`
+        : `exit code ${r.code}`;
       return {
         content: `${status}${r.truncated ? " (output truncated)" : ""}\n${r.out}`,
         preview: `${status}${r.out ? `: ${r.out.trim().split("\n").slice(-1)[0]?.slice(0, 200)}` : ""}`,
@@ -87,14 +97,21 @@ export function registerComputerTools(registry: ToolRegistry) {
     description: "Read a text file from your computer. Relative paths are inside ~/workspace.",
     risk: "low",
     requires,
-    schema: z.object({ path: z.string().min(1).max(1000), max_bytes: z.number().int().min(1).max(2_000_000).optional() }),
+    schema: z.object({
+      path: z.string().min(1).max(1000),
+      max_bytes: z.number().int().min(1).max(2_000_000).optional(),
+    }),
     async execute(args, ctx) {
       const data = await (await needComputer(ctx)).readFile(args.path);
       const slice = data.subarray(0, args.max_bytes ?? 200_000);
-      if (slice.includes(0)) throw new ToolError("binary_file", `${args.path} is a binary file (${data.length} bytes).`);
+      if (slice.includes(0))
+        throw new ToolError("binary_file", `${args.path} is a binary file (${data.length} bytes).`);
       const text = new TextDecoder().decode(slice);
       return {
-        content: data.length > slice.length ? `${text}\n[... ${data.length - slice.length} more bytes]` : text,
+        content:
+          data.length > slice.length
+            ? `${text}\n[... ${data.length - slice.length} more bytes]`
+            : text,
         preview: `${data.length} bytes`,
       };
     },
@@ -102,13 +119,18 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "files.write",
-    description: "Create or overwrite a text file in your computer. Relative paths are inside ~/workspace. Parent folders are created.",
+    description:
+      "Create or overwrite a text file in your computer. Relative paths are inside ~/workspace. Parent folders are created.",
     risk: "low",
     requires,
     schema: z.object({ path: z.string().min(1).max(1000), content: z.string().max(5_000_000) }),
     async execute(args, ctx) {
       await (await needComputer(ctx)).writeFile(args.path, new TextEncoder().encode(args.content));
-      return { content: `Wrote ${args.content.length} characters to ${args.path}.`, preview: `wrote ${args.path}`, artifactPath: args.path };
+      return {
+        content: `Wrote ${args.content.length} characters to ${args.path}.`,
+        preview: `wrote ${args.path}`,
+        artifactPath: args.path,
+      };
     },
   });
 
@@ -122,7 +144,12 @@ export function registerComputerTools(registry: ToolRegistry) {
       const entries = await (await needComputer(ctx)).listDir(args.path ?? "");
       if (!entries.length) return { content: "(empty)", preview: "0 entries" };
       return {
-        content: entries.map((e) => `${e.type === "dir" ? "d" : "-"} ${String(e.size).padStart(10)}  ${e.name}${e.type === "dir" ? "/" : ""}`).join("\n"),
+        content: entries
+          .map(
+            (e) =>
+              `${e.type === "dir" ? "d" : "-"} ${String(e.size).padStart(10)}  ${e.name}${e.type === "dir" ? "/" : ""}`,
+          )
+          .join("\n"),
         preview: `${entries.length} entries`,
       };
     },
@@ -130,14 +157,18 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "files.search",
-    description: "Search text files in your computer for a phrase (case-insensitive). Returns path, line and text.",
+    description:
+      "Search text files in your computer for a phrase (case-insensitive). Returns path, line and text.",
     risk: "low",
     requires,
     schema: z.object({ query: z.string().min(1).max(500), path: z.string().max(1000).optional() }),
     async execute(args, ctx) {
       const matches = await (await needComputer(ctx)).search(args.query, args.path);
       if (!matches.length) return { content: "No matches.", preview: "0 matches" };
-      return { content: matches.map((m) => `${m.path}:${m.line}: ${m.text}`).join("\n"), preview: `${matches.length} matches` };
+      return {
+        content: matches.map((m) => `${m.path}:${m.line}: ${m.text}`).join("\n"),
+        preview: `${matches.length} matches`,
+      };
     },
   });
 
@@ -147,14 +178,19 @@ export function registerComputerTools(registry: ToolRegistry) {
     const h = await needComputer(ctx);
     const r = await collectExec(h.exec(`agent-browser ${args}`, { timeoutMs }));
     const out = `${r.stdout}${r.stderr ? `\n${r.stderr}` : ""}`.trim();
-    if (r.code !== 0) throw new ToolError("browser_error", out.slice(0, 2000) || `agent-browser exited with ${r.code}`);
+    if (r.code !== 0)
+      throw new ToolError(
+        "browser_error",
+        out.slice(0, 2000) || `agent-browser exited with ${r.code}`,
+      );
     return out;
   };
   const web = (out: string, preview: string) => ({ content: wrapUntrusted("web", out), preview });
 
   registry.register({
     name: "browser.open",
-    description: "Open a URL in your computer's browser. Then use browser.snapshot to see interactive elements with refs like @e1.",
+    description:
+      "Open a URL in your computer's browser. Then use browser.snapshot to see interactive elements with refs like @e1.",
     risk: "low",
     requires,
     schema: z.object({ url: z.string().min(1).max(4000) }),
@@ -166,7 +202,8 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "browser.snapshot",
-    description: "Accessibility snapshot of the current page. Interactive elements get refs (@e1, @e2) to use with click and fill.",
+    description:
+      "Accessibility snapshot of the current page. Interactive elements get refs (@e1, @e2) to use with click and fill.",
     risk: "low",
     requires,
     schema: z.object({ interactive_only: z.boolean().optional() }),
@@ -196,7 +233,7 @@ export function registerComputerTools(registry: ToolRegistry) {
     schema: z.object({ ref: z.string().regex(/^@?e\d+$/) }),
     async execute(args, ctx) {
       const ref = args.ref.startsWith("@") ? args.ref : `@${args.ref}`;
-      return web(await browser(ctx, `click ${ref}`) || `Clicked ${ref}`, `clicked ${ref}`);
+      return web((await browser(ctx, `click ${ref}`)) || `Clicked ${ref}`, `clicked ${ref}`);
     },
   });
 
@@ -209,7 +246,10 @@ export function registerComputerTools(registry: ToolRegistry) {
     schema: z.object({ ref: z.string().regex(/^@?e\d+$/), text: z.string().max(20_000) }),
     async execute(args, ctx) {
       const ref = args.ref.startsWith("@") ? args.ref : `@${args.ref}`;
-      return web(await browser(ctx, `fill ${ref} ${shq(args.text)}`) || `Filled ${ref}`, `filled ${ref}`);
+      return web(
+        (await browser(ctx, `fill ${ref} ${shq(args.text)}`)) || `Filled ${ref}`,
+        `filled ${ref}`,
+      );
     },
   });
 
@@ -220,7 +260,7 @@ export function registerComputerTools(registry: ToolRegistry) {
     requires,
     schema: z.object({ text: z.string().max(20_000) }),
     async execute(args, ctx) {
-      return web(await browser(ctx, `keyboard type ${shq(args.text)}`) || "Typed", "typed");
+      return web((await browser(ctx, `keyboard type ${shq(args.text)}`)) || "Typed", "typed");
     },
   });
 
@@ -231,7 +271,10 @@ export function registerComputerTools(registry: ToolRegistry) {
     requires,
     schema: z.object({ key: z.string().min(1).max(50) }),
     async execute(args, ctx) {
-      return web(await browser(ctx, `press ${shq(args.key)}`) || `Pressed ${args.key}`, `pressed ${args.key}`);
+      return web(
+        (await browser(ctx, `press ${shq(args.key)}`)) || `Pressed ${args.key}`,
+        `pressed ${args.key}`,
+      );
     },
   });
 
@@ -240,35 +283,55 @@ export function registerComputerTools(registry: ToolRegistry) {
     description: "Scroll the page up or down.",
     risk: "low",
     requires,
-    schema: z.object({ direction: z.enum(["up", "down"]), amount: z.number().int().min(1).max(10_000).optional() }),
+    schema: z.object({
+      direction: z.enum(["up", "down"]),
+      amount: z.number().int().min(1).max(10_000).optional(),
+    }),
     async execute(args, ctx) {
-      return web(await browser(ctx, `scroll ${args.direction}${args.amount ? ` ${args.amount}` : ""}`) || "Scrolled", `scrolled ${args.direction}`);
+      return web(
+        (await browser(ctx, `scroll ${args.direction}${args.amount ? ` ${args.amount}` : ""}`)) ||
+          "Scrolled",
+        `scrolled ${args.direction}`,
+      );
     },
   });
 
   registry.register({
     name: "browser.screenshot",
-    description: "Save a screenshot of the current page to a file in your computer and return its path.",
+    description:
+      "Save a screenshot of the current page to a file in your computer and return its path.",
     risk: "low",
     requires,
     schema: z.object({ path: z.string().max(500).optional() }),
     async execute(args, ctx) {
       const path = args.path ?? `screenshots/${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
-      await browser(ctx, `screenshot ${shq(path.startsWith("/") ? path : `/home/kasama/workspace/${path}`)}`);
-      return { content: `Saved screenshot to ${path}.`, preview: `saved ${path}`, artifactPath: path };
+      await browser(
+        ctx,
+        `screenshot ${shq(path.startsWith("/") ? path : `/home/kasama/workspace/${path}`)}`,
+      );
+      return {
+        content: `Saved screenshot to ${path}.`,
+        preview: `saved ${path}`,
+        artifactPath: path,
+      };
     },
   });
 
   registry.register({
     name: "checkpoint.create",
-    description: "Save an undo point of your computer's files before risky changes. The user can restore it from the timeline.",
+    description:
+      "Save an undo point of your computer's files before risky changes. The user can restore it from the timeline.",
     risk: "low",
     requires,
     schema: z.object({ label: z.string().min(1).max(200) }),
     async execute(args, ctx) {
-      if (!ctx.checkpoint) throw new ToolError("no_computer", "This bot has no computer available.");
+      if (!ctx.checkpoint)
+        throw new ToolError("no_computer", "This bot has no computer available.");
       const cp = await ctx.checkpoint(args.label);
-      return { content: `Saved checkpoint ${cp.checkpointId} (${cp.label}).`, preview: `checkpoint ${cp.label}` };
+      return {
+        content: `Saved checkpoint ${cp.checkpointId} (${cp.label}).`,
+        preview: `checkpoint ${cp.label}`,
+      };
     },
   });
 

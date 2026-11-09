@@ -17,9 +17,14 @@ import {
   registerComputerTools,
 } from "@kasama/agent";
 import { createDb, type Database } from "@kasama/db";
-import { SupervisorProvider } from "@kasama/sandbox";
 import type { Logger } from "@kasama/observability";
-import { computersIdleWorkflow, configureWorkflows, maintenanceWorkflow, QUEUES } from "./workflows.ts";
+import { SupervisorProvider } from "@kasama/sandbox";
+import {
+  computersIdleWorkflow,
+  configureWorkflows,
+  maintenanceWorkflow,
+  QUEUES,
+} from "./workflows.ts";
 
 export interface WorkerOptions {
   databaseUrl: string;
@@ -76,7 +81,10 @@ export async function startWorker(opts: WorkerOptions) {
   const computers = opts.supervisor
     ? new ComputerService(db, new SupervisorProvider(opts.supervisor.url, opts.supervisor.token))
     : undefined;
-  const tools = builtinTools({ db, memory: async (orgId) => new MemoryService(db, await embedderFor(orgId)) });
+  const tools = builtinTools({
+    db,
+    memory: async (orgId) => new MemoryService(db, await embedderFor(orgId)),
+  });
   if (computers) registerComputerTools(tools);
   configureWorkflows({
     db,

@@ -6,6 +6,7 @@ lib/kasama_api.dart
 lib/src/api.dart
 lib/src/api/bots_api.dart
 lib/src/api/chat_api.dart
+lib/src/api/computers_api.dart
 lib/src/api/credentials_api.dart
 lib/src/api/memory_api.dart
 lib/src/api/runs_api.dart
@@ -26,13 +27,22 @@ lib/src/model/autonomy.dart
 lib/src/model/bot.dart
 lib/src/model/bot_budget.dart
 lib/src/model/bot_list.dart
+lib/src/model/checkpoint.dart
 lib/src/model/checkpoint_created_event.dart
 lib/src/model/checkpoint_created_event_payload.dart
+lib/src/model/checkpoint_list.dart
+lib/src/model/computer.dart
+lib/src/model/computer_file_entry.dart
+lib/src/model/computer_file_list.dart
+lib/src/model/computer_list.dart
+lib/src/model/computer_size.dart
+lib/src/model/computer_state.dart
 lib/src/model/computer_state_event.dart
 lib/src/model/computer_state_event_payload.dart
 lib/src/model/conversation.dart
 lib/src/model/conversation_list.dart
 lib/src/model/create_bot_request.dart
+lib/src/model/create_checkpoint_request.dart
 lib/src/model/create_conversation_request.dart
 lib/src/model/create_credential_request.dart
 lib/src/model/create_invite_request.dart
@@ -40,6 +50,7 @@ lib/src/model/create_organization_request.dart
 lib/src/model/credential.dart
 lib/src/model/credential_list.dart
 lib/src/model/credential_test_result.dart
+lib/src/model/delete_result.dart
 lib/src/model/health.dart
 lib/src/model/invite.dart
 lib/src/model/invite_role.dart
@@ -97,6 +108,7 @@ lib/src/model/tool_output_event.dart
 lib/src/model/tool_output_event_payload.dart
 lib/src/model/tool_started_event.dart
 lib/src/model/tool_started_event_payload.dart
+lib/src/model/upload_result.dart
 lib/src/model/usage_event.dart
 lib/src/model/usage_event_payload.dart
 lib/src/model/usage_report.dart

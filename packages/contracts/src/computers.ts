@@ -17,7 +17,11 @@ export const Computer = z
     provider: z.string(),
     profile: z.enum(["headless", "desktop"]),
     state: ComputerState,
-    size: z.object({ cpus: z.number().optional(), memory_mb: z.number().optional(), disk_gb: z.number().optional() }),
+    size: z.object({
+      cpus: z.number().optional(),
+      memory_mb: z.number().optional(),
+      disk_gb: z.number().optional(),
+    }),
     has_snapshot: z.boolean(),
     last_active_at: ts.nullable(),
     error: z.string().nullable(),
@@ -46,4 +50,6 @@ export const Checkpoint = z
   })
   .openapi("Checkpoint");
 
-export const CreateCheckpointRequest = z.object({ label: z.string().trim().min(1).max(200) }).openapi("CreateCheckpointRequest");
+export const CreateCheckpointRequest = z
+  .object({ label: z.string().trim().min(1).max(200) })
+  .openapi("CreateCheckpointRequest");

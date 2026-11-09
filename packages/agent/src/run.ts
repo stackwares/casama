@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import type { Database } from "@kasama/db";
 import { checkBudget, RUN_DEFAULTS } from "@kasama/domain";
 import type { Logger } from "@kasama/observability";
-import { sql } from "drizzle-orm";
-import { buildContext, offloadLargeResult } from "./context.ts";
 import type { SandboxHandle } from "@kasama/sandbox";
+import { sql } from "drizzle-orm";
 import type { ComputerService } from "./computers.ts";
+import { buildContext, offloadLargeResult } from "./context.ts";
 import type { CredentialResolver, ModelPolicy } from "./credentials.ts";
 import type { Embedder } from "./embeddings.ts";
 import { DeltaCoalescer, EventBus } from "./events.ts";
@@ -537,11 +537,13 @@ async function toolStep(
   });
   try {
     const { def, args } = deps.tools.parse(call.name, call.args);
-    const emit = (type: string, payload: Record<string, unknown>) => bus.append(info.runId, type, payload).then(() => undefined);
+    const emit = (type: string, payload: Record<string, unknown>) =>
+      bus.append(info.runId, type, payload).then(() => undefined);
     // The computer is started or restored on first use and touched on every call.
     let computer: { id: string; handle: SandboxHandle } | undefined;
     const getComputer = async () => {
-      if (!deps.computers) throw new ToolError("no_computer", "This bot has no computer available.");
+      if (!deps.computers)
+        throw new ToolError("no_computer", "This bot has no computer available.");
       if (!computer) {
         const row = await deps.computers.forBot(info.botId);
         computer = { id: row.id, handle: await deps.computers.ensureRunning(row.id, emit) };
@@ -563,8 +565,16 @@ async function toolStep(
       checkpoint: deps.computers
         ? async (label: string) => {
             const c = await getComputer();
-            const { checkpointId } = await (deps.computers as ComputerService).checkpoint(c.id, label, info.runId, c.handle);
-            await emit("checkpoint.created", { checkpoint_id: checkpointId, label: label.slice(0, 200) });
+            const { checkpointId } = await (deps.computers as ComputerService).checkpoint(
+              c.id,
+              label,
+              info.runId,
+              c.handle,
+            );
+            await emit("checkpoint.created", {
+              checkpoint_id: checkpointId,
+              label: label.slice(0, 200),
+            });
             return { checkpointId, label };
           }
         : undefined,

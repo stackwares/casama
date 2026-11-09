@@ -7,12 +7,15 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
+import { ComputerService } from "@kasama/agent";
 import { createDb } from "@kasama/db";
 import { startTestDatabase } from "@kasama/db/testing";
 import { createLogger } from "@kasama/observability";
+import { startSandboxStack } from "@kasama/sandbox/testing";
 import { SignJWT } from "jose";
 import { createApp } from "../src/api/app.ts";
 import { createTokenVerifier } from "../src/api/auth.ts";
+import { attachTerminal } from "../src/api/routes/computers.ts";
 import { pgRunEventHub } from "../src/api/run-event-hub.ts";
 import { dbosWorkflows } from "../src/api/workflows.ts";
 import { loadEnv } from "../src/env.ts";
@@ -86,35 +89,44 @@ const env = loadEnv({
   NODE_ENV: "test",
 });
 // The real worker, replaying recorded model responses (no provider calls, no keys needed).
-const fixtures = fileURLToPath(new URL("../test/fixtures/chat.json", import.meta.url));
+const fixtures = ["computer.json", "chat.json"]
+  .map((f) => fileURLToPath(new URL(`../test/fixtures/${f}`, import.meta.url)))
+  .join(",");
+// With E2E_SANDBOX=1 (and Docker), bots get real computers through a throwaway supervisor stack.
+const sandbox = process.env.E2E_SANDBOX === "1" ? await startSandboxStack() : undefined;
 const worker = await startWorker({
   databaseUrl: tdb.url,
   logger: createLogger("e2e-worker", "error"),
   logLevel: "error",
   modelFixtures: fixtures,
   embeddings: "hash",
+  supervisor: sandbox ? { url: sandbox.supervisorUrl, token: sandbox.token } : undefined,
 });
 const workflows = await dbosWorkflows(tdb.url);
 const hub = await pgRunEventHub(handle.client);
-const app = createApp({
+const deps = {
   workflows,
   hub,
+  computers: sandbox ? new ComputerService(handle.db, sandbox.provider) : undefined,
   env,
   db: handle.db,
   logger: createLogger("e2e", "error"),
   verifyToken: createTokenVerifier({ supabaseUrl: env.SUPABASE_URL, jwtSecret: secret }),
   email: disabledEmail,
   readiness: {},
-});
+};
+const app = createApp(deps);
 const server = serve({ fetch: app.fetch, port: 0 }, (info) => {
   console.log(`KASAMA_API_URL=http://127.0.0.1:${info.port}`);
 });
+attachTerminal(server as unknown as import("node:http").Server, deps);
 
 const stop = async () => {
   server.close();
   await workflows.close();
   await worker.stop();
   await hub.close();
+  await sandbox?.stop();
   auth.close();
   await handle.close();
   await tdb.stop();

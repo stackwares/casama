@@ -9,7 +9,10 @@ import { collectExec, type SandboxHandle, type SandboxProvider } from "./types.t
 const text = (b: Uint8Array) => new TextDecoder().decode(b);
 const bytes = (s: string) => new TextEncoder().encode(s);
 
-export function sandboxContract(name: string, setup: () => Promise<{ provider: SandboxProvider; cleanup?: () => Promise<void> }>) {
+export function sandboxContract(
+  name: string,
+  setup: () => Promise<{ provider: SandboxProvider; cleanup?: () => Promise<void> }>,
+) {
   describe(`SandboxProvider contract: ${name}`, () => {
     let provider: SandboxProvider;
     let cleanup: (() => Promise<void>) | undefined;
@@ -34,7 +37,8 @@ export function sandboxContract(name: string, setup: () => Promise<{ provider: S
 
     it("streams output as it is produced", async () => {
       const seen: string[] = [];
-      for await (const c of h.exec("for i in 1 2 3; do echo $i; sleep 0.2; done")) if (c.type === "stdout") seen.push(c.data);
+      for await (const c of h.exec("for i in 1 2 3; do echo $i; sleep 0.2; done"))
+        if (c.type === "stdout") seen.push(c.data);
       expect(seen.join("")).toBe("1\n2\n3\n");
       expect(seen.length).toBeGreaterThan(1);
     });

@@ -16,10 +16,13 @@ describe("destructive command detection", () => {
     "dd if=/dev/zero of=disk.img",
   ])("checkpoints before: %s", (cmd) => expect(isDestructive(cmd)).toBe(true));
 
-  it.each(["ls -la", "rm file.txt", "git status", "npm install", "echo rm -rf is dangerous > notes.txt".replace("rm -rf", "rm")])(
-    "leaves alone: %s",
-    (cmd) => expect(isDestructive(cmd)).toBe(false),
-  );
+  it.each([
+    "ls -la",
+    "rm file.txt",
+    "git status",
+    "npm install",
+    "echo rm -rf is dangerous > notes.txt".replace("rm -rf", "rm"),
+  ])("leaves alone: %s", (cmd) => expect(isDestructive(cmd)).toBe(false));
 });
 
 describe("shell quoting", () => {

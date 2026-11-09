@@ -129,5 +129,54 @@ void main() {
       expect(o, isNot(contains(key)));
     }
   }, skip: api == null ? 'set KASAMA_E2E_API (run scripts/e2e-cli.sh)' : false);
-}
 
+  test('Phase 2 gate: a bot researches the web and writes a report; files, checkpoints, sleep and restore', () async {
+    final dir = Directory.systemTemp.createTempSync('kasama-p2').path;
+    Future<(int, String, String)> raw(List<String> args) async {
+      final out = StringBuffer();
+      final err = StringBuffer();
+      final code = await runCli(['--api', api!, ...args], out: out, err: err, configDir: Directory(dir));
+      return (code, out.toString(), err.toString());
+    }
+
+    expect((await raw(['signup', '--email', 'p2@example.com', '--password', 'pw-123456'])).$1, 0);
+    expect((await raw(['org', 'create', 'Phase Two', '--slug', 'phase-two'])).$1, 0);
+    expect((await raw(['org', 'use', 'phase-two'])).$1, 0);
+    var (code, out, err) = await raw(['--json', 'credential', 'add', '--provider', 'openrouter', '--key', 'sk-or-v1-p2-test-key']);
+    final cred = jsonDecode(out) as Map<String, dynamic>;
+    (code, out, err) = await raw(['bot', 'create', 'Scout', '--credential', cred['id'] as String, '--model', 'fixture-main']);
+    expect(code, 0, reason: err);
+
+    (code, out, err) = await raw(['computer', 'status']);
+    expect(out, contains('stopped'));
+
+    (code, out, err) = await raw(['chat', 'Scout', 'Please research example.com and write a short report.']);
+    expect(code, 0, reason: err);
+    expect(err, contains('→ browser.open'));
+    expect(err, contains('→ shell.exec'));
+
+    final report = File('$dir/report.md');
+    (code, out, err) = await raw(['computer', 'files', 'get', 'report.md', '-O', report.path]);
+    expect(code, 0, reason: err);
+    expect(report.readAsStringSync(), contains('Example Domain'));
+
+    final local = File('$dir/upload.txt')..writeAsStringSync('from the CLI');
+    expect((await raw(['computer', 'files', 'put', local.path, 'notes/upload.txt'])).$1, 0);
+    (code, out, err) = await raw(['computer', 'files', 'ls', 'notes']);
+    expect(out, contains('upload.txt'));
+
+    (code, out, err) = await raw(['chat', 'Scout', 'Please clean up the old folder.']);
+    expect(code, 0, reason: err);
+    (code, out, err) = await raw(['--json', 'computer', 'checkpoints']);
+    final cps = (jsonDecode(out)['items'] as List).cast<Map<String, dynamic>>();
+    expect(cps.first['label'], startsWith('Before: rm -rf old'));
+    expect((await raw(['computer', 'restore', cps.first['id'] as String])).$1, 0);
+
+    (code, out, err) = await raw(['computer', 'stop']);
+    expect(out, contains('sleeping'));
+    (code, out, err) = await raw(['computer', 'start']);
+    expect(out, contains('running'));
+    (code, out, err) = await raw(['computer', 'files', 'get', 'notes/upload.txt']);
+    expect(out, 'from the CLI');
+  }, timeout: const Timeout(Duration(minutes: 6)), skip: (api == null || Platform.environment['E2E_SANDBOX'] != '1') ? 'set KASAMA_E2E_API and E2E_SANDBOX=1' : false);
+}

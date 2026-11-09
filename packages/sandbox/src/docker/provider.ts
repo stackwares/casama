@@ -6,15 +6,19 @@ import {
   type ComputerSpec,
   type ExecOptions,
   type InputEvent,
+  SandboxError,
   type SandboxHandle,
   type SandboxProvider,
-  SandboxError,
   type SnapshotRef,
 } from "../types.ts";
-import { type ContainerInspect, DockerApi } from "./api.ts";
+import type { ContainerInspect, DockerApi } from "./api.ts";
 
 export interface EgressControl {
-  register(ref: string, token: string, rules?: { allow?: string[]; deny?: string[] }): Promise<void>;
+  register(
+    ref: string,
+    token: string,
+    rules?: { allow?: string[]; deny?: string[] },
+  ): Promise<void>;
   unregister(ref: string): Promise<void>;
 }
 
@@ -26,7 +30,11 @@ export function egressControl(baseUrl: string, token: string): EgressControl {
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
     });
-    if (!res.ok) throw new SandboxError("egress_control_failed", `egress control ${method} returned ${res.status}`);
+    if (!res.ok)
+      throw new SandboxError(
+        "egress_control_failed",
+        `egress control ${method} returned ${res.status}`,
+      );
   };
   return {
     register: (ref, t, rules) => call("PUT", ref, { token: t, rules }),
@@ -62,7 +70,8 @@ export class DockerProvider implements SandboxProvider {
   }
 
   private names(ref: string) {
-    if (!/^[a-zA-Z0-9-]{1,64}$/.test(ref)) throw new SandboxError("bad_ref", "computer ref must be alphanumeric");
+    if (!/^[a-zA-Z0-9-]{1,64}$/.test(ref))
+      throw new SandboxError("bad_ref", "computer ref must be alphanumeric");
     const p = this.opts.namePrefix ?? "kasama";
     return { container: `${p}-c-${ref}`, network: `${p}-n-${ref}`, volume: `${p}-h-${ref}` };
   }
@@ -72,7 +81,10 @@ export class DockerProvider implements SandboxProvider {
   }
 
   private client(ref: string) {
-    return new ComputerdClient(`http://${this.names(ref).container}:7070`, this.token("computerd", ref));
+    return new ComputerdClient(
+      `http://${this.names(ref).container}:7070`,
+      this.token("computerd", ref),
+    );
   }
 
   private async connect(network: string, container: string) {
@@ -84,7 +96,9 @@ export class DockerProvider implements SandboxProvider {
   }
 
   private async disconnect(network: string, container: string) {
-    await this.opts.docker.call("POST", `/networks/${network}/disconnect`, { Container: container, Force: true }, [200]).catch(() => {});
+    await this.opts.docker
+      .call("POST", `/networks/${network}/disconnect`, { Container: container, Force: true }, [200])
+      .catch(() => {});
   }
 
   async create(spec: ComputerSpec): Promise<SandboxHandle> {
@@ -109,7 +123,14 @@ export class DockerProvider implements SandboxProvider {
     await this.opts.egress.control.register(spec.ref, egressToken);
     const proxyHost = `${this.opts.egress.containerName}:${this.opts.egress.proxyPort}`;
     const proxyUrl = `http://${spec.ref}:${egressToken}@${proxyHost}`;
-    const def = { cpus: 1, memoryMb: 1024, pids: 512, tmpMb: 1024, shmMb: 512, ...this.opts.defaults };
+    const def = {
+      cpus: 1,
+      memoryMb: 1024,
+      pids: 512,
+      tmpMb: 1024,
+      shmMb: 512,
+      ...this.opts.defaults,
+    };
     const cpus = spec.size?.cpus ?? def.cpus;
     const memoryMb = spec.size?.memoryMb ?? def.memoryMb;
     const env = {
@@ -158,7 +179,9 @@ export class DockerProvider implements SandboxProvider {
   }
 
   async get(ref: string) {
-    const c = await this.opts.docker.inspectOrNull<ContainerInspect>(`/containers/${this.names(ref).container}/json`);
+    const c = await this.opts.docker.inspectOrNull<ContainerInspect>(
+      `/containers/${this.names(ref).container}/json`,
+    );
     return c?.State.Running ? this.handle(ref) : null;
   }
 
@@ -181,11 +204,14 @@ export class DockerProvider implements SandboxProvider {
   async destroy(ref: string) {
     const n = this.names(ref);
     const d = this.opts.docker;
-    await d.call("DELETE", `/containers/${n.container}?force=true&v=true`).catch((e: SandboxError) => {
-      if (e.status !== 404) throw e;
-    });
+    await d
+      .call("DELETE", `/containers/${n.container}?force=true&v=true`)
+      .catch((e: SandboxError) => {
+        if (e.status !== 404) throw e;
+      });
     await this.disconnect(n.network, this.opts.egress.containerName);
-    if (this.opts.supervisorContainer) await this.disconnect(n.network, this.opts.supervisorContainer);
+    if (this.opts.supervisorContainer)
+      await this.disconnect(n.network, this.opts.supervisorContainer);
     await d.call("DELETE", `/networks/${n.network}`).catch(() => {});
     await d.call("DELETE", `/volumes/${n.volume}?force=true`).catch(() => {});
     await this.opts.egress.control.unregister(ref).catch(() => {});
@@ -194,12 +220,13 @@ export class DockerProvider implements SandboxProvider {
   /** Refs of computers that are running now. */
   async list(): Promise<string[]> {
     const filters = encodeURIComponent(JSON.stringify({ label: [LABEL] }));
-    const items = await this.opts.docker.call<Array<{ Labels: Record<string, string>; State: string; Names: string[] }>>(
-      "GET",
-      `/containers/json?filters=${filters}`,
-    );
+    const items = await this.opts.docker.call<
+      Array<{ Labels: Record<string, string>; State: string; Names: string[] }>
+    >("GET", `/containers/json?filters=${filters}`);
     const prefix = `/${this.opts.namePrefix ?? "kasama"}-c-`;
-    return items.filter((c) => c.Names.some((x) => x.startsWith(prefix))).map((c) => c.Labels[LABEL] as string);
+    return items
+      .filter((c) => c.Names.some((x) => x.startsWith(prefix)))
+      .map((c) => c.Labels[LABEL] as string);
   }
 
   handle(ref: string): SandboxHandle {

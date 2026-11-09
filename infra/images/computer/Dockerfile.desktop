@@ -1,0 +1,17 @@
+# Desktop computer: the headless image plus an X server, a lightweight window manager,
+# AT-SPI accessibility, agent-desktop and xdotool. The WebRTC streamer is added in Phase 5.
+#   docker build -f infra/images/computer/Dockerfile.desktop --build-arg BASE=kasama/computer-headless:dev -t kasama/computer-desktop:dev .
+ARG BASE=ghcr.io/stackwares/kasama-computer-headless:latest
+FROM ${BASE}
+ARG AGENT_DESKTOP_VERSION=1.2.0
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      xvfb x11-utils x11-xserver-utils openbox xdotool imagemagick xterm \
+      at-spi2-core libatk-adaptor dbus-x11 fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g agent-desktop@${AGENT_DESKTOP_VERSION}
+COPY infra/images/computer/desktop-start.sh /usr/local/bin/desktop-start
+RUN chmod +x /usr/local/bin/desktop-start
+ENV DISPLAY=:1 KASAMA_PROFILE=desktop
+USER kasama
+CMD ["desktop-start"]

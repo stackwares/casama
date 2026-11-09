@@ -10,7 +10,12 @@ export class DockerApi {
     this.version = version;
   }
 
-  call<T = unknown>(method: string, path: string, body?: unknown, okStatuses: number[] = [200, 201, 204, 304]): Promise<T> {
+  call<T = unknown>(
+    method: string,
+    path: string,
+    body?: unknown,
+    okStatuses: number[] = [200, 201, 204, 304],
+  ): Promise<T> {
     return new Promise((resolve, reject) => {
       const data = body === undefined ? undefined : JSON.stringify(body);
       const req = request(
@@ -18,7 +23,9 @@ export class DockerApi {
           socketPath: this.socketPath,
           method,
           path: `/${this.version}${path}`,
-          headers: data ? { "content-type": "application/json", "content-length": Buffer.byteLength(data) } : {},
+          headers: data
+            ? { "content-type": "application/json", "content-length": Buffer.byteLength(data) }
+            : {},
         },
         (res) => {
           const chunks: Buffer[] = [];
@@ -31,7 +38,13 @@ export class DockerApi {
               try {
                 message = (JSON.parse(text) as { message?: string }).message ?? text;
               } catch {}
-              return reject(new SandboxError(status === 404 ? "not_found" : "docker_error", `docker ${method} ${path}: ${status} ${message}`, status));
+              return reject(
+                new SandboxError(
+                  status === 404 ? "not_found" : "docker_error",
+                  `docker ${method} ${path}: ${status} ${message}`,
+                  status,
+                ),
+              );
             }
             if (!text) return resolve(undefined as T);
             try {
@@ -42,7 +55,9 @@ export class DockerApi {
           });
         },
       );
-      req.on("error", (err) => reject(new SandboxError("docker_unreachable", `docker socket: ${err.message}`)));
+      req.on("error", (err) =>
+        reject(new SandboxError("docker_unreachable", `docker socket: ${err.message}`)),
+      );
       if (data) req.write(data);
       req.end();
     });

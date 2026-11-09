@@ -57,24 +57,40 @@ describe("proxy", () => {
     },
   });
 
-  const auth = (ref: string, token: string) => `Basic ${Buffer.from(`${ref}:${token}`).toString("base64")}`;
+  const auth = (ref: string, token: string) =>
+    `Basic ${Buffer.from(`${ref}:${token}`).toString("base64")}`;
 
   function viaProxy(url: string, proxyAuth?: string) {
-    return new Promise<{ status: number; body: string; headers: Record<string, unknown> }>((resolve, reject) => {
-      const req = request({ host: "127.0.0.1", port: proxyPort, method: "GET", path: url, headers: proxyAuth ? { "proxy-authorization": proxyAuth } : {} }, (res) => {
-        let body = "";
-        res.on("data", (d) => (body += d));
-        res.on("end", () => resolve({ status: res.statusCode ?? 0, body, headers: res.headers }));
-      });
-      req.on("error", reject);
-      req.end();
-    });
+    return new Promise<{ status: number; body: string; headers: Record<string, unknown> }>(
+      (resolve, reject) => {
+        const req = request(
+          {
+            host: "127.0.0.1",
+            port: proxyPort,
+            method: "GET",
+            path: url,
+            headers: proxyAuth ? { "proxy-authorization": proxyAuth } : {},
+          },
+          (res) => {
+            let body = "";
+            res.on("data", (d) => (body += d));
+            res.on("end", () =>
+              resolve({ status: res.statusCode ?? 0, body, headers: res.headers }),
+            );
+          },
+        );
+        req.on("error", reject);
+        req.end();
+      },
+    );
   }
 
   function connectVia(target: string, proxyAuth: string) {
     return new Promise<string>((resolve, reject) => {
       const s = connect(proxyPort, "127.0.0.1", () => {
-        s.write(`CONNECT ${target} HTTP/1.1\r\nHost: ${target}\r\nProxy-Authorization: ${proxyAuth}\r\n\r\n`);
+        s.write(
+          `CONNECT ${target} HTTP/1.1\r\nHost: ${target}\r\nProxy-Authorization: ${proxyAuth}\r\n\r\n`,
+        );
       });
       let data = "";
       s.on("data", (d) => {
@@ -89,7 +105,10 @@ describe("proxy", () => {
   }
 
   beforeAll(async () => {
-    target = createServer((req, res) => res.end(`hello from ${req.headers.host}`)).listen(0, "127.0.0.1");
+    target = createServer((req, res) => res.end(`hello from ${req.headers.host}`)).listen(
+      0,
+      "127.0.0.1",
+    );
     await once(target, "listening");
     targetPort = (target.address() as AddressInfo).port;
     DNS["public.test"] = ["127.0.0.1"];
@@ -115,7 +134,10 @@ describe("proxy", () => {
 
   it("requires per-computer auth", async () => {
     expect((await viaProxy(`http://public.test:${targetPort}/`)).status).toBe(407);
-    expect((await viaProxy(`http://public.test:${targetPort}/`, auth("c1", "wrong-token-xxxxxxxxxx"))).status).toBe(407);
+    expect(
+      (await viaProxy(`http://public.test:${targetPort}/`, auth("c1", "wrong-token-xxxxxxxxxx")))
+        .status,
+    ).toBe(407);
   });
 
   it("forwards allowed HTTP requests to the vetted address", async () => {
@@ -139,11 +161,15 @@ describe("proxy", () => {
 
   it("rate-limits new connections per computer", async () => {
     let limited = false;
-    for (let i = 0; i < 30 && !limited; i++) limited = (await viaProxy(`http://public.test:${targetPort}/`, good())).status === 429;
+    for (let i = 0; i < 30 && !limited; i++)
+      limited = (await viaProxy(`http://public.test:${targetPort}/`, good())).status === 429;
     expect(limited).toBe(true);
   });
 
   it("protects the control API", async () => {
-    expect((await fetch(`http://127.0.0.1:${controlPort}/computers/c2`, { method: "PUT", body: "{}" })).status).toBe(401);
+    expect(
+      (await fetch(`http://127.0.0.1:${controlPort}/computers/c2`, { method: "PUT", body: "{}" }))
+        .status,
+    ).toBe(401);
   });
 });

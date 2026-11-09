@@ -20,7 +20,9 @@ export interface ComputerRow {
 }
 
 /** The provider plus optional object deletion (the supervisor client has it). */
-export type ComputerProvider = SandboxProvider & { deleteObjects?: (keys: string[]) => Promise<void> };
+export type ComputerProvider = SandboxProvider & {
+  deleteObjects?: (keys: string[]) => Promise<void>;
+};
 
 type Emit = (type: string, payload: Record<string, unknown>) => Promise<void>;
 
@@ -50,11 +52,18 @@ export class ComputerService {
   }
 
   async byId(id: string): Promise<ComputerRow | null> {
-    const [row] = await this.db.execute<ComputerRow>(sql`select * from public.computers where id = ${id}::uuid`);
+    const [row] = await this.db.execute<ComputerRow>(
+      sql`select * from public.computers where id = ${id}::uuid`,
+    );
     return row ?? null;
   }
 
-  private async setState(id: string, state: string, emit?: Emit, extra: Record<string, unknown> = {}) {
+  private async setState(
+    id: string,
+    state: string,
+    emit?: Emit,
+    extra: Record<string, unknown> = {},
+  ) {
     await this.db.execute(sql`
       update public.computers set state = ${state}, error = ${(extra.error as string) ?? null},
         running_since = case when ${state} = 'running' then coalesce(running_since, now()) when ${state} in ('sleeping', 'stopped', 'error') then null else running_since end,
@@ -66,7 +75,10 @@ export class ComputerService {
   /** Records computer-seconds for the interval that is ending. */
   private async recordUsage(c: ComputerRow) {
     if (!c.running_since) return;
-    const seconds = Math.max(0, Math.round((Date.now() - new Date(c.running_since).getTime()) / 1000));
+    const seconds = Math.max(
+      0,
+      Math.round((Date.now() - new Date(c.running_since).getTime()) / 1000),
+    );
     if (seconds === 0) return;
     // Rough cost per vCPU-hour; replaced by plan pricing in Phase 7.
     const cost = (seconds / 3600) * 0.01 * (c.size?.cpus ?? 1);
@@ -79,12 +91,16 @@ export class ComputerService {
   async ensureRunning(computerId: string, emit?: Emit): Promise<SandboxHandle> {
     return this.db.transaction(async (tx) => {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`computer:${computerId}`}))`);
-      const [c] = await tx.execute<ComputerRow>(sql`select * from public.computers where id = ${computerId}::uuid`);
+      const [c] = await tx.execute<ComputerRow>(
+        sql`select * from public.computers where id = ${computerId}::uuid`,
+      );
       if (!c) throw new Error("computer_not_found");
       if (c.state === "running" || c.state === "idle") {
         const h = await this.provider.get(computerId);
         if (h) {
-          await tx.execute(sql`update public.computers set last_active_at = now(), state = 'running' where id = ${computerId}::uuid`);
+          await tx.execute(
+            sql`update public.computers set last_active_at = now(), state = 'running' where id = ${computerId}::uuid`,
+          );
           return h;
         }
       }
@@ -99,14 +115,18 @@ export class ComputerService {
         await this.setState(computerId, "running", emit);
         return h;
       } catch (err) {
-        await this.setState(computerId, "error", emit, { error: (err as Error).message.slice(0, 500) });
+        await this.setState(computerId, "error", emit, {
+          error: (err as Error).message.slice(0, 500),
+        });
         throw err;
       }
     });
   }
 
   async touch(computerId: string) {
-    await this.db.execute(sql`update public.computers set last_active_at = now() where id = ${computerId}::uuid`);
+    await this.db.execute(
+      sql`update public.computers set last_active_at = now() where id = ${computerId}::uuid`,
+    );
   }
 
   /** Archives the home directory to object storage and stops the computer. */
@@ -119,9 +139,12 @@ export class ComputerService {
     }
     const snap = await this.provider.sleep(computerId);
     await this.recordUsage(c);
-    await this.db.execute(sql`update public.computers set snapshot_ref = ${JSON.stringify(snap)}::jsonb where id = ${computerId}::uuid`);
+    await this.db.execute(
+      sql`update public.computers set snapshot_ref = ${JSON.stringify(snap)}::jsonb where id = ${computerId}::uuid`,
+    );
     await this.setState(computerId, "sleeping", emit);
-    if (c.snapshot_ref?.key && c.snapshot_ref.key !== snap.key) await this.provider.deleteObjects?.([c.snapshot_ref.key]).catch(() => {});
+    if (c.snapshot_ref?.key && c.snapshot_ref.key !== snap.key)
+      await this.provider.deleteObjects?.([c.snapshot_ref.key]).catch(() => {});
   }
 
   /** Sleeps running computers with no activity, open terminals or running commands for idleMs. */
@@ -150,7 +173,12 @@ export class ComputerService {
     await this.sleep(computerId, emit);
   }
 
-  async checkpoint(computerId: string, label: string, runId: string | null, handle?: SandboxHandle) {
+  async checkpoint(
+    computerId: string,
+    label: string,
+    runId: string | null,
+    handle?: SandboxHandle,
+  ) {
     const c = await this.byId(computerId);
     if (!c) throw new Error("computer_not_found");
     const h = handle ?? (await this.ensureRunning(computerId));
@@ -172,7 +200,8 @@ export class ComputerService {
           from public.checkpoints where computer_id = ${computerId}::uuid
         ) t where n > ${CHECKPOINT_KEEP} or created_at < now() - (${CHECKPOINT_MAX_AGE_DAYS} * interval '1 day')
       ) returning id, storage_ref ->> 'key' as key`);
-    if (doomed.length) await this.provider.deleteObjects?.(doomed.map((d) => d.key)).catch(() => {});
+    if (doomed.length)
+      await this.provider.deleteObjects?.(doomed.map((d) => d.key)).catch(() => {});
     return doomed.length;
   }
 

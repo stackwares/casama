@@ -7,9 +7,9 @@ import {
   type FileEntry,
   type HealthStatus,
   type InputEvent,
+  SandboxError,
   type SandboxHandle,
   type SandboxProvider,
-  SandboxError,
   type SearchMatch,
   type SnapshotRef,
 } from "./types.ts";
@@ -31,14 +31,24 @@ export class SupervisorProvider implements SandboxProvider {
     try {
       res = await fetch(`${this.baseUrl}${path}`, {
         ...init,
-        headers: { authorization: `Bearer ${this.token}`, ...(init.headers as Record<string, string>) },
+        headers: {
+          authorization: `Bearer ${this.token}`,
+          ...(init.headers as Record<string, string>),
+        },
       });
     } catch (err) {
-      throw new SandboxError("supervisor_unreachable", `supervisor unreachable: ${(err as Error).message}`);
+      throw new SandboxError(
+        "supervisor_unreachable",
+        `supervisor unreachable: ${(err as Error).message}`,
+      );
     }
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as { code?: string; message?: string };
-      throw new SandboxError(body.code ?? "supervisor_error", body.message ?? `supervisor returned ${res.status}`, res.status);
+      throw new SandboxError(
+        body.code ?? "supervisor_error",
+        body.message ?? `supervisor returned ${res.status}`,
+        res.status,
+      );
     }
     return res;
   }
@@ -91,24 +101,48 @@ export class SupervisorProvider implements SandboxProvider {
         const res = await self.call(`${base}/exec`, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ cmd, cwd: opts.cwd, env: opts.env, timeoutMs: opts.timeoutMs, stdin: opts.stdin }),
+          body: JSON.stringify({
+            cmd,
+            cwd: opts.cwd,
+            env: opts.env,
+            timeoutMs: opts.timeoutMs,
+            stdin: opts.stdin,
+          }),
           signal: opts.signal,
         });
         if (!res.body) throw new SandboxError("supervisor_error", "exec returned no body");
         yield* ndjson<ExecChunk>(res.body);
       },
-      kill: async (id) => void (await self.call(`${base}/exec/${encodeURIComponent(id)}/kill`, { method: "POST" })),
-      readFile: async (p) => new Uint8Array(await (await self.call(`${base}/files?path=${encodeURIComponent(p)}`)).arrayBuffer()),
-      writeFile: async (p, data) => void (await self.call(`${base}/files?path=${encodeURIComponent(p)}`, { method: "PUT", body: data })),
-      deleteFile: async (p) => void (await self.call(`${base}/files?path=${encodeURIComponent(p)}`, { method: "DELETE" })),
+      kill: async (id) =>
+        void (await self.call(`${base}/exec/${encodeURIComponent(id)}/kill`, { method: "POST" })),
+      readFile: async (p) =>
+        new Uint8Array(
+          await (await self.call(`${base}/files?path=${encodeURIComponent(p)}`)).arrayBuffer(),
+        ),
+      writeFile: async (p, data) =>
+        void (await self.call(`${base}/files?path=${encodeURIComponent(p)}`, {
+          method: "PUT",
+          body: data,
+        })),
+      deleteFile: async (p) =>
+        void (await self.call(`${base}/files?path=${encodeURIComponent(p)}`, { method: "DELETE" })),
       listDir: async (p) =>
-        ((await (await self.call(`${base}/files/list?path=${encodeURIComponent(p)}`)).json()) as { entries: FileEntry[] }).entries,
+        (
+          (await (await self.call(`${base}/files/list?path=${encodeURIComponent(p)}`)).json()) as {
+            entries: FileEntry[];
+          }
+        ).entries,
       search: async (q, p) =>
-        ((await (await self.json(`${base}/files/search`, "POST", { query: q, path: p })).json()) as { matches: SearchMatch[] }).matches,
+        (
+          (await (
+            await self.json(`${base}/files/search`, "POST", { query: q, path: p })
+          ).json()) as { matches: SearchMatch[] }
+        ).matches,
       enableDesktop: async () => {
         throw new SandboxError("desktop_unavailable", "Desktop computers arrive in Phase 5");
       },
-      screenshot: async () => new Uint8Array(await (await self.call(`${base}/screenshot`)).arrayBuffer()),
+      screenshot: async () =>
+        new Uint8Array(await (await self.call(`${base}/screenshot`)).arrayBuffer()),
       input: async (e: InputEvent) => void (await self.json(`${base}/input`, "POST", e)),
       streamEndpoint: async () => {
         throw new SandboxError("stream_unavailable", "Live view arrives in Phase 5");
@@ -117,7 +151,8 @@ export class SupervisorProvider implements SandboxProvider {
         url: `${self.baseUrl.replace(/^http/, "ws")}${base}/terminal?cols=${opts.cols ?? 120}&rows=${opts.rows ?? 32}`,
         headers: { authorization: `Bearer ${self.token}` },
       }),
-      checkpoint: async (label) => (await (await self.json(`${base}/checkpoints`, "POST", { label })).json()) as CheckpointRef,
+      checkpoint: async (label) =>
+        (await (await self.json(`${base}/checkpoints`, "POST", { label })).json()) as CheckpointRef,
       restore: async (cp) => void (await self.json(`${base}/checkpoints/restore`, "POST", cp)),
       health: async () => (await (await self.call(`${base}/health`)).json()) as HealthStatus,
     };

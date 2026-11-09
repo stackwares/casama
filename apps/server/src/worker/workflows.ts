@@ -1,8 +1,8 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import {
+  type ComputerService,
   CredentialResolver,
   collect,
-  type ComputerService,
   type ModelGateway,
   type RunDeps,
   runAgent,
@@ -19,7 +19,12 @@ export const WORKFLOWS = {
 
 /** Set by startWorker before DBOS launches; workflows read it when they run. */
 let runtime:
-  | { agent: Omit<RunDeps, "step">; db: Database; gateway: ModelGateway; computers?: ComputerService }
+  | {
+      agent: Omit<RunDeps, "step">;
+      db: Database;
+      gateway: ModelGateway;
+      computers?: ComputerService;
+    }
   | undefined;
 export function configureWorkflows(r: NonNullable<typeof runtime>) {
   runtime = r;

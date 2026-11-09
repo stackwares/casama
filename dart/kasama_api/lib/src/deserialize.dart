@@ -5,13 +5,21 @@ import 'package:kasama_api/src/model/approval_resolved_event_payload.dart';
 import 'package:kasama_api/src/model/bot.dart';
 import 'package:kasama_api/src/model/bot_budget.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
+import 'package:kasama_api/src/model/checkpoint.dart';
 import 'package:kasama_api/src/model/checkpoint_created_event.dart';
 import 'package:kasama_api/src/model/checkpoint_created_event_payload.dart';
+import 'package:kasama_api/src/model/checkpoint_list.dart';
+import 'package:kasama_api/src/model/computer.dart';
+import 'package:kasama_api/src/model/computer_file_entry.dart';
+import 'package:kasama_api/src/model/computer_file_list.dart';
+import 'package:kasama_api/src/model/computer_list.dart';
+import 'package:kasama_api/src/model/computer_size.dart';
 import 'package:kasama_api/src/model/computer_state_event.dart';
 import 'package:kasama_api/src/model/computer_state_event_payload.dart';
 import 'package:kasama_api/src/model/conversation.dart';
 import 'package:kasama_api/src/model/conversation_list.dart';
 import 'package:kasama_api/src/model/create_bot_request.dart';
+import 'package:kasama_api/src/model/create_checkpoint_request.dart';
 import 'package:kasama_api/src/model/create_conversation_request.dart';
 import 'package:kasama_api/src/model/create_credential_request.dart';
 import 'package:kasama_api/src/model/create_invite_request.dart';
@@ -19,6 +27,7 @@ import 'package:kasama_api/src/model/create_organization_request.dart';
 import 'package:kasama_api/src/model/credential.dart';
 import 'package:kasama_api/src/model/credential_list.dart';
 import 'package:kasama_api/src/model/credential_test_result.dart';
+import 'package:kasama_api/src/model/delete_result.dart';
 import 'package:kasama_api/src/model/health.dart';
 import 'package:kasama_api/src/model/invite.dart';
 import 'package:kasama_api/src/model/lease_changed_event.dart';
@@ -72,6 +81,7 @@ import 'package:kasama_api/src/model/tool_output_event.dart';
 import 'package:kasama_api/src/model/tool_output_event_payload.dart';
 import 'package:kasama_api/src/model/tool_started_event.dart';
 import 'package:kasama_api/src/model/tool_started_event_payload.dart';
+import 'package:kasama_api/src/model/upload_result.dart';
 import 'package:kasama_api/src/model/usage_event.dart';
 import 'package:kasama_api/src/model/usage_event_payload.dart';
 import 'package:kasama_api/src/model/usage_report.dart';
@@ -112,10 +122,27 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BotBudget.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotList':
           return BotList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Checkpoint':
+          return Checkpoint.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CheckpointCreatedEvent':
           return CheckpointCreatedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CheckpointCreatedEventPayload':
           return CheckpointCreatedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CheckpointList':
+          return CheckpointList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Computer':
+          return Computer.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerFileEntry':
+          return ComputerFileEntry.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerFileList':
+          return ComputerFileList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerList':
+          return ComputerList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerSize':
+          return ComputerSize.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerState':
+          
+          
         case 'ComputerStateEvent':
           return ComputerStateEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerStateEventPayload':
@@ -126,6 +153,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ConversationList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateBotRequest':
           return CreateBotRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateCheckpointRequest':
+          return CreateCheckpointRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateConversationRequest':
           return CreateConversationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateCredentialRequest':
@@ -140,6 +169,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CredentialList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CredentialTestResult':
           return CredentialTestResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeleteResult':
+          return DeleteResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
           return Health.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Invite':
@@ -258,6 +289,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ToolStartedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ToolStartedEventPayload':
           return ToolStartedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UploadResult':
+          return UploadResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UsageEvent':
           return UsageEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UsageEventPayload':

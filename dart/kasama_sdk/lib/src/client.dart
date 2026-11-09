@@ -60,6 +60,48 @@ class KasamaClient {
   CredentialsApi get credentials => api.getCredentialsApi();
   MemoryApi get memory => api.getMemoryApi();
   UsageApi get usage => api.getUsageApi();
+  ComputersApi get computers => api.getComputersApi();
+
+  Future<Map<String, String>> _authHeader() async {
+    final session = await currentSession();
+    return {if (session != null) 'authorization': 'Bearer ${session.accessToken}'};
+  }
+
+  /// Uploads raw bytes to a path in a computer.
+  Future<UploadResult> uploadComputerFile(String computerId, String path, List<int> bytes) async {
+    final res = await api.dio.put<Map<String, dynamic>>(
+      '/v1/computers/$computerId/files',
+      queryParameters: {'path': path},
+      data: Stream.fromIterable([bytes]),
+      options: Options(headers: {
+        ...await _authHeader(),
+        'content-type': 'application/octet-stream',
+        'content-length': bytes.length,
+      }),
+    );
+    return UploadResult.fromJson(res.data!);
+  }
+
+  /// Downloads a file from a computer.
+  Future<List<int>> downloadComputerFile(String computerId, String path) async {
+    final res = await api.dio.get<List<int>>(
+      '/v1/computers/$computerId/files',
+      queryParameters: {'path': path},
+      options: Options(responseType: ResponseType.bytes, headers: await _authHeader()),
+    );
+    return res.data!;
+  }
+
+  /// WebSocket URL and headers for a computer's interactive terminal.
+  Future<(Uri, Map<String, String>)> terminalEndpoint(String computerId, {int cols = 120, int rows = 32}) async {
+    final base = Uri.parse(baseUrl);
+    final uri = base.replace(
+      scheme: base.scheme == 'https' ? 'wss' : 'ws',
+      path: '/v1/computers/$computerId/terminal',
+      queryParameters: {'cols': '$cols', 'rows': '$rows'},
+    );
+    return (uri, await _authHeader());
+  }
 
   /// Returns the stored session, refreshing it when it is about to expire.
   Future<AuthSession?> currentSession() async {

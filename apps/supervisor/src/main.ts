@@ -1,4 +1,10 @@
-import { DockerApi, DockerProvider, egressControl, FsObjectStore, S3ObjectStore } from "@kasama/sandbox";
+import {
+  DockerApi,
+  DockerProvider,
+  egressControl,
+  FsObjectStore,
+  S3ObjectStore,
+} from "@kasama/sandbox";
 import { startSupervisor } from "./app.ts";
 
 const env = process.env;
@@ -34,7 +40,10 @@ const provider = new DockerProvider({
   egress: {
     containerName: env.EGRESS_CONTAINER ?? "kasama-egress",
     proxyPort: Number(env.EGRESS_PROXY_PORT ?? 3128),
-    control: egressControl(env.EGRESS_CONTROL_URL ?? "http://kasama-egress:3129", need("EGRESS_CONTROL_TOKEN")),
+    control: egressControl(
+      env.EGRESS_CONTROL_URL ?? "http://kasama-egress:3129",
+      need("EGRESS_CONTROL_TOKEN"),
+    ),
   },
   supervisorContainer: env.SUPERVISOR_CONTAINER,
   namePrefix: env.NAME_PREFIX ?? "kasama",
@@ -46,5 +55,7 @@ const provider = new DockerProvider({
 
 const port = Number(env.PORT ?? 8788);
 startSupervisor(provider, token, port);
-console.log(JSON.stringify({ msg: "supervisor listening", port, runtime: env.SANDBOX_RUNTIME || "default" }));
+console.log(
+  JSON.stringify({ msg: "supervisor listening", port, runtime: env.SANDBOX_RUNTIME || "default" }),
+);
 for (const s of ["SIGTERM", "SIGINT"] as const) process.once(s, () => process.exit(0));
