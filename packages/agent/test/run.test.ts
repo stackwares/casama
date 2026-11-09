@@ -30,7 +30,7 @@ beforeAll(async () => {
   >`insert into public.organizations (name, slug) values ('Run Org', 'run-org') returning id`;
   orgId = org!.id;
   await tdb.admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${userId}, 'owner')`;
-  await tdb.admin`update public.profiles set timezone = 'Asia/Manila' where user_id = ${userId}`;
+  await tdb.admin`update public.profiles set timezone = 'America/Chicago' where user_id = ${userId}`;
   const [cred] = await tdb.admin<{ id: string }[]>`
     insert into public.model_credentials (org_id, provider, label, vault_secret_id)
     values (${orgId}, 'openrouter', 'Main', vault.create_secret(${SECRET})) returning id`;
@@ -259,7 +259,7 @@ describe("runAgent", () => {
       r.messages.at(-1)?.content.includes("what is my favorite color"),
     );
     expect(req?.system.join("\n")).toMatch(/teal/i);
-    expect(req?.system[2]).toContain("Asia/Manila");
+    expect(req?.system[2]).toContain("America/Chicago");
   });
 
   it("never writes model keys into events or messages", async () => {
@@ -375,18 +375,18 @@ describe("memory search", () => {
       orgId,
       botId,
       kind: "fact",
-      content: "Oliver works from Manila.",
+      content: "Oliver works from Chicago.",
     });
     const b = await memory.write({
       orgId,
       botId,
       kind: "fact",
-      content: "oliver works from manila",
+      content: "oliver works from chicago",
     });
     expect(b).toEqual({ id: a.id, created: false });
     await memory.write({ orgId, botId, kind: "fact", content: "The launch is planned for March." });
     const hits = await memory.recall(botId, "Where does Oliver work from?");
-    expect(hits[0]?.content).toMatch(/manila/i);
+    expect(hits[0]?.content).toMatch(/chicago/i);
     const [{ n } = { n: "0" }] = await tdb.admin<
       { n: string }[]
     >`select count(*) as n from public.memories where bot_id = ${botId}`;

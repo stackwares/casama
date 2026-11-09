@@ -4,7 +4,7 @@ This is the as-built view. [SPEC.md](../SPEC.md) is the target; this file tracks
 
 ## Status
 
-**Phases 0 (backend foundations), 1 (bots and chat) and 2 (computers): built.** See "Build status" at the end.
+**Phases 0 to 3 (backend, bots and chat, computers, the Flutter app): built.** See "Build status" at the end.
 
 ## Components today
 
@@ -64,6 +64,16 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - **packages/agent/src/computers.ts**: `ComputerService` (which computer a bot uses, start or restore under an advisory lock, idle sleep, checkpoints with retention, usage seconds). **tools/computer.ts**: `shell.exec`, `files.*`, `browser.*`, `checkpoint.create`.
 - **API**: `/v1/computers` list, get, start, stop, restart, files (list, download, upload, delete), checkpoints (list, create, restore) and the terminal WebSocket. **CLI**: `kasama computer status|start|stop|shell|files|checkpoints|restore`.
 
+## Flutter app (Phase 3)
+
+`client/` is one Flutter app for web, iOS, Android, macOS, Windows and Linux.
+
+- **core/**: `Backend` (interface) and `SupabaseBackend` (Supabase for reads and simple edits under RLS, the generated API client for commands, Realtime plus catch-up for live run events), Riverpod providers, go_router routes with auth and onboarding redirects, theme.
+- **features/**: auth (email and password, magic link, Google, Apple), onboarding (workspace, model key, first bot), bots list with status and today's cost, chat (streaming text, tool cards with live output, notices, stop, conversations), activity timeline with filters and checkpoint restore, computer (state, screen, terminal, files, checkpoints), memory (edit, pin, delete), skills, settings (workspace, invites, model keys, usage), bot settings.
+- **Layout**: bottom navigation under 700 px, a navigation rail under 1200 px, and three panes (bots, chat, computer) on wider screens.
+- **Strings**: every user-facing string is in `lib/l10n/app_en.arb` (English only in v1).
+- **Tests**: widget tests with a fake backend (`flutter test`); `integration_test/app_flow_test.dart` runs sign-up, onboarding, streaming chat and memory recall against the real local stack (`scripts/e2e-app.sh`), verified on macOS, the iOS Simulator, the Android emulator and web (headless Chrome for Testing).
+
 ## Model keys
 
 Keys go into Supabase Vault through the API's server role and are never returned. Only the worker reads `vault.decrypted_secrets`. The credential test is a worker workflow. Every event, message and tool result passes through a redactor seeded with the bot's model keys.
@@ -81,11 +91,12 @@ Keys go into Supabase Vault through the API's server role and are never returned
 
 ## Build status
 
-| Phase                 | State       | Notes                                                                                                                                                                                 |
-| --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0 Backend foundations | Built       | CLI signup, login, workspace, invite and join; RLS isolation; CI config                                                                                                               |
-| 1 Backend MVP         | Built       | Gate verified locally with recorded model fixtures: CLI chat streams; killing the worker mid-run resumes; a fact from one chat is recalled in another; no API response contains a key |
-| 2 Computers | Built | Gate verified locally on Docker Desktop (runc): from the CLI a bot researches a web page and writes a report; sleep and restore keep files and browser logins; restoring a checkpoint reverts files; metadata and internal addresses are blocked. gVisor not verified (needs a Linux host) |
-| 3 to 8 | Not started | |
+| Phase                 | State       | Notes                                                                                                                                                                                                                                                                                      |
+| --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0 Backend foundations | Built       | CLI signup, login, workspace, invite and join; RLS isolation; CI config                                                                                                                                                                                                                    |
+| 1 Backend MVP         | Built       | Gate verified locally with recorded model fixtures: CLI chat streams; killing the worker mid-run resumes; a fact from one chat is recalled in another; no API response contains a key                                                                                                      |
+| 2 Computers           | Built       | Gate verified locally on Docker Desktop (runc): from the CLI a bot researches a web page and writes a report; sleep and restore keep files and browser logins; restoring a checkpoint reverts files; metadata and internal addresses are blocked. gVisor not verified (needs a Linux host) |
+| 3 MVP app             | Built       | Same end-to-end flow passes on macOS, iOS Simulator, Android emulator and web against real local Supabase. The tester gate (10 testers for a week) needs store accounts and people                                                                                                         |
+| 4 to 8                | Not started |                                                                                                                                                                                                                                                                                            |
 
 Known gaps carried forward: attachments have a table but no upload flow yet (Phase 3 app); the worker uses the server's database connection instead of a dedicated least-privilege role (D-016); live provider calls are wired but only exercised with recorded fixtures here.

@@ -12,6 +12,8 @@ export const EnvSchema = z.object({
   /** Legacy HS256 secret. When unset, tokens are verified against the project's JWKS. */
   SUPABASE_JWT_SECRET: z.string().optional(),
   PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
+  /** Extra comma-separated origins allowed to call the API from a browser. */
+  CORS_ORIGINS: z.string().default(""),
   BILLING_ENABLED: bool.default(false),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Kasama <no-reply@localhost>"),

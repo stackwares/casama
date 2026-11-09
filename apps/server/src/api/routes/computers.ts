@@ -218,6 +218,32 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     return c.json(await reload(id), 200);
   });
 
+  app.openapi(routes.computerScreenshot, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const h = await handle(claims, id);
+    let png: Uint8Array;
+    try {
+      png = await h.screenshot();
+    } catch (err) {
+      if (!(err instanceof SandboxError) || err.status !== 501) throw err;
+      // Headless: capture the bot's browser page instead, if a browser is open.
+      const { collectExec } = await import("@kasama/sandbox");
+      const r = await collectExec(
+        h.exec("agent-browser screenshot /tmp/kasama-screen.png >/dev/null 2>&1 && echo ok", {
+          timeoutMs: 20_000,
+        }),
+      );
+      if (!r.stdout.includes("ok"))
+        throw new ApiError(409, "nothing_to_show", "No desktop or open browser page to capture");
+      png = await sandbox(() => h.readFile("/tmp/kasama-screen.png"));
+    }
+    return c.body(Buffer.from(png), 200, {
+      "content-type": "image/png",
+      "cache-control": "no-store",
+    }) as never;
+  });
+
   app.openapi(routes.computerTerminal, async () => {
     throw new ApiError(400, "websocket_required", "Connect to this endpoint with a WebSocket");
   });

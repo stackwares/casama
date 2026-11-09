@@ -7,7 +7,7 @@ const base = {
   persona: "Concise.",
   autonomy: "ask_risky" as const,
   now: new Date("2026-11-10T01:00:00Z"),
-  timezone: "Asia/Manila",
+  timezone: "America/Chicago",
   skills: [
     { name: "zeta", description: "Z" },
     { name: "alpha", description: "A" },
@@ -31,7 +31,7 @@ describe("buildContext", () => {
     expect(a.system[0]).toBe(b.system[0]);
     expect(a.system[1]).toBe(b.system[1]);
     expect(a.system[1]).toMatch(/- alpha: A\n- zeta: Z/);
-    expect(a.system[2]).toContain("Asia/Manila");
+    expect(a.system[2]).toContain("America/Chicago");
     expect(a.system[3]).toContain("Likes teal");
     expect(a.system[4]).toContain("Talked about launch");
     expect(a.messages.at(-1)).toEqual(base.current);

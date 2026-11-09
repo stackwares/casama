@@ -10,6 +10,18 @@ abstract interface class SessionStore {
   Future<void> clear();
 }
 
+/// Session store backed by another auth library (the app uses supabase_flutter, which refreshes tokens itself).
+class CallbackSessionStore implements SessionStore {
+  CallbackSessionStore(this.loader);
+  final Future<AuthSession?> Function() loader;
+  @override
+  Future<AuthSession?> load() => loader();
+  @override
+  Future<void> save(AuthSession session) async {}
+  @override
+  Future<void> clear() async {}
+}
+
 class MemorySessionStore implements SessionStore {
   AuthSession? _session;
   @override

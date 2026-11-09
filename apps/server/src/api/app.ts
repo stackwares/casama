@@ -4,6 +4,7 @@ import { openApiConfig, registerComponents } from "@kasama/contracts";
 import { pgErrorCode, pgErrorMessage } from "@kasama/db";
 import { captureError } from "@kasama/observability";
 import { Scalar } from "@scalar/hono-api-reference";
+import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { ApiError, problem } from "./errors.ts";
 import { idempotency } from "./middleware/idempotency.ts";
@@ -50,6 +51,39 @@ export function createApp(deps: AppDeps) {
     return problem(c, new ApiError(500, "internal_error", "Something went wrong"));
   });
   app.notFound((c) => problem(c, new ApiError(404, "not_found", "No such route")));
+
+  // Browsers (the web app) call the API from another origin.
+  const allowed = new Set([
+    deps.env.PUBLIC_APP_URL,
+    ...deps.env.CORS_ORIGINS.split(",")
+      .map((o) => o.trim())
+      .filter(Boolean),
+  ]);
+  app.use(
+    "*",
+    cors({
+      origin: (origin) => {
+        if (!origin) return null;
+        if (allowed.has(origin)) return origin;
+        if (
+          deps.env.NODE_ENV !== "production" &&
+          /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+        )
+          return origin;
+        return null;
+      },
+      allowHeaders: [
+        "authorization",
+        "content-type",
+        "idempotency-key",
+        "last-event-id",
+        "x-request-id",
+      ],
+      allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      exposeHeaders: ["x-request-id", "idempotent-replayed", "retry-after", "content-disposition"],
+      maxAge: 600,
+    }),
+  );
 
   // Request id and security headers.
   app.use("*", async (c, next) => {

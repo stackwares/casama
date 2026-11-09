@@ -1,8 +1,8 @@
 # Kasama
 
-**Persistent AI teammates you can self-host.** Each bot has its own chats, memory, routines and a sandboxed computer. You reach it from web, iOS, Android, desktop, the terminal and messaging apps, and it runs on your own model keys.
+**Persistent AI teammates you can self-host.** Each bot has its own chats, memory, routines and a sandboxed computer. You reach it from Kasama's own apps (web, iOS, Android, desktop) and the terminal, and it runs on your own model keys.
 
-> Status: early development. Phases 0 and 1 (backend, bots and chat from the CLI) are built. See [SPEC.md](SPEC.md) for the plan and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what exists.
+> Status: early development. Phases 0 to 3 (backend, bots and chat, computers, the Flutter app) are built. See [SPEC.md](SPEC.md) for the plan and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what exists.
 
 ## Why Kasama
 
@@ -51,6 +51,15 @@ dart run bin/kasama.dart chat Ada "What can you do?"
 ```
 
 Run the worker next to the API (`MODE=worker`). Without model keys, `KASAMA_MODEL_FIXTURES=apps/server/test/fixtures/chat.json` replays recorded responses.
+
+## The app
+
+```sh
+cd client
+flutter run -d macos --dart-define=KASAMA_API_URL=http://localhost:8787   # or chrome, an iOS simulator, an emulator
+```
+
+The app reads the Supabase URL and key from the API, so the API URL is the only setting.
 
 ## Contributing
 

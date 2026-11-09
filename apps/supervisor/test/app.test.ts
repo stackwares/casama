@@ -35,7 +35,7 @@ describe("supervisor API", () => {
     });
     const notRunning = await app.request("/computers/a/files/list", { headers: auth });
     expect(notRunning.status).toBe(409);
-    expect((await notRunning.json()).code).toBe("not_running");
+    expect(((await notRunning.json()) as { code: string }).code).toBe("not_running");
     const failed = await app.request("/computers", {
       method: "POST",
       headers: auth,

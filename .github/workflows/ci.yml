@@ -63,6 +63,22 @@ jobs:
           E2E_SANDBOX: "1"
         run: ./scripts/e2e-cli.sh
 
+  app:
+    name: Flutter app (analyze, widget tests, web build)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - name: Analyze and test
+        working-directory: client
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          flutter analyze
+          flutter test
+          flutter build web --release
+
   supabase:
     name: RLS tests on the real Supabase stack
     runs-on: ubuntu-24.04

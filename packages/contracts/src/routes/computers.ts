@@ -171,6 +171,25 @@ export const restoreCheckpoint = createRoute({
   responses: { 200: jsonResponse("Computer", Computer), 401: e401, 404: e404 },
 });
 
+export const computerScreenshot = createRoute({
+  operationId: "computerScreenshot",
+  method: "get",
+  path: "/v1/computers/{id}/screenshot",
+  tags: ["computers"],
+  security,
+  summary: "PNG of the desktop, or of the bot's browser page on headless computers",
+  request: { params: idParam },
+  responses: {
+    200: {
+      description: "PNG image",
+      content: { "image/png": { schema: z.string().openapi({ format: "binary" }) } },
+    },
+    401: e401,
+    404: e404,
+    409: e409,
+  },
+});
+
 export const computerTerminal = createRoute({
   operationId: "computerTerminal",
   method: "get",

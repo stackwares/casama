@@ -72,6 +72,7 @@ Class | Method | HTTP request | Description
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
+[*ComputersApi*](doc/ComputersApi.md) | [**computerScreenshot**](doc/ComputersApi.md#computerscreenshot) | **GET** /v1/computers/{id}/screenshot | PNG of the desktop, or of the bot&#39;s browser page on headless computers
 [*ComputersApi*](doc/ComputersApi.md) | [**computerTerminal**](doc/ComputersApi.md#computerterminal) | **GET** /v1/computers/{id}/terminal | WebSocket terminal. Binary frames carry terminal bytes both ways. Browsers may pass the access token as ?access_token&#x3D;.
 [*ComputersApi*](doc/ComputersApi.md) | [**createCheckpoint**](doc/ComputersApi.md#createcheckpoint) | **POST** /v1/computers/{id}/checkpoints | 
 [*ComputersApi*](doc/ComputersApi.md) | [**deleteComputerFile**](doc/ComputersApi.md#deletecomputerfile) | **DELETE** /v1/computers/{id}/files | 

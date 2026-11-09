@@ -1,0 +1,282 @@
+{
+  "@@locale": "en",
+  "appTitle": "Kasama",
+  "loading": "Loading…",
+  "retry": "Try again",
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "edit": "Edit",
+  "close": "Close",
+  "create": "Create",
+  "continueLabel": "Continue",
+  "somethingWentWrong": "Something went wrong",
+  "signInTitle": "Sign in to Kasama",
+  "signUpTitle": "Create your account",
+  "email": "Email",
+  "password": "Password",
+  "signIn": "Sign in",
+  "signUp": "Create account",
+  "haveAccount": "Have an account? Sign in",
+  "needAccount": "New here? Create an account",
+  "magicLink": "Email me a sign-in link",
+  "magicLinkSent": "Check your email for a sign-in link.",
+  "confirmEmailSent": "Check your email to confirm your account, then sign in.",
+  "continueWithGoogle": "Continue with Google",
+  "continueWithApple": "Continue with Apple",
+  "invalidEmail": "Enter a valid email address",
+  "passwordTooShort": "Use at least 6 characters",
+  "signOut": "Sign out",
+  "onboardingTitle": "Set up your workspace",
+  "createWorkspace": "Create a workspace",
+  "workspaceName": "Workspace name",
+  "joinWorkspace": "Join with an invite code",
+  "inviteCode": "Invite code",
+  "join": "Join",
+  "addModelKeyTitle": "Add a model key",
+  "addModelKeyBody": "Bots use your own model provider key. It is stored encrypted and never shown again.",
+  "provider": "Provider",
+  "label": "Label",
+  "apiKey": "API key",
+  "baseUrl": "Base URL",
+  "testKey": "Test key",
+  "keyOk": "Key works ({model}, {ms} ms)",
+  "@keyOk": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      },
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "keyFailed": "Key test failed: {error}",
+  "@keyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "createFirstBot": "Create your first bot",
+  "botName": "Bot name",
+  "model": "Model",
+  "persona": "Persona",
+  "personaHint": "How should this bot behave? (optional)",
+  "modelKey": "Model key",
+  "navBots": "Bots",
+  "navComputer": "Computer",
+  "navSettings": "Settings",
+  "bots": "Bots",
+  "newBot": "New bot",
+  "noBots": "No bots yet. Create one to start.",
+  "botStatusIdle": "Idle",
+  "botStatusWorking": "Working",
+  "botStatusWaiting": "Waiting for you",
+  "botStatusDisabled": "Disabled",
+  "costToday": "{cost} today",
+  "@costToday": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "lastActive": "Active {when}",
+  "@lastActive": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "selectBot": "Select a bot to chat",
+  "newChat": "New chat",
+  "conversations": "Conversations",
+  "messageHint": "Message {bot}",
+  "@messageHint": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      }
+    }
+  },
+  "send": "Send",
+  "stop": "Stop",
+  "thinking": "Thinking…",
+  "runFailed": "The run failed: {message}",
+  "@runFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "runCancelled": "Stopped.",
+  "emptyChat": "Say hello to {bot}.",
+  "@emptyChat": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      }
+    }
+  },
+  "toolRunning": "Running",
+  "toolDone": "Done in {ms} ms",
+  "@toolDone": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "toolFailedLabel": "Failed",
+  "toolOutput": "Output",
+  "remembered": "Remembered something",
+  "skillLoaded": "Loaded skill {name}",
+  "@skillLoaded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "checkpointSaved": "Saved checkpoint: {label}",
+  "@checkpointSaved": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "computerState": "Computer {state}",
+  "@computerState": {
+    "placeholders": {
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "runCost": "{cost} · {tokens} tokens",
+  "@runCost": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      },
+      "tokens": {
+        "type": "int"
+      }
+    }
+  },
+  "activity": "Activity",
+  "timelineTitle": "Run timeline",
+  "allEvents": "All",
+  "filterTools": "Tools",
+  "filterMessages": "Messages",
+  "filterSystem": "System",
+  "restore": "Restore",
+  "restoreConfirm": "Restore this checkpoint? Files changed since then will be replaced.",
+  "restored": "Checkpoint restored.",
+  "noRuns": "No runs yet.",
+  "computerTitle": "Computer",
+  "computerStart": "Start",
+  "computerSleep": "Sleep",
+  "screen": "Screen",
+  "terminal": "Terminal",
+  "files": "Files",
+  "checkpoints": "Checkpoints",
+  "noScreen": "Nothing on screen yet. The bot's browser page appears here.",
+  "refresh": "Refresh",
+  "upload": "Upload",
+  "download": "Download",
+  "emptyFolder": "This folder is empty.",
+  "noCheckpoints": "No checkpoints yet. They are saved before risky changes.",
+  "computerAsleep": "The computer is asleep. Its files are saved and it wakes up when needed.",
+  "connectTerminal": "Connect",
+  "terminalDisconnected": "Disconnected.",
+  "memory": "Memory",
+  "noMemories": "Nothing remembered yet.",
+  "pin": "Pin",
+  "unpin": "Unpin",
+  "deleteMemoryConfirm": "Forget this? It cannot be undone.",
+  "skills": "Skills",
+  "noSkills": "No skills yet. Skills are instructions bots load when relevant.",
+  "newSkill": "New skill",
+  "skillName": "Name (lowercase, dashes)",
+  "skillDescription": "One-line description",
+  "skillBody": "Instructions (Markdown)",
+  "enabled": "Enabled",
+  "settings": "Settings",
+  "workspace": "Workspace",
+  "switchWorkspace": "Switch workspace",
+  "modelKeys": "Model keys",
+  "noKeys": "No model keys yet.",
+  "addKey": "Add key",
+  "usage": "Usage",
+  "usageMonth": "This month: {cost}",
+  "@usageMonth": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "language": "Language",
+  "signedInAs": "Signed in as {email}",
+  "@signedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMember": "Invite a member",
+  "inviteSent": "Invite sent to {email}.",
+  "@inviteSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteCodeToShare": "Share this invite code: {code}",
+  "@inviteCodeToShare": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "botSettings": "Bot settings",
+  "autonomy": "Autonomy",
+  "autonomyAskAlways": "Ask before acting",
+  "autonomyAskRisky": "Ask for risky actions",
+  "autonomyAutonomous": "Act on its own",
+  "saved": "Saved.",
+  "justNow": "just now",
+  "minutesAgo": "{n, plural, =1{1 minute ago} other{{n} minutes ago}}",
+  "@minutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{n, plural, =1{1 hour ago} other{{n} hours ago}}",
+  "@hoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{n, plural, =1{yesterday} other{{n} days ago}}",
+  "@daysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
+}
