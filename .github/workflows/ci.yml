@@ -16,7 +16,7 @@ jobs:
       PG_BIN: /usr/lib/postgresql/16/bin
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: pnpm }
       - uses: actions/setup-java@v4
