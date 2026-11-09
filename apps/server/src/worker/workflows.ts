@@ -13,8 +13,14 @@ import type { Database } from "@kasama/db";
 import { DEFAULT_MODELS } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { claimDueRoutines, handleRoutineWebhook } from "./routines.ts";
+import { type VoiceRuntime, voiceSession, voiceSpeak, voiceTranscribe } from "./voice.ts";
 
-export const QUEUES = { runs: "runs", subruns: "subruns", system: "system" } as const;
+export const QUEUES = {
+  runs: "runs",
+  subruns: "subruns",
+  system: "system",
+  voice: "voice",
+} as const;
 export const WORKFLOWS = {
   agentRun: "agentRun",
   testCredential: "testCredential",
@@ -29,6 +35,7 @@ let runtime:
       gateway: ModelGateway;
       computers?: ComputerService;
       fetch?: typeof fetch;
+      voice?: VoiceRuntime;
     }
   | undefined;
 export function configureWorkflows(r: NonNullable<typeof runtime>) {
@@ -156,7 +163,12 @@ export async function testCredential(
   const [cred] = await db.execute<{ provider: string }>(
     sql`select provider from public.model_credentials where id = ${credentialId}::uuid and org_id = ${orgId}::uuid`,
   );
-  if (cred && ["fal", "brave_search", "tavily"].includes(cred.provider)) {
+  if (
+    cred &&
+    ["fal", "brave_search", "tavily", "deepgram", "elevenlabs", "cartesia", "fish_audio"].includes(
+      cred.provider,
+    )
+  ) {
     return {
       ok: true,
       model: cred.provider,
@@ -214,6 +226,30 @@ export const testCredentialWorkflow = DBOS.registerWorkflow(
       name: "test",
     }),
   { name: WORKFLOWS.testCredential },
+);
+
+/** Voice (D-065): short, keyed operations on their own queue. */
+const voiceRt = () => {
+  const v = rt().voice;
+  if (!v) throw new Error("voice not configured");
+  return v;
+};
+export const voiceTranscribeWorkflow = DBOS.registerWorkflow(
+  async (orgId: string, botId: string, audioB64: string, mime: string, language?: string) =>
+    DBOS.runStep(() => voiceTranscribe(voiceRt(), orgId, botId, audioB64, mime, language), {
+      name: "transcribe",
+    }),
+  { name: "voiceTranscribe" },
+);
+export const voiceSpeakWorkflow = DBOS.registerWorkflow(
+  async (orgId: string, messageId: string) =>
+    DBOS.runStep(() => voiceSpeak(voiceRt(), orgId, messageId), { name: "speak" }),
+  { name: "voiceSpeak" },
+);
+export const voiceSessionWorkflow = DBOS.registerWorkflow(
+  async (orgId: string, botId: string) =>
+    DBOS.runStep(() => voiceSession(voiceRt(), orgId, botId), { name: "session" }),
+  { name: "voiceSession" },
 );
 
 /** Phase 0 test workflow: two checkpointed steps. */

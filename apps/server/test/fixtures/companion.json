@@ -1,0 +1,103 @@
+{
+  "name": "companion",
+  "turns": [
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "open the companion test page"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "b1",
+            "name": "browser__open",
+            "args": {
+              "url": "http://127.0.0.1:47123/"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "browser.open",
+        "lastUserIncludes": "open the companion test page"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "b2",
+            "name": "browser__read",
+            "args": {}
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "browser.read",
+        "lastUserIncludes": "open the companion test page",
+        "lastToolResultIncludes": "marigold-4242"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "The page on your computer says the secret word is marigold-4242."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "browser.read",
+        "lastUserIncludes": "open the companion test page"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "I could not read the page."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

@@ -14,16 +14,36 @@ class ComputerdConfig {
     this.address = '0.0.0.0',
     this.maxOutputBytes = 10 * 1024 * 1024,
     this.defaultTimeout = const Duration(minutes: 10),
+    this.allowedRoots,
+    this.capabilities,
+    this.extraPath = const [],
+    this.extraEnv = const {},
   });
 
   final String home;
+  /// Companion mode (D-066): file paths and working directories must stay inside these folders.
+  /// Null inside a bot computer (the whole container is the bot's).
+  final List<String>? allowedRoots;
+  /// Companion mode: which tool families the user approved (shell, files, browser, desktop).
+  /// Null inside a bot computer (everything allowed).
+  final Set<String>? capabilities;
+  /// Extra PATH entries (for example Homebrew on macOS, where apps start with a minimal PATH).
+  final List<String> extraPath;
+  /// Added to every command's environment (the companion isolates agent-browser with its own
+  /// namespace and session so it never touches the user's other browser sessions).
+  final Map<String, String> extraEnv;
+
+  bool get companion => allowedRoots != null;
+  bool can(String capability) => capabilities == null || capabilities!.contains(capability);
   final String token;
   final int port;
   final String address;
   final int maxOutputBytes;
   final Duration defaultTimeout;
 
-  String get workspace => p.join(home, 'workspace');
+  /// The default working directory: ~/workspace in a bot computer, the first allowed folder on a
+  /// user's machine.
+  String get workspace => allowedRoots?.isNotEmpty == true ? allowedRoots!.first : p.join(home, 'workspace');
 
   factory ComputerdConfig.fromEnvironment(Map<String, String> env) {
     final token = env['COMPUTERD_TOKEN'];
@@ -35,6 +55,9 @@ class ComputerdConfig {
       token: token,
       port: int.tryParse(env['COMPUTERD_PORT'] ?? '') ?? 7070,
       address: env['COMPUTERD_ADDRESS'] ?? '0.0.0.0',
+      // Companion mode: colon-separated folders and comma-separated capabilities.
+      allowedRoots: env['COMPUTERD_ALLOWED_ROOTS']?.split(':').where((r) => r.isNotEmpty).toList(),
+      capabilities: env['COMPUTERD_CAPABILITIES']?.split(',').map((c) => c.trim()).where((c) => c.isNotEmpty).toSet(),
     );
   }
 }
@@ -69,7 +92,7 @@ class Computerd {
   int get port => _server!.port;
 
   Future<void> start() async {
-    Directory(config.workspace).createSync(recursive: true);
+    if (!config.companion) Directory(config.workspace).createSync(recursive: true);
     _server = await HttpServer.bind(config.address, config.port);
     _server!.listen(_handle);
   }
@@ -100,6 +123,12 @@ class Computerd {
           return await _exec(req);
         case ('POST', ['exec', final id, 'kill']):
           return await _kill(req, id);
+        case ('GET' || 'PUT' || 'DELETE', ['files', ...]) || ('POST', ['files', 'search']) when config.companion && !config.can('files'):
+          _need('files');
+        case ('POST', ['archive']) || ('POST', ['restore']) || ('GET', ['terminal']) || ('POST', ['stream', ...]) when config.companion:
+          throw _ApiError(403, 'not_on_companion', 'Not available on a personal computer');
+        case ('GET', ['screenshot']) || ('POST', ['input']) when config.companion && !config.can('desktop'):
+          _need('desktop');
         case ('GET', ['files']):
           return await _readFile(req);
         case ('PUT', ['files']):
@@ -159,9 +188,46 @@ class Computerd {
 
   /// Resolves a path: absolute paths as given, relative ones against the workspace.
   String _resolve(String? path) {
-    if (path == null || path.isEmpty) return config.workspace;
+    if (path == null || path.isEmpty) return _allowed(config.workspace);
     final expanded = path == '~' ? config.home : (path.startsWith('~/') ? p.join(config.home, path.substring(2)) : path);
-    return p.normalize(p.isAbsolute(expanded) ? expanded : p.join(config.workspace, expanded));
+    return _allowed(p.normalize(p.isAbsolute(expanded) ? expanded : p.join(config.workspace, expanded)));
+  }
+
+  /// Companion mode: refuses paths outside the folders the user chose (symlinks resolved).
+  String _allowed(String path) {
+    final roots = config.allowedRoots;
+    if (roots == null) return path;
+    if (roots.isEmpty) throw _ApiError(403, 'outside_allowed_folders', 'No folders are shared with bots on this computer');
+    String real(String x) {
+      try {
+        return File(x).resolveSymbolicLinksSync();
+      } catch (_) {
+        // A path that does not exist yet: check its parent.
+        final parent = p.dirname(x);
+        return parent == x ? x : p.join(real(parent), p.basename(x));
+      }
+    }
+
+    final resolved = real(path);
+    for (final r in roots) {
+      final root = real(r);
+      if (resolved == root || p.isWithin(root, resolved)) return path;
+    }
+    throw _ApiError(403, 'outside_allowed_folders', 'That path is outside the folders shared with bots on this computer');
+  }
+
+  void _need(String capability) {
+    if (!config.can(capability)) {
+      throw _ApiError(403, 'capability_not_allowed', 'The user has not allowed $capability on this computer');
+    }
+  }
+
+  /// Companion mode: which capability a command needs.
+  static String _capabilityFor(String cmd) {
+    final first = cmd.trimLeft().split(RegExp(r'\s+')).first;
+    if (first == 'agent-browser') return 'browser';
+    if (first == 'agent-desktop') return 'desktop';
+    return 'shell';
   }
 
   Future<void> _health(HttpRequest req) async {
@@ -203,10 +269,17 @@ class Computerd {
     final body = await _body(req);
     final cmd = body['cmd'];
     if (cmd is! String || cmd.isEmpty) throw _ApiError(400, 'bad_request', 'cmd is required');
-    final cwd = _resolve(body['cwd'] as String?);
+    if (config.companion) _need(_capabilityFor(cmd));
+    // A companion with no shared folders (browser or desktop only) runs commands in a temp folder.
+    final cwd = config.companion && config.allowedRoots!.isEmpty && body['cwd'] == null
+        ? Directory.systemTemp.path
+        : _resolve(body['cwd'] as String?);
     if (!Directory(cwd).existsSync()) throw _ApiError(400, 'bad_cwd', 'Working directory does not exist: $cwd');
+    final path = [...config.extraPath, Platform.environment['PATH'] ?? '/usr/bin:/bin'].join(':');
     final env = <String, String>{
       ...Platform.environment,
+      ...config.extraEnv,
+      'PATH': path,
       'HOME': config.home,
       'TERM': 'dumb',
       ...((body['env'] as Map?)?.map((k, v) => MapEntry('$k', '$v')) ?? const {}),

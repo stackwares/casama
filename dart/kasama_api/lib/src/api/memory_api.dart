@@ -10,7 +10,6 @@ import 'package:kasama_api/src/deserialize.dart';
 import 'package:dio/dio.dart';
 
 import 'package:kasama_api/src/model/memory_list.dart';
-import 'package:kasama_api/src/model/problem.dart';
 
 class MemoryApi {
 

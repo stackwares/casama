@@ -5,6 +5,8 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../admin/admin_screen.dart';
+import '../companion/companion.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -82,6 +84,20 @@ class SettingsScreen extends ConsumerWidget {
           title: Text(l10n.computers),
           onTap: () => context.push('/settings/computers'),
         ),
+        if (ref.watch(adminOverviewProvider).value != null)
+          ListTile(
+            key: const Key('settingsAdmin'),
+            leading: const Icon(Icons.admin_panel_settings_outlined),
+            title: Text(l10n.adminConsole),
+            onTap: () => context.push('/settings/admin'),
+          ),
+        if (ref.watch(companionProvider).supported)
+          ListTile(
+            key: const Key('settingsCompanion'),
+            leading: const Icon(Icons.laptop_mac),
+            title: Text(l10n.useThisComputer),
+            onTap: () => context.push('/settings/companion'),
+          ),
         ListTile(
           key: const Key('settingsSecrets'),
           leading: const Icon(Icons.lock_outline),
@@ -152,9 +168,20 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
           onChanged: (v) => setState(() => _autonomy = v),
         ),
         const SizedBox(height: 8),
+        ListTile(
+          key: const Key('botVoice'),
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.record_voice_over_outlined),
+          title: Text(l10n.voiceSettings),
+          subtitle: Text(l10n.voiceSettingsHelp),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => showDialog<void>(context: context, builder: (_) => VoiceSettingsDialog(botId: bot.id)),
+        ),
         Builder(builder: (context) {
           final computers = ref.watch(computersProvider).value ?? const <Computer>[];
-          final usable = computers.where((c) => c.kind == ComputerKindEnum.team || c.ownerBotId == bot.id).toList();
+          final usable = computers
+              .where((c) => c.kind == ComputerKindEnum.team || c.kind == ComputerKindEnum.local || c.ownerBotId == bot.id)
+              .toList();
           return DropdownButtonFormField<String?>(
             key: const Key('botComputer'),
             initialValue: usable.any((c) => c.id == bot.defaultComputerId) ? bot.defaultComputerId : null,
@@ -208,6 +235,76 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
           child: Text(l10n.save),
         ),
       ]),
+    );
+  }
+}
+
+/// A bot's read-aloud and dictation providers (each uses the workspace's own key).
+class VoiceSettingsDialog extends ConsumerStatefulWidget {
+  const VoiceSettingsDialog({super.key, required this.botId});
+  final String botId;
+
+  @override
+  ConsumerState<VoiceSettingsDialog> createState() => _VoiceSettingsDialogState();
+}
+
+class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
+  String? _tts;
+  String? _stt;
+  final _voice = TextEditingController();
+
+  @override
+  void dispose() {
+    _voice.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.voiceSettings),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        DropdownButtonFormField<String?>(
+          key: const Key('ttsProvider'),
+          initialValue: _tts,
+          decoration: InputDecoration(labelText: l10n.readAloudProvider),
+          items: [
+            DropdownMenuItem(value: null, child: Text(l10n.automatic)),
+            for (final p in const ['elevenlabs', 'openai', 'cartesia', 'fish_audio']) DropdownMenuItem(value: p, child: Text(p)),
+          ],
+          onChanged: (v) => setState(() => _tts = v),
+        ),
+        TextField(controller: _voice, decoration: InputDecoration(labelText: l10n.voiceId, helperText: l10n.voiceIdHelp)),
+        DropdownButtonFormField<String?>(
+          key: const Key('sttProvider'),
+          initialValue: _stt,
+          decoration: InputDecoration(labelText: l10n.dictationProvider),
+          items: [
+            DropdownMenuItem(value: null, child: Text(l10n.automatic)),
+            for (final p in const ['openai', 'deepgram']) DropdownMenuItem(value: p, child: Text(p)),
+          ],
+          onChanged: (v) => setState(() => _stt = v),
+        ),
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+        FilledButton(
+          key: const Key('saveVoice'),
+          onPressed: () async {
+            final ok = await runGuarded(context, () async {
+              await ref.read(backendProvider).updateBotVoice(widget.botId, {
+                'tts_provider': ?_tts,
+                'stt_provider': ?_stt,
+                if (_voice.text.trim().isNotEmpty) 'tts_voice': _voice.text.trim(),
+              });
+              return true;
+            });
+            if (ok == true && context.mounted) Navigator.pop(context);
+          },
+          child: Text(l10n.save),
+        ),
+      ],
     );
   }
 }

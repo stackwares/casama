@@ -117,6 +117,8 @@ interface RunInfo {
   allowedTools: string[] | null;
   wallTimeMs: number | null;
   routine: { id: string; notify: boolean; createdBy: string | null; name: string } | null;
+  /** A tool call forwarded from a live voice call: run only this call (D-065). */
+  voiceCall: { call_id: string; name: string; arguments: Record<string, unknown> } | null;
 }
 
 type StepOutcome = { ok: true } | { ok: false; code: string; message: string };
@@ -221,6 +223,56 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       allowed ? (name) => allowed.some((a) => name === a || name.startsWith(`${a}.`)) : undefined,
     );
     const toolSpecs = registry.specs(available);
+
+    // Voice calls: the realtime model chose the tool; run just that call with the same approvals.
+    if (info.voiceCall) {
+      const vc = info.voiceCall;
+      const call: ToolCall = {
+        callId: vc.call_id,
+        name: ToolRegistry.fromWire(vc.name),
+        args: vc.arguments ?? {},
+      };
+      if (!available.some((d) => d.name === call.name)) {
+        await step("voice-unknown", () =>
+          finishFailed(
+            db,
+            info,
+            { ok: false, code: "unknown_tool", message: `Unknown tool ${vc.name}` },
+            bus,
+          ),
+        );
+        return { status: "failed" };
+      }
+      const gate = await step("voice-gate", () =>
+        approvalGate(deps, registry, info, call, false, bus, redactor),
+      );
+      let blocked: string | null = null;
+      if (gate.approvalId) {
+        const wait = deps.waitForApproval ?? ((id, run, ms) => pollApproval(db, id, run, ms));
+        await wait(gate.approvalId, info.runId, APPROVAL_TTL_MS);
+        const outcome = await step("voice-resolve", () =>
+          resolveApproval(db, info, gate.approvalId as string, bus),
+        );
+        if (outcome === "cancelled") {
+          await step("cancel", () => finishCancelled(db, info, bus));
+          return { status: "cancelled" };
+        }
+        if (outcome !== "approved")
+          blocked = outcome === "denied" ? "The user denied this action." : "The approval expired.";
+      }
+      const res = blocked
+        ? await step("voice-blocked", () => blockedStep(deps, info, call, blocked as string, bus))
+        : await step("voice-tool", () =>
+            toolStep(deps, registry, info, call, bus, redactor, secrets),
+          );
+      await step("voice-finish", async () => {
+        await db.execute(sql`update public.runs set voice_call = voice_call || ${JSON.stringify({ result: res.content.slice(0, 20_000) })}::jsonb
+          where id = ${info.runId}::uuid`);
+        if (await setTerminal(db, info, "completed", null))
+          await (await bus()).append(info.runId, "run.completed", { final_message_id: null });
+      });
+      return { status: "completed" };
+    }
 
     const contextFor = (summary: string) =>
       buildContext({
@@ -487,11 +539,12 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     routine_notify: boolean | null;
     routine_created_by: string | null;
     routine_name: string | null;
+    voice_call: RunInfo["voiceCall"];
   }>(sql`
     select r.id, r.org_id, r.bot_id, r.conversation_id, r.created_by, r.trigger, r.status, r.budget as run_budget,
            b.name, b.persona_md, b.autonomy, b.model_policy, b.budget as bot_budget, b.created_by as bot_owner,
            coalesce(p.timezone, po.timezone) as timezone, c.summary, c.summary_through, r.parent_run_id,
-           r.routine_id, rt.notify as routine_notify, rt.created_by as routine_created_by, rt.name as routine_name
+           r.routine_id, rt.notify as routine_notify, rt.created_by as routine_created_by, rt.name as routine_name, r.voice_call
     from public.runs r
     join public.bots b on b.id = r.bot_id
     left join public.profiles p on p.user_id = r.created_by
@@ -566,6 +619,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
           name: row.routine_name ?? "",
         }
       : null,
+    voiceCall: row.voice_call ?? null,
   };
 }
 
@@ -781,7 +835,18 @@ async function toolStep(
         throw new ToolError("no_computer", "This bot has no computer available.");
       if (!computer) {
         const row = await deps.computers.forBot(info.botId);
-        computer = { id: row.id, handle: await deps.computers.ensureRunning(row.id, emit) };
+        const h = await deps.computers.ensureRunning(row.id, emit);
+        // Tell a personal computer which bot is acting, so its overlay can show it (D-066).
+        const activity = {
+          run_id: info.runId,
+          bot: info.botName,
+          tool: call.name,
+          summary: describeCall(
+            call.name,
+            redactor.value(call.args) as Record<string, unknown>,
+          ).slice(0, 200),
+        };
+        computer = { id: row.id, handle: h.withActivity?.(activity) ?? h };
       } else {
         await deps.computers.touch(computer.id);
       }
@@ -1085,6 +1150,14 @@ async function approvalGate(
   const [grant] = await deps.db.execute<{ id: string }>(
     sql`select id from public.tool_grants where bot_id = ${info.botId}::uuid and tool_name = ${call.name}`,
   );
+  // On the user's own machine (desktop companion), high-risk actions always ask (D-066).
+  const onLocal =
+    risk === "high" && def.requires?.computer && deps.computers
+      ? await deps.computers
+          .forBot(info.botId)
+          .then((c) => c.kind === "local")
+          .catch(() => false)
+      : false;
   const needed = needsApproval({
     autonomy: info.autonomy,
     risk,
@@ -1092,6 +1165,7 @@ async function approvalGate(
     confirmUnderDefault: def.confirm === true,
     untrustedSinceApproval: untrusted,
     granted: !!grant,
+    forceHighRisk: onLocal,
   });
   if (!needed) return { approvalId: null };
 

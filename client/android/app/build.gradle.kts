@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "dev.kasama.kasama_app"
-    compileSdk = flutter.compileSdkVersion
+    // Some plugins (receive_sharing_intent, permission_handler) need API 37 to compile against.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

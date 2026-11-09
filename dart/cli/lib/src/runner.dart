@@ -18,6 +18,7 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
   final runner = CommandRunner<int>('kasama', 'Command-line client for Kasama.')
     ..argParser.addOption('api', help: 'API base URL (or KASAMA_API_URL).')
     ..argParser.addFlag('json', negatable: false, help: 'Print JSON output for scripting.')
+    ..argParser.addFlag('version', negatable: false, help: 'Print the CLI version.')
     ..addCommand(ConfigCommand(ctx))
     ..addCommand(SignupCommand(ctx))
     ..addCommand(LoginCommand(ctx))
@@ -34,6 +35,10 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
     ..addCommand(ComputerCommand(ctx));
   try {
     final top = runner.parse(args);
+    if (top['version'] as bool) {
+      ctx.out.writeln('kasama $cliVersion');
+      return 0;
+    }
     ctx.json = top['json'] as bool;
     ctx.apiOverride = top['api'] as String?;
     return await runner.runCommand(top) ?? 0;
@@ -50,6 +55,9 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
     return ctx.fail(e.code, e.message);
   }
 }
+
+/// Kept in step with pubspec.yaml by scripts/release-cli.sh.
+const cliVersion = '0.6.0';
 
 class CliError implements Exception {
   CliError(this.code, this.message);

@@ -25,6 +25,10 @@ if [[ "$device" == "web" ]]; then
     -d web-server --browser-name=chrome --chrome-binary="$CHROME_BINARY" --headless --web-port=3000
 else
   flutter test integration_test/app_flow_test.dart -d "$device"
+  if [[ "${E2E_COMPANION:-0}" == "1" ]]; then
+    # Needs agent-browser on PATH and apps/server/test/fixtures/companion.json first in KASAMA_MODEL_FIXTURES.
+    flutter test integration_test/companion_flow_test.dart -d "$device"
+  fi
   if [[ "${E2E_LIVE:-0}" == "1" ]]; then
     flutter test integration_test/live_flow_test.dart -d "$device"
   fi

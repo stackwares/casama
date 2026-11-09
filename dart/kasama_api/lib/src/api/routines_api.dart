@@ -11,7 +11,6 @@ import 'package:dio/dio.dart';
 
 import 'package:kasama_api/src/model/create_routine_request.dart';
 import 'package:kasama_api/src/model/created_routine.dart';
-import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/routine.dart';
 import 'package:kasama_api/src/model/routine_list.dart';
 import 'package:kasama_api/src/model/run_started.dart';

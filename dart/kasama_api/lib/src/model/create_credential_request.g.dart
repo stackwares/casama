@@ -157,4 +157,8 @@ const _$ProviderIdEnumMap = {
   ProviderId.fal: 'fal',
   ProviderId.braveSearch: 'brave_search',
   ProviderId.tavily: 'tavily',
+  ProviderId.deepgram: 'deepgram',
+  ProviderId.elevenlabs: 'elevenlabs',
+  ProviderId.cartesia: 'cartesia',
+  ProviderId.fishAudio: 'fish_audio',
 };

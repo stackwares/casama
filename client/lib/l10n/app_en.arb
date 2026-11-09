@@ -538,5 +538,164 @@
         "type": "String"
       }
     }
+  },
+  "micPermissionNeeded": "Allow microphone access to dictate.",
+  "startCall": "Start a voice call",
+  "stopDictation": "Stop and transcribe",
+  "dictate": "Dictate",
+  "readAloud": "Read aloud",
+  "callConnecting": "Connecting…",
+  "callLive": "Live",
+  "callEnded": "Call ended",
+  "callFailed": "The call could not connect.",
+  "unmute": "Unmute",
+  "mute": "Mute",
+  "hangUp": "Hang up",
+  "callWith": "Call with {bot}",
+  "@callWith": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      }
+    }
+  },
+  "replyLatency": "Reply started in {ms} ms",
+  "@replyLatency": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceSettings": "Voice",
+  "voiceSettingsHelp": "Read-aloud voice and dictation provider",
+  "readAloudProvider": "Read-aloud provider",
+  "automatic": "Automatic (first key found)",
+  "voiceId": "Voice id (optional)",
+  "voiceIdHelp": "The provider's voice id; empty uses a default voice",
+  "dictationProvider": "Dictation provider",
+  "useThisComputer": "Use this computer for bots",
+  "companionDesktopOnly": "Only the desktop app (macOS, Windows, Linux) can act as a bot computer.",
+  "companionIntro": "Let chosen bots work on this computer: run commands, edit files in folders you pick, browse and use apps. Everything they do shows on screen and can be stopped. Off until you approve each capability.",
+  "thisComputer": "This computer",
+  "companionOnline": "On: bots you allow can use this computer",
+  "companionError": "Cannot reach Kasama; retrying",
+  "companionOff": "Off",
+  "companionCapabilities": "What bots may do",
+  "companionCapabilitiesHelp": "Approve each one. High-risk actions always ask, whatever the bot's autonomy.",
+  "capShell": "Run commands (inside shared folders)",
+  "capFiles": "Read and edit files in shared folders",
+  "capBrowser": "Use a browser (its own, separate from yours)",
+  "capDesktop": "Use desktop apps",
+  "sharedFolders": "Shared folders",
+  "sharedFoldersHelp": "Bots can only reach these folders.",
+  "addFolder": "Add a folder",
+  "botsAllowed": "Bots allowed",
+  "botsAllowedHelp": "Allowed bots use this computer as theirs.",
+  "unpairComputer": "Stop using this computer and unpair it",
+  "botActingHere": "{bot} is working on this computer: {action}",
+  "@botActingHere": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "quickAsk": "Quick ask",
+  "quickAskHint": "Ask a bot anything…",
+  "bot": "Bot",
+  "adminConsole": "Admin console",
+  "adminOverview": "Overview",
+  "adminUsers": "Users",
+  "adminWorkspaces": "Workspaces",
+  "adminServices": "Services",
+  "notInstanceOwner": "Only the instance owner can open the admin console.",
+  "runs24h": "Runs (24 h)",
+  "failedRuns24h": "Failed runs (24 h)",
+  "cost24h": "Spend (24 h)",
+  "computersRunning": "Computers running",
+  "devicesOnline": "Personal computers online",
+  "editQuotas": "Edit quotas",
+  "maxBots": "Max bots",
+  "monthlyUsd": "Monthly spend limit (USD)",
+  "updateAvailable": "Kasama {latest} is available (you run {current})",
+  "@updateAvailable": {
+    "placeholders": {
+      "latest": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "kasamaVersion": "Kasama {version}",
+  "@kasamaVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "workspacesCount": "{n, plural, =1{1 workspace} other{{n} workspaces}}",
+  "@workspacesCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lastSignIn": "signed in {when}",
+  "@lastSignIn": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "quotasFor": "Quotas for {name}",
+  "@quotasFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "membersCount": "{n, plural, =1{1 member} other{{n} members}}",
+  "@membersCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "botsCount": "{n, plural, =1{1 bot} other{{n} bots}}",
+  "@botsCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "cost30d": "{usd} in 30 days",
+  "@cost30d": {
+    "placeholders": {
+      "usd": {
+        "type": "String"
+      }
+    }
+  },
+  "connectingToServer": "Connecting to Kasama…",
+  "cannotReachServer": "Can't reach your Kasama server",
+  "cannotReachServerHelp": "Check your connection, or that the server at {url} is running.",
+  "@cannotReachServerHelp": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -20,7 +20,6 @@ import 'package:kasama_api/src/model/create_computer_request.dart';
 import 'package:kasama_api/src/model/delete_result.dart';
 import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/lease.dart';
-import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/release_lease_request.dart';
 import 'package:kasama_api/src/model/stream_session.dart';
 import 'package:kasama_api/src/model/stream_session_request.dart';

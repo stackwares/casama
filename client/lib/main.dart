@@ -8,6 +8,8 @@ import 'core/config.dart';
 import 'core/providers.dart';
 import 'core/supabase_backend.dart';
 import 'core/telemetry.dart';
+import 'core/theme.dart';
+import 'l10n/generated/app_localizations.dart';
 
 /// Connects to the API and Supabase and returns the app widget with its backend.
 Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config) async {
@@ -23,6 +25,79 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final (app, _) = await bootstrap(AppConfig.fromEnvironment);
-  await Telemetry.run(app);
+  // Draw at once; connecting happens behind the startup gate (never block runApp on the network).
+  await Telemetry.run(const StartupGate(config: AppConfig.fromEnvironment));
+}
+
+/// Connects to the server, showing progress and a retry when it cannot be reached.
+class StartupGate extends StatefulWidget {
+  const StartupGate({super.key, required this.config, this.connect = _connectApp});
+  final AppConfig config;
+  final Future<Widget> Function(AppConfig) connect;
+
+  static Future<Widget> _connectApp(AppConfig c) async => (await bootstrap(c)).$1;
+
+  @override
+  State<StartupGate> createState() => _StartupGateState();
+}
+
+class _StartupGateState extends State<StartupGate> {
+  Widget? _app;
+  Object? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  Future<void> _start() async {
+    setState(() => _error = null);
+    try {
+      final app = await widget.connect(widget.config).timeout(const Duration(seconds: 20));
+      if (mounted) setState(() => _app = app);
+    } catch (e) {
+      if (mounted) setState(() => _error = e);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = _app;
+    if (app != null) return app;
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Builder(
+        builder: (context) {
+          final l10n = AppLocalizations.of(context);
+          return Scaffold(
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: _error == null
+                    ? Column(mainAxisSize: MainAxisSize.min, children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 16),
+                        Text(l10n.connectingToServer, key: const Key('startupConnecting')),
+                      ])
+                    : Column(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(Icons.cloud_off, size: 48, color: Theme.of(context).colorScheme.outline),
+                        const SizedBox(height: 16),
+                        Text(l10n.cannotReachServer, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
+                        const SizedBox(height: 8),
+                        Text(l10n.cannotReachServerHelp(widget.config.apiUrl), textAlign: TextAlign.center),
+                        const SizedBox(height: 16),
+                        FilledButton(key: const Key('startupRetry'), onPressed: _start, child: Text(l10n.retry)),
+                      ]),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }

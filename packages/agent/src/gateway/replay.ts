@@ -14,6 +14,8 @@ export interface FixtureTurn {
     lastRole?: "user" | "tool";
     /** Name of the tool whose result is the last message. */
     lastToolName?: string;
+    /** Case-insensitive substring of the last tool result (proves what a tool returned). */
+    lastToolResultIncludes?: string;
     /** Case-insensitive substring of the joined system blocks. */
     systemIncludes?: string;
     /** Exact model id the request is for. */
@@ -46,6 +48,14 @@ export function matches(turn: FixtureTurn, req: ModelRequest) {
     return false;
   if (w.lastRole && last?.role !== w.lastRole) return false;
   if (w.lastToolName && !(last?.role === "tool" && last.name === w.lastToolName)) return false;
+  if (
+    w.lastToolResultIncludes &&
+    !(
+      last?.role === "tool" &&
+      last.content.toLowerCase().includes(w.lastToolResultIncludes.toLowerCase())
+    )
+  )
+    return false;
   if (
     w.systemIncludes &&
     !req.system.join("\n").toLowerCase().includes(w.systemIncludes.toLowerCase())

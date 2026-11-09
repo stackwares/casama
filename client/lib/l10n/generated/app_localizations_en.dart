@@ -967,4 +967,258 @@ class AppLocalizationsEn extends AppLocalizations {
   String privateComputerOf(String bot) {
     return '$bot\'s computer';
   }
+
+  @override
+  String get micPermissionNeeded => 'Allow microphone access to dictate.';
+
+  @override
+  String get startCall => 'Start a voice call';
+
+  @override
+  String get stopDictation => 'Stop and transcribe';
+
+  @override
+  String get dictate => 'Dictate';
+
+  @override
+  String get readAloud => 'Read aloud';
+
+  @override
+  String get callConnecting => 'Connecting…';
+
+  @override
+  String get callLive => 'Live';
+
+  @override
+  String get callEnded => 'Call ended';
+
+  @override
+  String get callFailed => 'The call could not connect.';
+
+  @override
+  String get unmute => 'Unmute';
+
+  @override
+  String get mute => 'Mute';
+
+  @override
+  String get hangUp => 'Hang up';
+
+  @override
+  String callWith(String bot) {
+    return 'Call with $bot';
+  }
+
+  @override
+  String replyLatency(int ms) {
+    return 'Reply started in $ms ms';
+  }
+
+  @override
+  String get voiceSettings => 'Voice';
+
+  @override
+  String get voiceSettingsHelp => 'Read-aloud voice and dictation provider';
+
+  @override
+  String get readAloudProvider => 'Read-aloud provider';
+
+  @override
+  String get automatic => 'Automatic (first key found)';
+
+  @override
+  String get voiceId => 'Voice id (optional)';
+
+  @override
+  String get voiceIdHelp =>
+      'The provider\'s voice id; empty uses a default voice';
+
+  @override
+  String get dictationProvider => 'Dictation provider';
+
+  @override
+  String get useThisComputer => 'Use this computer for bots';
+
+  @override
+  String get companionDesktopOnly =>
+      'Only the desktop app (macOS, Windows, Linux) can act as a bot computer.';
+
+  @override
+  String get companionIntro =>
+      'Let chosen bots work on this computer: run commands, edit files in folders you pick, browse and use apps. Everything they do shows on screen and can be stopped. Off until you approve each capability.';
+
+  @override
+  String get thisComputer => 'This computer';
+
+  @override
+  String get companionOnline => 'On: bots you allow can use this computer';
+
+  @override
+  String get companionError => 'Cannot reach Kasama; retrying';
+
+  @override
+  String get companionOff => 'Off';
+
+  @override
+  String get companionCapabilities => 'What bots may do';
+
+  @override
+  String get companionCapabilitiesHelp =>
+      'Approve each one. High-risk actions always ask, whatever the bot\'s autonomy.';
+
+  @override
+  String get capShell => 'Run commands (inside shared folders)';
+
+  @override
+  String get capFiles => 'Read and edit files in shared folders';
+
+  @override
+  String get capBrowser => 'Use a browser (its own, separate from yours)';
+
+  @override
+  String get capDesktop => 'Use desktop apps';
+
+  @override
+  String get sharedFolders => 'Shared folders';
+
+  @override
+  String get sharedFoldersHelp => 'Bots can only reach these folders.';
+
+  @override
+  String get addFolder => 'Add a folder';
+
+  @override
+  String get botsAllowed => 'Bots allowed';
+
+  @override
+  String get botsAllowedHelp => 'Allowed bots use this computer as theirs.';
+
+  @override
+  String get unpairComputer => 'Stop using this computer and unpair it';
+
+  @override
+  String botActingHere(String bot, String action) {
+    return '$bot is working on this computer: $action';
+  }
+
+  @override
+  String get quickAsk => 'Quick ask';
+
+  @override
+  String get quickAskHint => 'Ask a bot anything…';
+
+  @override
+  String get bot => 'Bot';
+
+  @override
+  String get adminConsole => 'Admin console';
+
+  @override
+  String get adminOverview => 'Overview';
+
+  @override
+  String get adminUsers => 'Users';
+
+  @override
+  String get adminWorkspaces => 'Workspaces';
+
+  @override
+  String get adminServices => 'Services';
+
+  @override
+  String get notInstanceOwner =>
+      'Only the instance owner can open the admin console.';
+
+  @override
+  String get runs24h => 'Runs (24 h)';
+
+  @override
+  String get failedRuns24h => 'Failed runs (24 h)';
+
+  @override
+  String get cost24h => 'Spend (24 h)';
+
+  @override
+  String get computersRunning => 'Computers running';
+
+  @override
+  String get devicesOnline => 'Personal computers online';
+
+  @override
+  String get editQuotas => 'Edit quotas';
+
+  @override
+  String get maxBots => 'Max bots';
+
+  @override
+  String get monthlyUsd => 'Monthly spend limit (USD)';
+
+  @override
+  String updateAvailable(String latest, String current) {
+    return 'Kasama $latest is available (you run $current)';
+  }
+
+  @override
+  String kasamaVersion(String version) {
+    return 'Kasama $version';
+  }
+
+  @override
+  String workspacesCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n workspaces',
+      one: '1 workspace',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String lastSignIn(String when) {
+    return 'signed in $when';
+  }
+
+  @override
+  String quotasFor(String name) {
+    return 'Quotas for $name';
+  }
+
+  @override
+  String membersCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n members',
+      one: '1 member',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String botsCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n bots',
+      one: '1 bot',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cost30d(String usd) {
+    return '$usd in 30 days';
+  }
+
+  @override
+  String get connectingToServer => 'Connecting to Kasama…';
+
+  @override
+  String get cannotReachServer => 'Can\'t reach your Kasama server';
+
+  @override
+  String cannotReachServerHelp(String url) {
+    return 'Check your connection, or that the server at $url is running.';
+  }
 }

@@ -2,6 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>dev.kasama.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kasama</string>
+			</array>
+		</dict>
+	</array>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Kasama uses the microphone for dictation and voice calls with your bots.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

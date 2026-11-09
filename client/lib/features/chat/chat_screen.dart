@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
+import '../../core/voice.dart';
 import '../../core/widgets.dart';
 import 'chat_controller.dart';
 import 'widgets/chat_widgets.dart';
@@ -54,6 +55,41 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _input = TextEditingController();
+  var _recording = false;
+  var _transcribing = false;
+
+  /// Dictation: tap to record, tap again to transcribe into the message box.
+  Future<void> _toggleDictation() async {
+    final dictation = ref.read(dictationProvider);
+    if (!_recording) {
+      final ok = await dictation.start();
+      if (!mounted) return;
+      if (!ok) {
+        showMessage(context, context.l10n.micPermissionNeeded);
+        return;
+      }
+      setState(() => _recording = true);
+      return;
+    }
+    setState(() {
+      _recording = false;
+      _transcribing = true;
+    });
+    final clip = await dictation.stop();
+    if (clip != null && mounted) {
+      final text = await runGuarded(context, () => ref.read(backendProvider).transcribe(widget.botId, clip.$1, clip.$2));
+      if (text != null && text.isNotEmpty) {
+        _input.text = _input.text.isEmpty ? text : '${_input.text} $text';
+        _input.selection = TextSelection.collapsed(offset: _input.text.length);
+      }
+    }
+    if (mounted) setState(() => _transcribing = false);
+  }
+
+  Future<void> _speak(String messageId) async {
+    final audio = await runGuarded(context, () => ref.read(backendProvider).speech(messageId));
+    if (audio != null) await ref.read(speechPlayerProvider).play(audio);
+  }
   final _scroll = ScrollController();
   final _focus = FocusNode();
 
@@ -112,6 +148,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: Text(name),
         actions: [
           IconButton(
+            key: const Key('callButton'),
+            tooltip: l10n.startCall,
+            icon: const Icon(Icons.call_outlined),
+            onPressed: () => context.push(
+              '/bots/${widget.botId}/call${chat.conversationId == null ? '' : '?c=${chat.conversationId}'}',
+            ),
+          ),
+          IconButton(
             tooltip: l10n.newChat,
             icon: const Icon(Icons.add_comment_outlined),
             onPressed: chat.running ? null : controller.newChat,
@@ -144,7 +188,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       padding: const EdgeInsets.all(16),
                       itemCount: chat.entries.length,
                       itemBuilder: (context, i) => switch (chat.entries[i]) {
-                        final MessageEntry m => MessageBubble(key: ValueKey(m.id), entry: m),
+                        final MessageEntry m => MessageBubble(
+                            key: ValueKey(m.id),
+                            entry: m,
+                            onSpeak: m.role == 'assistant' && !m.streaming ? () => _speak(m.id) : null,
+                          ),
                         final ToolEntry t => ToolCard(key: ValueKey(t.callId), entry: t),
                         final ApprovalEntry a => ApprovalPrompt(key: ValueKey(a.approvalId), entry: a, botName: name),
                         final TakeoverEntry t => TakeoverPrompt(
@@ -187,7 +235,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
+              IconButton(
+                key: const Key('dictateButton'),
+                tooltip: _recording ? l10n.stopDictation : l10n.dictate,
+                isSelected: _recording,
+                icon: _transcribing
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Icon(_recording ? Icons.stop_circle_outlined : Icons.mic_none),
+                onPressed: _transcribing ? null : _toggleDictation,
+              ),
+              const SizedBox(width: 4),
               if (chat.running)
                 IconButton.filledTonal(
                   key: const Key('stopButton'),

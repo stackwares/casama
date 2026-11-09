@@ -144,6 +144,10 @@ export const ProviderId = z
     "fal",
     "brave_search",
     "tavily",
+    "deepgram",
+    "elevenlabs",
+    "cartesia",
+    "fish_audio",
   ])
   .openapi("ProviderId");
 

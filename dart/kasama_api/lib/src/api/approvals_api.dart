@@ -12,7 +12,6 @@ import 'package:dio/dio.dart';
 import 'package:kasama_api/src/model/approval.dart';
 import 'package:kasama_api/src/model/approval_decision_request.dart';
 import 'package:kasama_api/src/model/approval_list.dart';
-import 'package:kasama_api/src/model/problem.dart';
 
 class ApprovalsApi {
 

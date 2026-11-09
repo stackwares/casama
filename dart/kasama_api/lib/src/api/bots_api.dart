@@ -12,7 +12,6 @@ import 'package:dio/dio.dart';
 import 'package:kasama_api/src/model/bot.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
 import 'package:kasama_api/src/model/create_bot_request.dart';
-import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/template_list.dart';
 
 class BotsApi {

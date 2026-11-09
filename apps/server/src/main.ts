@@ -2,18 +2,24 @@ import { serve } from "@hono/node-server";
 import { ComputerService } from "@kasama/agent";
 import { createDb } from "@kasama/db";
 import { createLogger, initObservability, shutdownObservability } from "@kasama/observability";
-import { SupervisorProvider } from "@kasama/sandbox";
+import { LocalProvider, SupervisorProvider, unavailableProvider } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
 import { createApp } from "./api/app.ts";
 import { createTokenVerifier } from "./api/auth.ts";
 import { attachTerminal } from "./api/routes/computers.ts";
 import { attachStream, liveConfigFromEnv } from "./api/routes/live.ts";
+import { attachLocalConnect, DeviceRegistry, internalToken } from "./api/routes/local.ts";
 import { pgRunEventHub } from "./api/run-event-hub.ts";
 import { dbosWorkflows } from "./api/workflows.ts";
 import { loadEnv } from "./env.ts";
 import { disabledEmail, resendEmail } from "./services/email.ts";
 
 const env = loadEnv();
+// The worker reaches personal computers through the API's internal tunnel (D-066).
+const localOpts = {
+  apiUrl: env.API_INTERNAL_URL ?? `http://127.0.0.1:${env.PORT}`,
+  internalToken: internalToken(env),
+};
 const logger = createLogger(`server-${env.MODE}`, env.LOG_LEVEL);
 initObservability({
   service: `kasama-${env.MODE}`,
@@ -46,12 +52,16 @@ if (env.MODE === "api") {
     workflows,
     hub,
     computers:
-      env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN
+      (env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN) || env.LOCAL_COMPUTERS
         ? new ComputerService(
             handle.db,
-            new SupervisorProvider(env.SUPERVISOR_URL, env.SUPERVISOR_TOKEN),
+            env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN
+              ? new SupervisorProvider(env.SUPERVISOR_URL, env.SUPERVISOR_TOKEN)
+              : unavailableProvider(),
+            env.LOCAL_COMPUTERS ? { local: new LocalProvider(localOpts) } : {},
           )
         : undefined,
+    devices: env.LOCAL_COMPUTERS ? new DeviceRegistry() : undefined,
     live: liveConfigFromEnv(env),
     env,
     db: handle.db,
@@ -69,6 +79,7 @@ if (env.MODE === "api") {
   );
   attachTerminal(server as unknown as import("node:http").Server, deps);
   attachStream(server as unknown as import("node:http").Server, deps);
+  attachLocalConnect(server as unknown as import("node:http").Server, deps);
   stoppers.push(() => new Promise((r) => server.close(r)));
 } else {
   const { startWorker } = await import("./worker/index.ts");
@@ -85,6 +96,7 @@ if (env.MODE === "api") {
       env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN
         ? { url: env.SUPERVISOR_URL, token: env.SUPERVISOR_TOKEN }
         : undefined,
+    local: env.LOCAL_COMPUTERS ? localOpts : undefined,
   });
   stoppers.push(worker.stop);
 }

@@ -49,6 +49,16 @@ export const EnvSchema = z.object({
   TURN_PUBLIC_HOST: z.string().default("localhost"),
   TURN_PORT: z.coerce.number().int().default(3478),
   TURN_TLS_PORT: z.coerce.number().int().optional(),
+  /** Owner admin console: comma-separated emails; when unset, the first user to sign up. */
+  INSTANCE_ADMIN_EMAILS: z.string().optional(),
+  /** Where the console checks for newer releases (GitHub "latest release" API shape); unset = off. */
+  UPDATE_CHECK_URL: z.url().optional(),
+  /** Desktop companion (D-066): personal computers as bot computers. On by default. */
+  LOCAL_COMPUTERS: bool.default(true),
+  /** Worker: how it reaches the API's internal endpoints (the companion tunnel). */
+  API_INTERNAL_URL: z.url().optional(),
+  /** Shared secret for /internal/*; derived from DATABASE_URL when unset. */
+  INTERNAL_TOKEN: z.string().min(32).optional(),
   /** Public base URL of this API (signaling URLs); defaults to the request's origin. */
   PUBLIC_API_URL: z.url().optional(),
 });

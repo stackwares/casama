@@ -132,6 +132,30 @@ abstract class Backend {
   Future<List<Task>> tasks(String orgId);
   Future<void> setTaskStatus(String taskId, String status);
 
+  // Owner admin console (Phase 6). Null when the user is not the instance owner.
+  Future<AdminOverview?> adminOverview();
+  Future<List<AdminUser>> adminUsers();
+  Future<List<AdminOrg>> adminOrgs();
+  Future<AdminOrg> setOrgLimits(String orgId, Map<String, num> limits);
+  Future<List<AdminService>> adminServices();
+  Future<UpdateNotice> adminUpdates();
+
+  // Desktop companion (Phase 6)
+  /// The API's base URL (the companion opens its WebSocket there).
+  String get apiUrl;
+  Future<List<LocalDevice>> localDevices(String orgId);
+  Future<CreatedLocalDevice> createLocalDevice(String orgId, String name, String platform);
+  Future<LocalDevice> updateLocalDevice(String id, {Set<String>? capabilities, List<String>? roots, List<String>? botIds, bool? enabled});
+  Future<void> deleteLocalDevice(String id);
+
+  // Voice (Phase 6)
+  Future<String> transcribe(String botId, Uint8List audio, String mime);
+  Future<Uint8List> speech(String messageId);
+  Future<VoiceSession> voiceSession(String botId, {String? conversationId});
+  Future<VoiceToolResult> voiceTool(String botId, String conversationId, String callId, String name, Map<String, Object?> arguments);
+  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds);
+  Future<void> updateBotVoice(String botId, Map<String, Object?> voice);
+
   // Computers: management (Phase 5)
   Future<Computer> createComputer(String orgId, {required String name, required bool private, String? ownerBotId, String profile});
   Future<Computer> updateComputer(String computerId, {String? name, String? profile});

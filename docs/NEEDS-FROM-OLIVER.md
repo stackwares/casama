@@ -20,6 +20,9 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 | E2B API key, and a template built from `infra/images/computer` (computerd start command) | Hosted computers on E2B (Phase 5) | Supervisor `E2B_API_KEY`, `E2B_TEMPLATE_HEADLESS`, `E2B_TEMPLATE_DESKTOP` | Adapter tested against a local mock of the E2B API (D-057) |
 | Daytona API key, and snapshots built from the computer images | Hosted computers on Daytona (Phase 5) | Supervisor `DAYTONA_API_KEY`, `DAYTONA_SNAPSHOT_*` | Adapter tested against a local mock of the Daytona API |
 
+| OpenAI key with Realtime access | Live voice calls; measuring the gate's "reply within 1 s" (Phase 6) | Workspace credential, provider `openai` | Session, tool forwarding and transcripts tested against a mock |
+| Deepgram, ElevenLabs, Cartesia or Fish Audio keys (optional) | Dictation and read-aloud with those providers | Workspace credentials | Tested against mocks |
+
 ## Infrastructure
 
 | Item                                                      | Needed for                                                                       | Status                                                                                              |
@@ -35,6 +38,17 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 | A phone on a mobile network | The Phase 5 gate "live view under 500 ms on 4G" | Measured 1–3 ms data-channel RTT locally (D-060) |
 | GitHub Actions enabled on `stackwares/kasama` | CI (lint, tests, RLS on real Supabase, image builds) | Disabled at the repo/org level; workflows are committed but have not run. Private repos use the org's free Actions minutes |
 | Review of Dependabot PRs | Dependency updates opened automatically on the first push | 5+ PRs left open, not merged |
+
+## Phase 6 publishing and platform checks
+
+| Item                                                                                                | Needed for                                                                     | Status                                                                                      |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| A pub.dev publisher (for example `kasama.dev`) and `dart pub publish` of kasama_api then kasama_sdk | The published SDK (gate: an external app uses it)                              | Dry runs clean; `examples/sdk_sample` streams a run using the 0.6.0 packages from this repo |
+| A public `stackwares/homebrew-tap` repository and a `cli-v0.6.0` release                            | `brew install stackwares/tap/kasama`                                           | Formula generator and release workflow ready; macOS arm64 binary built locally              |
+| Apple team: App Group `group.dev.kasama.app` and signing for the widget and share extensions        | Widgets, Live Activities and share to bot on real iPhones                      | Extensions build for the simulator; not run on a device                                     |
+| Developer ID certificate and notarization                                                           | Distributing the macOS app (it runs without the App Sandbox for the companion) | Debug and release builds run locally                                                        |
+| A Windows and a Linux machine                                                                       | Checking the companion, tray and global shortcut there                         | Built and tested on macOS only                                                              |
+| A real Android share from another app                                                               | Confirming the share sheet entry (the quick-ask route it opens is verified)    | Deep link checked on the emulator                                                           |
 
 ## Phase 3 app distribution and testers
 

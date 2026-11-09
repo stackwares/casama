@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -514,6 +515,108 @@ class SupabaseBackend implements Backend {
     await supabase
         .from('tasks')
         .update({'status': status, 'updated_at': DateTime.now().toUtc().toIso8601String()}).eq('id', taskId);
+  }
+
+  // --- owner admin console (Phase 6) ---------------------------------------
+
+  @override
+  Future<AdminOverview?> adminOverview() async {
+    try {
+      return (await api.admin.adminOverview()).data;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<AdminUser>> adminUsers() async => (await api.admin.adminUsers()).data!.items;
+  @override
+  Future<List<AdminOrg>> adminOrgs() async => (await api.admin.adminOrgs()).data!.items;
+  @override
+  Future<AdminOrg> setOrgLimits(String orgId, Map<String, num> limits) async =>
+      (await api.admin.setOrgLimits(id: orgId, setOrgLimitsRequest: SetOrgLimitsRequest(limits: limits))).data!;
+  @override
+  Future<List<AdminService>> adminServices() async => (await api.admin.adminServices()).data!.items;
+  @override
+  Future<UpdateNotice> adminUpdates() async => (await api.admin.adminUpdates()).data!;
+
+  // --- desktop companion (Phase 6) -----------------------------------------
+
+  @override
+  String get apiUrl => api.baseUrl;
+
+  @override
+  Future<List<LocalDevice>> localDevices(String orgId) async => (await api.localComputer.listLocalDevices(orgId: orgId)).data!.items;
+
+  @override
+  Future<CreatedLocalDevice> createLocalDevice(String orgId, String name, String platform) async => (await api.localComputer.createLocalDevice(
+        createLocalDeviceRequest: CreateLocalDeviceRequest(
+          orgId: orgId,
+          name: name,
+          platform: CreateLocalDeviceRequestPlatformEnum.values.firstWhere((p) => p.value == platform),
+        ),
+      ))
+          .data!;
+
+  @override
+  Future<LocalDevice> updateLocalDevice(String id, {Set<String>? capabilities, List<String>? roots, List<String>? botIds, bool? enabled}) async =>
+      (await api.localComputer.updateLocalDevice(
+        id: id,
+        updateLocalDeviceRequest: UpdateLocalDeviceRequest(
+          capabilities: capabilities == null
+              ? null
+              : LocalCapabilities(
+                  shell: capabilities.contains('shell'),
+                  files: capabilities.contains('files'),
+                  browser: capabilities.contains('browser'),
+                  desktop: capabilities.contains('desktop'),
+                ),
+          allowedRoots: roots,
+          allowedBotIds: botIds,
+          enabled: enabled,
+        ),
+      ))
+          .data!;
+
+  @override
+  Future<void> deleteLocalDevice(String id) async => api.localComputer.deleteLocalDevice(id: id);
+
+  // --- voice (Phase 6) -------------------------------------------------------
+
+  @override
+  Future<String> transcribe(String botId, Uint8List audio, String mime) async => (await api.transcribe(botId, audio, mime: mime)).text;
+
+  @override
+  Future<Uint8List> speech(String messageId) async => (await api.voice.messageSpeech(id: messageId)).data!;
+
+  @override
+  Future<VoiceSession> voiceSession(String botId, {String? conversationId}) async =>
+      (await api.voice.createVoiceSession(voiceSessionRequest: VoiceSessionRequest(botId: botId, conversationId: conversationId))).data!;
+
+  @override
+  Future<VoiceToolResult> voiceTool(String botId, String conversationId, String callId, String name, Map<String, Object?> arguments) async =>
+      (await api.voice.voiceTool(
+        voiceToolRequest: VoiceToolRequest(botId: botId, conversationId: conversationId, callId: callId, name: name, arguments: arguments),
+      ))
+          .data!;
+
+  @override
+  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds) async =>
+      api.voice.saveVoiceTranscript(
+        voiceTranscriptRequest: VoiceTranscriptRequest(
+          conversationId: conversationId,
+          seconds: seconds,
+          turns: [
+            for (final (role, text) in turns)
+              VoiceTranscriptRequestTurnsInner(role: VoiceTranscriptRequestTurnsInnerRoleEnum.values.firstWhere((r) => r.value == role), text: text),
+          ],
+        ),
+      );
+
+  @override
+  Future<void> updateBotVoice(String botId, Map<String, Object?> voice) async {
+    await supabase.from('bots').update({'voice': voice}).eq('id', botId);
   }
 
   // --- computer management and live view (Phase 5) -------------------------

@@ -11,7 +11,6 @@ import 'package:dio/dio.dart';
 
 import 'package:kasama_api/src/model/create_secret_request.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
-import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/secret.dart';
 import 'package:kasama_api/src/model/secret_list.dart';
 

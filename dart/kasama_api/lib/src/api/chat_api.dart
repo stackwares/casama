@@ -12,7 +12,6 @@ import 'package:dio/dio.dart';
 import 'package:kasama_api/src/model/conversation.dart';
 import 'package:kasama_api/src/model/conversation_list.dart';
 import 'package:kasama_api/src/model/create_conversation_request.dart';
-import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/send_message_request.dart';
 import 'package:kasama_api/src/model/send_message_response.dart';
 

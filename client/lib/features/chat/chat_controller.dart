@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/backend.dart';
+import '../../core/mobile_extras.dart';
 import '../../core/providers.dart';
 
 enum ToolStatus { running, done, failed }
@@ -184,6 +185,7 @@ class ChatController extends Notifier<ChatState> {
     final optimistic = MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed);
     state = state.copyWith(entries: [...state.entries, optimistic], lastUserText: trimmed);
     final sent = await _backend.send(conversationId, trimmed);
+    unawaited(ref.read(runActivitiesProvider).started(sent.runId, ref.read(botProvider(botId))?.name ?? ''));
     _attach(sent.runId);
   }
 
@@ -231,6 +233,9 @@ class ChatController extends Notifier<ChatState> {
         } else {
           entries[i] = (entries[i] as MessageEntry).copyWith(text: text, streaming: false);
         }
+      case ToolStartedItem(:final event) when state.activeRunId != null && event.payload.tool.isNotEmpty:
+        unawaited(ref.read(runActivitiesProvider).step(state.activeRunId!, event.payload.tool));
+        entries.add(ToolEntry(callId: event.payload.callId, tool: event.payload.tool, args: event.payload.argsRedacted));
       case ToolStartedItem(:final event):
         entries.add(ToolEntry(callId: event.payload.callId, tool: event.payload.tool, args: event.payload.argsRedacted));
       case ToolOutputItem(:final event):
@@ -305,6 +310,12 @@ class ChatController extends Notifier<ChatState> {
           tokens: (event.payload.tokensIn + event.payload.tokensOut).toInt(),
         );
         return;
+      case RunFailedItem(:final event) when state.activeRunId != null:
+        unawaited(ref.read(runActivitiesProvider).ended(state.activeRunId!));
+        entries.add(NoticeEntry(kind: NoticeKind.failed, text: event.payload.message));
+        _finishStreaming(entries);
+        state = state.copyWith(entries: entries, clearActiveRun: true);
+        return;
       case RunFailedItem(:final event):
         entries.add(NoticeEntry(kind: NoticeKind.failed, text: event.payload.message));
         _finishStreaming(entries);
@@ -312,6 +323,12 @@ class ChatController extends Notifier<ChatState> {
         return;
       case RunCancelledItem():
         entries.add(const NoticeEntry(kind: NoticeKind.cancelled, text: ''));
+        _finishStreaming(entries);
+        state = state.copyWith(entries: entries, clearActiveRun: true);
+        return;
+      case RunCompletedItem() when state.activeRunId != null:
+        unawaited(ref.read(runActivitiesProvider).ended(state.activeRunId!));
+        entries.removeWhere((x) => x is MessageEntry && x.streaming);
         _finishStreaming(entries);
         state = state.copyWith(entries: entries, clearActiveRun: true);
         return;

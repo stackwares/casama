@@ -30,6 +30,8 @@ services:
     <<: *server
     environment:
       MODE: worker
+      # The companion tunnel (D-066) goes through the API's internal endpoints.
+      API_INTERNAL_URL: http://api:8787
       DATABASE_URL: postgres://postgres:postgres@host.docker.internal:54322/postgres
       SUPABASE_URL: http://host.docker.internal:54321
       SUPERVISOR_URL: http://kasama-supervisor:8788

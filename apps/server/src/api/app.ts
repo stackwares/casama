@@ -9,11 +9,14 @@ import { HTTPException } from "hono/http-exception";
 import { ApiError, problem } from "./errors.ts";
 import { idempotency } from "./middleware/idempotency.ts";
 import { rateLimit } from "./middleware/rate-limit.ts";
+import { registerAdminRoutes } from "./routes/admin.ts";
 import { registerAutonomyRoutes } from "./routes/autonomy.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
 import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
+import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
 import { registerSystemRoutes } from "./routes/system.ts";
+import { registerVoiceRoutes } from "./routes/voice.ts";
 import { registerWorkspaceRoutes } from "./routes/workspaces.ts";
 import type { AppDeps, AppEnv } from "./types.ts";
 
@@ -120,6 +123,10 @@ export function createApp(deps: AppDeps) {
   registerBotRoutes(app, deps);
   registerComputerRoutes(app, deps);
   registerLiveRoutes(app, deps);
+  registerVoiceRoutes(app, deps);
+  registerLocalRoutes(app, deps);
+  registerAdminRoutes(app, deps);
+  registerInternalRoutes(app as never, deps);
   registerAutonomyRoutes(app, deps);
 
   app.doc31("/openapi.json", (c) => ({

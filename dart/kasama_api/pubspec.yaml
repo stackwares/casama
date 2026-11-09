@@ -1,7 +1,9 @@
 name: kasama_api
-version: 0.1.0
-description: Generated REST client for the Kasama API. Do not edit.
-publish_to: none
+version: 0.6.0
+description: Generated REST client for the Kasama API (dio + json_serializable), used by kasama_sdk. Do not edit by hand.
+homepage: https://github.com/stackwares/kasama
+repository: https://github.com/stackwares/kasama/tree/main/dart/kasama_api
+issue_tracker: https://github.com/stackwares/kasama/issues
 
 
 resolution: workspace

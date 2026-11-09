@@ -337,6 +337,133 @@ class FakeBackend implements Backend {
   @override
   Future<void> setTaskStatus(String taskId, String status) async => taskStatus[taskId] = status;
 
+  // --- Phase 6: admin -------------------------------------------------------
+
+  var isOwner = true;
+  Map<String, num>? setLimits;
+
+  @override
+  Future<AdminOverview?> adminOverview() async => isOwner
+      ? AdminOverview(version: '0.6.0', users: 3, orgs: 2, bots: 4, runs24h: 12, failedRuns24h: 1, cost24hUsd: 0.42, computersRunning: 1, devicesOnline: 1)
+      : null;
+  @override
+  Future<List<AdminUser>> adminUsers() async => [AdminUser(id: 'u1', email: 'owner@example.com', createdAt: DateTime(2026), lastSignInAt: null, orgs: 1)];
+  AdminOrg _org(Map<String, num> limits) =>
+      AdminOrg(id: orgId, name: 'Test Org', planCode: 'selfhost', limits: limits, members: 2, bots: 1, cost30dUsd: 1.5);
+  @override
+  Future<List<AdminOrg>> adminOrgs() async => [_org(setLimits ?? const {})];
+  @override
+  Future<AdminOrg> setOrgLimits(String orgId, Map<String, num> limits) async {
+    setLimits = limits;
+    return _org(limits);
+  }
+
+  @override
+  Future<List<AdminService>> adminServices() async =>
+      [AdminService(name: 'Database', configured: true, healthy: true, detail: 'Postgres (Supabase)')];
+  @override
+  Future<UpdateNotice> adminUpdates() async => UpdateNotice(current: '0.6.0', latest: '0.9.1', updateAvailable: true, url: 'https://example.com/r');
+
+  // --- Phase 6: companion ---------------------------------------------------
+
+  LocalDevice? device;
+  final deviceUpdates = <String>[];
+
+  LocalDevice _device({LocalCapabilities? caps, List<String>? roots, List<String>? bots, bool? enabled}) => LocalDevice(
+        id: 'dev1',
+        orgId: orgId,
+        userId: 'me',
+        computerId: 'local-computer',
+        name: 'This computer',
+        platform: LocalDevicePlatformEnum.macos,
+        capabilities: caps ?? device?.capabilities ?? LocalCapabilities(),
+        allowedRoots: roots ?? device?.allowedRoots ?? const [],
+        allowedBotIds: bots ?? device?.allowedBotIds ?? const [],
+        enabled: enabled ?? device?.enabled ?? true,
+        online: true,
+        lastSeenAt: null,
+        createdAt: DateTime(2026),
+      );
+
+  @override
+  String get apiUrl => 'http://localhost:8787';
+  @override
+  Future<List<LocalDevice>> localDevices(String orgId) async => [?device];
+  @override
+  Future<CreatedLocalDevice> createLocalDevice(String orgId, String name, String platform) async {
+    device = _device();
+    return CreatedLocalDevice.fromJson({...device!.toJson(), 'token': 'kdev_test'});
+  }
+
+  @override
+  Future<LocalDevice> updateLocalDevice(String id, {Set<String>? capabilities, List<String>? roots, List<String>? botIds, bool? enabled}) async {
+    deviceUpdates.add([if (capabilities != null) 'caps:${(capabilities.toList()..sort()).join(',')}', if (botIds != null) 'bots:${botIds.join(',')}', if (enabled != null) 'enabled:$enabled'].join(' '));
+    device = _device(
+      caps: capabilities == null
+          ? null
+          : LocalCapabilities(
+              shell: capabilities.contains('shell'),
+              files: capabilities.contains('files'),
+              browser: capabilities.contains('browser'),
+              desktop: capabilities.contains('desktop'),
+            ),
+      roots: roots,
+      bots: botIds,
+      enabled: enabled,
+    );
+    return device!;
+  }
+
+  @override
+  Future<void> deleteLocalDevice(String id) async => device = null;
+
+  // --- Phase 6: voice -------------------------------------------------------
+
+  final transcribed = <String>[];
+  final spoken = <String>[];
+  final voiceTools = <String>[];
+  List<(String, String)>? savedTurns;
+  int? savedSeconds;
+  Map<String, Object?>? botVoice;
+
+  @override
+  Future<String> transcribe(String botId, Uint8List audio, String mime) async {
+    transcribed.add(mime);
+    return 'water the plants';
+  }
+
+  @override
+  Future<Uint8List> speech(String messageId) async {
+    spoken.add(messageId);
+    return Uint8List.fromList([1, 2, 3]);
+  }
+
+  @override
+  Future<VoiceSession> voiceSession(String botId, {String? conversationId}) async => VoiceSession(
+        provider: VoiceSessionProviderEnum.openai,
+        model: 'gpt-realtime-2.1',
+        clientSecret: 'ek_test',
+        expiresAt: DateTime.now().add(const Duration(minutes: 10)),
+        connectUrl: 'https://example.invalid/v1/realtime/calls',
+        conversationId: conversationId ?? convId,
+        tools: 3,
+      );
+
+  @override
+  Future<VoiceToolResult> voiceTool(String botId, String conversationId, String callId, String name, Map<String, Object?> arguments) async {
+    voiceTools.add(name);
+    return VoiceToolResult(status: VoiceToolResultStatusEnum.completed, runId: runId, output: 'Found 2 memories', approvalId: null);
+  }
+
+  @override
+  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds) async {
+    savedTurns = turns;
+    savedSeconds = seconds;
+  }
+
+  @override
+  Future<void> updateBotVoice(String botId, Map<String, Object?> voice) async => botVoice = voice;
+
   // --- Phase 5 ---------------------------------------------------------------
 
   final createdComputers = <String>[];

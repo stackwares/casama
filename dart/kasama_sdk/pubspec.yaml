@@ -1,14 +1,16 @@
 name: kasama_sdk
-description: Dart SDK for Kasama, with a typed API client and run event stream.
-version: 0.1.0
-publish_to: none
+description: Dart SDK for Kasama, the self-hostable home for AI bots with their own computers. Typed API client, auth and live run event streams.
+version: 0.6.0
+homepage: https://github.com/stackwares/kasama
+repository: https://github.com/stackwares/kasama/tree/main/dart/kasama_sdk
+issue_tracker: https://github.com/stackwares/kasama/issues
+topics: [ai, agents, sdk, api-client]
 resolution: workspace
 environment:
   sdk: ^3.13.0
 dependencies:
   dio: ^5.11.1
   http: ^1.6.0
-  kasama_api:
-    path: ../kasama_api
+  kasama_api: ^0.6.0
 dev_dependencies:
   test: ^1.33.0

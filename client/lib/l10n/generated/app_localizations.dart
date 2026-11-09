@@ -1767,6 +1767,420 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{bot}\'s computer'**
   String privateComputerOf(String bot);
+
+  /// No description provided for @micPermissionNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow microphone access to dictate.'**
+  String get micPermissionNeeded;
+
+  /// No description provided for @startCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a voice call'**
+  String get startCall;
+
+  /// No description provided for @stopDictation.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop and transcribe'**
+  String get stopDictation;
+
+  /// No description provided for @dictate.
+  ///
+  /// In en, this message translates to:
+  /// **'Dictate'**
+  String get dictate;
+
+  /// No description provided for @readAloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Read aloud'**
+  String get readAloud;
+
+  /// No description provided for @callConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get callConnecting;
+
+  /// No description provided for @callLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get callLive;
+
+  /// No description provided for @callEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Call ended'**
+  String get callEnded;
+
+  /// No description provided for @callFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The call could not connect.'**
+  String get callFailed;
+
+  /// No description provided for @unmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get unmute;
+
+  /// No description provided for @mute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get mute;
+
+  /// No description provided for @hangUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Hang up'**
+  String get hangUp;
+
+  /// No description provided for @callWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Call with {bot}'**
+  String callWith(String bot);
+
+  /// No description provided for @replyLatency.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply started in {ms} ms'**
+  String replyLatency(int ms);
+
+  /// No description provided for @voiceSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get voiceSettings;
+
+  /// No description provided for @voiceSettingsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-aloud voice and dictation provider'**
+  String get voiceSettingsHelp;
+
+  /// No description provided for @readAloudProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-aloud provider'**
+  String get readAloudProvider;
+
+  /// No description provided for @automatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic (first key found)'**
+  String get automatic;
+
+  /// No description provided for @voiceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice id (optional)'**
+  String get voiceId;
+
+  /// No description provided for @voiceIdHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider\'s voice id; empty uses a default voice'**
+  String get voiceIdHelp;
+
+  /// No description provided for @dictationProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Dictation provider'**
+  String get dictationProvider;
+
+  /// No description provided for @useThisComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this computer for bots'**
+  String get useThisComputer;
+
+  /// No description provided for @companionDesktopOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the desktop app (macOS, Windows, Linux) can act as a bot computer.'**
+  String get companionDesktopOnly;
+
+  /// No description provided for @companionIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Let chosen bots work on this computer: run commands, edit files in folders you pick, browse and use apps. Everything they do shows on screen and can be stopped. Off until you approve each capability.'**
+  String get companionIntro;
+
+  /// No description provided for @thisComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'This computer'**
+  String get thisComputer;
+
+  /// No description provided for @companionOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'On: bots you allow can use this computer'**
+  String get companionOnline;
+
+  /// No description provided for @companionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot reach Kasama; retrying'**
+  String get companionError;
+
+  /// No description provided for @companionOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get companionOff;
+
+  /// No description provided for @companionCapabilities.
+  ///
+  /// In en, this message translates to:
+  /// **'What bots may do'**
+  String get companionCapabilities;
+
+  /// No description provided for @companionCapabilitiesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve each one. High-risk actions always ask, whatever the bot\'s autonomy.'**
+  String get companionCapabilitiesHelp;
+
+  /// No description provided for @capShell.
+  ///
+  /// In en, this message translates to:
+  /// **'Run commands (inside shared folders)'**
+  String get capShell;
+
+  /// No description provided for @capFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Read and edit files in shared folders'**
+  String get capFiles;
+
+  /// No description provided for @capBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a browser (its own, separate from yours)'**
+  String get capBrowser;
+
+  /// No description provided for @capDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Use desktop apps'**
+  String get capDesktop;
+
+  /// No description provided for @sharedFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared folders'**
+  String get sharedFolders;
+
+  /// No description provided for @sharedFoldersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots can only reach these folders.'**
+  String get sharedFoldersHelp;
+
+  /// No description provided for @addFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a folder'**
+  String get addFolder;
+
+  /// No description provided for @botsAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots allowed'**
+  String get botsAllowed;
+
+  /// No description provided for @botsAllowedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed bots use this computer as theirs.'**
+  String get botsAllowedHelp;
+
+  /// No description provided for @unpairComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop using this computer and unpair it'**
+  String get unpairComputer;
+
+  /// No description provided for @botActingHere.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} is working on this computer: {action}'**
+  String botActingHere(String bot, String action);
+
+  /// No description provided for @quickAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick ask'**
+  String get quickAsk;
+
+  /// No description provided for @quickAskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a bot anything…'**
+  String get quickAskHint;
+
+  /// No description provided for @bot.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot'**
+  String get bot;
+
+  /// No description provided for @adminConsole.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin console'**
+  String get adminConsole;
+
+  /// No description provided for @adminOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get adminOverview;
+
+  /// No description provided for @adminUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Users'**
+  String get adminUsers;
+
+  /// No description provided for @adminWorkspaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspaces'**
+  String get adminWorkspaces;
+
+  /// No description provided for @adminServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get adminServices;
+
+  /// No description provided for @notInstanceOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the instance owner can open the admin console.'**
+  String get notInstanceOwner;
+
+  /// No description provided for @runs24h.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs (24 h)'**
+  String get runs24h;
+
+  /// No description provided for @failedRuns24h.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed runs (24 h)'**
+  String get failedRuns24h;
+
+  /// No description provided for @cost24h.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend (24 h)'**
+  String get cost24h;
+
+  /// No description provided for @computersRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers running'**
+  String get computersRunning;
+
+  /// No description provided for @devicesOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal computers online'**
+  String get devicesOnline;
+
+  /// No description provided for @editQuotas.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit quotas'**
+  String get editQuotas;
+
+  /// No description provided for @maxBots.
+  ///
+  /// In en, this message translates to:
+  /// **'Max bots'**
+  String get maxBots;
+
+  /// No description provided for @monthlyUsd.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly spend limit (USD)'**
+  String get monthlyUsd;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Kasama {latest} is available (you run {current})'**
+  String updateAvailable(String latest, String current);
+
+  /// No description provided for @kasamaVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Kasama {version}'**
+  String kasamaVersion(String version);
+
+  /// No description provided for @workspacesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 workspace} other{{n} workspaces}}'**
+  String workspacesCount(int n);
+
+  /// No description provided for @lastSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'signed in {when}'**
+  String lastSignIn(String when);
+
+  /// No description provided for @quotasFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Quotas for {name}'**
+  String quotasFor(String name);
+
+  /// No description provided for @membersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 member} other{{n} members}}'**
+  String membersCount(int n);
+
+  /// No description provided for @botsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 bot} other{{n} bots}}'**
+  String botsCount(int n);
+
+  /// No description provided for @cost30d.
+  ///
+  /// In en, this message translates to:
+  /// **'{usd} in 30 days'**
+  String cost30d(String usd);
+
+  /// No description provided for @connectingToServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to Kasama…'**
+  String get connectingToServer;
+
+  /// No description provided for @cannotReachServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach your Kasama server'**
+  String get cannotReachServer;
+
+  /// No description provided for @cannotReachServerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection, or that the server at {url} is running.'**
+  String cannotReachServerHelp(String url);
 }
 
 class _AppLocalizationsDelegate

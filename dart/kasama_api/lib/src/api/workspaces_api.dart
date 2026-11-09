@@ -16,7 +16,6 @@ import 'package:kasama_api/src/model/me.dart';
 import 'package:kasama_api/src/model/membership.dart';
 import 'package:kasama_api/src/model/organization.dart';
 import 'package:kasama_api/src/model/organization_list.dart';
-import 'package:kasama_api/src/model/problem.dart';
 
 class WorkspacesApi {
 

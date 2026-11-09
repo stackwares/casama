@@ -1,8 +1,20 @@
+import * as admin from "./admin.ts";
 import * as autonomy from "./autonomy.ts";
 import * as bots from "./bots.ts";
 import * as computers from "./computers.ts";
+import * as local from "./local.ts";
 import * as system from "./system.ts";
+import * as voice from "./voice.ts";
 import * as workspaces from "./workspaces.ts";
 
-export const routes = { ...system, ...workspaces, ...bots, ...computers, ...autonomy };
-export { autonomy, bots, computers, system, workspaces };
+export const routes = {
+  ...system,
+  ...workspaces,
+  ...bots,
+  ...computers,
+  ...autonomy,
+  ...voice,
+  ...local,
+  ...admin,
+};
+export { admin, autonomy, bots, computers, local, system, voice, workspaces };

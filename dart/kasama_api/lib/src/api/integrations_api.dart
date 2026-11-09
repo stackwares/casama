@@ -15,7 +15,6 @@ import 'package:kasama_api/src/model/integration.dart';
 import 'package:kasama_api/src/model/integration_list.dart';
 import 'package:kasama_api/src/model/integration_test_result.dart';
 import 'package:kasama_api/src/model/ok.dart';
-import 'package:kasama_api/src/model/problem.dart';
 
 class IntegrationsApi {
 

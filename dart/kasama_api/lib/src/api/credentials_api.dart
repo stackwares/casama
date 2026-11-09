@@ -13,7 +13,6 @@ import 'package:kasama_api/src/model/create_credential_request.dart';
 import 'package:kasama_api/src/model/credential.dart';
 import 'package:kasama_api/src/model/credential_list.dart';
 import 'package:kasama_api/src/model/credential_test_result.dart';
-import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/test_credential_request.dart';
 
 class CredentialsApi {

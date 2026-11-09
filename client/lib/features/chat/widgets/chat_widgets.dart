@@ -11,8 +11,10 @@ import '../chat_controller.dart';
 
 /// A chat message. Assistant messages render Markdown with code highlighting.
 class MessageBubble extends StatelessWidget {
-  const MessageBubble({super.key, required this.entry});
+  const MessageBubble({super.key, required this.entry, this.onSpeak});
   final MessageEntry entry;
+  /// Read aloud (bot messages only).
+  final VoidCallback? onSpeak;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +44,18 @@ class MessageBubble extends StatelessWidget {
                     ),
                   if (entry.streaming)
                     const Padding(padding: EdgeInsets.only(top: 6), child: SizedBox(width: 40, child: LinearProgressIndicator())),
+                  if (onSpeak != null)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        key: Key('speak-${entry.id}'),
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 18,
+                        tooltip: context.l10n.readAloud,
+                        icon: const Icon(Icons.volume_up_outlined),
+                        onPressed: onSpeak,
+                      ),
+                    ),
                 ]),
         ),
       ),

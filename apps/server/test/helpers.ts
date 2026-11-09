@@ -1,11 +1,16 @@
+import type { Server } from "node:http";
+import { createServer as createNetServer } from "node:net";
+import { serve } from "@hono/node-server";
 import { ComputerService } from "@kasama/agent";
 import { createDb, type DbHandle } from "@kasama/db";
 import { createAuthUser, startTestDatabase, type TestDatabase } from "@kasama/db/testing";
 import { createLogger } from "@kasama/observability";
+import { LocalProvider, unavailableProvider } from "@kasama/sandbox";
 import type { SandboxStack } from "@kasama/sandbox/testing";
 import { SignJWT } from "jose";
 import { createApp } from "../src/api/app.ts";
 import { createTokenVerifier } from "../src/api/auth.ts";
+import { attachLocalConnect, DeviceRegistry, internalToken } from "../src/api/routes/local.ts";
 import { pgRunEventHub, type RunEventHub } from "../src/api/run-event-hub.ts";
 import { dbosWorkflows, type Workflows } from "../src/api/workflows.ts";
 import { loadEnv } from "../src/env.ts";
@@ -14,6 +19,8 @@ import type { EmailMessage, EmailSender } from "../src/services/email.ts";
 export const JWT_SECRET = "test-secret-at-least-32-characters-long!!";
 
 export interface Harness {
+  /** Set when started with `local`: the real HTTP server's URL. */
+  serverUrl?: string;
   deps: import("../src/api/types.ts").AppDeps;
   computers?: ComputerService;
   tdb: TestDatabase;
@@ -32,6 +39,9 @@ const noWorkflows: Workflows = {
   signalRun: async () => {},
   testIntegration: async () => ({ ok: false, tools: [], error: "no worker" }),
   routineWebhook: async () => {},
+  voiceTranscribe: async () => ({ ok: false, error: "no worker" }),
+  voiceSpeak: async () => ({ ok: false, error: "no worker" }),
+  voiceSession: async () => ({ ok: false, error: "no worker" }),
 };
 
 export async function startHarness(
@@ -44,10 +54,19 @@ export async function startHarness(
       maxOutputTokens?: number;
       push?: import("@kasama/agent").PushSender;
       egressExemptCidrs?: string[];
-      providerBases?: { fal?: string; brave?: string; tavily?: string };
+      providerBases?: {
+        fal?: string;
+        brave?: string;
+        tavily?: string;
+        openai?: string;
+        deepgram?: string;
+        elevenlabs?: string;
+      };
     };
     workflowsClient?: boolean;
     sandbox?: SandboxStack;
+    /** Desktop companion: serve the app on a real port with the device WebSocket (D-066). */
+    local?: boolean;
   } = {},
 ): Promise<Harness> {
   const tdb = await startTestDatabase();
@@ -59,8 +78,14 @@ export async function startHarness(
     SUPABASE_JWT_SECRET: JWT_SECRET,
     NODE_ENV: "test",
     RATE_LIMIT_PER_MINUTE: String(opts.rateLimit ?? 10_000),
+    UPDATE_CHECK_URL: process.env.TEST_UPDATE_CHECK_URL,
   });
   const outbox: EmailMessage[] = [];
+  // A real port for the companion tunnel, chosen before the worker starts.
+  const localPort = opts.local ? await freePort() : 0;
+  const localOpts = opts.local
+    ? { apiUrl: `http://127.0.0.1:${localPort}`, internalToken: internalToken(env) }
+    : undefined;
   const email: EmailSender = opts.email
     ? { enabled: true, send: async (m) => void outbox.push(m) }
     : { enabled: false, send: async () => {} };
@@ -82,14 +107,20 @@ export async function startHarness(
       push: opts.worker.push,
       egressExemptCidrs: opts.worker.egressExemptCidrs,
       providerBases: opts.worker.providerBases,
+      local: localOpts,
     });
     workflows = await dbosWorkflows(tdb.url);
   } else if (opts.workflowsClient) {
     workflows = await dbosWorkflows(tdb.url);
   }
-  const computers = opts.sandbox
-    ? new ComputerService(handle.db, opts.sandbox.provider)
-    : undefined;
+  const computers =
+    opts.sandbox || localOpts
+      ? new ComputerService(
+          handle.db,
+          opts.sandbox?.provider ?? unavailableProvider(),
+          localOpts ? { local: new LocalProvider(localOpts) } : {},
+        )
+      : undefined;
   const live = opts.sandbox
     ? {
         turnSecret: opts.sandbox.turn.secret,
@@ -103,6 +134,7 @@ export async function startHarness(
     hub,
     computers,
     live,
+    devices: opts.local ? new DeviceRegistry() : undefined,
     env,
     db: handle.db,
     logger: createLogger("test", "error"),
@@ -111,7 +143,18 @@ export async function startHarness(
     readiness: { database: async () => void (await tdb.admin`select 1`) },
   };
   const app = createApp(deps);
+  let server: Server | undefined;
+  if (opts.local) {
+    server = serve({
+      fetch: app.fetch,
+      port: localPort,
+      hostname: "127.0.0.1",
+    }) as unknown as Server;
+    await new Promise((r) => server?.once("listening", r));
+    attachLocalConnect(server, deps);
+  }
   return {
+    serverUrl: localOpts?.apiUrl,
     deps,
     computers,
     tdb,
@@ -140,6 +183,7 @@ export async function startHarness(
       return Promise.resolve(app.request(path, { ...init, headers, body }));
     },
     async stop() {
+      server?.close();
       await workflows.close();
       await worker?.stop();
       await hub.close();
@@ -152,3 +196,11 @@ export async function startHarness(
 /** Response body as a loosely typed value for assertions. */
 // biome-ignore lint/suspicious/noExplicitAny: test assertions inspect arbitrary JSON
 export const j = (res: Response): Promise<any> => res.json();
+
+async function freePort() {
+  const s = createNetServer();
+  await new Promise<void>((r) => s.listen(0, "127.0.0.1", r));
+  const port = (s.address() as { port: number }).port;
+  await new Promise((r) => s.close(r));
+  return port;
+}

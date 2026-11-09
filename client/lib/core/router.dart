@@ -18,6 +18,10 @@ import '../features/settings/model_keys_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/skills/skills_screen.dart';
 import '../features/timeline/timeline_screen.dart';
+import '../features/admin/admin_screen.dart';
+import '../features/companion/companion_screen.dart';
+import '../features/quick_ask/quick_ask_screen.dart';
+import '../features/voice/call_screen.dart';
 import '../features/workspaces/onboarding_screen.dart';
 import 'providers.dart';
 import 'telemetry.dart';
@@ -75,9 +79,20 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(path: ':botId/memory', builder: (_, s) => MemoryScreen(botId: s.pathParameters['botId']!)),
               GoRoute(path: ':botId/settings', builder: (_, s) => BotSettingsScreen(botId: s.pathParameters['botId']!)),
+              GoRoute(
+                path: ':botId/call',
+                builder: (_, s) => CallScreen(botId: s.pathParameters['botId']!, conversationId: s.uri.queryParameters['c']),
+              ),
               GoRoute(path: ':botId/routines', builder: (_, s) => RoutinesScreen(botId: s.pathParameters['botId']!)),
               GoRoute(path: ':botId/integrations', builder: (_, s) => BotIntegrationsScreen(botId: s.pathParameters['botId']!)),
             ],
+          ),
+          GoRoute(
+            path: '/quick-ask',
+            builder: (_, s) => QuickAskScreen(
+              initialText: s.uri.queryParameters['text'] ?? '',
+              fromShareExtension: s.uri.queryParameters['shared'] == '1',
+            ),
           ),
           GoRoute(path: '/inbox', builder: (_, s) => InboxScreen(initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? 0)),
           GoRoute(path: '/tasks', builder: (_, _) => const InboxScreen(initialTab: 2)),
@@ -104,6 +119,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'integrations', builder: (_, _) => const IntegrationsScreen()),
               GoRoute(path: 'secrets', builder: (_, _) => const SecretsScreen()),
               GoRoute(path: 'computers', builder: (_, _) => const ComputersScreen()),
+              GoRoute(path: 'companion', builder: (_, _) => const CompanionScreen()),
+              GoRoute(path: 'admin', builder: (_, _) => const AdminScreen()),
             ],
           ),
         ],

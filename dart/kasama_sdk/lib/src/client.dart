@@ -78,6 +78,9 @@ class KasamaClient {
   RoutinesApi get routines => api.getRoutinesApi();
   SecretsApi get secrets => api.getSecretsApi();
   TasksApi get tasks => api.getTasksApi();
+  VoiceApi get voice => api.getVoiceApi();
+  LocalComputerApi get localComputer => api.getLocalComputerApi();
+  AdminApi get admin => api.getAdminApi();
 
   Future<Map<String, String>> _authHeader() async {
     final session = await currentSession();
@@ -97,6 +100,21 @@ class KasamaClient {
       }),
     );
     return UploadResult.fromJson(res.data!);
+  }
+
+  /// Dictation: sends a recording and returns its text (uses the org's own speech-to-text key).
+  Future<Transcription> transcribe(String botId, List<int> audio, {required String mime, String? language}) async {
+    final res = await api.dio.post<Map<String, dynamic>>(
+      '/v1/voice/transcribe',
+      queryParameters: {'bot_id': botId, 'language': ?language},
+      data: Stream.fromIterable([audio]),
+      options: Options(headers: {
+        ...await _authHeader(),
+        'content-type': mime,
+        'content-length': audio.length,
+      }),
+    );
+    return Transcription.fromJson(res.data!);
   }
 
   /// Downloads a file from a computer.

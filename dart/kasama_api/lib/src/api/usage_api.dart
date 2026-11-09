@@ -9,7 +9,6 @@ import 'dart:convert';
 import 'package:kasama_api/src/deserialize.dart';
 import 'package:dio/dio.dart';
 
-import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/usage_report.dart';
 
 class UsageApi {

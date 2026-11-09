@@ -7,12 +7,14 @@ import 'package:kasama_api/src/auth/api_key_auth.dart';
 import 'package:kasama_api/src/auth/basic_auth.dart';
 import 'package:kasama_api/src/auth/bearer_auth.dart';
 import 'package:kasama_api/src/auth/oauth.dart';
+import 'package:kasama_api/src/api/admin_api.dart';
 import 'package:kasama_api/src/api/approvals_api.dart';
 import 'package:kasama_api/src/api/bots_api.dart';
 import 'package:kasama_api/src/api/chat_api.dart';
 import 'package:kasama_api/src/api/computers_api.dart';
 import 'package:kasama_api/src/api/credentials_api.dart';
 import 'package:kasama_api/src/api/integrations_api.dart';
+import 'package:kasama_api/src/api/local_computer_api.dart';
 import 'package:kasama_api/src/api/memory_api.dart';
 import 'package:kasama_api/src/api/routines_api.dart';
 import 'package:kasama_api/src/api/runs_api.dart';
@@ -20,6 +22,7 @@ import 'package:kasama_api/src/api/secrets_api.dart';
 import 'package:kasama_api/src/api/system_api.dart';
 import 'package:kasama_api/src/api/tasks_api.dart';
 import 'package:kasama_api/src/api/usage_api.dart';
+import 'package:kasama_api/src/api/voice_api.dart';
 import 'package:kasama_api/src/api/webhooks_api.dart';
 import 'package:kasama_api/src/api/workspaces_api.dart';
 
@@ -74,6 +77,12 @@ class KasamaApi {
     }
   }
 
+  /// Get AdminApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  AdminApi getAdminApi() {
+    return AdminApi(dio);
+  }
+
   /// Get ApprovalsApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   ApprovalsApi getApprovalsApi() {
@@ -108,6 +117,12 @@ class KasamaApi {
   /// by doing that all interceptors will not be executed
   IntegrationsApi getIntegrationsApi() {
     return IntegrationsApi(dio);
+  }
+
+  /// Get LocalComputerApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  LocalComputerApi getLocalComputerApi() {
+    return LocalComputerApi(dio);
   }
 
   /// Get MemoryApi instance, base route and serializer can be overridden by a given but be careful,
@@ -150,6 +165,12 @@ class KasamaApi {
   /// by doing that all interceptors will not be executed
   UsageApi getUsageApi() {
     return UsageApi(dio);
+  }
+
+  /// Get VoiceApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  VoiceApi getVoiceApi() {
+    return VoiceApi(dio);
   }
 
   /// Get WebhooksApi instance, base route and serializer can be overridden by a given but be careful,

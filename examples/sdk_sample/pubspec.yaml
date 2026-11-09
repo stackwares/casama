@@ -1,0 +1,16 @@
+name: kasama_sdk_sample
+description: An external app built on the published kasama_sdk package. Streams a bot's run live.
+publish_to: none
+environment:
+  sdk: ^3.13.0
+dependencies:
+  # As published on pub.dev.
+  kasama_sdk: ^0.6.0
+  args: ^2.7.0
+# Until 0.6.0 is on pub.dev (see docs/NEEDS-FROM-OLIVER.md), resolve the same versions from this
+# repository. Delete this block to use the published packages.
+dependency_overrides:
+  kasama_sdk:
+    path: ../../dart/kasama_sdk
+  kasama_api:
+    path: ../../dart/kasama_api

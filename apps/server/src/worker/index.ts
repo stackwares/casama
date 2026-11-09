@@ -28,7 +28,7 @@ import {
 } from "@kasama/agent";
 import { createDb, type Database } from "@kasama/db";
 import type { Logger } from "@kasama/observability";
-import { SupervisorProvider } from "@kasama/sandbox";
+import { LocalProvider, SupervisorProvider, unavailableProvider } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
 import {
   computersIdleWorkflow,
@@ -51,6 +51,8 @@ export interface WorkerOptions {
   embeddings?: "auto" | "none" | "hash";
   runConcurrency?: number;
   db?: Database;
+  /** Desktop companion tunnel (the API's internal URL and token). */
+  local?: { apiUrl: string; internalToken: string };
   /** Sandbox supervisor; without it bots have no computers. */
   supervisor?: { url: string; token: string };
   /** Push notifications; defaults to FCM when a service account is given, else recorded only. */
@@ -59,7 +61,18 @@ export interface WorkerOptions {
   /** Private address ranges the worker may call (local development and tests only). */
   egressExemptCidrs?: string[];
   /** Base URL overrides for provider APIs (tests). */
-  providerBases?: { fal?: string; brave?: string; tavily?: string };
+  providerBases?: {
+    fal?: string;
+    brave?: string;
+    tavily?: string;
+    openai?: string;
+    deepgram?: string;
+    elevenlabs?: string;
+    cartesia?: string;
+    fish_audio?: string;
+  };
+  /** Realtime voice model (default gpt-realtime-2.1). */
+  realtimeModel?: string;
 }
 
 function loadFixtures(paths: string): FixtureFile[] {
@@ -105,9 +118,18 @@ export async function startWorker(opts: WorkerOptions) {
     const cred = await credentials.embeddingCredential(orgId);
     return cred ? openAiEmbedder(cred) : null;
   };
-  const computers = opts.supervisor
-    ? new ComputerService(db, new SupervisorProvider(opts.supervisor.url, opts.supervisor.token))
-    : undefined;
+  // Bot computers: the sandbox supervisor, plus personal computers through the API (D-066).
+  const extra = opts.local ? { local: new LocalProvider(opts.local) } : undefined;
+  const computers =
+    opts.supervisor || extra
+      ? new ComputerService(
+          db,
+          opts.supervisor
+            ? new SupervisorProvider(opts.supervisor.url, opts.supervisor.token)
+            : unavailableProvider(),
+          extra,
+        )
+      : undefined;
   const tools = builtinTools({
     db,
     memory: async (orgId) => new MemoryService(db, await embedderFor(orgId)),
@@ -129,7 +151,7 @@ export async function startWorker(opts: WorkerOptions) {
       select c.provider, v.decrypted_secret as key from public.model_credentials c
       left join vault.decrypted_secrets v on v.id = c.vault_secret_id
       where c.org_id = ${orgId}::uuid and c.provider = any(${`{${providers.join(",")}}`}::text[])
-      order by c.created_at limit 1`);
+      order by array_position(${`{${providers.join(",")}}`}::text[], c.provider), c.created_at limit 1`);
     return row?.key ? row : null;
   };
   let client: DBOSClient | undefined;
@@ -170,6 +192,15 @@ export async function startWorker(opts: WorkerOptions) {
     gateway,
     computers,
     fetch: fetchOut,
+    voice: {
+      db,
+      key: providerKey,
+      bases: opts.providerBases,
+      fetch: opts.providerBases ? fetch : fetchOut,
+      tools,
+      computers: !!computers,
+      realtimeModel: opts.realtimeModel,
+    },
     agent: {
       db,
       gateway,
@@ -190,9 +221,18 @@ export async function startWorker(opts: WorkerOptions) {
     logLevel: opts.logLevel ?? "info",
   });
   await DBOS.launch();
-  await DBOS.registerQueue(QUEUES.runs, { workerConcurrency: opts.runConcurrency ?? 20 });
-  await DBOS.registerQueue(QUEUES.system, { workerConcurrency: 5 });
-  await DBOS.registerQueue(QUEUES.subruns, { workerConcurrency: opts.runConcurrency ?? 20 });
+  // Dispatch polling: runs and voice are latency-sensitive (a run should start, and a forwarded
+  // voice tool call answer, well within a second); background queues poll less often.
+  await DBOS.registerQueue(QUEUES.runs, {
+    workerConcurrency: opts.runConcurrency ?? 20,
+    minPollingIntervalMs: 100,
+  });
+  await DBOS.registerQueue(QUEUES.system, { workerConcurrency: 5, minPollingIntervalMs: 250 });
+  await DBOS.registerQueue(QUEUES.subruns, {
+    workerConcurrency: opts.runConcurrency ?? 20,
+    minPollingIntervalMs: 200,
+  });
+  await DBOS.registerQueue(QUEUES.voice, { workerConcurrency: 20, minPollingIntervalMs: 50 });
   client = await DBOSClient.create({
     systemDatabaseUrl: opts.databaseUrl,
     systemDatabaseSchemaName: "dbos",

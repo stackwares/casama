@@ -24,7 +24,15 @@ enum ProviderId {
       @JsonValue(r'brave_search')
       braveSearch(r'brave_search'),
       @JsonValue(r'tavily')
-      tavily(r'tavily');
+      tavily(r'tavily'),
+      @JsonValue(r'deepgram')
+      deepgram(r'deepgram'),
+      @JsonValue(r'elevenlabs')
+      elevenlabs(r'elevenlabs'),
+      @JsonValue(r'cartesia')
+      cartesia(r'cartesia'),
+      @JsonValue(r'fish_audio')
+      fishAudio(r'fish_audio');
 
   const ProviderId(this.value);
 

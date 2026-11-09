@@ -36,9 +36,16 @@ type Emit = (type: string, payload: Record<string, unknown>) => Promise<void>;
 export class ComputerService {
   readonly db: Database;
   readonly provider: ComputerProvider;
-  constructor(db: Database, provider: ComputerProvider) {
+  /** Providers that are not behind the supervisor (the `local` desktop companion, D-066). */
+  readonly extra: Record<string, ComputerProvider>;
+  constructor(
+    db: Database,
+    provider: ComputerProvider,
+    extra: Record<string, ComputerProvider> = {},
+  ) {
     this.db = db;
     this.provider = provider;
+    this.extra = extra;
   }
 
   /** The computer a bot uses: its default, else its private computer, else the org's team computer. */
@@ -57,6 +64,7 @@ export class ComputerService {
   /** The provider a computer runs on. */
   providerFor(c: ComputerRow): ComputerProvider {
     const id = typeof c.provider === "string" ? c.provider : "docker";
+    if (this.extra[id]) return this.extra[id];
     return id === "docker" ? this.provider : (this.provider.forProvider?.(id) ?? this.provider);
   }
 
@@ -176,7 +184,7 @@ export class ComputerService {
   async sleepIdle(idleMs = IDLE_SLEEP_MS) {
     const rows = await this.db.execute<ComputerRow>(sql`
       select * from public.computers
-      where state in ('running', 'idle') and coalesce(last_active_at, created_at) < now() - (${idleMs} * interval '1 millisecond')`);
+      where state in ('running', 'idle') and kind <> 'local' and coalesce(last_active_at, created_at) < now() - (${idleMs} * interval '1 millisecond')`);
     const slept: string[] = [];
     for (const c of rows) {
       const h = await this.providerFor(c)

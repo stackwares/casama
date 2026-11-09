@@ -42,17 +42,20 @@ execFileSync(
     "-o",
     apiDir,
     "--global-property=apiTests=false,modelTests=false,apiDocs=false,modelDocs=false",
-    "--additional-properties=pubName=kasama_api,pubVersion=0.1.0,serializationLibrary=json_serializable",
+    "--additional-properties=pubName=kasama_api,pubVersion=0.6.0,serializationLibrary=json_serializable",
   ],
   { stdio: ["ignore", "ignore", "inherit"], cwd: fileURLToPath(new URL("../..", import.meta.url)) },
 );
 // Join the Dart workspace.
 const pubspecPath = join(apiDir, "pubspec.yaml");
 let pubspec = readFileSync(pubspecPath, "utf8")
-  .replace(/^homepage:.*\n/m, "publish_to: none\n")
+  .replace(
+    /^homepage:.*\n/m,
+    "homepage: https://github.com/stackwares/kasama\nrepository: https://github.com/stackwares/kasama/tree/main/dart/kasama_api\nissue_tracker: https://github.com/stackwares/kasama/issues\n",
+  )
   .replace(
     /^description:.*$/m,
-    "description: Generated REST client for the Kasama API. Do not edit.",
+    "description: Generated REST client for the Kasama API (dio + json_serializable), used by kasama_sdk. Do not edit by hand.",
   )
   .replace(/sdk: '.*'/, "sdk: ^3.13.0");
 // Pin generated dependencies at their latest versions (policy: new deps at latest compatible).
@@ -85,7 +88,11 @@ for (const file of walk(join(apiDir, "lib")).filter(
   (f) => f.endsWith(".dart") && !f.endsWith(".g.dart"),
 )) {
   const src = readFileSync(file, "utf8");
-  const out = src.replaceAll("Map<String, Object>", "Map<String, Object?>");
+  let out = src.replaceAll("Map<String, Object>", "Map<String, Object?>");
+  // The generator imports the error model into every API file; drop it where unused (pub.dev lints).
+  const problemImport = "import 'package:kasama_api/src/model/problem.dart';\n";
+  if (out.includes(problemImport) && !/\bProblem\b/.test(out.replace(problemImport, "")))
+    out = out.replace(problemImport, "");
   if (out !== src) writeFileSync(file, out);
 }
 

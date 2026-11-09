@@ -25,8 +25,40 @@ export interface Workflows {
     body: string,
     headers: Record<string, string>,
   ): Promise<void>;
+  /** Voice (D-065): keyed operations run in the worker; each returns quickly. */
+  voiceTranscribe(
+    orgId: string,
+    botId: string,
+    audioB64: string,
+    mime: string,
+    language?: string,
+  ): Promise<VoiceResult<{ text: string; provider: string; seconds: number }>>;
+  voiceSpeak(
+    orgId: string,
+    messageId: string,
+  ): Promise<VoiceResult<{ voiceKey: string; cached: boolean }>>;
+  voiceSession(
+    orgId: string,
+    botId: string,
+  ): Promise<
+    VoiceResult<{
+      model: string;
+      clientSecret: string;
+      expiresAt: string;
+      connectUrl: string;
+      tools: number;
+    }>
+  >;
   close(): Promise<void>;
 }
+
+export type VoiceResult<T> = ({ ok: true } & T) | { ok: false; error: string };
+
+const withTimeout = <T>(p: Promise<T>, ms: number, what: string) =>
+  Promise.race([
+    p,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${what} timed out`)), ms)),
+  ]);
 
 /** Enqueues DBOS workflows from the API process; the worker executes them. */
 export async function dbosWorkflows(databaseUrl: string): Promise<Workflows> {
@@ -71,6 +103,33 @@ export async function dbosWorkflows(databaseUrl: string): Promise<Workflows> {
         body,
         headers,
       );
+    },
+    async voiceTranscribe(orgId, botId, audioB64, mime, language) {
+      const h = await client.enqueue<(...a: unknown[]) => Promise<never>>(
+        { queueName: "voice", workflowName: "voiceTranscribe" },
+        orgId,
+        botId,
+        audioB64,
+        mime,
+        language,
+      );
+      return withTimeout(h.getResult({ pollingIntervalMs: 50 }), 60_000, "transcription");
+    },
+    async voiceSpeak(orgId, messageId) {
+      const h = await client.enqueue<(...a: unknown[]) => Promise<never>>(
+        { queueName: "voice", workflowName: "voiceSpeak" },
+        orgId,
+        messageId,
+      );
+      return withTimeout(h.getResult({ pollingIntervalMs: 50 }), 60_000, "speech");
+    },
+    async voiceSession(orgId, botId) {
+      const h = await client.enqueue<(...a: unknown[]) => Promise<never>>(
+        { queueName: "voice", workflowName: "voiceSession" },
+        orgId,
+        botId,
+      );
+      return withTimeout(h.getResult({ pollingIntervalMs: 25 }), 20_000, "voice session");
     },
     close: () => client.destroy(),
   };

@@ -23,3 +23,4 @@ export * from "./tools/builtin.ts";
 export * from "./tools/computer.ts";
 export * from "./tools/desktop.ts";
 export * from "./tools/registry.ts";
+export * from "./voice.ts";

@@ -1,0 +1,171 @@
+{
+  "name": "local",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "list my shared folder"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "l1",
+            "name": "shell__exec",
+            "args": {
+              "command": "ls"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "shell.exec",
+        "lastUserIncludes": "list my shared folder"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Listed it."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "read my passwords"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "p1",
+            "name": "files__read",
+            "args": {
+              "path": "../Private/passwords.txt"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "files.read"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "I could not read that."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "clean up old files"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "r1",
+            "name": "shell__exec",
+            "args": {
+              "command": "rm -rf /tmp/kasama-old-files"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "shell.exec",
+        "lastUserIncludes": "clean up old files"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Done."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

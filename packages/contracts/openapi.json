@@ -2309,7 +2309,11 @@
           "openai_compatible",
           "fal",
           "brave_search",
-          "tavily"
+          "tavily",
+          "deepgram",
+          "elevenlabs",
+          "cartesia",
+          "fish_audio"
         ]
       },
       "CreateCredentialRequest": {
@@ -3910,6 +3914,645 @@
             "type": "boolean"
           }
         }
+      },
+      "VoiceSession": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai"
+            ]
+          },
+          "model": {
+            "type": "string"
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "Ephemeral key, valid for about 10 minutes"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "connect_url": {
+            "type": "string",
+            "description": "POST the WebRTC offer SDP here with the ephemeral key"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tools": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provider",
+          "model",
+          "client_secret",
+          "expires_at",
+          "connect_url",
+          "conversation_id",
+          "tools"
+        ]
+      },
+      "VoiceSessionRequest": {
+        "type": "object",
+        "properties": {
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "bot_id"
+        ]
+      },
+      "SavedCount": {
+        "type": "object",
+        "properties": {
+          "saved": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "saved"
+        ]
+      },
+      "VoiceTranscriptRequest": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "turns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "assistant"
+                  ]
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "required": [
+                "role",
+                "text"
+              ]
+            },
+            "maxItems": 500
+          },
+          "seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 86400
+          }
+        },
+        "required": [
+          "conversation_id",
+          "turns",
+          "seconds"
+        ]
+      },
+      "Transcription": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "seconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "text",
+          "provider",
+          "seconds"
+        ]
+      },
+      "VoiceToolResult": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "failed",
+              "waiting_approval",
+              "running"
+            ]
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "output": {
+            "type": "string",
+            "description": "Give this to the realtime model as the function output"
+          },
+          "approval_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "status",
+          "run_id",
+          "output",
+          "approval_id"
+        ]
+      },
+      "VoiceToolRequest": {
+        "type": "object",
+        "properties": {
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "call_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "arguments": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "bot_id",
+          "conversation_id",
+          "call_id",
+          "name"
+        ]
+      },
+      "CreatedLocalDevice": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LocalDevice"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "Device token, shown once; the app keeps it in secure storage"
+              }
+            },
+            "required": [
+              "token"
+            ]
+          }
+        ]
+      },
+      "LocalCapabilities": {
+        "type": "object",
+        "properties": {
+          "shell": {
+            "type": "boolean"
+          },
+          "files": {
+            "type": "boolean"
+          },
+          "browser": {
+            "type": "boolean"
+          },
+          "desktop": {
+            "type": "boolean"
+          }
+        }
+      },
+      "LocalDevice": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "computer_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "macos",
+              "windows",
+              "linux"
+            ]
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/LocalCapabilities"
+          },
+          "allowed_roots": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_bot_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "last_seen_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "org_id",
+          "user_id",
+          "computer_id",
+          "name",
+          "platform",
+          "capabilities",
+          "allowed_roots",
+          "allowed_bot_ids",
+          "enabled",
+          "online",
+          "last_seen_at",
+          "created_at"
+        ]
+      },
+      "CreateLocalDeviceRequest": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "macos",
+              "windows",
+              "linux"
+            ]
+          }
+        },
+        "required": [
+          "org_id",
+          "name",
+          "platform"
+        ]
+      },
+      "DeletedDevice": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "LocalDeviceList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocalDevice"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "UpdateLocalDeviceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/LocalCapabilities"
+          },
+          "allowed_roots": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "maxItems": 20
+          },
+          "allowed_bot_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 100
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AdminOrgList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminOrg"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "AdminOrg": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "plan_code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "limits": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "members": {
+            "type": "integer"
+          },
+          "bots": {
+            "type": "integer"
+          },
+          "cost_30d_usd": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "plan_code",
+          "limits",
+          "members",
+          "bots",
+          "cost_30d_usd"
+        ]
+      },
+      "AdminOverview": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "users": {
+            "type": "integer"
+          },
+          "orgs": {
+            "type": "integer"
+          },
+          "bots": {
+            "type": "integer"
+          },
+          "runs_24h": {
+            "type": "integer"
+          },
+          "failed_runs_24h": {
+            "type": "integer"
+          },
+          "cost_24h_usd": {
+            "type": "number"
+          },
+          "computers_running": {
+            "type": "integer"
+          },
+          "devices_online": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "users",
+          "orgs",
+          "bots",
+          "runs_24h",
+          "failed_runs_24h",
+          "cost_24h_usd",
+          "computers_running",
+          "devices_online"
+        ]
+      },
+      "AdminServiceList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminService"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "AdminService": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "configured": {
+            "type": "boolean"
+          },
+          "healthy": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "configured",
+          "healthy",
+          "detail"
+        ]
+      },
+      "UpdateNotice": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "type": "string"
+          },
+          "latest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "update_available": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "current",
+          "latest",
+          "update_available",
+          "url"
+        ]
+      },
+      "AdminUserList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUser"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "AdminUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_sign_in_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "orgs": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "created_at",
+          "last_sign_in_at",
+          "orgs"
+        ]
+      },
+      "SetOrgLimitsRequest": {
+        "type": "object",
+        "properties": {
+          "limits": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0
+            },
+            "description": "For example {max_bots, max_computers, monthly_usd}; replaces the org's limits"
+          }
+        },
+        "required": [
+          "limits"
+        ]
       }
     },
     "parameters": {}
@@ -7888,6 +8531,920 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/voice/session": {
+      "post": {
+        "operationId": "createVoiceSession",
+        "tags": [
+          "voice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Start a live call: mints an ephemeral realtime key with the bot's persona and tools",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages/{id}/speech": {
+      "get": {
+        "operationId": "messageSpeech",
+        "tags": [
+          "voice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Read aloud: MP3 audio of an assistant message (cached per voice)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MP3 audio",
+            "content": {
+              "audio/mpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/voice/transcript": {
+      "post": {
+        "operationId": "saveVoiceTranscript",
+        "tags": [
+          "voice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Save a call's transcript to the conversation and record its duration",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceTranscriptRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedCount"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/voice/transcribe": {
+      "post": {
+        "operationId": "transcribeAudio",
+        "tags": [
+          "voice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Dictation: send recorded audio (raw body, audio/* content type, up to 10 MB)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "bot_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 10
+            },
+            "required": false,
+            "name": "language",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Text",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transcription"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/voice/tool": {
+      "post": {
+        "operationId": "voiceTool",
+        "tags": [
+          "voice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Run a tool call from a live call as an agent run (same approvals); waits up to 25 s",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceToolRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceToolResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/local-devices": {
+      "post": {
+        "operationId": "createLocalDevice",
+        "tags": [
+          "local computer"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Pair this machine as a bot computer (desktop companion); returns a device token once",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLocalDeviceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Paired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedLocalDevice"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listLocalDevices",
+        "tags": [
+          "local computer"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "org_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your devices (admins see all)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalDeviceList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/local-devices/{id}": {
+      "delete": {
+        "operationId": "deleteLocalDevice",
+        "tags": [
+          "local computer"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unpaired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedDevice"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateLocalDevice",
+        "tags": [
+          "local computer"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Change capabilities, shared folders, allowed bots or turn the device off",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLocalDeviceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalDevice"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/local-computer/connect": {
+      "get": {
+        "operationId": "localComputerConnect",
+        "tags": [
+          "local computer"
+        ],
+        "summary": "WebSocket for the desktop companion (authorization: Device <token>, or ?token=). The API sends tool requests; the app answers from its embedded computerd.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "token",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching to WebSocket"
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/orgs": {
+      "get": {
+        "operationId": "adminOrgs",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Workspaces with their limits and spend",
+        "responses": {
+          "200": {
+            "description": "Workspaces with their limits and spend",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOrgList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/overview": {
+      "get": {
+        "operationId": "adminOverview",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Instance totals (owner only)",
+        "responses": {
+          "200": {
+            "description": "Instance totals (owner only)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOverview"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/services": {
+      "get": {
+        "operationId": "adminServices",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Configured providers and system health",
+        "responses": {
+          "200": {
+            "description": "Configured providers and system health",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminServiceList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/updates": {
+      "get": {
+        "operationId": "adminUpdates",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Whether a newer Kasama release exists",
+        "responses": {
+          "200": {
+            "description": "Whether a newer Kasama release exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateNotice"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/users": {
+      "get": {
+        "operationId": "adminUsers",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Everyone on this instance",
+        "responses": {
+          "200": {
+            "description": "Everyone on this instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/orgs/{id}/limits": {
+      "patch": {
+        "operationId": "setOrgLimits",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Set a workspace's quotas",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgLimitsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOrg"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {

@@ -112,6 +112,13 @@ export interface SandboxHandle {
   checkpoint(label: string): Promise<CheckpointRef>;
   restore(id: CheckpointRef): Promise<void>;
   health(): Promise<HealthStatus>;
+  /** Personal computers only: a handle whose calls tell the user which bot is acting (D-066). */
+  withActivity?(activity: {
+    run_id: string;
+    bot: string;
+    tool: string;
+    summary: string;
+  }): SandboxHandle;
 }
 
 export class SandboxError extends Error {
