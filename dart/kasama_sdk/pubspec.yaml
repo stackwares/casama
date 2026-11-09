@@ -11,4 +11,4 @@ dependencies:
   kasama_api:
     path: ../kasama_api
 dev_dependencies:
-  test: ^1.25.0
+  test: ^1.31.1
