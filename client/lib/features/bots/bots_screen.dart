@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -40,10 +41,10 @@ class BotsList extends ConsumerWidget {
       onRetry: () => ref.invalidate(botsProvider),
       data: (items) => items.isEmpty
           ? EmptyState(
-              icon: Icons.smart_toy_outlined,
+              icon: LucideIcons.bot,
               title: l10n.noBots,
               message: l10n.noBotsHelp,
-              action: FilledButton.icon(onPressed: () => showCreateBot(context, ref), icon: const Icon(Icons.add_rounded), label: Text(l10n.newBot)),
+              action: FilledButton.icon(onPressed: () => showCreateBot(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
             )
           : RefreshIndicator(
               onRefresh: () async {
@@ -124,7 +125,7 @@ class _BotCard extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+          Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
         ],
       ),
     );
@@ -141,7 +142,7 @@ class BotsScreen extends ConsumerWidget {
       appBar: ShellHeader(
         title: context.l10n.bots,
         subtitle: org?.name,
-        actions: [HeaderIconButton(icon: Icons.add_rounded, tooltip: context.l10n.newBot, onPressed: () => showCreateBot(context, ref))],
+        actions: [HeaderIconButton(icon: LucideIcons.plus, tooltip: context.l10n.newBot, onPressed: () => showCreateBot(context, ref))],
       ),
       body: const BotsList(),
     );

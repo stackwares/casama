@@ -5,6 +5,7 @@ import '../ui/adaptive_modal.dart';
 import '../ui/form_sheet.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'config.dart';
 
@@ -77,11 +78,11 @@ class _ServerFormState extends State<_ServerForm> {
 
   @override
   Widget build(BuildContext context) => FormSheet(
-    icon: Icons.dns_outlined,
+    icon: LucideIcons.server,
     title: widget.title,
     subtitle: widget.help,
     submitLabel: widget.connect,
-    submitIcon: Icons.link_rounded,
+    submitIcon: LucideIcons.link,
     submitKey: const Key('serverConnect'),
     cancelLabel: widget.cancel,
     onSubmit: () => Navigator.pop(context, _c.text),
@@ -92,7 +93,7 @@ class _ServerFormState extends State<_ServerForm> {
         autofocus: true,
         autocorrect: false,
         keyboardType: TextInputType.url,
-        decoration: InputDecoration(labelText: widget.label, hintText: 'https://kasama.example.com', prefixIcon: const Icon(Icons.public_rounded, size: 20)),
+        decoration: InputDecoration(labelText: widget.label, hintText: 'https://kasama.example.com', prefixIcon: const Icon(LucideIcons.globe, size: 20)),
         onSubmitted: (v) => Navigator.pop(context, v),
       ),
     ],

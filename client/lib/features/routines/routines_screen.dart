@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -26,17 +27,17 @@ class RoutinesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: ShellHeader(
         title: l10n.routines,
-        actions: [HeaderIconButton(key: const Key('newRoutine'), icon: Icons.add_rounded, tooltip: l10n.newRoutine, onPressed: () => _create(context, ref))],
+        actions: [HeaderIconButton(key: const Key('newRoutine'), icon: LucideIcons.plus, tooltip: l10n.newRoutine, onPressed: () => _create(context, ref))],
       ),
       body: AsyncView(
         value: ref.watch(routinesProvider(botId)),
         onRetry: () => ref.invalidate(routinesProvider(botId)),
         data: (items) => items.isEmpty
             ? EmptyState(
-                icon: Icons.schedule_rounded,
+                icon: LucideIcons.clock,
                 title: l10n.noRoutines,
                 message: l10n.noRoutinesHelp,
-                action: FilledButton.icon(onPressed: () => _create(context, ref), icon: const Icon(Icons.add_rounded), label: Text(l10n.newRoutine)),
+                action: FilledButton.icon(onPressed: () => _create(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newRoutine)),
               )
             : LayoutBuilder(
                 builder: (context, constraints) {
@@ -84,11 +85,11 @@ class RoutinesScreen extends ConsumerWidget {
             ],
           );
           return FormSheet(
-            icon: Icons.webhook_rounded,
+            icon: LucideIcons.webhook,
             title: l10n.webhookCreated,
             subtitle: l10n.webhookShownOnce,
             submitLabel: l10n.copySecret,
-            submitIcon: Icons.content_copy_rounded,
+            submitIcon: LucideIcons.copy,
             cancelLabel: l10n.close,
             onSubmit: () {
               Clipboard.setData(ClipboardData(text: created.webhookSecret ?? ''));
@@ -134,10 +135,10 @@ class _RoutineCard extends ConsumerWidget {
     final scheme = context.colorScheme;
     final r = routine;
     final (icon, schedule) = switch (r.trigger) {
-      RoutineTrigger.schedule => (Icons.repeat_rounded, l10n.routineSchedule(r.scheduleCron ?? '', r.timezone)),
-      RoutineTrigger.once => (Icons.alarm_rounded, l10n.routineOnce),
-      RoutineTrigger.github => (Icons.code_rounded, l10n.routineGithub),
-      RoutineTrigger.webhook => (Icons.webhook_rounded, l10n.routineWebhook),
+      RoutineTrigger.schedule => (LucideIcons.repeat, l10n.routineSchedule(r.scheduleCron ?? '', r.timezone)),
+      RoutineTrigger.once => (LucideIcons.alarmClock, l10n.routineOnce),
+      RoutineTrigger.github => (LucideIcons.codeXml, l10n.routineGithub),
+      RoutineTrigger.webhook => (LucideIcons.webhook, l10n.routineWebhook),
     };
     final next = r.enabled && r.nextRunAt != null ? l10n.nextRun(_formatWhen(context, r.nextRunAt!)) : null;
     final last = r.lastRunAt != null ? l10n.lastRun(_formatWhen(context, r.lastRunAt!)) : null;
@@ -170,7 +171,7 @@ class _RoutineCard extends ConsumerWidget {
                     runSpacing: 4,
                     children: [
                       if (!r.enabled) StatusLabel(text: l10n.routineOff, color: scheme.onSurfaceVariant, pill: true),
-                      if (next != null) StatusLabel(text: next, color: context.appColors.positive, pill: true, icon: Icons.schedule_rounded),
+                      if (next != null) StatusLabel(text: next, color: context.appColors.positive, pill: true, icon: LucideIcons.clock),
                       if (last != null) Text(last, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
                     ],
                   ),
@@ -191,7 +192,7 @@ class _RoutineCard extends ConsumerWidget {
             menuChildren: [
               MenuItemButton(
                 key: Key('runRoutine-${r.id}'),
-                leadingIcon: const Icon(Icons.play_arrow_rounded, size: 20),
+                leadingIcon: const Icon(LucideIcons.play, size: 20),
                 onPressed: () async {
                   final runId = await runGuarded(context, () => ref.read(backendProvider).runRoutine(r.id));
                   if (runId != null && context.mounted) {
@@ -208,7 +209,7 @@ class _RoutineCard extends ConsumerWidget {
               ),
               MenuItemButton(
                 key: Key('deleteRoutine-${r.id}'),
-                leadingIcon: Icon(Icons.delete_outline_rounded, size: 20, color: scheme.error),
+                leadingIcon: Icon(LucideIcons.trash2, size: 20, color: scheme.error),
                 onPressed: () => _delete(context, ref),
                 child: Text(l10n.delete, style: TextStyle(color: scheme.error)),
               ),
@@ -216,7 +217,7 @@ class _RoutineCard extends ConsumerWidget {
             builder: (context, controller, _) => IconButton(
               key: Key('routineMenu-${r.id}'),
               tooltip: l10n.moreActions,
-              icon: const Icon(Icons.more_vert_rounded),
+              icon: const Icon(LucideIcons.ellipsisVertical),
               onPressed: () => controller.isOpen ? controller.close() : controller.open(),
             ),
           ),
@@ -337,7 +338,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
             OutlinedButton.icon(
               key: const Key('routineRunAt'),
               onPressed: _pickTime,
-              icon: const Icon(Icons.event_rounded, size: 18),
+              icon: const Icon(LucideIcons.calendar, size: 18),
               label: Text(_formatWhen(context, _runAt)),
             ),
           ],

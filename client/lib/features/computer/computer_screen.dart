@@ -10,8 +10,10 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:xterm/xterm.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
+import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -51,7 +53,7 @@ class ComputerScreen extends ConsumerWidget {
       onRetry: () => ref.invalidate(computersProvider),
       data: (list) {
         final c = botId == null ? computerForBot(list, '') : computerForBot(list, botId!);
-        if (c == null) return EmptyState(icon: Icons.computer, message: l10n.somethingWentWrong);
+        if (c == null) return EmptyState(icon: LucideIcons.laptop, message: l10n.somethingWentWrong);
         return ComputerPanel(computer: c);
       },
     );
@@ -93,7 +95,7 @@ class ComputerPanel extends ConsumerWidget {
                       ),
                       alignment: Alignment.center,
                       child: Icon(
-                        computer.profile == ComputerProfileEnum.desktop ? Icons.desktop_windows_rounded : Icons.terminal_rounded,
+                        computer.profile == ComputerProfileEnum.desktop ? LucideIcons.monitor : LucideIcons.squareTerminal,
                         size: 20,
                         color: running ? context.appColors.working : context.colorScheme.onSurfaceVariant,
                       ),
@@ -127,7 +129,7 @@ class ComputerPanel extends ConsumerWidget {
                               await runGuarded(context, () => ref.read(backendProvider).startComputer(computer.id));
                               ref.invalidate(computersProvider);
                             },
-                            icon: const Icon(Icons.power_settings_new_rounded, size: 18),
+                            icon: const Icon(LucideIcons.power, size: 18),
                             label: Text(l10n.computerStart),
                           )
                         else
@@ -136,7 +138,7 @@ class ComputerPanel extends ConsumerWidget {
                               await runGuarded(context, () => ref.read(backendProvider).stopComputer(computer.id));
                               ref.invalidate(computersProvider);
                             },
-                            icon: const Icon(Icons.bedtime_outlined, size: 18),
+                            icon: const Icon(LucideIcons.moon, size: 18),
                             label: Text(l10n.computerSleep),
                           ),
                       ],
@@ -153,10 +155,10 @@ class ComputerPanel extends ConsumerWidget {
                     tabAlignment: TabAlignment.start,
                     padding: EdgeInsets.zero,
                     tabs: [
-                      _IconTab(icon: Icons.monitor_rounded, text: l10n.screen),
-                      _IconTab(icon: Icons.terminal_rounded, text: l10n.terminal),
-                      _IconTab(icon: Icons.folder_outlined, text: l10n.files),
-                      _IconTab(icon: Icons.history_rounded, text: l10n.checkpoints),
+                      _IconTab(icon: LucideIcons.monitor, text: l10n.screen),
+                      _IconTab(icon: LucideIcons.squareTerminal, text: l10n.terminal),
+                      _IconTab(icon: LucideIcons.folder, text: l10n.files),
+                      _IconTab(icon: LucideIcons.history, text: l10n.checkpoints),
                     ],
                   ),
                 ),
@@ -171,7 +173,7 @@ class ComputerPanel extends ConsumerWidget {
                             children: [
                               _DesktopSwitch(computer: computer),
                               Expanded(
-                                child: running ? _ScreenTab(computerId: computer.id) : EmptyState(icon: Icons.bedtime_outlined, message: l10n.computerAsleep),
+                                child: running ? _ScreenTab(computerId: computer.id) : EmptyState(icon: LucideIcons.moon, message: l10n.computerAsleep),
                               ),
                             ],
                           ),
@@ -221,12 +223,12 @@ class _LiveEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return EmptyState(
-      icon: Icons.live_tv_outlined,
+      icon: LucideIcons.monitorPlay,
       message: l10n.liveViewHelp,
       action: FilledButton.icon(
         key: const Key('openLiveView'),
         onPressed: () => GoRouter.of(context).push('/computer/live?c=${computer.id}'),
-        icon: const Icon(Icons.play_arrow),
+        icon: const Icon(LucideIcons.play),
         label: Text(l10n.openLiveView),
       ),
     );
@@ -259,7 +261,7 @@ class _DesktopSwitchState extends ConsumerState<_DesktopSwitch> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline_rounded, size: 18, color: scheme.primary),
+                Icon(LucideIcons.info, size: 18, color: scheme.primary),
                 const SizedBox(width: AppSpace.xs),
                 Expanded(
                   child: Text(l10n.headlessScreenNote, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
@@ -271,7 +273,7 @@ class _DesktopSwitchState extends ConsumerState<_DesktopSwitch> {
               alignment: AlignmentDirectional.centerEnd,
               child: FilledButton.tonalIcon(
                 key: const Key('switchToDesktop'),
-                icon: const Icon(Icons.desktop_windows_outlined, size: 18),
+                icon: const Icon(LucideIcons.monitor, size: 18),
                 label: Text(l10n.switchToDesktop),
                 onPressed: _busy
                     ? null
@@ -332,9 +334,9 @@ class _ScreenTabState extends ConsumerState<_ScreenTab> {
   Widget build(BuildContext context) {
     if (_png == null) {
       return EmptyState(
-        icon: Icons.desktop_windows_outlined,
+        icon: LucideIcons.monitor,
         message: context.l10n.noScreen,
-        action: OutlinedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded, size: 18), label: Text(context.l10n.refresh)),
+        action: OutlinedButton.icon(onPressed: _load, icon: const Icon(LucideIcons.rotateCw, size: 18), label: Text(context.l10n.refresh)),
       );
     }
     return InteractiveViewer(child: Center(child: Image.memory(_png!, gaplessPlayback: true)));
@@ -390,12 +392,12 @@ class _TerminalTabState extends ConsumerState<TerminalTab> with AutomaticKeepAli
     super.build(context);
     if (!_connected) {
       return EmptyState(
-        icon: Icons.terminal_rounded,
+        icon: LucideIcons.squareTerminal,
         title: context.l10n.terminal,
         message: context.l10n.terminalHelp,
         action: FilledButton.icon(
           onPressed: () => runGuarded(context, _connect),
-          icon: const Icon(Icons.power_rounded, size: 18),
+          icon: const Icon(LucideIcons.plug, size: 18),
           label: Text(context.l10n.connectTerminal),
         ),
       );
@@ -453,14 +455,13 @@ class _FilesTabState extends ConsumerState<FilesTab> {
     _reload();
   }
 
-  Future<void> _download(ComputerFileEntry e) async {
+  Future<void> _download(ComputerFileEntry e, {Rect? origin}) async {
     final bytes = await runGuarded(context, () => ref.read(backendProvider).downloadFile(widget.computerId, e.path));
-    if (bytes == null) return;
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile.fromData(bytes, name: e.name)],
-        fileNameOverrides: [e.name],
-      ),
+    if (bytes == null || !mounted) return;
+    await shareFiles(
+      [XFile.fromData(bytes, name: e.name)],
+      names: [e.name],
+      origin: origin ?? shareOrigin(context),
     );
   }
 
@@ -487,7 +488,7 @@ class _FilesTabState extends ConsumerState<FilesTab> {
               child: Row(
                 children: [
                   if (_path.isNotEmpty) ...[
-                    IconButton.filledTonal(tooltip: l10n.up, onPressed: () => _open(_parent), icon: const Icon(Icons.arrow_upward_rounded, size: 20)),
+                    IconButton.filledTonal(tooltip: l10n.up, onPressed: () => _open(_parent), icon: const Icon(LucideIcons.arrowUp, size: 20)),
                     const SizedBox(width: AppSpace.xs),
                   ],
                   Expanded(
@@ -500,9 +501,9 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                           constraints: BoxConstraints(minWidth: bar.maxWidth),
                           child: Row(
                             children: [
-                              _Crumb(icon: Icons.home_work_outlined, label: 'workspace', onTap: crumbs.isEmpty ? null : () => _open('')),
+                              _Crumb(icon: LucideIcons.house, label: 'workspace', onTap: crumbs.isEmpty ? null : () => _open('')),
                               for (var i = 0; i < crumbs.length; i++) ...[
-                                Icon(Icons.chevron_right_rounded, size: 18, color: scheme.onSurfaceVariant),
+                                Icon(LucideIcons.chevronRight, size: 18, color: scheme.onSurfaceVariant),
                                 _Crumb(label: crumbs[i], onTap: i == crumbs.length - 1 ? null : () => _open(crumbs.sublist(0, i + 1).join('/'))),
                               ],
                             ],
@@ -511,8 +512,8 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                       ),
                     ),
                   ),
-                  IconButton(tooltip: l10n.refresh, onPressed: _reload, icon: const Icon(Icons.refresh_rounded)),
-                  FilledButton.tonalIcon(onPressed: _upload, icon: const Icon(Icons.upload_rounded, size: 18), label: Text(l10n.upload)),
+                  IconButton(tooltip: l10n.refresh, onPressed: _reload, icon: const Icon(LucideIcons.rotateCw)),
+                  FilledButton.tonalIcon(onPressed: _upload, icon: const Icon(LucideIcons.upload, size: 18), label: Text(l10n.upload)),
                 ],
               ),
             ),
@@ -520,7 +521,7 @@ class _FilesTabState extends ConsumerState<FilesTab> {
               child: FutureBuilder<List<ComputerFileEntry>>(
                 future: _entries,
                 builder: (context, snap) {
-                  if (snap.hasError) return EmptyState(icon: Icons.error_outline_rounded, isError: true, message: errorText(context, snap.error!));
+                  if (snap.hasError) return EmptyState(icon: LucideIcons.circleAlert, isError: true, message: errorText(context, snap.error!));
                   if (!snap.hasData) return const Center(child: CircularProgressIndicator());
                   final items = [...snap.data!]
                     ..sort((a, b) {
@@ -530,10 +531,10 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                     });
                   if (items.isEmpty) {
                     return EmptyState(
-                      icon: Icons.folder_open_rounded,
+                      icon: LucideIcons.folderOpen,
                       title: l10n.emptyFolder,
                       message: l10n.emptyFolderHelp,
-                      action: OutlinedButton.icon(onPressed: _upload, icon: const Icon(Icons.upload_rounded, size: 18), label: Text(l10n.upload)),
+                      action: OutlinedButton.icon(onPressed: _upload, icon: const Icon(LucideIcons.upload, size: 18), label: Text(l10n.upload)),
                     );
                   }
                   return ListView(
@@ -544,7 +545,7 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                           for (final e in items)
                             if (e.type.name == 'dir')
                               GroupedTile(
-                                icon: Icons.folder_rounded,
+                                icon: LucideIcons.folder,
                                 iconColor: context.appColors.warning,
                                 title: e.name,
                                 onTap: () => _open(_path.isEmpty ? e.name : '$_path/${e.name}'),
@@ -555,27 +556,30 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                                 title: e.name,
                                 subtitle: formatBytes(e.size),
                                 onTap: () => showComputerFile(context, computerId: widget.computerId, path: e.path),
-                                trailing: PopupMenuButton<String>(
-                                  tooltip: l10n.moreActions,
-                                  icon: Icon(Icons.more_vert_rounded, color: scheme.onSurfaceVariant),
-                                  onSelected: (v) async {
-                                    if (v == 'download') await _download(e);
-                                    if (v == 'delete') await _delete(e);
-                                  },
-                                  itemBuilder: (_) => [
-                                    PopupMenuItem(
-                                      value: 'download',
-                                      child: ListTile(dense: true, leading: const Icon(Icons.ios_share_rounded), title: Text(l10n.download)),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: ListTile(
-                                        dense: true,
-                                        leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
-                                        title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
+                                trailing: Builder(
+                                  // The share sheet points at this button on iPad and macOS.
+                                  builder: (anchor) => PopupMenuButton<String>(
+                                    tooltip: l10n.moreActions,
+                                    icon: Icon(LucideIcons.ellipsisVertical, color: scheme.onSurfaceVariant),
+                                    onSelected: (v) async {
+                                      if (v == 'download') await _download(e, origin: shareOrigin(anchor));
+                                      if (v == 'delete') await _delete(e);
+                                    },
+                                    itemBuilder: (_) => [
+                                      PopupMenuItem(
+                                        value: 'download',
+                                        child: ListTile(dense: true, leading: const Icon(LucideIcons.share), title: Text(l10n.download)),
                                       ),
-                                    ),
-                                  ],
+                                      PopupMenuItem(
+                                        value: 'delete',
+                                        child: ListTile(
+                                          dense: true,
+                                          leading: Icon(LucideIcons.trash2, color: scheme.error),
+                                          title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                         ],
@@ -651,7 +655,7 @@ class _CheckpointsTabState extends ConsumerState<CheckpointsTab> {
         if (!snap.hasData) return const Center(child: CircularProgressIndicator());
         final items = snap.data!;
         if (items.isEmpty) {
-          return EmptyState(icon: Icons.history_rounded, title: context.l10n.noCheckpointsTitle, message: context.l10n.noCheckpoints);
+          return EmptyState(icon: LucideIcons.history, title: context.l10n.noCheckpointsTitle, message: context.l10n.noCheckpoints);
         }
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -665,14 +669,14 @@ class _CheckpointsTabState extends ConsumerState<CheckpointsTab> {
                   children: [
                     for (final cp in items)
                       GroupedTile(
-                        icon: Icons.bookmark_outline_rounded,
+                        icon: LucideIcons.bookmark,
                         iconColor: context.appColors.warning,
                         title: cp.label,
                         subtitle: relativeTime(cp.createdAt, context),
                         trailing: OutlinedButton.icon(
                           onPressed: () => confirmRestore(context, ref, widget.computerId, cp.id),
                           style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
-                          icon: const Icon(Icons.restore_rounded, size: 16),
+                          icon: const Icon(LucideIcons.rotateCcw, size: 16),
                           label: Text(context.l10n.restore),
                         ),
                       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_tokens.dart';
 import 'motion.dart';
 
 /// Gradients bots draw from, picked by name so a bot keeps its color everywhere.
@@ -92,7 +93,7 @@ class BotAvatar extends StatelessWidget {
               child: Text(
                 _initials(name),
                 style: TextStyle(
-                  fontFamily: 'Nunito',
+                  fontFamily: AppFonts.serif,
                   color: Colors.white,
                   fontWeight: FontWeight.w800,
                   fontSize: size * (name.trim().contains(' ') ? 0.36 : 0.44),

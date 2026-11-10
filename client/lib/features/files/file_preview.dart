@@ -8,8 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
+import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -117,15 +119,15 @@ String mimeFor(String name) => switch (_ext(name)) {
 };
 
 IconData fileIconFor(String name) => switch (_ext(name)) {
-  'png' || 'jpg' || 'jpeg' || 'gif' || 'webp' || 'heic' || 'svg' => Icons.image_outlined,
-  'pdf' => Icons.picture_as_pdf_outlined,
-  'md' || 'markdown' || 'txt' => Icons.description_outlined,
-  'csv' || 'xlsx' || 'tsv' => Icons.table_chart_outlined,
-  'zip' => Icons.folder_zip_outlined,
-  'mp3' || 'm4a' || 'wav' => Icons.audiotrack_outlined,
-  'mp4' || 'mov' => Icons.movie_outlined,
-  final e when _textTypes.contains(e) => Icons.code_rounded,
-  _ => Icons.insert_drive_file_outlined,
+  'png' || 'jpg' || 'jpeg' || 'gif' || 'webp' || 'heic' || 'svg' => LucideIcons.image,
+  'pdf' => LucideIcons.fileText,
+  'md' || 'markdown' || 'txt' => LucideIcons.fileText,
+  'csv' || 'xlsx' || 'tsv' => LucideIcons.table2,
+  'zip' => LucideIcons.folderArchive,
+  'mp3' || 'm4a' || 'wav' => LucideIcons.music,
+  'mp4' || 'mov' => LucideIcons.film,
+  final e when _textTypes.contains(e) => LucideIcons.codeXml,
+  _ => LucideIcons.file,
 };
 
 String formatBytes(int n) {
@@ -172,7 +174,7 @@ class FilePreview extends ConsumerWidget {
   final String computerId;
   final String path;
 
-  Future<void> _open(BuildContext context, Uint8List bytes) async {
+  Future<void> _open(BuildContext context, Uint8List bytes, {Rect? origin}) async {
     final name = fileNameOf(path);
     if (_desktop) {
       final dir = await getTemporaryDirectory();
@@ -183,7 +185,7 @@ class FilePreview extends ConsumerWidget {
       if (!ok && context.mounted) showMessage(context, context.l10n.noAppToOpen(name));
       return;
     }
-    await _share(context, bytes);
+    await _share(context, bytes, origin: origin);
   }
 
   Future<void> _save(BuildContext context, Uint8List bytes) async {
@@ -193,13 +195,12 @@ class FilePreview extends ConsumerWidget {
     if (saved != null && context.mounted) showMessage(context, context.l10n.savedFile(name));
   }
 
-  Future<void> _share(BuildContext context, Uint8List bytes) async {
+  Future<void> _share(BuildContext context, Uint8List bytes, {Rect? origin}) async {
     final name = fileNameOf(path);
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile.fromData(bytes, name: name, mimeType: mimeFor(name))],
-        fileNameOverrides: [name],
-      ),
+    await shareFiles(
+      [XFile.fromData(bytes, name: name, mimeType: mimeFor(name))],
+      names: [name],
+      origin: origin ?? shareOrigin(context),
     );
   }
 
@@ -220,10 +221,7 @@ class FilePreview extends ConsumerWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppRadius.icon),
-                ),
+                decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.icon)),
                 alignment: Alignment.center,
                 child: Icon(fileIconFor(name), color: scheme.primary, size: 22),
               ),
@@ -239,10 +237,7 @@ class FilePreview extends ConsumerWidget {
                       style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     Text(
-                      [
-                        path.startsWith('~/') || path.startsWith('/') ? path : 'workspace/$path',
-                        if (bytes != null) formatBytes(bytes.length),
-                      ].join(' · '),
+                      [path.startsWith('~/') || path.startsWith('/') ? path : 'workspace/$path', if (bytes != null) formatBytes(bytes.length)].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -255,7 +250,7 @@ class FilePreview extends ConsumerWidget {
                 IconButton(
                   tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                   onPressed: () => Navigator.of(context).maybePop(),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(LucideIcons.x),
                 ),
             ],
           ),
@@ -266,23 +261,27 @@ class FilePreview extends ConsumerWidget {
             spacing: AppSpace.xs,
             runSpacing: AppSpace.xs,
             children: [
-              FilledButton.tonalIcon(
-                key: const Key('fileOpen'),
-                onPressed: bytes == null ? null : () => runGuarded(context, () => _open(context, bytes)),
-                icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                label: Text(_desktop ? l10n.openFile : l10n.shareFile),
+              Builder(
+                builder: (button) => FilledButton.tonalIcon(
+                  key: const Key('fileOpen'),
+                  onPressed: bytes == null ? null : () => runGuarded(context, () => _open(context, bytes, origin: shareOrigin(button))),
+                  icon: const Icon(LucideIcons.squareArrowOutUpRight, size: 18),
+                  label: Text(_desktop ? l10n.openFile : l10n.shareFile),
+                ),
               ),
               OutlinedButton.icon(
                 key: const Key('fileSave'),
                 onPressed: bytes == null ? null : () => runGuarded(context, () => _save(context, bytes)),
-                icon: const Icon(Icons.download_rounded, size: 18),
+                icon: const Icon(LucideIcons.download, size: 18),
                 label: Text(l10n.saveFile),
               ),
               if (_desktop)
-                OutlinedButton.icon(
-                  onPressed: bytes == null ? null : () => runGuarded(context, () => _share(context, bytes)),
-                  icon: const Icon(Icons.ios_share_rounded, size: 18),
-                  label: Text(l10n.shareFile),
+                Builder(
+                  builder: (button) => OutlinedButton.icon(
+                    onPressed: bytes == null ? null : () => runGuarded(context, () => _share(context, bytes, origin: shareOrigin(button))),
+                    icon: const Icon(LucideIcons.share, size: 18),
+                    label: Text(l10n.shareFile),
+                  ),
                 ),
             ],
           ),
@@ -362,7 +361,7 @@ class _Unsupported extends StatelessWidget {
     message: hint ?? context.l10n.previewUnavailable,
     action: FilledButton.icon(
       onPressed: onOpen,
-      icon: const Icon(Icons.open_in_new_rounded, size: 18),
+      icon: const Icon(LucideIcons.squareArrowOutUpRight, size: 18),
       label: Text(_desktop ? context.l10n.openFile : context.l10n.shareFile),
     ),
   );

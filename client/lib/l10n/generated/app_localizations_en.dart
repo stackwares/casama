@@ -2142,4 +2142,77 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ssoHelp =>
       'Enter your work email and we\'ll send you to your company\'s sign-in page.';
+
+  @override
+  String get colorScheme => 'Color scheme';
+
+  @override
+  String get searchThemes => 'Search schemes';
+
+  @override
+  String get noThemesFound => 'No schemes match.';
+
+  @override
+  String get familyAll => 'All';
+
+  @override
+  String get familyPurple => 'Purple';
+
+  @override
+  String get familyBlue => 'Blue';
+
+  @override
+  String get familyTeal => 'Teal';
+
+  @override
+  String get familyGreen => 'Green';
+
+  @override
+  String get familyWarm => 'Warm';
+
+  @override
+  String get familyRed => 'Red & pink';
+
+  @override
+  String get familyNeutral => 'Neutral';
+
+  @override
+  String get background => 'Background';
+
+  @override
+  String get backgroundPattern => 'Pattern';
+
+  @override
+  String get backgroundColors => 'Colors';
+
+  @override
+  String get backgroundThemeColors => 'Theme';
+
+  @override
+  String get patternStrength => 'Pattern strength';
+
+  @override
+  String get wallpaperEverywhere => 'Show on every screen';
+
+  @override
+  String get wallpaperEverywhereHelp =>
+      'Turn off to keep it behind chats only.';
+
+  @override
+  String get resetBackground => 'Reset to default';
+
+  @override
+  String get chatsOnly => 'Chats only';
+
+  @override
+  String get copyMessage => 'Copy';
+
+  @override
+  String get selectText => 'Select text';
+
+  @override
+  String get shareMessage => 'Share';
+
+  @override
+  String get messageCopied => 'Copied';
 }

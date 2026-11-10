@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
 import '../../core/providers.dart';
@@ -69,7 +70,7 @@ class ApprovalsList extends ConsumerWidget {
       value: ref.watch(approvalsProvider),
       onRetry: () => ref.invalidate(approvalsProvider),
       data: (items) => items.isEmpty && takeovers.isEmpty
-          ? EmptyState(icon: Icons.verified_user_outlined, title: l10n.noApprovals, message: l10n.noApprovalsHelp)
+          ? EmptyState(icon: LucideIcons.shieldCheck, title: l10n.noApprovals, message: l10n.noApprovalsHelp)
           : RefreshIndicator(
               onRefresh: () async {
                 ref.invalidate(approvalsProvider);
@@ -208,20 +209,20 @@ class _ApprovalCardState extends ConsumerState<ApprovalCard> {
             children: [
               TextButton.icon(
                 onPressed: () => context.go('/bots/${a.botId}/runs/${a.runId}'),
-                icon: const Icon(Icons.timeline_rounded, size: 18),
+                icon: const Icon(LucideIcons.activity, size: 18),
                 label: Text(l10n.viewRun),
               ),
               TextButton(key: const Key('alwaysAllow'), onPressed: _busy ? null : () => _decide(true, always: true), child: Text(l10n.alwaysAllow)),
               OutlinedButton.icon(
                 key: const Key('deny'),
                 onPressed: _busy ? null : () => _decide(false),
-                icon: const Icon(Icons.close_rounded, size: 18),
+                icon: const Icon(LucideIcons.x, size: 18),
                 label: Text(l10n.deny),
               ),
               FilledButton.icon(
                 key: const Key('approve'),
                 onPressed: _busy ? null : () => _decide(true),
-                icon: const Icon(Icons.check_rounded, size: 18),
+                icon: const Icon(LucideIcons.check, size: 18),
                 label: Text(l10n.approve),
               ),
             ],
@@ -249,13 +250,9 @@ class ApprovalScreen extends ConsumerWidget {
           final match = items.where((a) => a.id == approvalId);
           if (match.isEmpty) {
             return EmptyState(
-              icon: Icons.task_alt_rounded,
+              icon: LucideIcons.circleCheckBig,
               message: l10n.approvalAlreadyDecided,
-              action: FilledButton.tonalIcon(
-                onPressed: () => context.go('/inbox'),
-                icon: const Icon(Icons.inbox_outlined, size: 18),
-                label: Text(l10n.openInbox),
-              ),
+              action: FilledButton.tonalIcon(onPressed: () => context.go('/inbox'), icon: const Icon(LucideIcons.inbox, size: 18), label: Text(l10n.openInbox)),
             );
           }
           return PageColumn(children: [ApprovalCard(approval: match.first)]);
@@ -277,7 +274,7 @@ class NotificationsList extends ConsumerWidget {
       value: value,
       onRetry: () => ref.invalidate(notificationsProvider),
       data: (items) => items.isEmpty
-          ? EmptyState(icon: Icons.notifications_none_rounded, title: l10n.noNotifications, message: l10n.noNotificationsHelp)
+          ? EmptyState(icon: LucideIcons.bell, title: l10n.noNotifications, message: l10n.noNotificationsHelp)
           : RefreshIndicator(
               onRefresh: () async => ref.invalidate(notificationsProvider),
               child: LayoutBuilder(
@@ -291,7 +288,7 @@ class NotificationsList extends ConsumerWidget {
                           alignment: AlignmentDirectional.centerEnd,
                           child: TextButton.icon(
                             onPressed: () => runGuarded(context, ref.read(notificationsProvider.notifier).markAllRead),
-                            icon: const Icon(Icons.done_all_rounded, size: 18),
+                            icon: const Icon(LucideIcons.checkCheck, size: 18),
                             label: Text(l10n.markAllRead),
                           ),
                         ),
@@ -316,11 +313,11 @@ class _NotificationRow extends ConsumerWidget {
     final n = notification;
     final unread = n.readAt == null;
     final (icon, color) = switch (n.kind) {
-      'approval' => (Icons.verified_user_outlined, colors.warning),
-      'routine' || 'routine_result' => (Icons.schedule_rounded, colors.info),
-      'budget' => (Icons.payments_outlined, colors.negative),
-      'takeover' => (Icons.back_hand_outlined, colors.waiting),
-      _ => (Icons.notifications_outlined, scheme.primary),
+      'approval' => (LucideIcons.shieldCheck, colors.warning),
+      'routine' || 'routine_result' => (LucideIcons.clock, colors.info),
+      'budget' => (LucideIcons.banknote, colors.negative),
+      'takeover' => (LucideIcons.hand, colors.waiting),
+      _ => (LucideIcons.bell, scheme.primary),
     };
     return InkWell(
       key: Key('notification-${n.id}'),
@@ -399,16 +396,16 @@ class TaskBoard extends ConsumerWidget {
     final colors = context.appColors;
     final scheme = context.colorScheme;
     (String, Color, IconData) style(String s) => switch (s) {
-      'todo' => (l10n.taskTodo, scheme.onSurfaceVariant, Icons.radio_button_unchecked_rounded),
-      'doing' => (l10n.taskDoing, colors.working, Icons.play_circle_outline_rounded),
-      'blocked' => (l10n.taskBlocked, colors.negative, Icons.block_rounded),
-      _ => (l10n.taskDone, colors.positive, Icons.check_circle_outline_rounded),
+      'todo' => (l10n.taskTodo, scheme.onSurfaceVariant, LucideIcons.circle),
+      'doing' => (l10n.taskDoing, colors.working, LucideIcons.circlePlay),
+      'blocked' => (l10n.taskBlocked, colors.negative, LucideIcons.ban),
+      _ => (l10n.taskDone, colors.positive, LucideIcons.circleCheck),
     };
     return AsyncView(
       value: ref.watch(tasksProvider),
       onRetry: () => ref.invalidate(tasksProvider),
       data: (items) => items.isEmpty
-          ? EmptyState(icon: Icons.view_kanban_outlined, title: l10n.noTasks, message: l10n.noTasksHelp)
+          ? EmptyState(icon: LucideIcons.squareKanban, title: l10n.noTasks, message: l10n.noTasksHelp)
           : RefreshIndicator(
               onRefresh: () async => ref.invalidate(tasksProvider),
               child: LayoutBuilder(
@@ -457,7 +454,7 @@ class TaskBoard extends ConsumerWidget {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           StatusLabel(text: style(t.status.value).$1, color: style(t.status.value).$2, pill: true),
-                                          Icon(Icons.expand_more_rounded, size: 18, color: scheme.onSurfaceVariant),
+                                          Icon(LucideIcons.chevronDown, size: 18, color: scheme.onSurfaceVariant),
                                         ],
                                       ),
                                     ),
@@ -509,7 +506,7 @@ class TakeoverCard extends ConsumerWidget {
                         shape: BoxShape.circle,
                         border: Border.all(color: scheme.surface, width: 2),
                       ),
-                      child: const Icon(Icons.back_hand_rounded, size: 10, color: Colors.white),
+                      child: const Icon(LucideIcons.hand, size: 10, color: Colors.white),
                     ),
                   ),
                 ],
@@ -546,7 +543,7 @@ class TakeoverCard extends ConsumerWidget {
               FilledButton.icon(
                 key: const Key('openTakeover'),
                 onPressed: () => context.push('/computer/live?c=${takeover.computerId}&takeover=${takeover.id}'),
-                icon: const Icon(Icons.mouse_outlined, size: 18),
+                icon: const Icon(LucideIcons.mousePointer2, size: 18),
                 label: Text(l10n.takeControl),
               ),
             ],

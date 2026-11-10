@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:kasama_app/app.dart';
 import 'package:kasama_app/core/backend.dart';
 import 'package:kasama_app/core/providers.dart';
@@ -14,13 +15,9 @@ import 'package:kasama_app/ui/floating_tab_chrome.dart';
 import 'fake_backend.dart';
 
 Widget harness(FakeBackend backend, Widget child) => ProviderScope(
-      overrides: [backendProvider.overrideWithValue(backend)],
-      child: MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: child,
-      ),
-    );
+  overrides: [backendProvider.overrideWithValue(backend)],
+  child: MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: child),
+);
 
 Future<void> setSize(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size;
@@ -58,7 +55,13 @@ void main() {
 
     backend.runEventsController
       ..add(ev(1, 'run.started', {'trigger': 'chat', 'model': 'm', 'computer_id': null}))
-      ..add(ev(2, 'tool.started', {'call_id': 'c1', 'tool': 'shell.exec', 'args_redacted': {'command': 'ls -la'}}))
+      ..add(
+        ev(2, 'tool.started', {
+          'call_id': 'c1',
+          'tool': 'shell.exec',
+          'args_redacted': {'command': 'ls -la'},
+        }),
+      )
       ..add(ev(3, 'tool.output', {'call_id': 'c1', 'chunk': 'report.md\n'}))
       ..add(ev(4, 'tool.completed', {'call_id': 'c1', 'result_preview': 'exit code 0', 'artifact_path': null, 'duration_ms': 42}))
       ..add(ev(5, 'message.delta', {'message_id': 'a1', 'text': 'Here is '}))
@@ -81,12 +84,14 @@ void main() {
     expect(backend.cancelled, isTrue);
 
     backend.runEventsController
-      ..add(ev(8, 'message.completed', {
-        'message_id': 'a1',
-        'content': [
-          {'type': 'text', 'text': 'Here is the **report**.'},
-        ],
-      }))
+      ..add(
+        ev(8, 'message.completed', {
+          'message_id': 'a1',
+          'content': [
+            {'type': 'text', 'text': 'Here is the **report**.'},
+          ],
+        }),
+      )
       ..add(ev(9, 'run.completed', {'final_message_id': 'a1'}));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('sendButton')), findsOneWidget);
@@ -98,12 +103,14 @@ void main() {
     final c = container.read(chatControllerProvider(botId).notifier);
     c.apply(ev(1, 'message.delta', {'message_id': 'crashed', 'text': 'partial'}));
     c.apply(ev(2, 'message.delta', {'message_id': 'final', 'text': 'Full answer'}));
-    c.apply(ev(3, 'message.completed', {
-      'message_id': 'final',
-      'content': [
-        {'type': 'text', 'text': 'Full answer'},
-      ],
-    }));
+    c.apply(
+      ev(3, 'message.completed', {
+        'message_id': 'final',
+        'content': [
+          {'type': 'text', 'text': 'Full answer'},
+        ],
+      }),
+    );
     c.apply(ev(4, 'run.completed', {'final_message_id': 'final'}));
     final texts = container.read(chatControllerProvider(botId)).entries.whereType<MessageEntry>().map((m) => m.text);
     expect(texts, ['Full answer']);
@@ -118,7 +125,11 @@ void main() {
       ..storedEvents = [
         ev(1, 'run.started', {'trigger': 'chat', 'model': 'm', 'computer_id': null}),
         ev(2, 'checkpoint.created', {'checkpoint_id': '66666666-6666-4666-8666-666666666666', 'label': 'Before: rm -rf old'}),
-        ev(3, 'tool.started', {'call_id': 'c1', 'tool': 'shell.exec', 'args_redacted': {'command': 'rm -rf old'}}),
+        ev(3, 'tool.started', {
+          'call_id': 'c1',
+          'tool': 'shell.exec',
+          'args_redacted': {'command': 'rm -rf old'},
+        }),
         ev(4, 'message.delta', {'message_id': 'a', 'text': 'Done'}),
         ev(5, 'run.completed', {'final_message_id': 'a'}),
       ];
@@ -168,7 +179,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.createdOrgs, 1);
     // Step 1 is complete (check icon) once the workspace exists.
-    expect(find.byIcon(Icons.check), findsWidgets);
+    expect(find.byIcon(LucideIcons.check), findsWidgets);
   });
 
   testWidgets('stored messages render oldest first', (tester) async {

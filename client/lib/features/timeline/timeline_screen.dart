@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/backend.dart';
@@ -28,12 +29,12 @@ class ActivityScreen extends ConsumerWidget {
     return SubPage(
       title: l10n.activity,
       subtitle: ref.watch(botProvider(botId))?.name,
-      actions: [HeaderIconButton(icon: Icons.refresh_rounded, tooltip: l10n.refresh, onPressed: () => ref.invalidate(runsProvider(botId)))],
+      actions: [HeaderIconButton(icon: LucideIcons.rotateCw, tooltip: l10n.refresh, onPressed: () => ref.invalidate(runsProvider(botId)))],
       body: AsyncView(
         value: runs,
         onRetry: () => ref.invalidate(runsProvider(botId)),
         data: (items) => items.isEmpty
-            ? EmptyState(icon: Icons.timeline_rounded, title: l10n.noRuns, message: l10n.noRunsHelp)
+            ? EmptyState(icon: LucideIcons.activity, title: l10n.noRuns, message: l10n.noRunsHelp)
             : RefreshIndicator(
                 onRefresh: () async => ref.invalidate(runsProvider(botId)),
                 child: PageListView(
@@ -50,11 +51,11 @@ class ActivityScreen extends ConsumerWidget {
   final colors = context.appColors;
   final l10n = context.l10n;
   return switch (status) {
-    'completed' => (l10n.runCompleted, colors.positive, Icons.check_rounded),
-    'failed' => (l10n.runStatusFailed, colors.negative, Icons.priority_high_rounded),
-    'cancelled' => (l10n.runStatusStopped, context.colorScheme.onSurfaceVariant, Icons.stop_rounded),
-    'paused' || 'waiting' => (l10n.runWaiting, colors.waiting, Icons.pause_rounded),
-    _ => (l10n.runWorking, colors.working, Icons.more_horiz_rounded),
+    'completed' => (l10n.runCompleted, colors.positive, LucideIcons.check),
+    'failed' => (l10n.runStatusFailed, colors.negative, LucideIcons.circleAlert),
+    'cancelled' => (l10n.runStatusStopped, context.colorScheme.onSurfaceVariant, LucideIcons.square),
+    'paused' || 'waiting' => (l10n.runWaiting, colors.waiting, LucideIcons.pause),
+    _ => (l10n.runWorking, colors.working, LucideIcons.ellipsis),
   };
 }
 
@@ -75,9 +76,9 @@ class _RunCard extends StatelessWidget {
     final scheme = context.colorScheme;
     final (label, color, icon) = runStatusStyle(context, run.status);
     final triggerIcon = switch (run.trigger) {
-      'chat' => Icons.chat_bubble_outline_rounded,
-      'webhook' => Icons.webhook_rounded,
-      _ => Icons.schedule_rounded,
+      'chat' => LucideIcons.messageCircle,
+      'webhook' => LucideIcons.webhook,
+      _ => LucideIcons.clock,
     };
     return AppCard(
       onTap: onTap,
@@ -122,7 +123,7 @@ class _RunCard extends StatelessWidget {
             formatUsd(run.costUsd),
             style: context.textTheme.labelLarge?.copyWith(fontFeatures: AppText.tabular, color: scheme.onSurfaceVariant),
           ),
-          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+          Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant),
         ],
       ),
     );
@@ -160,7 +161,7 @@ class _RunTimelineScreenState extends ConsumerState<RunTimelineScreen> {
       appBar: ShellHeader(
         title: l10n.timelineTitle,
         subtitle: ref.watch(botProvider(widget.botId))?.name,
-        actions: [HeaderIconButton(icon: Icons.refresh_rounded, tooltip: l10n.refresh, onPressed: () => ref.invalidate(runEventsProvider(widget.runId)))],
+        actions: [HeaderIconButton(icon: LucideIcons.rotateCw, tooltip: l10n.refresh, onPressed: () => ref.invalidate(runEventsProvider(widget.runId)))],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -191,7 +192,7 @@ class _RunTimelineScreenState extends ConsumerState<RunTimelineScreen> {
                           (e) => matchesFilter(_filter, e.type) && e.type != 'message.delta' || (_filter == EventFilter.messages && e.type == 'message.delta'),
                         )
                         .toList();
-                    if (shown.isEmpty) return EmptyState(icon: Icons.filter_alt_off_outlined, message: l10n.noEventsForFilter);
+                    if (shown.isEmpty) return EmptyState(icon: LucideIcons.funnelX, message: l10n.noEventsForFilter);
                     return ListView.builder(
                       padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom),
                       itemCount: shown.length,
@@ -243,19 +244,19 @@ class TimelineTile extends StatelessWidget {
     };
     final t = item.type;
     final (icon, color) = switch (t) {
-      'tool.started' => (Icons.play_arrow_rounded, colors.info),
-      'tool.completed' => (Icons.check_rounded, colors.positive),
-      'tool.failed' || 'run.failed' => (Icons.priority_high_rounded, colors.negative),
-      'tool.output' => (Icons.terminal_rounded, scheme.onSurfaceVariant),
-      'run.started' => (Icons.flag_rounded, scheme.primary),
-      'run.completed' => (Icons.done_all_rounded, colors.positive),
-      'usage' => (Icons.payments_outlined, colors.positive),
-      _ when t.startsWith('message.') => (Icons.chat_bubble_outline_rounded, scheme.primary),
-      _ when t.startsWith('checkpoint.') => (Icons.bookmark_outline_rounded, colors.warning),
-      _ when t.startsWith('computer.') => (Icons.desktop_windows_outlined, colors.working),
-      _ when t.startsWith('skill.') => (Icons.menu_book_outlined, colors.info),
-      _ when t.startsWith('approval.') || t.startsWith('takeover.') => (Icons.back_hand_outlined, colors.waiting),
-      _ => (Icons.circle, scheme.onSurfaceVariant),
+      'tool.started' => (LucideIcons.play, colors.info),
+      'tool.completed' => (LucideIcons.check, colors.positive),
+      'tool.failed' || 'run.failed' => (LucideIcons.circleAlert, colors.negative),
+      'tool.output' => (LucideIcons.squareTerminal, scheme.onSurfaceVariant),
+      'run.started' => (LucideIcons.flag, scheme.primary),
+      'run.completed' => (LucideIcons.checkCheck, colors.positive),
+      'usage' => (LucideIcons.banknote, colors.positive),
+      _ when t.startsWith('message.') => (LucideIcons.messageCircle, scheme.primary),
+      _ when t.startsWith('checkpoint.') => (LucideIcons.bookmark, colors.warning),
+      _ when t.startsWith('computer.') => (LucideIcons.monitor, colors.working),
+      _ when t.startsWith('skill.') => (LucideIcons.bookOpen, colors.info),
+      _ when t.startsWith('approval.') || t.startsWith('takeover.') => (LucideIcons.hand, colors.waiting),
+      _ => (LucideIcons.circle, scheme.onSurfaceVariant),
     };
     final rail = colors.hairline;
     final checkpoint = item is CheckpointCreatedItem && onRestore != null;
@@ -276,7 +277,7 @@ class TimelineTile extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
-                  child: Icon(icon, size: icon == Icons.circle ? 8 : 15, color: color),
+                  child: Icon(icon, size: icon == LucideIcons.circle ? 8 : 15, color: color),
                 ),
                 Expanded(child: Container(width: 2, color: last ? Colors.transparent : rail)),
               ],
@@ -317,7 +318,7 @@ class TimelineTile extends StatelessWidget {
                     OutlinedButton.icon(
                       onPressed: () => onRestore!((item as CheckpointCreatedItem).event.payload.checkpointId),
                       style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 12)),
-                      icon: const Icon(Icons.restore_rounded, size: 16),
+                      icon: const Icon(LucideIcons.rotateCcw, size: 16),
                       label: Text(context.l10n.restore),
                     ),
                   ],

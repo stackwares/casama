@@ -1,34 +1,11 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_tokens.dart';
-
-/// Accent choices in Settings → Appearance. The accent colors controls and selection only; pages
-/// and cards stay neutral whatever is picked.
-enum AppAccent {
-  kasama('Kasama', Color(0xFF0F766E)),
-  emerald('Emerald', Color(0xFF059669)),
-  green('Green', Color(0xFF16A34A)),
-  lime('Lime', Color(0xFF65A30D)),
-  amber('Amber', Color(0xFFD97706)),
-  orange('Orange', Color(0xFFEA580C)),
-  red('Red', Color(0xFFDC2626)),
-  rose('Rose', Color(0xFFE11D48)),
-  pink('Pink', Color(0xFFDB2777)),
-  fuchsia('Fuchsia', Color(0xFFC026D3)),
-  purple('Purple', Color(0xFF9333EA)),
-  violet('Violet', Color(0xFF7C3AED)),
-  indigo('Indigo', Color(0xFF4F46E5)),
-  blue('Blue', Color(0xFF2563EB)),
-  sky('Sky', Color(0xFF0284C7)),
-  cyan('Cyan', Color(0xFF0891B2)),
-  slate('Graphite', Color(0xFF475569));
-
-  const AppAccent(this.label, this.seed);
-  final String label;
-  final Color seed;
-}
+import 'appearance.dart';
+import 'wallpaper.dart';
 
 const _subThemes = FlexSubThemesData(
   blendOnLevel: 10,
@@ -61,85 +38,70 @@ const _subThemes = FlexSubThemesData(
 );
 
 abstract final class AppTheme {
-  static ThemeData light([AppAccent accent = AppAccent.kasama]) => _finish(
-        FlexThemeData.light(
-          colors: FlexSchemeColor.from(primary: accent.seed, brightness: Brightness.light),
-          keyColors: const FlexKeyColors(useKeyColors: true, keepPrimary: true),
-          surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
-          blendLevel: 7,
-          subThemesData: _subThemes,
-          visualDensity: FlexColorScheme.comfortablePlatformDensity,
-          useMaterial3: true,
-        ),
-      );
+  static ThemeData light([Appearance appearance = const Appearance()]) => _finish(
+    FlexThemeData.light(
+      colors: appearance.scheme.data.light,
+      keyColors: const FlexKeyColors(useKeyColors: true, useSecondary: true, useTertiary: true, keepPrimary: true, keepSecondary: true, keepTertiary: true),
+      surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
+      blendLevel: 6,
+      subThemesData: _subThemes,
+      fontFamily: AppFonts.sans,
+      visualDensity: FlexColorScheme.comfortablePlatformDensity,
+      useMaterial3: true,
+    ),
+    appearance.wallpaper,
+  );
 
-  static ThemeData dark([AppAccent accent = AppAccent.kasama]) => _finish(
-        FlexThemeData.dark(
-          colors: FlexSchemeColor.from(primary: accent.seed, brightness: Brightness.dark),
-          keyColors: const FlexKeyColors(useKeyColors: true),
-          surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
-          blendLevel: 13,
-          subThemesData: _subThemes.copyWith(blendOnLevel: 20),
-          visualDensity: FlexColorScheme.comfortablePlatformDensity,
-          useMaterial3: true,
-        ),
-      );
+  static ThemeData dark([Appearance appearance = const Appearance()]) => _finish(
+    FlexThemeData.dark(
+      colors: appearance.scheme.data.dark,
+      keyColors: const FlexKeyColors(useKeyColors: true, useSecondary: true, useTertiary: true, keepPrimary: true, keepSecondary: true, keepTertiary: true),
+      surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
+      blendLevel: 12,
+      subThemesData: _subThemes.copyWith(blendOnLevel: 20),
+      fontFamily: AppFonts.sans,
+      visualDensity: FlexColorScheme.comfortablePlatformDensity,
+      useMaterial3: true,
+    ),
+    appearance.wallpaper,
+  );
 
-  /// Neutral surfaces whatever the accent: it colors controls and selection, never the page.
-  static ColorScheme _neutralSurfaces(ColorScheme scheme) {
-    if (scheme.brightness == Brightness.dark) {
-      return scheme.copyWith(
-        surface: const Color(0xFF0D0E10),
-        surfaceDim: const Color(0xFF0D0E10),
-        surfaceBright: const Color(0xFF2A2D33),
-        surfaceContainerLowest: const Color(0xFF0A0B0C),
-        surfaceContainerLow: const Color(0xFF16171A),
-        surfaceContainer: const Color(0xFF1C1E22),
-        surfaceContainerHigh: const Color(0xFF23252A),
-        surfaceContainerHighest: const Color(0xFF2A2D33),
-        onSurface: const Color(0xFFEEF0F3),
-        onSurfaceVariant: const Color(0xFF9095A0),
-        outline: const Color(0xFF4A4E57),
-        outlineVariant: const Color(0xFF25272B),
-        surfaceTint: Colors.transparent,
-      );
-    }
-    return scheme.copyWith(
-      surface: const Color(0xFFF4F5F7),
-      surfaceDim: const Color(0xFFE6E8EB),
-      surfaceBright: const Color(0xFFFFFFFF),
-      surfaceContainerLowest: const Color(0xFFFFFFFF),
-      surfaceContainerLow: const Color(0xFFFFFFFF),
-      surfaceContainer: const Color(0xFFEEF0F3),
-      surfaceContainerHigh: const Color(0xFFE8EAEE),
-      surfaceContainerHighest: const Color(0xFFE1E4E8),
-      onSurface: const Color(0xFF111317),
-      onSurfaceVariant: const Color(0xFF5F6570),
-      outline: const Color(0xFFA0A5AE),
-      outlineVariant: const Color(0xFFE3E5E8),
-      surfaceTint: Colors.transparent,
-    );
-  }
+  /// Every page route paints the wallpaper under its content (see [WallpaperPageTransitionsBuilder]).
+  static const _pageTransitions = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: WallpaperPageTransitionsBuilder(FadeForwardsPageTransitionsBuilder()),
+      TargetPlatform.fuchsia: WallpaperPageTransitionsBuilder(FadeForwardsPageTransitionsBuilder()),
+      TargetPlatform.iOS: WallpaperPageTransitionsBuilder(CupertinoPageTransitionsBuilder()),
+      TargetPlatform.macOS: WallpaperPageTransitionsBuilder(CupertinoPageTransitionsBuilder()),
+      TargetPlatform.linux: WallpaperPageTransitionsBuilder(FadeForwardsPageTransitionsBuilder()),
+      TargetPlatform.windows: WallpaperPageTransitionsBuilder(FadeForwardsPageTransitionsBuilder()),
+    },
+  );
 
-  static ThemeData _finish(ThemeData base) {
-    final scheme = _neutralSurfaces(base.colorScheme);
+  static ThemeData _finish(ThemeData base, WallpaperSpec wallpaper) {
+    final scheme = base.colorScheme;
     final isDark = scheme.brightness == Brightness.dark;
     final colors = isDark ? AppColors.dark : AppColors.light;
-    final textTheme = _nunitoHeadlines(base.textTheme).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
+    final textTheme = _typography(base.textTheme).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
     final sheetColor = isDark ? scheme.surfaceContainerLow : scheme.surfaceContainerLowest;
     final selectedTint = Color.alphaBlend(scheme.primary.withValues(alpha: isDark ? 0.22 : 0.14), sheetColor);
     final fieldFill = isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest;
-    final fieldBorder = OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: colors.hairline));
+    final fieldBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: colors.hairline),
+    );
 
     return base.copyWith(
       colorScheme: scheme,
-      scaffoldBackgroundColor: scheme.surface,
+      // Pages are see-through: the wallpaper under every route shows behind them.
+      scaffoldBackgroundColor: Colors.transparent,
       canvasColor: scheme.surface,
+      pageTransitionsTheme: _pageTransitions,
       textTheme: textTheme,
-      primaryTextTheme: _nunitoHeadlines(base.primaryTextTheme),
-      extensions: [colors],
+      primaryTextTheme: _typography(base.primaryTextTheme),
+      extensions: [colors, WallpaperTheme.of(wallpaper, scheme)],
       appBarTheme: base.appBarTheme.copyWith(
-        backgroundColor: scheme.surface,
+        backgroundColor: Colors.transparent,
         foregroundColor: scheme.onSurface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -153,7 +115,10 @@ abstract final class AppTheme {
         shadowColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.cardAll, side: BorderSide(color: colors.hairline)),
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.cardAll,
+          side: BorderSide(color: colors.hairline),
+        ),
       ),
       dividerTheme: DividerThemeData(color: colors.hairline, thickness: 1, space: 1),
       inputDecorationTheme: base.inputDecorationTheme.copyWith(
@@ -182,7 +147,10 @@ abstract final class AppTheme {
       popupMenuTheme: base.popupMenuTheme.copyWith(
         color: isDark ? scheme.surfaceContainerHigh : scheme.surfaceBright,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: colors.hairline)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: colors.hairline),
+        ),
       ),
       listTileTheme: base.listTileTheme.copyWith(
         iconColor: scheme.onSurfaceVariant,
@@ -202,7 +170,10 @@ abstract final class AppTheme {
       tabBarTheme: base.tabBarTheme.copyWith(
         dividerHeight: 0,
         indicatorSize: TabBarIndicatorSize.tab,
-        indicator: ShapeDecoration(shape: const StadiumBorder(), color: scheme.primary.withValues(alpha: isDark ? 0.2 : 0.12)),
+        indicator: ShapeDecoration(
+          shape: const StadiumBorder(),
+          color: scheme.primary.withValues(alpha: isDark ? 0.2 : 0.12),
+        ),
         labelColor: scheme.primary,
         unselectedLabelColor: scheme.onSurfaceVariant,
         labelStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -245,33 +216,32 @@ abstract final class AppTheme {
         linearTrackColor: scheme.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
-      expansionTileTheme: base.expansionTileTheme.copyWith(
-        shape: const Border(),
-        collapsedShape: const Border(),
-      ),
+      expansionTileTheme: base.expansionTileTheme.copyWith(shape: const Border(), collapsedShape: const Border()),
     );
   }
 
-  /// Display, headline and title styles use Nunito; body and labels keep the platform font, with
-  /// the tighter tracking San Francisco and Segoe want (Material's is tuned for Roboto).
-  static TextTheme _nunitoHeadlines(TextTheme theme) {
-    TextStyle? nunito(TextStyle? style) => style?.copyWith(fontFamily: 'Nunito');
-    TextStyle? track(TextStyle? style, double spacing) => style?.copyWith(letterSpacing: spacing);
+  /// Fraunces for display, headline and large titles; Figtree (the theme's font) for the rest,
+  /// with slightly tighter tracking on large sizes.
+  static TextTheme _typography(TextTheme theme) {
+    TextStyle? serif(TextStyle? style, double spacing) => style?.copyWith(fontFamily: AppFonts.serif, fontWeight: FontWeight.w600, letterSpacing: spacing);
+    TextStyle? sans(TextStyle? style, double spacing, [FontWeight? weight]) =>
+        style?.copyWith(fontFamily: AppFonts.sans, letterSpacing: spacing, fontWeight: weight ?? style.fontWeight);
     return theme.copyWith(
-      bodyLarge: track(theme.bodyLarge, -0.1),
-      bodyMedium: track(theme.bodyMedium, 0),
-      bodySmall: track(theme.bodySmall, 0.1),
-      labelLarge: track(theme.labelLarge, 0),
-      labelMedium: track(theme.labelMedium, 0.1),
-      labelSmall: track(theme.labelSmall, 0.2),
-      displayLarge: nunito(theme.displayLarge),
-      displayMedium: nunito(theme.displayMedium),
-      displaySmall: nunito(theme.displaySmall),
-      headlineLarge: nunito(theme.headlineLarge),
-      headlineMedium: nunito(theme.headlineMedium),
-      headlineSmall: nunito(theme.headlineSmall),
-      titleLarge: nunito(theme.titleLarge),
-      titleMedium: nunito(theme.titleMedium),
+      displayLarge: serif(theme.displayLarge, -1.2),
+      displayMedium: serif(theme.displayMedium, -0.9),
+      displaySmall: serif(theme.displaySmall, -0.6),
+      headlineLarge: serif(theme.headlineLarge, -0.6),
+      headlineMedium: serif(theme.headlineMedium, -0.5),
+      headlineSmall: serif(theme.headlineSmall, -0.4),
+      titleLarge: serif(theme.titleLarge, -0.3),
+      titleMedium: sans(theme.titleMedium, -0.1, FontWeight.w600),
+      titleSmall: sans(theme.titleSmall, 0, FontWeight.w600),
+      bodyLarge: sans(theme.bodyLarge, -0.1),
+      bodyMedium: sans(theme.bodyMedium, 0),
+      bodySmall: sans(theme.bodySmall, 0.1),
+      labelLarge: sans(theme.labelLarge, 0, FontWeight.w600),
+      labelMedium: sans(theme.labelMedium, 0.1, FontWeight.w500),
+      labelSmall: sans(theme.labelSmall, 0.2, FontWeight.w500),
     );
   }
 }

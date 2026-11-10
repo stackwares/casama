@@ -57,6 +57,9 @@ void main() {
     final player = FakePlayer();
     await tester.pumpWidget(voiceHarness(backend, player: player, home: const ChatScreen(botId: botId, conversationId: convId)));
     await tester.pumpAndSettle();
+    // Read aloud lives in the message menu: long-press the reply.
+    await tester.longPress(find.text('Water the fern.'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('speak-msg-1')));
     await tester.pumpAndSettle();
     expect(backend.spoken, ['msg-1']);

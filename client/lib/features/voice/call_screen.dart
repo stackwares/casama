@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/voice.dart';
@@ -149,7 +150,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                           width: 96,
                           height: 96,
                           decoration: BoxDecoration(shape: BoxShape.circle, color: scheme.errorContainer),
-                          child: Icon(Icons.phone_disabled_rounded, size: 40, color: scheme.error),
+                          child: Icon(LucideIcons.phoneOff, size: 40, color: scheme.error),
                         )
                       : BotAvatar(name: name.isEmpty ? '?' : name, size: 96),
                 ),
@@ -198,7 +199,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
               if (_activeTools.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpace.sm),
-                  child: StatusLabel(text: _activeTools.join(', '), color: context.appColors.working, pill: true, icon: Icons.build_outlined),
+                  child: StatusLabel(text: _activeTools.join(', '), color: context.appColors.working, pill: true, icon: LucideIcons.wrench),
                 ),
               const SizedBox(height: AppSpace.md),
               Expanded(
@@ -233,7 +234,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                     children: [
                       _CallButton(
                         buttonKey: const Key('muteButton'),
-                        icon: _muted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                        icon: _muted ? LucideIcons.micOff : LucideIcons.mic,
                         label: _muted ? l10n.unmute : l10n.mute,
                         selected: _muted,
                         onPressed: call == null
@@ -244,13 +245,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                               },
                       ),
                       const SizedBox(width: 48),
-                      _CallButton(
-                        buttonKey: const Key('hangUpButton'),
-                        icon: Icons.call_end_rounded,
-                        label: l10n.hangUp,
-                        destructive: true,
-                        onPressed: _hangUp,
-                      ),
+                      _CallButton(buttonKey: const Key('hangUpButton'), icon: LucideIcons.phoneOff, label: l10n.hangUp, destructive: true, onPressed: _hangUp),
                     ],
                   ),
                 ),

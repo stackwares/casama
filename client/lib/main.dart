@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'app.dart';
 import 'core/config.dart';
@@ -94,26 +95,38 @@ class _StartupGateState extends State<StartupGate> {
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: _error == null
-                    ? Column(mainAxisSize: MainAxisSize.min, children: [
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 16),
-                        Text(l10n.connectingToServer, key: const Key('startupConnecting')),
-                      ])
-                    : Column(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.cloud_off, size: 48, color: Theme.of(context).colorScheme.outline),
-                        const SizedBox(height: 16),
-                        Text(l10n.cannotReachServer, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
-                        const SizedBox(height: 8),
-                        Text(l10n.cannotReachServerHelp(_config.apiUrl), textAlign: TextAlign.center),
-                        const SizedBox(height: 16),
-                        FilledButton(key: const Key('startupRetry'), onPressed: _start, child: Text(l10n.retry)),
-                        TextButton(
-                          key: const Key('startupChangeServer'),
-                          onPressed: () => changeServerDialog(context, _config.apiUrl,
-                              title: l10n.server, label: l10n.serverAddress, cancel: l10n.cancel, connect: l10n.connect),
-                          child: Text(l10n.changeServer),
-                        ),
-                      ]),
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircularProgressIndicator(),
+                          const SizedBox(height: 16),
+                          Text(l10n.connectingToServer, key: const Key('startupConnecting')),
+                        ],
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(LucideIcons.cloudOff, size: 48, color: Theme.of(context).colorScheme.outline),
+                          const SizedBox(height: 16),
+                          Text(l10n.cannotReachServer, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
+                          const SizedBox(height: 8),
+                          Text(l10n.cannotReachServerHelp(_config.apiUrl), textAlign: TextAlign.center),
+                          const SizedBox(height: 16),
+                          FilledButton(key: const Key('startupRetry'), onPressed: _start, child: Text(l10n.retry)),
+                          TextButton(
+                            key: const Key('startupChangeServer'),
+                            onPressed: () => changeServerDialog(
+                              context,
+                              _config.apiUrl,
+                              title: l10n.server,
+                              label: l10n.serverAddress,
+                              cancel: l10n.cancel,
+                              connect: l10n.connect,
+                            ),
+                            child: Text(l10n.changeServer),
+                          ),
+                        ],
+                      ),
               ),
             ),
           );

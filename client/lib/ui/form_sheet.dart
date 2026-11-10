@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
@@ -125,7 +126,7 @@ class FormSheet extends StatelessWidget {
 
 /// A muted line that explains a disabled button or adds a note under a form.
 class FormNote extends StatelessWidget {
-  const FormNote(this.text, {super.key, this.icon = Icons.info_outline_rounded, this.color});
+  const FormNote(this.text, {super.key, this.icon = LucideIcons.info, this.color});
   final String text;
   final IconData icon;
   final Color? color;
@@ -345,11 +346,11 @@ Future<Choice<T>?> showChoiceSheet<T>(
               children: [
                 for (final c in choices)
                   GroupedTile(
-                    icon: c.icon ?? Icons.circle_outlined,
+                    icon: c.icon ?? LucideIcons.circle,
                     title: c.label,
                     subtitle: c.subtitle,
                     onTap: () => Navigator.of(context).pop(c),
-                    trailing: c.value == selected ? Icon(Icons.check_rounded, color: scheme.primary) : const SizedBox(width: 24),
+                    trailing: c.value == selected ? Icon(LucideIcons.check, color: scheme.primary) : const SizedBox(width: 24),
                   ),
               ],
             ),

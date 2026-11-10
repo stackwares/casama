@@ -3,20 +3,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/billing.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
-import '../../theme/app_theme.dart';
 import '../../theme/app_tokens.dart';
 import '../../theme/appearance.dart';
+import '../../theme/wallpaper.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../bots/model_picker.dart';
 import 'model_keys_screen.dart';
+import 'theme_screen.dart';
 import '../../ui/app_card.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
@@ -35,8 +37,8 @@ class SettingsScreen extends ConsumerWidget {
       label: l10n.email,
       hint: 'name@company.com',
       submitLabel: l10n.sendInvite,
-      icon: Icons.person_add_alt_1_outlined,
-      fieldIcon: Icons.alternate_email_rounded,
+      icon: LucideIcons.userPlus,
+      fieldIcon: LucideIcons.atSign,
       keyboardType: TextInputType.emailAddress,
     );
     if (email == null || email.isEmpty || !context.mounted) return;
@@ -113,21 +115,21 @@ class SettingsScreen extends ConsumerWidget {
               GroupedCard(
                 children: [
                   GroupedTile(
-                    icon: Icons.workspaces_outline,
+                    icon: LucideIcons.boxes,
                     title: org?.name ?? l10n.workspace,
                     subtitle: orgs.length > 1 ? l10n.switchWorkspace : null,
                     trailing: orgs.length > 1
                         ? PopupMenuButton<String>(
                             tooltip: l10n.switchWorkspace,
-                            icon: Icon(Icons.unfold_more_rounded, color: scheme.onSurfaceVariant),
+                            icon: Icon(LucideIcons.chevronsUpDown, color: scheme.onSurfaceVariant),
                             onSelected: (id) => ref.read(selectedOrgIdProvider.notifier).select(id),
                             itemBuilder: (_) => [for (final o in orgs) PopupMenuItem(value: o.id, child: Text(o.name))],
                           )
                         : null,
                   ),
-                  if (isAdmin) GroupedTile(icon: Icons.person_add_alt_1_outlined, title: l10n.inviteMember, onTap: () => _invite(context, ref)),
+                  if (isAdmin) GroupedTile(icon: LucideIcons.userPlus, title: l10n.inviteMember, onTap: () => _invite(context, ref)),
                   GroupedTile(
-                    icon: Icons.payments_outlined,
+                    icon: LucideIcons.banknote,
                     iconColor: colors.positive,
                     title: l10n.usage,
                     trailing: Text(
@@ -139,7 +141,7 @@ class SettingsScreen extends ConsumerWidget {
                   if (billing?.enabled ?? false)
                     GroupedTile(
                       key: const Key('settingsBilling'),
-                      icon: Icons.workspace_premium_outlined,
+                      icon: LucideIcons.gem,
                       iconColor: colors.warning,
                       title: l10n.billing,
                       subtitle: billing!.planName,
@@ -150,25 +152,25 @@ class SettingsScreen extends ConsumerWidget {
               SectionHeader(title: l10n.settingsBotsSection),
               GroupedCard(
                 children: [
-                  GroupedTile(icon: Icons.key_outlined, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => context.push('/settings/keys')),
-                  GroupedTile(icon: Icons.menu_book_outlined, title: l10n.skills, subtitle: l10n.skillsRowHelp, onTap: () => context.push('/settings/skills')),
+                  GroupedTile(icon: LucideIcons.keyRound, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => context.push('/settings/keys')),
+                  GroupedTile(icon: LucideIcons.bookOpen, title: l10n.skills, subtitle: l10n.skillsRowHelp, onTap: () => context.push('/settings/skills')),
                   GroupedTile(
                     key: const Key('settingsIntegrations'),
-                    icon: Icons.extension_outlined,
+                    icon: LucideIcons.puzzle,
                     title: l10n.integrations,
                     subtitle: l10n.integrationsRowHelp,
                     onTap: () => context.push('/settings/integrations'),
                   ),
                   GroupedTile(
                     key: const Key('settingsSecrets'),
-                    icon: Icons.lock_outline_rounded,
+                    icon: LucideIcons.lock,
                     title: l10n.secrets,
                     subtitle: l10n.secretsRowHelp,
                     onTap: () => context.push('/settings/secrets'),
                   ),
                   GroupedTile(
                     key: const Key('settingsComputers'),
-                    icon: Icons.desktop_windows_outlined,
+                    icon: LucideIcons.monitor,
                     title: l10n.computers,
                     subtitle: l10n.computersRowHelp,
                     onTap: () => context.push('/settings/computers'),
@@ -176,7 +178,7 @@ class SettingsScreen extends ConsumerWidget {
                   if (ref.watch(companionProvider).supported)
                     GroupedTile(
                       key: const Key('settingsCompanion'),
-                      icon: Icons.laptop_mac_rounded,
+                      icon: LucideIcons.laptop,
                       title: l10n.useThisComputer,
                       subtitle: l10n.companionRowHelp,
                       onTap: () => context.push('/settings/companion'),
@@ -190,7 +192,7 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   GroupedTile(
                     key: const Key('settingsPrivacy'),
-                    icon: Icons.privacy_tip_outlined,
+                    icon: LucideIcons.shieldCheck,
                     title: l10n.privacy,
                     subtitle: l10n.privacyRowHelp,
                     onTap: () => context.push('/settings/privacy'),
@@ -198,13 +200,13 @@ class SettingsScreen extends ConsumerWidget {
                   if (ref.watch(adminOverviewProvider).value != null)
                     GroupedTile(
                       key: const Key('settingsAdmin'),
-                      icon: Icons.admin_panel_settings_outlined,
+                      icon: LucideIcons.shieldUser,
                       title: l10n.adminConsole,
                       subtitle: l10n.adminRowHelp,
                       onTap: () => context.push('/settings/admin'),
                     ),
                   GroupedTile(
-                    icon: Icons.translate_rounded,
+                    icon: LucideIcons.languages,
                     title: l10n.language,
                     trailing: Text(
                       _languageName(Localizations.localeOf(context)),
@@ -217,7 +219,7 @@ class SettingsScreen extends ConsumerWidget {
               GroupedCard(
                 children: [
                   GroupedTile(
-                    icon: Icons.logout_rounded,
+                    icon: LucideIcons.logOut,
                     title: l10n.signOut,
                     destructive: true,
                     showChevron: false,
@@ -253,7 +255,7 @@ String _roleLabel(BuildContext context, OrgRole role) => switch (role) {
   _ => context.l10n.roleMember,
 };
 
-/// Theme mode and accent color, kept on this device.
+/// Light or dark, plus the color scheme and background, each with a preview.
 class _AppearanceCard extends ConsumerWidget {
   const _AppearanceCard();
 
@@ -263,82 +265,79 @@ class _AppearanceCard extends ConsumerWidget {
     final appearance = ref.watch(appearanceProvider);
     final notifier = ref.read(appearanceProvider.notifier);
     final scheme = context.colorScheme;
+    final wallpaper = appearance.wallpaper;
+    Widget row({required Key key, required Widget leading, required String title, required String subtitle, required String route}) => InkWell(
+      key: key,
+      borderRadius: BorderRadius.circular(AppRadius.row),
+      onTap: () => context.push(route),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            SizedBox(width: 44, height: 44, child: Center(child: leading)),
+            const SizedBox(width: AppSpace.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            Icon(LucideIcons.chevronRight, size: 20, color: scheme.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
     return AppCard(
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md, AppSpace.sm, AppSpace.xs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppSegmentedControl<ThemeMode>(
-            values: const [ThemeMode.light, ThemeMode.system, ThemeMode.dark],
-            labels: {ThemeMode.light: l10n.themeLight, ThemeMode.system: l10n.themeSystem, ThemeMode.dark: l10n.themeDark},
-            icons: const {
-              ThemeMode.light: Icons.light_mode_outlined,
-              ThemeMode.system: Icons.brightness_auto_outlined,
-              ThemeMode.dark: Icons.dark_mode_outlined,
-            },
-            groupValue: appearance.mode,
-            onValueChanged: notifier.setMode,
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpace.xxs),
+            child: AppSegmentedControl<ThemeMode>(
+              values: const [ThemeMode.light, ThemeMode.system, ThemeMode.dark],
+              labels: {ThemeMode.light: l10n.themeLight, ThemeMode.system: l10n.themeSystem, ThemeMode.dark: l10n.themeDark},
+              icons: const {ThemeMode.light: LucideIcons.sun, ThemeMode.system: LucideIcons.sunMoon, ThemeMode.dark: LucideIcons.moon},
+              groupValue: appearance.mode,
+              onValueChanged: notifier.setMode,
+            ),
           ),
-          const SizedBox(height: AppSpace.md),
-          Row(
-            children: [
-              Text(l10n.accentColor, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
-              const Spacer(),
-              AnimatedSwitcher(
-                duration: AppMotion.of(context, AppMotion.fast),
-                child: Text(
-                  appearance.accent.label,
-                  key: ValueKey(appearance.accent),
-                  style: context.textTheme.labelLarge?.copyWith(color: appearance.accent.seed, fontWeight: FontWeight.w700),
-                ),
+          const SizedBox(height: AppSpace.xs),
+          row(
+            key: const Key('settingsTheme'),
+            leading: SchemeDots(colors: appearance.scheme.colors(Theme.of(context).brightness), size: 18),
+            title: l10n.colorScheme,
+            subtitle: appearance.scheme.name,
+            route: '/settings/theme',
+          ),
+          Divider(height: 1, indent: 56, color: context.appColors.hairline),
+          row(
+            key: const Key('settingsBackground'),
+            leading: Container(
+              width: 40,
+              height: 40,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.appColors.hairline),
               ),
-            ],
-          ),
-          const SizedBox(height: AppSpace.sm),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              // Justify the swatches so every row spans the card evenly.
-              const size = 36.0, minGap = 10.0;
-              final count = AppAccent.values.length;
-              final fit = ((constraints.maxWidth + minGap) / (size + minGap)).floor().clamp(1, count);
-              final rows = (count / fit).ceil();
-              final perRow = (count / rows).ceil(); // balanced rows (9 + 8, not 13 + 4)
-              final gap = perRow > 1 ? (constraints.maxWidth - perRow * size) / (perRow - 1) : 0.0;
-              return Wrap(
-                spacing: gap,
-                runSpacing: 12,
-                children: [
-                  for (final a in AppAccent.values)
-                    Tooltip(
-                      message: a.label,
-                      excludeFromSemantics: true,
-                      child: Semantics(
-                        button: true,
-                        selected: a == appearance.accent,
-                        label: a.label,
-                        child: InkResponse(
-                          key: Key('accent-${a.name}'),
-                          onTap: () => notifier.setAccent(a),
-                          radius: 22,
-                          child: AnimatedContainer(
-                            duration: AppMotion.of(context, AppMotion.fast),
-                            width: 36,
-                            height: 36,
-                            padding: const EdgeInsets.all(3),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: a == appearance.accent ? a.seed : Colors.transparent, width: 2),
-                            ),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(color: a.seed, shape: BoxShape.circle),
-                              child: a == appearance.accent ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
+              child: Wallpaper(force: true, specOverride: WallpaperTheme.of(wallpaper.copyWith(everywhere: true), scheme), child: const SizedBox.expand()),
+            ),
+            title: l10n.background,
+            subtitle: [
+              wallpaper.pattern.label,
+              wallpaper.palette == WallpaperPalette.theme ? l10n.backgroundThemeColors : wallpaper.palette.label,
+              if (!wallpaper.everywhere) l10n.chatsOnly,
+            ].join(' · '),
+            route: '/settings/background',
           ),
         ],
       ),
@@ -427,9 +426,9 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
     final dirty = _dirty(bot);
     final name = _name!.text.trim().isEmpty ? bot.name : _name!.text.trim();
     final levels = [
-      ('ask_always', Icons.front_hand_outlined, l10n.autonomyAskAlways, l10n.autonomyAskAlwaysHelp),
-      ('ask_risky', Icons.shield_outlined, l10n.autonomyAskRisky, l10n.autonomyAskRiskyHelp),
-      ('autonomous', Icons.bolt_rounded, l10n.autonomyAutonomous, l10n.autonomyAutonomousHelp),
+      ('ask_always', LucideIcons.hand, l10n.autonomyAskAlways, l10n.autonomyAskAlwaysHelp),
+      ('ask_risky', LucideIcons.shield, l10n.autonomyAskRisky, l10n.autonomyAskRiskyHelp),
+      ('autonomous', LucideIcons.zap, l10n.autonomyAutonomous, l10n.autonomyAutonomousHelp),
     ];
     return SubPage(
       title: l10n.botSettings,
@@ -481,7 +480,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
               DropdownButtonFormField<String>(
                 key: ValueKey('botKey-${keys.length}'),
                 initialValue: keys.any((k) => k.id == _credentialId) ? _credentialId : null,
-                decoration: InputDecoration(labelText: l10n.modelKey, prefixIcon: const Icon(Icons.key_rounded, size: 20)),
+                decoration: InputDecoration(labelText: l10n.modelKey, prefixIcon: const Icon(LucideIcons.keyRound, size: 20)),
                 items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} · ${providerLabel(k.provider)}'))],
                 onChanged: (v) => setState(() {
                   _credentialId = v;
@@ -537,19 +536,19 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                 final current = usable.where((c) => c.id == bot.defaultComputerId).firstOrNull;
                 return GroupedTile(
                   key: const Key('botComputer'),
-                  icon: Icons.desktop_windows_outlined,
+                  icon: LucideIcons.monitor,
                   title: l10n.botComputer,
                   subtitle: current?.name ?? l10n.botComputerAuto,
-                  trailing: Icon(Icons.unfold_more_rounded, color: scheme.onSurfaceVariant),
+                  trailing: Icon(LucideIcons.chevronsUpDown, color: scheme.onSurfaceVariant),
                   onTap: () async {
                     final picked = await showChoiceSheet<String?>(
                       context,
                       title: l10n.botComputer,
                       subtitle: l10n.botComputerHelp,
-                      icon: Icons.desktop_windows_outlined,
+                      icon: LucideIcons.monitor,
                       selected: current?.id,
                       choices: [
-                        Choice(value: null, label: l10n.botComputerAuto, subtitle: l10n.botComputerDefault, icon: Icons.auto_mode_rounded),
+                        Choice(value: null, label: l10n.botComputerAuto, subtitle: l10n.botComputerDefault, icon: LucideIcons.wandSparkles),
                         for (final c in usable)
                           Choice(
                             value: c.id,
@@ -559,7 +558,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                                 c.kind == ComputerKindEnum.team ? l10n.teamComputer : l10n.privateComputer,
                               c.profile == ComputerProfileEnum.desktop ? l10n.profileDesktop : l10n.profileHeadless,
                             ].join(' · '),
-                            icon: c.profile == ComputerProfileEnum.desktop ? Icons.desktop_windows_rounded : Icons.terminal_rounded,
+                            icon: c.profile == ComputerProfileEnum.desktop ? LucideIcons.monitor : LucideIcons.squareTerminal,
                           ),
                       ],
                     );
@@ -572,7 +571,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
             ),
             GroupedTile(
               key: const Key('botVoice'),
-              icon: Icons.record_voice_over_outlined,
+              icon: LucideIcons.speech,
               title: l10n.voiceSettings,
               subtitle: l10n.voiceSettingsHelp,
               onTap: () => showAdaptiveSheet<void>(
@@ -580,16 +579,16 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                 builder: (_) => VoiceSettingsDialog(botId: bot.id),
               ),
             ),
-            GroupedTile(icon: Icons.schedule_rounded, title: l10n.routines, onTap: () => context.push('/bots/${bot.id}/routines')),
-            GroupedTile(icon: Icons.extension_outlined, title: l10n.botIntegrations, onTap: () => context.push('/bots/${bot.id}/integrations')),
-            GroupedTile(icon: Icons.psychology_outlined, title: l10n.memory, onTap: () => context.push('/bots/${bot.id}/memory')),
+            GroupedTile(icon: LucideIcons.clock, title: l10n.routines, onTap: () => context.push('/bots/${bot.id}/routines')),
+            GroupedTile(icon: LucideIcons.puzzle, title: l10n.botIntegrations, onTap: () => context.push('/bots/${bot.id}/integrations')),
+            GroupedTile(icon: LucideIcons.brain, title: l10n.memory, onTap: () => context.push('/bots/${bot.id}/memory')),
           ],
         ),
         const SizedBox(height: AppSpace.lg),
         FilledButton.icon(
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
           onPressed: _busy || !dirty ? null : () => _save(bot),
-          icon: const Icon(Icons.check_rounded, size: 20),
+          icon: const Icon(LucideIcons.check, size: 20),
           label: Text(l10n.saveChanges),
         ),
       ],
@@ -606,11 +605,11 @@ class _InviteCode extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return FormSheet(
-      icon: Icons.mark_email_read_outlined,
+      icon: LucideIcons.mailCheck,
       title: l10n.inviteReady,
       subtitle: l10n.inviteCodeHelp(email),
       submitLabel: l10n.copyCode,
-      submitIcon: Icons.copy_rounded,
+      submitIcon: LucideIcons.copy,
       cancelLabel: l10n.close,
       onSubmit: () {
         Clipboard.setData(ClipboardData(text: code));
@@ -680,7 +679,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
       _ => p,
     };
     return FormSheet(
-      icon: Icons.record_voice_over_outlined,
+      icon: LucideIcons.speech,
       title: l10n.voiceSettings,
       subtitle: l10n.voiceSettingsHelp,
       submitLabel: l10n.save,
@@ -691,7 +690,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
         DropdownButtonFormField<String?>(
           key: const Key('ttsProvider'),
           initialValue: _tts,
-          decoration: InputDecoration(labelText: l10n.readAloudProvider, prefixIcon: const Icon(Icons.volume_up_outlined, size: 20)),
+          decoration: InputDecoration(labelText: l10n.readAloudProvider, prefixIcon: const Icon(LucideIcons.volume2, size: 20)),
           items: [
             DropdownMenuItem(value: null, child: Text(l10n.automatic)),
             for (final p in const ['elevenlabs', 'openai', 'cartesia', 'fish_audio']) DropdownMenuItem(value: p, child: Text(label(p))),
@@ -700,12 +699,12 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
         ),
         TextField(
           controller: _voice,
-          decoration: InputDecoration(labelText: l10n.voiceId, helperText: l10n.voiceIdHelp, prefixIcon: const Icon(Icons.graphic_eq_rounded, size: 20)),
+          decoration: InputDecoration(labelText: l10n.voiceId, helperText: l10n.voiceIdHelp, prefixIcon: const Icon(LucideIcons.audioLines, size: 20)),
         ),
         DropdownButtonFormField<String?>(
           key: const Key('sttProvider'),
           initialValue: _stt,
-          decoration: InputDecoration(labelText: l10n.dictationProvider, prefixIcon: const Icon(Icons.mic_none_rounded, size: 20)),
+          decoration: InputDecoration(labelText: l10n.dictationProvider, prefixIcon: const Icon(LucideIcons.mic, size: 20)),
           items: [
             DropdownMenuItem(value: null, child: Text(l10n.automatic)),
             for (final p in const ['openai', 'deepgram']) DropdownMenuItem(value: p, child: Text(label(p))),

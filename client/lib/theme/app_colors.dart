@@ -56,8 +56,7 @@ class AppColors extends ThemeExtension<AppColors> {
     codeBackground: Color(0xFFF4F5F7),
   );
 
-  static AppColors of(BuildContext context) =>
-      Theme.of(context).extension<AppColors>() ?? (Theme.of(context).brightness == Brightness.dark ? dark : light);
+  static AppColors of(BuildContext context) => Theme.of(context).extension<AppColors>() ?? (Theme.of(context).brightness == Brightness.dark ? dark : light);
 
   @override
   AppColors copyWith({
@@ -70,18 +69,17 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? waiting,
     Color? idle,
     Color? codeBackground,
-  }) =>
-      AppColors(
-        positive: positive ?? this.positive,
-        negative: negative ?? this.negative,
-        warning: warning ?? this.warning,
-        info: info ?? this.info,
-        hairline: hairline ?? this.hairline,
-        working: working ?? this.working,
-        waiting: waiting ?? this.waiting,
-        idle: idle ?? this.idle,
-        codeBackground: codeBackground ?? this.codeBackground,
-      );
+  }) => AppColors(
+    positive: positive ?? this.positive,
+    negative: negative ?? this.negative,
+    warning: warning ?? this.warning,
+    info: info ?? this.info,
+    hairline: hairline ?? this.hairline,
+    working: working ?? this.working,
+    waiting: waiting ?? this.waiting,
+    idle: idle ?? this.idle,
+    codeBackground: codeBackground ?? this.codeBackground,
+  );
 
   @override
   AppColors lerp(covariant AppColors? other, double t) {

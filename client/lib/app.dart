@@ -31,8 +31,8 @@ class KasamaApp extends ConsumerWidget {
     final appearance = ref.watch(appearanceProvider);
     return MaterialApp.router(
       onGenerateTitle: (c) => AppLocalizations.of(c).appTitle,
-      theme: AppTheme.light(appearance.accent),
-      darkTheme: AppTheme.dark(appearance.accent),
+      theme: AppTheme.light(appearance),
+      darkTheme: AppTheme.dark(appearance),
       themeMode: appearance.mode,
       themeAnimationDuration: const Duration(milliseconds: 250),
       routerConfig: ref.watch(routerProvider),

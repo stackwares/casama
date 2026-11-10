@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
@@ -9,10 +10,7 @@ import '../../../ui/motion.dart';
 
 /// Hardware keyboards send with Enter and break lines with Shift+Enter.
 bool get _enterSends =>
-    kIsWeb ||
-    defaultTargetPlatform == TargetPlatform.macOS ||
-    defaultTargetPlatform == TargetPlatform.windows ||
-    defaultTargetPlatform == TargetPlatform.linux;
+    kIsWeb || defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux;
 
 /// The message field: grows to a few lines, dictation on the left of the send button, and a round
 /// send button that turns into Stop while the bot works.
@@ -80,10 +78,7 @@ class ChatComposer extends StatelessWidget {
           decoration: BoxDecoration(
             color: dark ? scheme.surfaceContainerHigh : scheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(26),
-            border: Border.all(
-              color: focused ? scheme.primary.withValues(alpha: 0.6) : context.appColors.hairline,
-              width: focused ? 1.5 : 1,
-            ),
+            border: Border.all(color: focused ? scheme.primary.withValues(alpha: 0.6) : context.appColors.hairline, width: focused ? 1.5 : 1),
             boxShadow: [
               if (!dark)
                 BoxShadow(
@@ -121,9 +116,7 @@ class ChatComposer extends StatelessWidget {
                         decoration: InputDecoration(
                           hintText: recording ? l10n.listening : hint,
                           hintMaxLines: 1,
-                          hintStyle: context.textTheme.bodyLarge?.copyWith(
-                            color: recording ? context.appColors.negative : scheme.onSurfaceVariant,
-                          ),
+                          hintStyle: context.textTheme.bodyLarge?.copyWith(color: recording ? context.appColors.negative : scheme.onSurfaceVariant),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
@@ -150,7 +143,7 @@ class ChatComposer extends StatelessWidget {
                           ? _RoundButton(
                               key: const Key('stopButton'),
                               tooltip: l10n.stop,
-                              icon: Icons.stop_rounded,
+                              icon: LucideIcons.square,
                               background: scheme.onSurface,
                               foreground: scheme.surface,
                               onPressed: onStop,
@@ -158,7 +151,7 @@ class ChatComposer extends StatelessWidget {
                           : _RoundButton(
                               key: const Key('sendButton'),
                               tooltip: l10n.send,
-                              icon: Icons.arrow_upward_rounded,
+                              icon: LucideIcons.arrowUp,
                               background: scheme.primary,
                               foreground: scheme.onPrimary,
                               onPressed: canSend ? onSend : null,
@@ -192,7 +185,7 @@ class _DictateButton extends StatelessWidget {
             height: 18,
             child: CircularProgressIndicator(strokeWidth: 2, strokeCap: StrokeCap.round, color: scheme.primary),
           )
-        : Icon(recording ? Icons.stop_circle_rounded : Icons.mic_none_rounded, size: 22, color: recording ? red : scheme.onSurfaceVariant);
+        : Icon(recording ? LucideIcons.circleStop : LucideIcons.mic, size: 22, color: recording ? red : scheme.onSurfaceVariant);
     if (recording) icon = Pulse(from: 0.9, to: 1.1, duration: const Duration(milliseconds: 600), child: icon);
     return IconButton(
       key: const Key('dictateButton'),
@@ -210,14 +203,7 @@ class _DictateButton extends StatelessWidget {
 }
 
 class _RoundButton extends StatelessWidget {
-  const _RoundButton({
-    super.key,
-    required this.tooltip,
-    required this.icon,
-    required this.background,
-    required this.foreground,
-    required this.onPressed,
-  });
+  const _RoundButton({super.key, required this.tooltip, required this.icon, required this.background, required this.foreground, required this.onPressed});
   final String tooltip;
   final IconData icon;
   final Color background;

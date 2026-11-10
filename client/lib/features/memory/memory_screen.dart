@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -17,7 +18,10 @@ class MemoryScreen extends ConsumerWidget {
   final String botId;
 
   Future<void> _edit(BuildContext context, WidgetRef ref, Memory m) async {
-    final text = await showAdaptiveSheet<String>(context: context, builder: (_) => _EditMemoryForm(initial: m.content));
+    final text = await showAdaptiveSheet<String>(
+      context: context,
+      builder: (_) => _EditMemoryForm(initial: m.content),
+    );
     if (text == null || text.isEmpty || !context.mounted) return;
     await runGuarded(context, () => ref.read(backendProvider).updateMemory(m.id, content: text));
     ref.invalidate(memoriesProvider(botId));
@@ -25,7 +29,13 @@ class MemoryScreen extends ConsumerWidget {
 
   Future<void> _delete(BuildContext context, WidgetRef ref, Memory m) async {
     final l10n = context.l10n;
-    final ok = await showConfirm(context: context, title: l10n.deleteMemoryTitle, message: l10n.deleteMemoryConfirm, confirmLabel: l10n.delete, destructive: true);
+    final ok = await showConfirm(
+      context: context,
+      title: l10n.deleteMemoryTitle,
+      message: l10n.deleteMemoryConfirm,
+      confirmLabel: l10n.delete,
+      destructive: true,
+    );
     if (!ok || !context.mounted) return;
     await runGuarded(context, () => ref.read(backendProvider).deleteMemory(m.id));
     ref.invalidate(memoriesProvider(botId));
@@ -43,7 +53,7 @@ class MemoryScreen extends ConsumerWidget {
         value: memories,
         onRetry: () => ref.invalidate(memoriesProvider(botId)),
         data: (items) => items.isEmpty
-            ? EmptyState(icon: Icons.psychology_outlined, title: l10n.noMemories, message: l10n.noMemoriesHelp)
+            ? EmptyState(icon: LucideIcons.brain, title: l10n.noMemories, message: l10n.noMemoriesHelp)
             : PageListView(
                 header: FormNote(l10n.memoryHelp),
                 itemCount: items.length,
@@ -76,50 +86,65 @@ class _MemoryCard extends StatelessWidget {
     final colors = context.appColors;
     final m = memory;
     final (label, color, icon) = switch (m.kind.value) {
-      'fact' => (l10n.memoryFact, colors.info, Icons.lightbulb_outline_rounded),
-      'preference' => (l10n.memoryPreference, colors.positive, Icons.favorite_border_rounded),
-      'summary' => (l10n.memorySummary, colors.warning, Icons.notes_rounded),
-      _ => (l10n.memoryEpisode, scheme.primary, Icons.history_rounded),
+      'fact' => (l10n.memoryFact, colors.info, LucideIcons.lightbulb),
+      'preference' => (l10n.memoryPreference, colors.positive, LucideIcons.heart),
+      'summary' => (l10n.memorySummary, colors.warning, LucideIcons.notebookText),
+      _ => (l10n.memoryEpisode, scheme.primary, LucideIcons.history),
     };
     return AppCard(
       key: Key('memory-${m.id}'),
       onTap: onEdit,
       padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.xxs, 12),
       borderColor: m.pinned ? scheme.primary.withValues(alpha: 0.45) : null,
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              StatusLabel(text: label, color: color, pill: true, icon: icon),
-              if (m.pinned) ...[const SizedBox(width: 6), StatusLabel(text: l10n.pinned, color: scheme.primary, pill: true, icon: Icons.push_pin_rounded)],
-              const Spacer(),
-              Text(relativeTime(m.updatedAt, context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
-            ]),
-            const SizedBox(height: AppSpace.xs),
-            Text(m.content, style: context.textTheme.bodyMedium?.copyWith(height: 1.45)),
-          ]),
-        ),
-        PopupMenuButton<String>(
-          tooltip: l10n.moreActions,
-          icon: Icon(Icons.more_vert_rounded, color: scheme.onSurfaceVariant),
-          onSelected: (v) => switch (v) { 'edit' => onEdit(), 'pin' => onPin(), _ => onDelete() },
-          itemBuilder: (_) => [
-            PopupMenuItem(value: 'edit', child: ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.edit), dense: true)),
-            PopupMenuItem(
-              value: 'pin',
-              child: ListTile(leading: Icon(m.pinned ? Icons.push_pin_outlined : Icons.push_pin_rounded), title: Text(m.pinned ? l10n.unpin : l10n.pin), dense: true),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    StatusLabel(text: label, color: color, pill: true, icon: icon),
+                    if (m.pinned) ...[const SizedBox(width: 6), StatusLabel(text: l10n.pinned, color: scheme.primary, pill: true, icon: LucideIcons.pin)],
+                    const Spacer(),
+                    Text(relativeTime(m.updatedAt, context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                  ],
+                ),
+                const SizedBox(height: AppSpace.xs),
+                Text(m.content, style: context.textTheme.bodyMedium?.copyWith(height: 1.45)),
+              ],
             ),
-            PopupMenuItem(
-              value: 'delete',
-              child: ListTile(
-                leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
-                title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
-                dense: true,
+          ),
+          PopupMenuButton<String>(
+            tooltip: l10n.moreActions,
+            icon: Icon(LucideIcons.ellipsisVertical, color: scheme.onSurfaceVariant),
+            onSelected: (v) => switch (v) {
+              'edit' => onEdit(),
+              'pin' => onPin(),
+              _ => onDelete(),
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: ListTile(leading: const Icon(LucideIcons.pencil), title: Text(l10n.edit), dense: true),
               ),
-            ),
-          ],
-        ),
-      ]),
+              PopupMenuItem(
+                value: 'pin',
+                child: ListTile(leading: Icon(m.pinned ? LucideIcons.pinOff : LucideIcons.pin), title: Text(m.pinned ? l10n.unpin : l10n.pin), dense: true),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: ListTile(
+                  leading: Icon(LucideIcons.trash2, color: scheme.error),
+                  title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
+                  dense: true,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -145,14 +170,12 @@ class _EditMemoryFormState extends State<_EditMemoryForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return FormSheet(
-      icon: Icons.psychology_outlined,
+      icon: LucideIcons.brain,
       title: l10n.editMemory,
       subtitle: l10n.editMemoryHelp,
       submitLabel: l10n.save,
       onSubmit: _text.text.trim().isEmpty ? null : () => Navigator.pop(context, _text.text.trim()),
-      children: [
-        TextField(controller: _text, autofocus: true, minLines: 3, maxLines: 8, onChanged: (_) => setState(() {})),
-      ],
+      children: [TextField(controller: _text, autofocus: true, minLines: 3, maxLines: 8, onChanged: (_) => setState(() {}))],
     );
   }
 }

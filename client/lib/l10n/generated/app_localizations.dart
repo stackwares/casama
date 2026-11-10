@@ -3705,6 +3705,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter your work email and we\'ll send you to your company\'s sign-in page.'**
   String get ssoHelp;
+
+  /// No description provided for @colorScheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Color scheme'**
+  String get colorScheme;
+
+  /// No description provided for @searchThemes.
+  ///
+  /// In en, this message translates to:
+  /// **'Search schemes'**
+  String get searchThemes;
+
+  /// No description provided for @noThemesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No schemes match.'**
+  String get noThemesFound;
+
+  /// No description provided for @familyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get familyAll;
+
+  /// No description provided for @familyPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get familyPurple;
+
+  /// No description provided for @familyBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get familyBlue;
+
+  /// No description provided for @familyTeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get familyTeal;
+
+  /// No description provided for @familyGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get familyGreen;
+
+  /// No description provided for @familyWarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm'**
+  String get familyWarm;
+
+  /// No description provided for @familyRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red & pink'**
+  String get familyRed;
+
+  /// No description provided for @familyNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral'**
+  String get familyNeutral;
+
+  /// No description provided for @background.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get background;
+
+  /// No description provided for @backgroundPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern'**
+  String get backgroundPattern;
+
+  /// No description provided for @backgroundColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors'**
+  String get backgroundColors;
+
+  /// No description provided for @backgroundThemeColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get backgroundThemeColors;
+
+  /// No description provided for @patternStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern strength'**
+  String get patternStrength;
+
+  /// No description provided for @wallpaperEverywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on every screen'**
+  String get wallpaperEverywhere;
+
+  /// No description provided for @wallpaperEverywhereHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off to keep it behind chats only.'**
+  String get wallpaperEverywhereHelp;
+
+  /// No description provided for @resetBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to default'**
+  String get resetBackground;
+
+  /// No description provided for @chatsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats only'**
+  String get chatsOnly;
+
+  /// No description provided for @copyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copyMessage;
+
+  /// No description provided for @selectText.
+  ///
+  /// In en, this message translates to:
+  /// **'Select text'**
+  String get selectText;
+
+  /// No description provided for @shareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get shareMessage;
+
+  /// No description provided for @messageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get messageCopied;
 }
 
 class _AppLocalizationsDelegate

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -21,10 +22,10 @@ String integrationKindLabel(BuildContext context, IntegrationKind kind) => switc
 };
 
 IconData integrationKindIcon(IntegrationKind kind) => switch (kind) {
-  IntegrationKind.mcp => Icons.hub_outlined,
-  IntegrationKind.openapi => Icons.api_rounded,
-  IntegrationKind.composio => Icons.widgets_outlined,
-  IntegrationKind.pipedream => Icons.cable_rounded,
+  IntegrationKind.mcp => LucideIcons.network,
+  IntegrationKind.openapi => LucideIcons.braces,
+  IntegrationKind.composio => LucideIcons.blocks,
+  IntegrationKind.pipedream => LucideIcons.cable,
 };
 
 /// Workspace integrations: MCP servers, OpenAPI sources, Composio and Pipedream Connect.
@@ -41,16 +42,16 @@ class IntegrationsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     return SubPage(
       title: l10n.integrations,
-      actions: [HeaderIconButton(key: const Key('addIntegration'), icon: Icons.add_rounded, tooltip: l10n.addIntegration, onPressed: () => _add(context, ref))],
+      actions: [HeaderIconButton(key: const Key('addIntegration'), icon: LucideIcons.plus, tooltip: l10n.addIntegration, onPressed: () => _add(context, ref))],
       body: AsyncView(
         value: ref.watch(integrationsProvider),
         onRetry: () => ref.invalidate(integrationsProvider),
         data: (items) => items.isEmpty
             ? EmptyState(
-                icon: Icons.extension_outlined,
+                icon: LucideIcons.puzzle,
                 title: l10n.noIntegrationsTitle,
                 message: l10n.noIntegrations,
-                action: FilledButton.icon(onPressed: () => _add(context, ref), icon: const Icon(Icons.add_rounded, size: 18), label: Text(l10n.addIntegration)),
+                action: FilledButton.icon(onPressed: () => _add(context, ref), icon: const Icon(LucideIcons.plus, size: 18), label: Text(l10n.addIntegration)),
               )
             : PageColumn(
                 children: [
@@ -202,7 +203,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
     final missing = !nameOk ? l10n.integrationNeedsName : (!primaryOk ? l10n.integrationNeedsField(primaryLabel) : null);
     final secretIsName = _kind == IntegrationKind.openapi;
     return FormSheet(
-      icon: Icons.extension_outlined,
+      icon: LucideIcons.puzzle,
       title: l10n.addIntegration,
       subtitle: l10n.integrationsHelp,
       submitLabel: l10n.save,
@@ -223,7 +224,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
           controller: _name,
           decoration: InputDecoration(
             labelText: l10n.integrationName,
-            prefixIcon: const Icon(Icons.badge_outlined, size: 20),
+            prefixIcon: const Icon(LucideIcons.idCard, size: 20),
             helperText: _name.text.trim().isEmpty ? l10n.integrationNameHelp : (nameOk ? l10n.integrationSavedAs(name) : l10n.integrationNeedsName),
           ),
           onChanged: (_) => setState(() {}),
@@ -236,7 +237,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
           decoration: InputDecoration(
             labelText: primaryLabel,
             hintText: needsUrl ? 'https://' : null,
-            prefixIcon: Icon(needsUrl ? Icons.link_rounded : Icons.list_alt_rounded, size: 20),
+            prefixIcon: Icon(needsUrl ? LucideIcons.link : LucideIcons.list, size: 20),
             errorText: primary.isNotEmpty && !primaryOk ? l10n.integrationUrlInvalid : null,
           ),
           onChanged: (_) => setState(() {}),
@@ -247,13 +248,13 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
             autocorrect: false,
             decoration: InputDecoration(
               labelText: secondaryLabel,
-              prefixIcon: Icon(_kind == IntegrationKind.openapi ? Icons.dns_outlined : Icons.badge_outlined, size: 20),
+              prefixIcon: Icon(_kind == IntegrationKind.openapi ? LucideIcons.server : LucideIcons.idCard, size: 20),
             ),
           ),
         if (_kind == IntegrationKind.pipedream)
           TextField(
             controller: _apps,
-            decoration: InputDecoration(labelText: l10n.pipedreamApps, prefixIcon: const Icon(Icons.apps_rounded, size: 20)),
+            decoration: InputDecoration(labelText: l10n.pipedreamApps, prefixIcon: const Icon(LucideIcons.layoutGrid, size: 20)),
           ),
         TextField(
           key: const Key('integrationSecret'),
@@ -263,13 +264,13 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
           enableSuggestions: false,
           decoration: InputDecoration(
             labelText: secretLabel,
-            prefixIcon: Icon(secretIsName ? Icons.lock_outline_rounded : Icons.password_rounded, size: 20),
+            prefixIcon: Icon(secretIsName ? LucideIcons.lock : LucideIcons.rectangleEllipsis, size: 20),
             helperText: secretIsName ? l10n.authSecretNameHelp : l10n.storedEncrypted,
             suffixIcon: secretIsName
                 ? null
                 : IconButton(
                     tooltip: _showSecret ? l10n.hide : l10n.show,
-                    icon: Icon(_showSecret ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+                    icon: Icon(_showSecret ? LucideIcons.eyeOff : LucideIcons.eye, size: 20),
                     onPressed: () => setState(() => _showSecret = !_showSecret),
                   ),
           ),
@@ -312,12 +313,12 @@ class BotIntegrationsScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(integrationsProvider),
         data: (items) => items.isEmpty
             ? EmptyState(
-                icon: Icons.extension_outlined,
+                icon: LucideIcons.puzzle,
                 title: l10n.noIntegrationsTitle,
                 message: l10n.noIntegrationsForBot,
                 action: FilledButton.tonalIcon(
                   onPressed: () => context.push('/settings/integrations'),
-                  icon: const Icon(Icons.settings_outlined, size: 18),
+                  icon: const Icon(LucideIcons.settings, size: 18),
                   label: Text(l10n.openSettings),
                 ),
               )

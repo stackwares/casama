@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/live.dart';
 import '../../core/providers.dart';
@@ -269,7 +270,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
                   text: l10n.latencyMs(_rtt!.round()),
                   color: _rtt! < 120 ? context.appColors.positive : context.appColors.warning,
                   pill: true,
-                  icon: Icons.network_check_rounded,
+                  icon: LucideIcons.activity,
                 ),
               ),
             ),
@@ -277,10 +278,10 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
             HeaderIconButton(
               tooltip: l10n.rightClickNextTap,
               selected: _rightClick,
-              icon: Icons.mouse_outlined,
+              icon: LucideIcons.mousePointer2,
               onPressed: () => setState(() => _rightClick = !_rightClick),
             ),
-            HeaderIconButton(tooltip: l10n.showKeyboard, icon: Icons.keyboard_outlined, onPressed: () => _typingFocus.requestFocus()),
+            HeaderIconButton(tooltip: l10n.showKeyboard, icon: LucideIcons.keyboard, onPressed: () => _typingFocus.requestFocus()),
           ],
         ],
       ),
@@ -298,7 +299,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
               ),
               child: Row(
                 children: [
-                  Icon(Icons.front_hand_rounded, size: 20, color: context.appColors.waiting),
+                  Icon(LucideIcons.hand, size: 20, color: context.appColors.waiting),
                   const SizedBox(width: AppSpace.sm),
                   Expanded(child: Text(l10n.botAsksForHelp(takeover.reason), style: theme.textTheme.bodyMedium?.copyWith(height: 1.35))),
                   TextButton(
@@ -347,14 +348,14 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
                   FilledButton.tonalIcon(
                     key: const Key('handBack'),
                     onPressed: _handBack,
-                    icon: const Icon(Icons.undo_rounded, size: 18),
+                    icon: const Icon(LucideIcons.undo2, size: 18),
                     label: Text(l10n.handBack),
                   )
                 else
                   FilledButton.icon(
                     key: const Key('takeControl'),
                     onPressed: _busy || (_lease?.holderType == LeaseHolderTypeEnum.user) ? null : _takeControl,
-                    icon: const Icon(Icons.mouse_rounded, size: 18),
+                    icon: const Icon(LucideIcons.mousePointer2, size: 18),
                     label: Text(l10n.takeControl),
                   ),
               ],
@@ -363,7 +364,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
           if (_lease?.you == true)
             Padding(
               padding: const EdgeInsets.fromLTRB(AppSpace.gutter, 0, AppSpace.gutter, AppSpace.sm),
-              child: FormNote(l10n.takeoverPrivacy, icon: Icons.lock_outline_rounded),
+              child: FormNote(l10n.takeoverPrivacy, icon: LucideIcons.lock),
             ),
           Expanded(
             child: Container(
@@ -441,7 +442,7 @@ class _HandBackDialogState extends State<_HandBackDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return FormSheet(
-      icon: Icons.undo_rounded,
+      icon: LucideIcons.undo2,
       title: l10n.handBack,
       subtitle: l10n.handBackHelp,
       submitLabel: l10n.handBack,

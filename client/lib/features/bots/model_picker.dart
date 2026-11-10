@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -41,8 +42,8 @@ class ModelPickerField extends ConsumerWidget {
         decoration: InputDecoration(
           labelText: l10n.model,
           enabled: enabled,
-          prefixIcon: const Icon(Icons.auto_awesome_outlined, size: 20),
-          suffixIcon: const Icon(Icons.arrow_drop_down),
+          prefixIcon: const Icon(LucideIcons.sparkles, size: 20),
+          suffixIcon: const Icon(LucideIcons.chevronDown),
         ),
         child: value.isEmpty
             ? null
@@ -100,7 +101,7 @@ class _ModelSheetState extends ConsumerState<_ModelSheet> {
       key: Key('model-${m.id}'),
       title: Text(m.name),
       subtitle: Text([m.id, _context(m.contextLength)].where((s) => s.isNotEmpty).join(' · ')),
-      trailing: m.id == widget.current ? const Icon(Icons.check) : null,
+      trailing: m.id == widget.current ? const Icon(LucideIcons.check) : null,
       onTap: () => Navigator.of(context).pop(m.id),
     );
     return Column(
@@ -117,7 +118,7 @@ class _ModelSheetState extends ConsumerState<_ModelSheet> {
                 controller: _search,
                 autofocus: true,
                 autocorrect: false,
-                decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: l10n.searchModels),
+                decoration: InputDecoration(prefixIcon: const Icon(LucideIcons.search), hintText: l10n.searchModels),
                 onChanged: (v) => setState(() => _query = v),
                 onSubmitted: (v) {
                   if (v.trim().isNotEmpty) Navigator.of(context).pop(v.trim());
@@ -144,7 +145,7 @@ class _ModelSheetState extends ConsumerState<_ModelSheet> {
                 if (typed.isNotEmpty && !exact)
                   () => ListTile(
                     key: const Key('customModel'),
-                    leading: const Icon(Icons.edit),
+                    leading: const Icon(LucideIcons.pencil),
                     title: Text(l10n.useCustomModel(typed)),
                     onTap: () => Navigator.of(context).pop(typed),
                   ),

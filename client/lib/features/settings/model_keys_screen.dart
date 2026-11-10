@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -12,29 +13,29 @@ import '../../ui/page.dart';
 
 /// A provider's name as people know it, with what it is for when that isn't obvious.
 String providerLabel(ProviderId p) => switch (p) {
-      ProviderId.openrouter => 'OpenRouter',
-      ProviderId.openai => 'OpenAI',
-      ProviderId.anthropic => 'Anthropic',
-      ProviderId.google => 'Google Gemini',
-      ProviderId.xai => 'xAI',
-      ProviderId.openaiCompatible => 'OpenAI-compatible server',
-      ProviderId.fal => 'fal.ai',
-      ProviderId.braveSearch => 'Brave Search',
-      ProviderId.tavily => 'Tavily',
-      ProviderId.deepgram => 'Deepgram',
-      ProviderId.elevenlabs => 'ElevenLabs',
-      ProviderId.cartesia => 'Cartesia',
-      ProviderId.fishAudio => 'Fish Audio',
-    };
+  ProviderId.openrouter => 'OpenRouter',
+  ProviderId.openai => 'OpenAI',
+  ProviderId.anthropic => 'Anthropic',
+  ProviderId.google => 'Google Gemini',
+  ProviderId.xai => 'xAI',
+  ProviderId.openaiCompatible => 'OpenAI-compatible server',
+  ProviderId.fal => 'fal.ai',
+  ProviderId.braveSearch => 'Brave Search',
+  ProviderId.tavily => 'Tavily',
+  ProviderId.deepgram => 'Deepgram',
+  ProviderId.elevenlabs => 'ElevenLabs',
+  ProviderId.cartesia => 'Cartesia',
+  ProviderId.fishAudio => 'Fish Audio',
+};
 
 String? _providerHint(BuildContext context, ProviderId p) => switch (p) {
-      ProviderId.openrouter => context.l10n.providerHintOpenRouter,
-      ProviderId.openaiCompatible => context.l10n.providerHintCompatible,
-      ProviderId.fal => context.l10n.providerHintImages,
-      ProviderId.braveSearch || ProviderId.tavily => context.l10n.providerHintSearch,
-      ProviderId.deepgram || ProviderId.elevenlabs || ProviderId.cartesia || ProviderId.fishAudio => context.l10n.providerHintVoice,
-      _ => null,
-    };
+  ProviderId.openrouter => context.l10n.providerHintOpenRouter,
+  ProviderId.openaiCompatible => context.l10n.providerHintCompatible,
+  ProviderId.fal => context.l10n.providerHintImages,
+  ProviderId.braveSearch || ProviderId.tavily => context.l10n.providerHintSearch,
+  ProviderId.deepgram || ProviderId.elevenlabs || ProviderId.cartesia || ProviderId.fishAudio => context.l10n.providerHintVoice,
+  _ => null,
+};
 
 /// Form to add a model key; the key goes to Vault and is never shown again.
 class AddKeyForm extends ConsumerStatefulWidget {
@@ -66,7 +67,9 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
     setState(() => _busy = true);
     final added = await runGuarded(
       context,
-      () => ref.read(backendProvider).addCredential(
+      () => ref
+          .read(backendProvider)
+          .addCredential(
             org.id,
             _provider,
             _label.text.trim().isEmpty ? 'Main' : _label.text.trim(),
@@ -85,49 +88,61 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final compatible = _provider == ProviderId.openaiCompatible;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, spacing: AppSpace.md, children: [
-      DropdownButtonFormField<ProviderId>(
-        initialValue: _provider,
-        decoration: InputDecoration(labelText: l10n.provider, prefixIcon: const Icon(Icons.hub_outlined, size: 20)),
-        items: [
-          for (final p in ProviderId.values)
-            DropdownMenuItem(
-              value: p,
-              child: Text.rich(TextSpan(text: providerLabel(p), children: [
-                if (_providerHint(context, p) case final hint?)
-                  TextSpan(text: '  $hint', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13)),
-              ])),
-            ),
-        ],
-        selectedItemBuilder: (context) => [for (final p in ProviderId.values) Text(providerLabel(p))],
-        onChanged: (v) => setState(() => _provider = v ?? _provider),
-      ),
-      TextField(
-        controller: _label,
-        decoration: InputDecoration(labelText: l10n.label, prefixIcon: const Icon(Icons.label_outline_rounded, size: 20)),
-      ),
-      TextField(
-        key: const Key('apiKey'),
-        controller: _key,
-        decoration: InputDecoration(labelText: l10n.apiKey, prefixIcon: const Icon(Icons.key_rounded, size: 20), helperText: l10n.storedEncrypted),
-        obscureText: true,
-        autocorrect: false,
-        enableSuggestions: false,
-      ),
-      if (compatible)
-        TextField(
-          controller: _baseUrl,
-          keyboardType: TextInputType.url,
-          decoration: InputDecoration(labelText: l10n.baseUrl, hintText: 'http://localhost:11434/v1', prefixIcon: const Icon(Icons.dns_outlined, size: 20)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpace.md,
+      children: [
+        DropdownButtonFormField<ProviderId>(
+          initialValue: _provider,
+          decoration: InputDecoration(labelText: l10n.provider, prefixIcon: const Icon(LucideIcons.network, size: 20)),
+          items: [
+            for (final p in ProviderId.values)
+              DropdownMenuItem(
+                value: p,
+                child: Text.rich(
+                  TextSpan(
+                    text: providerLabel(p),
+                    children: [
+                      if (_providerHint(context, p) case final hint?)
+                        TextSpan(
+                          text: '  $hint',
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+          selectedItemBuilder: (context) => [for (final p in ProviderId.values) Text(providerLabel(p))],
+          onChanged: (v) => setState(() => _provider = v ?? _provider),
         ),
-      FilledButton.icon(
-        key: const Key('addKey'),
-        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-        onPressed: _busy ? null : _add,
-        icon: const Icon(Icons.add_rounded, size: 20),
-        label: Text(l10n.addKey),
-      ),
-    ]);
+        TextField(
+          controller: _label,
+          decoration: InputDecoration(labelText: l10n.label, prefixIcon: const Icon(LucideIcons.tag, size: 20)),
+        ),
+        TextField(
+          key: const Key('apiKey'),
+          controller: _key,
+          decoration: InputDecoration(labelText: l10n.apiKey, prefixIcon: const Icon(LucideIcons.keyRound, size: 20), helperText: l10n.storedEncrypted),
+          obscureText: true,
+          autocorrect: false,
+          enableSuggestions: false,
+        ),
+        if (compatible)
+          TextField(
+            controller: _baseUrl,
+            keyboardType: TextInputType.url,
+            decoration: InputDecoration(labelText: l10n.baseUrl, hintText: 'http://localhost:11434/v1', prefixIcon: const Icon(LucideIcons.server, size: 20)),
+          ),
+        FilledButton.icon(
+          key: const Key('addKey'),
+          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+          onPressed: _busy ? null : _add,
+          icon: const Icon(LucideIcons.plus, size: 20),
+          label: Text(l10n.addKey),
+        ),
+      ],
+    );
   }
 }
 
@@ -147,11 +162,14 @@ class ModelKeysScreen extends ConsumerWidget {
           value: keys,
           onRetry: () => ref.invalidate(credentialsProvider),
           data: (items) => items.isEmpty
-              ? AppCard(child: FormNote(l10n.noKeys, icon: Icons.key_off_outlined))
+              ? AppCard(child: FormNote(l10n.noKeys, icon: LucideIcons.keyRound))
               : GroupedCard(children: [for (final k in items) _KeyRow(credential: k)]),
         ),
         SectionHeader(title: l10n.addKey),
-        AppCard(padding: const EdgeInsets.all(AppSpace.lg), child: AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider))),
+        AppCard(
+          padding: const EdgeInsets.all(AppSpace.lg),
+          child: AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
+        ),
       ],
     );
   }
@@ -190,17 +208,23 @@ class _KeyRowState extends ConsumerState<_KeyRow> {
       null => (l10n.keyUntested, context.colorScheme.onSurfaceVariant),
     };
     return GroupedTile(
-      icon: Icons.key_rounded,
+      icon: LucideIcons.keyRound,
       iconColor: k.lastTestOk == false ? colors.negative : null,
       title: k.label,
       subtitle: '${providerLabel(k.provider)}${k.keyHint == null ? '' : ' · …${k.keyHint}'}',
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        StatusLabel(text: statusText, color: statusColor, pill: true),
-        const SizedBox(width: AppSpace.xs),
-        _testing
-            ? const SizedBox(width: 64, child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))))
-            : TextButton(onPressed: _test, child: Text(l10n.testKey)),
-      ]),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          StatusLabel(text: statusText, color: statusColor, pill: true),
+          const SizedBox(width: AppSpace.xs),
+          _testing
+              ? const SizedBox(
+                  width: 64,
+                  child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
+                )
+              : TextButton(onPressed: _test, child: Text(l10n.testKey)),
+        ],
+      ),
     );
   }
 }

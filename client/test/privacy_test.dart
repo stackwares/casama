@@ -18,17 +18,19 @@ void main() {
     await setSize(tester, const Size(800, 1000));
     final backend = FakeBackend();
     final saved = <String>[];
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        backendProvider.overrideWithValue(backend),
-        saveExportProvider.overrideWithValue((Uint8List b, String name) async => saved.add('$name:${b.length}')),
-      ],
-      child: const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: PrivacyScreen(),
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          backendProvider.overrideWithValue(backend),
+          saveExportProvider.overrideWithValue((Uint8List b, String name, {Rect? origin}) async => saved.add('$name:${b.length}')),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: PrivacyScreen(),
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('exportData')));
     await tester.pumpAndSettle();

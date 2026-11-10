@@ -3,10 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kasama_app/core/providers.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
+import 'package:kasama_app/features/settings/background_screen.dart';
 import 'package:kasama_app/features/settings/settings_screen.dart';
+import 'package:kasama_app/features/settings/theme_screen.dart';
 import 'package:kasama_app/l10n/generated/app_localizations.dart';
 import 'package:kasama_app/theme/app_theme.dart';
 import 'package:kasama_app/theme/appearance.dart';
+import 'package:kasama_app/theme/schemes.dart';
+import 'package:kasama_app/theme/wallpaper.dart';
 
 import 'fake_backend.dart';
 
@@ -15,8 +19,8 @@ Widget _app(FakeBackend backend, Widget child) => ProviderScope(
       child: Consumer(builder: (context, ref, _) {
         final a = ref.watch(appearanceProvider);
         return MaterialApp(
-          theme: AppTheme.light(a.accent),
-          darkTheme: AppTheme.dark(a.accent),
+          theme: AppTheme.light(a),
+          darkTheme: AppTheme.dark(a),
           themeMode: a.mode,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -56,26 +60,43 @@ void main() {
     expect(find.text('Thinking…'), findsOneWidget);
   });
 
-  testWidgets('appearance: theme mode and accent apply right away', (tester) async {
+  testWidgets('appearance: mode, color scheme and background apply right away', (tester) async {
     tester.view.physicalSize = const Size(500, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(_app(FakeBackend(), const SettingsScreen()));
     await tester.pumpAndSettle();
-    Color scaffoldColor() => Theme.of(tester.element(find.byType(SettingsScreen))).colorScheme.surface;
-    Color primary() => Theme.of(tester.element(find.byType(SettingsScreen))).colorScheme.primary;
-    final lightSurface = scaffoldColor();
-    final tealPrimary = primary();
+    ThemeData theme() => Theme.of(tester.element(find.byType(SettingsScreen)));
+    final lightSurface = theme().colorScheme.surface;
+    // Kasama's own scheme is the default: plum primary from the app icon.
+    expect(theme().colorScheme.primary, kasamaScheme.light.primary);
 
     await tester.tap(find.text('Dark'));
     await tester.pumpAndSettle();
-    expect(scaffoldColor(), isNot(lightSurface));
-    expect(scaffoldColor().computeLuminance(), lessThan(0.05));
+    expect(theme().colorScheme.surface, isNot(lightSurface));
+    expect(theme().colorScheme.surface.computeLuminance(), lessThan(0.05));
 
-    await tester.tap(find.byKey(const Key('accent-indigo')));
+    // Picking another scheme recolors the app.
+    await tester.pumpWidget(_app(FakeBackend(), const ThemeScreen()));
     await tester.pumpAndSettle();
-    expect(primary(), isNot(tealPrimary));
-    // Surfaces stay neutral whatever the accent.
-    expect(scaffoldColor(), const Color(0xFF0D0E10));
+    final kasamaPrimary = Theme.of(tester.element(find.byType(ThemeScreen))).colorScheme.primary;
+    await tester.enterText(find.byKey(const Key('themeSearch')), 'mandy');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('scheme-mandyRed')));
+    await tester.pumpAndSettle();
+    expect(Theme.of(tester.element(find.byType(ThemeScreen))).colorScheme.primary, isNot(kasamaPrimary));
+
+    // The background pattern and its reach are carried by the theme.
+    await tester.pumpWidget(_app(FakeBackend(), const BackgroundScreen()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pattern-doodles')));
+    await tester.pumpAndSettle();
+    WallpaperTheme wallpaper() => Theme.of(tester.element(find.byType(BackgroundScreen))).extension<WallpaperTheme>()!;
+    expect(wallpaper().spec.pattern, WallpaperPattern.doodles);
+    await tester.ensureVisible(find.byKey(const Key('wallpaperEverywhere')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wallpaperEverywhere')));
+    await tester.pumpAndSettle();
+    expect(wallpaper().spec.everywhere, isFalse);
   });
 }

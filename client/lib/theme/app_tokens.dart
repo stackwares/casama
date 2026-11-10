@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../ui/motion.dart';
 
 /// Spacing scale shared by every screen.
@@ -28,17 +29,24 @@ abstract final class AppRadius {
   static BorderRadius get rowAll => BorderRadius.circular(row);
 }
 
+/// The app's three typefaces (D-084), bundled under assets/fonts.
+abstract final class AppFonts {
+  /// Headlines: page and sheet titles, greetings, Markdown headings.
+  static const serif = 'Fraunces';
+
+  /// Everything else: interface, body text and bold labels.
+  static const sans = 'Figtree';
+
+  /// Code, terminal output and tool arguments.
+  static const mono = 'JetBrains Mono';
+}
+
 /// Text helpers that the theme can't express.
 abstract final class AppText {
   static const List<FontFeature> tabular = [FontFeature.tabularFigures()];
 
   /// Code, terminal output and tool arguments.
-  static const mono = TextStyle(
-    fontFamily: 'monospace',
-    fontFamilyFallback: ['SF Mono', 'Menlo', 'Consolas', 'DejaVu Sans Mono'],
-    fontSize: 13,
-    height: 1.45,
-  );
+  static const mono = TextStyle(fontFamily: AppFonts.mono, fontFamilyFallback: ['SF Mono', 'Menlo', 'Consolas', 'monospace'], fontSize: 13, height: 1.45);
 }
 
 /// Window size classes, after Material 3: phone, tablet, desktop.
@@ -57,12 +65,11 @@ abstract final class AppBreakpoints {
   static WindowSize of(double width) => width >= expanded
       ? WindowSize.expanded
       : width >= medium
-          ? WindowSize.medium
-          : WindowSize.compact;
+      ? WindowSize.medium
+      : WindowSize.compact;
 
   /// Side inset that centers a column of [maxWidth] in [available] width.
-  static double centeringInset(double available, {double maxWidth = readableWidth}) =>
-      available > maxWidth ? (available - maxWidth) / 2 : 0;
+  static double centeringInset(double available, {double maxWidth = readableWidth}) => available > maxWidth ? (available - maxWidth) / 2 : 0;
 }
 
 /// Shared motion timing.
@@ -81,11 +88,14 @@ abstract final class AppMotion {
 
 extension AppMotionWidget on Widget {
   /// Staggered fade and slight upward slide for list rows.
-  Widget appListItemEntrance(int index) => RepaintBoundary(child: Entrance(delay: AppMotion.staggerDelay(index), child: this));
+  Widget appListItemEntrance(int index) => RepaintBoundary(
+    child: Entrance(delay: AppMotion.staggerDelay(index), child: this),
+  );
 
   /// Cards and heroes: fade and a subtle scale.
-  Widget appCardEntrance({Duration delay = Duration.zero}) =>
-      RepaintBoundary(child: Entrance(delay: delay, offset: Offset.zero, scale: 0.98, child: this));
+  Widget appCardEntrance({Duration delay = Duration.zero}) => RepaintBoundary(
+    child: Entrance(delay: delay, offset: Offset.zero, scale: 0.98, child: this),
+  );
 
   /// A new chat entry: fade and rise from slightly below.
   Widget appMessageEntrance() => Entrance(duration: const Duration(milliseconds: 260), offset: const Offset(0, 0.08), child: this);

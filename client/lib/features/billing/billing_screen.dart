@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/billing.dart';
 import '../../core/providers.dart';
@@ -50,7 +51,7 @@ Future<void> showPaywall(BuildContext context, String message) async {
   final l10n = context.l10n;
   final go = await showConfirm(
     context: context,
-    icon: Icons.workspace_premium_outlined,
+    icon: LucideIcons.gem,
     title: l10n.upgradeTitle,
     message: message,
     confirmLabel: l10n.seePlans,
@@ -115,7 +116,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       title: l10n.billing,
       actions: [
         HeaderIconButton(
-          icon: Icons.refresh_rounded,
+          icon: LucideIcons.rotateCw,
           tooltip: l10n.refresh,
           onPressed: () {
             ref.invalidate(billingProvider);
@@ -128,7 +129,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
         onRetry: () => ref.invalidate(billingProvider),
         data: (b) {
           if (b == null || !b.enabled) {
-            return EmptyState(icon: Icons.all_inclusive_rounded, title: l10n.billingOffTitle, message: l10n.billingOffSelfHosted);
+            return EmptyState(icon: LucideIcons.infinity, title: l10n.billingOffTitle, message: l10n.billingOffSelfHosted);
           }
           final org = ref.watch(currentOrgProvider);
           final isAdmin = org != null && org.role != OrgRole.member;
@@ -147,7 +148,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                       child: TextButton.icon(
                         key: const Key('restorePurchases'),
                         onPressed: _restore,
-                        icon: const Icon(Icons.restore_rounded, size: 18),
+                        icon: const Icon(LucideIcons.rotateCcw, size: 18),
                         label: Text(l10n.restorePurchases),
                       ),
                     ),
@@ -182,7 +183,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(p.code == b.planCode ? Icons.check_circle_rounded : Icons.workspace_premium_outlined, size: 20, color: scheme.primary),
+                    Icon(p.code == b.planCode ? LucideIcons.circleCheck : LucideIcons.gem, size: 20, color: scheme.primary),
                     const SizedBox(width: AppSpace.xs),
                     Expanded(
                       child: Text(p.name, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
@@ -202,14 +203,14 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                         FilledButton.icon(
                           key: Key('buyStore-${p.code}'),
                           onPressed: () => _storeBuy(products[p.storeProductIds[source]]!),
-                          icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+                          icon: const Icon(LucideIcons.shoppingBag, size: 18),
                           label: Text(l10n.subscribeFor(products[p.storeProductIds[source]]!.price)),
                         ),
                       if (channels.contains(PurchaseChannel.web) && p.web)
                         OutlinedButton.icon(
                           key: Key('buyWeb-${p.code}'),
                           onPressed: () => _webCheckout(plan: p.code),
-                          icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                          icon: const Icon(LucideIcons.squareArrowOutUpRight, size: 18),
                           label: Text(l10n.subscribeOnWeb),
                         ),
                     ],
@@ -233,10 +234,10 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
           for (final p in packs)
             GroupedTile(
               key: Key('pack-${p.code}'),
-              icon: Icons.add_card_rounded,
+              icon: LucideIcons.creditCard,
               iconColor: context.appColors.positive,
               title: p.name,
-              trailing: Icon(Icons.open_in_new_rounded, size: 18, color: context.colorScheme.onSurfaceVariant),
+              trailing: Icon(LucideIcons.squareArrowOutUpRight, size: 18, color: context.colorScheme.onSurfaceVariant),
               onTap: () => _webCheckout(pack: p.code),
             ),
         ],
@@ -293,7 +294,7 @@ class _CurrentPlan extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 alignment: Alignment.center,
-                child: Icon(Icons.workspace_premium_rounded, color: scheme.onPrimary, size: 26),
+                child: Icon(LucideIcons.gem, color: scheme.onPrimary, size: 26),
               ),
               const SizedBox(width: AppSpace.md),
               Expanded(
@@ -321,7 +322,7 @@ class _CurrentPlan extends StatelessWidget {
             decoration: BoxDecoration(color: scheme.surfaceContainer, borderRadius: BorderRadius.circular(AppRadius.row)),
             child: Row(
               children: [
-                Icon(Icons.account_balance_wallet_outlined, size: 20, color: context.appColors.positive),
+                Icon(LucideIcons.wallet, size: 20, color: context.appColors.positive),
                 const SizedBox(width: AppSpace.sm),
                 Expanded(
                   child: Column(
@@ -344,7 +345,7 @@ class _CurrentPlan extends StatelessWidget {
             OutlinedButton.icon(
               key: const Key('manageSubscription'),
               onPressed: onManage,
-              icon: const Icon(Icons.tune_rounded, size: 18),
+              icon: const Icon(LucideIcons.slidersHorizontal, size: 18),
               label: Text(l10n.manageSubscription),
             ),
           ],
@@ -365,10 +366,10 @@ class _UsageSection extends ConsumerWidget {
     if (usage == null) return const SizedBox.shrink();
     (String, IconData) describe(BillingUsageItem i) {
       final (what, icon) = switch (i.kind) {
-        'computer_seconds' => (l10n.usageComputerHours((i.quantity / 3600).toStringAsFixed(2)), Icons.desktop_windows_outlined),
-        'stream_seconds' => (l10n.usageLiveViewMinutes((i.quantity / 60).toStringAsFixed(0)), Icons.live_tv_outlined),
-        'tokens_in' || 'tokens_out' => (l10n.usageTokens(i.quantity.toInt()), Icons.auto_awesome_outlined),
-        _ => (i.kind, Icons.receipt_long_outlined),
+        'computer_seconds' => (l10n.usageComputerHours((i.quantity / 3600).toStringAsFixed(2)), LucideIcons.monitor),
+        'stream_seconds' => (l10n.usageLiveViewMinutes((i.quantity / 60).toStringAsFixed(0)), LucideIcons.monitorPlay),
+        'tokens_in' || 'tokens_out' => (l10n.usageTokens(i.quantity.toInt()), LucideIcons.sparkles),
+        _ => (i.kind, LucideIcons.receiptText),
       };
       return (i.instance == null ? what : '$what · ${i.instance}', icon);
     }
@@ -378,7 +379,7 @@ class _UsageSection extends ConsumerWidget {
       children: [
         SectionHeader(title: l10n.thisMonth),
         if (usage.items.isEmpty)
-          AppCard(child: FormNote(l10n.noBillableUsage, icon: Icons.receipt_long_outlined))
+          AppCard(child: FormNote(l10n.noBillableUsage, icon: LucideIcons.receiptText))
         else
           GroupedCard(
             children: [
@@ -410,8 +411,8 @@ class _CloudConnectSection extends ConsumerWidget {
       label: l10n.instanceName,
       hint: 'home-server',
       submitLabel: l10n.create,
-      icon: Icons.cloud_outlined,
-      fieldIcon: Icons.dns_outlined,
+      icon: LucideIcons.cloud,
+      fieldIcon: LucideIcons.server,
       fieldKey: const Key('instanceName'),
     );
     if (name == null || name.isEmpty || !context.mounted) return;
@@ -437,7 +438,7 @@ class _CloudConnectSection extends ConsumerWidget {
           trailing: TextButton.icon(
             key: const Key('createConnectKey'),
             onPressed: () => _create(context, ref),
-            icon: const Icon(Icons.add_rounded, size: 18),
+            icon: const Icon(LucideIcons.plus, size: 18),
             label: Text(l10n.cloudConnectNewKey),
           ),
         ),
@@ -448,12 +449,12 @@ class _CloudConnectSection extends ConsumerWidget {
             children: [
               for (final k in keys)
                 GroupedTile(
-                  icon: Icons.dns_outlined,
+                  icon: LucideIcons.server,
                   title: k.instanceName,
                   subtitle: k.keyHint,
                   trailing: IconButton(
                     tooltip: l10n.revoke,
-                    icon: Icon(Icons.delete_outline_rounded, color: context.colorScheme.onSurfaceVariant),
+                    icon: Icon(LucideIcons.trash2, color: context.colorScheme.onSurfaceVariant),
                     onPressed: () async {
                       final ok = await showConfirm(
                         context: context,
@@ -486,12 +487,12 @@ class _KeyCreatedSheet extends StatelessWidget {
     final l10n = context.l10n;
     final line = 'KASAMA_CLOUD_KEY=$secret';
     return FormSheet(
-      icon: Icons.key_rounded,
+      icon: LucideIcons.keyRound,
       iconColor: context.appColors.warning,
       title: l10n.cloudConnectKeyCreated,
       subtitle: l10n.cloudConnectKeyOnce,
       submitLabel: l10n.copy,
-      submitIcon: Icons.content_copy_rounded,
+      submitIcon: LucideIcons.copy,
       cancelLabel: l10n.close,
       onSubmit: () {
         Clipboard.setData(ClipboardData(text: secret));

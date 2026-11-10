@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
@@ -85,7 +86,7 @@ Future<bool> showConfirm({
     context: context,
     dialogMaxWidth: 460,
     builder: (c) => FormSheet(
-      icon: icon ?? (destructive ? Icons.warning_amber_rounded : Icons.help_outline_rounded),
+      icon: icon ?? (destructive ? LucideIcons.triangleAlert : LucideIcons.circleQuestionMark),
       title: title,
       subtitle: message,
       submitLabel: confirmLabel,

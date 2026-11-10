@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../l10n/generated/app_localizations.dart';
 
@@ -46,13 +47,13 @@ class AsyncView<T> extends StatelessWidget {
         ),
       ),
       error: (e, _) => EmptyState(
-        icon: Icons.cloud_off_outlined,
+        icon: LucideIcons.cloudOff,
         title: context.l10n.somethingWentWrong,
         message: errorText(context, e),
         isError: true,
         action: onRetry == null
             ? null
-            : FilledButton.tonalIcon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded, size: 18), label: Text(context.l10n.retry)),
+            : FilledButton.tonalIcon(onPressed: onRetry, icon: const Icon(LucideIcons.rotateCw, size: 18), label: Text(context.l10n.retry)),
       ),
     );
   }
@@ -80,25 +81,32 @@ class EmptyState extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 380),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), shape: BoxShape.circle),
-                child: Icon(icon, size: 32, color: accent),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                title ?? message,
-                textAlign: TextAlign.center,
-                style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.2),
-              ),
-              if (title != null) ...[
-                const SizedBox(height: 8),
-                Text(message, textAlign: TextAlign.center, style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), shape: BoxShape.circle),
+                  child: Icon(icon, size: 32, color: accent),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  title ?? message,
+                  textAlign: TextAlign.center,
+                  style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+                ),
+                if (title != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4),
+                  ),
+                ],
+                if (action != null) ...[const SizedBox(height: 24), action!],
               ],
-              if (action != null) ...[const SizedBox(height: 24), action!],
-            ]),
+            ),
           ),
         ),
       ),

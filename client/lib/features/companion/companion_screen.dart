@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -36,20 +37,20 @@ class CompanionScreen extends ConsumerWidget {
     return SubPage(
       title: l10n.useThisComputer,
       body: !companion.supported
-          ? EmptyState(icon: Icons.desktop_access_disabled_outlined, title: l10n.useThisComputer, message: l10n.companionDesktopOnly)
+          ? EmptyState(icon: LucideIcons.monitorOff, title: l10n.useThisComputer, message: l10n.companionDesktopOnly)
           : AsyncView(
               value: value,
               onRetry: () => ref.invalidate(companionControllerProvider),
               data: (device) {
                 if (device == null) {
                   return EmptyState(
-                    icon: Icons.laptop_mac_rounded,
+                    icon: LucideIcons.laptop,
                     title: l10n.useThisComputer,
                     message: l10n.companionIntro,
                     action: FilledButton.icon(
                       key: const Key('pairComputer'),
                       onPressed: () => runGuarded(context, () => controller.pair(l10n.thisComputer)),
-                      icon: const Icon(Icons.link_rounded, size: 18),
+                      icon: const Icon(LucideIcons.link, size: 18),
                       label: Text(l10n.useThisComputer),
                     ),
                   );
@@ -76,7 +77,7 @@ class CompanionScreen extends ConsumerWidget {
                                 height: 48,
                                 decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
                                 alignment: Alignment.center,
-                                child: Icon(Icons.laptop_mac_rounded, color: statusColor),
+                                child: Icon(LucideIcons.laptop, color: statusColor),
                               ),
                               const SizedBox(width: 14),
                               Expanded(
@@ -104,10 +105,10 @@ class CompanionScreen extends ConsumerWidget {
                               GroupedTile(
                                 key: Key('cap-$c'),
                                 icon: switch (c) {
-                                  'shell' => Icons.terminal_rounded,
-                                  'files' => Icons.folder_outlined,
-                                  'browser' => Icons.language_rounded,
-                                  _ => Icons.mouse_outlined,
+                                  'shell' => LucideIcons.squareTerminal,
+                                  'files' => LucideIcons.folder,
+                                  'browser' => LucideIcons.globe,
+                                  _ => LucideIcons.mousePointer2,
                                 },
                                 title: capLabel(c),
                                 onTap: () => runGuarded(context, () => controller.save(capabilities: caps.contains(c) ? ({...caps}..remove(c)) : {...caps, c})),
@@ -128,23 +129,23 @@ class CompanionScreen extends ConsumerWidget {
                               if (dir == null || !context.mounted) return;
                               await runGuarded(context, () => controller.save(roots: {...device.allowedRoots, dir}.toList()));
                             },
-                            icon: const Icon(Icons.create_new_folder_outlined, size: 18),
+                            icon: const Icon(LucideIcons.folderPlus, size: 18),
                             label: Text(l10n.addFolder),
                           ),
                         ),
                         if (device.allowedRoots.isEmpty)
-                          AppCard(child: FormNote(l10n.sharedFoldersHelp, icon: Icons.folder_off_outlined))
+                          AppCard(child: FormNote(l10n.sharedFoldersHelp, icon: LucideIcons.folderX))
                         else
                           GroupedCard(
                             children: [
                               for (final r in device.allowedRoots)
                                 GroupedTile(
-                                  icon: Icons.folder_outlined,
+                                  icon: LucideIcons.folder,
                                   title: r.split('/').where((p) => p.isNotEmpty).lastOrNull ?? r,
                                   subtitle: r,
                                   trailing: IconButton(
                                     tooltip: l10n.delete,
-                                    icon: Icon(Icons.close_rounded, color: scheme.onSurfaceVariant),
+                                    icon: Icon(LucideIcons.x, color: scheme.onSurfaceVariant),
                                     onPressed: () => runGuarded(context, () => controller.save(roots: device.allowedRoots.where((x) => x != r).toList())),
                                   ),
                                 ),
@@ -176,7 +177,7 @@ class CompanionScreen extends ConsumerWidget {
                         GroupedCard(
                           children: [
                             GroupedTile(
-                              icon: Icons.link_off_rounded,
+                              icon: LucideIcons.unlink,
                               destructive: true,
                               title: l10n.unpairComputer,
                               onTap: () => runGuarded(context, controller.unpair),

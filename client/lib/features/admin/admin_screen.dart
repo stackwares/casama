@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -111,22 +112,22 @@ class _Overview extends ConsumerWidget {
       value: ref.watch(adminOverviewProvider),
       onRetry: () => ref.invalidate(adminOverviewProvider),
       data: (o) {
-        if (o == null) return EmptyState(icon: Icons.lock_outline_rounded, message: l10n.notInstanceOwner);
+        if (o == null) return EmptyState(icon: LucideIcons.lock, message: l10n.notInstanceOwner);
         final u = updates.value;
         final stats = [
-          _Stat(icon: Icons.person_outline_rounded, label: l10n.adminUsers, value: '${o.users}'),
-          _Stat(icon: Icons.workspaces_outline, label: l10n.adminWorkspaces, value: '${o.orgs}'),
-          _Stat(icon: Icons.smart_toy_outlined, label: l10n.bots, value: '${o.bots}'),
-          _Stat(icon: Icons.play_circle_outline_rounded, label: l10n.runs24h, value: '${o.runs24h}', color: colors.info),
+          _Stat(icon: LucideIcons.user, label: l10n.adminUsers, value: '${o.users}'),
+          _Stat(icon: LucideIcons.boxes, label: l10n.adminWorkspaces, value: '${o.orgs}'),
+          _Stat(icon: LucideIcons.bot, label: l10n.bots, value: '${o.bots}'),
+          _Stat(icon: LucideIcons.circlePlay, label: l10n.runs24h, value: '${o.runs24h}', color: colors.info),
           _Stat(
-            icon: Icons.error_outline_rounded,
+            icon: LucideIcons.circleAlert,
             label: l10n.failedRuns24h,
             value: '${o.failedRuns24h}',
             color: o.failedRuns24h > 0 ? colors.negative : colors.positive,
           ),
-          _Stat(icon: Icons.payments_outlined, label: l10n.cost24h, value: formatUsd(o.cost24hUsd), color: colors.positive),
-          _Stat(icon: Icons.desktop_windows_outlined, label: l10n.computersRunning, value: '${o.computersRunning}', color: colors.working),
-          _Stat(icon: Icons.devices_outlined, label: l10n.devicesOnline, value: '${o.devicesOnline}'),
+          _Stat(icon: LucideIcons.banknote, label: l10n.cost24h, value: formatUsd(o.cost24hUsd), color: colors.positive),
+          _Stat(icon: LucideIcons.monitor, label: l10n.computersRunning, value: '${o.computersRunning}', color: colors.working),
+          _Stat(icon: LucideIcons.monitorSmartphone, label: l10n.devicesOnline, value: '${o.devicesOnline}'),
         ];
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -141,7 +142,7 @@ class _Overview extends ConsumerWidget {
                     borderColor: context.colorScheme.primary.withValues(alpha: 0.45),
                     child: Row(
                       children: [
-                        Icon(Icons.system_update_alt_rounded, color: context.colorScheme.primary),
+                        Icon(LucideIcons.arrowDownToLine, color: context.colorScheme.primary),
                         const SizedBox(width: AppSpace.sm),
                         Expanded(
                           child: Column(
@@ -167,7 +168,7 @@ class _Overview extends ConsumerWidget {
                   children: stats,
                 ),
                 const SizedBox(height: AppSpace.md),
-                FormNote(l10n.kasamaVersion(o.version), icon: Icons.verified_outlined),
+                FormNote(l10n.kasamaVersion(o.version), icon: LucideIcons.badgeCheck),
               ],
             );
           },
@@ -191,7 +192,7 @@ class _Users extends ConsumerWidget {
             children: [
               for (final u in items)
                 GroupedTile(
-                  icon: Icons.person_outline_rounded,
+                  icon: LucideIcons.user,
                   title: u.email ?? u.id,
                   subtitle: [
                     context.l10n.workspacesCount(u.orgs),
@@ -243,7 +244,7 @@ class _OrgsState extends ConsumerState<_Orgs> {
                 for (final o in snap.data!)
                   GroupedTile(
                     key: Key('adminOrg-${o.id}'),
-                    icon: Icons.workspaces_outline,
+                    icon: LucideIcons.boxes,
                     title: o.name,
                     subtitle: [
                       l10n.membersCount(o.members),
@@ -251,7 +252,7 @@ class _OrgsState extends ConsumerState<_Orgs> {
                       l10n.cost30d(formatUsd(o.cost30dUsd)),
                       if (o.limits.isNotEmpty) o.limits.entries.map((e) => '${e.key}: ${e.value}').join(', '),
                     ].join(' · '),
-                    trailing: IconButton(tooltip: l10n.editQuotas, icon: const Icon(Icons.tune_rounded), onPressed: () => _edit(o)),
+                    trailing: IconButton(tooltip: l10n.editQuotas, icon: const Icon(LucideIcons.slidersHorizontal), onPressed: () => _edit(o)),
                   ),
               ],
             ),
@@ -285,7 +286,7 @@ class _QuotaFormState extends State<_QuotaForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return FormSheet(
-      icon: Icons.tune_rounded,
+      icon: LucideIcons.slidersHorizontal,
       title: l10n.quotasFor(widget.org.name),
       subtitle: l10n.quotasHelp,
       submitLabel: l10n.save,
@@ -299,13 +300,13 @@ class _QuotaFormState extends State<_QuotaForm> {
           key: const Key('maxBots'),
           controller: _bots,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: l10n.maxBots, prefixIcon: const Icon(Icons.smart_toy_outlined, size: 20)),
+          decoration: InputDecoration(labelText: l10n.maxBots, prefixIcon: const Icon(LucideIcons.bot, size: 20)),
         ),
         TextField(
           key: const Key('monthlyUsd'),
           controller: _usd,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(labelText: l10n.monthlyUsd, prefixIcon: const Icon(Icons.attach_money_rounded, size: 20)),
+          decoration: InputDecoration(labelText: l10n.monthlyUsd, prefixIcon: const Icon(LucideIcons.circleDollarSign, size: 20)),
         ),
       ],
     );
@@ -328,9 +329,7 @@ class _Services extends ConsumerWidget {
             children: [
               for (final s in items)
                 GroupedTile(
-                  icon: !s.configured
-                      ? Icons.remove_circle_outline_rounded
-                      : (s.healthy == false ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded),
+                  icon: !s.configured ? LucideIcons.circleMinus : (s.healthy == false ? LucideIcons.circleAlert : LucideIcons.circleCheck),
                   iconColor: !s.configured ? context.colorScheme.onSurfaceVariant : (s.healthy == false ? colors.negative : colors.positive),
                   title: s.name,
                   subtitle: s.detail,

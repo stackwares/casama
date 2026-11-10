@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -29,47 +30,51 @@ class SecretsScreen extends ConsumerWidget {
     final add = FilledButton.icon(
       key: const Key('addSecret'),
       onPressed: () => _add(context, ref),
-      icon: const Icon(Icons.add_rounded, size: 18),
+      icon: const Icon(LucideIcons.plus, size: 18),
       label: Text(l10n.addSecret),
     );
     return SubPage(
       title: l10n.secrets,
-      actions: [HeaderIconButton(icon: Icons.add_rounded, tooltip: l10n.addSecret, onPressed: () => _add(context, ref))],
+      actions: [HeaderIconButton(icon: LucideIcons.plus, tooltip: l10n.addSecret, onPressed: () => _add(context, ref))],
       body: AsyncView(
         value: ref.watch(secretsProvider),
         onRetry: () => ref.invalidate(secretsProvider),
         data: (items) => items.isEmpty
-            ? EmptyState(icon: Icons.lock_outline_rounded, title: l10n.noSecrets, message: l10n.secretsHelp, action: add)
-            : PageColumn(children: [
-                FormNote(l10n.secretsHelp),
-                const SizedBox(height: AppSpace.md),
-                GroupedCard(children: [
-                  for (final s in items)
-                    GroupedTile(
-                      key: Key('secret-${s.id}'),
-                      icon: Icons.key_rounded,
-                      iconColor: context.appColors.warning,
-                      title: s.name,
-                      subtitle: l10n.onlySentTo(s.allowedHosts.join(', ')),
-                      trailing: IconButton(
-                        tooltip: l10n.delete,
-                        icon: Icon(Icons.delete_outline_rounded, color: context.colorScheme.onSurfaceVariant),
-                        onPressed: () async {
-                          final ok = await showConfirm(
-                            context: context,
-                            title: l10n.deleteSecretTitle(s.name),
-                            message: l10n.deleteSecretBody,
-                            confirmLabel: l10n.delete,
-                            destructive: true,
-                          );
-                          if (!ok || !context.mounted) return;
-                          await runGuarded(context, () => ref.read(backendProvider).deleteSecret(s.id));
-                          ref.invalidate(secretsProvider);
-                        },
-                      ),
-                    ),
-                ]),
-              ]),
+            ? EmptyState(icon: LucideIcons.lock, title: l10n.noSecrets, message: l10n.secretsHelp, action: add)
+            : PageColumn(
+                children: [
+                  FormNote(l10n.secretsHelp),
+                  const SizedBox(height: AppSpace.md),
+                  GroupedCard(
+                    children: [
+                      for (final s in items)
+                        GroupedTile(
+                          key: Key('secret-${s.id}'),
+                          icon: LucideIcons.keyRound,
+                          iconColor: context.appColors.warning,
+                          title: s.name,
+                          subtitle: l10n.onlySentTo(s.allowedHosts.join(', ')),
+                          trailing: IconButton(
+                            tooltip: l10n.delete,
+                            icon: Icon(LucideIcons.trash2, color: context.colorScheme.onSurfaceVariant),
+                            onPressed: () async {
+                              final ok = await showConfirm(
+                                context: context,
+                                title: l10n.deleteSecretTitle(s.name),
+                                message: l10n.deleteSecretBody,
+                                confirmLabel: l10n.delete,
+                                destructive: true,
+                              );
+                              if (!ok || !context.mounted) return;
+                              await runGuarded(context, () => ref.read(backendProvider).deleteSecret(s.id));
+                              ref.invalidate(secretsProvider);
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -104,7 +109,7 @@ class _AddSecretFormState extends State<_AddSecretForm> {
     final nameOk = RegExp(r'^[A-Z][A-Z0-9_]{0,63}$').hasMatch(_name.text);
     final valid = nameOk && _value.text.isNotEmpty && _hostList.isNotEmpty;
     return FormSheet(
-      icon: Icons.key_rounded,
+      icon: LucideIcons.keyRound,
       iconColor: context.appColors.warning,
       title: l10n.addSecret,
       subtitle: l10n.secretsHelp,
@@ -120,13 +125,18 @@ class _AddSecretFormState extends State<_AddSecretForm> {
             labelText: l10n.secretName,
             hintText: 'GITHUB_TOKEN',
             helperText: l10n.secretNameHelp,
-            prefixIcon: const Icon(Icons.tag_rounded, size: 20),
+            prefixIcon: const Icon(LucideIcons.hash, size: 20),
             errorText: _name.text.isNotEmpty && !nameOk ? l10n.secretNameHelp : null,
           ),
           textCapitalization: TextCapitalization.characters,
           onChanged: (v) {
             final upper = v.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9_]'), '_');
-            if (upper != v) _name.value = TextEditingValue(text: upper, selection: TextSelection.collapsed(offset: upper.length));
+            if (upper != v) {
+              _name.value = TextEditingValue(
+                text: upper,
+                selection: TextSelection.collapsed(offset: upper.length),
+              );
+            }
             setState(() {});
           },
         ),
@@ -138,10 +148,10 @@ class _AddSecretFormState extends State<_AddSecretForm> {
           enableSuggestions: false,
           decoration: InputDecoration(
             labelText: l10n.secretValue,
-            prefixIcon: const Icon(Icons.password_rounded, size: 20),
+            prefixIcon: const Icon(LucideIcons.rectangleEllipsis, size: 20),
             suffixIcon: IconButton(
               tooltip: _show ? l10n.hide : l10n.show,
-              icon: Icon(_show ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+              icon: Icon(_show ? LucideIcons.eyeOff : LucideIcons.eye, size: 20),
               onPressed: () => setState(() => _show = !_show),
             ),
           ),
@@ -156,7 +166,7 @@ class _AddSecretFormState extends State<_AddSecretForm> {
             labelText: l10n.allowedHosts,
             hintText: 'api.github.com',
             helperText: l10n.allowedHostsHelp,
-            prefixIcon: const Icon(Icons.dns_outlined, size: 20),
+            prefixIcon: const Icon(LucideIcons.server, size: 20),
           ),
           onChanged: (_) => setState(() {}),
         ),

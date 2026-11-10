@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
@@ -64,10 +65,12 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
           ),
       ],
     );
-    Widget title0 = Row(children: [
-      if (titleLeading != null) ...[titleLeading!, const SizedBox(width: AppSpace.sm)],
-      Flexible(child: titleBlock),
-    ]);
+    Widget title0 = Row(
+      children: [
+        if (titleLeading != null) ...[titleLeading!, const SizedBox(width: AppSpace.sm)],
+        Flexible(child: titleBlock),
+      ],
+    );
     if (onTitleTap != null) {
       title0 = InkWell(
         onTap: onTitleTap,
@@ -79,13 +82,14 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       toolbarHeight: toolbarHeight,
       leadingWidth: 56,
-      leading: leading ??
+      leading:
+          leading ??
           (canPop
               ? Padding(
                   padding: const EdgeInsets.only(left: 12),
                   child: Center(
                     child: HeaderIconButton(
-                      icon: Icons.arrow_back_rounded,
+                      icon: LucideIcons.arrowLeft,
                       tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                       onPressed: () => Navigator.of(context).maybePop(),
                     ),
@@ -120,35 +124,42 @@ class HeaderIconButton extends StatelessWidget {
     final fill = context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3),
-      child: Stack(clipBehavior: Clip.none, children: [
-        IconButton(
-          tooltip: tooltip,
-          onPressed: onPressed,
-          icon: Icon(icon, size: 20),
-          style: IconButton.styleFrom(
-            fixedSize: const Size(36, 36),
-            minimumSize: const Size(36, 36),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            padding: EdgeInsets.zero,
-            backgroundColor: selected ? scheme.primary.withValues(alpha: 0.14) : fill,
-            foregroundColor: selected ? scheme.primary : scheme.onSurface,
-            disabledBackgroundColor: fill.withValues(alpha: 0.5),
-            side: BorderSide(color: selected ? scheme.primary.withValues(alpha: 0.4) : context.appColors.hairline),
-          ),
-        ),
-        if (badge)
-          Positioned(
-            top: 4,
-            right: 4,
-            child: IgnorePointer(
-              child: Container(
-                width: 9,
-                height: 9,
-                decoration: BoxDecoration(color: scheme.primary, shape: BoxShape.circle, border: Border.all(color: scheme.surface, width: 1.5)),
-              ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          IconButton(
+            tooltip: tooltip,
+            onPressed: onPressed,
+            icon: Icon(icon, size: 20),
+            style: IconButton.styleFrom(
+              fixedSize: const Size(36, 36),
+              minimumSize: const Size(36, 36),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: EdgeInsets.zero,
+              backgroundColor: selected ? scheme.primary.withValues(alpha: 0.14) : fill,
+              foregroundColor: selected ? scheme.primary : scheme.onSurface,
+              disabledBackgroundColor: fill.withValues(alpha: 0.5),
+              side: BorderSide(color: selected ? scheme.primary.withValues(alpha: 0.4) : context.appColors.hairline),
             ),
           ),
-      ]),
+          if (badge)
+            Positioned(
+              top: 4,
+              right: 4,
+              child: IgnorePointer(
+                child: Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: scheme.surface, width: 1.5),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

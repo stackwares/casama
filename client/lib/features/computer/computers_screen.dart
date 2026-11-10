@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -29,7 +30,7 @@ class ComputersScreen extends ConsumerWidget {
     final l10n = context.l10n;
     return SubPage(
       title: l10n.computers,
-      actions: [HeaderIconButton(key: const Key('newComputer'), icon: Icons.add_rounded, tooltip: l10n.newComputer, onPressed: () => _create(context, ref))],
+      actions: [HeaderIconButton(key: const Key('newComputer'), icon: LucideIcons.plus, tooltip: l10n.newComputer, onPressed: () => _create(context, ref))],
       body: AsyncView(
         value: ref.watch(computersProvider),
         onRetry: () => ref.invalidate(computersProvider),
@@ -80,7 +81,7 @@ class _ComputerCard extends ConsumerWidget {
             label: l10n.computerName,
             initial: c.name,
             submitLabel: l10n.save,
-            icon: Icons.edit_outlined,
+            icon: LucideIcons.pencil,
           );
           if (name == null || !context.mounted) return;
           await runGuarded(context, () => backend.updateComputer(c.id, name: name));
@@ -111,7 +112,7 @@ class _ComputerCard extends ConsumerWidget {
                 height: 44,
                 decoration: BoxDecoration(color: stateColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.icon + 2)),
                 alignment: Alignment.center,
-                child: Icon(desktop ? Icons.desktop_windows_rounded : Icons.terminal_rounded, color: stateColor, size: 22),
+                child: Icon(desktop ? LucideIcons.monitor : LucideIcons.squareTerminal, color: stateColor, size: 22),
               ),
               if (ownerBot != null)
                 Positioned(
@@ -144,7 +145,7 @@ class _ComputerCard extends ConsumerWidget {
                       text: desktop ? l10n.profileDesktop : l10n.profileHeadless,
                       color: scheme.onSurfaceVariant,
                       pill: true,
-                      icon: desktop ? Icons.desktop_windows_outlined : Icons.terminal_rounded,
+                      icon: desktop ? LucideIcons.monitor : LucideIcons.squareTerminal,
                     ),
                     if (c.provider != 'docker') StatusLabel(text: c.provider, color: scheme.onSurfaceVariant, pill: true),
                   ],
@@ -155,32 +156,32 @@ class _ComputerCard extends ConsumerWidget {
           PopupMenuButton<String>(
             key: Key('computerMenu-${c.id}'),
             tooltip: l10n.moreActions,
-            icon: Icon(Icons.more_vert_rounded, color: scheme.onSurfaceVariant),
+            icon: Icon(LucideIcons.ellipsisVertical, color: scheme.onSurfaceVariant),
             onSelected: action,
             itemBuilder: (_) => [
               if (desktop)
                 PopupMenuItem(
                   value: 'live',
-                  child: ListTile(dense: true, leading: const Icon(Icons.live_tv_outlined), title: Text(l10n.liveView)),
+                  child: ListTile(dense: true, leading: const Icon(LucideIcons.monitorPlay), title: Text(l10n.liveView)),
                 ),
               PopupMenuItem(
                 value: 'profile',
                 child: ListTile(
                   dense: true,
-                  leading: Icon(desktop ? Icons.terminal_rounded : Icons.desktop_windows_outlined),
+                  leading: Icon(desktop ? LucideIcons.squareTerminal : LucideIcons.monitor),
                   title: Text(desktop ? l10n.switchToHeadless : l10n.switchToDesktop),
                 ),
               ),
               PopupMenuItem(
                 value: 'rename',
-                child: ListTile(dense: true, leading: const Icon(Icons.edit_outlined), title: Text(l10n.rename)),
+                child: ListTile(dense: true, leading: const Icon(LucideIcons.pencil), title: Text(l10n.rename)),
               ),
               if (c.kind != ComputerKindEnum.team)
                 PopupMenuItem(
                   value: 'delete',
                   child: ListTile(
                     dense: true,
-                    leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
+                    leading: Icon(LucideIcons.trash2, color: scheme.error),
                     title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
                   ),
                 ),
@@ -231,7 +232,7 @@ class _NewComputerSheetState extends ConsumerState<NewComputerSheet> {
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     _botId ??= bots.isEmpty ? null : bots.first.id;
     return FormSheet(
-      icon: Icons.add_to_queue_rounded,
+      icon: LucideIcons.monitorUp,
       title: l10n.newComputer,
       subtitle: l10n.newComputerHelp,
       submitLabel: l10n.create,
@@ -242,19 +243,19 @@ class _NewComputerSheetState extends ConsumerState<NewComputerSheet> {
         DropdownButtonFormField<String>(
           key: const Key('computerBot'),
           initialValue: _botId,
-          decoration: InputDecoration(labelText: l10n.forBot, prefixIcon: const Icon(Icons.smart_toy_outlined, size: 20)),
+          decoration: InputDecoration(labelText: l10n.forBot, prefixIcon: const Icon(LucideIcons.bot, size: 20)),
           items: [for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name))],
           onChanged: (v) => setState(() => _botId = v),
         ),
         TextField(
           key: const Key('computerName'),
           controller: _name,
-          decoration: InputDecoration(labelText: l10n.computerName, prefixIcon: const Icon(Icons.badge_outlined, size: 20)),
+          decoration: InputDecoration(labelText: l10n.computerName, prefixIcon: const Icon(LucideIcons.idCard, size: 20)),
           onChanged: (_) => setState(() {}),
         ),
         FormSwitch(
           key: const Key('computerDesktop'),
-          icon: Icons.desktop_windows_outlined,
+          icon: LucideIcons.monitor,
           title: l10n.withDesktop,
           subtitle: l10n.withDesktopHelp,
           value: _desktop,

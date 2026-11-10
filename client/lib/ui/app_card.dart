@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
@@ -142,7 +143,7 @@ class GroupedTile extends StatelessWidget {
               ),
             ),
             if (trailing != null) ...[const SizedBox(width: AppSpace.xs), trailing!],
-            if (chevron) Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+            if (chevron) Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
           ],
         ),
       ),
@@ -182,11 +183,7 @@ class SectionHeader extends StatelessWidget {
                     if (count != null)
                       TextSpan(
                         text: '  $count',
-                        style: TextStyle(
-                          color: context.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                          fontFeatures: AppText.tabular,
-                        ),
+                        style: TextStyle(color: context.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500, fontFeatures: AppText.tabular),
                       ),
                   ],
                 ),
@@ -247,7 +244,7 @@ InputDecoration searchFieldDecoration(BuildContext context, String hint) {
   );
   return InputDecoration(
     hintText: hint,
-    prefixIcon: const Icon(Icons.search_rounded, size: 22),
+    prefixIcon: const Icon(LucideIcons.search, size: 22),
     filled: true,
     fillColor: scheme.surfaceContainerHighest.withValues(alpha: context.isDark ? 0.7 : 0.55),
     isDense: true,

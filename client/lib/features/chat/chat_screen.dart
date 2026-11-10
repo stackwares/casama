@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
 import '../../core/providers.dart';
@@ -101,12 +102,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
       final stamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[^0-9]'), '').substring(0, 14);
       final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
-      final item = _Pending(
-        name: name,
-        bytes: bytes,
-        mime: (mime == null || mime.isEmpty) ? mimeFor(name) : mime,
-        apiPath: 'uploads/$stamp-$safe',
-      );
+      final item = _Pending(name: name, bytes: bytes, mime: (mime == null || mime.isEmpty) ? mimeFor(name) : mime, apiPath: 'uploads/$stamp-$safe');
       setState(() => _pending.add(item));
       try {
         await ref.read(backendProvider).uploadFile(computerId, item.apiPath, bytes);
@@ -184,11 +180,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _jumpToLatest() {
     if (!_scroll.hasClients) return;
-    _scroll.animateTo(
-      _scroll.position.maxScrollExtent,
-      duration: AppMotion.of(context, const Duration(milliseconds: 380)),
-      curve: AppMotion.curve,
-    );
+    _scroll.animateTo(_scroll.position.maxScrollExtent, duration: AppMotion.of(context, const Duration(milliseconds: 380)), curve: AppMotion.curve);
   }
 
   Future<void> _send([String? text]) async {
@@ -260,11 +252,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final bot = ref.watch(botProvider(widget.botId));
     final chat = ref.watch(chatControllerProvider(widget.botId));
     final controller = ref.read(chatControllerProvider(widget.botId).notifier);
-    final computer = computerForBot(
-      ref.watch(computersProvider).value ?? const [],
-      widget.botId,
-      defaultComputerId: bot?.defaultComputerId,
-    );
+    final computer = computerForBot(ref.watch(computersProvider).value ?? const [], widget.botId, defaultComputerId: bot?.defaultComputerId);
     ref.listen(chatControllerProvider(widget.botId), (prev, next) {
       final opened = (prev?.loading ?? false) && !next.loading;
       _followIfAtBottom(
@@ -289,7 +277,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 padding: const EdgeInsets.only(left: 12),
                 child: Center(
                   child: HeaderIconButton(
-                    icon: Icons.arrow_back_rounded,
+                    icon: LucideIcons.arrowLeft,
                     tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                     onPressed: () => context.canPop() ? context.pop() : context.go('/bots'),
                   ),
@@ -301,25 +289,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         actions: [
           // Phones keep the header light: new chat lives in the conversations sheet there.
           if (layout != LayoutSize.phone)
-            HeaderIconButton(
-              icon: Icons.edit_square,
-              tooltip: l10n.newChat,
-              onPressed: chat.running || chat.entries.isEmpty ? null : controller.newChat,
-            ),
-          HeaderIconButton(
-            icon: Icons.history_rounded,
-            tooltip: l10n.conversations,
-            onPressed: () => _showConversations(context, chat.conversationId),
-          ),
+            HeaderIconButton(icon: LucideIcons.squarePen, tooltip: l10n.newChat, onPressed: chat.running || chat.entries.isEmpty ? null : controller.newChat),
+          HeaderIconButton(icon: LucideIcons.history, tooltip: l10n.conversations, onPressed: () => _showConversations(context, chat.conversationId)),
           HeaderIconButton(
             key: const Key('callButton'),
-            icon: Icons.call_outlined,
+            icon: LucideIcons.phone,
             tooltip: l10n.startCall,
             onPressed: () => context.push('/bots/${widget.botId}/call${chat.conversationId == null ? '' : '?c=${chat.conversationId}'}'),
           ),
           if (layout == LayoutSize.desktop)
             HeaderIconButton(
-              icon: Icons.view_sidebar_outlined,
+              icon: LucideIcons.panelRight,
               tooltip: ref.watch(computerPanelProvider) ? l10n.hideComputer : l10n.showComputer,
               selected: ref.watch(computerPanelProvider),
               onPressed: ref.read(computerPanelProvider.notifier).toggle,
@@ -397,7 +377,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                   child: IconButton.filledTonal(
                                     tooltip: l10n.jumpToLatest,
                                     onPressed: _jumpToLatest,
-                                    icon: const Icon(Icons.arrow_downward_rounded),
+                                    icon: const Icon(LucideIcons.arrowDown),
                                     style: IconButton.styleFrom(
                                       backgroundColor: context.colorScheme.surfaceContainerHigh,
                                       foregroundColor: context.colorScheme.onSurface,
@@ -441,8 +421,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                     scrollDirection: Axis.horizontal,
                                     itemCount: _pending.length,
                                     separatorBuilder: (_, _) => const SizedBox(width: AppSpace.xs),
-                                    itemBuilder: (context, i) =>
-                                        _PendingChip(item: _pending[i], onRemove: () => setState(() => _pending.removeAt(i))),
+                                    itemBuilder: (context, i) => _PendingChip(item: _pending[i], onRemove: () => setState(() => _pending.removeAt(i))),
                                   ),
                                 ),
                         ),
@@ -453,10 +432,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                   padding: const EdgeInsets.only(top: 6),
                                   child: Text(
                                     l10n.runCost(formatUsd(chat.costUsd), chat.tokens),
-                                    style: context.textTheme.labelSmall?.copyWith(
-                                      color: context.colorScheme.onSurfaceVariant,
-                                      fontFeatures: AppText.tabular,
-                                    ),
+                                    style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant, fontFeatures: AppText.tabular),
                                   ),
                                 )
                               : const SizedBox(width: double.infinity),
@@ -511,7 +487,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.file_upload_outlined, size: 40, color: context.colorScheme.primary),
+                      Icon(LucideIcons.fileUp, size: 40, color: context.colorScheme.primary),
                       const SizedBox(height: AppSpace.xs),
                       Text(
                         context.l10n.dropToAttach,
@@ -623,7 +599,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   const SizedBox(height: AppSpace.xs),
                   TextButton.icon(
                     onPressed: () => runGuarded(context, ref.read(chatControllerProvider(widget.botId).notifier).retry),
-                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    icon: const Icon(LucideIcons.rotateCw, size: 18),
                     label: Text(context.l10n.retry),
                   ),
                 ],
@@ -641,13 +617,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final toolRunning = last is ToolEntry && last.status == ToolStatus.running;
     if (chat.running && !waitingOnPerson && !replying && !toolRunning) {
       botSide('working');
-      rows.add(
-        _Row(
-          const ValueKey('working'),
-          rows.last.header ? 0 : AppSpace.md,
-          () => WorkingIndicator(status: workingStatus() ?? context.l10n.thinking),
-        ),
-      );
+      rows.add(_Row(const ValueKey('working'), rows.last.header ? 0 : AppSpace.md, () => WorkingIndicator(status: workingStatus() ?? context.l10n.thinking)));
     }
     return rows;
   }
@@ -726,10 +696,7 @@ class _PendingChip extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
                             ),
-                            Text(
-                              formatBytes(item.bytes.length),
-                              style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
+                            Text(formatBytes(item.bytes.length), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
                           ],
                         ),
                       ),
@@ -758,7 +725,7 @@ class _PendingChip extends StatelessWidget {
                 message: context.l10n.removeAttachment,
                 child: Padding(
                   padding: const EdgeInsets.all(3),
-                  child: Icon(Icons.close_rounded, size: 14, color: scheme.surface),
+                  child: Icon(LucideIcons.x, size: 14, color: scheme.surface),
                 ),
               ),
             ),
@@ -790,15 +757,15 @@ class _AttachButton extends StatelessWidget {
     return MenuAnchor(
       alignmentOffset: const Offset(0, -8),
       menuChildren: [
-        if (photos) item(const Key('attachPhotos'), Icons.photo_library_outlined, l10n.attachPhotos, onPhotos),
-        if (mobile) item(const Key('attachCamera'), Icons.photo_camera_outlined, l10n.attachCamera, onCamera),
-        item(const Key('attachFiles'), Icons.attach_file_rounded, l10n.attachFiles, onFiles),
+        if (photos) item(const Key('attachPhotos'), LucideIcons.images, l10n.attachPhotos, onPhotos),
+        if (mobile) item(const Key('attachCamera'), LucideIcons.camera, l10n.attachCamera, onCamera),
+        item(const Key('attachFiles'), LucideIcons.paperclip, l10n.attachFiles, onFiles),
       ],
       builder: (context, controller, _) => IconButton(
         key: const Key('attachButton'),
         tooltip: l10n.attach,
         onPressed: () => controller.isOpen ? controller.close() : controller.open(),
-        icon: Icon(Icons.add_rounded, size: 24, color: context.colorScheme.onSurfaceVariant),
+        icon: Icon(LucideIcons.plus, size: 24, color: context.colorScheme.onSurfaceVariant),
         style: IconButton.styleFrom(fixedSize: const Size.square(40), minimumSize: const Size.square(40), padding: EdgeInsets.zero),
       ),
     );
@@ -876,13 +843,10 @@ class _EmptyThread extends StatelessWidget {
                           ),
                           const SizedBox(width: AppSpace.xs),
                           Expanded(
-                            child: Text(
-                              suggestions[i].$2,
-                              style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.35),
-                            ),
+                            child: Text(suggestions[i].$2, style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.35)),
                           ),
                           const SizedBox(width: AppSpace.sm),
-                          Icon(Icons.arrow_upward_rounded, size: 18, color: scheme.onSurfaceVariant),
+                          Icon(LucideIcons.arrowUp, size: 18, color: scheme.onSurfaceVariant),
                         ],
                       ),
                     ).appListItemEntrance(i + 2),
@@ -921,10 +885,10 @@ class _HeroMark extends StatelessWidget {
               decoration: BoxDecoration(
                 color: scheme.primary,
                 shape: BoxShape.circle,
-                border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 3),
+                border: Border.all(color: context.colorScheme.surface, width: 3),
               ),
               alignment: Alignment.center,
-              child: Icon(Icons.auto_awesome_rounded, size: 17, color: scheme.onPrimary),
+              child: Icon(LucideIcons.sparkles, size: 17, color: scheme.onPrimary),
             ),
           ),
         ],
@@ -950,24 +914,18 @@ class _MoreMenu extends StatelessWidget {
     const menuWidth = 260.0;
     return MenuAnchor(
       alignmentOffset: const Offset(-(menuWidth - 42), 6),
-      style: const MenuStyle(
-        minimumSize: WidgetStatePropertyAll(Size(menuWidth, 0)),
-        maximumSize: WidgetStatePropertyAll(Size(menuWidth, double.infinity)),
-      ),
+      style: const MenuStyle(minimumSize: WidgetStatePropertyAll(Size(menuWidth, 0)), maximumSize: WidgetStatePropertyAll(Size(menuWidth, double.infinity))),
       menuChildren: [
-        item(Icons.timeline_rounded, l10n.activity, () => context.push('/bots/$botId/activity')),
-        if (showComputer) item(Icons.desktop_windows_outlined, l10n.navComputer, () => context.go('/computer')),
-        item(Icons.psychology_outlined, l10n.memory, () => context.push('/bots/$botId/memory')),
-        item(Icons.schedule_rounded, l10n.routines, () => context.push('/bots/$botId/routines')),
-        item(Icons.extension_outlined, l10n.botIntegrations, () => context.push('/bots/$botId/integrations')),
+        item(LucideIcons.activity, l10n.activity, () => context.push('/bots/$botId/activity')),
+        if (showComputer) item(LucideIcons.monitor, l10n.navComputer, () => context.go('/computer')),
+        item(LucideIcons.brain, l10n.memory, () => context.push('/bots/$botId/memory')),
+        item(LucideIcons.clock, l10n.routines, () => context.push('/bots/$botId/routines')),
+        item(LucideIcons.puzzle, l10n.botIntegrations, () => context.push('/bots/$botId/integrations')),
         const Divider(),
-        item(Icons.tune_rounded, l10n.botSettings, () => context.push('/bots/$botId/settings')),
+        item(LucideIcons.slidersHorizontal, l10n.botSettings, () => context.push('/bots/$botId/settings')),
       ],
-      builder: (context, controller, _) => HeaderIconButton(
-        icon: Icons.more_horiz_rounded,
-        tooltip: l10n.moreActions,
-        onPressed: () => controller.isOpen ? controller.close() : controller.open(),
-      ),
+      builder: (context, controller, _) =>
+          HeaderIconButton(icon: LucideIcons.ellipsis, tooltip: l10n.moreActions, onPressed: () => controller.isOpen ? controller.close() : controller.open()),
     );
   }
 }
@@ -989,14 +947,14 @@ class _ConversationsSheet extends ConsumerWidget {
       children: [
         SheetTitle(
           l10n.conversations,
-          trailing: FilledButton.tonalIcon(onPressed: onNew, icon: const Icon(Icons.edit_square, size: 18), label: Text(l10n.newChat)),
+          trailing: FilledButton.tonalIcon(onPressed: onNew, icon: const Icon(LucideIcons.squarePen, size: 18), label: Text(l10n.newChat)),
         ),
         Expanded(
           child: AsyncView(
             value: convos,
             onRetry: () => ref.invalidate(conversationsProvider(botId)),
             data: (items) => items.isEmpty
-                ? EmptyState(icon: Icons.forum_outlined, message: l10n.noConversations)
+                ? EmptyState(icon: LucideIcons.messagesSquare, message: l10n.noConversations)
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(AppSpace.sm, 0, AppSpace.sm, AppSpace.md),
                     itemCount: items.length,
@@ -1006,7 +964,7 @@ class _ConversationsSheet extends ConsumerWidget {
                       final current = c.id == currentId;
                       return ListTile(
                         selected: current,
-                        leading: Icon(current ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded, size: 20),
+                        leading: Icon(current ? LucideIcons.messageCircle : LucideIcons.messageCircle, size: 20),
                         title: Text(
                           c.title ?? l10n.untitledChat,
                           maxLines: 1,

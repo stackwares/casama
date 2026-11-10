@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/server_address.dart';
@@ -128,7 +129,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       TextFormField(
                         key: const Key('email'),
                         controller: _email,
-                        decoration: InputDecoration(labelText: l10n.email, prefixIcon: const Icon(Icons.alternate_email_rounded, size: 20)),
+                        decoration: InputDecoration(labelText: l10n.email, prefixIcon: const Icon(LucideIcons.atSign, size: 20)),
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         autofillHints: const [AutofillHints.email],
@@ -138,7 +139,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       TextFormField(
                         key: const Key('password'),
                         controller: _password,
-                        decoration: InputDecoration(labelText: l10n.password, prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20)),
+                        decoration: InputDecoration(labelText: l10n.password, prefixIcon: const Icon(LucideIcons.lock, size: 20)),
                         obscureText: true,
                         autofillHints: [_signUp ? AutofillHints.newPassword : AutofillHints.password],
                         validator: (v) => (v ?? '').length >= 6 ? null : l10n.passwordTooShort,
@@ -194,15 +195,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       Wrap(
                         alignment: WrapAlignment.center,
                         children: [
-                          TextButton.icon(
-                            onPressed: _busy ? null : _magicLink,
-                            icon: const Icon(Icons.mail_outline_rounded, size: 18),
-                            label: Text(l10n.magicLink),
-                          ),
+                          TextButton.icon(onPressed: _busy ? null : _magicLink, icon: const Icon(LucideIcons.mail, size: 18), label: Text(l10n.magicLink)),
                           TextButton.icon(
                             key: const Key('ssoSignIn'),
                             onPressed: _busy ? null : _sso,
-                            icon: const Icon(Icons.business_outlined, size: 18),
+                            icon: const Icon(LucideIcons.building2, size: 18),
                             label: Text(l10n.continueWithSso),
                           ),
                         ],
@@ -212,7 +209,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       Center(
                         child: ActionChip(
                           key: const Key('changeServer'),
-                          avatar: Icon(Icons.dns_outlined, size: 16, color: scheme.onSurfaceVariant),
+                          avatar: Icon(LucideIcons.server, size: 16, color: scheme.onSurfaceVariant),
                           label: Text(l10n.serverIs(host), style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
                           onPressed: _busy
                               ? null
@@ -268,7 +265,7 @@ class _SsoFormState extends State<_SsoForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return FormSheet(
-      icon: Icons.business_outlined,
+      icon: LucideIcons.building2,
       title: l10n.continueWithSso,
       subtitle: l10n.ssoHelp,
       submitLabel: l10n.continueLabel,
@@ -285,7 +282,7 @@ class _SsoFormState extends State<_SsoForm> {
           decoration: InputDecoration(
             labelText: l10n.workEmail,
             hintText: 'you@company.com',
-            prefixIcon: const Icon(Icons.alternate_email_rounded, size: 20),
+            prefixIcon: const Icon(LucideIcons.atSign, size: 20),
             errorText: _invalid ? l10n.invalidEmail : null,
           ),
           onChanged: (_) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/mobile_extras.dart';
 import '../../core/providers.dart';
@@ -111,7 +112,7 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
             onPressed: _busy || !ready ? null : _send,
             icon: _busy
                 ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: scheme.onPrimary))
-                : const Icon(Icons.arrow_upward_rounded, size: 20),
+                : const Icon(LucideIcons.arrowUp, size: 20),
             label: Text(l10n.send),
           ),
         ),
