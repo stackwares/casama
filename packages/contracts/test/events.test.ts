@@ -27,6 +27,8 @@ describe("run events", () => {
       "tool.failed",
       "approval.requested",
       "approval.resolved",
+      "secret.requested",
+      "secret.resolved",
       "takeover.requested",
       "takeover.resolved",
       "lease.changed",

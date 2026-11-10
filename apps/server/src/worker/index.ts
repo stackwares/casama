@@ -26,6 +26,7 @@ import {
   registerCodingTools,
   registerComputerTools,
   registerDesktopTools,
+  registerSecretRequestTool,
   TavilySearchProvider,
 } from "@kasama/agent";
 import { createDb, type Database } from "@kasama/db";
@@ -171,6 +172,7 @@ export async function startWorker(opts: WorkerOptions) {
   }
   // Bots that manage bots (D-100).
   registerBotTools(tools, { db });
+  registerSecretRequestTool(tools);
   // Coding agents (D-097): on the bot's computer, the user's own computer, or Cursor's cloud.
   registerCodingTools(tools, {
     db,

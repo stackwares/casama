@@ -59,6 +59,8 @@ lib/src/model/billing_usage_item.dart
 lib/src/model/bot.dart
 lib/src/model/bot_budget.dart
 lib/src/model/bot_list.dart
+lib/src/model/bot_secret_request.dart
+lib/src/model/bot_secret_request_list.dart
 lib/src/model/catalog_app.dart
 lib/src/model/catalog_app_api_key.dart
 lib/src/model/chat_gpt_sign_in_complete_request.dart
@@ -116,6 +118,7 @@ lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
 lib/src/model/deleted_routine.dart
+lib/src/model/fulfill_secret_request_body.dart
 lib/src/model/health.dart
 lib/src/model/ice_server.dart
 lib/src/model/integration.dart
@@ -198,6 +201,10 @@ lib/src/model/run_status.dart
 lib/src/model/saved_count.dart
 lib/src/model/secret.dart
 lib/src/model/secret_list.dart
+lib/src/model/secret_requested_event.dart
+lib/src/model/secret_requested_event_payload.dart
+lib/src/model/secret_resolved_event.dart
+lib/src/model/secret_resolved_event_payload.dart
 lib/src/model/send_message_request.dart
 lib/src/model/send_message_response.dart
 lib/src/model/set_local_mcp_servers_request.dart

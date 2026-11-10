@@ -3,12 +3,14 @@ import {
   Approval,
   ApprovalDecisionRequest,
   AttachIntegrationRequest,
+  BotSecretRequest,
   CreatedRoutine,
   CreateIntegrationRequest,
   CreateRoutineRequest,
   CreateSecretRequest,
   CreateTaskCommentRequest,
   CreateTaskRequest,
+  FulfillSecretRequestBody,
   Integration,
   IntegrationTestResult,
   Routine,
@@ -86,6 +88,55 @@ export const deleteSecret = createRoute({
     401: e401,
     403: e403,
     404: e404,
+  },
+});
+
+export const listSecretRequests = createRoute({
+  operationId: "listSecretRequests",
+  method: "get",
+  path: "/v1/secrets/requests",
+  tags: ["secrets"],
+  security,
+  summary: "Bots waiting for a secret (pending requests you can see)",
+  request: { query: orgQuery },
+  responses: {
+    200: jsonResponse("Secret requests", list("BotSecretRequestList", BotSecretRequest)),
+    401: e401,
+  },
+});
+
+export const fulfillSecretRequest = createRoute({
+  operationId: "fulfillSecretRequest",
+  method: "post",
+  path: "/v1/secrets/requests/{id}/fulfill",
+  tags: ["secrets"],
+  security,
+  summary: "Save the value a bot asked for (into Vault, for that bot and those hosts only)",
+  request: { params: idParam, body: jsonBody(FulfillSecretRequestBody) },
+  responses: {
+    200: jsonResponse("Fulfilled", BotSecretRequest),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
+});
+
+export const declineSecretRequest = createRoute({
+  operationId: "declineSecretRequest",
+  method: "post",
+  path: "/v1/secrets/requests/{id}/decline",
+  tags: ["secrets"],
+  security,
+  summary: "Decline a bot's request for a secret; the bot continues without it",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse("Declined", BotSecretRequest),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
   },
 });
 

@@ -204,6 +204,11 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  final secretAnswers = <(String, String?)>[];
+  @override
+  Future<void> fulfillSecretRequest(String requestId, String value) async => secretAnswers.add((requestId, value));
+  @override
+  Future<void> declineSecretRequest(String requestId) async => secretAnswers.add((requestId, null));
 
   @override
   Future<List<BotFolder>> botFolders(String orgId) async => [if (botFolder != null) BotFolder(id: botFolder!, name: botFolder!)];

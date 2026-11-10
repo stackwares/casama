@@ -41,6 +41,35 @@ export const Secret = z
   })
   .openapi("Secret");
 
+export const BotSecretRequest = z
+  .object({
+    id: Uuid,
+    org_id: Uuid,
+    bot_id: Uuid,
+    run_id: Uuid,
+    conversation_id: Uuid.nullable(),
+    name: z.string(),
+    service: z.string(),
+    allowed_hosts: z.array(z.string()),
+    reason: z.string(),
+    status: z.enum(["pending", "fulfilled", "declined", "expired"]),
+    expires_at: ts,
+    created_at: ts,
+  })
+  .openapi("BotSecretRequest", {
+    description: "A bot asking for a secret (D-101); never holds a value",
+  });
+
+export const FulfillSecretRequestBody = z
+  .object({
+    value: z
+      .string()
+      .min(1)
+      .max(10_000)
+      .openapi({ description: "Stored in Vault; never returned, logged or shown to the bot" }),
+  })
+  .openapi("FulfillSecretRequestBody");
+
 export const CreateSecretRequest = z
   .object({
     org_id: Uuid,

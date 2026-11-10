@@ -20,6 +20,7 @@ export * from "./redact.ts";
 export * from "./run.ts";
 export * from "./safe-fetch.ts";
 export * from "./search.ts";
+export * from "./secret-requests.ts";
 export * from "./secrets.ts";
 export * from "./takeover.ts";
 export * from "./tickets.ts";

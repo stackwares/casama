@@ -833,6 +833,119 @@ class TakeoverPrompt extends StatelessWidget {
   }
 }
 
+/// The protected card for a bot's secret request (D-101). The value goes from this field straight
+/// to the API (and Vault); it is never put in the composer, drafts, messages or the bot's context.
+class SecretPrompt extends ConsumerStatefulWidget {
+  const SecretPrompt({super.key, required this.entry, required this.botName});
+  final SecretEntry entry;
+  final String botName;
+
+  @override
+  ConsumerState<SecretPrompt> createState() => _SecretPromptState();
+}
+
+class _SecretPromptState extends ConsumerState<SecretPrompt> {
+  final _value = TextEditingController();
+  var _obscure = true;
+  var _busy = false;
+  String? _sent;
+
+  @override
+  void dispose() {
+    _value.clear();
+    _value.dispose();
+    super.dispose();
+  }
+
+  Future<void> _answer(bool save) async {
+    final value = _value.text;
+    if (save && value.trim().isEmpty) return;
+    setState(() => _busy = true);
+    final ok = await runGuarded(context, () async {
+      final backend = ref.read(backendProvider);
+      if (save) {
+        await backend.fulfillSecretRequest(widget.entry.requestId, value);
+      } else {
+        await backend.declineSecretRequest(widget.entry.requestId);
+      }
+      return true;
+    });
+    _value.clear();
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (ok == true) _sent = save ? 'fulfilled' : 'declined';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    final e = widget.entry;
+    final outcome = e.outcome ?? _sent;
+    return _ActionCard(
+      key: const Key('chatSecret'),
+      accent: colors.warning,
+      icon: LucideIcons.keyRound,
+      title: l10n.secretRequestTitle(widget.botName, e.service),
+      subtitle: l10n.secretRequestHosts(e.hosts.join(', ')),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpace.sm,
+        children: [
+          if (e.reason.isNotEmpty) Text(e.reason, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
+          if (outcome == null)
+            TextField(
+              key: const Key('secretValue'),
+              controller: _value,
+              obscureText: _obscure,
+              autocorrect: false,
+              enableSuggestions: false,
+              enableIMEPersonalizedLearning: false,
+              keyboardType: TextInputType.visiblePassword,
+              autofillHints: const <String>[],
+              decoration: InputDecoration(
+                labelText: e.name,
+                helperText: l10n.secretRequestHelp,
+                prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                suffixIcon: IconButton(
+                  tooltip: _obscure ? l10n.show : l10n.hide,
+                  icon: Icon(_obscure ? LucideIcons.eye : LucideIcons.eyeOff, size: 18),
+                  onPressed: () => setState(() => _obscure = !_obscure),
+                ),
+              ),
+              onSubmitted: (_) => _busy ? null : _answer(true),
+            ),
+        ],
+      ),
+      footer: outcome != null
+          ? _Outcome(
+              text: switch (outcome) {
+                'fulfilled' => l10n.secretSaved(e.name),
+                'declined' => l10n.secretDeclined,
+                _ => l10n.expired,
+              },
+              color: outcome == 'fulfilled' ? colors.positive : context.colorScheme.onSurfaceVariant,
+              icon: outcome == 'fulfilled' ? LucideIcons.circleCheck : LucideIcons.circleMinus,
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              spacing: AppSpace.sm,
+              children: [
+                TextButton(key: const Key('secretDecline'), onPressed: _busy ? null : () => _answer(false), child: Text(l10n.decline)),
+                GlowButton.icon(
+                  key: const Key('secretSave'),
+                  onPressed: _busy ? null : () => _answer(true),
+                  icon: const Icon(LucideIcons.lock, size: 18),
+                  label: Text(l10n.save),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
 class _Outcome extends StatelessWidget {
   const _Outcome({required this.text, required this.color, required this.icon});
   final String text;

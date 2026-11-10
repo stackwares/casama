@@ -53,6 +53,12 @@
             "$ref": "#/components/schemas/ApprovalResolvedEvent"
           },
           {
+            "$ref": "#/components/schemas/SecretRequestedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/SecretResolvedEvent"
+          },
+          {
             "$ref": "#/components/schemas/TakeoverRequestedEvent"
           },
           {
@@ -110,6 +116,8 @@
             "tool.failed": "#/components/schemas/ToolFailedEvent",
             "approval.requested": "#/components/schemas/ApprovalRequestedEvent",
             "approval.resolved": "#/components/schemas/ApprovalResolvedEvent",
+            "secret.requested": "#/components/schemas/SecretRequestedEvent",
+            "secret.resolved": "#/components/schemas/SecretResolvedEvent",
             "takeover.requested": "#/components/schemas/TakeoverRequestedEvent",
             "takeover.resolved": "#/components/schemas/TakeoverResolvedEvent",
             "lease.changed": "#/components/schemas/LeaseChangedEvent",
@@ -688,6 +696,145 @@
               "approval_id",
               "decision",
               "decided_by"
+            ]
+          }
+        },
+        "required": [
+          "v",
+          "run_id",
+          "seq",
+          "ts",
+          "bot_id",
+          "type",
+          "payload"
+        ]
+      },
+      "SecretRequestedEvent": {
+        "type": "object",
+        "properties": {
+          "v": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Protocol version, currently 1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seq": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "secret.requested"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "request_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "service": {
+                "type": "string"
+              },
+              "allowed_hosts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "reason": {
+                "type": "string"
+              },
+              "expires_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "request_id",
+              "name",
+              "service",
+              "allowed_hosts",
+              "reason",
+              "expires_at"
+            ]
+          }
+        },
+        "required": [
+          "v",
+          "run_id",
+          "seq",
+          "ts",
+          "bot_id",
+          "type",
+          "payload"
+        ]
+      },
+      "SecretResolvedEvent": {
+        "type": "object",
+        "properties": {
+          "v": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Protocol version, currently 1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seq": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "secret.resolved"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "request_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "fulfilled",
+                  "declined",
+                  "expired"
+                ]
+              }
+            },
+            "required": [
+              "request_id",
+              "outcome"
             ]
           }
         },
@@ -4680,6 +4827,81 @@
           "decision"
         ]
       },
+      "BotSecretRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conversation_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          },
+          "allowed_hosts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "fulfilled",
+              "declined",
+              "expired"
+            ]
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "org_id",
+          "bot_id",
+          "run_id",
+          "conversation_id",
+          "name",
+          "service",
+          "allowed_hosts",
+          "reason",
+          "status",
+          "expires_at",
+          "created_at"
+        ],
+        "description": "A bot asking for a secret (D-101); never holds a value"
+      },
       "DeletedRoutine": {
         "type": "object",
         "properties": {
@@ -4702,6 +4924,20 @@
         },
         "required": [
           "deleted"
+        ]
+      },
+      "FulfillSecretRequestBody": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "description": "Stored in Vault; never returned, logged or shown to the bot"
+          }
+        },
+        "required": [
+          "value"
         ]
       },
       "ApprovalList": {
@@ -4739,6 +4975,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Routine"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "BotSecretRequestList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BotSecretRequest"
             }
           }
         },
@@ -11316,6 +11566,83 @@
         }
       }
     },
+    "/v1/secrets/requests/{id}/decline": {
+      "post": {
+        "operationId": "declineSecretRequest",
+        "tags": [
+          "secrets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Decline a bot's request for a secret; the bot continues without it",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Declined",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotSecretRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/routines/{id}": {
       "delete": {
         "operationId": "deleteRoutine",
@@ -11637,6 +11964,103 @@
         }
       }
     },
+    "/v1/secrets/requests/{id}/fulfill": {
+      "post": {
+        "operationId": "fulfillSecretRequest",
+        "tags": [
+          "secrets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Save the value a bot asked for (into Vault, for that bot and those hosts only)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FulfillSecretRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fulfilled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotSecretRequest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/hooks/github/{routine_id}": {
       "post": {
         "operationId": "githubWebhook",
@@ -11777,6 +12201,53 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/secrets/requests": {
+      "get": {
+        "operationId": "listSecretRequests",
+        "tags": [
+          "secrets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Bots waiting for a secret (pending requests you can see)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "org_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Secret requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotSecretRequestList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
             "content": {
               "application/problem+json": {
                 "schema": {

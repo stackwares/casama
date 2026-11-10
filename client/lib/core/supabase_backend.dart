@@ -1121,6 +1121,16 @@ class SupabaseBackend implements Backend {
       (await api.computers.releaseLease(id: computerId, releaseLeaseRequest: ReleaseLeaseRequest(note: note))).data!;
 
   @override
+  Future<void> fulfillSecretRequest(String requestId, String value) async {
+    await api.secrets.fulfillSecretRequest(id: requestId, fulfillSecretRequestBody: FulfillSecretRequestBody(value: value));
+  }
+
+  @override
+  Future<void> declineSecretRequest(String requestId) async {
+    await api.secrets.declineSecretRequest(id: requestId);
+  }
+
+  @override
   Future<List<TakeoverRequest>> takeovers(String orgId) async => (await api.computers.listTakeovers(orgId: orgId)).data!.items;
 
   @override

@@ -79,6 +79,17 @@ class TakeoverEntry extends ChatEntry {
   final String? note;
 }
 
+/// A bot asking for a secret (D-101); the value is typed into the card and never kept here.
+class SecretEntry extends ChatEntry {
+  const SecretEntry({required this.requestId, required this.name, required this.service, required this.hosts, required this.reason, this.outcome});
+  final String requestId;
+  final String name;
+  final String service;
+  final List<String> hosts;
+  final String reason;
+  final String? outcome;
+}
+
 /// An interactive UI the bot showed (D-086), rendered from A2UI messages.
 class UiEntry extends ChatEntry {
   const UiEntry({required this.surfaceId, required this.messages});
@@ -318,6 +329,15 @@ class ChatController extends Notifier<ChatState> {
           entries[i] = ApprovalEntry(approvalId: a.approvalId, tool: a.tool, args: a.args, risk: a.risk, decision: event.payload.decision.value);
         }
         ref.invalidate(approvalsProvider);
+      case SecretRequestedItem(:final event):
+        final p = event.payload;
+        entries.add(SecretEntry(requestId: p.requestId, name: p.name, service: p.service, hosts: p.allowedHosts.toList(), reason: p.reason));
+      case SecretResolvedItem(:final event):
+        final i = indexWhere((x) => x is SecretEntry && x.requestId == event.payload.requestId);
+        if (i >= 0) {
+          final e = entries[i] as SecretEntry;
+          entries[i] = SecretEntry(requestId: e.requestId, name: e.name, service: e.service, hosts: e.hosts, reason: e.reason, outcome: event.payload.outcome.value);
+        }
       case TakeoverRequestedItem(:final event):
         entries.add(TakeoverEntry(computerId: event.payload.computerId, reason: event.payload.reason));
         ref.invalidate(takeoversProvider);

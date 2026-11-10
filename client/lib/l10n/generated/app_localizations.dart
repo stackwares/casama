@@ -5805,6 +5805,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'archived'**
   String get fieldArchived;
+
+  /// No description provided for @secretRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} needs a {service} key'**
+  String secretRequestTitle(String bot, String service);
+
+  /// No description provided for @secretRequestHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Only for {hosts}'**
+  String secretRequestHosts(String hosts);
+
+  /// No description provided for @secretRequestHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Goes straight to the vault. The bot never sees it.'**
+  String get secretRequestHelp;
+
+  /// No description provided for @secretSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String secretSaved(String name);
+
+  /// No description provided for @secretDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined'**
+  String get secretDeclined;
+
+  /// No description provided for @decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get decline;
 }
 
 class _AppLocalizationsDelegate

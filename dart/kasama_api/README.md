@@ -157,7 +157,10 @@ Class | Method | HTTP request | Description
 [*RunsApi*](doc/RunsApi.md) | [**getRun**](doc/RunsApi.md#getrun) | **GET** /v1/runs/{id} | 
 [*RunsApi*](doc/RunsApi.md) | [**listRunEvents**](doc/RunsApi.md#listrunevents) | **GET** /v1/runs/{id}/events | Events after a seq. Send Accept: text/event-stream to keep streaming live events (SSE).
 [*SecretsApi*](doc/SecretsApi.md) | [**createSecret**](doc/SecretsApi.md#createsecret) | **POST** /v1/secrets | Create a named secret with allowed hosts (value stored in Vault)
+[*SecretsApi*](doc/SecretsApi.md) | [**declineSecretRequest**](doc/SecretsApi.md#declinesecretrequest) | **POST** /v1/secrets/requests/{id}/decline | Decline a bot&#39;s request for a secret; the bot continues without it
 [*SecretsApi*](doc/SecretsApi.md) | [**deleteSecret**](doc/SecretsApi.md#deletesecret) | **DELETE** /v1/secrets/{id} | 
+[*SecretsApi*](doc/SecretsApi.md) | [**fulfillSecretRequest**](doc/SecretsApi.md#fulfillsecretrequest) | **POST** /v1/secrets/requests/{id}/fulfill | Save the value a bot asked for (into Vault, for that bot and those hosts only)
+[*SecretsApi*](doc/SecretsApi.md) | [**listSecretRequests**](doc/SecretsApi.md#listsecretrequests) | **GET** /v1/secrets/requests | Bots waiting for a secret (pending requests you can see)
 [*SecretsApi*](doc/SecretsApi.md) | [**listSecrets**](doc/SecretsApi.md#listsecrets) | **GET** /v1/secrets | 
 [*SystemApi*](doc/SystemApi.md) | [**getConfig**](doc/SystemApi.md#getconfig) | **GET** /v1/config | Public client configuration (no auth)
 [*SystemApi*](doc/SystemApi.md) | [**getSignupChallenge**](doc/SystemApi.md#getsignupchallenge) | **GET** /v1/signup/challenge | A proof-of-work puzzle for signing up when the server asks for one (no auth)
@@ -220,6 +223,8 @@ Class | Method | HTTP request | Description
  - [Bot](doc/Bot.md)
  - [BotBudget](doc/BotBudget.md)
  - [BotList](doc/BotList.md)
+ - [BotSecretRequest](doc/BotSecretRequest.md)
+ - [BotSecretRequestList](doc/BotSecretRequestList.md)
  - [CatalogApp](doc/CatalogApp.md)
  - [CatalogAppApiKey](doc/CatalogAppApiKey.md)
  - [ChatGptSignInCompleteRequest](doc/ChatGptSignInCompleteRequest.md)
@@ -277,6 +282,7 @@ Class | Method | HTTP request | Description
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
+ - [FulfillSecretRequestBody](doc/FulfillSecretRequestBody.md)
  - [Health](doc/Health.md)
  - [IceServer](doc/IceServer.md)
  - [Integration](doc/Integration.md)
@@ -359,6 +365,10 @@ Class | Method | HTTP request | Description
  - [SavedCount](doc/SavedCount.md)
  - [Secret](doc/Secret.md)
  - [SecretList](doc/SecretList.md)
+ - [SecretRequestedEvent](doc/SecretRequestedEvent.md)
+ - [SecretRequestedEventPayload](doc/SecretRequestedEventPayload.md)
+ - [SecretResolvedEvent](doc/SecretResolvedEvent.md)
+ - [SecretResolvedEventPayload](doc/SecretResolvedEventPayload.md)
  - [SendMessageRequest](doc/SendMessageRequest.md)
  - [SendMessageResponse](doc/SendMessageResponse.md)
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)

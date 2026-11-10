@@ -204,6 +204,136 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
 
   // --- secrets -------------------------------------------------------------------
 
+  // --- secret requests from bots (D-101) --------------------------------------------
+
+  type AskRow = {
+    id: string;
+    org_id: string;
+    bot_id: string;
+    run_id: string;
+    conversation_id: string | null;
+    name: string;
+    service: string;
+    allowed_hosts: string[];
+    reason: string;
+    status: "pending";
+    expires_at: Date | string;
+    created_at: Date | string;
+    run_by: string | null;
+  };
+  const askOut = (r: AskRow) => ({
+    id: r.id,
+    org_id: r.org_id,
+    bot_id: r.bot_id,
+    run_id: r.run_id,
+    conversation_id: r.conversation_id,
+    name: r.name,
+    service: r.service,
+    allowed_hosts: r.allowed_hosts,
+    reason: r.reason,
+    status: r.status,
+    expires_at: iso(r.expires_at),
+    created_at: iso(r.created_at),
+  });
+  const ASK_COLUMNS = sql`s.id, s.org_id, s.bot_id, s.run_id, s.conversation_id, s.name, s.service, s.allowed_hosts,
+    s.reason, case when s.status = 'pending' and s.expires_at <= now() then 'expired' else s.status end as status,
+    s.expires_at, s.created_at, r.created_by as run_by`;
+
+  /** The request, if this person can see it (RLS) and may answer it: an admin or the run's sender. */
+  const askFor = async (claims: JwtClaims, id: string) => {
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx.execute<AskRow>(sql`select ${ASK_COLUMNS} from public.secret_requests s
+        join public.runs r on r.id = s.run_id where s.id = ${id}::uuid`),
+    );
+    if (!row) throw new ApiError(404, "secret_request_not_found", "Secret request not found");
+    if (row.run_by !== claims.sub && !(await isAdmin(db, claims, row.org_id)))
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only the person who started this chat or an admin can answer",
+      );
+    if (row.status !== "pending")
+      throw new ApiError(409, "secret_request_closed", `This request is already ${row.status}`);
+    return row;
+  };
+
+  app.openapi(routes.listSecretRequests, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.execute<AskRow>(sql`select ${ASK_COLUMNS} from public.secret_requests s
+        join public.runs r on r.id = s.run_id
+        where s.org_id = ${c.req.valid("query").org_id}::uuid and s.status = 'pending' and s.expires_at > now()
+        order by s.created_at desc limit 50`),
+    );
+    return c.json({ items: rows.map(askOut) }, 200);
+  });
+
+  app.openapi(routes.fulfillSecretRequest, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { value } = c.req.valid("json");
+    const ask = await askFor(claims, id);
+    const admin = await isAdmin(db, claims, ask.org_id);
+    const secretId = await db.transaction(async (tx) => {
+      const [existing] = await tx.execute<{ id: string; vault_secret_id: string | null }>(sql`
+        select id, vault_secret_id from public.secrets where org_id = ${ask.org_id}::uuid and name = ${ask.name} for update`);
+      if (existing) {
+        // Replacing a workspace secret is an admin's call; the hosts become the requested ones.
+        if (!admin)
+          throw new ApiError(
+            409,
+            "secret_exists",
+            `A secret named ${ask.name} already exists. Ask an admin to replace it.`,
+          );
+        if (existing.vault_secret_id)
+          await tx.execute(
+            sql`select vault.update_secret(${existing.vault_secret_id}::uuid, ${value})`,
+          );
+        else {
+          const [v] = await tx.execute<{ id: string }>(
+            sql`select vault.create_secret(${value}, null, 'named secret') as id`,
+          );
+          await tx.execute(
+            sql`update public.secrets set vault_secret_id = ${v?.id}::uuid where id = ${existing.id}::uuid`,
+          );
+        }
+        await tx.execute(
+          sql`update public.secrets set allowed_hosts = array(select jsonb_array_elements_text(${JSON.stringify(ask.allowed_hosts)}::jsonb)) where id = ${existing.id}::uuid`,
+        );
+        return existing.id;
+      }
+      const [v] = await tx.execute<{ id: string }>(
+        sql`select vault.create_secret(${value}, null, 'named secret') as id`,
+      );
+      // Only the bot that asked may use it, and only on the hosts it named.
+      const [r] = await tx.execute<{ id: string }>(sql`
+        insert into public.secrets (org_id, name, vault_secret_id, allowed_hosts, allowed_bot_ids, created_by)
+        values (${ask.org_id}::uuid, ${ask.name}, ${v?.id}::uuid, array(select jsonb_array_elements_text(${JSON.stringify(ask.allowed_hosts)}::jsonb)), array[${ask.bot_id}::uuid], ${claims.sub}::uuid)
+        returning id`);
+      return r?.id;
+    });
+    const [done] = await db.execute<{ id: string }>(sql`
+      update public.secret_requests set status = 'fulfilled', secret_id = ${secretId}::uuid, resolved_by = ${claims.sub}::uuid, resolved_at = now()
+      where id = ${id}::uuid and status = 'pending' returning id`);
+    if (!done)
+      throw new ApiError(409, "secret_request_closed", "This request was already answered");
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${ask.org_id}::uuid, 'user', ${claims.sub}::uuid, 'secret.request_fulfilled', 'secret', ${secretId}::uuid,
+              ${JSON.stringify({ name: ask.name, bot_id: ask.bot_id, hosts: ask.allowed_hosts })}::jsonb)`);
+    await deps.workflows.signalRun(ask.run_id);
+    return c.json(askOut({ ...ask, status: "fulfilled" as never }), 200);
+  });
+
+  app.openapi(routes.declineSecretRequest, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const ask = await askFor(claims, id);
+    await db.execute(sql`update public.secret_requests set status = 'declined', resolved_by = ${claims.sub}::uuid, resolved_at = now()
+      where id = ${id}::uuid and status = 'pending'`);
+    await deps.workflows.signalRun(ask.run_id);
+    return c.json(askOut({ ...ask, status: "declined" as never }), 200);
+  });
+
   app.openapi(routes.listSecrets, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const rows = await withUserSession(db, claims, (tx) =>

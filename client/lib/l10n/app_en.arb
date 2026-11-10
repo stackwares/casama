@@ -1789,5 +1789,14 @@
   "fieldAutonomy": "autonomy",
   "fieldBudget": "budget",
   "fieldComputer": "computer",
-  "fieldArchived": "archived"
+  "fieldArchived": "archived",
+  "secretRequestTitle": "{bot} needs a {service} key",
+  "@secretRequestTitle": {"placeholders": {"bot": {"type": "String"}, "service": {"type": "String"}}},
+  "secretRequestHosts": "Only for {hosts}",
+  "@secretRequestHosts": {"placeholders": {"hosts": {"type": "String"}}},
+  "secretRequestHelp": "Goes straight to the vault. The bot never sees it.",
+  "secretSaved": "Saved {name}",
+  "@secretSaved": {"placeholders": {"name": {"type": "String"}}},
+  "secretDeclined": "Declined",
+  "decline": "Decline"
 }

@@ -290,6 +290,8 @@ Every step of every run is an append-only event in `run_events`; that one log dr
 | tool.failed        | call\_id, error\_code, message                                     |
 | approval.requested | approval\_id, tool, args\_redacted, risk, expires\_at              |
 | approval.resolved  | approval\_id, decision, decided\_by                                |
+| secret.requested   | request\_id, name, service, allowed\_hosts, reason, expires\_at   |
+| secret.resolved    | request\_id, outcome (never a value)                              |
 | takeover.requested | computer\_id, reason                                               |
 | lease.changed      | computer\_id, holder\_type, mode                                   |
 | computer.state     | computer\_id, state                                                |

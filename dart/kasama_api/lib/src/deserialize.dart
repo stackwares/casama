@@ -24,6 +24,8 @@ import 'package:kasama_api/src/model/billing_usage_item.dart';
 import 'package:kasama_api/src/model/bot.dart';
 import 'package:kasama_api/src/model/bot_budget.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
+import 'package:kasama_api/src/model/bot_secret_request.dart';
+import 'package:kasama_api/src/model/bot_secret_request_list.dart';
 import 'package:kasama_api/src/model/catalog_app.dart';
 import 'package:kasama_api/src/model/catalog_app_api_key.dart';
 import 'package:kasama_api/src/model/chat_gpt_sign_in_complete_request.dart';
@@ -79,6 +81,7 @@ import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
+import 'package:kasama_api/src/model/fulfill_secret_request_body.dart';
 import 'package:kasama_api/src/model/health.dart';
 import 'package:kasama_api/src/model/ice_server.dart';
 import 'package:kasama_api/src/model/integration.dart';
@@ -153,6 +156,10 @@ import 'package:kasama_api/src/model/run_started_event_payload.dart';
 import 'package:kasama_api/src/model/saved_count.dart';
 import 'package:kasama_api/src/model/secret.dart';
 import 'package:kasama_api/src/model/secret_list.dart';
+import 'package:kasama_api/src/model/secret_requested_event.dart';
+import 'package:kasama_api/src/model/secret_requested_event_payload.dart';
+import 'package:kasama_api/src/model/secret_resolved_event.dart';
+import 'package:kasama_api/src/model/secret_resolved_event_payload.dart';
 import 'package:kasama_api/src/model/send_message_request.dart';
 import 'package:kasama_api/src/model/send_message_response.dart';
 import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
@@ -300,6 +307,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BotBudget.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotList':
           return BotList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotSecretRequest':
+          return BotSecretRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotSecretRequestList':
+          return BotSecretRequestList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogApp':
           return CatalogApp.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogAppApiKey':
@@ -416,6 +427,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedId.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRoutine':
           return DeletedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'FulfillSecretRequestBody':
+          return FulfillSecretRequestBody.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
           return Health.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'IceServer':
@@ -588,6 +601,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Secret.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SecretList':
           return SecretList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SecretRequestedEvent':
+          return SecretRequestedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SecretRequestedEventPayload':
+          return SecretRequestedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SecretResolvedEvent':
+          return SecretResolvedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SecretResolvedEventPayload':
+          return SecretResolvedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SendMessageRequest':
           return SendMessageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SendMessageResponse':

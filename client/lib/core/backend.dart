@@ -349,6 +349,9 @@ abstract class Backend {
   Future<Lease> lease(String computerId);
   Future<Lease> takeLease(String computerId, {bool allowShell});
   Future<Lease> releaseLease(String computerId, {String? note});
+  // Secret requests from bots (D-101): the value goes to Vault through the API, nowhere else.
+  Future<void> fulfillSecretRequest(String requestId, String value);
+  Future<void> declineSecretRequest(String requestId);
   Future<List<TakeoverRequest>> takeovers(String orgId);
   Future<void> dismissTakeover(String takeoverId, {String? note});
 

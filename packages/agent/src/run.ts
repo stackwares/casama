@@ -35,6 +35,14 @@ import type { NotificationService } from "./notifications.ts";
 import { Redactor } from "./redact.ts";
 import { safeFetch } from "./safe-fetch.ts";
 import {
+  createSecretRequest,
+  finishSecretRequest,
+  SECRET_REQUEST_TOOL,
+  SECRET_REQUEST_TTL_MS,
+  SecretRequestArgs,
+  secretRequestState,
+} from "./secret-requests.ts";
+import {
   hasPlaceholders,
   loadSecrets,
   type NamedSecret,
@@ -474,6 +482,47 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           }
         }
         const waitUntil = deps.waitUntil ?? pollUntil;
+        // A bot asking for a secret waits here, durably; it only learns that the value was saved.
+        if (!blocked && call.name === SECRET_REQUEST_TOOL) {
+          const parsed = SecretRequestArgs.safeParse(call.args);
+          const started = parsed.success
+            ? await step(`secret-${i}-${call.callId}`, async () =>
+                createSecretRequest(db, info, parsed.data, bus, deps.notifications),
+              )
+            : {
+                error: `Invalid arguments: ${parsed.error.issues.map((x) => x.message).join("; ")}`,
+              };
+          if ("error" in started) {
+            const res = await step(`blocked-${i}-${call.callId}`, () =>
+              blockedStep(deps, info, call, started.error, bus),
+            );
+            turn.push({ role: "tool", callId: call.callId, name: call.name, content: res.content });
+            continue;
+          }
+          let state = "pending";
+          await waitUntil(
+            `secret-${call.callId}`,
+            async () => {
+              state = await secretRequestState(db, started.id);
+              return state !== "pending";
+            },
+            SECRET_REQUEST_TTL_MS,
+          );
+          if (state === "cancelled") {
+            await step("cancel", () => finishCancelled(db, info, bus));
+            return { status: "cancelled" };
+          }
+          // The new secret must be usable and scrubbed from here on.
+          secretsCache = undefined;
+          redactorCache = undefined;
+          const content = await step(`secret-done-${i}-${call.callId}`, async () => {
+            const text = await finishSecretRequest(db, info.runId, started.id, bus);
+            await completeToolEvent(deps, info, call, text, bus);
+            return text;
+          });
+          turn.push({ role: "tool", callId: call.callId, name: call.name, content });
+          continue;
+        }
         // A bot asking a person to take over the screen waits here, durably.
         if (!blocked && call.name === TAKEOVER_TOOL && deps.computers) {
           const started = await step(`takeover-${i}-${call.callId}`, () =>

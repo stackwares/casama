@@ -43,6 +43,18 @@ export const runEventPayloads = {
     decision: z.enum(["approved", "denied", "expired"]),
     decided_by: id.nullable(),
   }),
+  "secret.requested": z.object({
+    request_id: id,
+    name: z.string(),
+    service: z.string(),
+    allowed_hosts: z.array(z.string()),
+    reason: z.string(),
+    expires_at: ts,
+  }),
+  "secret.resolved": z.object({
+    request_id: id,
+    outcome: z.enum(["fulfilled", "declined", "expired"]),
+  }),
   "takeover.requested": z.object({ computer_id: id, reason: z.string() }),
   "takeover.resolved": z.object({
     computer_id: id,

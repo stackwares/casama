@@ -3316,4 +3316,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fieldArchived => 'archived';
+
+  @override
+  String secretRequestTitle(String bot, String service) {
+    return '$bot needs a $service key';
+  }
+
+  @override
+  String secretRequestHosts(String hosts) {
+    return 'Only for $hosts';
+  }
+
+  @override
+  String get secretRequestHelp =>
+      'Goes straight to the vault. The bot never sees it.';
+
+  @override
+  String secretSaved(String name) {
+    return 'Saved $name';
+  }
+
+  @override
+  String get secretDeclined => 'Declined';
+
+  @override
+  String get decline => 'Decline';
 }

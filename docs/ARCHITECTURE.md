@@ -146,6 +146,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/tools/bots.ts`: `bots.list|create|update|archive` and `sidebar.organize`, capped at the acting bot's autonomy and budget; routine tools take `bot`. `bot_folders`, `bots.folder_id|sort_key|archived_at`, and `bot_revisions` (trigger `bots_record_revision`; the acting bot comes from `kasama.actor_bot`). App: sidebar folders, bot settings → Folder, Settings history (restore), Archive; Archived bots on the bot list.
 
+## Ask for a secret (D-101)
+
+- `packages/agent/src/secret-requests.ts` (`secrets.request`, handled in the run loop like takeovers), `secret_requests`, `/v1/secrets/requests` (list, fulfill, decline), events `secret.requested`/`secret.resolved`, and the chat's protected `SecretPrompt` card.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

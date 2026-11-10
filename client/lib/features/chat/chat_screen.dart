@@ -601,6 +601,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               fresh: fresh,
             ),
           );
+        case final SecretEntry k:
+          botSide('secret-${k.requestId}');
+          rows.add(_Row(ValueKey('secret-${k.requestId}'), AppSpace.sm, () => SecretPrompt(entry: k, botName: name), fresh: fresh));
         case final UiEntry u:
           botSide(u.surfaceId);
           rows.add(
@@ -642,6 +645,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Waiting on a person (an approval or a takeover): no "thinking" shimmer.
     final waitingOnPerson = (last is ApprovalEntry && last.decision == null) ||
         (last is TakeoverEntry && last.outcome == null) ||
+        (last is SecretEntry && last.outcome == null) ||
         (last is UiEntry && !chat.answeredUi.contains(last.surfaceId));
     final replying = last is MessageEntry && last.role == 'assistant' && last.streaming;
     final toolRunning = last is ToolEntry && last.status == ToolStatus.running;
