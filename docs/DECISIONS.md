@@ -187,7 +187,7 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 
 - **Decision**: the app subscribes to the private Realtime topic `run:{id}`, merges broadcasts with `GET /v1/runs/{id}/events?after_seq=` through `RunEventBuffer` (ordered by seq, duplicates dropped, gaps filled from the API) and polls catch-up every 2 seconds as a safety net. The integration test asserts events arrive over Realtime.
 
-## D-042 Offline cache (drift) deferred
+## D-042 Offline cache (drift) deferred (superseded by D-112)
 
 - **Context**: the spec's client architecture lists a drift cache for conversations, messages and bots.
 - **Decision**: deferred past the MVP app. Data loads from Supabase and the API on demand. Add drift (including its web/wasm setup) when offline or instant-open becomes a priority.
@@ -621,4 +621,11 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Android:** app shortcuts through `quick_actions`: Quick ask, Ask <bot> for the first two bots, and Run <routine> for the first routine, refreshed when the bot list changes.
 - **Flutter:** `core/shortcuts.dart` keeps the list in sync and routes the paths; Quick ask takes a preselected bot; `/run-routine/<ref>` starts the routine and opens the bot's chat where results arrive.
 - **Verified:** `flutter build macos --debug` and `flutter build ios --simulator --debug` compile the intents; tests cover the paths, the list the intents read, and Quick ask with a preselected bot. Siri phrases themselves need a device to try.
+
+## D-112 Offline cache
+
+- **Store:** drift (SQLite) through `drift_flutter`, one hand-made `cache(key, value, updated_at)` table of JSON snapshots, so there's no code generation step: `bots:<org>`, `lastconv:<bot>` and `msgs:<conversation>` (the last 100 messages, text and attachments; bot UIs aren't kept). `main.dart` installs it on mobile and desktop; the web app and tests use no cache (drift on the web needs its wasm worker set up, which can come later).
+- **Instant open:** bots come from the cache first and refresh in the background (`BotsNotifier`); a chat shows its saved messages at once and the server's replace them. Offline, the saved bots and messages stay, and the chat says "Offline. Showing saved messages." with Retry. Every cache read and write is best effort: a broken or missing cache just means nothing saved.
+- **Privacy:** the cache is cleared when the session ends (sign-out or expiry). It holds what the app already showed; no keys or secrets.
+- **Tests:** the drift store with an in-memory database, and a chat opened once then reopened offline (`offline_cache_test.dart`); `flutter build macos` links drift's SQLite.
 

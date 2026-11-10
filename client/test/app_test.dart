@@ -14,9 +14,10 @@ import 'package:kasama_app/l10n/generated/app_localizations.dart';
 import 'package:kasama_app/ui/floating_tab_chrome.dart';
 
 import 'fake_backend.dart';
+import 'package:kasama_app/core/local_cache.dart';
 
-Widget harness(FakeBackend backend, Widget child) => ProviderScope(
-  overrides: [backendProvider.overrideWithValue(backend)],
+Widget harness(FakeBackend backend, Widget child, {LocalCache cache = const NoCache()}) => ProviderScope(
+  overrides: [backendProvider.overrideWithValue(backend), localCacheProvider.overrideWithValue(cache)],
   child: MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales, home: child),
 );
 

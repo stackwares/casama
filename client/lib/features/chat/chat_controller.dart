@@ -5,6 +5,7 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/backend.dart';
 import '../../core/mobile_extras.dart';
+import '../../core/local_cache.dart';
 import '../../core/providers.dart';
 
 enum ToolStatus { running, done, failed }
@@ -141,8 +142,12 @@ class ChatState {
     this.tokens = 0,
     this.lastUserText,
     this.answeredUi = const {},
+    this.offline = false,
   });
   final String? conversationId;
+
+  /// Showing saved messages because the server couldn't be reached (D-112).
+  final bool offline;
   final List<ChatEntry> entries;
   final bool loading;
   final String? activeRunId;
@@ -167,6 +172,7 @@ class ChatState {
     int? tokens,
     String? lastUserText,
     Set<String>? answeredUi,
+    bool? offline,
   }) => ChatState(
     conversationId: conversationId ?? this.conversationId,
     entries: entries ?? this.entries,
@@ -177,6 +183,7 @@ class ChatState {
     tokens: tokens ?? this.tokens,
     lastUserText: lastUserText ?? this.lastUserText,
     answeredUi: answeredUi ?? this.answeredUi,
+    offline: offline ?? this.offline,
   );
 }
 
@@ -195,30 +202,62 @@ class ChatController extends Notifier<ChatState> {
   }
 
   /// Opens a conversation (or the most recent one when null).
+  ChatState _fromMessages(String id, List<ChatMessageView> messages, {bool offline = false}) => ChatState(
+        conversationId: id,
+        offline: offline,
+        entries: [
+          for (final m in messages) ...[
+            if (m.text.isNotEmpty || m.attachments.isNotEmpty || m.ui.isEmpty)
+              MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments, siblingIndex: m.siblingIndex, siblingCount: m.siblingCount),
+            for (final u in m.ui) UiEntry(surfaceId: u.surfaceId, messages: u.messages),
+          ],
+        ],
+        answeredUi: {for (final m in messages) ?m.uiActionSurface},
+      );
+
+  /// Opens a conversation: saved messages show at once (D-112), then the server's replace them.
+  /// Offline, the saved ones stay with a note.
   Future<void> open(String? conversationId) async {
     await _sub?.cancel();
     state = const ChatState(loading: true);
+    final cache = ref.read(localCacheProvider);
     var id = conversationId;
     if (id == null) {
-      final list = await _backend.conversations(botId);
-      id = list.isEmpty ? null : list.first.id;
+      try {
+        final list = await _backend.conversations(botId);
+        id = list.isEmpty ? null : list.first.id;
+        unawaited(cacheWrite(cache, 'lastconv:$botId', id));
+      } catch (_) {
+        final saved = await cacheRead(cache, 'lastconv:$botId');
+        if (saved is! String) rethrow;
+        id = saved;
+      }
     }
     if (id == null) {
       state = const ChatState();
       return;
     }
-    final messages = await _backend.messages(id);
-    state = ChatState(
-      conversationId: id,
-      entries: [
-        for (final m in messages) ...[
-          if (m.text.isNotEmpty || m.attachments.isNotEmpty || m.ui.isEmpty)
-            MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments, siblingIndex: m.siblingIndex, siblingCount: m.siblingCount),
-          for (final u in m.ui) UiEntry(surfaceId: u.surfaceId, messages: u.messages),
-        ],
-      ],
-      answeredUi: {for (final m in messages) ?m.uiActionSurface},
-    );
+    final key = 'msgs:$id';
+    final cached = await cacheRead(cache, key);
+    var showingCached = false;
+    if (cached is List && cached.isNotEmpty) {
+      try {
+        state = _fromMessages(id, [for (final j in cached) ChatMessageView.fromJson(Map<String, dynamic>.from(j as Map))]);
+        showingCached = true;
+      } catch (_) {}
+    }
+    final List<ChatMessageView> messages;
+    try {
+      messages = await _backend.messages(id);
+    } catch (_) {
+      if (showingCached && state.conversationId == id) {
+        state = state.copyWith(offline: true);
+        return;
+      }
+      rethrow;
+    }
+    unawaited(cacheWrite(cache, key, [for (final m in messages.length > 100 ? messages.sublist(messages.length - 100) : messages) m.toJson()]));
+    state = _fromMessages(id, messages);
     final active = await _backend.activeRun(id);
     if (active != null) _attach(active);
   }

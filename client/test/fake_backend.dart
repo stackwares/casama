@@ -368,7 +368,10 @@ class FakeBackend implements Backend {
   String? defaultComputer;
 
   @override
-  Future<List<Bot>> bots(String orgId) async => [if (!archived.contains(botId)) bot()];
+  Future<List<Bot>> bots(String orgId) async {
+    if (offline) throw Exception('offline');
+    return [if (!archived.contains(botId)) bot()];
+  }
   @override
   Future<Bot> createBot(String orgId,
       {required String name, required String credentialId, required String model, String persona = '', String? templateId, String? avatarUrl}) async {
@@ -432,7 +435,13 @@ class FakeBackend implements Backend {
   @override
   Future<Conversation> createConversation(String botId) async => Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026));
   @override
-  Future<List<ChatMessageView>> messages(String conversationId) async => storedMessages;
+  Future<List<ChatMessageView>> messages(String conversationId) async {
+    if (offline) throw Exception('offline');
+    return storedMessages;
+  }
+
+  /// Simulates no network for bots and messages (offline cache tests).
+  bool offline = false;
   @override
   Future<String?> activeRun(String conversationId) async => null;
   final sentAttachments = <List<AttachmentRef>>[];

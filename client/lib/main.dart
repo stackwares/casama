@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'app.dart';
+import 'core/local_cache.dart';
 import 'core/config.dart';
 import 'core/providers.dart';
 import 'core/server_address.dart';
@@ -22,7 +23,10 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config) async {
   final supabase = Supabase.instance.client;
   final api = await SupabaseBackend.connectApi(config.apiUrl, supabase);
   final backend = SupabaseBackend(supabase, api, config: connection.config);
-  final app = ProviderScope(overrides: [backendProvider.overrideWithValue(backend)], child: const KasamaApp());
+  final app = ProviderScope(
+    overrides: [backendProvider.overrideWithValue(backend), localCacheProvider.overrideWithValue(openLocalCache())],
+    child: const KasamaApp(),
+  );
   return (app as Widget, backend);
 }
 

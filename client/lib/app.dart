@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/local_cache.dart';
+import 'core/providers.dart';
 import 'core/shortcuts.dart';
 import 'core/widgets.dart';
 import 'features/billing/billing_screen.dart';
@@ -31,6 +35,10 @@ class KasamaApp extends ConsumerWidget {
     ref.watch(shareToBotProvider);
     // Siri, Spotlight and Shortcuts (iOS, macOS) and Android app shortcuts (D-111).
     ref.watch(shortcutsProvider);
+    // Signing out (or a session ending) wipes the offline cache on this device (D-112).
+    ref.listen(signedInProvider, (prev, next) {
+      if (prev?.value == true && next.value == false) unawaited(cacheClear(ref.read(localCacheProvider)));
+    });
     final appearance = ref.watch(appearanceProvider);
     return MaterialApp.router(
       onGenerateTitle: (c) => AppLocalizations.of(c).appTitle,

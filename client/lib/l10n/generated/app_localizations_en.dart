@@ -3622,4 +3622,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startingRoutine => 'Starting the routine…';
+
+  @override
+  String get offlineSaved => 'Offline. Showing saved messages.';
 }

@@ -13,6 +13,10 @@ class AttachmentRef {
   final int size;
 
   bool get isImage => mimeType.startsWith('image/');
+
+  Map<String, Object?> toJson() => {'path': path, 'name': name, 'mime_type': mimeType, 'size': size};
+  static AttachmentRef fromJson(Map<String, dynamic> j) =>
+      AttachmentRef(path: j['path'] as String, name: j['name'] as String, mimeType: j['mime_type'] as String, size: (j['size'] as num).toInt());
 }
 
 /// An interactive UI a bot showed (D-086): one A2UI surface and the messages that build it.
@@ -35,6 +39,28 @@ class ChatMessageView {
     this.siblingIndex = 1,
     this.siblingCount = 1,
   });
+  /// For the offline cache (D-112): text, attachments and versions; bot UIs are left out.
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'role': role,
+        'text': text,
+        'created_at': createdAt.toIso8601String(),
+        'run_id': runId,
+        'attachments': [for (final a in attachments) a.toJson()],
+        'sibling_index': siblingIndex,
+        'sibling_count': siblingCount,
+      };
+  static ChatMessageView fromJson(Map<String, dynamic> j) => ChatMessageView(
+        id: j['id'] as String,
+        role: j['role'] as String,
+        text: j['text'] as String? ?? '',
+        createdAt: DateTime.parse(j['created_at'] as String),
+        runId: j['run_id'] as String?,
+        attachments: [for (final a in (j['attachments'] as List? ?? const [])) AttachmentRef.fromJson(a as Map<String, dynamic>)],
+        siblingIndex: (j['sibling_index'] as num?)?.toInt() ?? 1,
+        siblingCount: (j['sibling_count'] as num?)?.toInt() ?? 1,
+      );
+
   final String id;
   final String role;
   final String text;

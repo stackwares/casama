@@ -187,6 +187,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - App Intents and `ShortcutBridge` in `client/ios/Runner/AppDelegate.swift` and `client/macos/Runner/AppDelegate.swift`, `client/lib/core/shortcuts.dart` (list sync, `kasama/shortcuts` channel, Android `quick_actions`), `/run-routine/<ref>`.
 
+## Offline cache (D-112)
+
+- `client/lib/core/local_cache.dart` (drift key/value cache, `openLocalCache` installed in `main.dart`), cache-first `BotsNotifier` and `ChatController.open`, cleared on sign-out.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

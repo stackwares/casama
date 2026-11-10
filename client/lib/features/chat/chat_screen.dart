@@ -418,6 +418,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             }
             return Column(
               children: [
+                if (chat.offline)
+                  Padding(
+                    key: const Key('offlineNote'),
+                    padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, 0),
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.wifiOff, size: 16, color: context.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text(l10n.offlineSaved, style: context.textTheme.labelMedium?.copyWith(color: context.colorScheme.onSurfaceVariant))),
+                        TextButton(onPressed: () => runGuarded(context, () => controller.open(chat.conversationId)), child: Text(l10n.retry)),
+                      ],
+                    ),
+                  ),
                 Expanded(
                   child: Stack(
                     children: [

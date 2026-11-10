@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
 import 'backend.dart';
+import 'local_cache.dart';
 
 /// The backend; overridden in main() and in tests.
 final backendProvider = Provider<Backend>((ref) => throw UnimplementedError('backendProvider must be overridden'));
@@ -59,11 +60,38 @@ final currentOrgProvider = Provider<OrganizationWithRole?>((ref) {
   return orgs.firstWhere((o) => o.id == id, orElse: () => orgs.first);
 });
 
-final botsProvider = FutureProvider<List<Bot>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).bots(org.id);
-});
+/// Bots, shown from the offline cache first and refreshed in the background (D-112).
+class BotsNotifier extends AsyncNotifier<List<Bot>> {
+  var _generation = 0;
+
+  @override
+  Future<List<Bot>> build() async {
+    final org = ref.watch(currentOrgProvider);
+    if (org == null) return const [];
+    final backend = ref.watch(backendProvider);
+    final cache = ref.watch(localCacheProvider);
+    final key = 'bots:${org.id}';
+    final gen = ++_generation;
+    final fresh = backend.bots(org.id).then((v) {
+      unawaited(cacheWrite(cache, key, [for (final b in v) b.toJson()]));
+      return v;
+    });
+    // Handled here too, so an offline failure doesn't count as unhandled while the cache is read.
+    fresh.ignore();
+    final cached = await cacheRead(cache, key);
+    if (cached is List && cached.isNotEmpty) {
+      unawaited(fresh.then((v) {
+        if (ref.mounted && gen == _generation) state = AsyncData(v);
+      }).catchError((_) {}));
+      try {
+        return [for (final j in cached) Bot.fromJson(Map<String, dynamic>.from(j as Map))];
+      } catch (_) {}
+    }
+    return fresh;
+  }
+}
+
+final botsProvider = AsyncNotifierProvider<BotsNotifier, List<Bot>>(BotsNotifier.new);
 
 /// Sidebar folders (D-100).
 final botFoldersProvider = FutureProvider<List<BotFolder>>((ref) async {

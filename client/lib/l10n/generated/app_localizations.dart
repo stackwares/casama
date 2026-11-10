@@ -6315,6 +6315,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starting the routine…'**
   String get startingRoutine;
+
+  /// No description provided for @offlineSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline. Showing saved messages.'**
+  String get offlineSaved;
 }
 
 class _AppLocalizationsDelegate
