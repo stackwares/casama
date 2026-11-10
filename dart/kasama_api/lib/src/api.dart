@@ -17,6 +17,7 @@ import 'package:kasama_api/src/api/chat_api.dart';
 import 'package:kasama_api/src/api/checkins_api.dart';
 import 'package:kasama_api/src/api/computers_api.dart';
 import 'package:kasama_api/src/api/credentials_api.dart';
+import 'package:kasama_api/src/api/files_api.dart';
 import 'package:kasama_api/src/api/import_api.dart';
 import 'package:kasama_api/src/api/integrations_api.dart';
 import 'package:kasama_api/src/api/local_computer_api.dart';
@@ -149,6 +150,12 @@ class KasamaApi {
   /// by doing that all interceptors will not be executed
   CredentialsApi getCredentialsApi() {
     return CredentialsApi(dio);
+  }
+
+  /// Get FilesApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  FilesApi getFilesApi() {
+    return FilesApi(dio);
   }
 
   /// Get ImportApi instance, base route and serializer can be overridden by a given but be careful,

@@ -781,3 +781,44 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - domain (`agent-import.test.ts`): an OpenClaw home folder and a Hermes home folder end to end, schedules, splitting notes, and memory answers.
   - API (`agent-import.test.ts`): ZIP to template to bot through the template import, leftovers copied to `~/imported/`, unknown folders, unsafe paths, and memory paste-in.
   - widget (`agent_import_test.dart`): review with unticking, files copied, and the memory sheet.
+
+## D-123 Wave 2 scope cut: no public bots, browser extension or meeting bots
+
+- **What (Oliver, 41a7646):** public bots, "your own browser" (the browser extension) and meeting bots are removed from the roadmap. That covers SPEC's table, design sections, build plan and risks. Wave 2 is now 11 items.
+- **Effect:** none of the three were started, so no code changes. Wave 2 continues in SPEC order with routines and skills as files (D-124), knowledge sources, self-improving skills, step replay, password managers and bot sharing.
+
+## D-124 Routines and skills as files
+
+- **Layout** (`@kasama/domain` `workspace-files.ts`): `kasama.json` maps folders to bots. Each bot's routines are `<bot>/routines/<name>.md`; front matter holds `id`, `name`, `schedule` (cron), `timezone`, `trigger`, `enabled` and `notify`, and the instructions follow. Skills are normal `SKILL.md` folders plus `id` and `enabled`: `<bot>/skills/<name>/` for one bot, `workspace/skills/<name>/` for the whole workspace. Plugin skills and check-in routines are managed elsewhere and left out.
+- **Import rules** (`applyWorkspaceFiles`, shared by the API and the worker):
+  - Matching:
+    - Folders match bots through `kasama.json` (by id), else by name.
+    - Routines match by `id`, else bot and name; skills match by bot and name.
+  - Changes:
+    - Changed files update; new files create.
+    - Import never deletes; git sync deletes only what was removed in the repo.
+    - Changing a schedule recomputes the next run.
+  - Checks:
+    - Every file is checked (cron, time zone, names, folder matching the skill name). Bad files are reported and skipped; the rest still apply.
+    - Webhook and GitHub triggers can't be created from a file, because they need secrets; set them up in the app.
+  - Dry run shows created, updated and unchanged items, and errors, without writing.
+- **App, API and CLI:**
+  - Workspace settings → Routines and skills as files (admins): export as a ZIP, import a ZIP after a dry-run preview, and git sync.
+  - API: `POST /v1/orgs/{id}/files/export|import`.
+  - CLI: `kasama files export <folder>` and `kasama files import <folder> [--dry-run]`.
+  - Admins only, since the files cover every bot.
+- **Git sync** (`syncWorkspaceRepo`):
+  - **Setup:** `org_git_sync` holds repo, branch and folder. It uses the workspace's `GITHUB_TOKEN` secret, allowed for api.github.com. This is the GitHub connection for now; secrets already have host allowlists.
+  - **Algorithm:** each sync compares three versions of every file: the last synced baseline (git blob sha plus content hash), Kasama's export now, and the branch now.
+    - Changed only in Kasama: one commit on the branch through the git data API.
+    - Changed only in the repo: checked and applied. Bad files are reported in `last_error` and kept out of the baseline, so they're retried once fixed.
+    - Changed on both sides: Kasama keeps its version and opens a pull request carrying it on a `kasama/sync-…` branch. The baseline records the standoff, so no second pull request opens; merging it makes both sides agree.
+  - **When it runs:**
+    - Triggers on routines, skills and skill files mark the workspace dirty, and the worker's minute tick syncs dirty workspaces and checks the rest every 10 minutes.
+    - The repo's push webhook (`/hooks/git-sync/<org>`) marks it due. Its HMAC (`X-Hub-Signature-256`) is checked with a secret stored in Vault, shown once at setup.
+    - Changing the repo, branch or folder resets the baseline.
+- **Tests:**
+  - domain (`workspace-files.test.ts`)
+  - API (`workspace-files.test.ts`), with an in-memory GitHub: export, a dry run then an import with bad files reported, the first push, the webhook signature, a repo edit applied, an app edit pushed, a conflict keeping Kasama's version with one pull request, a repo deletion, and a bad repo file left alone
+  - widget (`workspace_files_test.dart`)
+  - the CLI suite

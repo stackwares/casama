@@ -121,12 +121,14 @@ import 'package:kasama_api/src/model/for_you_brief.dart';
 import 'package:kasama_api/src/model/fulfill_secret_request_body.dart';
 import 'package:kasama_api/src/model/git_hub_skill_preview.dart';
 import 'package:kasama_api/src/model/git_hub_skill_preview_request.dart';
+import 'package:kasama_api/src/model/git_sync_status.dart';
 import 'package:kasama_api/src/model/group_chat_list.dart';
 import 'package:kasama_api/src/model/health.dart';
 import 'package:kasama_api/src/model/ice_server.dart';
 import 'package:kasama_api/src/model/import_bot_request.dart';
 import 'package:kasama_api/src/model/import_bot_response.dart';
 import 'package:kasama_api/src/model/import_bot_response_connections_to_add_inner.dart';
+import 'package:kasama_api/src/model/import_workspace_files_request.dart';
 import 'package:kasama_api/src/model/imported_memory_item.dart';
 import 'package:kasama_api/src/model/install_catalog_skill_request.dart';
 import 'package:kasama_api/src/model/install_git_hub_skill_request.dart';
@@ -247,6 +249,7 @@ import 'package:kasama_api/src/model/secret_resolved_event.dart';
 import 'package:kasama_api/src/model/secret_resolved_event_payload.dart';
 import 'package:kasama_api/src/model/send_message_request.dart';
 import 'package:kasama_api/src/model/send_message_response.dart';
+import 'package:kasama_api/src/model/set_git_sync_request.dart';
 import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
 import 'package:kasama_api/src/model/signup_challenge.dart';
@@ -337,6 +340,9 @@ import 'package:kasama_api/src/model/watcher.dart';
 import 'package:kasama_api/src/model/watcher_list.dart';
 import 'package:kasama_api/src/model/workspace_badge.dart';
 import 'package:kasama_api/src/model/workspace_badge_list.dart';
+import 'package:kasama_api/src/model/workspace_files_export.dart';
+import 'package:kasama_api/src/model/workspace_files_export_files_inner.dart';
+import 'package:kasama_api/src/model/workspace_files_result.dart';
 import 'package:kasama_api/src/model/write_agent_import_files_request.dart';
 import 'package:kasama_api/src/model/write_agent_import_files_response.dart';
 
@@ -616,6 +622,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return GitHubSkillPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GitHubSkillPreviewRequest':
           return GitHubSkillPreviewRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GitSyncStatus':
+          return GitSyncStatus.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GroupChatList':
           return GroupChatList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
@@ -628,6 +636,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ImportBotResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ImportBotResponseConnectionsToAddInner':
           return ImportBotResponseConnectionsToAddInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ImportWorkspaceFilesRequest':
+          return ImportWorkspaceFilesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ImportedMemoryItem':
           return ImportedMemoryItem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InstallCatalogSkillRequest':
@@ -901,6 +911,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SendMessageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SendMessageResponse':
           return SendMessageResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetGitSyncRequest':
+          return SetGitSyncRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetLocalMcpServersRequest':
           return SetLocalMcpServersRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetOrgLimitsRequest':
@@ -1093,6 +1105,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return WorkspaceBadge.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WorkspaceBadgeList':
           return WorkspaceBadgeList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WorkspaceFilesExport':
+          return WorkspaceFilesExport.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WorkspaceFilesExportFilesInner':
+          return WorkspaceFilesExportFilesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WorkspaceFilesResult':
+          return WorkspaceFilesResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WriteAgentImportFilesRequest':
           return WriteAgentImportFilesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WriteAgentImportFilesResponse':

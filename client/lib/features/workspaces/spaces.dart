@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../mcp/mcp_screens.dart';
+import 'workspace_files.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -532,6 +533,7 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
             ),
         ],
         if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
+        if (admin) ...[const SizedBox(height: AppSpace.lg), WorkspaceFilesSection(orgId: org.id)],
       ],
     );
   }

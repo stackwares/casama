@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 
 import 'commands_bots.dart';
 import 'commands_computers.dart';
+import 'commands_files.dart';
 import 'commands_selfhost.dart';
 import 'store.dart';
 
@@ -34,6 +35,7 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
     ..addCommand(MemoryCommand(ctx))
     ..addCommand(UsageCommand(ctx))
     ..addCommand(ComputerCommand(ctx))
+    ..addCommand(FilesCommand(ctx))
     ..addCommand(AccountCommand(ctx))
     ..addCommand(SelfhostCommand(ctx));
   try {

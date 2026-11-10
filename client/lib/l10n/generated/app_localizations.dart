@@ -7443,6 +7443,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added {count, plural, =1{1 memory} other{{count} memories}}'**
   String memoriesImported(int count);
+
+  /// No description provided for @routinesAsFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Routines and skills as files'**
+  String get routinesAsFiles;
+
+  /// No description provided for @routinesAsFilesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Every routine and skill as a Markdown file: export them, edit them anywhere, import them back, or keep them in a GitHub repository.'**
+  String get routinesAsFilesHelp;
+
+  /// No description provided for @exportFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as files'**
+  String get exportFiles;
+
+  /// No description provided for @importFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Import files'**
+  String get importFiles;
+
+  /// No description provided for @importFilesApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get importFilesApply;
+
+  /// No description provided for @filesPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'{created} new, {updated} changed, {unchanged} unchanged'**
+  String filesPreview(int created, int updated, int unchanged);
+
+  /// No description provided for @filesImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported: {created} new, {updated} changed'**
+  String filesImported(int created, int updated);
+
+  /// No description provided for @gitSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Git sync'**
+  String get gitSync;
+
+  /// No description provided for @gitSyncOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get gitSyncOff;
+
+  /// No description provided for @gitSyncHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes in Kasama are committed to the repository, and pushes to it update Kasama after they\'re checked. If a file changed in both places, Kasama keeps its version and opens a pull request. Needs a GITHUB_TOKEN secret allowed for api.github.com.'**
+  String get gitSyncHelp;
+
+  /// No description provided for @gitSyncNeedsToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a GITHUB_TOKEN secret'**
+  String get gitSyncNeedsToken;
+
+  /// No description provided for @gitSyncLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {date}'**
+  String gitSyncLast(String date);
+
+  /// No description provided for @gitSyncPr.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull request waiting for you'**
+  String get gitSyncPr;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncNow;
+
+  /// No description provided for @syncQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing within a minute'**
+  String get syncQueued;
+
+  /// No description provided for @gitBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch'**
+  String get gitBranch;
+
+  /// No description provided for @gitFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder in the repository (optional)'**
+  String get gitFolder;
+
+  /// No description provided for @gitSyncOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync on'**
+  String get gitSyncOn;
+
+  /// No description provided for @gitSyncRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop syncing'**
+  String get gitSyncRemove;
+
+  /// No description provided for @gitWebhookTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add this webhook to the repository'**
+  String get gitWebhookTitle;
+
+  /// No description provided for @gitWebhookHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'In the repository\'s settings, add a webhook for push events with this address and secret (content type application/json). The secret is shown only now.'**
+  String get gitWebhookHelp;
+
+  /// No description provided for @gitWebhookUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Payload URL'**
+  String get gitWebhookUrl;
+
+  /// No description provided for @gitWebhookSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret'**
+  String get gitWebhookSecret;
 }
 
 class _AppLocalizationsDelegate

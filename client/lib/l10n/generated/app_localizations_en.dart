@@ -4335,4 +4335,82 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return 'Added $_temp0';
   }
+
+  @override
+  String get routinesAsFiles => 'Routines and skills as files';
+
+  @override
+  String get routinesAsFilesHelp =>
+      'Every routine and skill as a Markdown file: export them, edit them anywhere, import them back, or keep them in a GitHub repository.';
+
+  @override
+  String get exportFiles => 'Export as files';
+
+  @override
+  String get importFiles => 'Import files';
+
+  @override
+  String get importFilesApply => 'Apply';
+
+  @override
+  String filesPreview(int created, int updated, int unchanged) {
+    return '$created new, $updated changed, $unchanged unchanged';
+  }
+
+  @override
+  String filesImported(int created, int updated) {
+    return 'Imported: $created new, $updated changed';
+  }
+
+  @override
+  String get gitSync => 'Git sync';
+
+  @override
+  String get gitSyncOff => 'Off';
+
+  @override
+  String get gitSyncHelp =>
+      'Changes in Kasama are committed to the repository, and pushes to it update Kasama after they\'re checked. If a file changed in both places, Kasama keeps its version and opens a pull request. Needs a GITHUB_TOKEN secret allowed for api.github.com.';
+
+  @override
+  String get gitSyncNeedsToken => 'Needs a GITHUB_TOKEN secret';
+
+  @override
+  String gitSyncLast(String date) {
+    return 'Synced $date';
+  }
+
+  @override
+  String get gitSyncPr => 'Pull request waiting for you';
+
+  @override
+  String get syncNow => 'Sync now';
+
+  @override
+  String get syncQueued => 'Syncing within a minute';
+
+  @override
+  String get gitBranch => 'Branch';
+
+  @override
+  String get gitFolder => 'Folder in the repository (optional)';
+
+  @override
+  String get gitSyncOn => 'Sync on';
+
+  @override
+  String get gitSyncRemove => 'Stop syncing';
+
+  @override
+  String get gitWebhookTitle => 'Add this webhook to the repository';
+
+  @override
+  String get gitWebhookHelp =>
+      'In the repository\'s settings, add a webhook for push events with this address and secret (content type application/json). The secret is shown only now.';
+
+  @override
+  String get gitWebhookUrl => 'Payload URL';
+
+  @override
+  String get gitWebhookSecret => 'Secret';
 }

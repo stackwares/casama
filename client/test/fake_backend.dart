@@ -569,6 +569,37 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  // Routines and skills as files (D-124)
+  final fileActions = <String>[];
+  GitSyncStatus gitStatus = GitSyncStatus(
+      configured: false, repo: null, branch: null, path: null, enabled: false, hasToken: true, webhookUrl: null, webhookSecret: null, lastSyncedAt: null, lastCommit: null, lastError: null, openPrUrl: null);
+  @override
+  Future<Uint8List> exportWorkspaceFiles(String orgId) async {
+    fileActions.add('export');
+    return Uint8List.fromList([80, 75]);
+  }
+  @override
+  Future<WorkspaceFilesResult> importWorkspaceFiles(String orgId, Uint8List zip, {bool dryRun = false}) async {
+    fileActions.add(dryRun ? 'dry' : 'import');
+    return WorkspaceFilesResult(created: const ['ada/routines/weekly.md'], updated: const ['ada/routines/brief.md'], deleted: const [], unchanged: 2, errors: const ['ada/routines/bad.md: bad cron'], dryRun: dryRun);
+  }
+  @override
+  Future<GitSyncStatus> gitSync(String orgId) async => gitStatus;
+  @override
+  Future<GitSyncStatus> setGitSync(String orgId, {required String repo, String? branch, String? path, bool enabled = true}) async {
+    fileActions.add('git:$repo:$branch:$path');
+    gitStatus = GitSyncStatus(
+        configured: true, repo: repo, branch: branch, path: path, enabled: enabled, hasToken: true, webhookUrl: 'https://api.example.com/hooks/git-sync/o', webhookSecret: 'sec-1', lastSyncedAt: null, lastCommit: null, lastError: null, openPrUrl: null);
+    return gitStatus;
+  }
+  @override
+  Future<GitSyncStatus> runGitSync(String orgId) async {
+    fileActions.add('run');
+    return gitStatus;
+  }
+  @override
+  Future<GitSyncStatus> deleteGitSync(String orgId) async => gitStatus;
+
   // Import an agent (D-122)
   BotTemplateFile? importedTemplate;
   final importActions = <String>[];

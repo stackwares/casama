@@ -362,6 +362,13 @@ abstract class Backend {
   Future<void> revokeMcpKey(String orgId, String keyId);
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
+  // Routines and skills as files (D-124)
+  Future<Uint8List> exportWorkspaceFiles(String orgId);
+  Future<WorkspaceFilesResult> importWorkspaceFiles(String orgId, Uint8List zip, {bool dryRun = false});
+  Future<GitSyncStatus> gitSync(String orgId);
+  Future<GitSyncStatus> setGitSync(String orgId, {required String repo, String? branch, String? path, bool enabled = true});
+  Future<GitSyncStatus> runGitSync(String orgId);
+  Future<GitSyncStatus> deleteGitSync(String orgId);
   // Import an agent (D-122)
   Future<AgentImportPlan> startAgentImport(String orgId, {Uint8List? zip, Map<String, Uint8List>? files});
   Future<int> writeAgentImportFiles(String importId, String botId);

@@ -2249,6 +2249,40 @@ export const agentImports = pgTable("agent_imports", {
 	check("agent_imports_kind_check", sql`kind = ANY (ARRAY['openclaw'::text, 'hermes'::text])`),
 ]);
 
+export const orgGitSync = pgTable("org_git_sync", {
+	orgId: uuid("org_id").primaryKey().notNull(),
+	repo: text().notNull(),
+	branch: text().default('main').notNull(),
+	path: text().default("").notNull(),
+	enabled: boolean().default(true).notNull(),
+	webhookSecretId: uuid("webhook_secret_id"),
+	synced: jsonb().default({}).notNull(),
+	lastCommit: text("last_commit"),
+	dirtyAt: timestamp("dirty_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	checkedAt: timestamp("checked_at", { withTimezone: true, mode: 'string' }),
+	lastSyncedAt: timestamp("last_synced_at", { withTimezone: true, mode: 'string' }),
+	lastError: text("last_error"),
+	openPrUrl: text("open_pr_url"),
+	createdBy: uuid("created_by"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "org_git_sync_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "org_git_sync_created_by_fkey"
+		}).onDelete("set null"),
+	pgPolicy("org_git_sync_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("org_git_sync_repo_check", sql`repo ~ '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'::text`),
+	check("org_git_sync_branch_check", sql`(char_length(branch) >= 1) AND (char_length(branch) <= 200)`),
+	check("org_git_sync_path_check", sql`char_length(path) <= 200`),
+]);
+
 export const agentImportFiles = pgTable("agent_import_files", {
 	importId: uuid("import_id").notNull(),
 	path: text().notNull(),

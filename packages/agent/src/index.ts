@@ -42,3 +42,5 @@ export * from "./tools/setup.ts";
 export * from "./tools/skills.ts";
 export * from "./voice.ts";
 export * from "./watchers.ts";
+export * from "./git-sync.ts";
+export * from "./workspace-files.ts";

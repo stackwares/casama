@@ -142,6 +142,12 @@ Class | Method | HTTP request | Description
 [*CredentialsApi*](doc/CredentialsApi.md) | [**startChatGptSignIn**](doc/CredentialsApi.md#startchatgptsignin) | **POST** /v1/credentials/chatgpt/start | Begin ChatGPT sign-in; returns the authorize URL for a loopback callback
 [*CredentialsApi*](doc/CredentialsApi.md) | [**testCredential**](doc/CredentialsApi.md#testcredential) | **POST** /v1/credentials/{id}/test | Validate a key with a 1-token call
 [*CredentialsApi*](doc/CredentialsApi.md) | [**updateCredential**](doc/CredentialsApi.md#updatecredential) | **PATCH** /v1/credentials/{id} | Rename a credential or change its settings
+[*FilesApi*](doc/FilesApi.md) | [**deleteGitSync**](doc/FilesApi.md#deletegitsync) | **DELETE** /v1/orgs/{id}/git-sync | 
+[*FilesApi*](doc/FilesApi.md) | [**exportWorkspaceFiles**](doc/FilesApi.md#exportworkspacefiles) | **POST** /v1/orgs/{id}/files/export | Routines and skills as Markdown files, zipped (D-124)
+[*FilesApi*](doc/FilesApi.md) | [**getGitSync**](doc/FilesApi.md#getgitsync) | **GET** /v1/orgs/{id}/git-sync | 
+[*FilesApi*](doc/FilesApi.md) | [**importWorkspaceFiles**](doc/FilesApi.md#importworkspacefiles) | **POST** /v1/orgs/{id}/files/import | Create and update routines and skills from files (dry_run shows what would change)
+[*FilesApi*](doc/FilesApi.md) | [**runGitSync**](doc/FilesApi.md#rungitsync) | **POST** /v1/orgs/{id}/git-sync/run | Sync on the worker&#39;s next minute
+[*FilesApi*](doc/FilesApi.md) | [**setGitSync**](doc/FilesApi.md#setgitsync) | **PUT** /v1/orgs/{id}/git-sync | 
 [*ImportApi*](doc/ImportApi.md) | [**getMemoryImportPrompt**](doc/ImportApi.md#getmemoryimportprompt) | **GET** /v1/memory-import/prompt | The prompt to paste into ChatGPT or Claude to get your saved memories
 [*ImportApi*](doc/ImportApi.md) | [**parseMemoryImport**](doc/ImportApi.md#parsememoryimport) | **POST** /v1/memory-import/parse | 
 [*ImportApi*](doc/ImportApi.md) | [**saveImportedMemories**](doc/ImportApi.md#saveimportedmemories) | **POST** /v1/bots/{id}/memories/import | Add the memories the person kept
@@ -384,12 +390,14 @@ Class | Method | HTTP request | Description
  - [FulfillSecretRequestBody](doc/FulfillSecretRequestBody.md)
  - [GitHubSkillPreview](doc/GitHubSkillPreview.md)
  - [GitHubSkillPreviewRequest](doc/GitHubSkillPreviewRequest.md)
+ - [GitSyncStatus](doc/GitSyncStatus.md)
  - [GroupChatList](doc/GroupChatList.md)
  - [Health](doc/Health.md)
  - [IceServer](doc/IceServer.md)
  - [ImportBotRequest](doc/ImportBotRequest.md)
  - [ImportBotResponse](doc/ImportBotResponse.md)
  - [ImportBotResponseConnectionsToAddInner](doc/ImportBotResponseConnectionsToAddInner.md)
+ - [ImportWorkspaceFilesRequest](doc/ImportWorkspaceFilesRequest.md)
  - [ImportedMemoryItem](doc/ImportedMemoryItem.md)
  - [InstallCatalogSkillRequest](doc/InstallCatalogSkillRequest.md)
  - [InstallGitHubSkillRequest](doc/InstallGitHubSkillRequest.md)
@@ -521,6 +529,7 @@ Class | Method | HTTP request | Description
  - [SecretResolvedEventPayload](doc/SecretResolvedEventPayload.md)
  - [SendMessageRequest](doc/SendMessageRequest.md)
  - [SendMessageResponse](doc/SendMessageResponse.md)
+ - [SetGitSyncRequest](doc/SetGitSyncRequest.md)
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
  - [SignupChallenge](doc/SignupChallenge.md)
@@ -615,6 +624,9 @@ Class | Method | HTTP request | Description
  - [WatcherList](doc/WatcherList.md)
  - [WorkspaceBadge](doc/WorkspaceBadge.md)
  - [WorkspaceBadgeList](doc/WorkspaceBadgeList.md)
+ - [WorkspaceFilesExport](doc/WorkspaceFilesExport.md)
+ - [WorkspaceFilesExportFilesInner](doc/WorkspaceFilesExportFilesInner.md)
+ - [WorkspaceFilesResult](doc/WorkspaceFilesResult.md)
  - [WriteAgentImportFilesRequest](doc/WriteAgentImportFilesRequest.md)
  - [WriteAgentImportFilesResponse](doc/WriteAgentImportFilesResponse.md)
 

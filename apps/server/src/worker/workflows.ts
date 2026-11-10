@@ -4,6 +4,7 @@ import {
   type ComputerService,
   CredentialResolver,
   checkWatchers,
+  gitSyncTick,
   collect,
   listModels,
   type ModelGateway,
@@ -136,6 +137,12 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       { name: "watchers" },
     );
     runIds.push(...fired);
+    // Git sync of routines and skills (D-124): changed workspaces, and a check every 10 minutes.
+    await DBOS.runStep(
+      () =>
+        gitSyncTick({ db: rt().db, fetch: rt().agent.fetch ?? fetch, apiUrl: process.env.GITHUB_API_URL }).catch(() => []),
+      { name: "git-sync" },
+    );
     for (const runId of runIds) {
       await DBOS.startWorkflow(agentRunWorkflow, { workflowID: runId, queueName: QUEUES.runs })(
         runId,

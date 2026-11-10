@@ -914,6 +914,26 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<Uint8List> exportWorkspaceFiles(String orgId) async => base64Decode((await api.files.exportWorkspaceFiles(id: orgId)).data!.zipBase64);
+
+  @override
+  Future<WorkspaceFilesResult> importWorkspaceFiles(String orgId, Uint8List zip, {bool dryRun = false}) async =>
+      (await api.files.importWorkspaceFiles(id: orgId, importWorkspaceFilesRequest: ImportWorkspaceFilesRequest(zipBase64: base64Encode(zip), dryRun: dryRun))).data!;
+
+  @override
+  Future<GitSyncStatus> gitSync(String orgId) async => (await api.files.getGitSync(id: orgId)).data!;
+
+  @override
+  Future<GitSyncStatus> setGitSync(String orgId, {required String repo, String? branch, String? path, bool enabled = true}) async =>
+      (await api.files.setGitSync(id: orgId, setGitSyncRequest: SetGitSyncRequest(repo: repo, branch: branch, path: path, enabled: enabled))).data!;
+
+  @override
+  Future<GitSyncStatus> runGitSync(String orgId) async => (await api.files.runGitSync(id: orgId)).data!;
+
+  @override
+  Future<GitSyncStatus> deleteGitSync(String orgId) async => (await api.files.deleteGitSync(id: orgId)).data!;
+
+  @override
   Future<AgentImportPlan> startAgentImport(String orgId, {Uint8List? zip, Map<String, Uint8List>? files}) async => (await api.imports.startAgentImport(
         startAgentImportRequest: StartAgentImportRequest(
           orgId: orgId,

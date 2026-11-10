@@ -231,6 +231,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/domain/src/agent-import.ts` (OpenClaw and Hermes Agent folders → a `kasama.bot` template; ChatGPT/Claude memory prompt and parser), `agent_imports`/`agent_import_files`, `apps/server/src/api/routes/agent-import.ts`, and `client/lib/features/bots/agent_import.dart` (review screen, memory sheet).
 
+## Routines and skills as files (D-124)
+
+- `packages/domain/src/workspace-files.ts` (file formats), `packages/agent/src/workspace-files.ts` (export, apply) and `git-sync.ts` (`syncWorkspaceRepo`, `gitSyncTick` in the worker's minute tick), `org_git_sync` with change triggers, `apps/server/src/api/routes/workspace-files.ts` (export, import, git sync setup, `/hooks/git-sync/<org>`), `kasama files export|import`, and the workspace settings section.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

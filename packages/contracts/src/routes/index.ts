@@ -21,6 +21,7 @@ import * as pages from "./pages.ts";
 import * as plugins from "./plugins.ts";
 import * as teach from "./teach.ts";
 import * as watchers from "./watchers.ts";
+import * as workspaceFiles from "./workspace-files.ts";
 import * as workspaces from "./workspaces.ts";
 
 export const routes = {
@@ -47,6 +48,7 @@ export const routes = {
   ...plugins,
   ...teach,
   ...watchers,
+  ...workspaceFiles,
   ...mcp,
 };
 export {
@@ -72,5 +74,6 @@ export {
   plugins,
   teach,
   watchers,
+  workspaceFiles,
   workspaces,
 };

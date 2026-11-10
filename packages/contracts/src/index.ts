@@ -25,4 +25,5 @@ export * from "./pages.ts";
 export * from "./plugins.ts";
 export * from "./teach.ts";
 export * from "./watchers.ts";
+export * from "./workspace-files.ts";
 export * from "./workspaces.ts";
