@@ -25,6 +25,8 @@ class SendMessageResponse {
     required  this.runId,
 
     required  this.conversationId,
+
+     this.runIds,
   });
 
   @JsonKey(
@@ -63,19 +65,34 @@ class SendMessageResponse {
 
 
 
+      /// Group chats: every bot's run
+  @JsonKey(
+    
+    name: r'run_ids',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? runIds;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is SendMessageResponse &&
       other.messageId == messageId &&
       other.runId == runId &&
-      other.conversationId == conversationId;
+      other.conversationId == conversationId &&
+      other.runIds == runIds;
 
     @override
     int get hashCode =>
         messageId.hashCode +
         runId.hashCode +
-        conversationId.hashCode;
+        conversationId.hashCode +
+        runIds.hashCode;
 
   factory SendMessageResponse.fromJson(Map<String, dynamic> json) => _$SendMessageResponseFromJson(json);
 

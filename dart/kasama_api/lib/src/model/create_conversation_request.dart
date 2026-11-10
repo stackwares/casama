@@ -23,8 +23,11 @@ class CreateConversationRequest {
     required  this.botId,
 
      this.title,
+
+     this.botIds,
   });
 
+      /// The bot, or a group chat's lead
   @JsonKey(
     
     name: r'bot_id',
@@ -49,17 +52,32 @@ class CreateConversationRequest {
 
 
 
+      /// A group chat (D-118): the other bots (the lead may be listed too); 2 to 10 bots in all
+  @JsonKey(
+    
+    name: r'bot_ids',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? botIds;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is CreateConversationRequest &&
       other.botId == botId &&
-      other.title == title;
+      other.title == title &&
+      other.botIds == botIds;
 
     @override
     int get hashCode =>
         botId.hashCode +
-        title.hashCode;
+        title.hashCode +
+        botIds.hashCode;
 
   factory CreateConversationRequest.fromJson(Map<String, dynamic> json) => _$CreateConversationRequestFromJson(json);
 

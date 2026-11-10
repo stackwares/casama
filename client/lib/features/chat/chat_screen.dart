@@ -14,6 +14,7 @@ import '../../core/voice.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../groups/group_chats.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/adaptive_modal.dart';
@@ -63,7 +64,10 @@ List<(String, String)> _suggestions(BuildContext context) {
 }
 
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({super.key, required this.botId, this.conversationId, this.focusMessageId});
+  const ChatScreen({super.key, required this.botId, this.conversationId, this.focusMessageId, this.group = false});
+
+  /// A group chat (D-118): replies show which bot wrote them.
+  final bool group;
   final String botId;
   final String? conversationId;
 
@@ -158,7 +162,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
-    Future.microtask(() => ref.read(chatControllerProvider(widget.botId).notifier).open(widget.conversationId));
+    Future.microtask(() {
+      final c = ref.read(chatControllerProvider(widget.botId).notifier)..group = widget.group;
+      return c.open(widget.conversationId);
+    });
   }
 
   @override
@@ -495,6 +502,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (widget.group)
+                          MentionPicker(
+                            botIds: ref.watch(groupChatsProvider).value?.where((g) => g.id == widget.conversationId).firstOrNull?.botIds.toList() ?? const [],
+                            input: _input,
+                          ),
                         _SkillPicker(
                           botId: widget.botId,
                           input: _input,
@@ -618,11 +630,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     var lastSide = '';
     final freshFrom = entries.length - 1;
 
-    void botSide(String key) {
-      if (lastSide != 'bot') {
-        rows.add(_Row(ValueKey('hdr-$key'), lastSide.isEmpty ? 0 : AppSpace.xl, () => BotTurnHeader(name: name, avatar: avatar), header: true));
+    final allBots = ref.read(botsProvider).value ?? const <Bot>[];
+    void botSide(String key, [String? fromBot]) {
+      // In a group chat each bot's turn gets its own header (D-118).
+      final speaker = widget.group && fromBot != null ? allBots.where((b) => b.id == fromBot).firstOrNull : null;
+      final side = speaker == null ? 'bot' : 'bot:${speaker.id}';
+      if (lastSide != side) {
+        rows.add(
+          _Row(
+            ValueKey('hdr-$key'),
+            lastSide.isEmpty ? 0 : AppSpace.xl,
+            () => BotTurnHeader(name: speaker?.name ?? name, avatar: speaker?.avatarUrl ?? avatar),
+            header: true,
+          ),
+        );
       }
-      lastSide = 'bot';
+      lastSide = side;
     }
 
     String? workingStatus() {
@@ -655,7 +678,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           );
           lastSide = 'user';
         case final MessageEntry m:
-          botSide(m.id);
+          botSide(m.id, m.botId);
           rows.add(
             _Row(
               ValueKey(m.id),

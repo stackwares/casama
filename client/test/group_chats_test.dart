@@ -1,0 +1,71 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kasama_app/features/groups/group_chats.dart';
+
+import 'app_test.dart' show harness, setSize;
+import 'fake_backend.dart';
+
+void main() {
+  testWidgets('creating a group chat picks bots, first one leads', (tester) async {
+    await setSize(tester, const Size(900, 1000));
+    final backend = FakeBackend();
+    backend.extraBots.add(backend.bot(id: 'bot-b', name: 'Bea'));
+    await tester.pumpWidget(
+      harness(
+        backend,
+        Consumer(
+          builder: (context, ref, _) => Scaffold(
+            body: TextButton(onPressed: () => showNewGroupChat(context, ref), child: const Text('open')),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pick-$botId')));
+    await tester.pumpAndSettle();
+    expect(find.text('Leads the group'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('pick-bot-b')));
+    await tester.enterText(find.byKey(const Key('groupTitle')), 'Launch crew');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('createGroup')));
+    await tester.pumpAndSettle();
+    expect(backend.groups.single.botIds, [botId, 'bot-b']);
+    expect(backend.groups.single.title, 'Launch crew');
+  });
+
+  testWidgets('typing @ suggests the group bots and everyone', (tester) async {
+    final backend = FakeBackend();
+    backend.extraBots.add(backend.bot(id: 'bot-b', name: 'Bea'));
+    final input = TextEditingController();
+    addTearDown(input.dispose);
+    await tester.pumpWidget(
+      harness(
+        backend,
+        Scaffold(
+          body: Column(
+            children: [
+              MentionPicker(botIds: const [botId, 'bot-b'], input: input),
+              TextField(controller: input),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('mentionPicker')), findsNothing);
+    input.text = 'hi @B';
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('mention-Bea')), findsOneWidget);
+    expect(find.byKey(const Key('mention-Ada')), findsNothing);
+    await tester.tap(find.byKey(const Key('mention-Bea')));
+    await tester.pumpAndSettle();
+    expect(input.text, 'hi @Bea ');
+    input.text = '@';
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('mention-everyone')), findsOneWidget);
+    expect(find.byKey(const Key('mention-Ada')), findsOneWidget);
+  });
+}

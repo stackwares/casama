@@ -174,10 +174,10 @@ class FakeBackend implements Backend {
         source_: ModelOptionListSource_Enum.live,
       );
 
-  Bot bot({BotStatusEnum status = BotStatusEnum.idle}) => Bot(
-        id: botId,
+  Bot bot({BotStatusEnum status = BotStatusEnum.idle, String id = botId, String name = 'Ada'}) => Bot(
+        id: id,
         orgId: orgId,
-        name: 'Ada',
+        name: name,
         avatarUrl: null,
         personaMd: '',
         modelPolicy: ModelPolicy(primary: ModelChoice(credentialId: 'cred', model: 'fixture')),
@@ -499,8 +499,11 @@ class FakeBackend implements Backend {
   @override
   Future<List<Bot>> bots(String orgId) async {
     if (offline) throw Exception('offline');
-    return [if (!archived.contains(botId)) bot()];
+    return [if (!archived.contains(botId)) bot(), ...extraBots];
   }
+
+  /// More bots, for group chat tests.
+  final extraBots = <Bot>[];
   @override
   Future<Bot> createBot(String orgId,
       {required String name, required String credentialId, required String model, String persona = '', String? templateId, String? avatarUrl}) async {
@@ -560,9 +563,28 @@ class FakeBackend implements Backend {
 
   @override
   Future<List<Conversation>> conversations(String botId) async =>
-      [Conversation(id: convId, botId: botId, title: 'Hello', lastMessageAt: null, createdAt: DateTime(2026))];
+      [Conversation(id: convId, botId: botId, title: 'Hello', lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId])];
   @override
-  Future<Conversation> createConversation(String botId) async => Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026));
+  Future<Conversation> createConversation(String botId) async =>
+      Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
+
+  final groups = <Conversation>[];
+  @override
+  Future<List<Conversation>> groupChats(String orgId) async => groups;
+  @override
+  Future<Conversation> createGroupChat(String leadBotId, List<String> botIds, {String? title}) async {
+    final c = Conversation(
+      id: 'group-${groups.length + 1}',
+      botId: leadBotId,
+      title: title,
+      lastMessageAt: null,
+      createdAt: DateTime(2026),
+      kind: ConversationKindEnum.group,
+      botIds: [leadBotId, ...botIds],
+    );
+    groups.add(c);
+    return c;
+  }
   @override
   Future<List<ChatMessageView>> messages(String conversationId) async {
     if (offline) throw Exception('offline');

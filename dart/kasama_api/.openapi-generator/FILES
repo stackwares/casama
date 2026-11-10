@@ -155,6 +155,7 @@ lib/src/model/for_you_brief.dart
 lib/src/model/fulfill_secret_request_body.dart
 lib/src/model/git_hub_skill_preview.dart
 lib/src/model/git_hub_skill_preview_request.dart
+lib/src/model/group_chat_list.dart
 lib/src/model/health.dart
 lib/src/model/ice_server.dart
 lib/src/model/import_bot_request.dart

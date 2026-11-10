@@ -1,7 +1,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { routes } from "@kasama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@kasama/db";
-import { templateById } from "@kasama/domain";
+import { parseMentions, templateById } from "@kasama/domain";
 import { withSpan } from "@kasama/observability";
 import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { streamSSE } from "hono/streaming";
@@ -42,11 +42,13 @@ const botOut = (b: BotRow) => ({
 });
 
 type ConvRow = typeof conversations.$inferSelect;
-const convOut = (c: ConvRow) => ({
+const convOut = (c: ConvRow, botIds: string[] = []) => ({
   id: c.id,
   bot_id: c.botId,
   title: c.title,
   last_message_at: c.lastMessageAt ? iso(c.lastMessageAt) : null,
+  kind: (c.kind ?? "direct") as "direct",
+  bot_ids: botIds.length ? botIds : [c.botId],
   created_at: iso(c.createdAt),
 });
 
@@ -272,14 +274,28 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         .from(bots)
         .where(eq(bots.id, body.bot_id));
       if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
+      // A group chat (D-118): the lead first, then the others, all in this workspace and visible to you.
+      const ids = body.bot_ids ? [body.bot_id, ...body.bot_ids.filter((b) => b !== body.bot_id)] : [];
+      if (ids.length > 10) throw new ApiError(400, "too_many_bots", "A group chat has up to 10 bots");
+      if (body.bot_ids && ids.length < 2) throw new ApiError(400, "too_few_bots", "A group chat needs at least 2 bots");
+      if (ids.length) {
+        const seen = await tx.execute<{ id: string }>(sql`
+          select id from public.bots where org_id = ${bot.orgId}::uuid and archived_at is null and public.can_access_bot(id)
+            and id in (select jsonb_array_elements_text(${JSON.stringify(ids)}::jsonb)::uuid)`);
+        if (seen.length !== ids.length) throw new ApiError(400, "bot_not_found", "Every bot must be in this workspace and visible to you");
+      }
       const [row] = await tx
         .insert(conversations)
-        .values({ orgId: bot.orgId, botId: body.bot_id, title: body.title, createdBy: claims.sub })
+        .values({ orgId: bot.orgId, botId: body.bot_id, title: body.title, createdBy: claims.sub, kind: ids.length ? "group" : "direct" })
         .returning();
-      return row;
+      for (const [i, b] of ids.entries())
+        await tx.execute(sql`
+          insert into public.conversation_bots (conversation_id, bot_id, org_id, role, position)
+          values (${row?.id}::uuid, ${b}::uuid, ${bot.orgId}::uuid, ${i === 0 ? "lead" : "member"}, ${i})`);
+      return row ? { row, ids } : undefined;
     });
     if (!conv) throw new Error("conversation insert returned nothing");
-    return c.json(convOut(conv), 201);
+    return c.json(convOut(conv.row, conv.ids), 201);
   });
 
   app.openapi(routes.listConversations, async (c) => {
@@ -291,11 +307,32 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       return tx
         .select()
         .from(conversations)
-        .where(eq(conversations.botId, id))
+        .where(and(eq(conversations.botId, id), eq(conversations.kind, "direct")))
         .orderBy(desc(sql`coalesce(${conversations.lastMessageAt}, ${conversations.createdAt})`))
         .limit(100);
     });
-    return c.json({ items: rows.map(convOut) }, 200);
+    return c.json({ items: rows.map((r) => convOut(r)) }, 200);
+  });
+
+  app.openapi(routes.listGroupChats, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { org_id } = c.req.valid("query");
+    const out = await withUserSession(db, claims, async (tx) => {
+      const rows = await tx
+        .select()
+        .from(conversations)
+        .where(and(eq(conversations.orgId, org_id), eq(conversations.kind, "group")))
+        .orderBy(desc(sql`coalesce(${conversations.lastMessageAt}, ${conversations.createdAt})`))
+        .limit(100);
+      const members = rows.length
+        ? await tx.execute<{ conversation_id: string; bot_id: string }>(sql`
+            select conversation_id, bot_id from public.conversation_bots
+            where conversation_id in (select jsonb_array_elements_text(${JSON.stringify(rows.map((r) => r.id))}::jsonb)::uuid)
+            order by position`)
+        : [];
+      return rows.map((r) => convOut(r, members.filter((m) => m.conversation_id === r.id).map((m) => m.bot_id)));
+    });
+    return c.json({ items: out }, 200);
   });
 
   app.openapi(routes.editMessage, async (c) => {
@@ -372,10 +409,55 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json({ head_message_id: head }, 200);
   });
 
+  /** A message in a group chat (D-118): the mentioned bots (or @everyone's lead, or whoever spoke last) each get a run. */
+  const sendGroup = async (claims: JwtClaims, id: string, text: string, parts: unknown[]) => {
+    const created = await withUserSession(db, claims, async (tx) => {
+      const [conv] = await tx.execute<{ org_id: string; bot_id: string }>(sql`select org_id, bot_id from public.conversations where id = ${id}::uuid`);
+      if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
+      const members = await tx.execute<{ id: string; name: string; role: string }>(sql`
+        select b.id, b.name, cb.role from public.conversation_bots cb join public.bots b on b.id = cb.bot_id
+        where cb.conversation_id = ${id}::uuid order by cb.position`);
+      const { everyone, botIds } = parseMentions(text, members);
+      let targets = everyone ? [conv.bot_id] : botIds;
+      if (!targets.length) {
+        const [last] = await tx.execute<{ bot_id: string }>(sql`
+          select bot_id from public.messages where conversation_id = ${id}::uuid and role = 'assistant' and bot_id is not null
+          order by created_at desc limit 1`);
+        targets = [last?.bot_id && members.some((m) => m.id === last.bot_id) ? last.bot_id : conv.bot_id];
+      }
+      const [msg] = await tx.execute<{ id: string }>(sql`
+        insert into public.messages (org_id, conversation_id, role, author_user_id, content)
+        values (${conv.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${JSON.stringify(parts)}::jsonb) returning id`);
+      const runIds: string[] = [];
+      for (const botId of targets) {
+        const [run] = await tx.execute<{ id: string }>(sql`
+          insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger, trigger_message_id)
+          values (${conv.org_id}::uuid, ${botId}::uuid, ${id}::uuid, ${claims.sub}::uuid, 'chat', ${msg?.id}::uuid) returning id`);
+        if (run) runIds.push(run.id);
+      }
+      await tx.execute(sql`update public.conversations set last_message_at = now() where id = ${id}::uuid`);
+      return { messageId: msg?.id as string, runIds };
+    });
+    for (const r of created.runIds) await deps.workflows.startRun(r);
+    return { message_id: created.messageId, run_id: created.runIds[0] as string, conversation_id: id, run_ids: created.runIds };
+  };
+
   app.openapi(routes.sendMessage, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const { text, attachments, ui_action, skills: picked } = c.req.valid("json");
+    const [kind] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ kind: string }>(sql`select kind from public.conversations where id = ${id}::uuid`),
+    );
+    if (kind?.kind === "group")
+      return c.json(
+        await sendGroup(claims, id, text, [
+          { type: "text", text },
+          ...(attachments ?? []).map((f) => ({ type: "file", ...f })),
+          ...(picked ?? []).map((name) => ({ type: "skill", name })),
+        ]),
+        202,
+      );
     return withSpan("chat.send", { conversation_id: id }, async (span) => {
       const created = await withUserSession(db, claims, async (tx) => {
         const [conv] = await tx.select().from(conversations).where(eq(conversations.id, id));

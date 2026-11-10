@@ -1983,5 +1983,11 @@
   "mcpApprovalsHelp": "Connected apps can approve or deny your bots' actions. Off by default.",
   "apiKeyOnce": "Copy this key now; it won't be shown again.",
   "newApiKey": "New API key",
-  "apiKeyName": "Name"
+  "apiKeyName": "Name",
+  "newGroupChat": "New group chat",
+  "newGroupChatHelp": "Pick 2 to 10 bots. The first one leads: @everyone asks it for a plan. @Name wakes one bot.",
+  "groupTitle": "Name (optional)",
+  "groupPickBots": "Bots",
+  "groupLead": "Leads the group",
+  "mentionEveryone": "everyone"
 }

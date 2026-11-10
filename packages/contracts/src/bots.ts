@@ -92,12 +92,23 @@ export const Conversation = z
     bot_id: Uuid,
     title: z.string().nullable(),
     last_message_at: ts.nullable(),
+    kind: z.enum(["direct", "group"]),
+    bot_ids: z.array(Uuid).openapi({ description: "Group chats: every bot, the lead first (D-118)" }),
     created_at: ts,
   })
   .openapi("Conversation");
 
 export const CreateConversationRequest = z
-  .object({ bot_id: Uuid, title: z.string().max(200).optional() })
+  .object({
+    bot_id: Uuid.openapi({ description: "The bot, or a group chat's lead" }),
+    title: z.string().max(200).optional(),
+    bot_ids: z
+      .array(Uuid)
+      .min(1)
+      .max(10)
+      .optional()
+      .openapi({ description: "A group chat (D-118): the other bots (the lead may be listed too); 2 to 10 bots in all" }),
+  })
   .openapi("CreateConversationRequest");
 
 export const MessageAttachment = z
@@ -158,7 +169,12 @@ export const SwitchBranchResponse = z
   .openapi("SwitchBranchResponse");
 
 export const SendMessageResponse = z
-  .object({ message_id: Uuid, run_id: Uuid, conversation_id: Uuid })
+  .object({
+    message_id: Uuid,
+    run_id: Uuid,
+    conversation_id: Uuid,
+    run_ids: z.array(Uuid).optional().openapi({ description: "Group chats: every bot's run" }),
+  })
   .openapi("SendMessageResponse");
 
 export const RunStatus = z

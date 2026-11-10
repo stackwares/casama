@@ -211,6 +211,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `apps/server/src/api/routes/mcp.ts` (`/mcp` with `@kasama/mcp` tools over in-process API calls, the OAuth server, consent, API keys), `mcp_clients`/`mcp_auth_requests`/`mcp_tokens`, `organizations.mcp_decide_approvals`, `docs/MCP.md`, and the app's consent screen and Connect AI apps section.
 
+## Group chats (D-118)
+
+- `conversation_bots`, `conversations.kind`, `messages.bot_id`, `runs.trigger_message_id|hop`; `packages/domain/src/mentions.ts`; group handling in `run.ts` (other bots' messages as labelled chat, `wakeMentioned` with a 6-hop cap, `RunDeps.startRun`); `sendGroup` and `/v1/group-chats` in `apps/server/src/api/routes/bots.ts`; `client/lib/features/groups/`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

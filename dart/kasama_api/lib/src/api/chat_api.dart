@@ -13,6 +13,7 @@ import 'package:kasama_api/src/model/conversation.dart';
 import 'package:kasama_api/src/model/conversation_list.dart';
 import 'package:kasama_api/src/model/create_conversation_request.dart';
 import 'package:kasama_api/src/model/edit_message_request.dart';
+import 'package:kasama_api/src/model/group_chat_list.dart';
 import 'package:kasama_api/src/model/send_message_request.dart';
 import 'package:kasama_api/src/model/send_message_response.dart';
 import 'package:kasama_api/src/model/switch_branch_request.dart';
@@ -290,6 +291,89 @@ _responseData = rawData == null ? null : deserialize<ConversationList, Conversat
     }
 
     return Response<ConversationList>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Group chats in a workspace that you can see (D-118)
+  /// 
+  ///
+  /// Parameters:
+  /// * [orgId] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [GroupChatList] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<GroupChatList>> listGroupChats({ 
+    required String orgId,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/group-chats';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'org_id': orgId,
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    GroupChatList? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<GroupChatList, GroupChatList>(rawData, 'GroupChatList', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<GroupChatList>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

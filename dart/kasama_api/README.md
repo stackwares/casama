@@ -102,6 +102,7 @@ Class | Method | HTTP request | Description
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**editMessage**](doc/ChatApi.md#editmessage) | **POST** /v1/conversations/{id}/messages/{message_id}/edit | Edit a sent message: forks the conversation there and reruns it (the old branch stays)
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
+[*ChatApi*](doc/ChatApi.md) | [**listGroupChats**](doc/ChatApi.md#listgroupchats) | **GET** /v1/group-chats | Group chats in a workspace that you can see (D-118)
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
 [*ChatApi*](doc/ChatApi.md) | [**switchBranch**](doc/ChatApi.md#switchbranch) | **POST** /v1/conversations/{id}/branch | Show another branch of the conversation (its newest message under the given one)
 [*CheckinsApi*](doc/CheckinsApi.md) | [**acceptSuggestion**](doc/CheckinsApi.md#acceptsuggestion) | **POST** /v1/suggestions/{id}/accept | Have the bot do it, through normal approvals
@@ -349,6 +350,7 @@ Class | Method | HTTP request | Description
  - [FulfillSecretRequestBody](doc/FulfillSecretRequestBody.md)
  - [GitHubSkillPreview](doc/GitHubSkillPreview.md)
  - [GitHubSkillPreviewRequest](doc/GitHubSkillPreviewRequest.md)
+ - [GroupChatList](doc/GroupChatList.md)
  - [Health](doc/Health.md)
  - [IceServer](doc/IceServer.md)
  - [ImportBotRequest](doc/ImportBotRequest.md)

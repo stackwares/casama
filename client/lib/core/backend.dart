@@ -38,6 +38,7 @@ class ChatMessageView {
     this.uiActionSurface,
     this.siblingIndex = 1,
     this.siblingCount = 1,
+    this.botId,
   });
   /// For the offline cache (D-112): text, attachments and versions; bot UIs are left out.
   Map<String, Object?> toJson() => {
@@ -49,6 +50,7 @@ class ChatMessageView {
         'attachments': [for (final a in attachments) a.toJson()],
         'sibling_index': siblingIndex,
         'sibling_count': siblingCount,
+        'bot_id': botId,
       };
   static ChatMessageView fromJson(Map<String, dynamic> j) => ChatMessageView(
         id: j['id'] as String,
@@ -59,6 +61,7 @@ class ChatMessageView {
         attachments: [for (final a in (j['attachments'] as List? ?? const [])) AttachmentRef.fromJson(a as Map<String, dynamic>)],
         siblingIndex: (j['sibling_index'] as num?)?.toInt() ?? 1,
         siblingCount: (j['sibling_count'] as num?)?.toInt() ?? 1,
+        botId: j['bot_id'] as String?,
       );
 
   final String id;
@@ -68,6 +71,9 @@ class ChatMessageView {
   /// Its place among edited versions of the same message (D-108).
   final int siblingIndex;
   final int siblingCount;
+
+  /// The bot that wrote it (group chats show it; D-118).
+  final String? botId;
   final String? runId;
   final List<AttachmentRef> attachments;
 
@@ -226,6 +232,9 @@ abstract class Backend {
 
   // Bots
   Future<List<Bot>> bots(String orgId);
+  /// Group chats (D-118).
+  Future<List<Conversation>> groupChats(String orgId);
+  Future<Conversation> createGroupChat(String leadBotId, List<String> botIds, {String? title});
   Future<Bot> createBot(String orgId,
       {required String name, required String credentialId, required String model, String persona, String? templateId, String? avatarUrl});
   Future<List<Template>> templates();

@@ -347,3 +347,14 @@ export const switchBranch = createRoute({
   request: { params: idParam, body: jsonBody(SwitchBranchRequest) },
   responses: { 200: jsonResponse("Head", SwitchBranchResponse), 401: e401, 404: e404 },
 });
+
+export const listGroupChats = createRoute({
+  operationId: "listGroupChats",
+  method: "get",
+  path: "/v1/group-chats",
+  tags: ["chat"],
+  security,
+  summary: "Group chats in a workspace that you can see (D-118)",
+  request: { query: z.object({ org_id: Uuid }) },
+  responses: { 200: jsonResponse("Group chats", list("GroupChatList", Conversation)), 401: e401 },
+});

@@ -24,8 +24,12 @@ class MessageEntry extends ChatEntry {
     this.attachments = const [],
     this.siblingIndex = 1,
     this.siblingCount = 1,
+    this.botId,
   });
   final String id;
+
+  /// The bot that wrote it, in group chats (D-118).
+  final String? botId;
   final String role;
   final String text;
   final bool streaming;
@@ -42,6 +46,7 @@ class MessageEntry extends ChatEntry {
         attachments: attachments,
         siblingIndex: siblingIndex,
         siblingCount: siblingCount,
+        botId: botId,
       );
 }
 
@@ -208,7 +213,7 @@ class ChatController extends Notifier<ChatState> {
         entries: [
           for (final m in messages) ...[
             if (m.text.isNotEmpty || m.attachments.isNotEmpty || m.ui.isEmpty)
-              MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments, siblingIndex: m.siblingIndex, siblingCount: m.siblingCount),
+              MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments, siblingIndex: m.siblingIndex, siblingCount: m.siblingCount, botId: m.botId),
             for (final u in m.ui) UiEntry(surfaceId: u.surfaceId, messages: u.messages),
           ],
         ],
@@ -217,6 +222,10 @@ class ChatController extends Notifier<ChatState> {
 
   /// Opens a conversation: saved messages show at once (D-112), then the server's replace them.
   /// Offline, the saved ones stay with a note.
+  /// A group chat (D-118): several bots answer one message, so after each run the thread reloads
+  /// and follows the next bot still working.
+  bool group = false;
+
   Future<void> open(String? conversationId) async {
     await _sub?.cancel();
     state = const ChatState(loading: true);
@@ -328,6 +337,8 @@ class ChatController extends Notifier<ChatState> {
             if (state.activeRunId == runId) state = state.copyWith(clearActiveRun: true);
             ref.invalidate(botsProvider);
             ref.invalidate(usageTodayProvider);
+            final conv = state.conversationId;
+            if (group && conv != null) unawaited(Future<void>.delayed(const Duration(milliseconds: 300), () => open(conv)));
           },
         );
   }

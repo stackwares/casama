@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/backend.dart';
 import '../search/search_view.dart';
+import '../groups/group_chats.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -296,6 +297,8 @@ class _Sidebar extends ConsumerWidget {
     final l10n = context.l10n;
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     final folders = ref.watch(botFoldersProvider).value ?? const <BotFolder>[];
+    final groups = ref.watch(groupChatsProvider).value ?? const <Conversation>[];
+    final location = GoRouter.maybeOf(context)?.state.uri.path ?? '';
     final scheme = context.colorScheme;
     return SafeArea(
       right: false,
@@ -348,6 +351,24 @@ class _Sidebar extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 12),
                 children: [
+                  // Group chats (D-118).
+                  for (final g in groups)
+                    _SidebarItem(
+                      key: Key('sidebar-group-${g.id}'),
+                      height: 44,
+                      leading: Icon(LucideIcons.users, size: 20, color: scheme.onSurfaceVariant),
+                      label: groupTitle(g, bots),
+                      selected: location == '/groups/${g.id}',
+                      onTap: () => context.go('/groups/${g.id}'),
+                    ),
+                  _SidebarItem(
+                    key: const Key('newGroupChat'),
+                    height: 40,
+                    leading: Icon(LucideIcons.usersRound, size: 18, color: scheme.onSurfaceVariant),
+                    label: l10n.newGroupChat,
+                    selected: false,
+                    onTap: () => showNewGroupChat(context, ref),
+                  ),
                   // Bots outside folders first, then each folder in order (D-100).
                   for (final (folder, group) in groupBotsByFolder(bots, folders)) ...[
                     if (folder != null)

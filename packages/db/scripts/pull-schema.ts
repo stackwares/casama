@@ -59,7 +59,7 @@ try {
         );
       // Foreign keys that make a type cycle between two tables (conversations ↔ messages,
       // projects ↔ conversations). The app never needs their metadata; the database keeps them.
-      for (const name of ["conversations_head_message_id_fkey", "projects_conversation_id_fkey"]) {
+      for (const name of ["conversations_head_message_id_fkey", "projects_conversation_id_fkey", "runs_trigger_message_id_fkey"]) {
         src = src.replace(
           new RegExp(
             `\\tforeignKey\\(\\{\\n(?:\\t\\t\\t[^\\n]*\\n){2}\\t\\t\\tname: "${name}"\\n\\t\\t\\}\\)[^\\n]*\\n`,

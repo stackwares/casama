@@ -28,6 +28,10 @@ class Conversation {
 
     required  this.lastMessageAt,
 
+    required  this.kind,
+
+    required  this.botIds,
+
     required  this.createdAt,
   });
 
@@ -81,6 +85,31 @@ class Conversation {
 
   @JsonKey(
     
+    name: r'kind',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final ConversationKindEnum kind;
+
+
+
+      /// Group chats: every bot, the lead first (D-118)
+  @JsonKey(
+    
+    name: r'bot_ids',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final List<String> botIds;
+
+
+
+  @JsonKey(
+    
     name: r'created_at',
     required: true,
     includeIfNull: false,
@@ -99,6 +128,8 @@ class Conversation {
       other.botId == botId &&
       other.title == title &&
       other.lastMessageAt == lastMessageAt &&
+      other.kind == kind &&
+      other.botIds == botIds &&
       other.createdAt == createdAt;
 
     @override
@@ -107,6 +138,8 @@ class Conversation {
         botId.hashCode +
         (title == null ? 0 : title.hashCode) +
         (lastMessageAt == null ? 0 : lastMessageAt.hashCode) +
+        kind.hashCode +
+        botIds.hashCode +
         createdAt.hashCode;
 
   factory Conversation.fromJson(Map<String, dynamic> json) => _$ConversationFromJson(json);
@@ -119,4 +152,20 @@ class Conversation {
   }
 
 }
+
+
+enum ConversationKindEnum {
+@JsonValue(r'direct')
+direct(r'direct'),
+@JsonValue(r'group')
+group(r'group');
+
+const ConversationKindEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
 

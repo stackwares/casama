@@ -13,6 +13,8 @@ abstract class _$SendMessageResponseCWProxy {
 
   SendMessageResponse conversationId(String conversationId);
 
+  SendMessageResponse runIds(List<String>? runIds);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `SendMessageResponse(...).copyWith.fieldName(value)`.
@@ -25,6 +27,7 @@ abstract class _$SendMessageResponseCWProxy {
     String messageId,
     String runId,
     String conversationId,
+    List<String>? runIds,
   });
 }
 
@@ -45,6 +48,9 @@ class _$SendMessageResponseCWProxyImpl implements _$SendMessageResponseCWProxy {
   SendMessageResponse conversationId(String conversationId) =>
       call(conversationId: conversationId);
 
+  @override
+  SendMessageResponse runIds(List<String>? runIds) => call(runIds: runIds);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `SendMessageResponse(...).copyWith.fieldName(value)`.
@@ -58,6 +64,7 @@ class _$SendMessageResponseCWProxyImpl implements _$SendMessageResponseCWProxy {
     Object? messageId = const $CopyWithPlaceholder(),
     Object? runId = const $CopyWithPlaceholder(),
     Object? conversationId = const $CopyWithPlaceholder(),
+    Object? runIds = const $CopyWithPlaceholder(),
   }) {
     return SendMessageResponse(
       messageId: messageId == const $CopyWithPlaceholder() || messageId == null
@@ -74,6 +81,10 @@ class _$SendMessageResponseCWProxyImpl implements _$SendMessageResponseCWProxy {
           ? _value.conversationId
           // ignore: cast_nullable_to_non_nullable
           : conversationId as String,
+      runIds: runIds == const $CopyWithPlaceholder()
+          ? _value.runIds
+          // ignore: cast_nullable_to_non_nullable
+          : runIds as List<String>?,
     );
   }
 }
@@ -106,6 +117,10 @@ SendMessageResponse _$SendMessageResponseFromJson(Map<String, dynamic> json) =>
             'conversation_id',
             (v) => v as String,
           ),
+          runIds: $checkedConvert(
+            'run_ids',
+            (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+          ),
         );
         return val;
       },
@@ -113,6 +128,7 @@ SendMessageResponse _$SendMessageResponseFromJson(Map<String, dynamic> json) =>
         'messageId': 'message_id',
         'runId': 'run_id',
         'conversationId': 'conversation_id',
+        'runIds': 'run_ids',
       },
     );
 
@@ -122,4 +138,5 @@ Map<String, dynamic> _$SendMessageResponseToJson(
   'message_id': instance.messageId,
   'run_id': instance.runId,
   'conversation_id': instance.conversationId,
+  'run_ids': ?instance.runIds,
 };

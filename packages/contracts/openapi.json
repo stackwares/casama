@@ -2919,6 +2919,21 @@
             ],
             "format": "date-time"
           },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "direct",
+              "group"
+            ]
+          },
+          "bot_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Group chats: every bot, the lead first (D-118)"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -2929,6 +2944,8 @@
           "bot_id",
           "title",
           "last_message_at",
+          "kind",
+          "bot_ids",
           "created_at"
         ]
       },
@@ -2937,11 +2954,22 @@
         "properties": {
           "bot_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "The bot, or a group chat's lead"
           },
           "title": {
             "type": "string",
             "maxLength": 200
+          },
+          "bot_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 10,
+            "description": "A group chat (D-118): the other bots (the lead may be listed too); 2 to 10 bots in all"
           }
         },
         "required": [
@@ -2994,6 +3022,14 @@
           "conversation_id": {
             "type": "string",
             "format": "uuid"
+          },
+          "run_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Group chats: every bot's run"
           }
         },
         "required": [
@@ -3242,6 +3278,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Credential"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "GroupChatList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Conversation"
             }
           }
         },
@@ -10685,6 +10735,53 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/group-chats": {
+      "get": {
+        "operationId": "listGroupChats",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Group chats in a workspace that you can see (D-118)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "org_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Group chats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupChatList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
             "content": {
               "application/problem+json": {
                 "schema": {

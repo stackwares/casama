@@ -184,6 +184,13 @@ class SupabaseBackend implements Backend {
   Future<List<Bot>> bots(String orgId) async => (await api.bots.listBots(orgId: orgId)).data!.items;
 
   @override
+  Future<List<Conversation>> groupChats(String orgId) async => (await api.chat.listGroupChats(orgId: orgId)).data!.items;
+
+  @override
+  Future<Conversation> createGroupChat(String leadBotId, List<String> botIds, {String? title}) async =>
+      (await api.chat.createConversation(createConversationRequest: CreateConversationRequest(botId: leadBotId, botIds: botIds, title: title))).data!;
+
+  @override
   Future<Bot> createBot(String orgId,
           {required String name, required String credentialId, required String model, String persona = '', String? templateId, String? avatarUrl}) async =>
       (await api.bots.createBot(
@@ -437,6 +444,7 @@ class SupabaseBackend implements Backend {
         ChatMessageView(
           siblingIndex: (r['sibling_index'] as num?)?.toInt() ?? 1,
           siblingCount: (r['sibling_count'] as num?)?.toInt() ?? 1,
+          botId: r['bot_id'] as String?,
           id: r['id'] as String,
           role: r['role'] as String,
           text: _text(r['content']),

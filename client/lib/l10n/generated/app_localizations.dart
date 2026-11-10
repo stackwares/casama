@@ -6855,6 +6855,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name'**
   String get apiKeyName;
+
+  /// No description provided for @newGroupChat.
+  ///
+  /// In en, this message translates to:
+  /// **'New group chat'**
+  String get newGroupChat;
+
+  /// No description provided for @newGroupChatHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick 2 to 10 bots. The first one leads: @everyone asks it for a plan. @Name wakes one bot.'**
+  String get newGroupChatHelp;
+
+  /// No description provided for @groupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (optional)'**
+  String get groupTitle;
+
+  /// No description provided for @groupPickBots.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots'**
+  String get groupPickBots;
+
+  /// No description provided for @groupLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Leads the group'**
+  String get groupLead;
+
+  /// No description provided for @mentionEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'everyone'**
+  String get mentionEveryone;
 }
 
 class _AppLocalizationsDelegate

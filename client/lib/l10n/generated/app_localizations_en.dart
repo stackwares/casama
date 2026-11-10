@@ -3926,4 +3926,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get apiKeyName => 'Name';
+
+  @override
+  String get newGroupChat => 'New group chat';
+
+  @override
+  String get newGroupChatHelp =>
+      'Pick 2 to 10 bots. The first one leads: @everyone asks it for a plan. @Name wakes one bot.';
+
+  @override
+  String get groupTitle => 'Name (optional)';
+
+  @override
+  String get groupPickBots => 'Bots';
+
+  @override
+  String get groupLead => 'Leads the group';
+
+  @override
+  String get mentionEveryone => 'everyone';
 }

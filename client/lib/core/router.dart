@@ -8,6 +8,7 @@ import '../features/mcp/mcp_screens.dart';
 import '../features/bots/action_rules_screen.dart';
 import '../features/bots/watchers_screen.dart';
 import '../features/search/search_view.dart';
+import '../features/groups/group_chats.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/routines/run_routine_screen.dart';
 import '../features/auth/sign_in_screen.dart';
@@ -179,6 +180,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [GoRoute(path: ':id', pageBuilder: _page((_, s) => ProjectScreen(projectId: s.pathParameters['id']!)))],
           ),
           GoRoute(path: '/search', pageBuilder: _page((_, _) => const SearchScreen())),
+          GoRoute(path: '/groups/:id', pageBuilder: _page((_, s) => GroupChatScreen(conversationId: s.pathParameters['id']!))),
           GoRoute(path: '/run-routine/:ref', pageBuilder: _page((_, s) => RunRoutineScreen(reference: s.pathParameters['ref']!))),
           GoRoute(
             path: '/approvals/:id',

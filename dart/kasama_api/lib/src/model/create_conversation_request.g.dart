@@ -11,6 +11,8 @@ abstract class _$CreateConversationRequestCWProxy {
 
   CreateConversationRequest title(String? title);
 
+  CreateConversationRequest botIds(List<String>? botIds);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateConversationRequest(...).copyWith.fieldName(value)`.
@@ -19,7 +21,11 @@ abstract class _$CreateConversationRequestCWProxy {
   /// ```dart
   /// CreateConversationRequest(...).copyWith(id: 12, name: "My name")
   /// ```
-  CreateConversationRequest call({String botId, String? title});
+  CreateConversationRequest call({
+    String botId,
+    String? title,
+    List<String>? botIds,
+  });
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -36,6 +42,10 @@ class _$CreateConversationRequestCWProxyImpl
   @override
   CreateConversationRequest title(String? title) => call(title: title);
 
+  @override
+  CreateConversationRequest botIds(List<String>? botIds) =>
+      call(botIds: botIds);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateConversationRequest(...).copyWith.fieldName(value)`.
@@ -48,6 +58,7 @@ class _$CreateConversationRequestCWProxyImpl
   CreateConversationRequest call({
     Object? botId = const $CopyWithPlaceholder(),
     Object? title = const $CopyWithPlaceholder(),
+    Object? botIds = const $CopyWithPlaceholder(),
   }) {
     return CreateConversationRequest(
       botId: botId == const $CopyWithPlaceholder() || botId == null
@@ -58,6 +69,10 @@ class _$CreateConversationRequestCWProxyImpl
           ? _value.title
           // ignore: cast_nullable_to_non_nullable
           : title as String?,
+      botIds: botIds == const $CopyWithPlaceholder()
+          ? _value.botIds
+          // ignore: cast_nullable_to_non_nullable
+          : botIds as List<String>?,
     );
   }
 }
@@ -81,10 +96,18 @@ CreateConversationRequest _$CreateConversationRequestFromJson(
   final val = CreateConversationRequest(
     botId: $checkedConvert('bot_id', (v) => v as String),
     title: $checkedConvert('title', (v) => v as String?),
+    botIds: $checkedConvert(
+      'bot_ids',
+      (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+    ),
   );
   return val;
-}, fieldKeyMap: const {'botId': 'bot_id'});
+}, fieldKeyMap: const {'botId': 'bot_id', 'botIds': 'bot_ids'});
 
 Map<String, dynamic> _$CreateConversationRequestToJson(
   CreateConversationRequest instance,
-) => <String, dynamic>{'bot_id': instance.botId, 'title': ?instance.title};
+) => <String, dynamic>{
+  'bot_id': instance.botId,
+  'title': ?instance.title,
+  'bot_ids': ?instance.botIds,
+};

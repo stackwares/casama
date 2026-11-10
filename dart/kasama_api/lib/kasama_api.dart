@@ -155,6 +155,7 @@ export 'package:kasama_api/src/model/for_you_brief.dart';
 export 'package:kasama_api/src/model/fulfill_secret_request_body.dart';
 export 'package:kasama_api/src/model/git_hub_skill_preview.dart';
 export 'package:kasama_api/src/model/git_hub_skill_preview_request.dart';
+export 'package:kasama_api/src/model/group_chat_list.dart';
 export 'package:kasama_api/src/model/health.dart';
 export 'package:kasama_api/src/model/ice_server.dart';
 export 'package:kasama_api/src/model/import_bot_request.dart';

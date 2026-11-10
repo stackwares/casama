@@ -15,6 +15,10 @@ abstract class _$ConversationCWProxy {
 
   Conversation lastMessageAt(DateTime? lastMessageAt);
 
+  Conversation kind(ConversationKindEnum kind);
+
+  Conversation botIds(List<String> botIds);
+
   Conversation createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -30,6 +34,8 @@ abstract class _$ConversationCWProxy {
     String botId,
     String? title,
     DateTime? lastMessageAt,
+    ConversationKindEnum kind,
+    List<String> botIds,
     DateTime createdAt,
   });
 }
@@ -55,6 +61,12 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
       call(lastMessageAt: lastMessageAt);
 
   @override
+  Conversation kind(ConversationKindEnum kind) => call(kind: kind);
+
+  @override
+  Conversation botIds(List<String> botIds) => call(botIds: botIds);
+
+  @override
   Conversation createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -71,6 +83,8 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
     Object? botId = const $CopyWithPlaceholder(),
     Object? title = const $CopyWithPlaceholder(),
     Object? lastMessageAt = const $CopyWithPlaceholder(),
+    Object? kind = const $CopyWithPlaceholder(),
+    Object? botIds = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Conversation(
@@ -90,6 +104,14 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
           ? _value.lastMessageAt
           // ignore: cast_nullable_to_non_nullable
           : lastMessageAt as DateTime?,
+      kind: kind == const $CopyWithPlaceholder() || kind == null
+          ? _value.kind
+          // ignore: cast_nullable_to_non_nullable
+          : kind as ConversationKindEnum,
+      botIds: botIds == const $CopyWithPlaceholder() || botIds == null
+          ? _value.botIds
+          // ignore: cast_nullable_to_non_nullable
+          : botIds as List<String>,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -121,6 +143,8 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
             'bot_id',
             'title',
             'last_message_at',
+            'kind',
+            'bot_ids',
             'created_at',
           ],
         );
@@ -132,6 +156,14 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
             'last_message_at',
             (v) => v == null ? null : DateTime.parse(v as String),
           ),
+          kind: $checkedConvert(
+            'kind',
+            (v) => $enumDecode(_$ConversationKindEnumEnumMap, v),
+          ),
+          botIds: $checkedConvert(
+            'bot_ids',
+            (v) => (v as List<dynamic>).map((e) => e as String).toList(),
+          ),
           createdAt: $checkedConvert(
             'created_at',
             (v) => DateTime.parse(v as String),
@@ -142,6 +174,7 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
       fieldKeyMap: const {
         'botId': 'bot_id',
         'lastMessageAt': 'last_message_at',
+        'botIds': 'bot_ids',
         'createdAt': 'created_at',
       },
     );
@@ -152,5 +185,12 @@ Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
       'bot_id': instance.botId,
       'title': instance.title,
       'last_message_at': instance.lastMessageAt?.toIso8601String(),
+      'kind': _$ConversationKindEnumEnumMap[instance.kind]!,
+      'bot_ids': instance.botIds,
       'created_at': instance.createdAt.toIso8601String(),
     };
+
+const _$ConversationKindEnumEnumMap = {
+  ConversationKindEnum.direct: 'direct',
+  ConversationKindEnum.group: 'group',
+};

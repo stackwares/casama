@@ -111,6 +111,7 @@ import 'package:kasama_api/src/model/for_you_brief.dart';
 import 'package:kasama_api/src/model/fulfill_secret_request_body.dart';
 import 'package:kasama_api/src/model/git_hub_skill_preview.dart';
 import 'package:kasama_api/src/model/git_hub_skill_preview_request.dart';
+import 'package:kasama_api/src/model/group_chat_list.dart';
 import 'package:kasama_api/src/model/health.dart';
 import 'package:kasama_api/src/model/ice_server.dart';
 import 'package:kasama_api/src/model/import_bot_request.dart';
@@ -547,6 +548,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return GitHubSkillPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GitHubSkillPreviewRequest':
           return GitHubSkillPreviewRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GroupChatList':
+          return GroupChatList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
           return Health.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'IceServer':

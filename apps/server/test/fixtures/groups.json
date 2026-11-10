@@ -1,0 +1,168 @@
+{
+  "name": "groups",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 50,
+            "outputTokens": 5
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "systemIncludes": "You are Lead",
+        "lastUserIncludes": "@everyone"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Plan: @Writer write the launch copy. @Designer make the banner."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "systemIncludes": "You are Writer",
+        "lastUserIncludes": "write the launch copy"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Copy done: Meet Kasama."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "systemIncludes": "You are Designer",
+        "lastUserIncludes": "make the banner"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Banner done."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "systemIncludes": "You are Writer"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Fixed it."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "systemIncludes": "You are Ping"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "@Pong your turn"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "systemIncludes": "You are Pong"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "@Ping your turn"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "OK."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}
