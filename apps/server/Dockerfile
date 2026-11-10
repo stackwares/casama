@@ -13,6 +13,7 @@ COPY packages/agent/package.json packages/agent/
 COPY packages/contracts/package.json packages/contracts/
 COPY packages/db/package.json packages/db/
 COPY packages/domain/package.json packages/domain/
+COPY packages/mcp/package.json packages/mcp/
 COPY packages/observability/package.json packages/observability/
 COPY packages/sandbox/package.json packages/sandbox/
 COPY ee/package.json ee/
@@ -24,6 +25,7 @@ COPY packages/agent/src packages/agent/src
 COPY packages/contracts/src packages/contracts/src
 COPY packages/db/src packages/db/src
 COPY packages/domain/src packages/domain/src
+COPY packages/mcp/src packages/mcp/src
 COPY packages/observability/src packages/observability/src
 COPY packages/sandbox/src packages/sandbox/src
 COPY ee/server ee/server

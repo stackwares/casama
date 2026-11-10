@@ -15,8 +15,11 @@
 		reverse_proxy web:80
 	}
 	# Without the web app (compose profile: web) the root answers with a short note.
+	# Only the root page: health checks and API paths must see the real error (install.sh waits on /readyz).
 	handle_errors 502 {
-		respond "Kasama is running. Point the Kasama app or CLI at this address, or start the web app (compose profile: web)." 200
+		@root path /
+		respond @root "Kasama is running. Point the Kasama app or CLI at this address, or start the web app (compose profile: web)." 200
+		respond "Kasama isn't ready yet (or this part isn't running)." 502
 	}
 	header {
 		Strict-Transport-Security "max-age=63072000; includeSubDomains"

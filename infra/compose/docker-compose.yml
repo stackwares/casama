@@ -104,8 +104,11 @@ services:
       GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
       # Kasama's sign-up hook (abuse controls, D-094; the sign-up allowlist, D-145). Turn it on with
       # SIGNUP_HOOK_ENABLED=true and the same AUTH_HOOK_SECRET ("v1,whsec_…") here and on the API.
+      # Supabase Auth only calls https hooks (plain http only on localhost), so the hook goes through
+      # the public address: install.sh sets SIGNUP_HOOK_URI to https://<domain>/hooks/auth/before-user-created.
+      # An http URL here (even with the hook off) stops Auth from starting.
       GOTRUE_HOOK_BEFORE_USER_CREATED_ENABLED: ${SIGNUP_HOOK_ENABLED:-false}
-      GOTRUE_HOOK_BEFORE_USER_CREATED_URI: http://api:8787/hooks/auth/before-user-created
+      GOTRUE_HOOK_BEFORE_USER_CREATED_URI: ${SIGNUP_HOOK_URI:-}
       GOTRUE_HOOK_BEFORE_USER_CREATED_SECRETS: ${AUTH_HOOK_SECRET:-}
       # Two-step sign-in with authenticator apps (D-093).
       GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"

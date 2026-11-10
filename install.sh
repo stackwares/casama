@@ -50,7 +50,12 @@ fi
 # ---------------------------------------------------------------- secrets and .env
 rand() { openssl rand -hex "$1"; }
 # Supabase Auth signs SAML requests with an RSA key (base64 DER, one line).
-saml_key() { openssl genrsa 2048 2>/dev/null | openssl rsa -outform DER 2>/dev/null | openssl base64 -A; }
+# GoTrue wants PKCS#1 ("RSA PRIVATE KEY"); OpenSSL 3+ writes PKCS#8 unless told -traditional
+# (LibreSSL, macOS's default, has no such flag and already writes PKCS#1).
+rsa_trad() { openssl rsa -help 2>&1 | grep -q -- '-traditional' && echo "-traditional"; }
+saml_key() { openssl genrsa 2048 2>/dev/null | openssl rsa $(rsa_trad) -outform DER 2>/dev/null | openssl base64 -A; }
+# Re-encodes a stored key as PKCS#1 (fixes keys written by older installers in PKCS#8).
+saml_fix() { printf '%s' "$1" | openssl base64 -d -A 2>/dev/null | openssl rsa $(rsa_trad) -inform DER -outform DER 2>/dev/null | openssl base64 -A; }
 b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
 jwt() { # role secret
   local now exp header payload sig
@@ -65,7 +70,22 @@ if [[ -f "$ENV_FILE" ]]; then
   say "Keeping the existing $ENV_FILE"
   # Settings added by newer releases get generated values; nothing existing is changed.
   grep -q "^COMPUTER_TOKEN_SECRET=" "$ENV_FILE" || echo "COMPUTER_TOKEN_SECRET=$(rand 32)" >>"$ENV_FILE"
-  grep -q "^SAML_PRIVATE_KEY=" "$ENV_FILE" || echo "SAML_PRIVATE_KEY=$(saml_key)" >>"$ENV_FILE"
+  # Supabase Auth only takes https hook URLs: older installs used http://api:8787 (D-145 fix).
+  if ! grep -q "^SIGNUP_HOOK_URI=" "$ENV_FILE"; then
+    pub=$(grep '^KASAMA_PUBLIC_URL=' "$ENV_FILE" | cut -d= -f2-)
+    echo "SIGNUP_HOOK_URI=$([[ "$pub" == https://* ]] && echo "$pub/hooks/auth/before-user-created")" >>"$ENV_FILE"
+  fi
+  if grep -q "^SAML_PRIVATE_KEY=" "$ENV_FILE"; then
+    old_key=$(grep '^SAML_PRIVATE_KEY=' "$ENV_FILE" | head -n1 | cut -d= -f2-)
+    new_key=$(saml_fix "$old_key")
+    if [[ -n "$new_key" && "$new_key" != "$old_key" ]]; then
+      grep -v '^SAML_PRIVATE_KEY=' "$ENV_FILE" >"$ENV_FILE.tmp" && echo "SAML_PRIVATE_KEY=$new_key" >>"$ENV_FILE.tmp" && mv "$ENV_FILE.tmp" "$ENV_FILE"
+      chmod 600 "$ENV_FILE"
+      say "Converted the SAML signing key to the format Supabase Auth expects"
+    fi
+  else
+    echo "SAML_PRIVATE_KEY=$(saml_key)" >>"$ENV_FILE"
+  fi
   grep -q "^WORKER_DB_PASSWORD=" "$ENV_FILE" || echo "WORKER_DB_PASSWORD=$(rand 24)" >>"$ENV_FILE"
 else
   if [[ -z "$domain" && "$local" -eq 0 ]]; then
@@ -91,6 +111,7 @@ else
 # Keep this file private and backed up: it holds every key for this installation.
 KASAMA_SITE=$site
 KASAMA_PUBLIC_URL=$public
+SIGNUP_HOOK_URI=$([[ "$public" == https://* ]] && echo "$public/hooks/auth/before-user-created")
 HTTP_PORT=$http_port
 HTTPS_PORT=443
 TURN_PUBLIC_HOST=$turn_host
@@ -129,7 +150,15 @@ compose() { docker compose -f "$COMPOSE_DIR/docker-compose.yml" --env-file "$ENV
 
 # ---------------------------------------------------------------- images
 say "Pulling Supabase, Caddy and other images"
-compose pull --ignore-buildable --quiet
+# Public registries (public.ecr.aws for Supabase) rate-limit anonymous pulls: a few at a time,
+# retried with a growing wait.
+pulled=0
+for attempt in 1 2 3 4 5; do
+  if COMPOSE_PARALLEL_LIMIT=2 compose pull --ignore-buildable --quiet; then pulled=1; break; fi
+  say "Image pull failed (attempt $attempt of 5); retrying in $((attempt * 15))s"
+  sleep $((attempt * 15))
+done
+[[ "$pulled" -eq 1 ]] || die "Couldn't pull the images. Check your internet connection (or registry rate limits) and run this again."
 say "Building Kasama images (first run takes a few minutes)"
 # KASAMA_BUILD_FLAGS=--no-cache forces clean rebuilds.
 compose build --quiet ${KASAMA_BUILD_FLAGS:-} api supervisor egress turn
