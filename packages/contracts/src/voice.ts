@@ -8,7 +8,11 @@ export const Transcription = z
   .openapi("Transcription");
 
 export const VoiceSessionRequest = z
-  .object({ bot_id: Uuid, conversation_id: Uuid.optional() })
+  .object({
+    bot_id: Uuid,
+    conversation_id: Uuid.optional(),
+    call_id: Uuid.optional().openapi({ description: "An answered phone call (D-135): the session uses its conversation and the bot speaks first" }),
+  })
   .openapi("VoiceSessionRequest");
 
 export const VoiceSession = z
@@ -22,8 +26,23 @@ export const VoiceSession = z
       .openapi({ description: "POST the WebRTC offer SDP here with the ephemeral key" }),
     conversation_id: Uuid,
     tools: z.number().int(),
+    /** The bot opens the conversation (an answered phone call). */
+    speak_first: z.boolean(),
   })
   .openapi("VoiceSession");
+
+export const PhoneCall = z
+  .object({
+    id: Uuid,
+    bot_id: Uuid,
+    bot_name: z.string(),
+    reason: z.string(),
+    status: z.enum(["ringing", "answered", "declined", "missed", "cancelled"]),
+    conversation_id: Uuid.nullable(),
+    expires_at: ts,
+    created_at: ts,
+  })
+  .openapi("PhoneCall");
 
 export const VoiceToolRequest = z
   .object({

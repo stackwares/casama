@@ -1,14 +1,53 @@
 import AppIntents
 import Flutter
+import PushKit
 import UIKit
+import flutter_callkit_incoming
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, PKPushRegistryDelegate {
+  private var voipRegistry: PKPushRegistry?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    // Phone-call voice (D-135): bots ring this phone with VoIP pushes.
+    let registry = PKPushRegistry(queue: .main)
+    registry.delegate = self
+    registry.desiredPushTypes = [.voIP]
+    voipRegistry = registry
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func pushRegistry(_ registry: PKPushRegistry, didUpdate credentials: PKPushCredentials, for type: PKPushType) {
+    let token = credentials.token.map { String(format: "%02x", $0) }.joined()
+    SwiftFlutterCallkitIncomingPlugin.sharedInstance?.setDevicePushTokenVoIP(token)
+  }
+
+  func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) {
+    SwiftFlutterCallkitIncomingPlugin.sharedInstance?.setDevicePushTokenVoIP("")
+  }
+
+  // Apple requires every VoIP push to report a call to CallKit right away.
+  func pushRegistry(
+    _ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType,
+    completion: @escaping () -> Void
+  ) {
+    let p = payload.dictionaryPayload
+    let id = (p["call_id"] as? String) ?? UUID().uuidString
+    let reason = (p["reason"] as? String) ?? ""
+    let data = flutter_callkit_incoming.Data(id: id, nameCaller: (p["bot_name"] as? String) ?? "Kasama", handle: reason, type: 0)
+    data.appName = "Kasama"
+    data.duration = 45000
+    data.extra = [
+      "call_id": id,
+      "bot_id": (p["bot_id"] as? String) ?? "",
+      "bot_name": (p["bot_name"] as? String) ?? "Kasama",
+      "reason": reason,
+      "conversation_id": (p["conversation_id"] as? String) ?? "",
+    ]
+    SwiftFlutterCallkitIncomingPlugin.sharedInstance?.showCallkitIncoming(data, fromPushKit: true) { _ in completion() }
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {

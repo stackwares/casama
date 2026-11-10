@@ -548,7 +548,14 @@ abstract class Backend {
   // Voice (Phase 6)
   Future<String> transcribe(String botId, Uint8List audio, String mime);
   Future<Uint8List> speech(String messageId);
-  Future<VoiceSession> voiceSession(String botId, {String? conversationId});
+  Future<VoiceSession> voiceSession(String botId, {String? conversationId, String? callId});
+  // Phone-call voice (D-135)
+  Future<List<PhoneCall>> ringingCalls();
+  Future<PhoneCall> answerCall(String id);
+  Future<PhoneCall> declineCall(String id);
+
+  /// iOS PushKit token, so calls ring through CallKit.
+  Future<void> registerVoipToken(String token);
   Future<VoiceToolResult> voiceTool(String botId, String conversationId, String callId, String name, Map<String, Object?> arguments);
   Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds);
   Future<void> updateBotVoice(String botId, Map<String, Object?> voice);

@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,10 +30,12 @@ class SelectedOrg extends Notifier<String?> {
 
   @override
   String? build() {
-    SharedPreferences.getInstance().then((p) {
-      final saved = p.getString(_key);
-      if (saved != null && state == null) state = saved;
-    }).catchError((_) {});
+    SharedPreferences.getInstance()
+        .then((p) {
+          final saved = p.getString(_key);
+          if (saved != null && state == null) state = saved;
+        })
+        .catchError((_) {});
     return null;
   }
 
@@ -80,9 +83,13 @@ class BotsNotifier extends AsyncNotifier<List<Bot>> {
     fresh.ignore();
     final cached = await cacheRead(cache, key);
     if (cached is List && cached.isNotEmpty) {
-      unawaited(fresh.then((v) {
-        if (ref.mounted && gen == _generation) state = AsyncData(v);
-      }).catchError((_) {}));
+      unawaited(
+        fresh
+            .then((v) {
+              if (ref.mounted && gen == _generation) state = AsyncData(v);
+            })
+            .catchError((_) {}),
+      );
       try {
         return [for (final j in cached) Bot.fromJson(Map<String, dynamic>.from(j as Map))];
       } catch (_) {}
@@ -121,9 +128,7 @@ final credentialsProvider = FutureProvider<List<Credential>>((ref) async {
 });
 
 /// Models a key can use for the bot model picker (cached by the server for 10 minutes).
-final modelOptionsProvider = FutureProvider.family<ModelOptionList, String>(
-  (ref, credentialId) => ref.watch(backendProvider).models(credentialId),
-);
+final modelOptionsProvider = FutureProvider.family<ModelOptionList, String>((ref, credentialId) => ref.watch(backendProvider).models(credentialId));
 
 final usageTodayProvider = FutureProvider<UsageReport?>((ref) async {
   final org = ref.watch(currentOrgProvider);
@@ -143,13 +148,9 @@ final computersProvider = FutureProvider<List<Computer>>((ref) async {
   return ref.watch(backendProvider).computers(org.id);
 });
 
-final conversationsProvider = FutureProvider.family<List<Conversation>, String>(
-  (ref, botId) => ref.watch(backendProvider).conversations(botId),
-);
+final conversationsProvider = FutureProvider.family<List<Conversation>, String>((ref, botId) => ref.watch(backendProvider).conversations(botId));
 
-final memoriesProvider = FutureProvider.family<List<Memory>, String>(
-  (ref, botId) => ref.watch(backendProvider).memories(botId),
-);
+final memoriesProvider = FutureProvider.family<List<Memory>, String>((ref, botId) => ref.watch(backendProvider).memories(botId));
 
 final skillsProvider = FutureProvider<List<SkillView>>((ref) async {
   final org = ref.watch(currentOrgProvider);
@@ -157,13 +158,9 @@ final skillsProvider = FutureProvider<List<SkillView>>((ref) async {
   return ref.watch(backendProvider).skills(org.id);
 });
 
-final runsProvider = FutureProvider.family<List<RunSummary>, String>(
-  (ref, botId) => ref.watch(backendProvider).runs(botId),
-);
+final runsProvider = FutureProvider.family<List<RunSummary>, String>((ref, botId) => ref.watch(backendProvider).runs(botId));
 
-final runEventsProvider = FutureProvider.family<List<RunEventItem>, String>(
-  (ref, runId) => ref.watch(backendProvider).runEvents(runId),
-);
+final runEventsProvider = FutureProvider.family<List<RunEventItem>, String>((ref, runId) => ref.watch(backendProvider).runEvents(runId));
 
 // --- Phase 4: autonomy ------------------------------------------------------
 
@@ -183,6 +180,11 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
     if (!signedIn) return const [];
     final backend = ref.watch(backendProvider);
     final sub = backend.watchNotifications().listen((n) {
+      // A phone call ringing (D-135): shown as the ringing banner, not in the inbox.
+      if (n.kind == 'call') {
+        ref.invalidate(ringingCallsProvider);
+        return;
+      }
       final current = state.value ?? const <NotificationView>[];
       if (current.any((c) => c.id == n.id)) return;
       state = AsyncData([n, ...current]);
@@ -190,7 +192,10 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
       if (n.kind == 'takeover') ref.invalidate(takeoversProvider);
     });
     ref.onDispose(sub.cancel);
-    return backend.notifications();
+    return [
+      for (final n in await backend.notifications())
+        if (n.kind != 'call') n,
+    ];
   }
 
   /// Marks one notification read (opened from the inbox or from a push).
@@ -198,10 +203,7 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
     final current = state.value ?? const <NotificationView>[];
     final now = DateTime.now();
     state = AsyncData([
-      for (final n in current)
-        n.id == id && n.readAt == null
-            ? NotificationView(id: n.id, kind: n.kind, title: n.title, body: n.body, link: n.link, createdAt: n.createdAt, readAt: now)
-            : n,
+      for (final n in current) n.id == id && n.readAt == null ? NotificationView(id: n.id, kind: n.kind, title: n.title, body: n.body, link: n.link, createdAt: n.createdAt, readAt: now) : n,
     ]);
     await ref.read(backendProvider).markNotificationRead(id);
   }
@@ -210,26 +212,28 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
     await ref.read(backendProvider).markNotificationsRead();
     final now = DateTime.now();
     state = AsyncData([
-      for (final n in state.value ?? const <NotificationView>[])
-        NotificationView(id: n.id, kind: n.kind, title: n.title, body: n.body, link: n.link, createdAt: n.createdAt, readAt: n.readAt ?? now),
+      for (final n in state.value ?? const <NotificationView>[]) NotificationView(id: n.id, kind: n.kind, title: n.title, body: n.body, link: n.link, createdAt: n.createdAt, readAt: n.readAt ?? now),
     ]);
   }
 }
 
 final notificationsProvider = AsyncNotifierProvider<NotificationsNotifier, List<NotificationView>>(NotificationsNotifier.new);
 
+/// Phone calls ringing for this person now (D-135), refreshed when a `call` notification arrives.
+final ringingCallsProvider = FutureProvider<List<PhoneCall>>((ref) async {
+  final signedIn = ref.watch(signedInProvider).value ?? false;
+  if (!signedIn) return const [];
+  return ref.watch(backendProvider).ringingCalls();
+});
+
 /// Badge count for the inbox: pending approvals plus unread notifications (approval notices are not double counted).
 final inboxBadgeProvider = Provider<int>((ref) {
   final approvals = (ref.watch(approvalsProvider).value?.length ?? 0) + (ref.watch(takeoversProvider).value?.length ?? 0);
-  final unread = (ref.watch(notificationsProvider).value ?? const <NotificationView>[])
-      .where((n) => n.readAt == null && n.kind != 'approval' && n.kind != 'takeover')
-      .length;
+  final unread = (ref.watch(notificationsProvider).value ?? const <NotificationView>[]).where((n) => n.readAt == null && n.kind != 'approval' && n.kind != 'takeover').length;
   return approvals + unread;
 });
 
-final routinesProvider = FutureProvider.family<List<Routine>, String>(
-  (ref, botId) => ref.watch(backendProvider).routines(botId),
-);
+final routinesProvider = FutureProvider.family<List<Routine>, String>((ref, botId) => ref.watch(backendProvider).routines(botId));
 
 /// Built-in apps (D-089); cached for the session.
 final appCatalogProvider = FutureProvider<AppCatalog>((ref) => ref.watch(backendProvider).appCatalog());
@@ -240,9 +244,7 @@ final integrationsProvider = FutureProvider<List<Integration>>((ref) async {
   return ref.watch(backendProvider).integrations(org.id);
 });
 
-final botIntegrationIdsProvider = FutureProvider.family<Set<String>, String>(
-  (ref, botId) => ref.watch(backendProvider).botIntegrationIds(botId),
-);
+final botIntegrationIdsProvider = FutureProvider.family<Set<String>, String>((ref, botId) => ref.watch(backendProvider).botIntegrationIds(botId));
 
 final secretsProvider = FutureProvider<List<Secret>>((ref) async {
   final org = ref.watch(currentOrgProvider);

@@ -33,6 +33,8 @@ class VoiceSession {
     required  this.conversationId,
 
     required  this.tools,
+
+    required  this.speakFirst,
   });
 
   @JsonKey(
@@ -121,6 +123,18 @@ class VoiceSession {
 
 
 
+  @JsonKey(
+    
+    name: r'speak_first',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final bool speakFirst;
+
+
+
 
 
     @override
@@ -131,7 +145,8 @@ class VoiceSession {
       other.expiresAt == expiresAt &&
       other.connectUrl == connectUrl &&
       other.conversationId == conversationId &&
-      other.tools == tools;
+      other.tools == tools &&
+      other.speakFirst == speakFirst;
 
     @override
     int get hashCode =>
@@ -141,7 +156,8 @@ class VoiceSession {
         expiresAt.hashCode +
         connectUrl.hashCode +
         conversationId.hashCode +
-        tools.hashCode;
+        tools.hashCode +
+        speakFirst.hashCode;
 
   factory VoiceSession.fromJson(Map<String, dynamic> json) => _$VoiceSessionFromJson(json);
 

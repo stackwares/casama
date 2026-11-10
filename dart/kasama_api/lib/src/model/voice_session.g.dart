@@ -21,6 +21,8 @@ abstract class _$VoiceSessionCWProxy {
 
   VoiceSession tools(int tools);
 
+  VoiceSession speakFirst(bool speakFirst);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `VoiceSession(...).copyWith.fieldName(value)`.
@@ -37,6 +39,7 @@ abstract class _$VoiceSessionCWProxy {
     String connectUrl,
     String conversationId,
     int tools,
+    bool speakFirst,
   });
 }
 
@@ -71,6 +74,9 @@ class _$VoiceSessionCWProxyImpl implements _$VoiceSessionCWProxy {
   @override
   VoiceSession tools(int tools) => call(tools: tools);
 
+  @override
+  VoiceSession speakFirst(bool speakFirst) => call(speakFirst: speakFirst);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `VoiceSession(...).copyWith.fieldName(value)`.
@@ -88,6 +94,7 @@ class _$VoiceSessionCWProxyImpl implements _$VoiceSessionCWProxy {
     Object? connectUrl = const $CopyWithPlaceholder(),
     Object? conversationId = const $CopyWithPlaceholder(),
     Object? tools = const $CopyWithPlaceholder(),
+    Object? speakFirst = const $CopyWithPlaceholder(),
   }) {
     return VoiceSession(
       provider: provider == const $CopyWithPlaceholder() || provider == null
@@ -122,6 +129,11 @@ class _$VoiceSessionCWProxyImpl implements _$VoiceSessionCWProxy {
           ? _value.tools
           // ignore: cast_nullable_to_non_nullable
           : tools as int,
+      speakFirst:
+          speakFirst == const $CopyWithPlaceholder() || speakFirst == null
+          ? _value.speakFirst
+          // ignore: cast_nullable_to_non_nullable
+          : speakFirst as bool,
     );
   }
 }
@@ -152,6 +164,7 @@ VoiceSession _$VoiceSessionFromJson(Map<String, dynamic> json) =>
             'connect_url',
             'conversation_id',
             'tools',
+            'speak_first',
           ],
         );
         final val = VoiceSession(
@@ -171,6 +184,7 @@ VoiceSession _$VoiceSessionFromJson(Map<String, dynamic> json) =>
             (v) => v as String,
           ),
           tools: $checkedConvert('tools', (v) => (v as num).toInt()),
+          speakFirst: $checkedConvert('speak_first', (v) => v as bool),
         );
         return val;
       },
@@ -179,6 +193,7 @@ VoiceSession _$VoiceSessionFromJson(Map<String, dynamic> json) =>
         'expiresAt': 'expires_at',
         'connectUrl': 'connect_url',
         'conversationId': 'conversation_id',
+        'speakFirst': 'speak_first',
       },
     );
 
@@ -191,6 +206,7 @@ Map<String, dynamic> _$VoiceSessionToJson(VoiceSession instance) =>
       'connect_url': instance.connectUrl,
       'conversation_id': instance.conversationId,
       'tools': instance.tools,
+      'speak_first': instance.speakFirst,
     };
 
 const _$VoiceSessionProviderEnumEnumMap = {

@@ -213,6 +213,8 @@ import 'package:kasama_api/src/model/password_manager.dart';
 import 'package:kasama_api/src/model/password_manager_list.dart';
 import 'package:kasama_api/src/model/password_manager_vault.dart';
 import 'package:kasama_api/src/model/password_manager_vault_list.dart';
+import 'package:kasama_api/src/model/phone_call.dart';
+import 'package:kasama_api/src/model/phone_call_list.dart';
 import 'package:kasama_api/src/model/plan.dart';
 import 'package:kasama_api/src/model/plan_catalog.dart';
 import 'package:kasama_api/src/model/plugin.dart';
@@ -863,6 +865,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PasswordManagerVault.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PasswordManagerVaultList':
           return PasswordManagerVaultList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PhoneCall':
+          return PhoneCall.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PhoneCallList':
+          return PhoneCallList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Plan':
           return Plan.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PlanCatalog':

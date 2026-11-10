@@ -270,6 +270,8 @@ lib/src/model/password_manager.dart
 lib/src/model/password_manager_list.dart
 lib/src/model/password_manager_vault.dart
 lib/src/model/password_manager_vault_list.dart
+lib/src/model/phone_call.dart
+lib/src/model/phone_call_list.dart
 lib/src/model/plan.dart
 lib/src/model/plan_catalog.dart
 lib/src/model/plugin.dart

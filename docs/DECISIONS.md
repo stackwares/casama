@@ -1062,3 +1062,34 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - unit (`channels.test.ts` in the agent package): every adapter's signature check (good and bad), payload parsing and send request; allowlists; routine filters.
   - API (`channels.test.ts`), with a fake provider: Telegram `setWebhook` with the stored secret; bad signature refused; two messages in one conversation; a stranger ignored and logged; the reply sent back to the chat; turning a chat app off; disconnecting removes its Vault secret. Email: a vendor invoice starts a message routine, a vendor's other email is ignored, and a colleague gets an answer. Meta handshake, missing credentials, members refused.
   - pgTAP (`channels_rls.test.sql`), computerd (iMessage baseline, own messages skipped, sending, the permission), widget (`channels_test.dart`: connect WhatsApp, webhook address and verify token, senders, activity, disconnect; a message routine).
+
+## D-135 Phone-call voice
+
+- **The tool:** `voice.call_user(reason)` (medium risk, send category) rings the person a run acts for.
+  - **Quiet hours:** if the person's quiet hours are on (D-109), nothing rings; they get a notification with the reason when the window ends, and the tool says so.
+  - **One at a time:** only one call rings per person.
+  - **What's saved:** each call is a `voice_calls` row holding the run's conversation and the reason. It rings for 45 seconds.
+- **How each device rings:**
+  - **iOS:** a PushKit VoIP push through APNs. It goes over HTTP/2 with an ES256 token key (`APNS_KEY_P8`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_VOIP_TOPIC`), with push type `voip`, priority 10, and an expiry at the end of the ring.
+    - The app registers its PushKit token in `voip_tokens`.
+    - `AppDelegate.swift` reports every VoIP push to CallKit straight away, as Apple requires, through flutter_callkit_incoming.
+    - Tokens APNs reports gone (410 or 400) are removed.
+  - **Android:** a data-only FCM message with `android.priority = HIGH` and a 45-second TTL (`PushSender.sendCall`). A background handler shows the plugin's full-screen calling screen, even when the app is closed.
+  - **Desktop and web:** a `call` notification row reaches the app over the usual Realtime topic. The app shows a ringing banner (Answer, Decline) over every screen until the call is answered or expires. `call` rows don't appear in the inbox.
+- **Answering:**
+  - `POST /v1/calls/{id}/answer` marks the call answered. It returns 409 if the call already ended.
+  - The app then opens the live call (D-065) with the call's id.
+  - `POST /v1/voice/session` with `call_id` uses the call's conversation and adds "you called because …; speak first" to the session's instructions. It returns `speak_first: true`, and the app sends `response.create` as soon as the data channel opens, so the bot talks first.
+- **Declined and missed calls:**
+  - **Declined:** `POST /v1/calls/{id}/decline` turns into an ordinary push with the reason ("Max wanted to talk"). The API has no push sender, so it writes the notification as due now and the worker's minute tick sends it.
+  - **Missed:** a call still ringing at its expiry is marked missed by the minute tick, and pushes "Missed call from Max" right away, quiet hours or not, because the call itself already passed the quiet-hours check.
+  - Both link to the conversation.
+- **The plugin:** flutter_callkit_incoming (MIT) wraps CallKit and Android's calling UI. It's a native plugin, not a WebView.
+- **Not yet:**
+  - Stopping the ringing on the person's other devices once one answers (the extra rings end at the timeout).
+  - Calls from routines to people other than the acting user.
+- **Tests:**
+  - API (`phone-calls.test.ts`), with a local HTTP/2 APNs server: the token signature verified with the public key; VoIP headers and payload; a gone token removed; the Android data message; the banner row; one ring at a time; the ringing list; answer, then 409; the voice session with the call's conversation, the greeting and `speak_first`; other people get 404; missed and declined calls push the reason; quiet hours leave a notification instead.
+  - pgTAP (`phone_calls_rls.test.sql`).
+  - widget (`phone_calls_test.dart`): the banner; answer opens the live call with the call id and speak-first; decline; push payload parsing.
+  - Also fixed: the call screen stops listening to the call before hanging up when it closes.

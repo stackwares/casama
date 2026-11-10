@@ -147,7 +147,8 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
 }
 
 /** Mints an ephemeral realtime key with the bot's persona and tools. */
-export async function voiceSession(rt: VoiceRuntime, orgId: string, botId: string) {
+/** `greeting`: an answered phone call (D-135); the bot speaks first. */
+export async function voiceSession(rt: VoiceRuntime, orgId: string, botId: string, greeting?: string) {
   const bot = await botVoice(rt.db, botId);
   if (bot.org_id !== orgId) throw new Error("bot_not_found");
   const k = await rt.key(orgId, ["openai"]);
@@ -166,6 +167,7 @@ export async function voiceSession(rt: VoiceRuntime, orgId: string, botId: strin
     `You are ${bot.name}, talking with the user on a live voice call. Keep replies short and natural.`,
     bot.persona_md,
     "Use tools when needed; tell the user briefly what you are doing. Some actions may need their approval in the Kasama app.",
+    greeting,
   ]
     .filter(Boolean)
     .join("\n\n");

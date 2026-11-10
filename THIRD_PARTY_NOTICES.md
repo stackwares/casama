@@ -58,6 +58,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | sentry_flutter                                         | client                             | MIT                           |
 | firebase_core, firebase_messaging                      | client                             | BSD-3-Clause                  |
 | flutter_webrtc                                         | client                             | MIT                           |
+| flutter_callkit_incoming                               | client (phone calls)               | MIT                           |
 | posthog_flutter                                        | client                             | MIT                           |
 | record, just_audio                                     | client (voice)                     | BSD-3-Clause, MIT             |
 | flutter_secure_storage                                 | client (companion)                 | BSD-3-Clause                  |

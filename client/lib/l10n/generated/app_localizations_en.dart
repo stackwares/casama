@@ -4929,4 +4929,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messageTriggerWords => 'Message contains';
+
+  @override
+  String callIncoming(String name) {
+    return '$name is calling';
+  }
+
+  @override
+  String get callAnswer => 'Answer';
+
+  @override
+  String get callDecline => 'Decline';
 }

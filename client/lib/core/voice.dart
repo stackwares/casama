@@ -13,6 +13,7 @@ import 'package:record/record.dart';
 /// Records a short clip for dictation.
 abstract class Dictation {
   Future<bool> start();
+
   /// Stops and returns the audio and its MIME type (null if nothing was recorded).
   Future<(Uint8List, String)?> stop();
   Future<void> cancel();
@@ -111,13 +112,7 @@ class _BytesSource extends StreamAudioSource {
     final s = start ?? 0;
     final e = end ?? bytes.length;
     // ignore: experimental_member_use
-    return StreamAudioResponse(
-      sourceLength: bytes.length,
-      contentLength: e - s,
-      offset: s,
-      stream: Stream.value(bytes.sublist(s, e)),
-      contentType: 'audio/mpeg',
-    );
+    return StreamAudioResponse(sourceLength: bytes.length, contentLength: e - s, offset: s, stream: Stream.value(bytes.sublist(s, e)), contentType: 'audio/mpeg');
   }
 }
 
@@ -142,8 +137,10 @@ enum CallState { connecting, live, ended, failed }
 abstract class VoiceCall {
   ValueListenable<CallState> get state;
   ValueListenable<List<CallTurn>> get transcript;
+
   /// Time from the end of the user's speech to the start of the reply, for the last turn.
   ValueListenable<int?> get replyLatencyMs;
+
   /// Tool calls the model wants run; answer each with [sendToolResult].
   Stream<CallToolRequest> get toolCalls;
   void sendToolResult(String callId, String output);
@@ -197,13 +194,15 @@ class _RealtimeCall implements VoiceCall {
     }
     _events = await pc.createDataChannel('oai-events', RTCDataChannelInit());
     _events!.onMessage = (m) => _onEvent(m.text);
+    // An answered phone call (D-135): the bot opens the conversation.
+    if (s.speakFirst) {
+      _events!.onDataChannelState = (st) {
+        if (st == RTCDataChannelState.RTCDataChannelOpen) _send({'type': 'response.create'});
+      };
+    }
     final offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    final res = await http.post(
-      Uri.parse(s.connectUrl),
-      headers: {'authorization': 'Bearer ${s.clientSecret}', 'content-type': 'application/sdp'},
-      body: offer.sdp,
-    );
+    final res = await http.post(Uri.parse(s.connectUrl), headers: {'authorization': 'Bearer ${s.clientSecret}', 'content-type': 'application/sdp'}, body: offer.sdp);
     if (res.statusCode >= 300) {
       _state.value = CallState.failed;
       throw StateError('Realtime connection refused (${res.statusCode})');

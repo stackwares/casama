@@ -2785,5 +2785,15 @@
   "messageTriggerAnyApp": "Any app",
   "messageTriggerSender": "From (address, number, or *@company.com)",
   "messageTriggerSubject": "Subject contains",
-  "messageTriggerWords": "Message contains"
+  "messageTriggerWords": "Message contains",
+  "callIncoming": "{name} is calling",
+  "@callIncoming": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callAnswer": "Answer",
+  "callDecline": "Decline"
 }

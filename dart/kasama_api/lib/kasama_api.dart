@@ -270,6 +270,8 @@ export 'package:kasama_api/src/model/password_manager.dart';
 export 'package:kasama_api/src/model/password_manager_list.dart';
 export 'package:kasama_api/src/model/password_manager_vault.dart';
 export 'package:kasama_api/src/model/password_manager_vault_list.dart';
+export 'package:kasama_api/src/model/phone_call.dart';
+export 'package:kasama_api/src/model/phone_call_list.dart';
 export 'package:kasama_api/src/model/plan.dart';
 export 'package:kasama_api/src/model/plan_catalog.dart';
 export 'package:kasama_api/src/model/plugin.dart';

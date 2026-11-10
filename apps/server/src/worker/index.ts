@@ -33,6 +33,9 @@ import {
   registerReplayTools,
   registerLoginTools,
   registerChannelTools,
+  registerPhoneCallTools,
+  ApnsVoipSender,
+  type VoipSender,
   registerProjectTools,
   registerSecretRequestTool,
   registerSetupTools,
@@ -84,6 +87,9 @@ export interface WorkerOptions {
   /** Push notifications; defaults to FCM when a service account is given, else recorded only. */
   push?: PushSender;
   fcmServiceAccountJson?: string;
+  /** iOS call rings (PushKit, D-135): a sender, or APNs settings. */
+  voip?: VoipSender;
+  apns?: { keyP8: string; keyId: string; teamId: string; topic: string; url?: string };
   /** Private address ranges the worker may call (local development and tests only). */
   egressExemptCidrs?: string[];
   /** Base URL overrides for provider APIs (tests). */
@@ -265,6 +271,8 @@ export async function startWorker(opts: WorkerOptions) {
   registerReplayTools(tools, { db, fetch: fetchOut });
   registerLoginTools(tools, { db, fetch: fetchOut });
   registerChannelTools(tools, { db, fetch: fetchOut, local: opts.local });
+  const voip = opts.voip ?? (opts.apns ? new ApnsVoipSender(opts.apns) : undefined);
+  registerPhoneCallTools(tools, { db, notifications, voip });
   registerPageTools(tools, { db, pagesUrl: opts.pagesUrl ?? "http://localhost:8790" });
   // Projects (D-113): the tools start planning runs; the heartbeat lives in the minute tick.
   registerProjectTools(tools, {
@@ -296,6 +304,7 @@ export async function startWorker(opts: WorkerOptions) {
       computers: !!computers,
       realtimeModel: opts.realtimeModel,
     },
+    voip,
     agent: {
       db,
       gateway,

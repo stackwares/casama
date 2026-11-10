@@ -1,6 +1,6 @@
 /** Voice (Phase 6, D-065): dictation, read aloud, live-call sessions, tool forwarding, transcripts. */
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { VOICE_PRICES } from "@kasama/agent";
+import { callGreeting, callNotAnswered, VOICE_PRICES } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@kasama/db";
 import { eq, sql } from "drizzle-orm";
@@ -87,8 +87,19 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.createVoiceSession, async (c) => {
     const claims = requireClaims(c.get("claims"));
-    const { bot_id, conversation_id } = c.req.valid("json");
+    const { bot_id, call_id } = c.req.valid("json");
+    let { conversation_id } = c.req.valid("json");
     const bot = await visibleBot(claims, bot_id);
+    // An answered phone call (D-135): its conversation, and the bot opens with why it called.
+    let greeting: string | undefined;
+    if (call_id) {
+      const [call] = await db.execute<{ reason: string; conversation_id: string | null; bot_id: string }>(sql`
+        select reason, conversation_id, bot_id from public.voice_calls
+        where id = ${call_id}::uuid and user_id = ${claims.sub}::uuid and status = 'answered'`);
+      if (!call || call.bot_id !== bot.id) throw new ApiError(404, "call_not_found", "Call not found");
+      greeting = callGreeting(call.reason);
+      conversation_id = call.conversation_id ?? conversation_id;
+    }
     const conv = conversation_id
       ? await visibleConversation(claims, conversation_id, bot.id)
       : (
@@ -105,7 +116,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           )
         )[0];
     if (!conv) throw new Error("conversation insert returned nothing");
-    const s = unwrap(await deps.workflows.voiceSession(bot.orgId, bot.id));
+    const s = unwrap(await deps.workflows.voiceSession(bot.orgId, bot.id, greeting));
     return c.json(
       {
         provider: "openai" as const,
@@ -115,6 +126,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         connect_url: s.connectUrl,
         conversation_id: conv.id,
         tools: s.tools,
+        speak_first: !!greeting,
       },
       200,
     );
@@ -209,5 +221,49 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd)
         values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${(seconds / 60) * VOICE_PRICES.realtimePerMinute})`);
     return c.json({ saved: turns.length }, 200);
+  });
+
+  // Phone calls (D-135) -------------------------------------------------------
+  type CallRow = { id: string; bot_id: string; bot_name: string; reason: string; status: "ringing"; conversation_id: string | null; expires_at: string; created_at: string };
+  const callOut = (r: CallRow) => ({ ...r, expires_at: new Date(r.expires_at).toISOString(), created_at: new Date(r.created_at).toISOString() });
+  const myCall = async (claims: JwtClaims, id: string) => {
+    const [r] = await db.execute<CallRow>(sql`
+      select vc.id, vc.bot_id, b.name as bot_name, vc.reason, vc.status, vc.conversation_id, vc.expires_at, vc.created_at
+      from public.voice_calls vc join public.bots b on b.id = vc.bot_id where vc.id = ${id}::uuid and vc.user_id = ${claims.sub}::uuid`);
+    if (!r) throw new ApiError(404, "call_not_found", "Call not found");
+    return r;
+  };
+
+  app.openapi(routes.listRingingCalls, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const rows = await db.execute<CallRow>(sql`
+      select vc.id, vc.bot_id, b.name as bot_name, vc.reason, vc.status, vc.conversation_id, vc.expires_at, vc.created_at
+      from public.voice_calls vc join public.bots b on b.id = vc.bot_id
+      where vc.user_id = ${claims.sub}::uuid and vc.status = 'ringing' and vc.expires_at > now() order by vc.created_at desc`);
+    return c.json({ items: rows.map(callOut) }, 200);
+  });
+
+  app.openapi(routes.getVoiceCall, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    return c.json(callOut(await myCall(claims, c.req.valid("param").id)), 200);
+  });
+
+  app.openapi(routes.answerVoiceCall, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    await myCall(claims, id);
+    const [ok] = await db.execute<{ id: string }>(sql`
+      update public.voice_calls set status = 'answered', answered_at = now()
+      where id = ${id}::uuid and status = 'ringing' and expires_at > now() returning id`);
+    if (!ok) throw new ApiError(409, "call_over", "This call has already ended");
+    return c.json(callOut(await myCall(claims, id)), 200);
+  });
+
+  app.openapi(routes.declineVoiceCall, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    await myCall(claims, id);
+    await callNotAnswered({ db }, id, "declined");
+    return c.json(callOut(await myCall(claims, id)), 200);
   });
 }

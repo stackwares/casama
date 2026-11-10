@@ -263,7 +263,11 @@ Class | Method | HTTP request | Description
 [*TeachApi*](doc/TeachApi.md) | [**startTeach**](doc/TeachApi.md#startteach) | **POST** /v1/teach | Start recording a task while you have control of a computer (D-120)
 [*TeachApi*](doc/TeachApi.md) | [**stopTeach**](doc/TeachApi.md#stopteach) | **POST** /v1/teach/{id}/stop | Stop recording; the bot drafts a skill from it
 [*UsageApi*](doc/UsageApi.md) | [**getUsage**](doc/UsageApi.md#getusage) | **GET** /v1/usage | 
+[*VoiceApi*](doc/VoiceApi.md) | [**answerVoiceCall**](doc/VoiceApi.md#answervoicecall) | **POST** /v1/calls/{id}/answer | Answer a call; then start a voice session with its call_id
 [*VoiceApi*](doc/VoiceApi.md) | [**createVoiceSession**](doc/VoiceApi.md#createvoicesession) | **POST** /v1/voice/session | Start a live call: mints an ephemeral realtime key with the bot&#39;s persona and tools
+[*VoiceApi*](doc/VoiceApi.md) | [**declineVoiceCall**](doc/VoiceApi.md#declinevoicecall) | **POST** /v1/calls/{id}/decline | Decline a call; the reason arrives as a normal notification
+[*VoiceApi*](doc/VoiceApi.md) | [**getVoiceCall**](doc/VoiceApi.md#getvoicecall) | **GET** /v1/calls/{id} | 
+[*VoiceApi*](doc/VoiceApi.md) | [**listRingingCalls**](doc/VoiceApi.md#listringingcalls) | **GET** /v1/calls/ringing | Calls ringing for you now (the in-app banner on desktop and web)
 [*VoiceApi*](doc/VoiceApi.md) | [**messageSpeech**](doc/VoiceApi.md#messagespeech) | **GET** /v1/messages/{id}/speech | Read aloud: MP3 audio of an assistant message (cached per voice)
 [*VoiceApi*](doc/VoiceApi.md) | [**saveVoiceTranscript**](doc/VoiceApi.md#savevoicetranscript) | **POST** /v1/voice/transcript | Save a call&#39;s transcript to the conversation and record its duration
 [*VoiceApi*](doc/VoiceApi.md) | [**transcribeAudio**](doc/VoiceApi.md#transcribeaudio) | **POST** /v1/voice/transcribe | Dictation: send recorded audio (raw body, audio/_* content type, up to 10 MB)
@@ -512,6 +516,8 @@ Class | Method | HTTP request | Description
  - [PasswordManagerList](doc/PasswordManagerList.md)
  - [PasswordManagerVault](doc/PasswordManagerVault.md)
  - [PasswordManagerVaultList](doc/PasswordManagerVaultList.md)
+ - [PhoneCall](doc/PhoneCall.md)
+ - [PhoneCallList](doc/PhoneCallList.md)
  - [Plan](doc/Plan.md)
  - [PlanCatalog](doc/PlanCatalog.md)
  - [Plugin](doc/Plugin.md)

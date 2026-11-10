@@ -184,7 +184,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: ':botId/call',
-                pageBuilder: _page((_, s) => CallScreen(botId: s.pathParameters['botId']!, conversationId: s.uri.queryParameters['c'])),
+                pageBuilder: _page((_, s) => CallScreen(botId: s.pathParameters['botId']!, conversationId: s.uri.queryParameters['c'], callId: s.uri.queryParameters['call'])),
               ),
               GoRoute(
                 path: ':botId/routines',

@@ -21,6 +21,7 @@ import '../bots/bots_screen.dart';
 import '../computer/computer_screen.dart';
 import '../../ui/glow_button.dart';
 import '../workspaces/spaces.dart';
+import '../voice/phone_calls.dart';
 
 /// Phone: floating tab bar. Tablet: navigation rail. Desktop: a sidebar with the bot list, the
 /// chat, and the bot's computer beside it.
@@ -49,10 +50,12 @@ class ComputerPanelWidth extends Notifier<double> {
 
   @override
   double build() {
-    SharedPreferences.getInstance().then((p) {
-      final v = p.getDouble(_key);
-      if (v != null) state = v;
-    }).catchError((_) {});
+    SharedPreferences.getInstance()
+        .then((p) {
+          final v = p.getDouble(_key);
+          if (v != null) state = v;
+        })
+        .catchError((_) {});
     return defaultWidth;
   }
 
@@ -101,12 +104,7 @@ class HomeShell extends ConsumerWidget {
   String? get _botId => RegExp(r'^/bots/([^/]+)').firstMatch(location)?.group(1);
 
   /// Screens opened from a tab (a chat, a settings page): on phones they take the whole screen.
-  bool get _isDetail =>
-      _botId != null ||
-      location.startsWith('/computer/') ||
-      RegExp(r'^/settings/.+').hasMatch(location) ||
-      location.startsWith('/approvals/') ||
-      location.startsWith('/quick-ask');
+  bool get _isDetail => _botId != null || location.startsWith('/computer/') || RegExp(r'^/settings/.+').hasMatch(location) || location.startsWith('/approvals/') || location.startsWith('/quick-ask');
 
   List<_Dest> _destinations(BuildContext context, {bool phone = false}) {
     final l10n = context.l10n;
@@ -125,7 +123,8 @@ class HomeShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final size = layoutFor(MediaQuery.sizeOf(context).width);
     final badge = ref.watch(inboxBadgeProvider);
-    final child = ref.watch(currentOrgProvider)?.suspended == true ? _SuspendedBanner(child: this.child) : this.child;
+    final inner = ref.watch(currentOrgProvider)?.suspended == true ? _SuspendedBanner(child: this.child) : this.child;
+    final child = IncomingCallBanner(child: inner);
     final dests = _destinations(context, phone: size == LayoutSize.phone);
     void go(int i) => context.go(dests[i].path);
     final shell = _buildShell(context, ref, size, badge, child, dests, go);
@@ -140,7 +139,6 @@ class HomeShell extends ConsumerWidget {
   }
 
   Widget _buildShell(BuildContext context, WidgetRef ref, LayoutSize size, int badge, Widget child, List<_Dest> dests, void Function(int) go) {
-
     if (size == LayoutSize.phone) {
       final showBar = !_isDetail;
       final media = MediaQuery.of(context);
@@ -169,10 +167,7 @@ class HomeShell extends ConsumerWidget {
                   child: FloatingTabChrome(
                     currentIndex: _index,
                     onDestinationSelected: go,
-                    destinations: [
-                      for (final d in dests)
-                        FloatingTabDestination(icon: d.icon, selectedIcon: d.selectedIcon, label: d.label, badge: d.path == '/inbox' ? badge : 0),
-                    ],
+                    destinations: [for (final d in dests) FloatingTabDestination(icon: d.icon, selectedIcon: d.selectedIcon, label: d.label, badge: d.path == '/inbox' ? badge : 0)],
                   ),
                 ),
               ),
@@ -337,13 +332,7 @@ class _Sidebar extends ConsumerWidget {
                     icon: const Icon(LucideIcons.search),
                     onPressed: () => showWorkspaceSearch(context),
                   ),
-                  IconButton(
-                    tooltip: l10n.newBot,
-                    visualDensity: VisualDensity.compact,
-                    iconSize: 20,
-                    icon: const Icon(LucideIcons.plus),
-                    onPressed: () => showCreateBot(context, ref),
-                  ),
+                  IconButton(tooltip: l10n.newBot, visualDensity: VisualDensity.compact, iconSize: 20, icon: const Icon(LucideIcons.plus), onPressed: () => showCreateBot(context, ref)),
                 ],
               ),
             ),
@@ -433,16 +422,7 @@ class _Sidebar extends ConsumerWidget {
 }
 
 class _SidebarItem extends StatelessWidget {
-  const _SidebarItem({
-    super.key,
-    required this.leading,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.trailing,
-    this.subtitle,
-    this.height = 44,
-  });
+  const _SidebarItem({super.key, required this.leading, required this.label, required this.selected, required this.onTap, this.trailing, this.subtitle, this.height = 44});
 
   final Widget leading;
   final String label;
@@ -488,11 +468,7 @@ class _SidebarItem extends StatelessWidget {
                               label,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: tt.bodyLarge?.copyWith(
-                                color: selected ? scheme.primary : scheme.onSurface,
-                                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                                height: 1.2,
-                              ),
+                              style: tt.bodyLarge?.copyWith(color: selected ? scheme.primary : scheme.onSurface, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, height: 1.2),
                             ),
                             if (subtitle != null) Text(subtitle!, maxLines: 1, style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.2)),
                           ],
@@ -570,7 +546,9 @@ class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
     final notifier = ref.read(computerPanelWidthProvider.notifier);
     final active = _hover || _dragging;
     return Glass(
-      border: Border(left: BorderSide(color: active ? scheme.primary.withValues(alpha: 0.6) : context.appColors.hairline, width: active ? 2 : 1)),
+      border: Border(
+        left: BorderSide(color: active ? scheme.primary.withValues(alpha: 0.6) : context.appColors.hairline, width: active ? 2 : 1),
+      ),
       child: SizedBox(
         width: width,
         child: Stack(
@@ -622,7 +600,6 @@ class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
     );
   }
 }
-
 
 /// A suspended workspace (D-094) says so above every screen.
 class _SuspendedBanner extends StatelessWidget {

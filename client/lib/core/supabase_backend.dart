@@ -708,6 +708,22 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<List<PhoneCall>> ringingCalls() async => (await api.voice.listRingingCalls()).data!.items;
+
+  @override
+  Future<PhoneCall> answerCall(String id) async => (await api.voice.answerVoiceCall(id: id)).data!;
+
+  @override
+  Future<PhoneCall> declineCall(String id) async => (await api.voice.declineVoiceCall(id: id)).data!;
+
+  @override
+  Future<void> registerVoipToken(String token) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null || token.isEmpty) return;
+    await supabase.from('voip_tokens').upsert({'user_id': userId, 'token': token, 'last_seen_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'token');
+  }
+
+  @override
   Future<void> registerDevice(String platform, String token) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
@@ -1470,8 +1486,8 @@ class SupabaseBackend implements Backend {
   Future<Uint8List> speech(String messageId) async => (await api.voice.messageSpeech(id: messageId)).data!;
 
   @override
-  Future<VoiceSession> voiceSession(String botId, {String? conversationId}) async => (await api.voice.createVoiceSession(
-    voiceSessionRequest: VoiceSessionRequest(botId: botId, conversationId: conversationId),
+  Future<VoiceSession> voiceSession(String botId, {String? conversationId, String? callId}) async => (await api.voice.createVoiceSession(
+    voiceSessionRequest: VoiceSessionRequest(botId: botId, conversationId: conversationId, callId: callId),
   )).data!;
 
   @override

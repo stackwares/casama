@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/voice/phone_calls.dart' show kasamaBackgroundMessage;
 import 'backend.dart';
 import 'providers.dart';
 import 'router.dart';
@@ -42,13 +43,13 @@ class PushConfig {
   static bool get enabled => projectId.isNotEmpty && senderId.isNotEmpty && _keys.$1.isNotEmpty && _keys.$2.isNotEmpty;
 
   static FirebaseOptions get options => FirebaseOptions(
-        apiKey: _keys.$1,
-        appId: _keys.$2,
-        messagingSenderId: senderId,
-        projectId: projectId,
-        iosBundleId: _iosBundleId.isEmpty ? null : _iosBundleId,
-        authDomain: kIsWeb && _webAuthDomain.isNotEmpty ? _webAuthDomain : null,
-      );
+    apiKey: _keys.$1,
+    appId: _keys.$2,
+    messagingSenderId: senderId,
+    projectId: projectId,
+    iosBundleId: _iosBundleId.isEmpty ? null : _iosBundleId,
+    authDomain: kIsWeb && _webAuthDomain.isNotEmpty ? _webAuthDomain : null,
+  );
 }
 
 String _platform() {
@@ -83,6 +84,8 @@ class PushRegistrar {
     _started = true;
     try {
       if (Firebase.apps.isEmpty) await Firebase.initializeApp(options: PushConfig.options);
+      // Phone calls (D-135): on Android a call push rings even when the app is closed.
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) FirebaseMessaging.onBackgroundMessage(kasamaBackgroundMessage);
       final messaging = FirebaseMessaging.instance;
       final settings = await messaging.requestPermission();
       if (settings.authorizationStatus == AuthorizationStatus.denied) return;

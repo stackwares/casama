@@ -8409,6 +8409,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message contains'**
   String get messageTriggerWords;
+
+  /// No description provided for @callIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is calling'**
+  String callIncoming(String name);
+
+  /// No description provided for @callAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer'**
+  String get callAnswer;
+
+  /// No description provided for @callDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get callDecline;
 }
 
 class _AppLocalizationsDelegate

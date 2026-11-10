@@ -23,6 +23,8 @@ class VoiceSessionRequest {
     required  this.botId,
 
      this.conversationId,
+
+     this.callId,
   });
 
   @JsonKey(
@@ -49,17 +51,32 @@ class VoiceSessionRequest {
 
 
 
+      /// An answered phone call (D-135): the session uses its conversation and the bot speaks first
+  @JsonKey(
+    
+    name: r'call_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? callId;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is VoiceSessionRequest &&
       other.botId == botId &&
-      other.conversationId == conversationId;
+      other.conversationId == conversationId &&
+      other.callId == callId;
 
     @override
     int get hashCode =>
         botId.hashCode +
-        conversationId.hashCode;
+        conversationId.hashCode +
+        callId.hashCode;
 
   factory VoiceSessionRequest.fromJson(Map<String, dynamic> json) => _$VoiceSessionRequestFromJson(json);
 

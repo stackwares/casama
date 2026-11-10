@@ -6,6 +6,7 @@ import {
   checkCalendarTriggers,
   checkWatchers,
   pollIMessage,
+  expireCalls,
   gitSyncTick,
   knowledgeTick,
   collect,
@@ -55,6 +56,8 @@ let runtime:
       offlineModels?: boolean;
       /** ChatGPT plan sign-in endpoints (tests point them at a fake OpenAI). */
       chatgpt?: ChatGptConfig;
+      /** iOS call rings (D-135). */
+      voip?: import("@kasama/agent").VoipSender;
     }
   | undefined;
 export function configureWorkflows(r: NonNullable<typeof runtime>) {
@@ -120,6 +123,8 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
         name: "deferred-pushes",
       },
     );
+    // Phone calls nobody answered (D-135) become a push with the reason.
+    await DBOS.runStep(() => expireCalls({ db: rt().db, notifications: rt().agent.notifications }).catch(() => 0), { name: "expire-calls" });
     const runIds = await DBOS.runStep(() => claimDueRoutines(rt().db), { name: "claim-due" });
     // Calendar triggers (D-132): read calendars every 5 minutes; start the runs whose time has come.
     await DBOS.runStep(
@@ -454,8 +459,8 @@ export const voiceSpeakWorkflow = DBOS.registerWorkflow(
   { name: "voiceSpeak" },
 );
 export const voiceSessionWorkflow = DBOS.registerWorkflow(
-  async (orgId: string, botId: string) =>
-    DBOS.runStep(() => voiceSession(voiceRt(), orgId, botId), { name: "session" }),
+  async (orgId: string, botId: string, greeting?: string | null) =>
+    DBOS.runStep(() => voiceSession(voiceRt(), orgId, botId, greeting ?? undefined), { name: "session" }),
   { name: "voiceSession" },
 );
 

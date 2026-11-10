@@ -17,9 +17,12 @@ import '../../ui/shell_header.dart';
 
 /// A live voice call with a bot (/bots/:id/call?c=conversation).
 class CallScreen extends ConsumerStatefulWidget {
-  const CallScreen({super.key, required this.botId, this.conversationId});
+  const CallScreen({super.key, required this.botId, this.conversationId, this.callId});
   final String botId;
   final String? conversationId;
+
+  /// An answered phone call (D-135).
+  final String? callId;
 
   @override
   ConsumerState<CallScreen> createState() => _CallScreenState();
@@ -44,6 +47,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   @override
   void dispose() {
     unawaited(_toolSub?.cancel());
+    // Stop listening first: hanging up changes the call's state while this widget is going away.
+    _call?.state.removeListener(_refresh);
+    _call?.transcript.removeListener(_refresh);
+    _call?.replyLatencyMs.removeListener(_refresh);
     if (!_ending) unawaited(_call?.hangUp());
     super.dispose();
   }
@@ -51,7 +58,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   Future<void> _connect() async {
     try {
       final backend = ref.read(backendProvider);
-      final session = await backend.voiceSession(widget.botId, conversationId: widget.conversationId);
+      final session = await backend.voiceSession(widget.botId, conversationId: widget.conversationId, callId: widget.callId);
       _conversationId = session.conversationId;
       final call = await ref.read(voiceCallConnectorProvider).connect(session);
       if (!mounted) {
@@ -260,14 +267,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
 /// A round call control with its label underneath.
 class _CallButton extends StatelessWidget {
-  const _CallButton({
-    required this.buttonKey,
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-    this.selected = false,
-    this.destructive = false,
-  });
+  const _CallButton({required this.buttonKey, required this.icon, required this.label, required this.onPressed, this.selected = false, this.destructive = false});
   final Key buttonKey;
   final IconData icon;
   final String label;

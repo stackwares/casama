@@ -203,6 +203,9 @@ services:
       WORKER_DATABASE_URL: ${WORKER_DB_PASSWORD:+postgres://kasama_worker:${WORKER_DB_PASSWORD}@db:5432/postgres}
       # Push notifications: the Firebase service account JSON on one line (optional).
       FCM_SERVICE_ACCOUNT: ${FCM_SERVICE_ACCOUNT:-}
+      APNS_KEY_P8: ${APNS_KEY_P8:-}
+      APNS_KEY_ID: ${APNS_KEY_ID:-}
+      APNS_TEAM_ID: ${APNS_TEAM_ID:-}
     depends_on: { migrate: { condition: service_completed_successfully } }
 
   # The only service with Docker access. It joins each computer's private network to reach computerd.

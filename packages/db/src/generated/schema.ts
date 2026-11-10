@@ -2713,6 +2713,72 @@ export const channelEvents = pgTable("channel_events", {
 	check("channel_events_preview_check", sql`char_length(preview) <= 300`),
 ]);
 
+export const voipTokens = pgTable("voip_tokens", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	token: text().notNull(),
+	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("voip_tokens_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "voip_tokens_user_id_fkey"
+		}).onDelete("cascade"),
+	unique("voip_tokens_token_key").on(table.token),
+	pgPolicy("voip_tokens_own", { as: "permissive", for: "all", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))`, withCheck: sql`(user_id = ( SELECT auth.uid() AS uid))`  }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("voip_tokens_token_check", sql`(char_length(token) >= 8) AND (char_length(token) <= 400)`),
+]);
+
+export const voiceCalls = pgTable("voice_calls", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	runId: uuid("run_id"),
+	conversationId: uuid("conversation_id"),
+	reason: text().notNull(),
+	status: text().default('ringing').notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '00:00:45'::interval)`).notNull(),
+	answeredAt: timestamp("answered_at", { withTimezone: true, mode: 'string' }),
+	endedAt: timestamp("ended_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("voice_calls_ringing_idx").using("btree", table.expiresAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(status = 'ringing'::text)`),
+	index("voice_calls_user_idx").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "voice_calls_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "voice_calls_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "voice_calls_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "voice_calls_run_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.conversationId],
+			foreignColumns: [conversations.id],
+			name: "voice_calls_conversation_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("voice_calls_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("voice_calls_reason_check", sql`(char_length(reason) >= 1) AND (char_length(reason) <= 500)`),
+	check("voice_calls_status_check", sql`status = ANY (ARRAY['ringing'::text, 'answered'::text, 'declined'::text, 'missed'::text, 'cancelled'::text])`),
+]);
+
 export const agentImportFiles = pgTable("agent_import_files", {
 	importId: uuid("import_id").notNull(),
 	path: text().notNull(),

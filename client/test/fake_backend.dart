@@ -1858,16 +1858,44 @@ class FakeBackend implements Backend {
     return Uint8List.fromList([1, 2, 3]);
   }
 
+  final ringing = <PhoneCall>[];
+  final callActions = <String>[];
+  String? sessionCallId;
   @override
-  Future<VoiceSession> voiceSession(String botId, {String? conversationId}) async => VoiceSession(
-    provider: VoiceSessionProviderEnum.openai,
-    model: 'gpt-realtime-2.1',
-    clientSecret: 'ek_test',
-    expiresAt: DateTime.now().add(const Duration(minutes: 10)),
-    connectUrl: 'https://example.invalid/v1/realtime/calls',
-    conversationId: conversationId ?? convId,
-    tools: 3,
-  );
+  Future<List<PhoneCall>> ringingCalls() async => List.of(ringing);
+  @override
+  Future<PhoneCall> answerCall(String id) async {
+    callActions.add('answer:$id');
+    final c = ringing.firstWhere((c) => c.id == id);
+    ringing.remove(c);
+    return PhoneCall.fromJson({...c.toJson(), 'status': 'answered'});
+  }
+
+  @override
+  Future<PhoneCall> declineCall(String id) async {
+    callActions.add('decline:$id');
+    final c = ringing.firstWhere((c) => c.id == id);
+    ringing.remove(c);
+    return PhoneCall.fromJson({...c.toJson(), 'status': 'declined'});
+  }
+
+  @override
+  Future<void> registerVoipToken(String token) async => callActions.add('voip:$token');
+
+  @override
+  Future<VoiceSession> voiceSession(String botId, {String? conversationId, String? callId}) async {
+    sessionCallId = callId;
+    return VoiceSession(
+      provider: VoiceSessionProviderEnum.openai,
+      model: 'gpt-realtime-2.1',
+      clientSecret: 'ek_test',
+      expiresAt: DateTime.now().add(const Duration(minutes: 10)),
+      connectUrl: 'https://example.invalid/v1/realtime/calls',
+      conversationId: conversationId ?? convId,
+      tools: 3,
+      speakFirst: callId != null,
+    );
+  }
 
   @override
   Future<VoiceToolResult> voiceTool(String botId, String conversationId, String callId, String name, Map<String, Object?> arguments) async {

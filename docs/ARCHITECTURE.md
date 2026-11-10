@@ -271,6 +271,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/channels/` (`adapters.ts` per provider; `service.ts` with `handleInbound`, `replyToChannel`, `channel.send`, `pollIMessage`); `channels`, `channel_threads`, `channel_events`; `apps/server/src/api/routes/channels.ts` (CRUD and `/hooks/channels/{id}`); the `channel-reply` run step; the `message` routine trigger (`startRoutineForMessage`); computerd `/imessage/new` and `/imessage/send` behind the companion's Messages permission; the bot's Chat apps screen.
 
+## Phone-call voice (D-135)
+
+- `packages/agent/src/phone-calls.ts` (`voice.call_user`, `ApnsVoipSender`, `ringCall`, `callNotAnswered`, `expireCalls` in the minute tick), `PushSender.sendCall` (FCM high priority); `voice_calls`, `voip_tokens`; `/v1/calls/*` and `call_id` on `/v1/voice/session` in `routes/voice.ts`; the app's `features/voice/phone_calls.dart` (CallKit and Android calling screen through flutter_callkit_incoming, the desktop/web ringing banner) and PushKit in `ios/Runner/AppDelegate.swift`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).
