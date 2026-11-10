@@ -1421,3 +1421,28 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - unit: barge-in cancels and clears only while the bot is talking; the keyword tokenizer on a small vocabulary. The tokenizer was also checked offline against the real vocabulary and examples.
   - widget: the avatar follows the speaking state and the choice is remembered; turning the wake word on prepares the model and listens for the phrase, and a detection opens the chosen bot's live call (fake engine).
   - Both native builds work with the plugin.
+
+## D-145 Ops extras: sign-up allowlist, AI Gateway, secret store
+
+- **Sign-up allowlist:**
+  - `SIGNUP_ALLOWED_EMAILS` (emails or domains, comma-separated; `@acme.com` or `acme.com` for a domain) sits beside `DISABLE_SIGNUP`.
+  - Kasama's Supabase sign-up hook enforces it for every sign-in method, Google included, and refuses others with "limited to approved email addresses".
+  - Compose now wires the hook (`SIGNUP_HOOK_ENABLED`, `AUTH_HOOK_SECRET`, sent to the auth service and the API). An allowlist without the hook secret refuses sign-ups rather than allowing everyone.
+- **Cloudflare AI Gateway:**
+  - With `AI_GATEWAY_URL` (`https://gateway.ai.cloudflare.com/v1/<account>/<gateway>`), model calls whose credential has no base URL of its own go through the gateway's provider endpoint, for caching, logs and rate limits. The endpoints are: `openai`, `anthropic/v1`, `google-ai-studio/v1beta`, `grok/v1`, `openrouter/v1`.
+  - `AI_GATEWAY_TOKEN` is sent as `cf-aig-authorization` for authenticated gateways.
+  - `AI_GATEWAY_PROVIDERS` limits which providers use it.
+  - It's applied in `CredentialResolver`, so every model path picks it up. Paths follow Cloudflare's public docs.
+- **Secret store:**
+  - **The interface:** `SecretStore` (`packages/agent/src/secret-store.ts`) for bots' named secrets (`{{secret:NAME}}`). Supabase Vault is the default; the Infisical adapter uses the workspace's own project with a universal-auth machine identity.
+  - **Infisical calls:** `/api/v1/auth/universal-auth/login`, then `/api/v3/secrets/raw` to list, create, update and delete in the project, environment and path. Built from Infisical's public API docs; tested against a fake.
+  - **What Kasama keeps:** each secret's name, kind, allowed hosts and bots (`secrets.store` says where the value is). Values are read from Infisical when a bot uses them.
+  - **Settings:** admins set it up in workspace settings → Where secrets are kept (`PUT /v1/orgs/{id}/secret-store`, checked before saving, audited).
+  - **Moving secrets:** `move_existing` moves current Vault secrets into Infisical; switching back to Vault copies them back first.
+  - **What it doesn't cover:** the rest of Kasama's own credentials (model keys, integration tokens, channel secrets and so on) stay in Vault. Moving those is a separate, larger change.
+- **Tests:**
+  - API (`ops-extras.test.ts`):
+    - The allowlist admits listed emails and domains (including Google sign-ins) and refuses others.
+    - Gateway URLs and the auth header, an own base URL winning, and the provider filter.
+    - Infisical: a bad identity refused, existing secrets moved (Vault row cleared), new secrets written to Infisical, bots reading values from it, and switching back to Vault restoring the values.
+  - widget (`secret_store_test.dart`).

@@ -623,6 +623,27 @@ class FakeBackend implements Backend {
   @override
   Future<bool> allowBotToBot(String orgId) async => botToBot;
 
+  // Secret store (D-145)
+  var secretStoreState = SecretStoreSettings(provider: SecretStoreSettingsProviderEnum.vault, siteUrl: null, projectId: null, environment: null, secretPath: null);
+  SetSecretStoreRequest? setStore;
+  @override
+  Future<SecretStoreSettings> secretStore(String orgId) async => secretStoreState;
+  @override
+  Future<SecretStoreSettings> setSecretStore(String orgId, SetSecretStoreRequest request) async {
+    setStore = request;
+    return secretStoreState = SecretStoreSettings(
+      provider: SecretStoreSettingsProviderEnum.infisical,
+      siteUrl: request.siteUrl,
+      projectId: request.projectId,
+      environment: request.environment ?? 'prod',
+      secretPath: request.secretPath ?? '/',
+    );
+  }
+
+  @override
+  Future<SecretStoreSettings> removeSecretStore(String orgId) async =>
+      secretStoreState = SecretStoreSettings(provider: SecretStoreSettingsProviderEnum.vault, siteUrl: null, projectId: null, environment: null, secretPath: null);
+
   // Linked agents (D-143)
   final linkList = <BotLink>[];
   final linkActions = <String>[];

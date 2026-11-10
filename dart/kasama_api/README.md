@@ -252,9 +252,12 @@ Class | Method | HTTP request | Description
 [*SecretsApi*](doc/SecretsApi.md) | [**createSecret**](doc/SecretsApi.md#createsecret) | **POST** /v1/secrets | Create a named secret with allowed hosts (value stored in Vault)
 [*SecretsApi*](doc/SecretsApi.md) | [**declineSecretRequest**](doc/SecretsApi.md#declinesecretrequest) | **POST** /v1/secrets/requests/{id}/decline | Decline a bot&#39;s request for a secret; the bot continues without it
 [*SecretsApi*](doc/SecretsApi.md) | [**deleteSecret**](doc/SecretsApi.md#deletesecret) | **DELETE** /v1/secrets/{id} | 
+[*SecretsApi*](doc/SecretsApi.md) | [**deleteSecretStore**](doc/SecretsApi.md#deletesecretstore) | **DELETE** /v1/orgs/{id}/secret-store | Go back to Vault (secrets kept in Infisical are copied back first)
 [*SecretsApi*](doc/SecretsApi.md) | [**fulfillSecretRequest**](doc/SecretsApi.md#fulfillsecretrequest) | **POST** /v1/secrets/requests/{id}/fulfill | Save the value a bot asked for (into Vault, for that bot and those hosts only)
+[*SecretsApi*](doc/SecretsApi.md) | [**getSecretStore**](doc/SecretsApi.md#getsecretstore) | **GET** /v1/orgs/{id}/secret-store | 
 [*SecretsApi*](doc/SecretsApi.md) | [**listSecretRequests**](doc/SecretsApi.md#listsecretrequests) | **GET** /v1/secrets/requests | Bots waiting for a secret (pending requests you can see)
 [*SecretsApi*](doc/SecretsApi.md) | [**listSecrets**](doc/SecretsApi.md#listsecrets) | **GET** /v1/secrets | 
+[*SecretsApi*](doc/SecretsApi.md) | [**setSecretStore**](doc/SecretsApi.md#setsecretstore) | **PUT** /v1/orgs/{id}/secret-store | Keep bots&#39; named secrets in the workspace&#39;s Infisical project (admins, D-145)
 [*SkillsApi*](doc/SkillsApi.md) | [**acceptSkillProposal**](doc/SkillsApi.md#acceptskillproposal) | **POST** /v1/skill-proposals/{id}/accept | Save the proposed skill or edit, optionally changed first
 [*SkillsApi*](doc/SkillsApi.md) | [**applySkillUpdate**](doc/SkillsApi.md#applyskillupdate) | **POST** /v1/skills/{id}/update | Update a GitHub skill to a newer commit (after reviewing the diff)
 [*SkillsApi*](doc/SkillsApi.md) | [**checkSkillUpdate**](doc/SkillsApi.md#checkskillupdate) | **GET** /v1/skills/{id}/update | Compare a GitHub skill with its source&#39;s latest commit (diff before updating)
@@ -636,6 +639,7 @@ Class | Method | HTTP request | Description
  - [SecretRequestedEventPayload](doc/SecretRequestedEventPayload.md)
  - [SecretResolvedEvent](doc/SecretResolvedEvent.md)
  - [SecretResolvedEventPayload](doc/SecretResolvedEventPayload.md)
+ - [SecretStoreSettings](doc/SecretStoreSettings.md)
  - [SendMessageRequest](doc/SendMessageRequest.md)
  - [SendMessageResponse](doc/SendMessageResponse.md)
  - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
@@ -648,6 +652,7 @@ Class | Method | HTTP request | Description
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
  - [SetPaymentSettingsRequest](doc/SetPaymentSettingsRequest.md)
  - [SetPaymentSettingsRequestCardholder](doc/SetPaymentSettingsRequestCardholder.md)
+ - [SetSecretStoreRequest](doc/SetSecretStoreRequest.md)
  - [SetTelephonyRequest](doc/SetTelephonyRequest.md)
  - [SignupChallenge](doc/SignupChallenge.md)
  - [SkillCatalog](doc/SkillCatalog.md)

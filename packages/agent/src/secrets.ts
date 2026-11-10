@@ -25,16 +25,25 @@ export async function loadSecrets(
   db: Database,
   orgId: string,
   botId: string,
+  opts: { fetch?: typeof fetch } = {},
 ): Promise<NamedSecret[]> {
   const rows = await db.execute<{
     name: string;
     value: string | null;
     allowed_hosts: string[];
     kind: "value" | "totp";
+    store: "vault" | "infisical";
   }>(sql`
-    select s.name, v.decrypted_secret as value, s.allowed_hosts, s.kind
+    select s.name, v.decrypted_secret as value, s.allowed_hosts, s.kind, s.store
     from public.secrets s left join vault.decrypted_secrets v on v.id = s.vault_secret_id
     where s.org_id = ${orgId}::uuid and (s.allowed_bot_ids is null or ${botId}::uuid = any(s.allowed_bot_ids))`);
+  // Secrets kept in Infisical (D-145) are read from there.
+  const external = rows.filter((r) => r.store === "infisical").map((r) => r.name);
+  if (external.length) {
+    const { secretStoreFor } = await import("./secret-store.ts");
+    const values = await (await secretStoreFor(db, orgId, opts.fetch)).get(external).catch(() => new Map<string, string>());
+    for (const r of rows) if (r.store === "infisical") r.value = values.get(r.name) ?? null;
+  }
   return rows
     .filter((r) => r.value)
     .map((r) => ({

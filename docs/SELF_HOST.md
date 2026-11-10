@@ -63,6 +63,8 @@ All settings live in `infra/compose/.env`. Common ones:
 | `KASAMA_SITE`, `KASAMA_PUBLIC_URL`                                                   | The domain (automatic HTTPS) or `:80` behind another proxy           |
 | `INSTANCE_ADMIN_EMAILS`                                                              | Comma-separated owners (default: the first account)                  |
 | `DISABLE_SIGNUP=true`                                                                | Invite-only after the first accounts exist                           |
+| `SIGNUP_ALLOWED_EMAILS=ana@acme.com,@acme.com` with `SIGNUP_HOOK_ENABLED=true` and `AUTH_HOOK_SECRET` | Only these emails or domains can sign up                      |
+| `AI_GATEWAY_URL=https://gateway.ai.cloudflare.com/v1/<account>/<gateway>`            | Model calls go through Cloudflare AI Gateway (caching, logs, limits) |
 | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ADMIN_EMAIL`, `EMAIL_AUTOCONFIRM=false` | Email confirmation and password reset through your SMTP server       |
 | `FCM_SERVICE_ACCOUNT`                                                                | Push: Firebase service account JSON (one line) for the apps' project |
 | `RESEND_API_KEY`                                                                     | Invite emails (otherwise invites return a code to share)             |

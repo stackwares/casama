@@ -563,6 +563,7 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
         if (admin) ...[const SizedBox(height: AppSpace.lg), BotToBotSwitch(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), A2aSwitch(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), PhoneCallsSection(orgId: org.id)],
+        if (admin) ...[const SizedBox(height: AppSpace.lg), SecretStoreSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), MemoryBackendSection(orgId: org.id)],
         if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), EncryptionSection(orgId: org.id)],
         if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), PaymentsSection(orgId: org.id)],
@@ -1100,6 +1101,126 @@ class _PaymentsSheetState extends ConsumerState<_PaymentsSheet> {
         field('cardholderCountry', _country, l10n.paymentsCountry),
         field('paymentsCap', _cap, l10n.paymentsCap),
         field('paymentsBotCap', _botCap, l10n.paymentsBotCap),
+      ],
+    );
+  }
+}
+
+final _secretStoreProvider = FutureProvider.autoDispose.family<SecretStoreSettings, String>((ref, orgId) => ref.watch(backendProvider).secretStore(orgId));
+
+/// Secret store (D-145): bots' named secrets in Vault, or the workspace's Infisical project.
+class SecretStoreSection extends ConsumerWidget {
+  const SecretStoreSection({super.key, required this.orgId});
+  final String orgId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final s = ref.watch(_secretStoreProvider(orgId)).value;
+    if (s == null) return const SizedBox.shrink();
+    final infisical = s.provider == SecretStoreSettingsProviderEnum.infisical;
+    return GroupedCard(
+      children: [
+        GroupedTile(
+          key: const Key('secretStore'),
+          icon: LucideIcons.vault,
+          title: l10n.secretStore,
+          subtitle: infisical ? 'Infisical · ${s.projectId} · ${s.environment}' : l10n.secretStoreVault,
+          onTap: () async {
+            final changed = await showAdaptiveSheet<bool>(
+              context: context,
+              builder: (_) => _SecretStoreSheet(orgId: orgId, current: s),
+            );
+            if (changed == true) ref.invalidate(_secretStoreProvider(orgId));
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _SecretStoreSheet extends ConsumerStatefulWidget {
+  const _SecretStoreSheet({required this.orgId, required this.current});
+  final String orgId;
+  final SecretStoreSettings current;
+  @override
+  ConsumerState<_SecretStoreSheet> createState() => _SecretStoreSheetState();
+}
+
+class _SecretStoreSheetState extends ConsumerState<_SecretStoreSheet> {
+  late final _site = TextEditingController(text: widget.current.siteUrl ?? 'https://app.infisical.com');
+  late final _project = TextEditingController(text: widget.current.projectId ?? '');
+  late final _env = TextEditingController(text: widget.current.environment ?? 'prod');
+  final _clientId = TextEditingController();
+  final _clientSecret = TextEditingController();
+  var _move = true;
+  var _busy = false;
+
+  @override
+  void dispose() {
+    for (final c in [_site, _project, _env, _clientId, _clientSecret]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final valid = [_site, _project, _clientId, _clientSecret].every((c) => c.text.trim().isNotEmpty);
+    Widget field(String key, TextEditingController c, String label, {bool secret = false}) => TextField(
+      key: Key(key),
+      controller: c,
+      obscureText: secret,
+      onChanged: (_) => setState(() {}),
+      decoration: InputDecoration(labelText: label),
+    );
+    return FormSheet(
+      icon: LucideIcons.vault,
+      title: l10n.secretStore,
+      subtitle: l10n.secretStoreHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveSecretStore'),
+      onSubmit: !valid || _busy
+          ? null
+          : () async {
+              setState(() => _busy = true);
+              final r = await runGuarded(
+                context,
+                () => ref
+                    .read(backendProvider)
+                    .setSecretStore(
+                      widget.orgId,
+                      SetSecretStoreRequest(
+                        siteUrl: _site.text.trim(),
+                        projectId: _project.text.trim(),
+                        environment: _env.text.trim().isEmpty ? null : _env.text.trim(),
+                        clientId: _clientId.text.trim(),
+                        clientSecret: _clientSecret.text.trim(),
+                        moveExisting: _move,
+                      ),
+                    ),
+              );
+              if (!mounted) return;
+              setState(() => _busy = false);
+              if (r != null) Navigator.pop(context, true);
+            },
+      children: [
+        field('infisicalSite', _site, l10n.secretStoreSite),
+        field('infisicalProject', _project, l10n.secretStoreProject),
+        field('infisicalEnv', _env, l10n.secretStoreEnv),
+        field('infisicalClientId', _clientId, l10n.secretStoreClientId),
+        field('infisicalClientSecret', _clientSecret, l10n.secretStoreClientSecret, secret: true),
+        SwitchListTile(key: const Key('infisicalMove'), contentPadding: EdgeInsets.zero, title: Text(l10n.secretStoreMove), value: _move, onChanged: (v) => setState(() => _move = v)),
+        if (widget.current.provider == SecretStoreSettingsProviderEnum.infisical)
+          TextButton(
+            key: const Key('secretStoreVault'),
+            onPressed: () async {
+              final r = await runGuarded(context, () => ref.read(backendProvider).removeSecretStore(widget.orgId));
+              if (r != null && context.mounted) Navigator.pop(context, true);
+            },
+            child: Text(l10n.secretStoreBack),
+          ),
       ],
     );
   }

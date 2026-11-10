@@ -91,6 +91,12 @@ export const EnvSchema = z.object({
   OPENAI_REALTIME_URL: z.string().optional(),
   /** Payments (D-142): override for Stripe's API (tests, proxies). */
   STRIPE_API_URL: z.url().optional(),
+  /** Cloudflare AI Gateway (D-145): model calls go through it; the token is for authenticated gateways. */
+  AI_GATEWAY_URL: z.url().optional(),
+  AI_GATEWAY_TOKEN: z.string().optional(),
+  AI_GATEWAY_PROVIDERS: z.string().optional(),
+  /** Self-host sign-up allowlist (D-145): emails or domains, comma-separated (needs the sign-up hook). */
+  SIGNUP_ALLOWED_EMAILS: z.string().optional(),
   /** Encryption at rest (D-136): the server key that wraps workspace data keys (32 bytes, base64), and older keys during a rotation (comma-separated). */
   CONTENT_ENCRYPTION_KEY: z.string().optional(),
   CONTENT_ENCRYPTION_KEY_PREVIOUS: z.string().optional(),

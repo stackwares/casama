@@ -311,6 +311,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - Barge-in in `RealtimeEvents` (`client/lib/core/voice.dart`) and `turn_detection` in `createRealtimeSession`; `client/lib/features/voice/talking_avatar.dart`; the wake word in `client/lib/features/voice/wake_word.dart` (sherpa-onnx keyword spotting, model download and checksum, keyword tokenizer, `WakeWordController`) and `wake_word_sheet.dart`.
 
+## Ops extras (D-145 to D-148)
+
+- D-145: the sign-up allowlist in `routes/abuse.ts` (compose wires the hook); `AiGatewayConfig` in `CredentialResolver`; `packages/agent/src/secret-store.ts` (`SecretStore`, Vault and Infisical), `org_secret_stores`, `secrets.store`, `routes/secret-store.ts`, and "Where secrets are kept" in workspace settings.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

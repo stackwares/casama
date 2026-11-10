@@ -385,6 +385,10 @@ abstract class Backend {
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
   // Bot-to-bot switch (D-133)
   Future<bool> allowBotToBot(String orgId);
+  // Secret store (D-145)
+  Future<SecretStoreSettings> secretStore(String orgId);
+  Future<SecretStoreSettings> setSecretStore(String orgId, SetSecretStoreRequest request);
+  Future<SecretStoreSettings> removeSecretStore(String orgId);
   // Linked agents (D-143)
   Future<List<BotLink>> botLinks(String botId);
   Future<CreatedBotLink> createBotLink(String botId, String name);

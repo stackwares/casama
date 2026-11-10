@@ -369,6 +369,7 @@ lib/src/model/secret_requested_event.dart
 lib/src/model/secret_requested_event_payload.dart
 lib/src/model/secret_resolved_event.dart
 lib/src/model/secret_resolved_event_payload.dart
+lib/src/model/secret_store_settings.dart
 lib/src/model/send_message_request.dart
 lib/src/model/send_message_response.dart
 lib/src/model/set_bot_a2a_request.dart
@@ -381,6 +382,7 @@ lib/src/model/set_memory_backend_request.dart
 lib/src/model/set_org_limits_request.dart
 lib/src/model/set_payment_settings_request.dart
 lib/src/model/set_payment_settings_request_cardholder.dart
+lib/src/model/set_secret_store_request.dart
 lib/src/model/set_telephony_request.dart
 lib/src/model/signup_challenge.dart
 lib/src/model/skill_catalog.dart

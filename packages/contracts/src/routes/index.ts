@@ -24,6 +24,7 @@ import * as encryption from "./encryption.ts";
 import * as telephony from "./telephony.ts";
 import * as payments from "./payments.ts";
 import * as links from "./links.ts";
+import * as secretStore from "./secret-store.ts";
 import * as pages from "./pages.ts";
 import * as passwordManagers from "./password-managers.ts";
 import * as replays from "./replays.ts";
@@ -61,6 +62,7 @@ export const routes = {
   ...telephony,
   ...payments,
   ...links,
+  ...secretStore,
   ...pages,
   ...passwordManagers,
   ...replays,
@@ -97,6 +99,7 @@ export {
   telephony,
   payments,
   links,
+  secretStore,
   pages,
   passwordManagers,
   replays,

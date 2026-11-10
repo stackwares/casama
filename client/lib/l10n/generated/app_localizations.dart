@@ -9015,6 +9015,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Listening happens on this device with an open-source model (about 18 MB, downloaded once). Nothing is sent anywhere until the call starts.'**
   String get wakeWordPrivacy;
+
+  /// No description provided for @secretStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Where secrets are kept'**
+  String get secretStore;
+
+  /// No description provided for @secretStoreVault.
+  ///
+  /// In en, this message translates to:
+  /// **'This server\'s vault'**
+  String get secretStoreVault;
+
+  /// No description provided for @secretStoreHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep bots\' named secrets in your own Infisical project. Kasama keeps only each secret\'s name and where it may be used.'**
+  String get secretStoreHelp;
+
+  /// No description provided for @secretStoreSite.
+  ///
+  /// In en, this message translates to:
+  /// **'Infisical address'**
+  String get secretStoreSite;
+
+  /// No description provided for @secretStoreProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Project ID'**
+  String get secretStoreProject;
+
+  /// No description provided for @secretStoreEnv.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment'**
+  String get secretStoreEnv;
+
+  /// No description provided for @secretStoreClientId.
+  ///
+  /// In en, this message translates to:
+  /// **'Machine identity client ID'**
+  String get secretStoreClientId;
+
+  /// No description provided for @secretStoreClientSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Client secret'**
+  String get secretStoreClientSecret;
+
+  /// No description provided for @secretStoreMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move current secrets into Infisical'**
+  String get secretStoreMove;
+
+  /// No description provided for @secretStoreBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this server\'s vault again'**
+  String get secretStoreBack;
 }
 
 class _AppLocalizationsDelegate

@@ -129,6 +129,13 @@ if (env.MODE === "api") {
     databaseUrl: env.WORKER_DATABASE_URL ?? env.DATABASE_URL,
     pagesUrl: env.PAGES_URL,
     publicApiUrl: env.PUBLIC_API_URL,
+    aiGateway: env.AI_GATEWAY_URL
+      ? {
+          url: env.AI_GATEWAY_URL,
+          token: env.AI_GATEWAY_TOKEN,
+          providers: env.AI_GATEWAY_PROVIDERS ? (env.AI_GATEWAY_PROVIDERS.split(",").map((p) => p.trim()) as never) : undefined,
+        }
+      : undefined,
     dataResale: env.TREG_RESALE === "on" && env.TREG_API_KEY ? { tregKey: env.TREG_API_KEY, tregUrl: env.TREG_API_URL } : undefined,
     apns:
       env.APNS_KEY_P8 && env.APNS_KEY_ID && env.APNS_TEAM_ID

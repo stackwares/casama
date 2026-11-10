@@ -28,6 +28,8 @@ export interface ResolvedModel {
   reasoningEffort?: "none" | "low" | "medium" | "high" | "xhigh" | "max";
   /** chatgpt: the owner allows moving to the next model when the plan limit is reached. */
   fallbackOnLimit?: boolean;
+  /** Extra request headers (an authenticated Cloudflare AI Gateway, D-145). */
+  headers?: Record<string, string>;
 }
 
 export type ChatMessage =

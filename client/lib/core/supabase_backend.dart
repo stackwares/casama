@@ -916,6 +916,15 @@ class SupabaseBackend implements Backend {
   Future<bool> allowBotToBot(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.allowBotToBot;
 
   @override
+  Future<SecretStoreSettings> secretStore(String orgId) async => (await api.secrets.getSecretStore(id: orgId)).data!;
+
+  @override
+  Future<SecretStoreSettings> setSecretStore(String orgId, SetSecretStoreRequest request) async => (await api.secrets.setSecretStore(id: orgId, setSecretStoreRequest: request)).data!;
+
+  @override
+  Future<SecretStoreSettings> removeSecretStore(String orgId) async => (await api.secrets.deleteSecretStore(id: orgId)).data!;
+
+  @override
   Future<List<BotLink>> botLinks(String botId) async => (await api.links.listBotLinks(id: botId)).data!.items;
 
   @override

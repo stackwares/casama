@@ -819,6 +819,7 @@ export const secrets = pgTable("secrets", {
 	createdBy: uuid("created_by"),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	kind: text().default('value').notNull(),
+	store: text().default('vault').notNull(),
 }, (table) => [
 	foreignKey({
 			columns: [table.orgId],
@@ -836,6 +837,7 @@ export const secrets = pgTable("secrets", {
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("secrets_name_check", sql`name ~ '^[A-Z][A-Z0-9_]{0,63}$'::text`),
 	check("secrets_kind_check", sql`kind = ANY (ARRAY['value'::text, 'totp'::text])`),
+	check("secrets_store_check", sql`store = ANY (ARRAY['vault'::text, 'infisical'::text])`),
 ]);
 
 export const botIntegrations = pgTable("bot_integrations", {
@@ -3100,6 +3102,31 @@ export const linkExchanges = pgTable("link_exchanges", {
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("link_exchanges_direction_check", sql`direction = ANY (ARRAY['out'::text, 'in'::text])`),
 	check("link_exchanges_status_check", sql`status = ANY (ARRAY['working'::text, 'answered'::text, 'failed'::text])`),
+]);
+
+export const orgSecretStores = pgTable("org_secret_stores", {
+	orgId: uuid("org_id").primaryKey().notNull(),
+	provider: text().default('infisical').notNull(),
+	siteUrl: text("site_url").notNull(),
+	projectId: text("project_id").notNull(),
+	environment: text().default('prod').notNull(),
+	secretPath: text("secret_path").default('/').notNull(),
+	clientId: text("client_id").notNull(),
+	vaultSecretId: uuid("vault_secret_id").notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "org_secret_stores_org_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("org_secret_stores_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("org_secret_stores_secret_path_check", sql`secret_path ~ '^/'::text`),
+	check("org_secret_stores_provider_check", sql`provider = 'infisical'::text`),
+	check("org_secret_stores_site_url_check", sql`site_url ~ '^https?://'::text`),
+	check("org_secret_stores_project_id_check", sql`(char_length(project_id) >= 1) AND (char_length(project_id) <= 100)`),
+	check("org_secret_stores_environment_check", sql`(char_length(environment) >= 1) AND (char_length(environment) <= 64)`),
 ]);
 
 export const agentImportFiles = pgTable("agent_import_files", {

@@ -27,12 +27,40 @@ export interface ResolveContext {
 }
 
 /** Reads model keys from Vault. Only the worker's database role can read vault.decrypted_secrets. */
+/** Cloudflare AI Gateway paths for each provider (replacing the provider's own base URL). */
+export const AI_GATEWAY_PATHS: Partial<Record<ProviderId, string>> = {
+  openai: "openai",
+  anthropic: "anthropic/v1",
+  google: "google-ai-studio/v1beta",
+  xai: "grok/v1",
+  openrouter: "openrouter/v1",
+};
+
+export interface AiGatewayConfig {
+  /** https://gateway.ai.cloudflare.com/v1/<account>/<gateway> */
+  url: string;
+  /** For authenticated gateways (sent as cf-aig-authorization). */
+  token?: string;
+  /** Which providers go through it (default: all it supports). */
+  providers?: ProviderId[];
+}
+
 export class CredentialResolver {
   private readonly db: Database;
   private readonly chatgpt: ChatGptConfig;
-  constructor(db: Database, opts: { chatgpt?: ChatGptConfig } = {}) {
+  private readonly gateway?: AiGatewayConfig;
+  constructor(db: Database, opts: { chatgpt?: ChatGptConfig; aiGateway?: AiGatewayConfig } = {}) {
     this.db = db;
     this.chatgpt = opts.chatgpt ?? {};
+    this.gateway = opts.aiGateway;
+  }
+
+  /** Cloudflare AI Gateway (D-145): calls without their own base URL go through it, for caching, logs and limits. */
+  private viaGateway(provider: ProviderId, baseUrl: string | null) {
+    const path = AI_GATEWAY_PATHS[provider];
+    const g = this.gateway;
+    if (!g || baseUrl || !path || (g.providers && !g.providers.includes(provider))) return { baseUrl: baseUrl ?? undefined };
+    return { baseUrl: `${g.url.replace(/\/$/, "")}/${path}`, headers: g.token ? { "cf-aig-authorization": `Bearer ${g.token}` } : undefined };
   }
 
   private now() {
@@ -98,7 +126,7 @@ export class CredentialResolver {
       provider: row.provider,
       model: choice.model,
       apiKey: row.key ?? undefined,
-      baseUrl: row.base_url ?? undefined,
+      ...this.viaGateway(row.provider, row.base_url),
       credentialId: choice.credential_id,
       reasoningEffort,
     };

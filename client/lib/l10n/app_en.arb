@@ -2931,5 +2931,15 @@
   "wakeWordPhraseHelp": "Two or three words, like \"hey kasama\"",
   "wakeWordBot": "Call this bot",
   "wakeWordDownloading": "Downloading the on-device model…",
-  "wakeWordPrivacy": "Listening happens on this device with an open-source model (about 18 MB, downloaded once). Nothing is sent anywhere until the call starts."
+  "wakeWordPrivacy": "Listening happens on this device with an open-source model (about 18 MB, downloaded once). Nothing is sent anywhere until the call starts.",
+  "secretStore": "Where secrets are kept",
+  "secretStoreVault": "This server's vault",
+  "secretStoreHelp": "Keep bots' named secrets in your own Infisical project. Kasama keeps only each secret's name and where it may be used.",
+  "secretStoreSite": "Infisical address",
+  "secretStoreProject": "Project ID",
+  "secretStoreEnv": "Environment",
+  "secretStoreClientId": "Machine identity client ID",
+  "secretStoreClientSecret": "Client secret",
+  "secretStoreMove": "Move current secrets into Infisical",
+  "secretStoreBack": "Use this server's vault again"
 }

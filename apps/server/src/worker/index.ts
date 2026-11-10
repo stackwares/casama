@@ -118,6 +118,8 @@ export interface WorkerOptions {
   };
   /** The API's public address, for Twilio's call webhooks and media streams (D-141). */
   publicApiUrl?: string;
+  /** Cloudflare AI Gateway for model calls (D-145). */
+  aiGateway?: import("@kasama/agent").AiGatewayConfig;
   /** Paid data resale on Kasama Cloud (D-138): Kasama's Treg key, used only when resale is on. */
   dataResale?: { tregKey: string; tregUrl?: string };
   /** Billing (Kasama Cloud only); settles usage into credits every minute. */
@@ -181,7 +183,7 @@ export async function startWorker(opts: WorkerOptions) {
   const chatgptFetch = customChatGpt ? fetch : fetchOut;
   const chatgpt = { ...opts.chatgpt, fetch: chatgptFetch };
   const gateway = buildGateway({ ...opts, chatgptFetch });
-  const credentials = new CredentialResolver(db, { chatgpt });
+  const credentials = new CredentialResolver(db, { chatgpt, aiGateway: opts.aiGateway });
   const mode = opts.embeddings ?? "auto";
   const embedderFor = async (orgId: string): Promise<Embedder | null> => {
     if (mode === "none") return null;

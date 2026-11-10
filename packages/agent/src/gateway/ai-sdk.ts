@@ -26,17 +26,18 @@ import {
 export function languageModel(m: ResolvedModel): LanguageModel {
   switch (m.provider) {
     case "openai":
-      return createOpenAI({ apiKey: m.apiKey, baseURL: m.baseUrl })(m.model);
+      return createOpenAI({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
     case "anthropic":
-      return createAnthropic({ apiKey: m.apiKey, baseURL: m.baseUrl })(m.model);
+      return createAnthropic({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
     case "google":
-      return createGoogleGenerativeAI({ apiKey: m.apiKey, baseURL: m.baseUrl })(m.model);
+      return createGoogleGenerativeAI({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
     case "xai":
-      return createXai({ apiKey: m.apiKey, baseURL: m.baseUrl })(m.model);
+      return createXai({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
     case "openrouter":
       return createOpenAICompatible({
         name: "openrouter",
         apiKey: m.apiKey,
+        headers: m.headers,
         baseURL: m.baseUrl ?? "https://openrouter.ai/api/v1",
         includeUsage: true,
       })(m.model);

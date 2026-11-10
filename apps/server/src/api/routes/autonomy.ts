@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { startTicketWork } from "@kasama/agent";
+import { startTicketWork, secretStoreFor } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
 import { type Database, type JwtClaims, pgErrorCode, schema, withUserSession, contentKeys } from "@kasama/db";
 import {
@@ -312,7 +312,22 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const ask = await askFor(claims, id);
     if (ask.kind === "totp") checkTotpValue(value);
     const admin = await isAdmin(db, claims, ask.org_id);
+    const store = await secretStoreFor(db, ask.org_id, deps.apps?.fetch ?? fetch);
+    if (store.kind === "infisical") {
+      // Infisical keeps the value (D-145); Kasama keeps the name, hosts and bot.
+      const [existing] = await db.execute<{ id: string }>(sql`select id from public.secrets where org_id = ${ask.org_id}::uuid and name = ${ask.name}`);
+      if (existing && !admin) throw new ApiError(409, "secret_exists", `A secret named ${ask.name} already exists. Ask an admin to replace it.`);
+      await store.put(ask.name, value);
+    }
     const secretId = await db.transaction(async (tx) => {
+      if (store.kind === "infisical") {
+        const [r] = await tx.execute<{ id: string }>(sql`
+          insert into public.secrets (org_id, name, kind, store, allowed_hosts, allowed_bot_ids, created_by)
+          values (${ask.org_id}::uuid, ${ask.name}, ${ask.kind}, 'infisical', array(select jsonb_array_elements_text(${JSON.stringify(ask.allowed_hosts)}::jsonb)), array[${ask.bot_id}::uuid], ${claims.sub}::uuid)
+          on conflict (org_id, name) do update set store = 'infisical', allowed_hosts = excluded.allowed_hosts
+          returning id`);
+        return r?.id;
+      }
       const [existing] = await tx.execute<{ id: string; vault_secret_id: string | null }>(sql`
         select id, vault_secret_id from public.secrets where org_id = ${ask.org_id}::uuid and name = ${ask.name} for update`);
       if (existing) {
@@ -390,18 +405,29 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     if (!(await isAdmin(db, claims, body.org_id)))
       throw new ApiError(403, "forbidden", "Only owners and admins can add secrets");
     if (body.kind === "totp") checkTotpValue(body.value);
+    // The workspace's secret store (D-145): Vault, or its own Infisical project.
+    const store = await secretStoreFor(db, body.org_id, deps.apps?.fetch ?? fetch);
+    if (store.kind === "infisical") {
+      const [dup] = await db.execute<{ id: string }>(sql`select id from public.secrets where org_id = ${body.org_id}::uuid and name = ${body.name}`);
+      if (dup) throw new ApiError(409, "secret_exists", `A secret named ${body.name} already exists`);
+      await store.put(body.name, body.value).catch((e: Error) => {
+        throw new ApiError(502, "secret_store_failed", e.message);
+      });
+    }
     try {
       const row = await db.transaction(async (tx) => {
-        const [v] = await tx.execute<{ id: string }>(
-          sql`select vault.create_secret(${body.value}, null, 'named secret') as id`,
-        );
+        const [v] =
+          store.kind === "vault"
+            ? await tx.execute<{ id: string }>(sql`select vault.create_secret(${body.value}, null, 'named secret') as id`)
+            : [];
         const [r] = await tx
           .insert(secrets)
           .values({
             orgId: body.org_id,
             name: body.name,
             kind: body.kind ?? "value",
-            vaultSecretId: v?.id,
+            store: store.kind,
+            vaultSecretId: v?.id ?? null,
             allowedHosts: body.allowed_hosts.map((h) => h.toLowerCase()),
             allowedBotIds: body.allowed_bot_ids ?? null,
             createdBy: claims.sub,
@@ -430,6 +456,8 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       throw new ApiError(404, "secret_not_found", "Secret not found (or you are not an admin)");
     const vaultId = rows[0]?.vaultSecretId;
     if (vaultId) await db.execute(sql`delete from vault.secrets where id = ${vaultId}::uuid`);
+    if (rows[0]?.store === "infisical")
+      await (await secretStoreFor(db, rows[0].orgId, deps.apps?.fetch ?? fetch)).delete(rows[0].name).catch(() => {});
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${rows[0]?.orgId}::uuid, 'user', ${claims.sub}::uuid, 'secret.deleted', 'secret', ${id}::uuid,
               ${JSON.stringify({ name: rows[0]?.name })}::jsonb)`);

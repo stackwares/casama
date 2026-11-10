@@ -45,9 +45,17 @@ export function registerAbuseRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       } catch {
         return c.json({ error: { http_code: 401, message: "Bad hook signature" } }, 401);
       }
-    } else if (abuseControlsOn(env)) {
+    } else if (abuseControlsOn(env) || env.SIGNUP_ALLOWED_EMAILS) {
       // The gate is on but nobody configured the hook secret: refuse rather than trust anyone.
       return c.json({ error: { http_code: 500, message: "Sign-up hook is not configured" } }, 500);
+    }
+    // Self-host sign-up allowlist (D-145): only these emails or domains may sign up, by any method.
+    const allow = (env.SIGNUP_ALLOWED_EMAILS ?? "").split(",").map((a) => a.trim().toLowerCase()).filter(Boolean);
+    if (allow.length) {
+      const email = String((JSON.parse(body || "{}") as { user?: { email?: string } }).user?.email ?? "").toLowerCase();
+      const domain = email.split("@")[1] ?? "";
+      const ok = !!email && allow.some((a) => (a.includes("@") && !a.startsWith("@") ? a === email : a.replace(/^@/, "") === domain));
+      if (!ok) return c.json({ error: { http_code: 403, message: "Sign-up on this server is limited to approved email addresses." } }, 403);
     }
     if (!abuseControlsOn(env)) return c.json({}, 200);
     const payload = JSON.parse(body || "{}") as {

@@ -299,6 +299,7 @@ import 'package:kasama_api/src/model/secret_requested_event.dart';
 import 'package:kasama_api/src/model/secret_requested_event_payload.dart';
 import 'package:kasama_api/src/model/secret_resolved_event.dart';
 import 'package:kasama_api/src/model/secret_resolved_event_payload.dart';
+import 'package:kasama_api/src/model/secret_store_settings.dart';
 import 'package:kasama_api/src/model/send_message_request.dart';
 import 'package:kasama_api/src/model/send_message_response.dart';
 import 'package:kasama_api/src/model/set_bot_a2a_request.dart';
@@ -311,6 +312,7 @@ import 'package:kasama_api/src/model/set_memory_backend_request.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
 import 'package:kasama_api/src/model/set_payment_settings_request.dart';
 import 'package:kasama_api/src/model/set_payment_settings_request_cardholder.dart';
+import 'package:kasama_api/src/model/set_secret_store_request.dart';
 import 'package:kasama_api/src/model/set_telephony_request.dart';
 import 'package:kasama_api/src/model/signup_challenge.dart';
 import 'package:kasama_api/src/model/skill_catalog.dart';
@@ -1087,6 +1089,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SecretResolvedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SecretResolvedEventPayload':
           return SecretResolvedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SecretStoreSettings':
+          return SecretStoreSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SendMessageRequest':
           return SendMessageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SendMessageResponse':
@@ -1111,6 +1115,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetPaymentSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetPaymentSettingsRequestCardholder':
           return SetPaymentSettingsRequestCardholder.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetSecretStoreRequest':
+          return SetSecretStoreRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetTelephonyRequest':
           return SetTelephonyRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SignupChallenge':

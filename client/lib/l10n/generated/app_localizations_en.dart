@@ -5263,4 +5263,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get wakeWordPrivacy =>
       'Listening happens on this device with an open-source model (about 18 MB, downloaded once). Nothing is sent anywhere until the call starts.';
+
+  @override
+  String get secretStore => 'Where secrets are kept';
+
+  @override
+  String get secretStoreVault => 'This server\'s vault';
+
+  @override
+  String get secretStoreHelp =>
+      'Keep bots\' named secrets in your own Infisical project. Kasama keeps only each secret\'s name and where it may be used.';
+
+  @override
+  String get secretStoreSite => 'Infisical address';
+
+  @override
+  String get secretStoreProject => 'Project ID';
+
+  @override
+  String get secretStoreEnv => 'Environment';
+
+  @override
+  String get secretStoreClientId => 'Machine identity client ID';
+
+  @override
+  String get secretStoreClientSecret => 'Client secret';
+
+  @override
+  String get secretStoreMove => 'Move current secrets into Infisical';
+
+  @override
+  String get secretStoreBack => 'Use this server\'s vault again';
 }
