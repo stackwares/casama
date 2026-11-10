@@ -117,4 +117,17 @@ describe("group chats", () => {
     expect(ids).not.toContain(hidden.id);
     expect((await h.request(`/v1/conversations/${hidden.id}/messages`, { method: "POST", token: member.token, json: { text: "hi" } })).status).toBe(404);
   });
+  it("with the bot-to-bot switch off, a bot's @mention isn't delivered and the timeline says why", async () => {
+    const off = await h.request(`/v1/orgs/${orgId}/settings`, { method: "PATCH", token: owner.token, json: { allow_bot_to_bot: false } });
+    expect(off.status).toBe(200);
+    expect((await j(off)).allow_bot_to_bot).toBe(false);
+    const c = await j(await h.request("/v1/conversations", { method: "POST", token: owner.token, json: { bot_id: lead, bot_ids: [writer, designer], title: "Quiet" } }));
+    await h.request(`/v1/conversations/${c.id}/messages`, { method: "POST", token: owner.token, json: { text: "@everyone let's ship the launch" } });
+    await settle();
+    expect(await replies(c.id)).toEqual(["Lead: Plan: @Writer write the launch copy. @Designer make the banner."]);
+    const [ev] = await h.tdb.admin<{ payload: { code: string; message: string } }[]>`
+      select e.payload from public.run_events e join public.runs r on r.id = e.run_id where r.conversation_id = ${c.id} and e.type = 'notice'`;
+    expect(ev?.payload).toEqual({ code: "bot_to_bot_off", message: "@Writer, @Designer weren't told: bots can't message each other in this workspace." });
+    await h.request(`/v1/orgs/${orgId}/settings`, { method: "PATCH", token: owner.token, json: { allow_bot_to_bot: true } });
+  });
 });

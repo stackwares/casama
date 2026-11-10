@@ -362,6 +362,9 @@ abstract class Backend {
   Future<void> revokeMcpKey(String orgId, String keyId);
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
+  // Bot-to-bot switch (D-133)
+  Future<bool> allowBotToBot(String orgId);
+  Future<void> setAllowBotToBot(String orgId, bool allowed);
   // Bot sharing (D-131)
   Future<BotAccess> botAccess(String botId);
   Future<BotAccess> setBotAccess(String botId, SetBotAccessRequest request);

@@ -263,6 +263,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/calendar-triggers.ts` (`checkCalendarTriggers`, event parsing and filters), `fireDueCalendarRuns` in `worker/routines.ts`, both in the minute tick; `calendar_fires`, `worker_user_email_domain`, the `calendar_event` routine trigger, and the routine sheet's Meetings option.
 
+## Bot-to-bot switch (D-133)
+
+- `organizations.allow_bot_to_bot` (workspace settings), checked in `wakeMentioned` (group chats, with a `notice` run event) and `bots.delegate`; the app's switch in workspace settings and `NoticeKind.info` in chat.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

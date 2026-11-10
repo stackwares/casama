@@ -26,6 +26,8 @@ class OrgSettings {
 
     required  this.mcpDecideApprovals,
 
+    required  this.allowBotToBot,
+
     required  this.llmTracing,
   });
 
@@ -69,6 +71,19 @@ class OrgSettings {
 
 
 
+      /// Bots may @mention, message and delegate to each other (D-133); subagents always work
+  @JsonKey(
+    
+    name: r'allow_bot_to_bot',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final bool allowBotToBot;
+
+
+
       /// Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse
   @JsonKey(
     
@@ -89,6 +104,7 @@ class OrgSettings {
       other.runEventRetentionDays == runEventRetentionDays &&
       other.requireMfa == requireMfa &&
       other.mcpDecideApprovals == mcpDecideApprovals &&
+      other.allowBotToBot == allowBotToBot &&
       other.llmTracing == llmTracing;
 
     @override
@@ -96,6 +112,7 @@ class OrgSettings {
         runEventRetentionDays.hashCode +
         requireMfa.hashCode +
         mcpDecideApprovals.hashCode +
+        allowBotToBot.hashCode +
         llmTracing.hashCode;
 
   factory OrgSettings.fromJson(Map<String, dynamic> json) => _$OrgSettingsFromJson(json);

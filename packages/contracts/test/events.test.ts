@@ -40,6 +40,7 @@ describe("run events", () => {
       "skill.loaded",
       "usage",
       "model.fallback",
+      "notice",
       "run.completed",
       "run.failed",
       "run.cancelled",

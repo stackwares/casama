@@ -90,6 +90,8 @@ export const runEventPayloads = {
   }),
   /** The run moved past a model it could not use, such as a ChatGPT plan at its limit. */
   "model.fallback": z.object({ from_model: z.string(), reason: z.string(), message: z.string() }),
+  /** Something the person should know about the run, e.g. a bot @mention that wasn't delivered (D-133). */
+  notice: z.object({ code: z.string(), message: z.string() }),
   "run.completed": z.object({ final_message_id: id.nullable() }),
   "run.failed": z.object({ error_code: z.string(), message: z.string() }),
   "run.cancelled": z.object({ cancelled_by: id.nullable() }),

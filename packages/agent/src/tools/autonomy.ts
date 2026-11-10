@@ -626,6 +626,10 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       if (!peer) throw new ToolError("bot_not_found", `No bot named ${args.bot}.`);
       if (peer.id === ctx.botId)
         throw new ToolError("delegation_cycle", "Use subagent.spawn to hand work to yourself.");
+      // Bot-to-bot switch (D-133): handing work to peer bots can be turned off; subagents still work.
+      const [org] = await deps.db.execute<{ allow: boolean }>(sql`select allow_bot_to_bot as allow from public.organizations where id = ${ctx.orgId}::uuid`);
+      if (org && !org.allow)
+        throw new ToolError("bot_to_bot_off", "Bots can't hand work to each other in this workspace (an admin turned it off). Use subagent.spawn instead.");
       const r = await runChildTask(ctx, {
         botId: peer.id,
         task: args.task,

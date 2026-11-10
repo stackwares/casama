@@ -992,3 +992,15 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - unit (`calendar-triggers.test.ts`): Google and Microsoft shapes, the filters, argument naming.
   - API (`calendar-triggers.test.ts`), with a real MCP calendar server: create the routine; one read per 5 minutes; only the meeting with an outside guest; not due 16 minutes before; one run at 15 minutes before, with the event in context; not twice.
   - widget (`calendar_trigger_test.dart`).
+
+## D-133 Bot-to-bot switch
+
+- **The setting:** `organizations.allow_bot_to_bot`, on by default. Owners and admins change it in workspace settings ("Bots can talk to each other", `PATCH /v1/orgs/{id}/settings`), and changes are audited.
+- **When it's off:**
+  - **Group chat @mentions:** a bot's @mention of other bots in a group chat starts no runs. The sending run records a new `notice` run event (`code: bot_to_bot_off`, "@Writer, @Designer weren't told: bots can't message each other in this workspace."). The app shows it in the chat as an info line.
+  - **Delegation:** `bots.delegate` to a peer bot fails with `bot_to_bot_off`, which appears on the timeline as a failed step.
+  - **Still allowed:** `subagent.spawn` keeps working, as do people mentioning bots.
+- **`notice`** is a general run event `{code, message}` for things the person should know. Older apps ignore it, since unknown events are skipped.
+- **Tests:**
+  - API (`group-chats.test.ts`): with the switch off, @everyone gets only the lead's plan, and the notice names the bots that weren't told.
+  - widget (`bot_to_bot_test.dart`).

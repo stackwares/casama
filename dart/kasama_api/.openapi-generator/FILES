@@ -243,6 +243,8 @@ lib/src/model/model_fallback_event_payload.dart
 lib/src/model/model_option.dart
 lib/src/model/model_option_list.dart
 lib/src/model/model_policy.dart
+lib/src/model/notice_event.dart
+lib/src/model/notice_event_payload.dart
 lib/src/model/ok.dart
 lib/src/model/org_role.dart
 lib/src/model/org_settings.dart

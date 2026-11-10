@@ -1635,13 +1635,26 @@ async function compact(
 
 /** Group chats (D-118): bots this reply @mentions start on it, up to 6 bot-to-bot hops. */
 export const MAX_BOT_HOPS = 6;
-async function wakeMentioned(db: Database, info: RunInfo, final: { text: string; messageId: string }): Promise<string[]> {
+async function wakeMentioned(db: Database, info: RunInfo, final: { text: string; messageId: string }, bus: EventBus): Promise<string[]> {
   const group = info.group;
   if (!group || !info.conversationId) return [];
   if (group.hop >= MAX_BOT_HOPS) return [];
   const others = group.members.filter((m) => m.id !== info.botId);
   const { botIds } = parseMentions(final.text, others);
   const ids: string[] = [];
+  // Bot-to-bot switch (D-133): with it off, mentions of other bots aren't delivered, and the
+  // timeline and chat say why.
+  if (botIds.length) {
+    const [org] = await db.execute<{ allow: boolean }>(sql`select allow_bot_to_bot as allow from public.organizations where id = ${info.orgId}::uuid`);
+    if (org && !org.allow) {
+      const names = others.filter((m) => botIds.includes(m.id)).map((m) => `@${m.name}`).join(", ");
+      await bus.append(info.runId, "notice", {
+        code: "bot_to_bot_off",
+        message: `${names} ${botIds.length === 1 ? "wasn't" : "weren't"} told: bots can't message each other in this workspace.`,
+      });
+      return [];
+    }
+  }
   for (const botId of botIds) {
     const [r] = await db.execute<{ id: string }>(sql`
       insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger, trigger_message_id, hop)
@@ -1678,7 +1691,7 @@ async function saveFinalMessage(
               ${!info.group && info.current && /^[0-9a-f-]{36}$/.test(info.current.id) ? info.current.id : null}::uuid, ${info.botId}::uuid)
       on conflict (id) do nothing`);
     // In a group chat, several bots answer at once; their replies append to the thread (D-118).
-    if (info.group) wakes = await wakeMentioned(db, info, final);
+    if (info.group) wakes = await wakeMentioned(db, info, final, bus);
     const title = info.current?.text.replace(/\s+/g, " ").trim().slice(0, 60) || null;
     await db.execute(sql`
       update public.conversations set last_message_at = now(), title = coalesce(title, ${title})

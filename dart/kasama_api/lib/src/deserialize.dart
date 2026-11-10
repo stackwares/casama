@@ -189,6 +189,8 @@ import 'package:kasama_api/src/model/model_fallback_event_payload.dart';
 import 'package:kasama_api/src/model/model_option.dart';
 import 'package:kasama_api/src/model/model_option_list.dart';
 import 'package:kasama_api/src/model/model_policy.dart';
+import 'package:kasama_api/src/model/notice_event.dart';
+import 'package:kasama_api/src/model/notice_event_payload.dart';
 import 'package:kasama_api/src/model/ok.dart';
 import 'package:kasama_api/src/model/org_settings.dart';
 import 'package:kasama_api/src/model/organization.dart';
@@ -799,6 +801,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ModelOptionList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ModelPolicy':
           return ModelPolicy.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'NoticeEvent':
+          return NoticeEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'NoticeEventPayload':
+          return NoticeEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Ok':
           return Ok.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'OrgRole':

@@ -8115,6 +8115,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only titles containing (optional)'**
   String get calendarTitleMatch;
+
+  /// No description provided for @botToBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots can talk to each other'**
+  String get botToBot;
+
+  /// No description provided for @botToBotHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'When off, bots can\'t @mention, message or hand work to each other. Each bot can still split its own work into subagents.'**
+  String get botToBotHelp;
 }
 
 class _AppLocalizationsDelegate

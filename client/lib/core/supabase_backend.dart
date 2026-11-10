@@ -915,6 +915,14 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<bool> allowBotToBot(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.allowBotToBot;
+
+  @override
+  Future<void> setAllowBotToBot(String orgId, bool allowed) async {
+    await api.privacy.updateOrgSettings(id: orgId, updateOrgSettingsRequest: UpdateOrgSettingsRequest(allowBotToBot: allowed));
+  }
+
+  @override
   Future<BotAccess> botAccess(String botId) async => (await api.bots.getBotAccess(id: botId)).data!;
 
   @override

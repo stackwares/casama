@@ -243,6 +243,8 @@ export 'package:kasama_api/src/model/model_fallback_event_payload.dart';
 export 'package:kasama_api/src/model/model_option.dart';
 export 'package:kasama_api/src/model/model_option_list.dart';
 export 'package:kasama_api/src/model/model_policy.dart';
+export 'package:kasama_api/src/model/notice_event.dart';
+export 'package:kasama_api/src/model/notice_event_payload.dart';
 export 'package:kasama_api/src/model/ok.dart';
 export 'package:kasama_api/src/model/org_role.dart';
 export 'package:kasama_api/src/model/org_settings.dart';

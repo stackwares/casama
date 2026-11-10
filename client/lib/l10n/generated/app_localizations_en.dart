@@ -4763,4 +4763,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarTitleMatch => 'Only titles containing (optional)';
+
+  @override
+  String get botToBot => 'Bots can talk to each other';
+
+  @override
+  String get botToBotHelp =>
+      'When off, bots can\'t @mention, message or hand work to each other. Each bot can still split its own work into subagents.';
 }

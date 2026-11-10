@@ -16,11 +16,11 @@ export const membershipsRelations = relations(memberships, ({one}) => ({
 
 export const organizationsRelations = relations(organizations, ({one, many}) => ({
 	memberships: many(memberships),
-	invites: many(invites),
 	usersInAuth: one(usersInAuth, {
 		fields: [organizations.createdBy],
 		references: [usersInAuth.id]
 	}),
+	invites: many(invites),
 	entitlements: many(entitlements),
 	skills: many(skills),
 	runs: many(runs),
@@ -90,6 +90,7 @@ export const organizationsRelations = relations(organizations, ({one, many}) => 
 
 export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	memberships: many(memberships),
+	organizations: many(organizations),
 	invites_invitedBy: many(invites, {
 		relationName: "invites_invitedBy_usersInAuth_id"
 	}),
@@ -97,7 +98,6 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 		relationName: "invites_acceptedBy_usersInAuth_id"
 	}),
 	profiles: many(profiles),
-	organizations: many(organizations),
 	runs: many(runs),
 	bots: many(bots),
 	messages: many(messages),

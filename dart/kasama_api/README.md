@@ -481,6 +481,8 @@ Class | Method | HTTP request | Description
  - [ModelOption](doc/ModelOption.md)
  - [ModelOptionList](doc/ModelOptionList.md)
  - [ModelPolicy](doc/ModelPolicy.md)
+ - [NoticeEvent](doc/NoticeEvent.md)
+ - [NoticeEventPayload](doc/NoticeEventPayload.md)
  - [Ok](doc/Ok.md)
  - [OrgRole](doc/OrgRole.md)
  - [OrgSettings](doc/OrgSettings.md)

@@ -717,6 +717,7 @@ class NoticeLine extends StatelessWidget {
       NoticeKind.userControl => (LucideIcons.hand, l10n.pausedUserInControl, colors.warning),
       NoticeKind.botControl => (LucideIcons.bot, l10n.botBackInControl, muted),
       NoticeKind.modelFallback => (LucideIcons.arrowRightLeft, l10n.modelFallbackNotice(entry.text), colors.warning),
+      NoticeKind.info => (LucideIcons.info, entry.text, colors.warning),
     };
     final failed = entry.kind == NoticeKind.failed;
     final restorable = entry.kind == NoticeKind.checkpoint && entry.refId != null && onRestore != null;

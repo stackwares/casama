@@ -542,9 +542,36 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
             onTap: () => context.push('/password-managers'),
           ),
         ]),
+        if (admin) ...[const SizedBox(height: AppSpace.lg), BotToBotSwitch(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), WorkspaceFilesSection(orgId: org.id)],
       ],
     );
+  }
+}
+
+final _botToBotProvider = FutureProvider.autoDispose.family<bool, String>((ref, orgId) => ref.watch(backendProvider).allowBotToBot(orgId));
+
+/// Bot-to-bot switch (D-133): whether bots may @mention, message and delegate to each other.
+class BotToBotSwitch extends ConsumerWidget {
+  const BotToBotSwitch({super.key, required this.orgId});
+  final String orgId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final on = ref.watch(_botToBotProvider(orgId)).value ?? true;
+    return GroupedCard(children: [
+      SwitchListTile(
+        key: const Key('botToBot'),
+        title: Text(l10n.botToBot),
+        subtitle: Text(l10n.botToBotHelp),
+        value: on,
+        onChanged: (v) async {
+          await runGuarded(context, () => ref.read(backendProvider).setAllowBotToBot(orgId, v));
+          ref.invalidate(_botToBotProvider(orgId));
+        },
+      ),
+    ]);
   }
 }

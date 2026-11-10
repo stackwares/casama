@@ -13,6 +13,8 @@ abstract class _$UpdateOrgSettingsRequestCWProxy {
 
   UpdateOrgSettingsRequest mcpDecideApprovals(bool? mcpDecideApprovals);
 
+  UpdateOrgSettingsRequest allowBotToBot(bool? allowBotToBot);
+
   UpdateOrgSettingsRequest llmTracing(bool? llmTracing);
 
   /// Creates a new instance with the provided field values.
@@ -27,6 +29,7 @@ abstract class _$UpdateOrgSettingsRequestCWProxy {
     int? runEventRetentionDays,
     bool? requireMfa,
     bool? mcpDecideApprovals,
+    bool? allowBotToBot,
     bool? llmTracing,
   });
 }
@@ -52,6 +55,10 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
       call(mcpDecideApprovals: mcpDecideApprovals);
 
   @override
+  UpdateOrgSettingsRequest allowBotToBot(bool? allowBotToBot) =>
+      call(allowBotToBot: allowBotToBot);
+
+  @override
   UpdateOrgSettingsRequest llmTracing(bool? llmTracing) =>
       call(llmTracing: llmTracing);
 
@@ -68,6 +75,7 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
     Object? runEventRetentionDays = const $CopyWithPlaceholder(),
     Object? requireMfa = const $CopyWithPlaceholder(),
     Object? mcpDecideApprovals = const $CopyWithPlaceholder(),
+    Object? allowBotToBot = const $CopyWithPlaceholder(),
     Object? llmTracing = const $CopyWithPlaceholder(),
   }) {
     return UpdateOrgSettingsRequest(
@@ -84,6 +92,10 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
           ? _value.mcpDecideApprovals
           // ignore: cast_nullable_to_non_nullable
           : mcpDecideApprovals as bool?,
+      allowBotToBot: allowBotToBot == const $CopyWithPlaceholder()
+          ? _value.allowBotToBot
+          // ignore: cast_nullable_to_non_nullable
+          : allowBotToBot as bool?,
       llmTracing: llmTracing == const $CopyWithPlaceholder()
           ? _value.llmTracing
           // ignore: cast_nullable_to_non_nullable
@@ -120,6 +132,7 @@ UpdateOrgSettingsRequest _$UpdateOrgSettingsRequestFromJson(
         'mcp_decide_approvals',
         (v) => v as bool?,
       ),
+      allowBotToBot: $checkedConvert('allow_bot_to_bot', (v) => v as bool?),
       llmTracing: $checkedConvert('llm_tracing', (v) => v as bool?),
     );
     return val;
@@ -128,6 +141,7 @@ UpdateOrgSettingsRequest _$UpdateOrgSettingsRequestFromJson(
     'runEventRetentionDays': 'run_event_retention_days',
     'requireMfa': 'require_mfa',
     'mcpDecideApprovals': 'mcp_decide_approvals',
+    'allowBotToBot': 'allow_bot_to_bot',
     'llmTracing': 'llm_tracing',
   },
 );
@@ -138,5 +152,6 @@ Map<String, dynamic> _$UpdateOrgSettingsRequestToJson(
   'run_event_retention_days': ?instance.runEventRetentionDays,
   'require_mfa': ?instance.requireMfa,
   'mcp_decide_approvals': ?instance.mcpDecideApprovals,
+  'allow_bot_to_bot': ?instance.allowBotToBot,
   'llm_tracing': ?instance.llmTracing,
 };

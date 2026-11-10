@@ -25,6 +25,9 @@ export const OrgSettings = z
     mcp_decide_approvals: z.boolean().openapi({
       description: "Allow approving or denying actions from AI apps connected over MCP (D-117)",
     }),
+    allow_bot_to_bot: z.boolean().openapi({
+      description: "Bots may @mention, message and delegate to each other (D-133); subagents always work",
+    }),
     llm_tracing: z.boolean().openapi({
       description:
         "Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse",

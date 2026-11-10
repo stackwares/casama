@@ -92,6 +92,9 @@
             "$ref": "#/components/schemas/ModelFallbackEvent"
           },
           {
+            "$ref": "#/components/schemas/NoticeEvent"
+          },
+          {
             "$ref": "#/components/schemas/RunCompletedEvent"
           },
           {
@@ -129,6 +132,7 @@
             "skill.loaded": "#/components/schemas/SkillLoadedEvent",
             "usage": "#/components/schemas/UsageEvent",
             "model.fallback": "#/components/schemas/ModelFallbackEvent",
+            "notice": "#/components/schemas/NoticeEvent",
             "run.completed": "#/components/schemas/RunCompletedEvent",
             "run.failed": "#/components/schemas/RunFailedEvent",
             "run.cancelled": "#/components/schemas/RunCancelledEvent",
@@ -1531,6 +1535,62 @@
             "required": [
               "from_model",
               "reason",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "v",
+          "run_id",
+          "seq",
+          "ts",
+          "bot_id",
+          "type",
+          "payload"
+        ]
+      },
+      "NoticeEvent": {
+        "type": "object",
+        "properties": {
+          "v": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Protocol version, currently 1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seq": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "notice"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
               "message"
             ]
           }
@@ -6868,6 +6928,10 @@
             "type": "boolean",
             "description": "Allow approving or denying actions from AI apps connected over MCP (D-117)"
           },
+          "allow_bot_to_bot": {
+            "type": "boolean",
+            "description": "Bots may @mention, message and delegate to each other (D-133); subagents always work"
+          },
           "llm_tracing": {
             "type": "boolean",
             "description": "Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse"
@@ -6877,6 +6941,7 @@
           "run_event_retention_days",
           "require_mfa",
           "mcp_decide_approvals",
+          "allow_bot_to_bot",
           "llm_tracing"
         ]
       },
@@ -6895,6 +6960,10 @@
           "mcp_decide_approvals": {
             "type": "boolean",
             "description": "Allow approving or denying actions from AI apps connected over MCP (D-117)"
+          },
+          "allow_bot_to_bot": {
+            "type": "boolean",
+            "description": "Bots may @mention, message and delegate to each other (D-133); subagents always work"
           },
           "llm_tracing": {
             "type": "boolean",

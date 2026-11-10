@@ -569,6 +569,13 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  // Bot-to-bot switch (D-133)
+  var botToBot = true;
+  @override
+  Future<bool> allowBotToBot(String orgId) async => botToBot;
+  @override
+  Future<void> setAllowBotToBot(String orgId, bool allowed) async => botToBot = allowed;
+
   // Bot sharing (D-131)
   SetBotAccessRequest? savedAccess;
   @override

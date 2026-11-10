@@ -61,14 +61,16 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       require_mfa: boolean;
       llm_tracing: boolean;
       mcp_decide_approvals: boolean;
+      allow_bot_to_bot: boolean;
     }>(
-      sql`select run_event_retention_days, require_mfa, llm_tracing, mcp_decide_approvals from public.organizations where id = ${orgId}::uuid`,
+      sql`select run_event_retention_days, require_mfa, llm_tracing, mcp_decide_approvals, allow_bot_to_bot from public.organizations where id = ${orgId}::uuid`,
     );
     return {
       run_event_retention_days: o?.run_event_retention_days ?? 180,
       require_mfa: o?.require_mfa ?? false,
       llm_tracing: o?.llm_tracing ?? true,
       mcp_decide_approvals: o?.mcp_decide_approvals ?? false,
+      allow_bot_to_bot: o?.allow_bot_to_bot ?? true,
     };
   };
 
@@ -96,8 +98,12 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       body.run_event_retention_days != null ||
       body.require_mfa != null ||
       body.llm_tracing != null ||
-      body.mcp_decide_approvals != null
+      body.mcp_decide_approvals != null ||
+      body.allow_bot_to_bot != null
     ) {
+      if (body.allow_bot_to_bot != null)
+        await db.execute(sql`
+          update public.organizations set allow_bot_to_bot = ${body.allow_bot_to_bot} where id = ${id}::uuid`);
       if (body.mcp_decide_approvals != null)
         await db.execute(sql`
           update public.organizations set mcp_decide_approvals = ${body.mcp_decide_approvals} where id = ${id}::uuid`);

@@ -123,7 +123,7 @@ class UiEntry extends ChatEntry {
   final List<Object?> messages;
 }
 
-enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled, userControl, botControl, modelFallback }
+enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled, userControl, botControl, modelFallback, info }
 
 class NoticeEntry extends ChatEntry {
   const NoticeEntry({required this.kind, required this.text, this.refId, this.errorCode, this.at});
@@ -453,6 +453,9 @@ class ChatController extends Notifier<ChatState> {
         entries.add(NoticeEntry(kind: NoticeKind.skill, text: event.payload.name));
       case ModelFallbackItem(:final event):
         entries.add(NoticeEntry(kind: NoticeKind.modelFallback, text: event.payload.message));
+      // Things the person should know, e.g. a bot @mention that wasn't delivered (D-133).
+      case NoticeItem(:final event):
+        entries.add(NoticeEntry(kind: NoticeKind.info, text: event.payload.message));
       case CheckpointCreatedItem(:final event):
         entries.add(NoticeEntry(kind: NoticeKind.checkpoint, text: event.payload.label, refId: event.payload.checkpointId));
       case ComputerStateItem(:final event):

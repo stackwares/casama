@@ -4,7 +4,7 @@
 import 'package:kasama_api/kasama_api.dart';
 
 /// All run event types known to this client version.
-const knownRunEventTypes = <String>{'run.started', 'message.delta', 'message.completed', 'tool.started', 'tool.output', 'tool.completed', 'tool.failed', 'approval.requested', 'approval.resolved', 'secret.requested', 'secret.resolved', 'takeover.requested', 'takeover.resolved', 'lease.changed', 'computer.state', 'checkpoint.created', 'subrun.started', 'subrun.completed', 'memory.written', 'skill.loaded', 'usage', 'model.fallback', 'run.completed', 'run.failed', 'run.cancelled', 'ui.shown'};
+const knownRunEventTypes = <String>{'run.started', 'message.delta', 'message.completed', 'tool.started', 'tool.output', 'tool.completed', 'tool.failed', 'approval.requested', 'approval.resolved', 'secret.requested', 'secret.resolved', 'takeover.requested', 'takeover.resolved', 'lease.changed', 'computer.state', 'checkpoint.created', 'subrun.started', 'subrun.completed', 'memory.written', 'skill.loaded', 'usage', 'model.fallback', 'notice', 'run.completed', 'run.failed', 'run.cancelled', 'ui.shown'};
 
 /// A run event: the envelope plus, for known types, the typed event.
 /// Unknown types parse to [UnknownRunEventItem] so newer servers never break older clients.
@@ -62,6 +62,8 @@ sealed class RunEventItem {
         return UsageItem(envelope, UsageEvent.fromJson(json));
       case 'model.fallback':
         return ModelFallbackItem(envelope, ModelFallbackEvent.fromJson(json));
+      case 'notice':
+        return NoticeItem(envelope, NoticeEvent.fromJson(json));
       case 'run.completed':
         return RunCompletedItem(envelope, RunCompletedEvent.fromJson(json));
       case 'run.failed':
@@ -184,6 +186,11 @@ final class UsageItem extends RunEventItem {
 final class ModelFallbackItem extends RunEventItem {
   const ModelFallbackItem(super.envelope, this.event);
   final ModelFallbackEvent event;
+}
+
+final class NoticeItem extends RunEventItem {
+  const NoticeItem(super.envelope, this.event);
+  final NoticeEvent event;
 }
 
 final class RunCompletedItem extends RunEventItem {
