@@ -33,6 +33,8 @@ abstract class _$RunCWProxy {
 
   Run error(RunError? error);
 
+  Run traceId(String? traceId);
+
   Run createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -57,6 +59,7 @@ abstract class _$RunCWProxy {
     DateTime? startedAt,
     DateTime? endedAt,
     RunError? error,
+    String? traceId,
     DateTime createdAt,
   });
 }
@@ -109,6 +112,9 @@ class _$RunCWProxyImpl implements _$RunCWProxy {
   Run error(RunError? error) => call(error: error);
 
   @override
+  Run traceId(String? traceId) => call(traceId: traceId);
+
+  @override
   Run createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -134,6 +140,7 @@ class _$RunCWProxyImpl implements _$RunCWProxy {
     Object? startedAt = const $CopyWithPlaceholder(),
     Object? endedAt = const $CopyWithPlaceholder(),
     Object? error = const $CopyWithPlaceholder(),
+    Object? traceId = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Run(
@@ -189,6 +196,10 @@ class _$RunCWProxyImpl implements _$RunCWProxy {
           ? _value.error
           // ignore: cast_nullable_to_non_nullable
           : error as RunError?,
+      traceId: traceId == const $CopyWithPlaceholder()
+          ? _value.traceId
+          // ignore: cast_nullable_to_non_nullable
+          : traceId as String?,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -228,6 +239,7 @@ Run _$RunFromJson(Map<String, dynamic> json) => $checkedCreate(
         'started_at',
         'ended_at',
         'error',
+        'trace_id',
         'created_at',
       ],
     );
@@ -257,6 +269,7 @@ Run _$RunFromJson(Map<String, dynamic> json) => $checkedCreate(
         'error',
         (v) => v == null ? null : RunError.fromJson(v as Map<String, dynamic>),
       ),
+      traceId: $checkedConvert('trace_id', (v) => v as String?),
       createdAt: $checkedConvert(
         'created_at',
         (v) => DateTime.parse(v as String),
@@ -274,6 +287,7 @@ Run _$RunFromJson(Map<String, dynamic> json) => $checkedCreate(
     'lastSeq': 'last_seq',
     'startedAt': 'started_at',
     'endedAt': 'ended_at',
+    'traceId': 'trace_id',
     'createdAt': 'created_at',
   },
 );
@@ -292,6 +306,7 @@ Map<String, dynamic> _$RunToJson(Run instance) => <String, dynamic>{
   'started_at': instance.startedAt?.toIso8601String(),
   'ended_at': instance.endedAt?.toIso8601String(),
   'error': instance.error?.toJson(),
+  'trace_id': instance.traceId,
   'created_at': instance.createdAt.toIso8601String(),
 };
 

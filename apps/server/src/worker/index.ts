@@ -13,6 +13,7 @@ import {
   type FixtureFile,
   type FixtureTurn,
   hashEmbedder,
+  LangfuseSink,
   MemoryService,
   type ModelGateway,
   NotificationService,
@@ -50,6 +51,8 @@ import {
 
 export interface WorkerOptions {
   databaseUrl: string;
+  /** Langfuse LLM traces for every model attempt (D-107). */
+  langfuse?: { baseUrl: string; publicKey: string; secretKey: string };
   /** Bots with more tools start with core tools and load the rest (D-106); 0 = off, default 30. */
   lazyToolsThreshold?: number;
   logger: Logger;
@@ -273,6 +276,7 @@ export async function startWorker(opts: WorkerOptions) {
       logger: opts.logger,
       local: opts.local,
       lazyToolsThreshold: opts.lazyToolsThreshold,
+      langfuse: opts.langfuse ? new LangfuseSink(opts.langfuse) : undefined,
     },
   });
 

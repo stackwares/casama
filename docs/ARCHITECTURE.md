@@ -167,6 +167,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/lazy-tools.ts` (`planLazyTools`, `tools.load`), handled in the run loop; `LAZY_TOOLS_THRESHOLD`; `ToolSpec.deferred` and `ModelCapabilities.deferredTools` for native support; `packages/evals/src/compare.ts`.
 
+## Run tracing (D-107)
+
+- `packages/observability/src/run-trace.ts` (deterministic ids, `ForcedIdGenerator`, run and child spans), spans in `run.ts`, `packages/agent/src/langfuse.ts` (`LANGFUSE_*`, `organizations.llm_tracing`), `runs.trace_id`, `TRACE_URL_TEMPLATE` and the timeline's trace link.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

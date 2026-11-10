@@ -11,6 +11,8 @@ abstract class _$UpdateOrgSettingsRequestCWProxy {
 
   UpdateOrgSettingsRequest requireMfa(bool? requireMfa);
 
+  UpdateOrgSettingsRequest llmTracing(bool? llmTracing);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateOrgSettingsRequest(...).copyWith.fieldName(value)`.
@@ -19,7 +21,11 @@ abstract class _$UpdateOrgSettingsRequestCWProxy {
   /// ```dart
   /// UpdateOrgSettingsRequest(...).copyWith(id: 12, name: "My name")
   /// ```
-  UpdateOrgSettingsRequest call({int? runEventRetentionDays, bool? requireMfa});
+  UpdateOrgSettingsRequest call({
+    int? runEventRetentionDays,
+    bool? requireMfa,
+    bool? llmTracing,
+  });
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -38,6 +44,10 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
   UpdateOrgSettingsRequest requireMfa(bool? requireMfa) =>
       call(requireMfa: requireMfa);
 
+  @override
+  UpdateOrgSettingsRequest llmTracing(bool? llmTracing) =>
+      call(llmTracing: llmTracing);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateOrgSettingsRequest(...).copyWith.fieldName(value)`.
@@ -50,6 +60,7 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
   UpdateOrgSettingsRequest call({
     Object? runEventRetentionDays = const $CopyWithPlaceholder(),
     Object? requireMfa = const $CopyWithPlaceholder(),
+    Object? llmTracing = const $CopyWithPlaceholder(),
   }) {
     return UpdateOrgSettingsRequest(
       runEventRetentionDays:
@@ -61,6 +72,10 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
           ? _value.requireMfa
           // ignore: cast_nullable_to_non_nullable
           : requireMfa as bool?,
+      llmTracing: llmTracing == const $CopyWithPlaceholder()
+          ? _value.llmTracing
+          // ignore: cast_nullable_to_non_nullable
+          : llmTracing as bool?,
     );
   }
 }
@@ -89,12 +104,14 @@ UpdateOrgSettingsRequest _$UpdateOrgSettingsRequestFromJson(
         (v) => (v as num?)?.toInt(),
       ),
       requireMfa: $checkedConvert('require_mfa', (v) => v as bool?),
+      llmTracing: $checkedConvert('llm_tracing', (v) => v as bool?),
     );
     return val;
   },
   fieldKeyMap: const {
     'runEventRetentionDays': 'run_event_retention_days',
     'requireMfa': 'require_mfa',
+    'llmTracing': 'llm_tracing',
   },
 );
 
@@ -103,4 +120,5 @@ Map<String, dynamic> _$UpdateOrgSettingsRequestToJson(
 ) => <String, dynamic>{
   'run_event_retention_days': ?instance.runEventRetentionDays,
   'require_mfa': ?instance.requireMfa,
+  'llm_tracing': ?instance.llmTracing,
 };

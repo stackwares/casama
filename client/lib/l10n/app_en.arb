@@ -1850,5 +1850,7 @@
   "startSetup": "Start setup",
   "skipSetup": "Skip for now",
   "rerunSetup": "Run setup again",
-  "rerunSetupHelp": "Answer the setup questions again and review a new proposal"
+  "rerunSetupHelp": "Answer the setup questions again and review a new proposal",
+  "trace": "Trace",
+  "openTrace": "Open trace"
 }

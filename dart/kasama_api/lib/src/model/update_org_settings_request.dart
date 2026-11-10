@@ -23,6 +23,8 @@ class UpdateOrgSettingsRequest {
      this.runEventRetentionDays,
 
      this.requireMfa,
+
+     this.llmTracing,
   });
 
           // minimum: 7
@@ -52,17 +54,32 @@ class UpdateOrgSettingsRequest {
 
 
 
+      /// Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse
+  @JsonKey(
+    
+    name: r'llm_tracing',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? llmTracing;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is UpdateOrgSettingsRequest &&
       other.runEventRetentionDays == runEventRetentionDays &&
-      other.requireMfa == requireMfa;
+      other.requireMfa == requireMfa &&
+      other.llmTracing == llmTracing;
 
     @override
     int get hashCode =>
         runEventRetentionDays.hashCode +
-        requireMfa.hashCode;
+        requireMfa.hashCode +
+        llmTracing.hashCode;
 
   factory UpdateOrgSettingsRequest.fromJson(Map<String, dynamic> json) => _$UpdateOrgSettingsRequestFromJson(json);
 

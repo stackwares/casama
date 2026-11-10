@@ -296,6 +296,10 @@ class SupabaseBackend implements Backend {
 
   @override
   bool get wallpapersEnabled => config?.wallpapersEnabled ?? false;
+  @override
+  String? get traceUrlTemplate => config?.traceUrlTemplate;
+  @override
+  Future<Run> run(String runId) async => (await api.runs.getRun(id: runId)).data!;
 
   @override
   Future<List<WallpaperPhoto>> searchWallpapers({String? query, int page = 1}) async =>

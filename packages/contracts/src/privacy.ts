@@ -22,6 +22,10 @@ export const OrgSettings = z
       description:
         "Owners and admins must use two-step sign-in (turning it on needs an aal2 session)",
     }),
+    llm_tracing: z.boolean().openapi({
+      description:
+        "Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse",
+    }),
   })
   .openapi("OrgSettings");
 

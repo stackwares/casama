@@ -1866,6 +1866,12 @@
                 "pow"
               ]
             }
+          },
+          "trace_url_template": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -2468,6 +2474,13 @@
               "message"
             ]
           },
+          "trace_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "OpenTelemetry trace of this run (D-107)"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -2487,6 +2500,7 @@
           "started_at",
           "ended_at",
           "error",
+          "trace_id",
           "created_at"
         ]
       },
@@ -6645,11 +6659,16 @@
           "require_mfa": {
             "type": "boolean",
             "description": "Owners and admins must use two-step sign-in (turning it on needs an aal2 session)"
+          },
+          "llm_tracing": {
+            "type": "boolean",
+            "description": "Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse"
           }
         },
         "required": [
           "run_event_retention_days",
-          "require_mfa"
+          "require_mfa",
+          "llm_tracing"
         ]
       },
       "UpdateOrgSettingsRequest": {
@@ -6663,6 +6682,10 @@
           "require_mfa": {
             "type": "boolean",
             "description": "Owners and admins must use two-step sign-in (turning it on needs an aal2 session)"
+          },
+          "llm_tracing": {
+            "type": "boolean",
+            "description": "Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse"
           }
         }
       },

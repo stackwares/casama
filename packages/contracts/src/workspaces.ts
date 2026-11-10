@@ -161,5 +161,7 @@ export const PublicConfig = z
      * app_check: a Firebase App Check token; pow: a solved GET /v1/signup/challenge puzzle.
      */
     signup_proofs: z.array(z.enum(["app_check", "pow"])).optional(),
+    /** Where a run's trace opens, with {trace_id} in it (Grafana, Jaeger, Honeycomb…; D-107). */
+    trace_url_template: z.string().nullable().optional(),
   })
   .openapi("PublicConfig");

@@ -29,6 +29,8 @@ abstract class _$PublicConfigCWProxy {
 
   PublicConfig signupProofs(List<PublicConfigSignupProofsEnum>? signupProofs);
 
+  PublicConfig traceUrlTemplate(String? traceUrlTemplate);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
@@ -48,6 +50,7 @@ abstract class _$PublicConfigCWProxy {
     bool? wallpapersEnabled,
     bool? chatgptSignIn,
     List<PublicConfigSignupProofsEnum>? signupProofs,
+    String? traceUrlTemplate,
   });
 }
 
@@ -98,6 +101,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
   PublicConfig signupProofs(List<PublicConfigSignupProofsEnum>? signupProofs) =>
       call(signupProofs: signupProofs);
 
+  @override
+  PublicConfig traceUrlTemplate(String? traceUrlTemplate) =>
+      call(traceUrlTemplate: traceUrlTemplate);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
@@ -118,6 +125,7 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? wallpapersEnabled = const $CopyWithPlaceholder(),
     Object? chatgptSignIn = const $CopyWithPlaceholder(),
     Object? signupProofs = const $CopyWithPlaceholder(),
+    Object? traceUrlTemplate = const $CopyWithPlaceholder(),
   }) {
     return PublicConfig(
       productName:
@@ -170,6 +178,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
           ? _value.signupProofs
           // ignore: cast_nullable_to_non_nullable
           : signupProofs as List<PublicConfigSignupProofsEnum>?,
+      traceUrlTemplate: traceUrlTemplate == const $CopyWithPlaceholder()
+          ? _value.traceUrlTemplate
+          // ignore: cast_nullable_to_non_nullable
+          : traceUrlTemplate as String?,
     );
   }
 }
@@ -228,6 +240,10 @@ PublicConfig _$PublicConfigFromJson(
             ?.map((e) => $enumDecode(_$PublicConfigSignupProofsEnumEnumMap, e))
             .toList(),
       ),
+      traceUrlTemplate: $checkedConvert(
+        'trace_url_template',
+        (v) => v as String?,
+      ),
     );
     return val;
   },
@@ -242,6 +258,7 @@ PublicConfig _$PublicConfigFromJson(
     'wallpapersEnabled': 'wallpapers_enabled',
     'chatgptSignIn': 'chatgpt_sign_in',
     'signupProofs': 'signup_proofs',
+    'traceUrlTemplate': 'trace_url_template',
   },
 );
 
@@ -261,6 +278,7 @@ Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
       'signup_proofs': ?instance.signupProofs
           ?.map((e) => _$PublicConfigSignupProofsEnumEnumMap[e]!)
           .toList(),
+      'trace_url_template': ?instance.traceUrlTemplate,
     };
 
 const _$PublicConfigDefaultReasoningEffortEnumEnumMap = {

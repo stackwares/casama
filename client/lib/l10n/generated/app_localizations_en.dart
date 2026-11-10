@@ -3503,4 +3503,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get rerunSetupHelp =>
       'Answer the setup questions again and review a new proposal';
+
+  @override
+  String get trace => 'Trace';
+
+  @override
+  String get openTrace => 'Open trace';
 }

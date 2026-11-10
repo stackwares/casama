@@ -114,6 +114,7 @@ export const organizations = pgTable("organizations", {
 	suspendedReason: text("suspended_reason"),
 	icon: text(),
 	color: text(),
+	llmTracing: boolean("llm_tracing").default(true).notNull(),
 }, (table) => [
 	foreignKey({
 			columns: [table.createdBy],
@@ -385,77 +386,6 @@ export const auditLog = pgTable("audit_log", {
 	check("audit_log_actor_type_check", sql`actor_type = ANY (ARRAY['user'::text, 'bot'::text, 'system'::text])`),
 ]);
 
-export const runs = pgTable("runs", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	botId: uuid("bot_id").notNull(),
-	conversationId: uuid("conversation_id"),
-	parentRunId: uuid("parent_run_id"),
-	createdBy: uuid("created_by"),
-	trigger: text().default('chat').notNull(),
-	status: text().default('queued').notNull(),
-	budget: jsonb().default({}).notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	tokensIn: bigint("tokens_in", { mode: "number" }).default(0).notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	tokensOut: bigint("tokens_out", { mode: "number" }).default(0).notNull(),
-	costUsd: numeric("cost_usd", { precision: 12, scale:  6 }).default('0').notNull(),
-	lastSeq: integer("last_seq").default(0).notNull(),
-	cancelRequestedAt: timestamp("cancel_requested_at", { withTimezone: true, mode: 'string' }),
-	cancelledBy: uuid("cancelled_by"),
-	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }),
-	endedAt: timestamp("ended_at", { withTimezone: true, mode: 'string' }),
-	error: jsonb(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	routineId: uuid("routine_id"),
-	waitingComputerId: uuid("waiting_computer_id"),
-	voiceCall: jsonb("voice_call"),
-	firstTokenAt: timestamp("first_token_at", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	index("runs_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
-	index("runs_conversation_id_idx").using("btree", table.conversationId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("timestamptz_ops")),
-	index("runs_waiting_computer_idx").using("btree", table.waitingComputerId.asc().nullsLast().op("uuid_ops")).where(sql`(waiting_computer_id IS NOT NULL)`),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "runs_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.botId],
-			foreignColumns: [bots.id],
-			name: "runs_bot_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.conversationId],
-			foreignColumns: [conversations.id],
-			name: "runs_conversation_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.parentRunId],
-			foreignColumns: [table.id],
-			name: "runs_parent_run_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.createdBy],
-			foreignColumns: [users.id],
-			name: "runs_created_by_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.routineId],
-			foreignColumns: [routines.id],
-			name: "runs_routine_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.waitingComputerId],
-			foreignColumns: [computers.id],
-			name: "runs_waiting_computer_id_fkey"
-		}).onDelete("set null"),
-	pgPolicy("runs_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("runs_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("runs_status_check", sql`status = ANY (ARRAY['queued'::text, 'running'::text, 'waiting_approval'::text, 'waiting_takeover'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])`),
-]);
-
 export const skills = pgTable("skills", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -537,6 +467,79 @@ export const messages = pgTable("messages", {
 	pgPolicy("messages_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("messages_role_check", sql`role = ANY (ARRAY['user'::text, 'assistant'::text, 'system'::text, 'tool'::text])`),
+]);
+
+export const runs = pgTable("runs", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	conversationId: uuid("conversation_id"),
+	parentRunId: uuid("parent_run_id"),
+	createdBy: uuid("created_by"),
+	trigger: text().default('chat').notNull(),
+	status: text().default('queued').notNull(),
+	budget: jsonb().default({}).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	tokensIn: bigint("tokens_in", { mode: "number" }).default(0).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	tokensOut: bigint("tokens_out", { mode: "number" }).default(0).notNull(),
+	costUsd: numeric("cost_usd", { precision: 12, scale:  6 }).default('0').notNull(),
+	lastSeq: integer("last_seq").default(0).notNull(),
+	cancelRequestedAt: timestamp("cancel_requested_at", { withTimezone: true, mode: 'string' }),
+	cancelledBy: uuid("cancelled_by"),
+	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }),
+	endedAt: timestamp("ended_at", { withTimezone: true, mode: 'string' }),
+	error: jsonb(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	routineId: uuid("routine_id"),
+	waitingComputerId: uuid("waiting_computer_id"),
+	voiceCall: jsonb("voice_call"),
+	firstTokenAt: timestamp("first_token_at", { withTimezone: true, mode: 'string' }),
+	traceId: text("trace_id"),
+}, (table) => [
+	index("runs_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	index("runs_conversation_id_idx").using("btree", table.conversationId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("timestamptz_ops")),
+	index("runs_waiting_computer_idx").using("btree", table.waitingComputerId.asc().nullsLast().op("uuid_ops")).where(sql`(waiting_computer_id IS NOT NULL)`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "runs_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "runs_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.conversationId],
+			foreignColumns: [conversations.id],
+			name: "runs_conversation_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.parentRunId],
+			foreignColumns: [table.id],
+			name: "runs_parent_run_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "runs_created_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.routineId],
+			foreignColumns: [routines.id],
+			name: "runs_routine_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.waitingComputerId],
+			foreignColumns: [computers.id],
+			name: "runs_waiting_computer_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("runs_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
+	pgPolicy("runs_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("runs_status_check", sql`status = ANY (ARRAY['queued'::text, 'running'::text, 'waiting_approval'::text, 'waiting_takeover'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])`),
+	check("runs_trace_id_check", sql`trace_id ~ '^[0-9a-f]{32}$'::text`),
 ]);
 
 export const computers = pgTable("computers", {

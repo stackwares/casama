@@ -56,12 +56,17 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }
   };
   const settings = async (orgId: string) => {
-    const [o] = await db.execute<{ run_event_retention_days: number; require_mfa: boolean }>(
-      sql`select run_event_retention_days, require_mfa from public.organizations where id = ${orgId}::uuid`,
+    const [o] = await db.execute<{
+      run_event_retention_days: number;
+      require_mfa: boolean;
+      llm_tracing: boolean;
+    }>(
+      sql`select run_event_retention_days, require_mfa, llm_tracing from public.organizations where id = ${orgId}::uuid`,
     );
     return {
       run_event_retention_days: o?.run_event_retention_days ?? 180,
       require_mfa: o?.require_mfa ?? false,
+      llm_tracing: o?.llm_tracing ?? true,
     };
   };
 
@@ -85,7 +90,14 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         "Set up two-step sign-in and sign in with it before requiring it for the workspace",
       );
     }
-    if (body.run_event_retention_days != null || body.require_mfa != null) {
+    if (
+      body.run_event_retention_days != null ||
+      body.require_mfa != null ||
+      body.llm_tracing != null
+    ) {
+      if (body.llm_tracing != null)
+        await db.execute(sql`
+          update public.organizations set llm_tracing = ${body.llm_tracing} where id = ${id}::uuid`);
       if (body.run_event_retention_days != null)
         await db.execute(sql`
           update public.organizations set run_event_retention_days = ${body.run_event_retention_days} where id = ${id}::uuid`);

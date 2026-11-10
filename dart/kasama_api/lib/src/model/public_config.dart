@@ -39,6 +39,8 @@ class PublicConfig {
      this.chatgptSignIn,
 
      this.signupProofs,
+
+     this.traceUrlTemplate,
   });
 
   @JsonKey(
@@ -162,6 +164,18 @@ class PublicConfig {
 
 
 
+  @JsonKey(
+    
+    name: r'trace_url_template',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? traceUrlTemplate;
+
+
+
 
 
     @override
@@ -175,7 +189,8 @@ class PublicConfig {
       other.defaultReasoningEffort == defaultReasoningEffort &&
       other.wallpapersEnabled == wallpapersEnabled &&
       other.chatgptSignIn == chatgptSignIn &&
-      other.signupProofs == signupProofs;
+      other.signupProofs == signupProofs &&
+      other.traceUrlTemplate == traceUrlTemplate;
 
     @override
     int get hashCode =>
@@ -188,7 +203,8 @@ class PublicConfig {
         defaultReasoningEffort.hashCode +
         wallpapersEnabled.hashCode +
         chatgptSignIn.hashCode +
-        signupProofs.hashCode;
+        signupProofs.hashCode +
+        (traceUrlTemplate == null ? 0 : traceUrlTemplate.hashCode);
 
   factory PublicConfig.fromJson(Map<String, dynamic> json) => _$PublicConfigFromJson(json);
 

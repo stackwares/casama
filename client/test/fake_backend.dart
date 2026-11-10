@@ -205,6 +205,27 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  @override
+  String? traceUrlTemplate;
+  String? runTraceId;
+  @override
+  Future<Run> run(String runId) async => Run(
+        id: runId,
+        botId: botId,
+        conversationId: convId,
+        parentRunId: null,
+        trigger: 'chat',
+        status: RunStatus.completed,
+        tokensIn: 100,
+        tokensOut: 10,
+        costUsd: 0.01,
+        lastSeq: 1,
+        startedAt: DateTime(2026),
+        endedAt: DateTime(2026),
+        error: null,
+        traceId: runTraceId,
+        createdAt: DateTime(2026),
+      );
   BotSetupStatusEnum setupStatus = BotSetupStatusEnum.done;
   var setupStarted = 0;
   @override

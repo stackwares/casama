@@ -122,6 +122,14 @@ if (env.MODE === "api") {
     embeddings: env.EMBEDDINGS,
     runConcurrency: env.RUN_CONCURRENCY,
     lazyToolsThreshold: env.LAZY_TOOLS_THRESHOLD,
+    langfuse:
+      env.LANGFUSE_BASE_URL && env.LANGFUSE_PUBLIC_KEY && env.LANGFUSE_SECRET_KEY
+        ? {
+            baseUrl: env.LANGFUSE_BASE_URL,
+            publicKey: env.LANGFUSE_PUBLIC_KEY,
+            secretKey: env.LANGFUSE_SECRET_KEY,
+          }
+        : undefined,
     supervisor:
       env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN
         ? { url: env.SUPERVISOR_URL, token: env.SUPERVISOR_TOKEN }

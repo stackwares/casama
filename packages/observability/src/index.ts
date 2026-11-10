@@ -11,6 +11,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions";
 import * as Sentry from "@sentry/node";
 import { PostHog } from "posthog-node";
+import { forcedIds } from "./run-trace.ts";
 
 export type ErrorReporting = "auto" | "sentry" | "posthog" | "none";
 
@@ -157,6 +158,8 @@ export function initObservability(opts: ObservabilityOptions) {
       traceExporter: new OTLPTraceExporter({
         url: `${opts.otlpEndpoint.replace(/\/$/, "")}/v1/traces`,
       }),
+      // Run spans use ids derived from the run (D-107).
+      idGenerator: forcedIds,
     });
     sdk.start();
   }
@@ -218,3 +221,5 @@ export function createLogger(
   };
 }
 export type Logger = ReturnType<typeof createLogger>;
+
+export * from "./run-trace.ts";

@@ -65,6 +65,7 @@ const runOut = (r: RunRow) => ({
   started_at: r.startedAt ? iso(r.startedAt) : null,
   ended_at: r.endedAt ? iso(r.endedAt) : null,
   error: (r.error as { code: string; message: string } | null) ?? null,
+  trace_id: r.traceId ?? null,
   created_at: iso(r.createdAt),
 });
 

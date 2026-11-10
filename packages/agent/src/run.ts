@@ -43,6 +43,7 @@ import {
   secretRequestState,
 } from "./secret-requests.ts";
 import { SETUP_GUIDE } from "./tools/setup.ts";
+import { endRunSpan, recordRunSpan, runTraceId, startRunChildSpan } from "@kasama/observability";
 import {
   DEFAULT_LAZY_THRESHOLD,
   isCoreTool,
@@ -88,6 +89,8 @@ export interface RunDeps {
   step: StepRunner;
   logger?: Logger;
   limits?: { maxSteps?: number; wallTimeMs?: number };
+  /** Langfuse generations for every model attempt (D-107); off when unset. */
+  langfuse?: import("./langfuse.ts").LangfuseSink;
   /** Bots with more tools than this start with core tools and load the rest (D-106); 0 = off. */
   lazyToolsThreshold?: number;
   fallback?: FallbackOptions;
@@ -135,6 +138,8 @@ interface RunInfo {
   now: string;
   summary: string;
   current: { id: string; text: string; files?: FilePart[] } | null;
+  /** Langfuse traces allowed for this workspace (D-107). */
+  llmTracing: boolean;
   history: ChatMessage[];
   skills: Array<{ name: string; description: string }>;
   botOwner: string | null;
@@ -358,12 +363,10 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       lazy
         ? registry.specs([...lazy.core, ...loaded])
         : native
-          ? registry
-              .specs(offered)
-              .map((spec, k) => ({
-                ...spec,
-                deferred: !isCoreTool((offered[k] as ToolDefinition).name),
-              }))
+          ? registry.specs(offered).map((spec, k) => ({
+              ...spec,
+              deferred: !isCoreTool((offered[k] as ToolDefinition).name),
+            }))
           : registry.specs(offered);
     const toolSpecs = specsNow();
 
@@ -793,6 +796,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     summary: string | null;
     summary_through: Date | null;
     purpose: string | null;
+    llm_tracing: boolean | null;
     bot_owner: string | null;
     parent_run_id: string | null;
     routine_id: string | null;
@@ -817,7 +821,8 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
            ) as acting_user_id,
            r.id, r.org_id, r.bot_id, r.conversation_id, r.created_by, r.trigger, r.status, r.budget as run_budget,
            b.name, b.persona_md, b.autonomy, b.model_policy, b.budget as bot_budget, b.created_by as bot_owner,
-           coalesce(p.timezone, po.timezone) as timezone, c.summary, c.summary_through, c.purpose, r.parent_run_id,
+           coalesce(p.timezone, po.timezone) as timezone, c.summary, c.summary_through, c.purpose,
+           (select o.llm_tracing from public.organizations o where o.id = r.org_id) as llm_tracing, r.parent_run_id,
            r.routine_id, rt.notify as routine_notify, rt.created_by as routine_created_by, rt.name as routine_name, r.voice_call
     from public.runs r
     join public.bots b on b.id = r.bot_id
@@ -892,6 +897,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     dailyLimit: num(row.bot_budget?.daily_usd),
     botName: row.name,
     // A setup conversation adds the interview guide until setup is applied (D-105).
+    llmTracing: row.llm_tracing !== false,
     persona:
       row.purpose === "setup" ? `${row.persona_md}\n\n${SETUP_GUIDE}`.trim() : row.persona_md,
     autonomy: row.autonomy,
@@ -993,7 +999,8 @@ async function admit(
   const verdict = await spend(db, info);
   if (!verdict.ok) return verdict;
   await db.execute(
-    sql`update public.runs set status = 'running', started_at = coalesce(started_at, now()) where id = ${info.runId}::uuid`,
+    sql`update public.runs set status = 'running', started_at = coalesce(started_at, now()),
+          trace_id = coalesce(trace_id, ${runTraceId(info.runId)}) where id = ${info.runId}::uuid`,
   );
   await db.execute(sql`update public.bots set status = 'working' where id = ${info.botId}::uuid`);
   await (await bus()).append(info.runId, "run.started", {
@@ -1140,10 +1147,38 @@ async function modelStep(
   let usage: Usage = { inputTokens: 0, outputTokens: 0 };
   let model = chain[0]?.model ?? "unknown";
   let provider: ProviderId | undefined = chain[0]?.provider;
+  // One span per model step: model, tokens, cost, failovers; never prompt or reply text (D-107).
+  const span = startRunChildSpan(info.runId, `chat ${model}`, {
+    "gen_ai.operation.name": "chat",
+    "gen_ai.request.model": model,
+    "gen_ai.agent.id": info.botId,
+    "kasama.run.step": i,
+  });
+  let failovers = 0;
+  const lf = info.llmTracing ? deps.langfuse : undefined;
+  let attemptStart = new Date();
+  const lfInput = lf ? redactor.value({ system: req.system, messages: req.messages }) : undefined;
   try {
     const stream = withFallback(deps.gateway, chain, {
       ...deps.fallback,
       onAttempt: (a) => {
+        if (a.error) failovers++;
+        if (lf && a.error) {
+          void lf.generation({
+            traceId: runTraceId(info.runId),
+            runId: info.runId,
+            botName: info.botName,
+            orgId: info.orgId,
+            model: a.model,
+            attempt: a.attempt,
+            start: attemptStart,
+            end: new Date(),
+            input: lfInput as { system: string[]; messages: ChatMessage[] },
+            output: null,
+            error: redactor.text(a.error),
+          });
+          attemptStart = new Date();
+        }
         deps.logger?.info("model attempt", {
           run_id: info.runId,
           step: i,
@@ -1179,6 +1214,13 @@ async function modelStep(
     }
   } catch (err) {
     if (!cancelled) {
+      endRunSpan(
+        span,
+        { "kasama.failover_attempts": failovers },
+        {
+          type: (err instanceof ModelCallError ? err.code : undefined) ?? "model_error",
+        },
+      );
       await coalescer.drain().catch(() => {});
       throw err;
     }
@@ -1186,8 +1228,40 @@ async function modelStep(
     clearInterval(poll);
   }
   await coalescer.drain();
-  if (cancelled)
+  const spanEnd = {
+    "gen_ai.response.model": model,
+    ...(provider ? { "gen_ai.provider.name": provider } : {}),
+    "gen_ai.usage.input_tokens": usage.inputTokens,
+    "gen_ai.usage.output_tokens": usage.outputTokens,
+    ...(usage.cachedInputTokens !== undefined
+      ? { "gen_ai.usage.cache_read.input_tokens": usage.cachedInputTokens }
+      : {}),
+    "kasama.cost_usd": costOf(model, usage),
+    "kasama.failover_attempts": failovers,
+    "kasama.tool_calls": toolCalls.length,
+  };
+  if (cancelled) {
+    endRunSpan(span, spanEnd, { type: "cancelled" });
     return { cancelled: true as const, text: "", toolCalls: [] as ToolCall[], messageId };
+  }
+  endRunSpan(span, spanEnd);
+  if (lf)
+    void lf.generation({
+      traceId: runTraceId(info.runId),
+      runId: info.runId,
+      botName: info.botName,
+      orgId: info.orgId,
+      model,
+      attempt: failovers,
+      start: attemptStart,
+      end: new Date(),
+      input: lfInput as { system: string[]; messages: ChatMessage[] },
+      output:
+        redactor.text(text) ||
+        (toolCalls.length ? `[tool calls: ${toolCalls.map((t) => t.name).join(", ")}]` : ""),
+      usage,
+      costUsd: costOf(model, usage),
+    });
   await recordUsage(deps.db, info, model, usage, bus, provider);
   return { cancelled: false as const, text: redactor.text(text), toolCalls, messageId };
 }
@@ -1205,8 +1279,19 @@ async function toolStep(
   const redactor = await redactorFn();
   const started = Date.now();
   let untrusted = false;
+  // One span per tool call; names and outcome only, never arguments or results (D-107).
+  const span = startRunChildSpan(info.runId, `execute_tool ${call.name}`, {
+    "gen_ai.operation.name": "execute_tool",
+    "gen_ai.tool.name": call.name,
+    "gen_ai.tool.call.id": call.callId,
+    "gen_ai.agent.id": info.botId,
+  });
   try {
     const parsed = registry.parse(call.name, call.args);
+    span.setAttribute(
+      "kasama.tool.risk",
+      parsed.def.riskFor?.(parsed.args as never) ?? parsed.def.risk,
+    );
     const def = parsed.def;
     let args = parsed.args as Record<string, unknown>;
     untrusted = def.untrustedOutput === true;
@@ -1312,6 +1397,7 @@ async function toolStep(
       artifact_path: res.artifactPath ?? off.artifactPath,
       duration_ms: Date.now() - started,
     });
+    endRunSpan(span, { "kasama.tool.outcome": "ok" });
     return { content, untrusted };
   } catch (err) {
     const code = err instanceof ToolError ? err.code : "tool_error";
@@ -1321,6 +1407,7 @@ async function toolStep(
       error_code: code,
       message,
     });
+    endRunSpan(span, { "kasama.tool.outcome": "error" }, { type: code });
     return { content: `Error (${code}): ${message}`, untrusted };
   }
 }
@@ -1455,9 +1542,41 @@ async function setTerminal(db: Database, info: RunInfo, status: string, error: u
   await db.execute(
     sql`update public.approvals set status = 'expired' where run_id = ${info.runId}::uuid and status = 'pending'`,
   );
-  const rows = await db.execute<{ id: string }>(sql`
+  const rows = await db.execute<{
+    id: string;
+    started: Date | string;
+    ended: Date | string;
+    tokens_in: string;
+    tokens_out: string;
+    cost_usd: string;
+  }>(sql`
     update public.runs set status = ${status}, ended_at = now(), error = ${error ? JSON.stringify(error) : null}::jsonb
-    where id = ${info.runId}::uuid and status not in ('completed', 'failed', 'cancelled') returning id`);
+    where id = ${info.runId}::uuid and status not in ('completed', 'failed', 'cancelled')
+    returning id, coalesce(started_at, created_at) as started, ended_at as ended, tokens_in, tokens_out, cost_usd`);
+  const r = rows[0];
+  if (r)
+    // The run span, with the id its model and tool spans point at (D-107).
+    recordRunSpan(
+      info.runId,
+      `invoke_agent ${info.botName}`,
+      {
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.agent.id": info.botId,
+        "gen_ai.agent.name": info.botName,
+        "gen_ai.request.model": info.policy.primary?.model ?? "unknown",
+        "gen_ai.usage.input_tokens": Number(r.tokens_in),
+        "gen_ai.usage.output_tokens": Number(r.tokens_out),
+        "kasama.cost_usd": Number(r.cost_usd),
+        "kasama.run.id": info.runId,
+        "kasama.run.trigger": info.trigger,
+        "kasama.run.status": status,
+        "kasama.org.id": info.orgId,
+      },
+      { start: new Date(r.started), end: new Date(r.ended) },
+      status === "failed"
+        ? { type: (error as { code?: string } | null)?.code ?? "failed" }
+        : undefined,
+    );
   await db.execute(sql`
     update public.bots set status = 'idle' where id = ${info.botId}::uuid
       and not exists (select 1 from public.runs where bot_id = ${info.botId}::uuid and status = 'running' and id <> ${info.runId}::uuid)`);

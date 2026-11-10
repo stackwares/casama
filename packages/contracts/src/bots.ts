@@ -176,6 +176,10 @@ export const Run = z
     started_at: ts.nullable(),
     ended_at: ts.nullable(),
     error: z.object({ code: z.string(), message: z.string() }).nullable(),
+    trace_id: z
+      .string()
+      .nullable()
+      .openapi({ description: "OpenTelemetry trace of this run (D-107)" }),
     created_at: ts,
   })
   .openapi("Run");

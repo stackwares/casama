@@ -201,6 +201,10 @@ abstract class Backend {
   // Appearance
   /// Whether the server can search wallpaper photos (Unsplash; D-087).
   bool get wallpapersEnabled;
+  /// A trace viewer link with {trace_id} in it, when the server has one (D-107).
+  String? get traceUrlTemplate;
+  /// One run (its status, totals and trace id).
+  Future<Run> run(String runId);
   Future<List<WallpaperPhoto>> searchWallpapers({String? query, int page = 1});
   /// Tells the photo source a photo was chosen.
   Future<void> trackWallpaperDownload(String downloadLocation);

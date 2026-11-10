@@ -92,6 +92,12 @@ export const EnvSchema = z.object({
   POSTHOG_API_KEY: z.string().optional(),
   POSTHOG_HOST: z.url().optional(),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
+  /** Langfuse LLM traces (D-107): all three set turns them on (workspaces can opt out). */
+  LANGFUSE_BASE_URL: z.url().optional(),
+  LANGFUSE_PUBLIC_KEY: z.string().min(1).optional(),
+  LANGFUSE_SECRET_KEY: z.string().min(1).optional(),
+  /** A trace viewer link with {trace_id} in it, shown on run timelines (D-107). */
+  TRACE_URL_TEMPLATE: z.string().includes("{trace_id}").optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   /** Worker: replay recorded model responses (comma-separated fixture files) instead of calling providers. */
   KASAMA_MODEL_FIXTURES: z.string().optional(),

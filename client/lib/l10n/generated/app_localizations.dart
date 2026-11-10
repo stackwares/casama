@@ -6117,6 +6117,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Answer the setup questions again and review a new proposal'**
   String get rerunSetupHelp;
+
+  /// No description provided for @trace.
+  ///
+  /// In en, this message translates to:
+  /// **'Trace'**
+  String get trace;
+
+  /// No description provided for @openTrace.
+  ///
+  /// In en, this message translates to:
+  /// **'Open trace'**
+  String get openTrace;
 }
 
 class _AppLocalizationsDelegate

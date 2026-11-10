@@ -53,6 +53,8 @@ export interface ToolSpec {
 export interface Usage {
   inputTokens: number;
   outputTokens: number;
+  /** Input tokens served from the provider's prompt cache, when it reports them. */
+  cachedInputTokens?: number;
 }
 
 export type GatewayEvent =

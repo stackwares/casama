@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
@@ -168,6 +170,7 @@ class _RunTimelineScreenState extends ConsumerState<RunTimelineScreen> {
           final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: kPageMaxWidth);
           return Column(
             children: [
+              _TraceLink(runId: widget.runId, side: side),
               Padding(
                 padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.sm),
                 child: AppSegmentedControl<EventFilter>(
@@ -328,6 +331,52 @@ class TimelineTile extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+final _runProvider = FutureProvider.autoDispose.family<Run, String>((ref, id) => ref.watch(backendProvider).run(id));
+
+/// The run's OpenTelemetry trace (D-107): its id to copy, and a link when the server has a viewer.
+class _TraceLink extends ConsumerWidget {
+  const _TraceLink({required this.runId, required this.side});
+  final String runId;
+  final double side;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final traceId = ref.watch(_runProvider(runId)).value?.traceId;
+    if (traceId == null) return const SizedBox.shrink();
+    final template = ref.watch(backendProvider).traceUrlTemplate;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, 0),
+      child: Row(
+        key: const Key('traceLink'),
+        children: [
+          Icon(LucideIcons.waypoints, size: 16, color: context.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text('${l10n.trace} ${traceId.substring(0, 12)}…', style: AppText.mono.copyWith(fontSize: 12, color: context.colorScheme.onSurfaceVariant)),
+          ),
+          IconButton(
+            tooltip: l10n.copy,
+            icon: const Icon(LucideIcons.copy, size: 16),
+            onPressed: () async {
+              try {
+                await Clipboard.setData(ClipboardData(text: traceId));
+                if (context.mounted) showMessage(context, l10n.copied);
+              } catch (_) {}
+            },
+          ),
+          if (template != null)
+            TextButton(
+              key: const Key('openTrace'),
+              onPressed: () => launchUrl(Uri.parse(template.replaceAll('{trace_id}', traceId)), mode: LaunchMode.externalApplication),
+              child: Text(l10n.openTrace),
+            ),
         ],
       ),
     );

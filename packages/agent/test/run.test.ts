@@ -1,7 +1,15 @@
 import { createDb, type DbHandle } from "@kasama/db";
 import { createAuthUser, startTestDatabase, type TestDatabase } from "@kasama/db/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { trace } from "@opentelemetry/api";
+import {
+  InMemorySpanExporter,
+  SimpleSpanProcessor,
+  TracerProvider,
+} from "@opentelemetry/sdk-trace";
+import { forcedIds, runSpanId, runTraceId } from "@kasama/observability";
 import { z } from "zod";
+import { LangfuseSink } from "../src/langfuse.ts";
 import { planLazyTools, registerToolsLoad, toolGroup } from "../src/lazy-tools.ts";
 import {
   builtinTools,
@@ -507,5 +515,78 @@ describe("lazy tool loading (D-106)", () => {
     );
     expect(req?.tools?.some((t) => t.name === "crm__action_1")).toBe(true);
     expect(req?.tools?.some((t) => t.name === "tools__load")).toBe(false);
+  });
+});
+
+describe("run tracing (D-107)", () => {
+  const exporter = new InMemorySpanExporter();
+  beforeAll(() => {
+    const provider = new TracerProvider({
+      idGenerator: forcedIds,
+      spanProcessors: [new SimpleSpanProcessor({ exporter })],
+    });
+    trace.setGlobalTracerProvider(provider);
+  });
+
+  it("emits one trace per run: the run span, model steps and tool calls, with no prompt text", async () => {
+    exporter.reset();
+    const gateway = new ReplayGateway(fixtures);
+    const botId = await makeBot();
+    const { runId } = await startRun(botId, "Please remember my favorite color is teal");
+    expect(await runAgent(runId, deps(gateway))).toEqual({ status: "completed" });
+    const spans = exporter
+      .getFinishedSpans()
+      .filter((s) => s.spanContext().traceId === runTraceId(runId));
+    const run = spans.find((s) => s.name.startsWith("invoke_agent"));
+    expect(run?.spanContext().spanId).toBe(runSpanId(runId, "run"));
+    expect(run?.attributes["kasama.run.status"]).toBe("completed");
+    expect(Number(run?.attributes["gen_ai.usage.input_tokens"])).toBeGreaterThan(0);
+    const chats = spans.filter((s) => s.attributes["gen_ai.operation.name"] === "chat");
+    expect(chats.length).toBeGreaterThanOrEqual(2);
+    for (const c of chats) expect(c.parentSpanContext?.spanId).toBe(runSpanId(runId, "run"));
+    expect(chats[0]?.attributes["gen_ai.usage.input_tokens"]).toBe(10_000);
+    expect(typeof chats[0]?.attributes["kasama.cost_usd"]).toBe("number");
+    const tool = spans.find((s) => s.attributes["gen_ai.tool.name"] === "memory.write");
+    expect(tool?.attributes["kasama.tool.outcome"]).toBe("ok");
+    expect(tool?.attributes["kasama.tool.risk"]).toBeDefined();
+    const all = JSON.stringify(spans.map((s) => ({ n: s.name, a: s.attributes, e: s.events })));
+    expect(all).not.toMatch(/teal/i);
+    const [row] = await tdb.admin<
+      { trace_id: string }[]
+    >`select trace_id from public.runs where id = ${runId}`;
+    expect(row?.trace_id).toBe(runTraceId(runId));
+  });
+
+  it("logs every model attempt to Langfuse with secrets redacted, unless the workspace opts out", async () => {
+    const batches: Array<{ batch: Array<{ type: string; body: Record<string, unknown> }> }> = [];
+    const langfuse = new LangfuseSink({
+      baseUrl: "http://langfuse.test",
+      publicKey: "pk",
+      secretKey: "sk",
+      fetch: (async (_u: string, init: RequestInit) => {
+        batches.push(JSON.parse(String(init.body)));
+        return new Response("{}");
+      }) as typeof fetch,
+    });
+    const gateway = new ReplayGateway(fixtures);
+    const botId = await makeBot();
+    const { runId } = await startRun(
+      botId,
+      `My key is ${SECRET}, remember my favorite color is teal`,
+    );
+    await runAgent(runId, deps(gateway, { langfuse }));
+    await new Promise((r) => setTimeout(r, 50));
+    const gens = batches.flatMap((b) => b.batch).filter((e) => e.type === "generation-create");
+    expect(gens.length).toBeGreaterThanOrEqual(2);
+    expect(gens[0]?.body.traceId).toBe(runTraceId(runId));
+    expect(JSON.stringify(batches)).not.toContain(SECRET);
+
+    batches.length = 0;
+    await tdb.admin`update public.organizations set llm_tracing = false where id = ${orgId}`;
+    const second = await startRun(botId, "Hey, what is my favorite color?");
+    await runAgent(second.runId, deps(gateway, { langfuse }));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(batches).toEqual([]);
+    await tdb.admin`update public.organizations set llm_tracing = true where id = ${orgId}`;
   });
 });

@@ -48,6 +48,8 @@ class Run {
 
     required  this.error,
 
+    required  this.traceId,
+
     required  this.createdAt,
   });
 
@@ -207,6 +209,19 @@ class Run {
 
 
 
+      /// OpenTelemetry trace of this run (D-107)
+  @JsonKey(
+    
+    name: r'trace_id',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? traceId;
+
+
+
   @JsonKey(
     
     name: r'created_at',
@@ -236,6 +251,7 @@ class Run {
       other.startedAt == startedAt &&
       other.endedAt == endedAt &&
       other.error == error &&
+      other.traceId == traceId &&
       other.createdAt == createdAt;
 
     @override
@@ -253,6 +269,7 @@ class Run {
         (startedAt == null ? 0 : startedAt.hashCode) +
         (endedAt == null ? 0 : endedAt.hashCode) +
         (error == null ? 0 : error.hashCode) +
+        (traceId == null ? 0 : traceId.hashCode) +
         createdAt.hashCode;
 
   factory Run.fromJson(Map<String, dynamic> json) => _$RunFromJson(json);
