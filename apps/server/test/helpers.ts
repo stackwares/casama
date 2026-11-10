@@ -62,6 +62,7 @@ export async function startHarness(
     /** Encryption at rest: the server key (base64, 32 bytes). */
     contentKey?: string;
     worker?: {
+      deviceWaitMs?: { read?: number; write?: number };
       /** Recorded model responses; omit only in live checks (real provider calls). */
       fixtures?: string;
       maxOutputTokens?: number;
@@ -148,6 +149,7 @@ export async function startHarness(
       push: opts.worker.push,
       egressExemptCidrs: opts.worker.egressExemptCidrs,
       providerBases: opts.worker.providerBases,
+      deviceWaitMs: opts.worker.deviceWaitMs,
       publicApiUrl: opts.worker.publicApiUrl === "self" ? `http://127.0.0.1:${localPort}` : opts.worker.publicApiUrl,
       chatgpt: opts.worker.chatgpt,
       local: localOpts,

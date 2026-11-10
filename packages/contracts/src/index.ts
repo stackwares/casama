@@ -29,6 +29,7 @@ export * from "./telephony.ts";
 export * from "./payments.ts";
 export * from "./links.ts";
 export * from "./secret-store.ts";
+export * from "./device-data.ts";
 export * from "./pages.ts";
 export * from "./password-managers.ts";
 export * from "./replays.ts";

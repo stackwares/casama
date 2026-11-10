@@ -9153,6 +9153,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 bot} other{{count} bots}}'**
   String desktopUsersCount(int count);
+
+  /// No description provided for @deviceAccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} would like to use your {what}'**
+  String deviceAccessTitle(String bot, String what);
+
+  /// No description provided for @deviceAccessHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only in your own chats. You can stop it any time in Settings → Device connections.'**
+  String get deviceAccessHelp;
+
+  /// No description provided for @deviceAccessAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed to use your {what}'**
+  String deviceAccessAllowed(String what);
+
+  /// No description provided for @deviceAccessSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Not shared'**
+  String get deviceAccessSkipped;
+
+  /// No description provided for @deviceKindCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'calendar'**
+  String get deviceKindCalendar;
+
+  /// No description provided for @deviceKindReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'reminders'**
+  String get deviceKindReminders;
+
+  /// No description provided for @deviceKindContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'contacts'**
+  String get deviceKindContacts;
+
+  /// No description provided for @deviceKindPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'places'**
+  String get deviceKindPlaces;
+
+  /// No description provided for @deviceKindPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'photos'**
+  String get deviceKindPhotos;
+
+  /// No description provided for @deviceKindHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'health data'**
+  String get deviceKindHealth;
+
+  /// No description provided for @deviceKindNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'notifications'**
+  String get deviceKindNotifications;
+
+  /// No description provided for @deviceKindActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'computer activity'**
+  String get deviceKindActivity;
+
+  /// No description provided for @deviceConnections.
+  ///
+  /// In en, this message translates to:
+  /// **'Device connections'**
+  String get deviceConnections;
+
+  /// No description provided for @deviceConnectionsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Share data from this device with your bots. Each kind is off until you turn it on, and only bots you allow can read it, only in your own chats.'**
+  String get deviceConnectionsHelp;
+
+  /// No description provided for @deviceConnectionsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'This device can\'t share data yet. On your phone, open Kasama and turn on what you\'d like to share.'**
+  String get deviceConnectionsNone;
+
+  /// No description provided for @deviceKeepFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep for'**
+  String get deviceKeepFor;
+
+  /// No description provided for @deviceKeepLiveOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Live only'**
+  String get deviceKeepLiveOnly;
+
+  /// No description provided for @deviceKeepDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String deviceKeepDays(int count);
+
+  /// No description provided for @devicePrivateModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Private models only'**
+  String get devicePrivateModel;
+
+  /// No description provided for @devicePrivateModelHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only bots on a local model can read it'**
+  String get devicePrivateModelHelp;
+
+  /// No description provided for @deviceBotsWithAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots that can read it'**
+  String get deviceBotsWithAccess;
+
+  /// No description provided for @deviceNoBots.
+  ///
+  /// In en, this message translates to:
+  /// **'No bots yet. A bot asks when it needs this.'**
+  String get deviceNoBots;
+
+  /// No description provided for @devicePermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Kasama doesn\'t have permission. Allow it in the system settings, then try again.'**
+  String get devicePermissionDenied;
+
+  /// No description provided for @deviceOtherDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Your other devices'**
+  String get deviceOtherDevices;
+
+  /// No description provided for @deviceForget.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget this device'**
+  String get deviceForget;
+
+  /// No description provided for @deviceConnectionsRowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar, contacts and more from this device'**
+  String get deviceConnectionsRowHelp;
 }
 
 class _AppLocalizationsDelegate

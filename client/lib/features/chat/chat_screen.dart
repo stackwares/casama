@@ -747,6 +747,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         case final SecretEntry k:
           botSide('secret-${k.requestId}');
           rows.add(_Row(ValueKey('secret-${k.requestId}'), AppSpace.sm, () => SecretPrompt(entry: k, botName: name), fresh: fresh));
+        case final DeviceAccessEntry d:
+          botSide('device-${d.kind.value}-$i');
+          rows.add(_Row(ValueKey('device-${d.kind.value}-$i'), AppSpace.sm, () => DeviceAccessPrompt(entry: d, botName: name), fresh: fresh));
         case final UiEntry u:
           botSide(u.surfaceId);
           rows.add(

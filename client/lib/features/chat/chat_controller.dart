@@ -116,6 +116,14 @@ class SecretEntry extends ChatEntry {
   final String? outcome;
 }
 
+/// A bot asking for one kind of the person's device data (D-149): a one-tap card.
+class DeviceAccessEntry extends ChatEntry {
+  const DeviceAccessEntry({required this.kind, required this.reason, required this.botId});
+  final DeviceKind kind;
+  final String reason;
+  final String botId;
+}
+
 /// An interactive UI the bot showed (D-086), rendered from A2UI messages.
 class UiEntry extends ChatEntry {
   const UiEntry({required this.surfaceId, required this.messages});
@@ -423,6 +431,10 @@ class ChatController extends Notifier<ChatState> {
       case SecretRequestedItem(:final event):
         final p = event.payload;
         entries.add(SecretEntry(requestId: p.requestId, name: p.name, service: p.service, hosts: p.allowedHosts.toList(), reason: p.reason, totp: p.kind.value == 'totp'));
+      case DeviceAccessRequestedItem(:final event):
+        final p = event.payload;
+        final kind = DeviceKind.values.where((k) => k.value == p.kind.value).firstOrNull;
+        if (kind != null) entries.add(DeviceAccessEntry(kind: kind, reason: p.reason, botId: p.botId));
       case SecretResolvedItem(:final event):
         final i = indexWhere((x) => x is SecretEntry && x.requestId == event.payload.requestId);
         if (i >= 0) {

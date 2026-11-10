@@ -35,6 +35,7 @@ import {
   registerChannelTools,
   registerPhoneCallTools,
   registerDataTools,
+  registerDeviceTools,
   registerCallTools,
   registerPaymentTools,
   registerLinkTools,
@@ -101,6 +102,8 @@ export interface WorkerOptions {
   /** Private address ranges the worker may call (local development and tests only). */
   egressExemptCidrs?: string[];
   /** Base URL overrides for provider APIs (tests). */
+  /** Device connections (D-149): how long tools wait for a device (tests shorten it). */
+  deviceWaitMs?: { read?: number; write?: number };
   providerBases?: {
     fal?: string;
     brave?: string;
@@ -347,6 +350,8 @@ export async function startWorker(opts: WorkerOptions) {
       };
     },
   });
+  // Device connections (D-149): the person's own phone and computer data, per-bot grants.
+  registerDeviceTools(tools, { db, waitMs: opts.deviceWaitMs });
   // Paid data (D-138): the workspace's own Treg key, else Kasama's resale key when it's on.
   registerDataTools(tools, {
     db,

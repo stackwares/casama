@@ -609,6 +609,19 @@ abstract class Backend {
   // Secret requests from bots (D-101): the value goes to Vault through the API, nowhere else.
   Future<void> fulfillSecretRequest(String requestId, String value);
   Future<void> declineSecretRequest(String requestId);
+
+  // Device connections (D-149): data this person shares from their devices.
+  Future<List<DeviceSource>> deviceSources();
+  Future<DeviceSource> saveDeviceSource(String key, {required String name, required String platform, required Map<String, DeviceKindSettings> kinds});
+  Future<void> deleteDeviceSource(String key);
+  Future<int> uploadDeviceReadings(String key, List<DeviceReadingInput> readings, {String? requestId});
+  Future<List<DeviceRequest>> deviceRequests(String key);
+  Future<void> answerDeviceRequest(String id, {required bool ok, Map<String, Object?>? result, String? error});
+  Future<List<DeviceGrant>> deviceGrants({String? botId});
+  Future<List<DeviceGrant>> setDeviceGrant(String botId, DeviceKind kind, bool allowed);
+
+  /// Fires when a run asks one of this person's devices for something (its request id).
+  Stream<String> watchDeviceRequests();
   Future<List<TakeoverRequest>> takeovers(String orgId);
   Future<void> dismissTakeover(String takeoverId, {String? note});
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ import '../chat_controller.dart';
 import 'chat_markdown.dart';
 import 'message_actions.dart';
 import '../../../ui/glow_button.dart';
+import '../../devices/device_labels.dart';
 
 // ---------------------------------------------------------------------------------------------
 // Messages
@@ -981,6 +983,81 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
                   onPressed: _busy ? null : () => _answer(true),
                   icon: const Icon(LucideIcons.lock, size: 18),
                   label: Text(l10n.save),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+/// "Allow <bot> to use your calendar?" (D-149): one tap grants or skips; revoke in Settings.
+class DeviceAccessPrompt extends ConsumerStatefulWidget {
+  const DeviceAccessPrompt({super.key, required this.entry, required this.botName});
+  final DeviceAccessEntry entry;
+  final String botName;
+
+  @override
+  ConsumerState<DeviceAccessPrompt> createState() => _DeviceAccessPromptState();
+}
+
+class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
+  bool? _allowed;
+  var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Already allowed (from an earlier card or Settings): show it as done.
+    unawaited(
+      ref.read(backendProvider).deviceGrants(botId: widget.entry.botId).then((g) {
+        if (mounted && g.any((x) => x.kind == widget.entry.kind)) setState(() => _allowed ??= true);
+      }).catchError((_) {}),
+    );
+  }
+
+  Future<void> _answer(bool allow) async {
+    if (!allow) return setState(() => _allowed = false);
+    setState(() => _busy = true);
+    final ok = await runGuarded(context, () async {
+      await ref.read(backendProvider).setDeviceGrant(widget.entry.botId, widget.entry.kind, true);
+      return true;
+    });
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (ok == true) _allowed = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    final e = widget.entry;
+    final what = deviceKindLabel(l10n, e.kind);
+    return _ActionCard(
+      key: const Key('chatDeviceAccess'),
+      accent: colors.working,
+      icon: LucideIcons.smartphone,
+      title: l10n.deviceAccessTitle(widget.botName, what),
+      subtitle: l10n.deviceAccessHelp,
+      body: e.reason.isEmpty ? const SizedBox.shrink() : Text(e.reason, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
+      footer: _allowed != null
+          ? _Outcome(
+              text: _allowed! ? l10n.deviceAccessAllowed(what) : l10n.deviceAccessSkipped,
+              color: _allowed! ? colors.positive : context.colorScheme.onSurfaceVariant,
+              icon: _allowed! ? LucideIcons.circleCheck : LucideIcons.circleMinus,
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              spacing: AppSpace.sm,
+              children: [
+                TextButton(key: const Key('deviceAccessSkip'), onPressed: _busy ? null : () => _answer(false), child: Text(l10n.notNow)),
+                GlowButton.icon(
+                  key: const Key('deviceAccessAllow'),
+                  onPressed: _busy ? null : () => _answer(true),
+                  icon: const Icon(LucideIcons.check, size: 18),
+                  label: Text(l10n.allow),
                 ),
               ],
             ),

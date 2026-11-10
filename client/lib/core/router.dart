@@ -56,6 +56,7 @@ import '../features/board/board_screen.dart';
 import '../features/workspaces/spaces.dart';
 import 'providers.dart';
 import 'telemetry.dart';
+import '../features/devices/device_connections_screen.dart';
 
 /// Every route is a [MaterialPage], so pages slide or fade the way each platform expects and the
 /// theme's page transitions paint the wallpaper under each one. (go_router's own fallback here is
@@ -288,6 +289,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'secrets', pageBuilder: _page((_, _) => const SecretsScreen())),
               GoRoute(path: 'computers', pageBuilder: _page((_, _) => const ComputersScreen())),
               GoRoute(path: 'companion', pageBuilder: _page((_, _) => const CompanionScreen())),
+              GoRoute(path: 'devices', pageBuilder: _page((_, _) => const DeviceConnectionsScreen())),
               GoRoute(path: 'admin', pageBuilder: _page((_, _) => const AdminScreen())),
               GoRoute(path: 'billing', pageBuilder: _page((_, _) => const BillingScreen())),
               GoRoute(path: 'privacy', pageBuilder: _page((_, _) => const PrivacyScreen())),

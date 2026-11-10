@@ -18,6 +18,7 @@ import 'core/router.dart';
 import 'core/theme.dart';
 import 'theme/appearance.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'features/devices/device_sync.dart';
 
 class KasamaApp extends ConsumerWidget {
   const KasamaApp({super.key});
@@ -27,6 +28,8 @@ class KasamaApp extends ConsumerWidget {
     // 402 from the server (plan limit, out of credits) opens the paywall (Kasama Cloud only).
     onPaymentRequired ??= showPaywall;
     ref.watch(pushProvider);
+    // Device connections (D-149): shared device data stays fresh and runs' requests get answers.
+    ref.watch(deviceSyncProvider);
     // Desktop: the companion resumes if this computer is paired and on; tray and global shortcut.
     ref.watch(companionControllerProvider);
     if (isDesktop) ref.watch(desktopShellProvider);

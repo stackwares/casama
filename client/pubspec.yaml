@@ -65,6 +65,8 @@ dependencies:
   sherpa_onnx: ^2.0.1
   archive: ^4.6.0
   crypto: ^3.0.8
+  device_calendar: ^4.3.3
+  flutter_contacts: ^2.6.0
 dev_dependencies:
   integration_test:
     sdk: flutter

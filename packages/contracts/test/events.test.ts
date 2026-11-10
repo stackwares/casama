@@ -27,6 +27,8 @@ describe("run events", () => {
       "tool.failed",
       "approval.requested",
       "approval.resolved",
+      "device.access_requested",
+      "device.data_used",
       "secret.requested",
       "secret.resolved",
       "takeover.requested",

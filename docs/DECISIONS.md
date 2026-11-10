@@ -1524,3 +1524,49 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - pgTAP: the default and limits, folder name format, and members versus outsiders on leases.
   - Docker (`warm-pool.test.ts`, real containers): a new computer claims the started member in well under 5 seconds and runs normally (shell, egress, files). It sleeps and restores through the member's own credentials, `list` shows the computer and not the pool ref, and the pool refills. A custom-size computer leaves the pool alone.
   - App: setting the cap from the team computer's menu.
+
+## D-149 Device connections
+
+- **Owner-only data, not workspace data:**
+  - New tables:
+    - `device_sources`: a person's devices, with the kinds each shares and per-kind settings.
+    - `device_readings`: summaries, keyed by an `external_id` so a re-upload replaces the old one.
+    - `device_grants`: which bot may read which kind for that person.
+    - `device_requests`: fresh reads and writes waiting for a device.
+  - Every table keys on the person (`user_id`), not on a workspace. Row-level security shows rows only to their owner, not even to workspace admins.
+  - Readings and grants are written only through the API. The API checks that the kind is on, and that the person can use the bot (D-131), before granting.
+- **Bots read through `device.read(kind, from, to)`:**
+  - It works only in runs acting for that person (the D-091 rule, via `actingUserOf`), and only with a grant for this bot and kind.
+  - Without a grant it fails with `no_device_access` and points the bot at `device.request_access`. That tool emits `device.access_requested`, and the app shows a one-tap Allow / Not now card. The bot carries on meanwhile.
+  - If the device was seen in the last 15 minutes, the tool first inserts a read request and waits up to 10 seconds. A trigger broadcasts the request on the person's private realtime topic, and the app collects and uploads with the request id. A "live only" kind (retention 0) is answered without being stored.
+  - The result carries summaries with their age, wrapped as untrusted (calendar titles come from other people). A `device.data_used` event records the kind, count, range and devices, so the timeline shows exactly what reached the model.
+  - Health results carry the "not medical advice" rule.
+- **Private models:** a kind can be marked "private models only". The tool then refuses unless every model in the bot's policy (primary, fallbacks, cheap) uses a key whose base URL is on this machine or a private network (localhost, RFC 1918, CGNAT, `.local`, `.internal`).
+- **Writes:**
+  - `device.calendar.create` and `device.reminders.create` are medium-risk with `confirm`, so they ask first by default and action rules can allow them.
+  - They queue a request on the most recently seen device and wait 20 seconds. If the device doesn't answer in time, the bot is told it will happen when the device is next online.
+- **Retention:**
+  - Defaults are a year for daily summaries and 90 days for places, photos and notifications. A person can shorten it per kind (7, 30, 90 days, or live only).
+  - The worker's minute tick deletes expired readings and stale requests.
+  - Turning a kind off deletes its readings. Forgetting a device deletes everything it shared.
+  - Privacy export includes devices, readings and grants. An account deletion request removes device data right away.
+- **App:**
+  - Settings → Device connections offers the kinds this platform supports, each with a switch. The system prompt appears only when a kind is turned on. Each kind has its keep-for setting, the private-model switch and the bots allowed to read it (tap × to revoke). Other devices can be forgotten from the same screen.
+  - The sync service answers requests as they arrive on the realtime topic, and refreshes on launch and resume. The notifications stream and device requests now share one subscription to the topic, because joining a topic twice replaces the first join.
+  - Collectors: calendar (iOS, Android, `device_calendar`) and contacts (iOS, Android, macOS, `flutter_contacts`).
+  - Calendar summaries are one per local day, from a day back to 30 days ahead (up to 100 events a day). Contacts are names, phones and emails, in chunks of 200.
+  - Calendar writes go to the default writable calendar.
+- **Not in this step:**
+  - The remaining collectors and background refresh come with health data (D-150) and device triggers (D-151): places, photos, health, Android notifications, and WorkManager or background tasks.
+  - Reminders have no Flutter plugin. The server and tools support them, but the app doesn't collect them yet; this is listed for Oliver.
+  - Desktop calendar and activity come with desktop context (D-152).
+- **Tests:**
+  - API (`device-data.test.ts`, fixture model):
+    - Registering and uploading, with re-uploads replacing. Kinds that are off are refused, and other people see nothing.
+    - No access leads to the card event. With a grant, a fresh read is answered by the "phone" while the run waits, and the reply cites it.
+    - A teammate using the same bot gets nothing.
+    - A calendar write goes through approval and the device, and only the owner can answer it.
+    - Turning calendar off deletes its data, and then `device_kind_off`.
+    - Grants only for usable bots; revoking; retention.
+  - pgTAP: owner-only rows; grants and readings can't be written directly.
+  - App: day grouping and contact chunks; the permission-first switch; answering reads and writes and refusing unshared kinds; the settings screen (on, keep for, revoke); the chat card.

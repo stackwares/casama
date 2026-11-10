@@ -5344,4 +5344,99 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String deviceAccessTitle(String bot, String what) {
+    return '$bot would like to use your $what';
+  }
+
+  @override
+  String get deviceAccessHelp =>
+      'Only in your own chats. You can stop it any time in Settings → Device connections.';
+
+  @override
+  String deviceAccessAllowed(String what) {
+    return 'Allowed to use your $what';
+  }
+
+  @override
+  String get deviceAccessSkipped => 'Not shared';
+
+  @override
+  String get deviceKindCalendar => 'calendar';
+
+  @override
+  String get deviceKindReminders => 'reminders';
+
+  @override
+  String get deviceKindContacts => 'contacts';
+
+  @override
+  String get deviceKindPlaces => 'places';
+
+  @override
+  String get deviceKindPhotos => 'photos';
+
+  @override
+  String get deviceKindHealth => 'health data';
+
+  @override
+  String get deviceKindNotifications => 'notifications';
+
+  @override
+  String get deviceKindActivity => 'computer activity';
+
+  @override
+  String get deviceConnections => 'Device connections';
+
+  @override
+  String get deviceConnectionsHelp =>
+      'Share data from this device with your bots. Each kind is off until you turn it on, and only bots you allow can read it, only in your own chats.';
+
+  @override
+  String get deviceConnectionsNone =>
+      'This device can\'t share data yet. On your phone, open Kasama and turn on what you\'d like to share.';
+
+  @override
+  String get deviceKeepFor => 'Keep for';
+
+  @override
+  String get deviceKeepLiveOnly => 'Live only';
+
+  @override
+  String deviceKeepDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicePrivateModel => 'Private models only';
+
+  @override
+  String get devicePrivateModelHelp => 'Only bots on a local model can read it';
+
+  @override
+  String get deviceBotsWithAccess => 'Bots that can read it';
+
+  @override
+  String get deviceNoBots => 'No bots yet. A bot asks when it needs this.';
+
+  @override
+  String get devicePermissionDenied =>
+      'Kasama doesn\'t have permission. Allow it in the system settings, then try again.';
+
+  @override
+  String get deviceOtherDevices => 'Your other devices';
+
+  @override
+  String get deviceForget => 'Forget this device';
+
+  @override
+  String get deviceConnectionsRowHelp =>
+      'Calendar, contacts and more from this device';
 }

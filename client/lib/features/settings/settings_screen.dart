@@ -185,6 +185,14 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   GroupedTile(key: const Key('settingsSecrets'), icon: LucideIcons.lock, title: l10n.secrets, subtitle: l10n.secretsRowHelp, onTap: () => context.push('/settings/secrets')),
                   GroupedTile(key: const Key('settingsComputers'), icon: LucideIcons.monitor, title: l10n.computers, subtitle: l10n.computersRowHelp, onTap: () => context.push('/settings/computers')),
+                  // Device connections (D-149): data this device shares with your bots.
+                  GroupedTile(
+                    key: const Key('settingsDevices'),
+                    icon: LucideIcons.smartphone,
+                    title: l10n.deviceConnections,
+                    subtitle: l10n.deviceConnectionsRowHelp,
+                    onTap: () => context.push('/settings/devices'),
+                  ),
                   if (ref.watch(companionProvider).supported)
                     GroupedTile(
                       key: const Key('settingsCompanion'),

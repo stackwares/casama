@@ -705,31 +705,49 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Stream<NotificationView> watchNotifications() {
+  Stream<NotificationView> watchNotifications() => _userEvents('notification').expand((data) {
+    try {
+      return [_notification(data)];
+    } catch (_) {
+      return <NotificationView>[];
+    }
+  });
+
+  // One subscription to the person's private topic, shared by every event kind on it
+  // (notifications, device requests): a second join of the same topic would replace the first.
+  final _userTopic = <String, StreamController<Map>>{};
+  sb.RealtimeChannel? _userChannel;
+  String? _userChannelFor;
+
+  Stream<Map> _userEvents(String event) {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return const Stream.empty();
-    late final StreamController<NotificationView> out;
-    sb.RealtimeChannel? channel;
-    out = StreamController<NotificationView>(
-      onListen: () {
-        channel = supabase
-            .channel('user:$userId', opts: const sb.RealtimeChannelConfig(private: true))
-            .onBroadcast(
-              event: 'notification',
-              callback: (message) {
-                final data = message['payload'] is Map ? message['payload'] as Map : message;
-                try {
-                  out.add(_notification(data));
-                } catch (_) {}
-              },
-            )
-            .subscribe();
-      },
-      onCancel: () async {
-        if (channel != null) await supabase.removeChannel(channel!);
-      },
-    );
-    return out.stream;
+    final c = _userTopic.putIfAbsent(event, () => StreamController<Map>.broadcast(onCancel: _maybeCloseUserChannel));
+    if (_userChannel == null || _userChannelFor != userId) {
+      final old = _userChannel;
+      if (old != null) unawaited(supabase.removeChannel(old));
+      _userChannelFor = userId;
+      var ch = supabase.channel('user:$userId', opts: const sb.RealtimeChannelConfig(private: true));
+      for (final name in const ['notification', 'device_request']) {
+        ch = ch.onBroadcast(
+          event: name,
+          callback: (message) {
+            final data = message['payload'] is Map ? message['payload'] as Map : message;
+            _userTopic[name]?.add(data);
+          },
+        );
+      }
+      _userChannel = ch..subscribe();
+    }
+    return c.stream;
+  }
+
+  void _maybeCloseUserChannel() {
+    if (_userTopic.values.any((c) => c.hasListener)) return;
+    final ch = _userChannel;
+    _userChannel = null;
+    _userChannelFor = null;
+    if (ch != null) unawaited(supabase.removeChannel(ch));
   }
 
   @override
@@ -1688,6 +1706,49 @@ class SupabaseBackend implements Backend {
   Future<void> declineSecretRequest(String requestId) async {
     await api.secrets.declineSecretRequest(id: requestId);
   }
+
+  @override
+  Future<List<DeviceSource>> deviceSources() async => (await api.devices.listDeviceSources()).data!.items;
+
+  @override
+  Future<DeviceSource> saveDeviceSource(String key, {required String name, required String platform, required Map<String, DeviceKindSettings> kinds}) async =>
+      (await api.devices.saveDeviceSource(
+        key: key,
+        saveDeviceSourceRequest: SaveDeviceSourceRequest(
+          name: name,
+          platform: SaveDeviceSourceRequestPlatformEnum.values.firstWhere((p) => p.value == platform),
+          kinds: SaveDeviceSourceRequestKinds.fromJson({for (final e in kinds.entries) e.key: e.value.toJson()}),
+        ),
+      ))
+          .data!;
+
+  @override
+  Future<void> deleteDeviceSource(String key) async => api.devices.deleteDeviceSource(key: key);
+
+  @override
+  Future<int> uploadDeviceReadings(String key, List<DeviceReadingInput> readings, {String? requestId}) async => (await api.devices.uploadDeviceReadings(
+    key: key,
+    uploadDeviceReadingsRequest: UploadDeviceReadingsRequest(readings: readings, requestId: requestId),
+  ))
+      .data!
+      .stored;
+
+  @override
+  Future<List<DeviceRequest>> deviceRequests(String key) async => (await api.devices.listDeviceRequests(key: key)).data!.items;
+
+  @override
+  Future<void> answerDeviceRequest(String id, {required bool ok, Map<String, Object?>? result, String? error}) async =>
+      api.devices.answerDeviceRequest(id: id, deviceRequestResult: DeviceRequestResult(ok: ok, result: result, error: error));
+
+  @override
+  Future<List<DeviceGrant>> deviceGrants({String? botId}) async => (await api.devices.listDeviceGrants(botId: botId)).data!.items;
+
+  @override
+  Future<List<DeviceGrant>> setDeviceGrant(String botId, DeviceKind kind, bool allowed) async =>
+      (await api.devices.setDeviceGrant(setDeviceGrantRequest: SetDeviceGrantRequest(botId: botId, kind: kind, allowed: allowed))).data!.items;
+
+  @override
+  Stream<String> watchDeviceRequests() => _userEvents('device_request').map((m) => '${m['id'] ?? ''}').where((id) => id.isNotEmpty);
 
   @override
   Future<List<TakeoverRequest>> takeovers(String orgId) async => (await api.computers.listTakeovers(orgId: orgId)).data!.items;

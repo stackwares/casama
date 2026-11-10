@@ -153,6 +153,15 @@ Class | Method | HTTP request | Description
 [*CredentialsApi*](doc/CredentialsApi.md) | [**startChatGptSignIn**](doc/CredentialsApi.md#startchatgptsignin) | **POST** /v1/credentials/chatgpt/start | Begin ChatGPT sign-in; returns the authorize URL for a loopback callback
 [*CredentialsApi*](doc/CredentialsApi.md) | [**testCredential**](doc/CredentialsApi.md#testcredential) | **POST** /v1/credentials/{id}/test | Validate a key with a 1-token call
 [*CredentialsApi*](doc/CredentialsApi.md) | [**updateCredential**](doc/CredentialsApi.md#updatecredential) | **PATCH** /v1/credentials/{id} | Rename a credential or change its settings
+[*DevicesApi*](doc/DevicesApi.md) | [**answerDeviceRequest**](doc/DevicesApi.md#answerdevicerequest) | **POST** /v1/device-requests/{id}/result | 
+[*DevicesApi*](doc/DevicesApi.md) | [**deleteDeviceSource**](doc/DevicesApi.md#deletedevicesource) | **DELETE** /v1/device-sources/{key} | Forget this device and everything it shared
+[*DevicesApi*](doc/DevicesApi.md) | [**listDeviceGrants**](doc/DevicesApi.md#listdevicegrants) | **GET** /v1/device-grants | Which bots may read which kinds of your device data
+[*DevicesApi*](doc/DevicesApi.md) | [**listDeviceReadings**](doc/DevicesApi.md#listdevicereadings) | **GET** /v1/device-readings | What your devices have shared
+[*DevicesApi*](doc/DevicesApi.md) | [**listDeviceRequests**](doc/DevicesApi.md#listdevicerequests) | **GET** /v1/device-sources/{key}/requests | Work waiting for this device
+[*DevicesApi*](doc/DevicesApi.md) | [**listDeviceSources**](doc/DevicesApi.md#listdevicesources) | **GET** /v1/device-sources | Your devices that share data (D-149)
+[*DevicesApi*](doc/DevicesApi.md) | [**saveDeviceSource**](doc/DevicesApi.md#savedevicesource) | **PUT** /v1/device-sources/{key} | Register this device and the kinds it shares; kinds turned off lose their data
+[*DevicesApi*](doc/DevicesApi.md) | [**setDeviceGrant**](doc/DevicesApi.md#setdevicegrant) | **PUT** /v1/device-grants | Allow or stop a bot reading one kind of your device data
+[*DevicesApi*](doc/DevicesApi.md) | [**uploadDeviceReadings**](doc/DevicesApi.md#uploaddevicereadings) | **POST** /v1/device-sources/{key}/readings | Upload summaries (re-uploading the same external_id replaces it)
 [*EncryptionApi*](doc/EncryptionApi.md) | [**getEncryption**](doc/EncryptionApi.md#getencryption) | **GET** /v1/orgs/{id}/encryption | Encryption at rest for a workspace (D-136)
 [*EncryptionApi*](doc/EncryptionApi.md) | [**rotateEncryptionKey**](doc/EncryptionApi.md#rotateencryptionkey) | **POST** /v1/orgs/{id}/encryption/rotate | Rewrap the workspace&#39;s data key with the server&#39;s current key (rows are not rewritten)
 [*EncryptionApi*](doc/EncryptionApi.md) | [**setEncryption**](doc/EncryptionApi.md#setencryption) | **PUT** /v1/orgs/{id}/encryption | Turn encryption at rest on or off (owners); existing rows are sealed or opened in the background
@@ -466,6 +475,18 @@ Class | Method | HTTP request | Description
  - [DeletedRule](doc/DeletedRule.md)
  - [DeletedTeach](doc/DeletedTeach.md)
  - [DeletedWatcher](doc/DeletedWatcher.md)
+ - [DeviceAccessRequestedEvent](doc/DeviceAccessRequestedEvent.md)
+ - [DeviceAccessRequestedEventPayload](doc/DeviceAccessRequestedEventPayload.md)
+ - [DeviceDataUsedEvent](doc/DeviceDataUsedEvent.md)
+ - [DeviceDataUsedEventPayload](doc/DeviceDataUsedEventPayload.md)
+ - [DeviceGrant](doc/DeviceGrant.md)
+ - [DeviceKind](doc/DeviceKind.md)
+ - [DeviceKindSettings](doc/DeviceKindSettings.md)
+ - [DeviceReading](doc/DeviceReading.md)
+ - [DeviceReadingInput](doc/DeviceReadingInput.md)
+ - [DeviceRequest](doc/DeviceRequest.md)
+ - [DeviceRequestResult](doc/DeviceRequestResult.md)
+ - [DeviceSource](doc/DeviceSource.md)
  - [DismissSuggestionRequest](doc/DismissSuggestionRequest.md)
  - [EditMessageRequest](doc/EditMessageRequest.md)
  - [EncryptionStatus](doc/EncryptionStatus.md)
@@ -508,6 +529,10 @@ Class | Method | HTTP request | Description
  - [LeaseChangedEventPayload](doc/LeaseChangedEventPayload.md)
  - [LinkExchange](doc/LinkExchange.md)
  - [LinkExchangeList](doc/LinkExchangeList.md)
+ - [ListDeviceGrants200Response](doc/ListDeviceGrants200Response.md)
+ - [ListDeviceReadings200Response](doc/ListDeviceReadings200Response.md)
+ - [ListDeviceRequests200Response](doc/ListDeviceRequests200Response.md)
+ - [ListDeviceSources200Response](doc/ListDeviceSources200Response.md)
  - [LocalCapabilities](doc/LocalCapabilities.md)
  - [LocalDevice](doc/LocalDevice.md)
  - [LocalDeviceList](doc/LocalDeviceList.md)
@@ -624,6 +649,8 @@ Class | Method | HTTP request | Description
  - [RunStartedEvent](doc/RunStartedEvent.md)
  - [RunStartedEventPayload](doc/RunStartedEventPayload.md)
  - [RunStatus](doc/RunStatus.md)
+ - [SaveDeviceSourceRequest](doc/SaveDeviceSourceRequest.md)
+ - [SaveDeviceSourceRequestKinds](doc/SaveDeviceSourceRequestKinds.md)
  - [SaveImportedMemoriesRequest](doc/SaveImportedMemoriesRequest.md)
  - [SaveTeachRequest](doc/SaveTeachRequest.md)
  - [SaveTeachResponse](doc/SaveTeachResponse.md)
@@ -645,6 +672,7 @@ Class | Method | HTTP request | Description
  - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
  - [SetBotAccessRequestEntriesInner](doc/SetBotAccessRequestEntriesInner.md)
+ - [SetDeviceGrantRequest](doc/SetDeviceGrantRequest.md)
  - [SetEncryptionRequest](doc/SetEncryptionRequest.md)
  - [SetGitSyncRequest](doc/SetGitSyncRequest.md)
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
@@ -734,6 +762,8 @@ Class | Method | HTTP request | Description
  - [UpdateRoutineRequest](doc/UpdateRoutineRequest.md)
  - [UpdateTaskRequest](doc/UpdateTaskRequest.md)
  - [UpdateWatcherRequest](doc/UpdateWatcherRequest.md)
+ - [UploadDeviceReadings200Response](doc/UploadDeviceReadings200Response.md)
+ - [UploadDeviceReadingsRequest](doc/UploadDeviceReadingsRequest.md)
  - [UploadResult](doc/UploadResult.md)
  - [UsageEvent](doc/UsageEvent.md)
  - [UsageEventPayload](doc/UsageEventPayload.md)

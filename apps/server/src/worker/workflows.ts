@@ -5,6 +5,7 @@ import {
   CredentialResolver,
   checkCalendarTriggers,
   checkWatchers,
+  purgeDeviceData,
   pollIMessage,
   expireCalls,
   expireCards,
@@ -172,6 +173,8 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
         )),
       );
     }
+    // Device connections (D-149): retention per kind, and stale device requests.
+    await DBOS.runStep(() => purgeDeviceData(rt().db).catch(() => 0), { name: "device-retention" });
     // Knowledge sources (D-125): new, resynced and daily-due sources.
     await DBOS.runStep(
       () =>

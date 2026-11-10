@@ -2961,5 +2961,55 @@
         "type": "int"
       }
     }
-  }
+  },
+  "deviceAccessTitle": "{bot} would like to use your {what}",
+  "@deviceAccessTitle": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      },
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceAccessHelp": "Only in your own chats. You can stop it any time in Settings → Device connections.",
+  "deviceAccessAllowed": "Allowed to use your {what}",
+  "@deviceAccessAllowed": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceAccessSkipped": "Not shared",
+  "deviceKindCalendar": "calendar",
+  "deviceKindReminders": "reminders",
+  "deviceKindContacts": "contacts",
+  "deviceKindPlaces": "places",
+  "deviceKindPhotos": "photos",
+  "deviceKindHealth": "health data",
+  "deviceKindNotifications": "notifications",
+  "deviceKindActivity": "computer activity",
+  "deviceConnections": "Device connections",
+  "deviceConnectionsHelp": "Share data from this device with your bots. Each kind is off until you turn it on, and only bots you allow can read it, only in your own chats.",
+  "deviceConnectionsNone": "This device can't share data yet. On your phone, open Kasama and turn on what you'd like to share.",
+  "deviceKeepFor": "Keep for",
+  "deviceKeepLiveOnly": "Live only",
+  "deviceKeepDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@deviceKeepDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "devicePrivateModel": "Private models only",
+  "devicePrivateModelHelp": "Only bots on a local model can read it",
+  "deviceBotsWithAccess": "Bots that can read it",
+  "deviceNoBots": "No bots yet. A bot asks when it needs this.",
+  "devicePermissionDenied": "Kasama doesn't have permission. Allow it in the system settings, then try again.",
+  "deviceOtherDevices": "Your other devices",
+  "deviceForget": "Forget this device",
+  "deviceConnectionsRowHelp": "Calendar, contacts and more from this device"
 }

@@ -4,7 +4,7 @@
 import 'package:kasama_api/kasama_api.dart';
 
 /// All run event types known to this client version.
-const knownRunEventTypes = <String>{'run.started', 'message.delta', 'message.completed', 'tool.started', 'tool.output', 'tool.completed', 'tool.failed', 'approval.requested', 'approval.resolved', 'secret.requested', 'secret.resolved', 'takeover.requested', 'takeover.resolved', 'lease.changed', 'computer.state', 'checkpoint.created', 'subrun.started', 'subrun.completed', 'memory.written', 'skill.loaded', 'usage', 'model.fallback', 'notice', 'run.completed', 'run.failed', 'run.cancelled', 'ui.shown'};
+const knownRunEventTypes = <String>{'run.started', 'message.delta', 'message.completed', 'tool.started', 'tool.output', 'tool.completed', 'tool.failed', 'approval.requested', 'approval.resolved', 'device.access_requested', 'device.data_used', 'secret.requested', 'secret.resolved', 'takeover.requested', 'takeover.resolved', 'lease.changed', 'computer.state', 'checkpoint.created', 'subrun.started', 'subrun.completed', 'memory.written', 'skill.loaded', 'usage', 'model.fallback', 'notice', 'run.completed', 'run.failed', 'run.cancelled', 'ui.shown'};
 
 /// A run event: the envelope plus, for known types, the typed event.
 /// Unknown types parse to [UnknownRunEventItem] so newer servers never break older clients.
@@ -36,6 +36,10 @@ sealed class RunEventItem {
         return ApprovalRequestedItem(envelope, ApprovalRequestedEvent.fromJson(json));
       case 'approval.resolved':
         return ApprovalResolvedItem(envelope, ApprovalResolvedEvent.fromJson(json));
+      case 'device.access_requested':
+        return DeviceAccessRequestedItem(envelope, DeviceAccessRequestedEvent.fromJson(json));
+      case 'device.data_used':
+        return DeviceDataUsedItem(envelope, DeviceDataUsedEvent.fromJson(json));
       case 'secret.requested':
         return SecretRequestedItem(envelope, SecretRequestedEvent.fromJson(json));
       case 'secret.resolved':
@@ -121,6 +125,16 @@ final class ApprovalRequestedItem extends RunEventItem {
 final class ApprovalResolvedItem extends RunEventItem {
   const ApprovalResolvedItem(super.envelope, this.event);
   final ApprovalResolvedEvent event;
+}
+
+final class DeviceAccessRequestedItem extends RunEventItem {
+  const DeviceAccessRequestedItem(super.envelope, this.event);
+  final DeviceAccessRequestedEvent event;
+}
+
+final class DeviceDataUsedItem extends RunEventItem {
+  const DeviceDataUsedItem(super.envelope, this.event);
+  final DeviceDataUsedEvent event;
 }
 
 final class SecretRequestedItem extends RunEventItem {

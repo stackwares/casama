@@ -537,6 +537,58 @@ class FakeBackend implements Backend {
   @override
   Future<void> declineSecretRequest(String requestId) async => secretAnswers.add((requestId, null));
 
+  // Device connections (D-149).
+  final deviceSourcesSaved = <String, DeviceSource>{};
+  final uploadedReadings = <(String, DeviceReadingInput, String?)>[];
+  final pendingDeviceRequests = <DeviceRequest>[];
+  final deviceAnswers = <(String, bool, Map<String, Object?>?)>[];
+  final grants = <DeviceGrant>[];
+  final deviceRequestsController = StreamController<String>.broadcast();
+
+  @override
+  Future<List<DeviceSource>> deviceSources() async => deviceSourcesSaved.values.toList();
+  @override
+  Future<DeviceSource> saveDeviceSource(String key, {required String name, required String platform, required Map<String, DeviceKindSettings> kinds}) async =>
+      deviceSourcesSaved[key] = DeviceSource(
+        id: 'src-$key',
+        deviceKey: key,
+        name: name,
+        platform: DeviceSourcePlatformEnum.values.firstWhere((p) => p.value == platform),
+        kinds: kinds,
+        lastSeenAt: DateTime.now(),
+        createdAt: DateTime.now(),
+      );
+  @override
+  Future<void> deleteDeviceSource(String key) async => deviceSourcesSaved.remove(key);
+  @override
+  Future<int> uploadDeviceReadings(String key, List<DeviceReadingInput> readings, {String? requestId}) async {
+    for (final r in readings) {
+      uploadedReadings.add((key, r, requestId));
+    }
+    if (requestId != null) pendingDeviceRequests.removeWhere((r) => r.id == requestId);
+    return readings.length;
+  }
+
+  @override
+  Future<List<DeviceRequest>> deviceRequests(String key) async => List.of(pendingDeviceRequests);
+  @override
+  Future<void> answerDeviceRequest(String id, {required bool ok, Map<String, Object?>? result, String? error}) async {
+    deviceAnswers.add((id, ok, result));
+    pendingDeviceRequests.removeWhere((r) => r.id == id);
+  }
+
+  @override
+  Future<List<DeviceGrant>> deviceGrants({String? botId}) async => grants.where((g) => botId == null || g.botId == botId).toList();
+  @override
+  Future<List<DeviceGrant>> setDeviceGrant(String botId, DeviceKind kind, bool allowed) async {
+    grants.removeWhere((g) => g.botId == botId && g.kind == kind);
+    if (allowed) grants.add(DeviceGrant(botId: botId, botName: 'Pal', kind: kind, createdAt: DateTime(2026)));
+    return deviceGrants(botId: botId);
+  }
+
+  @override
+  Stream<String> watchDeviceRequests() => deviceRequestsController.stream;
+
   @override
   Future<List<BotFolder>> botFolders(String orgId) async => [if (botFolder != null) BotFolder(id: botFolder!, name: botFolder!)];
   @override

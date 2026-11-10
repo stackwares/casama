@@ -62,3 +62,4 @@ export * from "./payments.ts";
 export * from "./links.ts";
 export * from "./secret-store.ts";
 export * from "./team-computer.ts";
+export * from "./device-data.ts";

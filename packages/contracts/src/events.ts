@@ -43,6 +43,19 @@ export const runEventPayloads = {
     decision: z.enum(["approved", "denied", "expired"]),
     decided_by: id.nullable(),
   }),
+  // Device connections (D-149).
+  "device.access_requested": z.object({
+    kind: z.enum(["calendar", "reminders", "contacts", "places", "photos", "health", "notifications", "activity"]),
+    reason: z.string(),
+    bot_id: id,
+  }),
+  "device.data_used": z.object({
+    kind: z.string(),
+    count: z.number().int(),
+    from: z.string(),
+    to: z.string(),
+    devices: z.array(z.string()),
+  }),
   "secret.requested": z.object({
     request_id: id,
     name: z.string(),

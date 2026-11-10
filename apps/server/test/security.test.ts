@@ -225,6 +225,10 @@ describe("cross-tenant sweep (Phase 8 security review)", () => {
       // Text utilities with no tenant data (D-122).
       "getMemoryImportPrompt",
       "parseMemoryImport",
+      // Device connections (D-149): keys live in the caller's own namespace, so B "saving" A's key
+      // registers B's own device (device-data.test.ts proves A's device is untouched).
+      "saveDeviceSource",
+      "deleteDeviceSource",
     ]);
     for (const [path, ops] of Object.entries(doc.paths)) {
       if (!path.startsWith("/v1/")) continue;

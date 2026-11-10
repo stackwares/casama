@@ -109,3 +109,8 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 ## Sandbox providers without a public HTTP API (D-139)
 
 - boxd (gRPC only), CreateOS (REST paths unpublished) and Alibaba Wuying AgentBay (SDK-only, port range 30100–30199) aren't built. Options: wait for public HTTP docs, wrap their SDKs in the supervisor, or drop them from the roadmap.
+
+## Device connections (Wave 4, D-149 onward)
+
+- iOS Reminders: no maintained Flutter plugin reads or writes Reminders (EventKit `EKReminder`). The server and tools support them; the app needs a small native channel (Swift, EventKit) or a plugin choice. Until then Reminders don't show in Settings → Device connections.
+- App Store and Play review: calendar and contacts purpose strings are in place. Health (D-150) needs Google's Health Connect declaration, and the privacy policy must cover device data before release.

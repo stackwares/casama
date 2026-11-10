@@ -2226,6 +2226,61 @@ END` }),
 	check("pages_data_check", sql`(octet_length((data)::text) <= 1000000) OR ((data ? '$enc'::text) AND (octet_length((data)::text) <= 1400000))`),
 ]);
 
+export const deviceSources = pgTable("device_sources", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	deviceKey: text("device_key").notNull(),
+	name: text().default('Device').notNull(),
+	platform: text().notNull(),
+	kinds: jsonb().default({}).notNull(),
+	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "device_sources_user_id_fkey"
+		}).onDelete("cascade"),
+	unique("device_sources_user_id_device_key_key").on(table.userId, table.deviceKey),
+	pgPolicy("device_sources_own", { as: "permissive", for: "all", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))`, withCheck: sql`(user_id = ( SELECT auth.uid() AS uid))`  }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("device_sources_device_key_check", sql`device_key ~ '^[A-Za-z0-9_-]{8,100}$'::text`),
+	check("device_sources_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 80)`),
+	check("device_sources_platform_check", sql`platform = ANY (ARRAY['ios'::text, 'android'::text, 'macos'::text, 'windows'::text, 'linux'::text, 'web'::text])`),
+	check("device_sources_kinds_check", sql`jsonb_typeof(kinds) = 'object'::text`),
+]);
+
+export const deviceReadings = pgTable("device_readings", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	sourceId: uuid("source_id").notNull(),
+	kind: text().notNull(),
+	periodStart: timestamp("period_start", { withTimezone: true, mode: 'string' }).notNull(),
+	periodEnd: timestamp("period_end", { withTimezone: true, mode: 'string' }).notNull(),
+	externalId: text("external_id").notNull(),
+	summary: jsonb().notNull(),
+	collectedAt: timestamp("collected_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("device_readings_user_kind_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.kind.asc().nullsLast().op("text_ops"), table.periodStart.desc().nullsFirst().op("text_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "device_readings_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.sourceId],
+			foreignColumns: [deviceSources.id],
+			name: "device_readings_source_id_fkey"
+		}).onDelete("cascade"),
+	unique("device_readings_source_id_kind_external_id_key").on(table.sourceId, table.kind, table.externalId),
+	pgPolicy("device_readings_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("device_readings_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("device_readings_kind_check", sql`kind = ANY (ARRAY['calendar'::text, 'reminders'::text, 'contacts'::text, 'places'::text, 'photos'::text, 'health'::text, 'notifications'::text, 'activity'::text])`),
+	check("device_readings_check", sql`period_end >= period_start`),
+	check("device_readings_external_id_check", sql`(char_length(external_id) >= 1) AND (char_length(external_id) <= 200)`),
+]);
+
 export const pageViewTokens = pgTable("page_view_tokens", {
 	tokenHash: text("token_hash").primaryKey().notNull(),
 	pageId: uuid("page_id").notNull(),
@@ -3161,6 +3216,36 @@ export const auditForwarders = pgTable("audit_forwarders", {
 	check("audit_forwarders_kind_check", sql`kind = ANY (ARRAY['webhook'::text, 'otlp'::text, 's3'::text])`),
 ]);
 
+export const deviceRequests = pgTable("device_requests", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	sourceId: uuid("source_id").notNull(),
+	kind: text().notNull(),
+	action: text().notNull(),
+	params: jsonb().default({}).notNull(),
+	status: text().default('pending').notNull(),
+	result: jsonb(),
+	runId: uuid("run_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	answeredAt: timestamp("answered_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("device_requests_pending_idx").using("btree", table.sourceId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(status = 'pending'::text)`),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "device_requests_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.sourceId],
+			foreignColumns: [deviceSources.id],
+			name: "device_requests_source_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("device_requests_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("device_requests_action_check", sql`action = ANY (ARRAY['read'::text, 'calendar.create'::text, 'reminders.create'::text])`),
+	check("device_requests_status_check", sql`status = ANY (ARRAY['pending'::text, 'done'::text, 'failed'::text, 'expired'::text])`),
+]);
+
 export const agentImportFiles = pgTable("agent_import_files", {
 	importId: uuid("import_id").notNull(),
 	path: text().notNull(),
@@ -3175,6 +3260,29 @@ export const agentImportFiles = pgTable("agent_import_files", {
 	primaryKey({ columns: [table.importId, table.path], name: "agent_import_files_pkey"}),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("agent_import_files_path_check", sql`(char_length(path) >= 1) AND (char_length(path) <= 1000)`),
+]);
+
+export const deviceGrants = pgTable("device_grants", {
+	userId: uuid("user_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	kind: text().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "device_grants_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "device_grants_bot_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.userId, table.botId, table.kind], name: "device_grants_pkey"}),
+	pgPolicy("device_grants_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("device_grants_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("device_grants_kind_check", sql`kind = ANY (ARRAY['calendar'::text, 'reminders'::text, 'contacts'::text, 'places'::text, 'photos'::text, 'health'::text, 'notifications'::text, 'activity'::text])`),
 ]);
 
 export const ttsCache = pgTable("tts_cache", {

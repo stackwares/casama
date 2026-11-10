@@ -1,0 +1,195 @@
+{
+  "name": "devices",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "on tomorrow"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "r1",
+            "name": "device.read",
+            "args": {
+              "kind": "calendar"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "device.read",
+        "lastToolResultIncludes": "no_device_access"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "a1",
+            "name": "device.request_access",
+            "args": {
+              "kind": "calendar",
+              "reason": "To see what's on your calendar"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "device.request_access"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "I asked for your calendar."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "device.read",
+        "lastToolResultIncludes": "Dentist"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Tomorrow you have the dentist at 9."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "device.read"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "I couldn't read your calendar."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "add lunch"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "c1",
+            "name": "device.calendar.create",
+            "args": {
+              "title": "Lunch with Sam",
+              "start": "2027-01-08T12:00:00Z",
+              "end": "2027-01-08T13:00:00Z"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "device.calendar.create"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Done."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

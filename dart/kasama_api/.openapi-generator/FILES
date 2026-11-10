@@ -16,6 +16,7 @@ lib/src/api/chat_api.dart
 lib/src/api/checkins_api.dart
 lib/src/api/computers_api.dart
 lib/src/api/credentials_api.dart
+lib/src/api/devices_api.dart
 lib/src/api/encryption_api.dart
 lib/src/api/files_api.dart
 lib/src/api/import_api.dart
@@ -196,6 +197,18 @@ lib/src/model/deleted_routine.dart
 lib/src/model/deleted_rule.dart
 lib/src/model/deleted_teach.dart
 lib/src/model/deleted_watcher.dart
+lib/src/model/device_access_requested_event.dart
+lib/src/model/device_access_requested_event_payload.dart
+lib/src/model/device_data_used_event.dart
+lib/src/model/device_data_used_event_payload.dart
+lib/src/model/device_grant.dart
+lib/src/model/device_kind.dart
+lib/src/model/device_kind_settings.dart
+lib/src/model/device_reading.dart
+lib/src/model/device_reading_input.dart
+lib/src/model/device_request.dart
+lib/src/model/device_request_result.dart
+lib/src/model/device_source.dart
 lib/src/model/dismiss_suggestion_request.dart
 lib/src/model/edit_message_request.dart
 lib/src/model/encryption_status.dart
@@ -238,6 +251,10 @@ lib/src/model/lease_changed_event.dart
 lib/src/model/lease_changed_event_payload.dart
 lib/src/model/link_exchange.dart
 lib/src/model/link_exchange_list.dart
+lib/src/model/list_device_grants200_response.dart
+lib/src/model/list_device_readings200_response.dart
+lib/src/model/list_device_requests200_response.dart
+lib/src/model/list_device_sources200_response.dart
 lib/src/model/local_capabilities.dart
 lib/src/model/local_device.dart
 lib/src/model/local_device_list.dart
@@ -354,6 +371,8 @@ lib/src/model/run_started.dart
 lib/src/model/run_started_event.dart
 lib/src/model/run_started_event_payload.dart
 lib/src/model/run_status.dart
+lib/src/model/save_device_source_request.dart
+lib/src/model/save_device_source_request_kinds.dart
 lib/src/model/save_imported_memories_request.dart
 lib/src/model/save_teach_request.dart
 lib/src/model/save_teach_response.dart
@@ -375,6 +394,7 @@ lib/src/model/send_message_response.dart
 lib/src/model/set_bot_a2a_request.dart
 lib/src/model/set_bot_access_request.dart
 lib/src/model/set_bot_access_request_entries_inner.dart
+lib/src/model/set_device_grant_request.dart
 lib/src/model/set_encryption_request.dart
 lib/src/model/set_git_sync_request.dart
 lib/src/model/set_local_mcp_servers_request.dart
@@ -464,6 +484,8 @@ lib/src/model/update_project_request.dart
 lib/src/model/update_routine_request.dart
 lib/src/model/update_task_request.dart
 lib/src/model/update_watcher_request.dart
+lib/src/model/upload_device_readings200_response.dart
+lib/src/model/upload_device_readings_request.dart
 lib/src/model/upload_result.dart
 lib/src/model/usage_event.dart
 lib/src/model/usage_event_payload.dart

@@ -64,6 +64,10 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
         (await q(sql`select * from public.profiles where user_id = ${claims.sub}::uuid`))[0] ??
         null,
       push_devices: await q(sql`select * from public.devices where user_id = ${claims.sub}::uuid`),
+      // Device connections (D-149): the person's own shared device data.
+      device_sources: await q(sql`select id, name, platform, kinds, last_seen_at, created_at from public.device_sources where user_id = ${claims.sub}::uuid`),
+      device_readings: await q(sql`select source_id, kind, period_start, period_end, external_id, summary, collected_at from public.device_readings where user_id = ${claims.sub}::uuid`),
+      device_grants: await q(sql`select bot_id, kind, created_at from public.device_grants where user_id = ${claims.sub}::uuid`),
       notifications: await q(
         sql`select * from public.notifications where user_id = ${claims.sub}::uuid`,
       ),
@@ -113,6 +117,8 @@ export async function requestAccountDeletion(db: Database, userId: string, grace
       sql`update auth.users set banned_until = 'infinity'::timestamptz where id = ${userId}::uuid`,
     );
     await tx.execute(sql`delete from public.devices where user_id = ${userId}::uuid`);
+    // Shared device data goes right away too (D-149); the rest goes with the account.
+    await tx.execute(sql`delete from public.device_sources where user_id = ${userId}::uuid`);
   });
   // End every session (Supabase Auth tables; absent in the test shim, so outside the transaction).
   await db.execute(sql`delete from auth.sessions where user_id = ${userId}::uuid`).catch(() => {});

@@ -318,6 +318,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - D-147: `dart/cli/lib/src/backups.dart` (age encryption and retention) and the backup and restore flags in `commands_selfhost.dart`; `infra/helm/kasama` and `scripts/check-helm.sh`; `DEFAULT_PROVIDER` in `apps/supervisor/src/main.ts`; `client/lib/features/selfhost/` (`LocalServerManager` and the sign-in sheet).
 - D-148: `packages/agent/src/team-computer.ts` (folder names, `inTeamFolder`, desktop leases), the wrapping and the `desktop_busy` check in `run.ts`, `computer_desktop_leases`, `computers.max_desktops`, `bots.team_folder`; the warm pool in `packages/sandbox/src/docker/provider.ts` (`fillPool`, claim by rename, `dev.kasama.pool` alias) and `WARM_POOL_SIZE` in the supervisor.
 
+## Devices (Wave 4, D-149 onward)
+
+- D-149: `device_sources`, `device_readings`, `device_grants`, `device_requests` (realtime broadcast trigger); `apps/server/src/api/routes/device-data.ts`; `packages/agent/src/device-data.ts` (`device.read`, `device.request_access`, `device.calendar.create`, `device.reminders.create`, `purgeDeviceData`); `client/lib/features/devices/` (collectors, `DeviceSync`, Settings → Device connections) and `DeviceAccessPrompt` in chat.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).
