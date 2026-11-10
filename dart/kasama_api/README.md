@@ -142,6 +142,11 @@ Class | Method | HTTP request | Description
 [*CredentialsApi*](doc/CredentialsApi.md) | [**startChatGptSignIn**](doc/CredentialsApi.md#startchatgptsignin) | **POST** /v1/credentials/chatgpt/start | Begin ChatGPT sign-in; returns the authorize URL for a loopback callback
 [*CredentialsApi*](doc/CredentialsApi.md) | [**testCredential**](doc/CredentialsApi.md#testcredential) | **POST** /v1/credentials/{id}/test | Validate a key with a 1-token call
 [*CredentialsApi*](doc/CredentialsApi.md) | [**updateCredential**](doc/CredentialsApi.md#updatecredential) | **PATCH** /v1/credentials/{id} | Rename a credential or change its settings
+[*ImportApi*](doc/ImportApi.md) | [**getMemoryImportPrompt**](doc/ImportApi.md#getmemoryimportprompt) | **GET** /v1/memory-import/prompt | The prompt to paste into ChatGPT or Claude to get your saved memories
+[*ImportApi*](doc/ImportApi.md) | [**parseMemoryImport**](doc/ImportApi.md#parsememoryimport) | **POST** /v1/memory-import/parse | 
+[*ImportApi*](doc/ImportApi.md) | [**saveImportedMemories**](doc/ImportApi.md#saveimportedmemories) | **POST** /v1/bots/{id}/memories/import | Add the memories the person kept
+[*ImportApi*](doc/ImportApi.md) | [**startAgentImport**](doc/ImportApi.md#startagentimport) | **POST** /v1/agent-imports | Read an OpenClaw or Hermes Agent folder into a bot template for review (D-122)
+[*ImportApi*](doc/ImportApi.md) | [**writeAgentImportFiles**](doc/ImportApi.md#writeagentimportfiles) | **POST** /v1/agent-imports/{id}/files | Copy the files nothing mapped to into ~/imported/ on the bot&#39;s computer
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**attachIntegration**](doc/IntegrationsApi.md#attachintegration) | **POST** /v1/bots/{id}/integrations | Let a bot use an integration&#39;s tools (optionally only some)
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectApp**](doc/IntegrationsApi.md#connectapp) | **POST** /v1/apps/connect | Connect a built-in app: with an API key at once, or start an OAuth sign-in
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectProviderApp**](doc/IntegrationsApi.md#connectproviderapp) | **POST** /v1/integrations/{id}/provider/connect | Add an app to a Composio or Pipedream connection and start signing in to it
@@ -268,6 +273,10 @@ Class | Method | HTTP request | Description
  - [AdminServiceList](doc/AdminServiceList.md)
  - [AdminUser](doc/AdminUser.md)
  - [AdminUserList](doc/AdminUserList.md)
+ - [AgentImportPlan](doc/AgentImportPlan.md)
+ - [AgentImportPlanLeftoversInner](doc/AgentImportPlanLeftoversInner.md)
+ - [AgentImportPlanSkippedInner](doc/AgentImportPlanSkippedInner.md)
+ - [AgentImportPlanSources](doc/AgentImportPlanSources.md)
  - [AppCatalog](doc/AppCatalog.md)
  - [ApplySkillUpdateRequest](doc/ApplySkillUpdateRequest.md)
  - [Approval](doc/Approval.md)
@@ -381,6 +390,7 @@ Class | Method | HTTP request | Description
  - [ImportBotRequest](doc/ImportBotRequest.md)
  - [ImportBotResponse](doc/ImportBotResponse.md)
  - [ImportBotResponseConnectionsToAddInner](doc/ImportBotResponseConnectionsToAddInner.md)
+ - [ImportedMemoryItem](doc/ImportedMemoryItem.md)
  - [InstallCatalogSkillRequest](doc/InstallCatalogSkillRequest.md)
  - [InstallGitHubSkillRequest](doc/InstallGitHubSkillRequest.md)
  - [InstallPluginRequest](doc/InstallPluginRequest.md)
@@ -414,6 +424,7 @@ Class | Method | HTTP request | Description
  - [Me](doc/Me.md)
  - [Membership](doc/Membership.md)
  - [Memory](doc/Memory.md)
+ - [MemoryImportPrompt](doc/MemoryImportPrompt.md)
  - [MemoryList](doc/MemoryList.md)
  - [MemoryWrittenEvent](doc/MemoryWrittenEvent.md)
  - [MemoryWrittenEventPayload](doc/MemoryWrittenEventPayload.md)
@@ -438,6 +449,8 @@ Class | Method | HTTP request | Description
  - [PageVersion](doc/PageVersion.md)
  - [PageViewLink](doc/PageViewLink.md)
  - [PageViewLinkRequest](doc/PageViewLinkRequest.md)
+ - [ParseMemoryImportRequest](doc/ParseMemoryImportRequest.md)
+ - [ParsedMemoryImport](doc/ParsedMemoryImport.md)
  - [Plan](doc/Plan.md)
  - [PlanCatalog](doc/PlanCatalog.md)
  - [Plugin](doc/Plugin.md)
@@ -491,9 +504,11 @@ Class | Method | HTTP request | Description
  - [RunStartedEvent](doc/RunStartedEvent.md)
  - [RunStartedEventPayload](doc/RunStartedEventPayload.md)
  - [RunStatus](doc/RunStatus.md)
+ - [SaveImportedMemoriesRequest](doc/SaveImportedMemoriesRequest.md)
  - [SaveTeachRequest](doc/SaveTeachRequest.md)
  - [SaveTeachResponse](doc/SaveTeachResponse.md)
  - [SavedCount](doc/SavedCount.md)
+ - [SavedImportedMemories](doc/SavedImportedMemories.md)
  - [SearchKind](doc/SearchKind.md)
  - [SearchResponse](doc/SearchResponse.md)
  - [SearchResult](doc/SearchResult.md)
@@ -514,6 +529,8 @@ Class | Method | HTTP request | Description
  - [SkillLoadedEventPayload](doc/SkillLoadedEventPayload.md)
  - [SkillPreviewFile](doc/SkillPreviewFile.md)
  - [SkillUpdateCheck](doc/SkillUpdateCheck.md)
+ - [StartAgentImportRequest](doc/StartAgentImportRequest.md)
+ - [StartAgentImportRequestFilesInner](doc/StartAgentImportRequestFilesInner.md)
  - [StartSetupResponse](doc/StartSetupResponse.md)
  - [StartTeachRequest](doc/StartTeachRequest.md)
  - [StreamMode](doc/StreamMode.md)
@@ -598,6 +615,8 @@ Class | Method | HTTP request | Description
  - [WatcherList](doc/WatcherList.md)
  - [WorkspaceBadge](doc/WorkspaceBadge.md)
  - [WorkspaceBadgeList](doc/WorkspaceBadgeList.md)
+ - [WriteAgentImportFilesRequest](doc/WriteAgentImportFilesRequest.md)
+ - [WriteAgentImportFilesResponse](doc/WriteAgentImportFilesResponse.md)
 
 
 ## Documentation For Authorization

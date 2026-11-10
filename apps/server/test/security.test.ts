@@ -222,6 +222,9 @@ describe("cross-tenant sweep (Phase 8 security review)", () => {
       "adminOrgs",
       "adminServices",
       "adminUpdates",
+      // Text utilities with no tenant data (D-122).
+      "getMemoryImportPrompt",
+      "parseMemoryImport",
     ]);
     for (const [path, ops] of Object.entries(doc.paths)) {
       if (!path.startsWith("/v1/")) continue;

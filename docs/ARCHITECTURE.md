@@ -227,6 +227,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/domain/src/agent-plugins.ts` (Agent Plugins 1.0 checks), `packages/agent/src/plugins.ts` (`syncPluginComputer`, `computerMcpFor`) and `ComputerMcpAdapter` in `integrations.ts`, `plugins`/`plugin_files` plus `skills.plugin_id`/`integrations.plugin_id`, `apps/server/src/api/routes/plugins.ts`, computerd `PUT /mcp-servers`, the supervisor's `/computers/:ref/mcp*` passthrough, `SandboxHandle.setMcpServers|mcpFetch`, and the bot's Plugins screen.
 
+## Import an agent (D-122)
+
+- `packages/domain/src/agent-import.ts` (OpenClaw and Hermes Agent folders → a `kasama.bot` template; ChatGPT/Claude memory prompt and parser), `agent_imports`/`agent_import_files`, `apps/server/src/api/routes/agent-import.ts`, and `client/lib/features/bots/agent_import.dart` (review screen, memory sheet).
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

@@ -7317,6 +7317,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No changes to what it adds.'**
   String get pluginDiffNone;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @botNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get botNameLabel;
+
+  /// No description provided for @importAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Import an agent'**
+  String get importAgent;
+
+  /// No description provided for @importAgentHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring a bot over from OpenClaw or Hermes Agent: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.'**
+  String get importAgentHelp;
+
+  /// No description provided for @importAgentPickFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick its folder'**
+  String get importAgentPickFolder;
+
+  /// No description provided for @importAgentPickZip.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a ZIP of its folder'**
+  String get importAgentPickZip;
+
+  /// No description provided for @agentImportReviewHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Untick anything you don\'t want. Nothing is created until you import.'**
+  String get agentImportReviewHelp;
+
+  /// No description provided for @agentImportNoPersona.
+  ///
+  /// In en, this message translates to:
+  /// **'No persona file was found.'**
+  String get agentImportNoPersona;
+
+  /// No description provided for @agentImportSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 skill} other{{count} skills}}'**
+  String agentImportSkills(int count);
+
+  /// No description provided for @agentImportRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 routine} other{{count} routines}}'**
+  String agentImportRoutines(int count);
+
+  /// No description provided for @agentImportMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 memory} other{{count} memories}}'**
+  String agentImportMemories(int count);
+
+  /// No description provided for @agentImportLeftovers.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy {count, plural, =1{1 other file} other{{count} other files}} to ~/imported/ on its computer'**
+  String agentImportLeftovers(int count);
+
+  /// No description provided for @agentImportSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Not imported: {files}'**
+  String agentImportSkipped(String files);
+
+  /// No description provided for @agentImportedWithFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {name} and copied {count} files to its computer'**
+  String agentImportedWithFiles(String name, int count);
+
+  /// No description provided for @agentImportedFilesLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {name}. Its other files couldn\'t be copied yet; give it a computer and import again to copy them.'**
+  String agentImportedFilesLater(String name);
+
+  /// No description provided for @importMemoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import memories from ChatGPT or Claude'**
+  String get importMemoryTitle;
+
+  /// No description provided for @importMemoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this prompt into ChatGPT or Claude, then paste its answer below.'**
+  String get importMemoryHelp;
+
+  /// No description provided for @importMemoryPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep what\'s right; untick the rest.'**
+  String get importMemoryPick;
+
+  /// No description provided for @importMemoryPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Its answer'**
+  String get importMemoryPaste;
+
+  /// No description provided for @importMemoryNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No memories found in that answer.'**
+  String get importMemoryNone;
+
+  /// No description provided for @memoriesImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count, plural, =1{1 memory} other{{count} memories}}'**
+  String memoriesImported(int count);
 }
 
 class _AppLocalizationsDelegate

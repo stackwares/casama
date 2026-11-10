@@ -14,6 +14,10 @@ import 'package:kasama_api/src/model/admin_service.dart';
 import 'package:kasama_api/src/model/admin_service_list.dart';
 import 'package:kasama_api/src/model/admin_user.dart';
 import 'package:kasama_api/src/model/admin_user_list.dart';
+import 'package:kasama_api/src/model/agent_import_plan.dart';
+import 'package:kasama_api/src/model/agent_import_plan_leftovers_inner.dart';
+import 'package:kasama_api/src/model/agent_import_plan_skipped_inner.dart';
+import 'package:kasama_api/src/model/agent_import_plan_sources.dart';
 import 'package:kasama_api/src/model/app_catalog.dart';
 import 'package:kasama_api/src/model/apply_skill_update_request.dart';
 import 'package:kasama_api/src/model/approval.dart';
@@ -123,6 +127,7 @@ import 'package:kasama_api/src/model/ice_server.dart';
 import 'package:kasama_api/src/model/import_bot_request.dart';
 import 'package:kasama_api/src/model/import_bot_response.dart';
 import 'package:kasama_api/src/model/import_bot_response_connections_to_add_inner.dart';
+import 'package:kasama_api/src/model/imported_memory_item.dart';
 import 'package:kasama_api/src/model/install_catalog_skill_request.dart';
 import 'package:kasama_api/src/model/install_git_hub_skill_request.dart';
 import 'package:kasama_api/src/model/install_plugin_request.dart';
@@ -154,6 +159,7 @@ import 'package:kasama_api/src/model/mcp_key_list.dart';
 import 'package:kasama_api/src/model/me.dart';
 import 'package:kasama_api/src/model/membership.dart';
 import 'package:kasama_api/src/model/memory.dart';
+import 'package:kasama_api/src/model/memory_import_prompt.dart';
 import 'package:kasama_api/src/model/memory_list.dart';
 import 'package:kasama_api/src/model/memory_written_event.dart';
 import 'package:kasama_api/src/model/memory_written_event_payload.dart';
@@ -177,6 +183,8 @@ import 'package:kasama_api/src/model/page_list.dart';
 import 'package:kasama_api/src/model/page_version.dart';
 import 'package:kasama_api/src/model/page_view_link.dart';
 import 'package:kasama_api/src/model/page_view_link_request.dart';
+import 'package:kasama_api/src/model/parse_memory_import_request.dart';
+import 'package:kasama_api/src/model/parsed_memory_import.dart';
 import 'package:kasama_api/src/model/plan.dart';
 import 'package:kasama_api/src/model/plan_catalog.dart';
 import 'package:kasama_api/src/model/plugin.dart';
@@ -224,9 +232,11 @@ import 'package:kasama_api/src/model/run_failed_event_payload.dart';
 import 'package:kasama_api/src/model/run_started.dart';
 import 'package:kasama_api/src/model/run_started_event.dart';
 import 'package:kasama_api/src/model/run_started_event_payload.dart';
+import 'package:kasama_api/src/model/save_imported_memories_request.dart';
 import 'package:kasama_api/src/model/save_teach_request.dart';
 import 'package:kasama_api/src/model/save_teach_response.dart';
 import 'package:kasama_api/src/model/saved_count.dart';
+import 'package:kasama_api/src/model/saved_imported_memories.dart';
 import 'package:kasama_api/src/model/search_response.dart';
 import 'package:kasama_api/src/model/search_result.dart';
 import 'package:kasama_api/src/model/secret.dart';
@@ -245,6 +255,8 @@ import 'package:kasama_api/src/model/skill_loaded_event.dart';
 import 'package:kasama_api/src/model/skill_loaded_event_payload.dart';
 import 'package:kasama_api/src/model/skill_preview_file.dart';
 import 'package:kasama_api/src/model/skill_update_check.dart';
+import 'package:kasama_api/src/model/start_agent_import_request.dart';
+import 'package:kasama_api/src/model/start_agent_import_request_files_inner.dart';
 import 'package:kasama_api/src/model/start_setup_response.dart';
 import 'package:kasama_api/src/model/start_teach_request.dart';
 import 'package:kasama_api/src/model/stream_session.dart';
@@ -325,6 +337,8 @@ import 'package:kasama_api/src/model/watcher.dart';
 import 'package:kasama_api/src/model/watcher_list.dart';
 import 'package:kasama_api/src/model/workspace_badge.dart';
 import 'package:kasama_api/src/model/workspace_badge_list.dart';
+import 'package:kasama_api/src/model/write_agent_import_files_request.dart';
+import 'package:kasama_api/src/model/write_agent_import_files_response.dart';
 
 final _regList = RegExp(r'^List<(.*)>$');
 final _regSet = RegExp(r'^Set<(.*)>$');
@@ -376,6 +390,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminUser.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminUserList':
           return AdminUserList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AgentImportPlan':
+          return AgentImportPlan.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AgentImportPlanLeftoversInner':
+          return AgentImportPlanLeftoversInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AgentImportPlanSkippedInner':
+          return AgentImportPlanSkippedInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AgentImportPlanSources':
+          return AgentImportPlanSources.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AppCatalog':
           return AppCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ApplySkillUpdateRequest':
@@ -606,6 +628,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ImportBotResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ImportBotResponseConnectionsToAddInner':
           return ImportBotResponseConnectionsToAddInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ImportedMemoryItem':
+          return ImportedMemoryItem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InstallCatalogSkillRequest':
           return InstallCatalogSkillRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InstallGitHubSkillRequest':
@@ -674,6 +698,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Membership.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Memory':
           return Memory.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MemoryImportPrompt':
+          return MemoryImportPrompt.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'MemoryList':
           return MemoryList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'MemoryWrittenEvent':
@@ -723,6 +749,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PageViewLink.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PageViewLinkRequest':
           return PageViewLinkRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ParseMemoryImportRequest':
+          return ParseMemoryImportRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ParsedMemoryImport':
+          return ParsedMemoryImport.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Plan':
           return Plan.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PlanCatalog':
@@ -835,12 +865,16 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'RunStatus':
           
           
+        case 'SaveImportedMemoriesRequest':
+          return SaveImportedMemoriesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveTeachRequest':
           return SaveTeachRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveTeachResponse':
           return SaveTeachResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SavedCount':
           return SavedCount.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SavedImportedMemories':
+          return SavedImportedMemories.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SearchKind':
           
           
@@ -883,6 +917,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SkillPreviewFile.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillUpdateCheck':
           return SkillUpdateCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'StartAgentImportRequest':
+          return StartAgentImportRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'StartAgentImportRequestFilesInner':
+          return StartAgentImportRequestFilesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StartSetupResponse':
           return StartSetupResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StartTeachRequest':
@@ -1055,6 +1093,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return WorkspaceBadge.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WorkspaceBadgeList':
           return WorkspaceBadgeList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WriteAgentImportFilesRequest':
+          return WriteAgentImportFilesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WriteAgentImportFilesResponse':
+          return WriteAgentImportFilesResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         default:
           RegExpMatch? match;
 

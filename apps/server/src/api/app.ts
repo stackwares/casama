@@ -29,6 +29,7 @@ import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
 import { type InProcessEnv, registerMcpRoutes } from "./routes/mcp.ts";
 import { registerPageRoutes } from "./routes/pages.ts";
+import { registerAgentImportRoutes } from "./routes/agent-import.ts";
 import { registerPluginRoutes } from "./routes/plugins.ts";
 import { registerPrivacyRoutes } from "./routes/privacy.ts";
 import { registerTeachRoutes } from "./routes/teach.ts";
@@ -226,6 +227,7 @@ export function createApp(deps: AppDeps) {
   registerPageRoutes(app, deps);
   registerTeachRoutes(app, deps);
   registerPluginRoutes(app, deps);
+  registerAgentImportRoutes(app, deps);
   registerMcpRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {

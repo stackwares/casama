@@ -748,3 +748,36 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - computerd: `PUT /mcp-servers` starts and stops a real stdio server.
   - API (`plugins.test.ts`), with a fake GitHub, a fake computer and real MCP servers: preview, pinned install needing its secrets, tools listed for both kinds, the package and env on the computer with no secret in the config, a call through `computerMcpFor`, an update diff carrying secrets over, and an uninstall that removes everything.
   - widget (`plugins_test.dart`).
+
+## D-122 Import an agent
+
+- **Importers built from public docs only** (`@kasama/domain` `planAgentImport`), not from either project's code:
+  - **OpenClaw:**
+    - The workspace's `SOUL.md` and `AGENTS.md` become the persona; `IDENTITY.md` gives the name and joins the persona.
+    - `USER.md` items become preferences, `MEMORY.md` items become facts, and the newest 60 `memory/YYYY-MM-DD.md` daily notes become episodes.
+    - Skills come from `skills/<name>/SKILL.md`.
+    - Scheduled jobs come from `cron/jobs.json` (`schedule` of kind `cron`, or `every` when it divides an hour or a day; `payload.message` or `text`). Newer OpenClaw versions keep jobs in a database, which isn't read.
+  - **Hermes Agent:**
+    - `SOUL.md` (plus `AGENTS.md` or `.hermes.md`) becomes the persona.
+    - `memories/MEMORY.md` entries become facts and `memories/USER.md` entries become preferences; entries are split on `§`.
+    - Skills come from `skills/<category>/<name>/SKILL.md`.
+    - Jobs come from `cron/jobs.json` (`prompt`, with `schedule.expr` or the readable `display`: "every 2h", "daily at 7am").
+  - The folder is found anywhere in the upload; a ZIP of `.openclaw/` or of `workspace/` both work.
+- **What's left out, and said so:**
+  - **Never read:** keys and settings (`.env`, `auth.json`, `credentials/`, `openclaw.json`, `config.yaml`), databases, sessions, logs and run history. These are listed as skipped.
+  - **Not imported as routines, each with a note:** paused jobs, one-off jobs, finished jobs and unreadable schedules. A job's own time zone becomes the person's.
+  - **Fixed up:** skill names that aren't valid are fixed (`Weekly Report` becomes `weekly-report`).
+  - **Limits:** the template caps (30 skills, 20 routines, 200 memories, 20,000-character persona) apply, with a note when something was trimmed.
+  - **Everything else** (for example `HEARTBEAT.md`, `canvas/`, notes) is kept for a day.
+- **Review, then the existing template import:**
+  - `POST /v1/agent-imports` takes a ZIP (unzipped with fflate; paths with `..` or absolute paths dropped; 50 MB and 3,000 files at most) or the files of a folder the desktop app picked. It returns a `kasama.bot` template (D-110) plus where each item came from, the leftovers, the skipped files and the notes.
+  - The app lists every skill, routine and memory with a checkbox, plus the name and persona. Importing sends the ticked items to the existing `POST /v1/bots/import`, so there's one way to create a bot from outside.
+  - `POST /v1/agent-imports/{id}/files` then copies the leftovers to `~/imported/<openclaw|hermes>/` on the new bot's computer, or answers 409 when it has none yet.
+- **ChatGPT or Claude memory:**
+  - `GET /v1/memory-import/prompt` gives a prompt asking for `FACT:` and `PREFERENCE:` lines.
+  - `POST /v1/memory-import/parse` reads the pasted answer (labels optional, bullets and bold tolerated, duplicates dropped).
+  - `POST /v1/bots/{id}/memories/import` saves the ticked ones (bot managers only). The bot's Memory screen has the import button.
+- **Tests:**
+  - domain (`agent-import.test.ts`): an OpenClaw home folder and a Hermes home folder end to end, schedules, splitting notes, and memory answers.
+  - API (`agent-import.test.ts`): ZIP to template to bot through the template import, leftovers copied to `~/imported/`, unknown folders, unsafe paths, and memory paste-in.
+  - widget (`agent_import_test.dart`): review with unticking, files copied, and the memory sheet.

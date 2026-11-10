@@ -4223,4 +4223,116 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pluginDiffNone => 'No changes to what it adds.';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get botNameLabel => 'Name';
+
+  @override
+  String get importAgent => 'Import an agent';
+
+  @override
+  String get importAgentHelp =>
+      'Bring a bot over from OpenClaw or Hermes Agent: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.';
+
+  @override
+  String get importAgentPickFolder => 'Pick its folder';
+
+  @override
+  String get importAgentPickZip => 'Upload a ZIP of its folder';
+
+  @override
+  String get agentImportReviewHelp =>
+      'Untick anything you don\'t want. Nothing is created until you import.';
+
+  @override
+  String get agentImportNoPersona => 'No persona file was found.';
+
+  @override
+  String agentImportSkills(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skills',
+      one: '1 skill',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String agentImportRoutines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count routines',
+      one: '1 routine',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String agentImportMemories(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count memories',
+      one: '1 memory',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String agentImportLeftovers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count other files',
+      one: '1 other file',
+    );
+    return 'Copy $_temp0 to ~/imported/ on its computer';
+  }
+
+  @override
+  String agentImportSkipped(String files) {
+    return 'Not imported: $files';
+  }
+
+  @override
+  String agentImportedWithFiles(String name, int count) {
+    return 'Imported $name and copied $count files to its computer';
+  }
+
+  @override
+  String agentImportedFilesLater(String name) {
+    return 'Imported $name. Its other files couldn\'t be copied yet; give it a computer and import again to copy them.';
+  }
+
+  @override
+  String get importMemoryTitle => 'Import memories from ChatGPT or Claude';
+
+  @override
+  String get importMemoryHelp =>
+      'Copy this prompt into ChatGPT or Claude, then paste its answer below.';
+
+  @override
+  String get importMemoryPick => 'Keep what\'s right; untick the rest.';
+
+  @override
+  String get importMemoryPaste => 'Its answer';
+
+  @override
+  String get importMemoryNone => 'No memories found in that answer.';
+
+  @override
+  String memoriesImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count memories',
+      one: '1 memory',
+    );
+    return 'Added $_temp0';
+  }
 }

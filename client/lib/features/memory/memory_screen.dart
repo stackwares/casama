@@ -11,6 +11,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../bots/agent_import.dart';
 
 /// What a bot remembers: view, edit, pin and delete (deleted memories are gone, not hidden).
 class MemoryScreen extends ConsumerWidget {
@@ -46,9 +47,16 @@ class MemoryScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final bot = ref.watch(botProvider(botId));
     final memories = ref.watch(memoriesProvider(botId));
+    Future<void> importMemories() async {
+      final n = await showAdaptiveSheet<int>(context: context, builder: (_) => MemoryImportSheet(botId: botId));
+      ref.invalidate(memoriesProvider(botId));
+      if (n != null && context.mounted) showMessage(context, l10n.memoriesImported(n));
+    }
+
     return SubPage(
       title: l10n.memory,
       subtitle: bot?.name,
+      actions: [IconButton(key: const Key('importMemories'), tooltip: l10n.importMemoryTitle, icon: const Icon(LucideIcons.download), onPressed: importMemories)],
       body: AsyncView(
         value: memories,
         onRetry: () => ref.invalidate(memoriesProvider(botId)),

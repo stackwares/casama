@@ -2219,6 +2219,52 @@ export const teachSessions = pgTable("teach_sessions", {
 	check("teach_sessions_status_check", sql`status = ANY (ARRAY['recording'::text, 'drafting'::text, 'drafted'::text, 'saved'::text, 'cancelled'::text, 'failed'::text])`),
 ]);
 
+export const agentImports = pgTable("agent_imports", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	kind: text().notNull(),
+	botId: uuid("bot_id"),
+	filesWrittenAt: timestamp("files_written_at", { withTimezone: true, mode: 'string' }),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '1 day'::interval)`).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "agent_imports_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "agent_imports_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "agent_imports_bot_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("agent_imports_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("agent_imports_kind_check", sql`kind = ANY (ARRAY['openclaw'::text, 'hermes'::text])`),
+]);
+
+export const agentImportFiles = pgTable("agent_import_files", {
+	importId: uuid("import_id").notNull(),
+	path: text().notNull(),
+	// TODO: failed to parse database type 'bytea'
+	content: text("content").notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.importId],
+			foreignColumns: [agentImports.id],
+			name: "agent_import_files_import_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.importId, table.path], name: "agent_import_files_pkey"}),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("agent_import_files_path_check", sql`(char_length(path) >= 1) AND (char_length(path) <= 1000)`),
+]);
+
 export const ttsCache = pgTable("tts_cache", {
 	messageId: uuid("message_id").notNull(),
 	voiceKey: text("voice_key").notNull(),

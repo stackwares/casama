@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'dart:async';
@@ -911,6 +912,31 @@ class SupabaseBackend implements Backend {
   Future<void> setMcpDecideApprovals(String orgId, bool allowed) async {
     await api.privacy.updateOrgSettings(id: orgId, updateOrgSettingsRequest: UpdateOrgSettingsRequest(mcpDecideApprovals: allowed));
   }
+
+  @override
+  Future<AgentImportPlan> startAgentImport(String orgId, {Uint8List? zip, Map<String, Uint8List>? files}) async => (await api.imports.startAgentImport(
+        startAgentImportRequest: StartAgentImportRequest(
+          orgId: orgId,
+          zipBase64: zip == null ? null : base64Encode(zip),
+          files: files == null ? null : [for (final e in files.entries) StartAgentImportRequestFilesInner(path: e.key, contentBase64: base64Encode(e.value))],
+        ),
+      ))
+          .data!;
+
+  @override
+  Future<int> writeAgentImportFiles(String importId, String botId) async =>
+      (await api.imports.writeAgentImportFiles(id: importId, writeAgentImportFilesRequest: WriteAgentImportFilesRequest(botId: botId))).data!.written;
+
+  @override
+  Future<String> memoryImportPrompt() async => (await api.imports.getMemoryImportPrompt()).data!.prompt;
+
+  @override
+  Future<List<ImportedMemoryItem>> parseMemoryImport(String text) async =>
+      (await api.imports.parseMemoryImport(parseMemoryImportRequest: ParseMemoryImportRequest(text: text))).data!.memories;
+
+  @override
+  Future<int> saveImportedMemories(String botId, List<ImportedMemoryItem> memories) async =>
+      (await api.imports.saveImportedMemories(id: botId, saveImportedMemoriesRequest: SaveImportedMemoriesRequest(memories: memories))).data!.saved;
 
   @override
   Future<List<Plugin>> plugins(String botId) async => (await api.plugins.listPlugins(botId: botId)).data!.items;

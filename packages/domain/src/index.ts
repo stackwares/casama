@@ -16,3 +16,4 @@ export * from "./mentions.ts";
 export * from "./pages.ts";
 export * from "./teach.ts";
 export * from "./agent-plugins.ts";
+export * from "./agent-import.ts";

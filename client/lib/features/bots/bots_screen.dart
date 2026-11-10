@@ -1,4 +1,5 @@
 import 'bot_history_screen.dart';
+import 'agent_import.dart';
 import 'bot_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,6 +62,12 @@ class BotsList extends ConsumerWidget {
                     label: Text(l10n.importBot),
                     onPressed: () => importBotFromFile(context),
                   ),
+                  TextButton.icon(
+                    key: const Key('importAgent'),
+                    icon: const Icon(LucideIcons.folderInput, size: 18),
+                    label: Text(l10n.importAgent),
+                    onPressed: () => importAgentFolder(context, ref),
+                  ),
                   if (archived.isNotEmpty)
                     TextButton.icon(
                       key: const Key('archivedBots'),
@@ -92,6 +99,12 @@ class BotsList extends ConsumerWidget {
                                 icon: const Icon(LucideIcons.fileDown, size: 18),
                                 label: Text(l10n.importBot),
                                 onPressed: () => importBotFromFile(context),
+                              ),
+                              TextButton.icon(
+                                key: const Key('importAgentList'),
+                                icon: const Icon(LucideIcons.folderInput, size: 18),
+                                label: Text(l10n.importAgent),
+                                onPressed: () => importAgentFolder(context, ref),
                               ),
                               if (archived.isNotEmpty)
                                 TextButton.icon(

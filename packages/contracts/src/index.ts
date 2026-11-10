@@ -20,6 +20,7 @@ export * from "./search.ts";
 export * from "./skills.ts";
 export { routes } from "./routes/index.ts";
 export * from "./voice.ts";
+export * from "./agent-import.ts";
 export * from "./pages.ts";
 export * from "./plugins.ts";
 export * from "./teach.ts";

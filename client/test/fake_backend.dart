@@ -360,6 +360,7 @@ class FakeBackend implements Backend {
   Future<ImportBotResponse> importBot(String orgId, BotTemplateFile template,
       {required String credentialId, required String model, bool memories = true, bool routines = true}) async {
     imported = (credentialId: credentialId, model: model, memories: memories, routines: routines);
+    importedTemplate = template;
     return ImportBotResponse(botId: 'bot-new', skills: 1, routines: routines ? 1 : 0, memories: memories ? 1 : 0, connectionsToAdd: [for (final c in template.connections ?? const <BotTemplateFileConnectionsInner>[]) ImportBotResponseConnectionsToAddInner(kind: c.kind, name: c.name)]);
   }
   QuietHoursView quiet = const QuietHoursView(enabled: false, start: '22:00', end: '07:00');
@@ -567,6 +568,56 @@ class FakeBackend implements Backend {
   @override
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
+
+  // Import an agent (D-122)
+  BotTemplateFile? importedTemplate;
+  final importActions = <String>[];
+  @override
+  Future<AgentImportPlan> startAgentImport(String orgId, {Uint8List? zip, Map<String, Uint8List>? files}) async {
+    importActions.add(zip != null ? 'zip:${zip.length}' : 'files:${files?.keys.join(',')}');
+    return agentPlan();
+  }
+  AgentImportPlan agentPlan() => AgentImportPlan(
+        id: 'imp-1',
+        kind: AgentImportPlanKindEnum.openclaw,
+        template: BotTemplateFile(
+          format: BotTemplateFileFormatEnum.kasamaPeriodBot,
+          version: 1,
+          name: 'Juno',
+          description: 'Imported from OpenClaw',
+          personaMd: 'You are Juno.',
+          autonomy: BotTemplateFileAutonomyEnum.askRisky,
+          skills: [BotTemplateFileSkillsInner(name: 'triage', description: 'Triage the inbox', bodyMd: 'Sort.')],
+          routines: [BotTemplateFileRoutinesInner(name: 'Brief', instructionsMd: 'Brief me', scheduleCron: '0 7 * * *')],
+          memories: [
+            BotTemplateFileMemoriesInner(kind: BotTemplateFileMemoriesInnerKindEnum.preference, content: 'Prefers mornings'),
+            BotTemplateFileMemoriesInner(kind: BotTemplateFileMemoriesInnerKindEnum.fact, content: 'Old address'),
+          ],
+          connections: const [],
+        ),
+        sources: AgentImportPlanSources(skills: const ['workspace/skills/triage/SKILL.md'], routines: const ['cron/jobs.json'], memories: const ['USER.md', 'MEMORY.md']),
+        leftovers: [AgentImportPlanLeftoversInner(path: 'workspace/notes/plan.md', size: 8)],
+        skipped: [AgentImportPlanSkippedInner(path: '.env', reason: 'secrets')],
+        notes: const ['"Reminder" ran once at a set time; not imported as a routine'],
+      );
+  @override
+  Future<int> writeAgentImportFiles(String importId, String botId) async {
+    importActions.add('files:$importId:$botId');
+    return 1;
+  }
+  @override
+  Future<String> memoryImportPrompt() async => 'FACT: … PREFERENCE: …';
+  @override
+  Future<List<ImportedMemoryItem>> parseMemoryImport(String text) async => [
+        ImportedMemoryItem(kind: ImportedMemoryItemKindEnum.fact, content: 'Has a dog'),
+        ImportedMemoryItem(kind: ImportedMemoryItemKindEnum.preference, content: 'Metric units'),
+      ];
+  final savedMemories = <ImportedMemoryItem>[];
+  @override
+  Future<int> saveImportedMemories(String botId, List<ImportedMemoryItem> memories) async {
+    savedMemories.addAll(memories);
+    return memories.length;
+  }
 
   // Plugins (D-121)
   final pluginList = <Plugin>[];

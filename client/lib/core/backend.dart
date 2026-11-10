@@ -362,6 +362,12 @@ abstract class Backend {
   Future<void> revokeMcpKey(String orgId, String keyId);
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
+  // Import an agent (D-122)
+  Future<AgentImportPlan> startAgentImport(String orgId, {Uint8List? zip, Map<String, Uint8List>? files});
+  Future<int> writeAgentImportFiles(String importId, String botId);
+  Future<String> memoryImportPrompt();
+  Future<List<ImportedMemoryItem>> parseMemoryImport(String text);
+  Future<int> saveImportedMemories(String botId, List<ImportedMemoryItem> memories);
   // Plugins (D-121)
   Future<List<Plugin>> plugins(String botId);
   Future<PluginPreview> previewPlugin(String orgId, String url);

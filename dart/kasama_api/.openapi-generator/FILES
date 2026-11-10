@@ -14,6 +14,7 @@ lib/src/api/chat_api.dart
 lib/src/api/checkins_api.dart
 lib/src/api/computers_api.dart
 lib/src/api/credentials_api.dart
+lib/src/api/import_api.dart
 lib/src/api/integrations_api.dart
 lib/src/api/local_computer_api.dart
 lib/src/api/mcp_api.dart
@@ -57,6 +58,10 @@ lib/src/model/admin_service.dart
 lib/src/model/admin_service_list.dart
 lib/src/model/admin_user.dart
 lib/src/model/admin_user_list.dart
+lib/src/model/agent_import_plan.dart
+lib/src/model/agent_import_plan_leftovers_inner.dart
+lib/src/model/agent_import_plan_skipped_inner.dart
+lib/src/model/agent_import_plan_sources.dart
 lib/src/model/app_catalog.dart
 lib/src/model/apply_skill_update_request.dart
 lib/src/model/approval.dart
@@ -170,6 +175,7 @@ lib/src/model/ice_server.dart
 lib/src/model/import_bot_request.dart
 lib/src/model/import_bot_response.dart
 lib/src/model/import_bot_response_connections_to_add_inner.dart
+lib/src/model/imported_memory_item.dart
 lib/src/model/install_catalog_skill_request.dart
 lib/src/model/install_git_hub_skill_request.dart
 lib/src/model/install_plugin_request.dart
@@ -203,6 +209,7 @@ lib/src/model/mcp_key_list.dart
 lib/src/model/me.dart
 lib/src/model/membership.dart
 lib/src/model/memory.dart
+lib/src/model/memory_import_prompt.dart
 lib/src/model/memory_list.dart
 lib/src/model/memory_written_event.dart
 lib/src/model/memory_written_event_payload.dart
@@ -227,6 +234,8 @@ lib/src/model/page_list.dart
 lib/src/model/page_version.dart
 lib/src/model/page_view_link.dart
 lib/src/model/page_view_link_request.dart
+lib/src/model/parse_memory_import_request.dart
+lib/src/model/parsed_memory_import.dart
 lib/src/model/plan.dart
 lib/src/model/plan_catalog.dart
 lib/src/model/plugin.dart
@@ -280,9 +289,11 @@ lib/src/model/run_started.dart
 lib/src/model/run_started_event.dart
 lib/src/model/run_started_event_payload.dart
 lib/src/model/run_status.dart
+lib/src/model/save_imported_memories_request.dart
 lib/src/model/save_teach_request.dart
 lib/src/model/save_teach_response.dart
 lib/src/model/saved_count.dart
+lib/src/model/saved_imported_memories.dart
 lib/src/model/search_kind.dart
 lib/src/model/search_response.dart
 lib/src/model/search_result.dart
@@ -303,6 +314,8 @@ lib/src/model/skill_loaded_event.dart
 lib/src/model/skill_loaded_event_payload.dart
 lib/src/model/skill_preview_file.dart
 lib/src/model/skill_update_check.dart
+lib/src/model/start_agent_import_request.dart
+lib/src/model/start_agent_import_request_files_inner.dart
 lib/src/model/start_setup_response.dart
 lib/src/model/start_teach_request.dart
 lib/src/model/stream_mode.dart
@@ -387,4 +400,6 @@ lib/src/model/watcher.dart
 lib/src/model/watcher_list.dart
 lib/src/model/workspace_badge.dart
 lib/src/model/workspace_badge_list.dart
+lib/src/model/write_agent_import_files_request.dart
+lib/src/model/write_agent_import_files_response.dart
 pubspec.yaml
