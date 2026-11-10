@@ -569,13 +569,34 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         {
           ok: false,
           code: errorCode(err),
-          message: "The run failed. See the run timeline for details.",
+          message: failureMessage(errorCode(err), message),
         },
         bus,
       ),
     );
     return { status: "failed" };
   }
+}
+
+/** What a person sees when a run fails: a plain reason, then the start of the error with anything
+ * token-like redacted (keys, bearer tokens, long opaque strings). */
+export function failureMessage(code: string, detail: string): string {
+  const reason: Record<string, string> = {
+    model_credential_not_found:
+      "This bot's model key is missing. Add one in Settings → Model keys.",
+    no_model_configured: "This bot has no model set. Pick one in its settings.",
+    model_auth_failed: "The model provider rejected the key. Check it in Settings → Model keys.",
+    model_rate_limited: "The model provider is rate limiting this key. Try again in a minute.",
+  };
+  const redacted = detail
+    .replace(/\b(sk|pk|rk|key|tok|ghp|gho|xox[abp])[-_][A-Za-z0-9_-]{8,}/gi, "[redacted]")
+    .replace(/Bearer\s+[A-Za-z0-9._~+/=-]+/gi, "Bearer [redacted]")
+    .replace(/[A-Za-z0-9_-]{32,}/g, "[redacted]")
+    .split("\n")[0]
+    ?.slice(0, 300)
+    .trim();
+  const head = reason[code] ?? "Something went wrong while the bot was working.";
+  return redacted && !reason[code] ? `${head} ${redacted}` : head;
 }
 
 function errorCode(err: unknown) {

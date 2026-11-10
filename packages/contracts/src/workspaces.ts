@@ -87,5 +87,7 @@ export const PublicConfig = z
       .record(z.string(), z.string())
       .openapi({ description: "Default model id per provider (for example openrouter, openai)" }),
     default_reasoning_effort: z.enum(["none", "low", "medium", "high", "xhigh", "max"]),
+    /** Whether the server can search wallpaper photos (UNSPLASH_ACCESS_KEY set). */
+    wallpapers_enabled: z.boolean().optional(),
   })
   .openapi("PublicConfig");

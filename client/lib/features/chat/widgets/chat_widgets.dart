@@ -18,6 +18,7 @@ import '../../../ui/motion.dart';
 import '../chat_controller.dart';
 import 'chat_markdown.dart';
 import 'message_actions.dart';
+import '../../../ui/glow_button.dart';
 
 // ---------------------------------------------------------------------------------------------
 // Messages
@@ -657,9 +658,12 @@ class CodePanel extends StatelessWidget {
 
 /// A short note in the thread (memory saved, checkpoint, computer state, run ended), centered.
 class NoticeLine extends StatelessWidget {
-  const NoticeLine({super.key, required this.entry, this.onRestore});
+  const NoticeLine({super.key, required this.entry, this.onRestore, this.onDetails});
   final NoticeEntry entry;
   final void Function(String checkpointId)? onRestore;
+
+  /// Failures open their details (error, failed steps, copy and export).
+  final VoidCallback? onDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -679,9 +683,16 @@ class NoticeLine extends StatelessWidget {
     };
     final failed = entry.kind == NoticeKind.failed;
     final restorable = entry.kind == NoticeKind.checkpoint && entry.refId != null && onRestore != null;
+    final details = failed && onDetails != null;
     return Center(
-      child: Container(
-        padding: EdgeInsets.fromLTRB(12, restorable ? 2 : 6, restorable ? 4 : 12, restorable ? 2 : 6),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+        key: details ? const Key('errorDetails') : null,
+        onTap: details ? onDetails : null,
+        borderRadius: BorderRadius.circular(failed ? AppRadius.row : AppRadius.pill),
+        child: Container(
+        padding: EdgeInsets.fromLTRB(12, restorable ? 2 : 6, restorable || details ? 4 : 12, restorable ? 2 : 6),
         decoration: BoxDecoration(
           color: failed ? colors.negative.withValues(alpha: 0.08) : scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(failed ? AppRadius.row : AppRadius.pill),
@@ -696,7 +707,14 @@ class NoticeLine extends StatelessWidget {
               child: Text(text, style: context.textTheme.labelMedium?.copyWith(color: color, height: 1.3)),
             ),
             if (restorable) TextButton(onPressed: () => onRestore!(entry.refId!), child: Text(l10n.restore)),
+            if (details) ...[
+              const SizedBox(width: 6),
+              Text(l10n.details, style: context.textTheme.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700)),
+              Icon(LucideIcons.chevronRight, size: 16, color: color),
+            ],
           ],
+        ),
+      ),
         ),
       ),
     );
@@ -766,7 +784,7 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
               children: [
                 TextButton(onPressed: _busy ? null : () => _decide(true, always: true), child: Text(l10n.alwaysAllow)),
                 OutlinedButton(onPressed: _busy ? null : () => _decide(false), child: Text(l10n.deny)),
-                FilledButton(key: const Key('chatApprove'), onPressed: _busy ? null : () => _decide(true), child: Text(l10n.approve)),
+                GlowButton(key: const Key('chatApprove'), onPressed: _busy ? null : () => _decide(true), child: Text(l10n.approve)),
               ],
             ),
     );
@@ -802,7 +820,7 @@ class TakeoverPrompt extends StatelessWidget {
             )
           : Align(
               alignment: Alignment.centerRight,
-              child: FilledButton.icon(
+              child: GlowButton.icon(
                 key: const Key('chatTakeControl'),
                 onPressed: onOpen,
                 icon: const Icon(LucideIcons.monitorPlay, size: 18),

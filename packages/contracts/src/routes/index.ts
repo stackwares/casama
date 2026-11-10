@@ -1,4 +1,5 @@
 import * as admin from "./admin.ts";
+import * as appearance from "./appearance.ts";
 import * as autonomy from "./autonomy.ts";
 import * as billing from "./billing.ts";
 import * as bots from "./bots.ts";
@@ -20,5 +21,18 @@ export const routes = {
   ...admin,
   ...billing,
   ...privacy,
+  ...appearance,
 };
-export { admin, autonomy, billing, bots, computers, local, privacy, system, voice, workspaces };
+export {
+  admin,
+  appearance,
+  autonomy,
+  billing,
+  bots,
+  computers,
+  local,
+  privacy,
+  system,
+  voice,
+  workspaces,
+};

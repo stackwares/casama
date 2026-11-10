@@ -15,6 +15,14 @@ abstract class _$UsageReportCWProxy {
 
   UsageReport byBot(List<UsageReportByBotInner> byBot);
 
+  UsageReport byDay(List<UsageReportByDayInner>? byDay);
+
+  UsageReport byModel(List<UsageReportByModelInner>? byModel);
+
+  UsageReport byKind(List<UsageReportByKindInner>? byKind);
+
+  UsageReport runs(int? runs);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageReport(...).copyWith.fieldName(value)`.
@@ -28,6 +36,10 @@ abstract class _$UsageReportCWProxy {
     DateTime since,
     num totalCostUsd,
     List<UsageReportByBotInner> byBot,
+    List<UsageReportByDayInner>? byDay,
+    List<UsageReportByModelInner>? byModel,
+    List<UsageReportByKindInner>? byKind,
+    int? runs,
   });
 }
 
@@ -51,6 +63,20 @@ class _$UsageReportCWProxyImpl implements _$UsageReportCWProxy {
   @override
   UsageReport byBot(List<UsageReportByBotInner> byBot) => call(byBot: byBot);
 
+  @override
+  UsageReport byDay(List<UsageReportByDayInner>? byDay) => call(byDay: byDay);
+
+  @override
+  UsageReport byModel(List<UsageReportByModelInner>? byModel) =>
+      call(byModel: byModel);
+
+  @override
+  UsageReport byKind(List<UsageReportByKindInner>? byKind) =>
+      call(byKind: byKind);
+
+  @override
+  UsageReport runs(int? runs) => call(runs: runs);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageReport(...).copyWith.fieldName(value)`.
@@ -65,6 +91,10 @@ class _$UsageReportCWProxyImpl implements _$UsageReportCWProxy {
     Object? since = const $CopyWithPlaceholder(),
     Object? totalCostUsd = const $CopyWithPlaceholder(),
     Object? byBot = const $CopyWithPlaceholder(),
+    Object? byDay = const $CopyWithPlaceholder(),
+    Object? byModel = const $CopyWithPlaceholder(),
+    Object? byKind = const $CopyWithPlaceholder(),
+    Object? runs = const $CopyWithPlaceholder(),
   }) {
     return UsageReport(
       period: period == const $CopyWithPlaceholder() || period == null
@@ -84,6 +114,22 @@ class _$UsageReportCWProxyImpl implements _$UsageReportCWProxy {
           ? _value.byBot
           // ignore: cast_nullable_to_non_nullable
           : byBot as List<UsageReportByBotInner>,
+      byDay: byDay == const $CopyWithPlaceholder()
+          ? _value.byDay
+          // ignore: cast_nullable_to_non_nullable
+          : byDay as List<UsageReportByDayInner>?,
+      byModel: byModel == const $CopyWithPlaceholder()
+          ? _value.byModel
+          // ignore: cast_nullable_to_non_nullable
+          : byModel as List<UsageReportByModelInner>?,
+      byKind: byKind == const $CopyWithPlaceholder()
+          ? _value.byKind
+          // ignore: cast_nullable_to_non_nullable
+          : byKind as List<UsageReportByKindInner>?,
+      runs: runs == const $CopyWithPlaceholder()
+          ? _value.runs
+          // ignore: cast_nullable_to_non_nullable
+          : runs as int?,
     );
   }
 }
@@ -99,29 +145,66 @@ extension $UsageReportCopyWith on UsageReport {
 // JsonSerializableGenerator
 // **************************************************************************
 
-UsageReport _$UsageReportFromJson(
-  Map<String, dynamic> json,
-) => $checkedCreate('UsageReport', json, ($checkedConvert) {
-  $checkKeys(
-    json,
-    requiredKeys: const ['period', 'since', 'total_cost_usd', 'by_bot'],
-  );
-  final val = UsageReport(
-    period: $checkedConvert(
-      'period',
-      (v) => $enumDecode(_$UsageReportPeriodEnumEnumMap, v),
-    ),
-    since: $checkedConvert('since', (v) => DateTime.parse(v as String)),
-    totalCostUsd: $checkedConvert('total_cost_usd', (v) => v as num),
-    byBot: $checkedConvert(
-      'by_bot',
-      (v) => (v as List<dynamic>)
-          .map((e) => UsageReportByBotInner.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    ),
-  );
-  return val;
-}, fieldKeyMap: const {'totalCostUsd': 'total_cost_usd', 'byBot': 'by_bot'});
+UsageReport _$UsageReportFromJson(Map<String, dynamic> json) => $checkedCreate(
+  'UsageReport',
+  json,
+  ($checkedConvert) {
+    $checkKeys(
+      json,
+      requiredKeys: const ['period', 'since', 'total_cost_usd', 'by_bot'],
+    );
+    final val = UsageReport(
+      period: $checkedConvert(
+        'period',
+        (v) => $enumDecode(_$UsageReportPeriodEnumEnumMap, v),
+      ),
+      since: $checkedConvert('since', (v) => DateTime.parse(v as String)),
+      totalCostUsd: $checkedConvert('total_cost_usd', (v) => v as num),
+      byBot: $checkedConvert(
+        'by_bot',
+        (v) => (v as List<dynamic>)
+            .map(
+              (e) => UsageReportByBotInner.fromJson(e as Map<String, dynamic>),
+            )
+            .toList(),
+      ),
+      byDay: $checkedConvert(
+        'by_day',
+        (v) => (v as List<dynamic>?)
+            ?.map(
+              (e) => UsageReportByDayInner.fromJson(e as Map<String, dynamic>),
+            )
+            .toList(),
+      ),
+      byModel: $checkedConvert(
+        'by_model',
+        (v) => (v as List<dynamic>?)
+            ?.map(
+              (e) =>
+                  UsageReportByModelInner.fromJson(e as Map<String, dynamic>),
+            )
+            .toList(),
+      ),
+      byKind: $checkedConvert(
+        'by_kind',
+        (v) => (v as List<dynamic>?)
+            ?.map(
+              (e) => UsageReportByKindInner.fromJson(e as Map<String, dynamic>),
+            )
+            .toList(),
+      ),
+      runs: $checkedConvert('runs', (v) => (v as num?)?.toInt()),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'totalCostUsd': 'total_cost_usd',
+    'byBot': 'by_bot',
+    'byDay': 'by_day',
+    'byModel': 'by_model',
+    'byKind': 'by_kind',
+  },
+);
 
 Map<String, dynamic> _$UsageReportToJson(UsageReport instance) =>
     <String, dynamic>{
@@ -129,9 +212,15 @@ Map<String, dynamic> _$UsageReportToJson(UsageReport instance) =>
       'since': instance.since.toIso8601String(),
       'total_cost_usd': instance.totalCostUsd,
       'by_bot': instance.byBot.map((e) => e.toJson()).toList(),
+      'by_day': ?instance.byDay?.map((e) => e.toJson()).toList(),
+      'by_model': ?instance.byModel?.map((e) => e.toJson()).toList(),
+      'by_kind': ?instance.byKind?.map((e) => e.toJson()).toList(),
+      'runs': ?instance.runs,
     };
 
 const _$UsageReportPeriodEnumEnumMap = {
   UsageReportPeriodEnum.day: 'day',
+  UsageReportPeriodEnum.week: 'week',
   UsageReportPeriodEnum.month: 'month',
+  UsageReportPeriodEnum.year: 'year',
 };

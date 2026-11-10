@@ -10,6 +10,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/glow_button.dart';
 
 /// A provider's name as people know it, with what it is for when that isn't obvious.
 String providerLabel(ProviderId p) => switch (p) {
@@ -134,7 +135,7 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
             keyboardType: TextInputType.url,
             decoration: InputDecoration(labelText: l10n.baseUrl, hintText: 'http://localhost:11434/v1', prefixIcon: const Icon(LucideIcons.server, size: 20)),
           ),
-        FilledButton.icon(
+        GlowButton.icon(
           key: const Key('addKey'),
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
           onPressed: _busy ? null : _add,

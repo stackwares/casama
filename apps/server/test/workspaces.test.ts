@@ -17,6 +17,7 @@ describe("system", () => {
       product_name: "Kasama",
       supabase_anon_key: "anon",
       billing_enabled: false,
+      wallpapers_enabled: false,
     });
   });
 

@@ -264,7 +264,7 @@ export const Memory = z
 
 export const UsageReport = z
   .object({
-    period: z.enum(["day", "month"]),
+    period: z.enum(["day", "week", "month", "year"]),
     since: ts,
     total_cost_usd: z.number(),
     by_bot: z.array(
@@ -276,5 +276,31 @@ export const UsageReport = z
         tokens_out: z.number().int(),
       }),
     ),
+    /** Per UTC day in the period, oldest first (days without usage are left out). */
+    by_day: z
+      .array(
+        z.object({
+          day: z.string(),
+          cost_usd: z.number(),
+          tokens_in: z.number().int(),
+          tokens_out: z.number().int(),
+        }),
+      )
+      .optional(),
+    by_model: z
+      .array(
+        z.object({
+          model: z.string().nullable(),
+          cost_usd: z.number(),
+          tokens_in: z.number().int(),
+          tokens_out: z.number().int(),
+        }),
+      )
+      .optional(),
+    /** Everything metered: tokens, computer and live-view seconds, read-aloud characters. */
+    by_kind: z
+      .array(z.object({ kind: z.string(), quantity: z.number(), cost_usd: z.number() }))
+      .optional(),
+    runs: z.number().int().optional(),
   })
   .openapi("UsageReport");

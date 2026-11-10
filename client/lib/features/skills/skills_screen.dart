@@ -12,6 +12,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/glow_button.dart';
 
 /// Skills: Markdown instruction packs that bots load on demand.
 class SkillsScreen extends ConsumerWidget {
@@ -41,7 +42,7 @@ class SkillsScreen extends ConsumerWidget {
                 icon: LucideIcons.bookOpen,
                 title: l10n.noSkills,
                 message: l10n.skillsHelp,
-                action: FilledButton.icon(onPressed: () => _edit(context, ref), icon: const Icon(LucideIcons.plus, size: 18), label: Text(l10n.newSkill)),
+                action: GlowButton.icon(onPressed: () => _edit(context, ref), icon: const Icon(LucideIcons.plus, size: 18), label: Text(l10n.newSkill)),
               )
             : PageColumn(
                 children: [

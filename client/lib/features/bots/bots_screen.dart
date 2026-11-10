@@ -17,6 +17,7 @@ import '../settings/model_keys_screen.dart';
 import 'model_picker.dart';
 import 'template_picker.dart';
 
+import '../../ui/glow_button.dart';
 String botStatusLabel(BuildContext context, BotStatusEnum s) => switch (s) {
   BotStatusEnum.working => context.l10n.botStatusWorking,
   BotStatusEnum.waiting => context.l10n.botStatusWaiting,
@@ -44,7 +45,7 @@ class BotsList extends ConsumerWidget {
               icon: LucideIcons.bot,
               title: l10n.noBots,
               message: l10n.noBotsHelp,
-              action: FilledButton.icon(onPressed: () => showCreateBot(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
+              action: GlowButton.icon(onPressed: () => showCreateBot(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
             )
           : RefreshIndicator(
               onRefresh: () async {
@@ -290,7 +291,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
           ),
           const SizedBox(height: 12),
           const SizedBox(height: AppSpace.xs),
-          FilledButton(
+          GlowButton(
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
             onPressed: _busy || _credentialId == null || _model.isEmpty
                 ? null

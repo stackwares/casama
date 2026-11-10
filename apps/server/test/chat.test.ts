@@ -317,6 +317,11 @@ describe("bots and chat", () => {
     expect(usage.total_cost_usd).toBeGreaterThan(0);
     expect(usage.by_bot[0]).toMatchObject({ bot_id: botId, name: "Ada" });
     expect(usage.by_bot[0].tokens_in).toBeGreaterThan(0);
+    expect(usage.by_day.length).toBeGreaterThan(0);
+    expect(usage.by_day[0].day).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(usage.by_model[0].tokens_in).toBeGreaterThan(0);
+    expect(usage.by_kind.map((k: { kind: string }) => k.kind)).toContain("tokens_in");
+    expect(usage.runs).toBeGreaterThan(0);
   });
 });
 

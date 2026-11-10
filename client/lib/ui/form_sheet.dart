@@ -5,6 +5,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
 import 'adaptive_modal.dart';
 import 'app_card.dart';
+import '../ui/glow_button.dart';
 
 /// The body of a form shown with `showAdaptiveSheet`: an icon tile, title and a line of help,
 /// fields with even spacing, then the actions. Phones get full-width buttons (main action first);
@@ -59,8 +60,8 @@ class FormSheet extends StatelessWidget {
         ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: destructive ? scheme.onError : scheme.onPrimary))
         : Text(submitLabel);
     final submit = submitIcon == null || busy
-        ? FilledButton(key: submitKey, style: style, onPressed: busy ? null : onSubmit, child: submitChild)
-        : FilledButton.icon(key: submitKey, style: style, onPressed: onSubmit, icon: Icon(submitIcon, size: 18), label: submitChild);
+        ? GlowButton(key: submitKey, style: style, onPressed: busy ? null : onSubmit, child: submitChild)
+        : GlowButton.icon(key: submitKey, style: style, onPressed: onSubmit, icon: Icon(submitIcon, size: 18), label: submitChild);
     final cancel = TextButton(
       onPressed: busy ? null : () => Navigator.of(context).maybePop(),
       child: Text(cancelLabel ?? MaterialLocalizations.of(context).cancelButtonLabel),

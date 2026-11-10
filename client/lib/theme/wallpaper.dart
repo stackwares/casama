@@ -7,6 +7,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../core/local_image.dart';
+
 /// Doodle patterns drawn over the wallpaper gradient, Telegram style, from Lucide glyphs.
 enum WallpaperPattern {
   none('Plain', []),
@@ -168,7 +170,17 @@ enum WallpaperPalette {
 /// What Settings → Background chose.
 @immutable
 class WallpaperSpec {
-  const WallpaperSpec({this.pattern = WallpaperPattern.clouds, this.palette = WallpaperPalette.theme, this.intensity = 0.5, this.everywhere = true});
+  const WallpaperSpec({
+    this.pattern = WallpaperPattern.clouds,
+    this.palette = WallpaperPalette.theme,
+    this.intensity = 0.5,
+    this.everywhere = true,
+    this.photo,
+    this.photoBlur = 0.3,
+    this.photoDim = 0.15,
+    this.photoCredit,
+    this.photoCreditUrl,
+  });
 
   final WallpaperPattern pattern;
   final WallpaperPalette palette;
@@ -179,19 +191,92 @@ class WallpaperSpec {
   /// Behind every screen, or only behind chats.
   final bool everywhere;
 
-  WallpaperSpec copyWith({WallpaperPattern? pattern, WallpaperPalette? palette, double? intensity, bool? everywhere}) => WallpaperSpec(
+  /// A photo instead of the gradient: a file path, an https URL (Unsplash), or a data: URI (web).
+  final String? photo;
+
+  /// Photo blur and darkening (0 to 1), so text on top stays readable.
+  final double photoBlur;
+  final double photoDim;
+
+  /// Who took the photo, for Unsplash attribution.
+  final String? photoCredit;
+  final String? photoCreditUrl;
+
+  WallpaperSpec copyWith({
+    WallpaperPattern? pattern,
+    WallpaperPalette? palette,
+    double? intensity,
+    bool? everywhere,
+    String? photo,
+    bool clearPhoto = false,
+    double? photoBlur,
+    double? photoDim,
+    String? photoCredit,
+    String? photoCreditUrl,
+  }) => WallpaperSpec(
     pattern: pattern ?? this.pattern,
     palette: palette ?? this.palette,
     intensity: intensity ?? this.intensity,
     everywhere: everywhere ?? this.everywhere,
+    photo: clearPhoto ? null : (photo ?? this.photo),
+    photoBlur: photoBlur ?? this.photoBlur,
+    photoDim: photoDim ?? this.photoDim,
+    photoCredit: clearPhoto ? null : (photoCredit ?? this.photoCredit),
+    photoCreditUrl: clearPhoto ? null : (photoCreditUrl ?? this.photoCreditUrl),
   );
 
-  @override
-  bool operator ==(Object other) =>
-      other is WallpaperSpec && other.pattern == pattern && other.palette == palette && other.intensity == intensity && other.everywhere == everywhere;
+  /// The same wallpaper with its photo credit replaced (null clears it).
+  WallpaperSpec copyWithCredit(String? credit, String? url) => WallpaperSpec(
+    pattern: pattern,
+    palette: palette,
+    intensity: intensity,
+    everywhere: everywhere,
+    photo: photo,
+    photoBlur: photoBlur,
+    photoDim: photoDim,
+    photoCredit: credit,
+    photoCreditUrl: url,
+  );
+
+  Map<String, Object?> toJson() => {
+    'pattern': pattern.name,
+    'palette': palette.name,
+    'intensity': intensity,
+    'everywhere': everywhere,
+    if (photo != null) 'photo': photo,
+    'photoBlur': photoBlur,
+    'photoDim': photoDim,
+    if (photoCredit != null) 'photoCredit': photoCredit,
+    if (photoCreditUrl != null) 'photoCreditUrl': photoCreditUrl,
+  };
+
+  factory WallpaperSpec.fromJson(Map<String, Object?> j) {
+    const d = WallpaperSpec();
+    double unit(Object? v, double fallback) => v is num ? v.toDouble().clamp(0, 1) : fallback;
+    return WallpaperSpec(
+      pattern: WallpaperPattern.values.asNameMap()[j['pattern']] ?? d.pattern,
+      palette: WallpaperPalette.values.asNameMap()[j['palette']] ?? d.palette,
+      intensity: unit(j['intensity'], d.intensity),
+      everywhere: j['everywhere'] is bool ? j['everywhere']! as bool : d.everywhere,
+      photo: j['photo'] as String?,
+      photoBlur: unit(j['photoBlur'], d.photoBlur),
+      photoDim: unit(j['photoDim'], d.photoDim),
+      photoCredit: j['photoCredit'] as String?,
+      photoCreditUrl: j['photoCreditUrl'] as String?,
+    );
+  }
 
   @override
-  int get hashCode => Object.hash(pattern, palette, intensity, everywhere);
+  bool operator ==(Object other) => other is WallpaperSpec && const DeepCollectionEqualityLite().equals(toJson(), other.toJson());
+
+  @override
+  int get hashCode => Object.hashAll(toJson().entries.map((e) => Object.hash(e.key, e.value)));
+}
+
+/// Map equality for flat JSON maps, without pulling in package:collection.
+class DeepCollectionEqualityLite {
+  const DeepCollectionEqualityLite();
+  bool equals(Map<String, Object?> a, Map<String, Object?> b) => a.length == b.length && a.entries.every((e) => b[e.key] == e.value);
 }
 
 /// The wallpaper as the theme carries it, so every page can paint it without reaching for state.
@@ -249,11 +334,15 @@ class Wallpaper extends StatelessWidget {
       children: [
         Positioned.fill(
           child: RepaintBoundary(
-            child: _WallpaperLayer(
-              theme: theme,
-              plain: plain,
-              screen: specOverride != null ? null : MediaQuery.sizeOf(context),
-              textDirection: Directionality.of(context),
+            child: _PhotoLoader(
+              source: plain ? null : theme.spec.photo,
+              builder: (photo) => _WallpaperLayer(
+                theme: theme,
+                plain: plain,
+                photo: photo,
+                screen: specOverride != null ? null : MediaQuery.sizeOf(context),
+                textDirection: Directionality.of(context),
+              ),
             ),
           ),
         ),
@@ -274,10 +363,75 @@ class WallpaperPageTransitionsBuilder extends PageTransitionsBuilder {
       base.buildTransitions(route, context, animation, secondaryAnimation, Wallpaper(child: child));
 }
 
+/// Loads the wallpaper photo, if there is one, and hands the decoded image to [builder]. Until it
+/// arrives (or if it fails) the gradient shows.
+class _PhotoLoader extends StatefulWidget {
+  const _PhotoLoader({required this.source, required this.builder});
+  final String? source;
+  final Widget Function(ui.Image? photo) builder;
+
+  @override
+  State<_PhotoLoader> createState() => _PhotoLoaderState();
+}
+
+class _PhotoLoaderState extends State<_PhotoLoader> {
+  ImageStream? _stream;
+  ImageStreamListener? _listener;
+  ImageInfo? _info;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolve();
+  }
+
+  @override
+  void didUpdateWidget(_PhotoLoader old) {
+    super.didUpdateWidget(old);
+    if (old.source != widget.source) _resolve();
+  }
+
+  void _resolve() {
+    final source = widget.source;
+    if (source == null) {
+      _stop();
+      if (_info != null) setState(() => _info = null);
+      return;
+    }
+    final stream = imageProviderFor(source).resolve(createLocalImageConfiguration(context));
+    if (stream.key == _stream?.key) return;
+    _stop();
+    _stream = stream;
+    _listener = ImageStreamListener(
+      (info, _) {
+        if (mounted) setState(() => _info = info);
+      },
+      onError: (e, _) => debugPrint('wallpaper photo: $e'),
+    );
+    stream.addListener(_listener!);
+  }
+
+  void _stop() {
+    if (_listener != null) _stream?.removeListener(_listener!);
+    _stream = null;
+    _listener = null;
+  }
+
+  @override
+  void dispose() {
+    _stop();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(widget.source == null ? null : _info?.image);
+}
+
 class _WallpaperLayer extends LeafRenderObjectWidget {
-  const _WallpaperLayer({required this.theme, required this.plain, required this.screen, required this.textDirection});
+  const _WallpaperLayer({required this.theme, required this.plain, required this.screen, required this.textDirection, this.photo});
   final WallpaperTheme theme;
   final bool plain;
+  final ui.Image? photo;
 
   /// The window size, so the gradient and pattern line up across the shell's panes. Null in
   /// previews, which paint relative to themselves.
@@ -285,21 +439,23 @@ class _WallpaperLayer extends LeafRenderObjectWidget {
   final TextDirection textDirection;
 
   @override
-  RenderObject createRenderObject(BuildContext context) => _RenderWallpaper(theme: theme, plain: plain, screen: screen, textDirection: textDirection);
+  RenderObject createRenderObject(BuildContext context) => _RenderWallpaper(theme: theme, plain: plain, screen: screen, textDirection: textDirection, photo: photo);
 
   @override
   void updateRenderObject(BuildContext context, _RenderWallpaper renderObject) {
     renderObject
       ..theme = theme
       ..plain = plain
+      ..photo = photo
       ..screen = screen
       ..textDirection = textDirection;
   }
 }
 
 class _RenderWallpaper extends RenderBox {
-  _RenderWallpaper({required WallpaperTheme theme, required bool plain, required Size? screen, required TextDirection textDirection})
+  _RenderWallpaper({required WallpaperTheme theme, required bool plain, required Size? screen, required TextDirection textDirection, ui.Image? photo})
     : _theme = theme,
+      _photo = photo,
       _plain = plain,
       _screen = screen,
       _textDirection = textDirection;
@@ -308,6 +464,13 @@ class _RenderWallpaper extends RenderBox {
   set theme(WallpaperTheme v) {
     if (v == _theme) return;
     _theme = v;
+    markNeedsPaint();
+  }
+
+  ui.Image? _photo;
+  set photo(ui.Image? v) {
+    if (v == _photo) return;
+    _photo = v;
     markNeedsPaint();
   }
 
@@ -354,14 +517,38 @@ class _RenderWallpaper extends RenderBox {
     final world = Rect.fromLTWH(offset.dx - global.dx, offset.dy - global.dy, (_screen ?? size).width, (_screen ?? size).height);
     canvas.save();
     canvas.clipRect(rect);
-    _paintGradient(canvas, world, _theme.colors);
     final spec = _theme.spec;
+    final photo = _photo;
+    if (photo != null) {
+      _paintPhoto(canvas, world, photo, spec, _theme.surface);
+    } else {
+      _paintGradient(canvas, world, _theme.colors);
+    }
     if (spec.pattern != WallpaperPattern.none && spec.intensity > 0) {
       final dark = _theme.surface.computeLuminance() < 0.2;
       final alpha = (dark ? 0.16 : 0.22) * spec.intensity;
       _paintPattern(canvas, rect, world.topLeft, spec.pattern, _theme.ink.withValues(alpha: alpha.clamp(0, 1)));
     }
     canvas.restore();
+  }
+
+  /// The photo covering the whole window, blurred and dimmed toward the surface color so text on
+  /// top stays readable.
+  static void _paintPhoto(Canvas canvas, Rect world, ui.Image photo, WallpaperSpec spec, Color surface) {
+    final sigma = spec.photoBlur * 40;
+    // Drawn a little larger than the window so the blur doesn't fade at the edges.
+    final target = world.inflate(sigma * 2);
+    final src = Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble());
+    final fitted = applyBoxFit(BoxFit.cover, src.size, target.size);
+    final from = Alignment.center.inscribe(fitted.source, src);
+    final paint = Paint()
+      ..filterQuality = FilterQuality.medium
+      ..isAntiAlias = false;
+    if (sigma > 0.5) paint.imageFilter = ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma, tileMode: TileMode.clamp);
+    canvas.drawImageRect(photo, from, target, paint);
+    if (spec.photoDim > 0) {
+      canvas.drawRect(world, Paint()..color = surface.withValues(alpha: spec.photoDim * 0.85));
+    }
   }
 
   static void _paintGradient(Canvas canvas, Rect world, List<Color> c) {

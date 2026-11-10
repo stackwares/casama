@@ -224,7 +224,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String runFailed(String message) {
-    return 'The run failed: $message';
+    return '$message';
   }
 
   @override
@@ -2221,4 +2221,210 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get botUiSent => 'Sent';
+
+  @override
+  String get errorDetailsTitle => 'What went wrong';
+
+  @override
+  String get exportLabel => 'Export';
+
+  @override
+  String get openTimeline => 'Open run timeline';
+
+  @override
+  String get details => 'Details';
+
+  @override
+  String get themes => 'Themes';
+
+  @override
+  String get themesHelp =>
+      'A theme sets the color scheme, fonts and background together. Change any of them afterwards and save the result as your own.';
+
+  @override
+  String get themePresets => 'Presets';
+
+  @override
+  String get myThemes => 'Your themes';
+
+  @override
+  String get saveTheme => 'Save current look';
+
+  @override
+  String get themeName => 'Theme name';
+
+  @override
+  String get importTheme => 'Import a theme';
+
+  @override
+  String get themeCode => 'Theme code';
+
+  @override
+  String get themeCodeHelp =>
+      'Paste a code someone shared with you. It starts with kasama-theme:';
+
+  @override
+  String get invalidThemeCode => 'That isn\'t a Kasama theme code.';
+
+  @override
+  String themeImported(String name) {
+    return 'Added $name to your themes';
+  }
+
+  @override
+  String get themeCodeCopied =>
+      'Theme code copied. Anyone can paste it into Themes → Import.';
+
+  @override
+  String get shareTheme => 'Share code';
+
+  @override
+  String deleteThemeTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get currentLook => 'Custom';
+
+  @override
+  String get fonts => 'Fonts';
+
+  @override
+  String get headingFont => 'Headings';
+
+  @override
+  String get bodyFont => 'Text';
+
+  @override
+  String get fontsHelp =>
+      'Google Sans and Noto Serif come with the app and work offline. Other Google Fonts download the first time you pick them.';
+
+  @override
+  String get searchFonts => 'Search all Google Fonts';
+
+  @override
+  String get suggestedFonts => 'Suggested';
+
+  @override
+  String get allFonts => 'All Google Fonts';
+
+  @override
+  String get noFontsFound => 'No font with that name';
+
+  @override
+  String get resetFonts => 'Use the defaults';
+
+  @override
+  String get fontSample => 'Your bots, working together with you.';
+
+  @override
+  String get backgroundPhoto => 'Photo';
+
+  @override
+  String get yourPhoto => 'Your photo';
+
+  @override
+  String get browsePhotos => 'Browse photos';
+
+  @override
+  String get removePhoto => 'Remove photo';
+
+  @override
+  String get photoBlur => 'Blur';
+
+  @override
+  String get photoDim => 'Dim';
+
+  @override
+  String photoBy(String name) {
+    return 'Photo by $name on Unsplash';
+  }
+
+  @override
+  String get searchPhotos => 'Search photos';
+
+  @override
+  String get photosUnavailable => 'Couldn\'t load photos.';
+
+  @override
+  String get noPhotos => 'No photos found';
+
+  @override
+  String get photoHelp =>
+      'A photo goes under the doodles. Blur and dim keep text readable on top.';
+
+  @override
+  String get periodToday => 'Today';
+
+  @override
+  String get periodWeek => 'This week';
+
+  @override
+  String get periodYear => 'This year';
+
+  @override
+  String get totalSpend => 'Spend';
+
+  @override
+  String get tokensIn => 'Tokens in';
+
+  @override
+  String get tokensOut => 'Tokens out';
+
+  @override
+  String get runsLabel => 'Runs';
+
+  @override
+  String get spendByDay => 'Spend by day';
+
+  @override
+  String get byBot => 'By bot';
+
+  @override
+  String get byModel => 'By model';
+
+  @override
+  String get everythingMetered => 'Everything metered';
+
+  @override
+  String get exportCsv => 'Export CSV';
+
+  @override
+  String get exportJson => 'Export JSON';
+
+  @override
+  String get askBotAboutUsage => 'Ask a bot about this';
+
+  @override
+  String get noUsageYet => 'No usage in this period yet.';
+
+  @override
+  String get otherModel => 'Computers and other';
+
+  @override
+  String get deletedBot => 'Not tied to a bot';
+
+  @override
+  String get usageHelp =>
+      'Costs are estimates from token counts and published prices. Your model provider\'s bill is the final word.';
+
+  @override
+  String usageAskPrompt(String period, String summary) {
+    return 'Here is my Kasama usage for $period. Help me understand where the money goes and how I could spend less.\n\n$summary';
+  }
+
+  @override
+  String get kindTokensIn => 'Model input';
+
+  @override
+  String get kindTokensOut => 'Model output';
+
+  @override
+  String get kindComputer => 'Cloud computer time';
+
+  @override
+  String get kindStream => 'Live view';
+
+  @override
+  String get kindTts => 'Read aloud';
 }

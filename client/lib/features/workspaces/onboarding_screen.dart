@@ -12,6 +12,7 @@ import '../../ui/app_card.dart';
 import '../../ui/kasama_mark.dart';
 import '../bots/bots_screen.dart';
 import '../settings/model_keys_screen.dart';
+import '../../ui/glow_button.dart';
 
 /// First run: create or join a workspace, add a model key, create a bot. One step at a time, with
 /// progress across the top.
@@ -72,7 +73,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               decoration: InputDecoration(labelText: l10n.workspaceName, hintText: l10n.workspaceNameHint),
             ),
             const SizedBox(height: AppSpace.sm),
-            FilledButton(
+            GlowButton(
               key: const Key('createWorkspace'),
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
               onPressed: _busy

@@ -11,6 +11,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../theme/appearance.dart';
+import '../../theme/presets.dart';
 import '../../theme/wallpaper.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
@@ -24,6 +25,7 @@ import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 import '../admin/admin_screen.dart';
 import '../companion/companion.dart';
+import '../../ui/glow_button.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -129,8 +131,11 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   if (isAdmin) GroupedTile(icon: LucideIcons.userPlus, title: l10n.inviteMember, onTap: () => _invite(context, ref)),
                   GroupedTile(
+                    key: const Key('settingsUsage'),
                     icon: LucideIcons.banknote,
                     iconColor: colors.positive,
+                    onTap: () => context.push('/settings/usage'),
+                    showChevron: true,
                     title: l10n.usage,
                     trailing: Text(
                       formatUsd(month?.totalCostUsd ?? 0),
@@ -312,11 +317,27 @@ class _AppearanceCard extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpace.xs),
           row(
+            key: const Key('settingsThemes'),
+            leading: Icon(LucideIcons.swatchBook, size: 22, color: scheme.primary),
+            title: l10n.themes,
+            subtitle: [...builtInPresets, ...ref.watch(savedThemesProvider)].where((p) => p.matches(appearance)).firstOrNull?.name ?? l10n.currentLook,
+            route: '/settings/themes',
+          ),
+          Divider(height: 1, indent: 56, color: context.appColors.hairline),
+          row(
             key: const Key('settingsTheme'),
             leading: SchemeDots(colors: appearance.scheme.colors(Theme.of(context).brightness), size: 18),
             title: l10n.colorScheme,
             subtitle: appearance.scheme.name,
             route: '/settings/theme',
+          ),
+          Divider(height: 1, indent: 56, color: context.appColors.hairline),
+          row(
+            key: const Key('settingsFonts'),
+            leading: Text('Aa', style: context.textTheme.titleLarge?.copyWith(color: scheme.primary)),
+            title: l10n.fonts,
+            subtitle: '${appearance.headingFont} · ${appearance.bodyFont}',
+            route: '/settings/fonts',
           ),
           Divider(height: 1, indent: 56, color: context.appColors.hairline),
           row(
@@ -437,7 +458,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
         if (dirty)
           Padding(
             padding: const EdgeInsets.only(right: 4),
-            child: FilledButton(onPressed: _busy ? null : () => _save(bot), child: Text(l10n.save)),
+            child: GlowButton(onPressed: _busy ? null : () => _save(bot), child: Text(l10n.save)),
           ),
       ],
       children: [
@@ -585,7 +606,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
           ],
         ),
         const SizedBox(height: AppSpace.lg),
-        FilledButton.icon(
+        GlowButton.icon(
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
           onPressed: _busy || !dirty ? null : () => _save(bot),
           icon: const Icon(LucideIcons.check, size: 20),

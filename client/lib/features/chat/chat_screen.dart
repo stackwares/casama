@@ -24,6 +24,7 @@ import 'chat_controller.dart';
 import 'widgets/bot_ui.dart';
 import 'widgets/chat_widgets.dart';
 import 'widgets/composer.dart';
+import 'widgets/error_details.dart';
 
 /// The computer a bot uses: its private computer, else the team computer.
 Computer? computerForBot(List<Computer> computers, String botId, {String? defaultComputerId}) {
@@ -612,7 +613,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           final last = i == entries.length - 1;
           rows.add(
             _Row(ValueKey('notice-$i'), AppSpace.sm, () {
-              final line = NoticeLine(entry: n, onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp));
+              final line = NoticeLine(
+                entry: n,
+                onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp),
+                onDetails: () => showErrorDetails(context, entry: n, botId: widget.botId),
+              );
               if (!(last && n.kind == NoticeKind.failed && chat.lastUserText != null && !chat.running)) return line;
               return Column(
                 children: [

@@ -11,6 +11,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/glow_button.dart';
 
 /// Named secrets bots reference as {{secret:NAME}}; each is only sent to its allowed hosts.
 class SecretsScreen extends ConsumerWidget {
@@ -27,7 +28,7 @@ class SecretsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final add = FilledButton.icon(
+    final add = GlowButton.icon(
       key: const Key('addSecret'),
       onPressed: () => _add(context, ref),
       icon: const Icon(LucideIcons.plus, size: 18),

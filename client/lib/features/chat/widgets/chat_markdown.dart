@@ -22,8 +22,7 @@ class ChatMarkdown extends StatelessWidget {
     final colors = context.appColors;
     final dark = context.isDark;
     final body = tt.bodyLarge!.copyWith(height: 1.55, color: scheme.onSurface);
-    TextStyle heading(double size, {bool serif = true}) => TextStyle(
-      fontFamily: serif ? AppFonts.serif : AppFonts.sans,
+    TextStyle heading(double size, {bool serif = true}) => (serif ? tt.headlineSmall! : tt.titleMedium!).copyWith(
       fontSize: size,
       fontWeight: FontWeight.w700,
       height: 1.3,

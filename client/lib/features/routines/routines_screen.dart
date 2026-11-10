@@ -15,6 +15,7 @@ import '../../ui/app_card.dart';
 import '../../ui/page.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/glow_button.dart';
 
 /// A bot's routines: one-time, repeating (cron in a timezone), or webhook-triggered.
 class RoutinesScreen extends ConsumerWidget {
@@ -37,7 +38,7 @@ class RoutinesScreen extends ConsumerWidget {
                 icon: LucideIcons.clock,
                 title: l10n.noRoutines,
                 message: l10n.noRoutinesHelp,
-                action: FilledButton.icon(onPressed: () => _create(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newRoutine)),
+                action: GlowButton.icon(onPressed: () => _create(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newRoutine)),
               )
             : LayoutBuilder(
                 builder: (context, constraints) {
@@ -367,7 +368,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
             ),
           ],
           const SizedBox(height: AppSpace.md),
-          FilledButton(
+          GlowButton(
             key: const Key('createRoutine'),
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
             onPressed: _busy || !valid

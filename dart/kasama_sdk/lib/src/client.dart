@@ -84,6 +84,9 @@ class KasamaClient {
   LocalComputerApi get localComputer => api.getLocalComputerApi();
   AdminApi get admin => api.getAdminApi();
 
+  /// Wallpaper photo search, when the server has a photo source (D-087).
+  AppearanceApi get appearance => api.getAppearanceApi();
+
   /// Plans, entitlements, purchases and Cloud Connect keys (Phase 7).
   BillingApi get billing => api.getBillingApi();
 

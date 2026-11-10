@@ -16,6 +16,9 @@ import '../features/settings/secrets_screen.dart';
 import '../features/memory/memory_screen.dart';
 import '../features/settings/model_keys_screen.dart';
 import '../features/settings/background_screen.dart';
+import '../features/settings/fonts_screen.dart';
+import '../features/settings/themes_screen.dart';
+import '../features/usage/usage_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/settings/theme_screen.dart';
 import '../features/skills/skills_screen.dart';
@@ -145,7 +148,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: _page((_, _) => const SettingsScreen()),
             routes: [
               GoRoute(path: 'keys', pageBuilder: _page((_, _) => const ModelKeysScreen())),
+              GoRoute(path: 'themes', pageBuilder: _page((_, _) => const ThemesScreen())),
               GoRoute(path: 'theme', pageBuilder: _page((_, _) => const ThemeScreen())),
+              GoRoute(path: 'fonts', pageBuilder: _page((_, _) => const FontsScreen())),
+              GoRoute(path: 'usage', pageBuilder: _page((_, _) => const UsageScreen())),
               GoRoute(path: 'background', pageBuilder: _page((_, _) => const BackgroundScreen())),
               GoRoute(path: 'skills', pageBuilder: _page((_, _) => const SkillsScreen())),
               GoRoute(path: 'integrations', pageBuilder: _page((_, _) => const IntegrationsScreen())),

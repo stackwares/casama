@@ -12,6 +12,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/kasama_mark.dart';
+import '../../ui/glow_button.dart';
 
 /// Email and password, magic link, Google and Apple sign-in.
 class SignInScreen extends ConsumerStatefulWidget {
@@ -95,19 +96,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Center(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0F766E).withValues(alpha: context.isDark ? 0.5 : 0.3),
-                                blurRadius: 28,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: const KasamaMark(size: 64),
-                        ),
+                        child: const KasamaMark(size: 64),
                       ).appCardEntrance(),
                       const SizedBox(height: AppSpace.xl),
                       AnimatedSwitcher(
@@ -147,7 +136,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       ),
                       const SizedBox(height: AppSpace.md),
                       pill(
-                        FilledButton(
+                        GlowButton(
                           key: const Key('submit'),
                           onPressed: _busy ? null : _submit,
                           child: _busy

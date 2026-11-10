@@ -10,9 +10,11 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/floating_tab_chrome.dart';
+import '../../ui/glass.dart';
 import '../../ui/kasama_mark.dart';
 import '../bots/bots_screen.dart';
 import '../computer/computer_screen.dart';
+import '../../ui/glow_button.dart';
 
 /// Phone: floating tab bar. Tablet: navigation rail. Desktop: a sidebar with the bot list, the
 /// chat, and the bot's computer beside it.
@@ -163,10 +165,9 @@ class HomeShell extends ConsumerWidget {
               curve: AppMotion.curve,
               alignment: Alignment.centerLeft,
               child: panelOpen
-                  ? DecoratedBox(
-                      decoration: BoxDecoration(
-                        border: Border(left: BorderSide(color: context.appColors.hairline)),
-                      ),
+                  // Frosted, so the computer reads as its own pane over the chat's wallpaper.
+                  ? Glass(
+                      border: Border(left: BorderSide(color: context.appColors.hairline)),
                       child: SizedBox(width: 420, child: ComputerScreen(botId: _botId, embedded: true)),
                     )
                   : const SizedBox(width: 0, height: double.infinity),
@@ -183,11 +184,9 @@ class _NavSurface extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: context.colorScheme.surfaceContainerLow,
-      border: Border(right: BorderSide(color: context.appColors.hairline)),
-    ),
+  Widget build(BuildContext context) => Glass(
+    opacity: context.isDark ? 0.72 : 0.78,
+    border: Border(right: BorderSide(color: context.appColors.hairline)),
     child: child,
   );
 }
@@ -274,16 +273,9 @@ class _Sidebar extends ConsumerWidget {
                 ],
               ),
             ),
-            for (var i = 0; i < dests.length; i++)
-              _SidebarItem(
-                leading: Icon(i == index ? dests[i].selectedIcon : dests[i].icon, size: 22, color: i == index ? scheme.primary : scheme.onSurfaceVariant),
-                label: dests[i].label,
-                selected: i == index && (i != 0 || selectedBotId == null),
-                trailing: dests[i].path == '/inbox' && badge > 0 ? _CountPill(badge) : null,
-                onTap: () => onSelected(i),
-              ),
+            // Chats first: the bot list fills the sidebar; places and settings sit at the bottom.
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 22, 12, 6),
+              padding: const EdgeInsets.fromLTRB(24, 4, 12, 6),
               child: Row(
                 children: [
                   Expanded(
@@ -319,8 +311,20 @@ class _Sidebar extends ConsumerWidget {
                 ],
               ),
             ),
-            const Divider(height: 1),
-            _SidebarAccount(email: ref.watch(backendProvider).userEmail),
+            Divider(height: 1, color: context.appColors.hairline),
+            const SizedBox(height: 6),
+            for (var i = 0; i < dests.length; i++)
+              if (dests[i].path != '/bots')
+                _SidebarItem(
+                  key: Key('sidebar-nav-${dests[i].path}'),
+                  leading: Icon(i == index ? dests[i].selectedIcon : dests[i].icon, size: 21, color: i == index ? scheme.primary : scheme.onSurfaceVariant),
+                  label: dests[i].label,
+                  subtitle: dests[i].path == '/settings' ? ref.watch(backendProvider).userEmail : null,
+                  selected: i == index,
+                  trailing: dests[i].path == '/inbox' && badge > 0 ? _CountPill(badge) : null,
+                  onTap: () => onSelected(i),
+                ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -422,52 +426,6 @@ class _CountPill extends StatelessWidget {
   );
 }
 
-class _SidebarAccount extends StatelessWidget {
-  const _SidebarAccount({required this.email});
-  final String? email;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final initial = (email == null || email!.isEmpty) ? '' : email!.characters.first.toUpperCase();
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: () => context.go('/settings'),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 16, 16),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.16), shape: BoxShape.circle),
-                alignment: Alignment.center,
-                child: initial.isEmpty
-                    ? Icon(LucideIcons.user, size: 20, color: scheme.primary)
-                    : Text(
-                        initial,
-                        style: context.textTheme.labelLarge?.copyWith(color: scheme.primary, fontWeight: FontWeight.w800),
-                      ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  email ?? context.l10n.navSettings,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ),
-              Icon(LucideIcons.settings, size: 18, color: scheme.onSurfaceVariant),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _SelectBotPlaceholder extends ConsumerWidget {
   const _SelectBotPlaceholder({required this.onCreate});
   final VoidCallback onCreate;
@@ -480,7 +438,7 @@ class _SelectBotPlaceholder extends ConsumerWidget {
       icon: LucideIcons.messagesSquare,
       title: hasBots ? l10n.selectBot : l10n.noBots,
       message: l10n.selectBotHelp,
-      action: FilledButton.icon(onPressed: onCreate, icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
+      action: GlowButton.icon(onPressed: onCreate, icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
     );
   }
 }

@@ -122,6 +122,13 @@ abstract class Backend {
 
   // Chat
   Future<List<Conversation>> conversations(String botId);
+  // Appearance
+  /// Whether the server can search wallpaper photos (Unsplash; D-087).
+  bool get wallpapersEnabled;
+  Future<List<WallpaperPhoto>> searchWallpapers({String? query, int page = 1});
+  /// Tells the photo source a photo was chosen.
+  Future<void> trackWallpaperDownload(String downloadLocation);
+
   Future<Conversation> createConversation(String botId);
   Future<List<ChatMessageView>> messages(String conversationId);
   Future<String?> activeRun(String conversationId);

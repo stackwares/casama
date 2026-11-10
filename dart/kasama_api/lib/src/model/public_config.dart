@@ -33,6 +33,8 @@ class PublicConfig {
     required  this.defaultModels,
 
     required  this.defaultReasoningEffort,
+
+     this.wallpapersEnabled,
   });
 
   @JsonKey(
@@ -120,6 +122,18 @@ class PublicConfig {
 
 
 
+  @JsonKey(
+    
+    name: r'wallpapers_enabled',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? wallpapersEnabled;
+
+
+
 
 
     @override
@@ -130,7 +144,8 @@ class PublicConfig {
       other.supabaseAnonKey == supabaseAnonKey &&
       other.billingEnabled == billingEnabled &&
       other.defaultModels == defaultModels &&
-      other.defaultReasoningEffort == defaultReasoningEffort;
+      other.defaultReasoningEffort == defaultReasoningEffort &&
+      other.wallpapersEnabled == wallpapersEnabled;
 
     @override
     int get hashCode =>
@@ -140,7 +155,8 @@ class PublicConfig {
         supabaseAnonKey.hashCode +
         billingEnabled.hashCode +
         defaultModels.hashCode +
-        defaultReasoningEffort.hashCode;
+        defaultReasoningEffort.hashCode +
+        wallpapersEnabled.hashCode;
 
   factory PublicConfig.fromJson(Map<String, dynamic> json) => _$PublicConfigFromJson(json);
 

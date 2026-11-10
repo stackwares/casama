@@ -153,6 +153,17 @@ class SupabaseBackend implements Backend {
   // --- chat -----------------------------------------------------------------
 
   @override
+  bool get wallpapersEnabled => config?.wallpapersEnabled ?? false;
+
+  @override
+  Future<List<WallpaperPhoto>> searchWallpapers({String? query, int page = 1}) async =>
+      (await api.appearance.searchWallpapers(q: query == null || query.trim().isEmpty ? null : query.trim(), page: page)).data!.items;
+
+  @override
+  Future<void> trackWallpaperDownload(String downloadLocation) async =>
+      api.appearance.trackWallpaperDownload(wallpaperDownloadRequest: WallpaperDownloadRequest(downloadLocation: downloadLocation));
+
+  @override
   Future<List<Conversation>> conversations(String botId) async => (await api.chat.listConversations(id: botId)).data!.items;
 
   @override

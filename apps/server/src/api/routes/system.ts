@@ -39,6 +39,7 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           ]),
         ),
         default_reasoning_effort: deps.env.DEFAULT_REASONING_EFFORT,
+        wallpapers_enabled: Boolean(deps.env.UNSPLASH_ACCESS_KEY),
       },
       200,
     ),

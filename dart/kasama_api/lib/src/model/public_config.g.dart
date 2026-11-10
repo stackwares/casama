@@ -23,6 +23,8 @@ abstract class _$PublicConfigCWProxy {
     PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort,
   );
 
+  PublicConfig wallpapersEnabled(bool? wallpapersEnabled);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
@@ -39,6 +41,7 @@ abstract class _$PublicConfigCWProxy {
     bool billingEnabled,
     Map<String, String> defaultModels,
     PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort,
+    bool? wallpapersEnabled,
   });
 }
 
@@ -77,6 +80,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort,
   ) => call(defaultReasoningEffort: defaultReasoningEffort);
 
+  @override
+  PublicConfig wallpapersEnabled(bool? wallpapersEnabled) =>
+      call(wallpapersEnabled: wallpapersEnabled);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
@@ -94,6 +101,7 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? billingEnabled = const $CopyWithPlaceholder(),
     Object? defaultModels = const $CopyWithPlaceholder(),
     Object? defaultReasoningEffort = const $CopyWithPlaceholder(),
+    Object? wallpapersEnabled = const $CopyWithPlaceholder(),
   }) {
     return PublicConfig(
       productName:
@@ -134,6 +142,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
           ? _value.defaultReasoningEffort
           // ignore: cast_nullable_to_non_nullable
           : defaultReasoningEffort as PublicConfigDefaultReasoningEffortEnum,
+      wallpapersEnabled: wallpapersEnabled == const $CopyWithPlaceholder()
+          ? _value.wallpapersEnabled
+          // ignore: cast_nullable_to_non_nullable
+          : wallpapersEnabled as bool?,
     );
   }
 }
@@ -184,6 +196,10 @@ PublicConfig _$PublicConfigFromJson(Map<String, dynamic> json) =>
             (v) =>
                 $enumDecode(_$PublicConfigDefaultReasoningEffortEnumEnumMap, v),
           ),
+          wallpapersEnabled: $checkedConvert(
+            'wallpapers_enabled',
+            (v) => v as bool?,
+          ),
         );
         return val;
       },
@@ -195,6 +211,7 @@ PublicConfig _$PublicConfigFromJson(Map<String, dynamic> json) =>
         'billingEnabled': 'billing_enabled',
         'defaultModels': 'default_models',
         'defaultReasoningEffort': 'default_reasoning_effort',
+        'wallpapersEnabled': 'wallpapers_enabled',
       },
     );
 
@@ -209,6 +226,7 @@ Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
       'default_reasoning_effort':
           _$PublicConfigDefaultReasoningEffortEnumEnumMap[instance
               .defaultReasoningEffort]!,
+      'wallpapers_enabled': ?instance.wallpapersEnabled,
     };
 
 const _$PublicConfigDefaultReasoningEffortEnumEnumMap = {

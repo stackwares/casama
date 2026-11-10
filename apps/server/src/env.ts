@@ -14,6 +14,9 @@ export const EnvSchema = z.object({
   PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
   /** Extra comma-separated origins allowed to call the API from a browser. */
   CORS_ORIGINS: z.string().default(""),
+  /** Optional wallpaper photo search (D-087). Unset: the app offers its own patterns and photos. */
+  UNSPLASH_ACCESS_KEY: z.string().optional(),
+  UNSPLASH_API_URL: z.url().default("https://api.unsplash.com"),
   /** Kasama Cloud only (D-070). Self-hosted servers keep it off: no paywall, unlimited use. */
   BILLING_ENABLED: bool.default(false),
   /** Dodo Payments (web, desktop, credit packs). */

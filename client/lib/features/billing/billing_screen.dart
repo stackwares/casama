@@ -17,6 +17,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/glow_button.dart';
 
 final _plansProvider = FutureProvider<PlanCatalog>((ref) => ref.watch(backendProvider).plans());
 final _usageProvider = FutureProvider<BillingUsage?>((ref) async {
@@ -200,7 +201,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                     runSpacing: AppSpace.xs,
                     children: [
                       if (source != null && products[p.storeProductIds[source]] != null && channels.any((c) => c != PurchaseChannel.web))
-                        FilledButton.icon(
+                        GlowButton.icon(
                           key: Key('buyStore-${p.code}'),
                           onPressed: () => _storeBuy(products[p.storeProductIds[source]]!),
                           icon: const Icon(LucideIcons.shoppingBag, size: 18),

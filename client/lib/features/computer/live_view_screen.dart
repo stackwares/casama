@@ -17,6 +17,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/glow_button.dart';
 
 /// Watch a computer's desktop live and take control (deep link: /computer/live?c=&takeover=).
 class LiveViewScreen extends ConsumerStatefulWidget {
@@ -352,7 +353,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
                     label: Text(l10n.handBack),
                   )
                 else
-                  FilledButton.icon(
+                  GlowButton.icon(
                     key: const Key('takeControl'),
                     onPressed: _busy || (_lease?.holderType == LeaseHolderTypeEnum.user) ? null : _takeControl,
                     icon: const Icon(LucideIcons.mousePointer2, size: 18),

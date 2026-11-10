@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_tokens.dart';
 import 'appearance.dart';
+import 'fonts.dart';
 import 'wallpaper.dart';
 
 const _subThemes = FlexSubThemesData(
@@ -45,11 +46,11 @@ abstract final class AppTheme {
       surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
       blendLevel: 6,
       subThemesData: _subThemes,
-      fontFamily: AppFonts.sans,
+      fontFamily: bundledFonts.contains(appearance.bodyFont) ? appearance.bodyFont : null,
       visualDensity: FlexColorScheme.comfortablePlatformDensity,
       useMaterial3: true,
     ),
-    appearance.wallpaper,
+    appearance,
   );
 
   static ThemeData dark([Appearance appearance = const Appearance()]) => _finish(
@@ -59,11 +60,11 @@ abstract final class AppTheme {
       surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
       blendLevel: 12,
       subThemesData: _subThemes.copyWith(blendOnLevel: 20),
-      fontFamily: AppFonts.sans,
+      fontFamily: bundledFonts.contains(appearance.bodyFont) ? appearance.bodyFont : null,
       visualDensity: FlexColorScheme.comfortablePlatformDensity,
       useMaterial3: true,
     ),
-    appearance.wallpaper,
+    appearance,
   );
 
   /// Every page route paints the wallpaper under its content (see [WallpaperPageTransitionsBuilder]).
@@ -78,11 +79,13 @@ abstract final class AppTheme {
     },
   );
 
-  static ThemeData _finish(ThemeData base, WallpaperSpec wallpaper) {
+  static ThemeData _finish(ThemeData base, Appearance appearance) {
+    final wallpaper = appearance.wallpaper;
+    TextTheme typography(TextTheme t) => _typography(t, heading: appearance.headingFont, body: appearance.bodyFont);
     final scheme = base.colorScheme;
     final isDark = scheme.brightness == Brightness.dark;
     final colors = isDark ? AppColors.dark : AppColors.light;
-    final textTheme = _typography(base.textTheme).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
+    final textTheme = typography(base.textTheme).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
     final sheetColor = isDark ? scheme.surfaceContainerLow : scheme.surfaceContainerLowest;
     final selectedTint = Color.alphaBlend(scheme.primary.withValues(alpha: isDark ? 0.22 : 0.14), sheetColor);
     final fieldFill = isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest;
@@ -98,7 +101,7 @@ abstract final class AppTheme {
       canvasColor: scheme.surface,
       pageTransitionsTheme: _pageTransitions,
       textTheme: textTheme,
-      primaryTextTheme: _typography(base.primaryTextTheme),
+      primaryTextTheme: typography(base.primaryTextTheme),
       extensions: [colors, WallpaperTheme.of(wallpaper, scheme)],
       appBarTheme: base.appBarTheme.copyWith(
         backgroundColor: Colors.transparent,
@@ -220,12 +223,19 @@ abstract final class AppTheme {
     );
   }
 
-  /// Fraunces for display, headline and large titles; Figtree (the theme's font) for the rest,
-  /// with slightly tighter tracking on large sizes.
-  static TextTheme _typography(TextTheme theme) {
-    TextStyle? serif(TextStyle? style, double spacing) => style?.copyWith(fontFamily: AppFonts.serif, fontWeight: FontWeight.w600, letterSpacing: spacing);
-    TextStyle? sans(TextStyle? style, double spacing, [FontWeight? weight]) =>
-        style?.copyWith(fontFamily: AppFonts.sans, letterSpacing: spacing, fontWeight: weight ?? style.fontWeight);
+  /// The heading font (Noto Serif by default) for display, headline and large titles; the body
+  /// font (Google Sans by default) for the rest, with slightly tighter tracking on large sizes.
+  /// Even leading keeps text optically centered in fields and buttons whatever the font's metrics.
+  static TextTheme _typography(TextTheme theme, {required String heading, required String body}) {
+    TextStyle? serif(TextStyle? style, double spacing) => style == null
+        ? null
+        : fontStyle(heading, style.copyWith(fontWeight: FontWeight.w600, letterSpacing: spacing, leadingDistribution: TextLeadingDistribution.even));
+    TextStyle? sans(TextStyle? style, double spacing, [FontWeight? weight]) => style == null
+        ? null
+        : fontStyle(
+            body,
+            style.copyWith(letterSpacing: spacing, fontWeight: weight ?? style.fontWeight, leadingDistribution: TextLeadingDistribution.even),
+          );
     return theme.copyWith(
       displayLarge: serif(theme.displayLarge, -1.2),
       displayMedium: serif(theme.displayMedium, -0.9),

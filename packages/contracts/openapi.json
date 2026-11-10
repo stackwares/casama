@@ -1631,6 +1631,9 @@
               "xhigh",
               "max"
             ]
+          },
+          "wallpapers_enabled": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -2419,7 +2422,9 @@
             "type": "string",
             "enum": [
               "day",
-              "month"
+              "week",
+              "month",
+              "year"
             ]
           },
           "since": {
@@ -2465,6 +2470,86 @@
                 "tokens_out"
               ]
             }
+          },
+          "by_day": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "day": {
+                  "type": "string"
+                },
+                "cost_usd": {
+                  "type": "number"
+                },
+                "tokens_in": {
+                  "type": "integer"
+                },
+                "tokens_out": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "day",
+                "cost_usd",
+                "tokens_in",
+                "tokens_out"
+              ]
+            }
+          },
+          "by_model": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "model": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "cost_usd": {
+                  "type": "number"
+                },
+                "tokens_in": {
+                  "type": "integer"
+                },
+                "tokens_out": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "model",
+                "cost_usd",
+                "tokens_in",
+                "tokens_out"
+              ]
+            }
+          },
+          "by_kind": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "number"
+                },
+                "cost_usd": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "kind",
+                "quantity",
+                "cost_usd"
+              ]
+            }
+          },
+          "runs": {
+            "type": "integer"
           }
         },
         "required": [
@@ -5283,6 +5368,90 @@
             "maximum": 3650
           }
         }
+      },
+      "WallpaperPhotoList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WallpaperPhoto"
+            }
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "unsplash"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "source"
+        ]
+      },
+      "WallpaperPhoto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "thumb_url": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "author": {
+            "type": "string"
+          },
+          "author_url": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "download_location": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "thumb_url",
+          "url",
+          "color",
+          "width",
+          "height",
+          "author",
+          "author_url",
+          "source_url",
+          "download_location"
+        ]
+      },
+      "WallpaperDownloadRequest": {
+        "type": "object",
+        "properties": {
+          "download_location": {
+            "type": "string",
+            "maxLength": 2000,
+            "format": "uri"
+          }
+        },
+        "required": [
+          "download_location"
+        ]
       }
     },
     "parameters": {}
@@ -6219,7 +6388,9 @@
               "type": "string",
               "enum": [
                 "day",
-                "month"
+                "week",
+                "month",
+                "year"
               ]
             },
             "required": false,
@@ -11137,6 +11308,132 @@
           },
           "403": {
             "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/wallpapers": {
+      "get": {
+        "operationId": "searchWallpapers",
+        "tags": [
+          "appearance"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Search wallpaper photos. Only when the server has a photo source configured (config.wallpapers_enabled); 404 otherwise",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Photos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WallpaperPhotoList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/wallpapers/download": {
+      "post": {
+        "operationId": "trackWallpaperDownload",
+        "tags": [
+          "appearance"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Tell the photo source a photo was chosen (Unsplash requires this)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WallpaperDownloadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Recorded"
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
             "content": {
               "application/problem+json": {
                 "schema": {

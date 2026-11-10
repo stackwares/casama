@@ -105,7 +105,7 @@
   "send": "Send",
   "stop": "Stop",
   "thinking": "Thinking…",
-  "runFailed": "The run failed: {message}",
+  "runFailed": "{message}",
   "@runFailed": {
     "placeholders": {
       "message": {
@@ -1253,5 +1253,100 @@
   "shareMessage": "Share",
   "messageCopied": "Copied",
   "botUiBroken": "This part of the reply couldn't be shown.",
-  "botUiSent": "Sent"
+  "botUiSent": "Sent",
+  "errorDetailsTitle": "What went wrong",
+  "exportLabel": "Export",
+  "openTimeline": "Open run timeline",
+  "details": "Details",
+  "themes": "Themes",
+  "themesHelp": "A theme sets the color scheme, fonts and background together. Change any of them afterwards and save the result as your own.",
+  "themePresets": "Presets",
+  "myThemes": "Your themes",
+  "saveTheme": "Save current look",
+  "themeName": "Theme name",
+  "importTheme": "Import a theme",
+  "themeCode": "Theme code",
+  "themeCodeHelp": "Paste a code someone shared with you. It starts with kasama-theme:",
+  "invalidThemeCode": "That isn't a Kasama theme code.",
+  "themeImported": "Added {name} to your themes",
+  "@themeImported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themeCodeCopied": "Theme code copied. Anyone can paste it into Themes → Import.",
+  "shareTheme": "Share code",
+  "deleteThemeTitle": "Delete {name}?",
+  "@deleteThemeTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "currentLook": "Custom",
+  "fonts": "Fonts",
+  "headingFont": "Headings",
+  "bodyFont": "Text",
+  "fontsHelp": "Google Sans and Noto Serif come with the app and work offline. Other Google Fonts download the first time you pick them.",
+  "searchFonts": "Search all Google Fonts",
+  "suggestedFonts": "Suggested",
+  "allFonts": "All Google Fonts",
+  "noFontsFound": "No font with that name",
+  "resetFonts": "Use the defaults",
+  "fontSample": "Your bots, working together with you.",
+  "backgroundPhoto": "Photo",
+  "yourPhoto": "Your photo",
+  "browsePhotos": "Browse photos",
+  "removePhoto": "Remove photo",
+  "photoBlur": "Blur",
+  "photoDim": "Dim",
+  "photoBy": "Photo by {name} on Unsplash",
+  "@photoBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "searchPhotos": "Search photos",
+  "photosUnavailable": "Couldn't load photos.",
+  "noPhotos": "No photos found",
+  "photoHelp": "A photo goes under the doodles. Blur and dim keep text readable on top.",
+  "periodToday": "Today",
+  "periodWeek": "This week",
+  "periodYear": "This year",
+  "totalSpend": "Spend",
+  "tokensIn": "Tokens in",
+  "tokensOut": "Tokens out",
+  "runsLabel": "Runs",
+  "spendByDay": "Spend by day",
+  "byBot": "By bot",
+  "byModel": "By model",
+  "everythingMetered": "Everything metered",
+  "exportCsv": "Export CSV",
+  "exportJson": "Export JSON",
+  "askBotAboutUsage": "Ask a bot about this",
+  "noUsageYet": "No usage in this period yet.",
+  "otherModel": "Computers and other",
+  "deletedBot": "Not tied to a bot",
+  "usageHelp": "Costs are estimates from token counts and published prices. Your model provider's bill is the final word.",
+  "usageAskPrompt": "Here is my Kasama usage for {period}. Help me understand where the money goes and how I could spend less.\n\n{summary}",
+  "@usageAskPrompt": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      },
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "kindTokensIn": "Model input",
+  "kindTokensOut": "Model output",
+  "kindComputer": "Cloud computer time",
+  "kindStream": "Live view",
+  "kindTts": "Read aloud"
 }

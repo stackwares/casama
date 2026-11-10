@@ -14,6 +14,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import 'companion.dart';
 import 'companion_controller.dart';
+import '../../ui/glow_button.dart';
 
 /// Settings > Use this computer for bots (desktop only, D-066).
 class CompanionScreen extends ConsumerWidget {
@@ -47,7 +48,7 @@ class CompanionScreen extends ConsumerWidget {
                     icon: LucideIcons.laptop,
                     title: l10n.useThisComputer,
                     message: l10n.companionIntro,
-                    action: FilledButton.icon(
+                    action: GlowButton.icon(
                       key: const Key('pairComputer'),
                       onPressed: () => runGuarded(context, () => controller.pair(l10n.thisComputer)),
                       icon: const Icon(LucideIcons.link, size: 18),

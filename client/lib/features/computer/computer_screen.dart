@@ -24,6 +24,7 @@ import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
 import '../files/file_preview.dart';
+import '../../ui/glow_button.dart';
 
 String computerStateLabel(BuildContext context, ComputerState s) {
   final l10n = context.l10n;
@@ -225,7 +226,7 @@ class _LiveEntry extends StatelessWidget {
     return EmptyState(
       icon: LucideIcons.monitorPlay,
       message: l10n.liveViewHelp,
-      action: FilledButton.icon(
+      action: GlowButton.icon(
         key: const Key('openLiveView'),
         onPressed: () => GoRouter.of(context).push('/computer/live?c=${computer.id}'),
         icon: const Icon(LucideIcons.play),
@@ -395,7 +396,7 @@ class _TerminalTabState extends ConsumerState<TerminalTab> with AutomaticKeepAli
         icon: LucideIcons.squareTerminal,
         title: context.l10n.terminal,
         message: context.l10n.terminalHelp,
-        action: FilledButton.icon(
+        action: GlowButton.icon(
           onPressed: () => runGuarded(context, _connect),
           icon: const Icon(LucideIcons.plug, size: 18),
           label: Text(context.l10n.connectTerminal),

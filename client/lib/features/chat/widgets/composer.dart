@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
+import '../../../ui/glass.dart';
 import '../../../ui/motion.dart';
 
 /// Hardware keyboards send with Enter and break lines with Shift+Enter.
@@ -72,95 +73,110 @@ class ChatComposer extends StatelessWidget {
       builder: (context, _) {
         final canSend = (controller.text.trim().isNotEmpty || hasAttachments) && !uploading;
         final focused = focusNode.hasFocus;
-        return AnimatedContainer(
-          duration: AppMotion.of(context, AppMotion.fast),
-          curve: AppMotion.curve,
-          decoration: BoxDecoration(
-            color: dark ? scheme.surfaceContainerHigh : scheme.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: focused ? scheme.primary.withValues(alpha: 0.6) : context.appColors.hairline, width: focused ? 1.5 : 1),
-            boxShadow: [
-              if (!dark)
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: focused ? 0.08 : 0.05),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
-                ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (attachments != null) Padding(padding: const EdgeInsets.fromLTRB(10, 10, 10, 0), child: attachments),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (attachButton != null) Padding(padding: const EdgeInsets.fromLTRB(6, 7, 0, 7), child: attachButton),
-                  Expanded(
-                    child: Focus(
-                      canRequestFocus: false,
-                      skipTraversal: true,
-                      onKeyEvent: _onKey,
-                      child: TextField(
-                        key: const Key('messageInput'),
-                        controller: controller,
-                        focusNode: focusNode,
-                        minLines: 1,
-                        maxLines: 8,
-                        textAlignVertical: TextAlignVertical.center,
-                        textCapitalization: TextCapitalization.sentences,
-                        keyboardType: TextInputType.multiline,
-                        textInputAction: TextInputAction.newline,
-                        style: context.textTheme.bodyLarge,
-                        decoration: InputDecoration(
-                          hintText: recording ? l10n.listening : hint,
-                          hintMaxLines: 1,
-                          hintStyle: context.textTheme.bodyLarge?.copyWith(color: recording ? context.appColors.negative : scheme.onSurfaceVariant),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          filled: false,
-                          isDense: true,
-                          contentPadding: EdgeInsets.fromLTRB(attachButton == null ? AppSpace.lg : AppSpace.xs, 15, AppSpace.xs, 15),
+        // Frosted over the wallpaper; the border lights up with focus.
+        return Glass(
+          borderRadius: BorderRadius.circular(26),
+          opacity: dark ? 0.78 : 0.86,
+          border: Border.all(color: focused ? scheme.primary.withValues(alpha: 0.6) : context.appColors.hairline, width: focused ? 1.5 : 1),
+          child: AnimatedContainer(
+            duration: AppMotion.of(context, AppMotion.fast),
+            curve: AppMotion.curve,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(26),
+              boxShadow: [
+                if (!dark)
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: focused ? 0.08 : 0.05),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (attachments != null) Padding(padding: const EdgeInsets.fromLTRB(10, 10, 10, 0), child: attachments),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (attachButton != null) Padding(padding: const EdgeInsets.fromLTRB(6, 7, 0, 7), child: attachButton),
+                    Expanded(
+                      child: Focus(
+                        canRequestFocus: false,
+                        skipTraversal: true,
+                        onKeyEvent: _onKey,
+                        child: TextField(
+                          key: const Key('messageInput'),
+                          controller: controller,
+                          focusNode: focusNode,
+                          minLines: 1,
+                          maxLines: 8,
+                          textAlignVertical: TextAlignVertical.center,
+                          textCapitalization: TextCapitalization.sentences,
+                          keyboardType: TextInputType.multiline,
+                          textInputAction: TextInputAction.newline,
+                          // A fixed line box (22pt) with even leading: 16 + 22 + 16 matches the 54pt row.
+                          style: context.textTheme.bodyLarge?.copyWith(height: 22 / 16, leadingDistribution: TextLeadingDistribution.even),
+                          strutStyle: const StrutStyle(
+                            fontSize: 16,
+                            height: 22 / 16,
+                            leadingDistribution: TextLeadingDistribution.even,
+                            forceStrutHeight: true,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: recording ? l10n.listening : hint,
+                            hintMaxLines: 1,
+                            hintStyle: context.textTheme.bodyLarge?.copyWith(
+                              height: 22 / 16,
+                              leadingDistribution: TextLeadingDistribution.even,
+                              color: recording ? context.appColors.negative : scheme.onSurfaceVariant,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            filled: false,
+                            isDense: true,
+                            contentPadding: EdgeInsets.fromLTRB(attachButton == null ? AppSpace.lg : AppSpace.xs, 16, AppSpace.xs, 16),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 7, 2, 7),
-                    child: _DictateButton(recording: recording, transcribing: transcribing, onPressed: onDictate),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 7, 7, 7),
-                    child: AnimatedSwitcher(
-                      duration: AppMotion.of(context, AppMotion.fast),
-                      transitionBuilder: (child, a) => ScaleTransition(
-                        scale: a,
-                        child: FadeTransition(opacity: a, child: child),
-                      ),
-                      child: running
-                          ? _RoundButton(
-                              key: const Key('stopButton'),
-                              tooltip: l10n.stop,
-                              icon: LucideIcons.square,
-                              background: scheme.onSurface,
-                              foreground: scheme.surface,
-                              onPressed: onStop,
-                            )
-                          : _RoundButton(
-                              key: const Key('sendButton'),
-                              tooltip: l10n.send,
-                              icon: LucideIcons.arrowUp,
-                              background: scheme.primary,
-                              foreground: scheme.onPrimary,
-                              onPressed: canSend ? onSend : null,
-                            ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 7, 2, 7),
+                      child: _DictateButton(recording: recording, transcribing: transcribing, onPressed: onDictate),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 7, 7, 7),
+                      child: AnimatedSwitcher(
+                        duration: AppMotion.of(context, AppMotion.fast),
+                        transitionBuilder: (child, a) => ScaleTransition(
+                          scale: a,
+                          child: FadeTransition(opacity: a, child: child),
+                        ),
+                        child: running
+                            ? _RoundButton(
+                                key: const Key('stopButton'),
+                                tooltip: l10n.stop,
+                                icon: LucideIcons.square,
+                                background: scheme.onSurface,
+                                foreground: scheme.surface,
+                                onPressed: onStop,
+                              )
+                            : _RoundButton(
+                                key: const Key('sendButton'),
+                                tooltip: l10n.send,
+                                icon: LucideIcons.arrowUp,
+                                background: scheme.primary,
+                                foreground: scheme.onPrimary,
+                                onPressed: canSend ? onSend : null,
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },

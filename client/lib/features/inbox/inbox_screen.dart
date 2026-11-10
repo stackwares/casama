@@ -17,6 +17,7 @@ import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/glow_button.dart';
 
 /// Approvals waiting for you, notifications, and the shared task board.
 class InboxScreen extends ConsumerWidget {
@@ -219,7 +220,7 @@ class _ApprovalCardState extends ConsumerState<ApprovalCard> {
                 icon: const Icon(LucideIcons.x, size: 18),
                 label: Text(l10n.deny),
               ),
-              FilledButton.icon(
+              GlowButton.icon(
                 key: const Key('approve'),
                 onPressed: _busy ? null : () => _decide(true),
                 icon: const Icon(LucideIcons.check, size: 18),
@@ -540,7 +541,7 @@ class TakeoverCard extends ConsumerWidget {
                 },
                 child: Text(l10n.dismiss),
               ),
-              FilledButton.icon(
+              GlowButton.icon(
                 key: const Key('openTakeover'),
                 onPressed: () => context.push('/computer/live?c=${takeover.computerId}&takeover=${takeover.id}'),
                 icon: const Icon(LucideIcons.mousePointer2, size: 18),

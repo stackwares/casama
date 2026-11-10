@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kasama_app/core/providers.dart';
+import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
 import 'package:kasama_app/features/settings/background_screen.dart';
+import 'package:kasama_app/features/settings/fonts_screen.dart';
+import 'package:kasama_app/features/settings/themes_screen.dart';
+import 'package:kasama_app/features/usage/usage_screen.dart';
 import 'package:kasama_app/features/settings/settings_screen.dart';
 import 'package:kasama_app/features/settings/theme_screen.dart';
 import 'package:kasama_app/l10n/generated/app_localizations.dart';
 import 'package:kasama_app/theme/app_theme.dart';
 import 'package:kasama_app/theme/appearance.dart';
+import 'package:kasama_app/theme/presets.dart';
 import 'package:kasama_app/theme/schemes.dart';
 import 'package:kasama_app/theme/wallpaper.dart';
 
@@ -98,5 +103,88 @@ void main() {
     await tester.tap(find.byKey(const Key('wallpaperEverywhere')));
     await tester.pumpAndSettle();
     expect(wallpaper().spec.everywhere, isFalse);
+  });
+
+  testWidgets('themes: a preset sets scheme, fonts and wallpaper together', (tester) async {
+    tester.view.physicalSize = const Size(700, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_app(FakeBackend(), const ThemesScreen()));
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(tester.element(find.byType(ThemesScreen)));
+    await tester.ensureVisible(find.byKey(const Key('preset-editorial')));
+    await tester.tap(find.byKey(const Key('preset-editorial')));
+    await tester.pumpAndSettle();
+    final a = container.read(appearanceProvider);
+    expect(a.schemeId, 'sepia');
+    expect(a.headingFont, 'Fraunces');
+    expect(a.wallpaper.palette, WallpaperPalette.peach);
+    // The theme's text styles follow the preset's fonts.
+    await tester.pumpAndSettle();
+    expect(Theme.of(tester.element(find.byType(ThemesScreen))).textTheme.headlineSmall?.fontFamily, 'Fraunces');
+  });
+
+  test('a theme survives a share code round trip, without local photos', () {
+    const preset = ThemePreset(
+      id: 'x',
+      name: 'Night swim',
+      schemeId: 'blueWhale',
+      headingFont: 'Lora',
+      bodyFont: 'Inter',
+      wallpaper: WallpaperSpec(pattern: WallpaperPattern.sea, palette: WallpaperPalette.ocean, photo: '/private/photo.jpg', photoBlur: 0.6),
+    );
+    final code = preset.toCode();
+    expect(code, startsWith('kasama-theme:'));
+    final back = ThemePreset.fromCode(code)!;
+    expect(back.name, 'Night swim');
+    expect(back.schemeId, 'blueWhale');
+    expect(back.headingFont, 'Lora');
+    expect(back.wallpaper.pattern, WallpaperPattern.sea);
+    expect(back.wallpaper.photoBlur, 0.6);
+    expect(back.wallpaper.photo, isNull);
+    expect(ThemePreset.fromCode('hello'), isNull);
+    expect(ThemePreset.fromCode('kasama-theme:!!!'), isNull);
+  });
+
+  testWidgets('fonts: picking a heading font applies it; reset goes back to the defaults', (tester) async {
+    tester.view.physicalSize = const Size(700, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_app(FakeBackend(), const FontsScreen()));
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(tester.element(find.byType(FontsScreen)));
+    await tester.ensureVisible(find.byKey(const Key('font-Fraunces')));
+    await tester.tap(find.byKey(const Key('font-Fraunces')));
+    await tester.pumpAndSettle();
+    expect(container.read(appearanceProvider).headingFont, 'Fraunces');
+    await tester.ensureVisible(find.byKey(const Key('resetFonts')));
+    await tester.tap(find.byKey(const Key('resetFonts')));
+    await tester.pumpAndSettle();
+    expect(container.read(appearanceProvider).headingFont, 'Noto Serif');
+  });
+
+  testWidgets('usage shows totals, breakdowns and exports', (tester) async {
+    tester.view.physicalSize = const Size(700, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_app(FakeBackend(), const UsageScreen()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('usageSpend')), findsOneWidget);
+    expect(find.text('Ada'), findsOneWidget);
+    expect(find.byKey(const Key('askAboutUsage')), findsOneWidget);
+  });
+
+  test('usage CSV escapes and lists every section', () {
+    final csv = usageCsv(UsageReport(
+      period: UsageReportPeriodEnum.month,
+      since: DateTime.utc(2026, 11),
+      totalCostUsd: 1.5,
+      byBot: [UsageReportByBotInner(botId: null, name: 'Ada, the bot', costUsd: 1.5, tokensIn: 10, tokensOut: 2)],
+      byDay: [UsageReportByDayInner(day: '2026-11-02', costUsd: 1.5, tokensIn: 10, tokensOut: 2)],
+    ));
+    expect(csv.split('\n').first, 'section,key,cost_usd,tokens_in,tokens_out');
+    expect(csv, contains('bot,"Ada, the bot",1.5,10,2'));
+    expect(csv, contains('day,2026-11-02,1.5,10,2'));
+    expect(csv, contains('total,month,1.5'));
   });
 }

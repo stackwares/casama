@@ -522,44 +522,58 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.getUsage, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { org_id, period = "month" } = c.req.valid("query");
-    const rows = await withUserSession(db, claims, async (tx) => {
+    type Sums = { cost: string; tin: string; tout: string };
+    const sums = sql`sum(u.cost_usd) as cost,
+      sum(case when u.kind = 'tokens_in' then u.quantity else 0 end) as tin,
+      sum(case when u.kind = 'tokens_out' then u.quantity else 0 end) as tout`;
+    const report = await withUserSession(db, claims, async (tx) => {
       const [m] = await tx.execute<{ ok: boolean }>(
         sql`select public.is_member(${org_id}::uuid) as ok`,
       );
       if (!m?.ok) throw new ApiError(404, "org_not_found", "Organization not found");
-      return tx.execute<{
-        bot_id: string | null;
-        name: string | null;
-        cost: string;
-        tin: string;
-        tout: string;
-        since: Date;
-      }>(sql`
-        with since as (select date_trunc(${period}, now() at time zone 'utc') at time zone 'utc' as t)
-        select u.bot_id, b.name, sum(u.cost_usd) as cost,
-               sum(case when u.kind = 'tokens_in' then u.quantity else 0 end) as tin,
-               sum(case when u.kind = 'tokens_out' then u.quantity else 0 end) as tout,
-               (select t from since) as since
+      const [s] = await tx.execute<{ t: Date }>(
+        sql`select date_trunc(${period}, now() at time zone 'utc') at time zone 'utc' as t`,
+      );
+      const since = s?.t ?? new Date();
+      const scope = sql`u.org_id = ${org_id}::uuid and u.created_at >= ${since}`;
+      const bots_ = await tx.execute<Sums & { bot_id: string | null; name: string | null }>(sql`
+        select u.bot_id, b.name, ${sums}
         from public.usage_ledger u left join public.bots b on b.id = u.bot_id
-        where u.org_id = ${org_id}::uuid and u.created_at >= (select t from since)
-        group by u.bot_id, b.name order by cost desc`);
+        where ${scope} group by u.bot_id, b.name order by cost desc`);
+      const days = await tx.execute<Sums & { day: string }>(sql`
+        select to_char(date_trunc('day', u.created_at at time zone 'utc'), 'YYYY-MM-DD') as day, ${sums}
+        from public.usage_ledger u where ${scope} group by 1 order by 1`);
+      const models = await tx.execute<Sums & { model: string | null }>(sql`
+        select u.model, ${sums} from public.usage_ledger u
+        where ${scope} group by u.model order by cost desc`);
+      const kinds = await tx.execute<{ kind: string; quantity: string; cost: string }>(sql`
+        select u.kind, sum(u.quantity) as quantity, sum(u.cost_usd) as cost
+        from public.usage_ledger u where ${scope} group by u.kind order by cost desc`);
+      const [r] = await tx.execute<{ n: string }>(
+        sql`select count(distinct u.run_id) as n from public.usage_ledger u where ${scope}`,
+      );
+      return { since, bots_, days, models, kinds, runs: Number(r?.n ?? 0) };
     });
-    const [sinceRow] = await db.execute<{ t: Date }>(
-      sql`select date_trunc(${period}, now() at time zone 'utc') at time zone 'utc' as t`,
-    );
-    const by_bot = rows.map((r) => ({
-      bot_id: r.bot_id,
-      name: r.name,
+    const num = (r: Sums) => ({
       cost_usd: Number(r.cost),
       tokens_in: Number(r.tin),
       tokens_out: Number(r.tout),
-    }));
+    });
+    const by_bot = report.bots_.map((r) => ({ bot_id: r.bot_id, name: r.name, ...num(r) }));
     return c.json(
       {
         period,
-        since: iso(sinceRow?.t ?? new Date()),
+        since: iso(report.since),
         total_cost_usd: by_bot.reduce((n, b) => n + b.cost_usd, 0),
         by_bot,
+        by_day: report.days.map((r) => ({ day: r.day, ...num(r) })),
+        by_model: report.models.map((r) => ({ model: r.model, ...num(r) })),
+        by_kind: report.kinds.map((r) => ({
+          kind: r.kind,
+          quantity: Number(r.quantity),
+          cost_usd: Number(r.cost),
+        })),
+        runs: report.runs,
       },
       200,
     );

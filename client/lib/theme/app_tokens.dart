@@ -31,11 +31,10 @@ abstract final class AppRadius {
 
 /// The app's three typefaces (D-084), bundled under assets/fonts.
 abstract final class AppFonts {
-  /// Headlines: page and sheet titles, greetings, Markdown headings.
-  static const serif = 'Fraunces';
-
-  /// Everything else: interface, body text and bold labels.
-  static const sans = 'Figtree';
+  /// The default headline and text faces. They are a setting (Appearance.headingFont /
+  /// bodyFont, see fonts.dart), so widgets should read them from the text theme instead.
+  static const serif = 'Noto Serif';
+  static const sans = 'Google Sans';
 
   /// Code, terminal output and tool arguments.
   static const mono = 'JetBrains Mono';

@@ -499,7 +499,7 @@ abstract class AppLocalizations {
   /// No description provided for @runFailed.
   ///
   /// In en, this message translates to:
-  /// **'The run failed: {message}'**
+  /// **'{message}'**
   String runFailed(String message);
 
   /// No description provided for @runCancelled.
@@ -3861,6 +3861,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sent'**
   String get botUiSent;
+
+  /// No description provided for @errorDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What went wrong'**
+  String get errorDetailsTitle;
+
+  /// No description provided for @exportLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get exportLabel;
+
+  /// No description provided for @openTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Open run timeline'**
+  String get openTimeline;
+
+  /// No description provided for @details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
+
+  /// No description provided for @themes.
+  ///
+  /// In en, this message translates to:
+  /// **'Themes'**
+  String get themes;
+
+  /// No description provided for @themesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A theme sets the color scheme, fonts and background together. Change any of them afterwards and save the result as your own.'**
+  String get themesHelp;
+
+  /// No description provided for @themePresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Presets'**
+  String get themePresets;
+
+  /// No description provided for @myThemes.
+  ///
+  /// In en, this message translates to:
+  /// **'Your themes'**
+  String get myThemes;
+
+  /// No description provided for @saveTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Save current look'**
+  String get saveTheme;
+
+  /// No description provided for @themeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme name'**
+  String get themeName;
+
+  /// No description provided for @importTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a theme'**
+  String get importTheme;
+
+  /// No description provided for @themeCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme code'**
+  String get themeCode;
+
+  /// No description provided for @themeCodeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a code someone shared with you. It starts with kasama-theme:'**
+  String get themeCodeHelp;
+
+  /// No description provided for @invalidThemeCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That isn\'t a Kasama theme code.'**
+  String get invalidThemeCode;
+
+  /// No description provided for @themeImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {name} to your themes'**
+  String themeImported(String name);
+
+  /// No description provided for @themeCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme code copied. Anyone can paste it into Themes → Import.'**
+  String get themeCodeCopied;
+
+  /// No description provided for @shareTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Share code'**
+  String get shareTheme;
+
+  /// No description provided for @deleteThemeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String deleteThemeTitle(String name);
+
+  /// No description provided for @currentLook.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get currentLook;
+
+  /// No description provided for @fonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Fonts'**
+  String get fonts;
+
+  /// No description provided for @headingFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Headings'**
+  String get headingFont;
+
+  /// No description provided for @bodyFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get bodyFont;
+
+  /// No description provided for @fontsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sans and Noto Serif come with the app and work offline. Other Google Fonts download the first time you pick them.'**
+  String get fontsHelp;
+
+  /// No description provided for @searchFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search all Google Fonts'**
+  String get searchFonts;
+
+  /// No description provided for @suggestedFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get suggestedFonts;
+
+  /// No description provided for @allFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'All Google Fonts'**
+  String get allFonts;
+
+  /// No description provided for @noFontsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No font with that name'**
+  String get noFontsFound;
+
+  /// No description provided for @resetFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the defaults'**
+  String get resetFonts;
+
+  /// No description provided for @fontSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bots, working together with you.'**
+  String get fontSample;
+
+  /// No description provided for @backgroundPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get backgroundPhoto;
+
+  /// No description provided for @yourPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Your photo'**
+  String get yourPhoto;
+
+  /// No description provided for @browsePhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse photos'**
+  String get browsePhotos;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhoto;
+
+  /// No description provided for @photoBlur.
+  ///
+  /// In en, this message translates to:
+  /// **'Blur'**
+  String get photoBlur;
+
+  /// No description provided for @photoDim.
+  ///
+  /// In en, this message translates to:
+  /// **'Dim'**
+  String get photoDim;
+
+  /// No description provided for @photoBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo by {name} on Unsplash'**
+  String photoBy(String name);
+
+  /// No description provided for @searchPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Search photos'**
+  String get searchPhotos;
+
+  /// No description provided for @photosUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load photos.'**
+  String get photosUnavailable;
+
+  /// No description provided for @noPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos found'**
+  String get noPhotos;
+
+  /// No description provided for @photoHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A photo goes under the doodles. Blur and dim keep text readable on top.'**
+  String get photoHelp;
+
+  /// No description provided for @periodToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get periodToday;
+
+  /// No description provided for @periodWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get periodWeek;
+
+  /// No description provided for @periodYear.
+  ///
+  /// In en, this message translates to:
+  /// **'This year'**
+  String get periodYear;
+
+  /// No description provided for @totalSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend'**
+  String get totalSpend;
+
+  /// No description provided for @tokensIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Tokens in'**
+  String get tokensIn;
+
+  /// No description provided for @tokensOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Tokens out'**
+  String get tokensOut;
+
+  /// No description provided for @runsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs'**
+  String get runsLabel;
+
+  /// No description provided for @spendByDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Spend by day'**
+  String get spendByDay;
+
+  /// No description provided for @byBot.
+  ///
+  /// In en, this message translates to:
+  /// **'By bot'**
+  String get byBot;
+
+  /// No description provided for @byModel.
+  ///
+  /// In en, this message translates to:
+  /// **'By model'**
+  String get byModel;
+
+  /// No description provided for @everythingMetered.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything metered'**
+  String get everythingMetered;
+
+  /// No description provided for @exportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get exportCsv;
+
+  /// No description provided for @exportJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Export JSON'**
+  String get exportJson;
+
+  /// No description provided for @askBotAboutUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a bot about this'**
+  String get askBotAboutUsage;
+
+  /// No description provided for @noUsageYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No usage in this period yet.'**
+  String get noUsageYet;
+
+  /// No description provided for @otherModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers and other'**
+  String get otherModel;
+
+  /// No description provided for @deletedBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Not tied to a bot'**
+  String get deletedBot;
+
+  /// No description provided for @usageHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Costs are estimates from token counts and published prices. Your model provider\'s bill is the final word.'**
+  String get usageHelp;
+
+  /// No description provided for @usageAskPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Here is my Kasama usage for {period}. Help me understand where the money goes and how I could spend less.\n\n{summary}'**
+  String usageAskPrompt(String period, String summary);
+
+  /// No description provided for @kindTokensIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Model input'**
+  String get kindTokensIn;
+
+  /// No description provided for @kindTokensOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Model output'**
+  String get kindTokensOut;
+
+  /// No description provided for @kindComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud computer time'**
+  String get kindComputer;
+
+  /// No description provided for @kindStream.
+  ///
+  /// In en, this message translates to:
+  /// **'Live view'**
+  String get kindStream;
+
+  /// No description provided for @kindTts.
+  ///
+  /// In en, this message translates to:
+  /// **'Read aloud'**
+  String get kindTts;
 }
 
 class _AppLocalizationsDelegate

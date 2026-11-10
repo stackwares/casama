@@ -17,6 +17,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../chat/widgets/chat_markdown.dart';
+import '../../ui/glow_button.dart';
 
 /// Turns a file reference a bot wrote into a path for the files API (relative to the computer's
 /// workspace, `~/` for the rest of home, or absolute). Returns null for web links and anything
@@ -359,7 +360,7 @@ class _Unsupported extends StatelessWidget {
     icon: fileIconFor(name),
     title: name,
     message: hint ?? context.l10n.previewUnavailable,
-    action: FilledButton.icon(
+    action: GlowButton.icon(
       onPressed: onOpen,
       icon: const Icon(LucideIcons.squareArrowOutUpRight, size: 18),
       label: Text(_desktop ? context.l10n.openFile : context.l10n.shareFile),

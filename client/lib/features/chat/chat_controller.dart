@@ -89,10 +89,14 @@ class UiEntry extends ChatEntry {
 enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled, userControl, botControl }
 
 class NoticeEntry extends ChatEntry {
-  const NoticeEntry({required this.kind, required this.text, this.refId});
+  const NoticeEntry({required this.kind, required this.text, this.refId, this.errorCode, this.at});
   final NoticeKind kind;
   final String text;
+
+  /// The checkpoint (checkpoint notices) or the run (failures).
   final String? refId;
+  final String? errorCode;
+  final DateTime? at;
 }
 
 class ChatState {
@@ -237,6 +241,14 @@ class ChatController extends Notifier<ChatState> {
         );
   }
 
+  NoticeEntry _failure(RunFailedEvent event) => NoticeEntry(
+    kind: NoticeKind.failed,
+    text: event.payload.message,
+    refId: event.runId,
+    errorCode: event.payload.errorCode,
+    at: event.ts,
+  );
+
   /// Applies one run event to the chat (public for tests).
   void apply(RunEventItem e) {
     final entries = [...state.entries];
@@ -343,12 +355,12 @@ class ChatController extends Notifier<ChatState> {
         return;
       case RunFailedItem(:final event) when state.activeRunId != null:
         unawaited(ref.read(runActivitiesProvider).ended(state.activeRunId!));
-        entries.add(NoticeEntry(kind: NoticeKind.failed, text: event.payload.message));
+        entries.add(_failure(event));
         _finishStreaming(entries);
         state = state.copyWith(entries: entries, clearActiveRun: true);
         return;
       case RunFailedItem(:final event):
-        entries.add(NoticeEntry(kind: NoticeKind.failed, text: event.payload.message));
+        entries.add(_failure(event));
         _finishStreaming(entries);
         state = state.copyWith(entries: entries, clearActiveRun: true);
         return;

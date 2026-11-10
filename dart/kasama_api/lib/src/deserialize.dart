@@ -171,12 +171,18 @@ import 'package:kasama_api/src/model/usage_event.dart';
 import 'package:kasama_api/src/model/usage_event_payload.dart';
 import 'package:kasama_api/src/model/usage_report.dart';
 import 'package:kasama_api/src/model/usage_report_by_bot_inner.dart';
+import 'package:kasama_api/src/model/usage_report_by_day_inner.dart';
+import 'package:kasama_api/src/model/usage_report_by_kind_inner.dart';
+import 'package:kasama_api/src/model/usage_report_by_model_inner.dart';
 import 'package:kasama_api/src/model/voice_session.dart';
 import 'package:kasama_api/src/model/voice_session_request.dart';
 import 'package:kasama_api/src/model/voice_tool_request.dart';
 import 'package:kasama_api/src/model/voice_tool_result.dart';
 import 'package:kasama_api/src/model/voice_transcript_request.dart';
 import 'package:kasama_api/src/model/voice_transcript_request_turns_inner.dart';
+import 'package:kasama_api/src/model/wallpaper_download_request.dart';
+import 'package:kasama_api/src/model/wallpaper_photo.dart';
+import 'package:kasama_api/src/model/wallpaper_photo_list.dart';
 
 final _regList = RegExp(r'^List<(.*)>$');
 final _regSet = RegExp(r'^Set<(.*)>$');
@@ -578,6 +584,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UsageReport.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UsageReportByBotInner':
           return UsageReportByBotInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UsageReportByDayInner':
+          return UsageReportByDayInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UsageReportByKindInner':
+          return UsageReportByKindInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UsageReportByModelInner':
+          return UsageReportByModelInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Visibility':
           
           
@@ -593,6 +605,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return VoiceTranscriptRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'VoiceTranscriptRequestTurnsInner':
           return VoiceTranscriptRequestTurnsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WallpaperDownloadRequest':
+          return WallpaperDownloadRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WallpaperPhoto':
+          return WallpaperPhoto.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WallpaperPhotoList':
+          return WallpaperPhotoList.fromJson(value as Map<String, dynamic>) as ReturnType;
         default:
           RegExpMatch? match;
 

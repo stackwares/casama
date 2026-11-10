@@ -13,6 +13,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/glow_button.dart';
 
 String integrationKindLabel(BuildContext context, IntegrationKind kind) => switch (kind) {
   IntegrationKind.mcp => context.l10n.kindMcp,
@@ -51,7 +52,7 @@ class IntegrationsScreen extends ConsumerWidget {
                 icon: LucideIcons.puzzle,
                 title: l10n.noIntegrationsTitle,
                 message: l10n.noIntegrations,
-                action: FilledButton.icon(onPressed: () => _add(context, ref), icon: const Icon(LucideIcons.plus, size: 18), label: Text(l10n.addIntegration)),
+                action: GlowButton.icon(onPressed: () => _add(context, ref), icon: const Icon(LucideIcons.plus, size: 18), label: Text(l10n.addIntegration)),
               )
             : PageColumn(
                 children: [

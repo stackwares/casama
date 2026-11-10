@@ -22,6 +22,7 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 
 | OpenAI key with Realtime access | Live voice calls; measuring the gate's "reply within 1 s" (Phase 6) | Workspace credential, provider `openai` | Session, tool forwarding and transcripts tested against a mock |
 | Deepgram, ElevenLabs, Cartesia or Fish Audio keys (optional) | Dictation and read-aloud with those providers | Workspace credentials | Tested against mocks |
+| Unsplash access key (free "Demo" app; apply for Production for 5,000 requests/hour) | Wallpaper photo search in Settings → Background (D-087) | Server `UNSPLASH_ACCESS_KEY`; the key stays on the server | Built and tested against a mock; "Browse photos" stays hidden until a key is set. Your own photos work without it |
 
 ## Infrastructure
 

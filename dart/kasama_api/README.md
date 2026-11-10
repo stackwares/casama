@@ -71,6 +71,8 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdates**](doc/AdminApi.md#adminupdates) | **GET** /v1/admin/updates | Whether a newer Kasama release exists
 [*AdminApi*](doc/AdminApi.md) | [**adminUsers**](doc/AdminApi.md#adminusers) | **GET** /v1/admin/users | Everyone on this instance
 [*AdminApi*](doc/AdminApi.md) | [**setOrgLimits**](doc/AdminApi.md#setorglimits) | **PATCH** /v1/admin/orgs/{id}/limits | Set a workspace&#39;s quotas
+[*AppearanceApi*](doc/AppearanceApi.md) | [**searchWallpapers**](doc/AppearanceApi.md#searchwallpapers) | **GET** /v1/wallpapers | Search wallpaper photos. Only when the server has a photo source configured (config.wallpapers_enabled); 404 otherwise
+[*AppearanceApi*](doc/AppearanceApi.md) | [**trackWallpaperDownload**](doc/AppearanceApi.md#trackwallpaperdownload) | **POST** /v1/wallpapers/download | Tell the photo source a photo was chosen (Unsplash requires this)
 [*ApprovalsApi*](doc/ApprovalsApi.md) | [**decideApproval**](doc/ApprovalsApi.md#decideapproval) | **POST** /v1/approvals/{id}/decision | Approve or deny; denying cancels that step only
 [*ApprovalsApi*](doc/ApprovalsApi.md) | [**listApprovals**](doc/ApprovalsApi.md#listapprovals) | **GET** /v1/approvals | 
 [*BillingApi*](doc/BillingApi.md) | [**billingPortal**](doc/BillingApi.md#billingportal) | **POST** /v1/orgs/{id}/billing/portal | Open the customer portal for a web subscription
@@ -347,6 +349,9 @@ Class | Method | HTTP request | Description
  - [UsageEventPayload](doc/UsageEventPayload.md)
  - [UsageReport](doc/UsageReport.md)
  - [UsageReportByBotInner](doc/UsageReportByBotInner.md)
+ - [UsageReportByDayInner](doc/UsageReportByDayInner.md)
+ - [UsageReportByKindInner](doc/UsageReportByKindInner.md)
+ - [UsageReportByModelInner](doc/UsageReportByModelInner.md)
  - [Visibility](doc/Visibility.md)
  - [VoiceSession](doc/VoiceSession.md)
  - [VoiceSessionRequest](doc/VoiceSessionRequest.md)
@@ -354,6 +359,9 @@ Class | Method | HTTP request | Description
  - [VoiceToolResult](doc/VoiceToolResult.md)
  - [VoiceTranscriptRequest](doc/VoiceTranscriptRequest.md)
  - [VoiceTranscriptRequestTurnsInner](doc/VoiceTranscriptRequestTurnsInner.md)
+ - [WallpaperDownloadRequest](doc/WallpaperDownloadRequest.md)
+ - [WallpaperPhoto](doc/WallpaperPhoto.md)
+ - [WallpaperPhotoList](doc/WallpaperPhotoList.md)
 
 
 ## Documentation For Authorization

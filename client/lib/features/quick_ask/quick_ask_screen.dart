@@ -11,6 +11,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/page.dart';
+import '../../ui/glow_button.dart';
 
 /// Quick ask (global shortcut, share-to-bot target): pick a bot, type, send; opens the chat.
 class QuickAskScreen extends ConsumerStatefulWidget {
@@ -107,7 +108,7 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
         const SizedBox(height: AppSpace.lg),
         SizedBox(
           height: 50,
-          child: FilledButton.icon(
+          child: GlowButton.icon(
             key: const Key('quickAskSend'),
             onPressed: _busy || !ready ? null : _send,
             icon: _busy

@@ -5,6 +5,7 @@ build.yaml
 lib/kasama_api.dart
 lib/src/api.dart
 lib/src/api/admin_api.dart
+lib/src/api/appearance_api.dart
 lib/src/api/approvals_api.dart
 lib/src/api/billing_api.dart
 lib/src/api/bots_api.dart
@@ -215,6 +216,9 @@ lib/src/model/usage_event.dart
 lib/src/model/usage_event_payload.dart
 lib/src/model/usage_report.dart
 lib/src/model/usage_report_by_bot_inner.dart
+lib/src/model/usage_report_by_day_inner.dart
+lib/src/model/usage_report_by_kind_inner.dart
+lib/src/model/usage_report_by_model_inner.dart
 lib/src/model/visibility.dart
 lib/src/model/voice_session.dart
 lib/src/model/voice_session_request.dart
@@ -222,4 +226,7 @@ lib/src/model/voice_tool_request.dart
 lib/src/model/voice_tool_result.dart
 lib/src/model/voice_transcript_request.dart
 lib/src/model/voice_transcript_request_turns_inner.dart
+lib/src/model/wallpaper_download_request.dart
+lib/src/model/wallpaper_photo.dart
+lib/src/model/wallpaper_photo_list.dart
 pubspec.yaml

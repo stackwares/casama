@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/local_image.dart';
+import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../theme/appearance.dart';
 import '../../theme/wallpaper.dart';
+import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import 'appearance_preview.dart';
+import 'photo_picker.dart';
 
 /// Settings → Background: the wallpaper behind every screen, Telegram style. A doodle pattern,
 /// soft gradient colors, how strong the pattern is, and whether it shows everywhere.
@@ -30,6 +36,8 @@ class BackgroundScreen extends ConsumerWidget {
       title: l10n.background,
       children: [
         AppearancePreview(wallpaper: preview(spec), height: 220),
+        SectionHeader(title: l10n.backgroundPhoto),
+        _PhotoSection(spec: spec, onChanged: set),
         SectionHeader(title: l10n.backgroundPattern),
         SizedBox(
           height: 112,
@@ -68,7 +76,7 @@ class BackgroundScreen extends ConsumerWidget {
                 onTap: () => set(spec.copyWith(palette: c)),
                 child: Wallpaper(
                   force: true,
-                  specOverride: preview(spec.copyWith(palette: c, pattern: WallpaperPattern.none)),
+                  specOverride: preview(spec.copyWith(palette: c, pattern: WallpaperPattern.none, clearPhoto: true)),
                   child: const SizedBox.expand(),
                 ),
               ),
@@ -179,6 +187,104 @@ class _Swatch extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Your own photo, or one from the server's photo source, under the pattern; with blur and dim.
+class _PhotoSection extends ConsumerWidget {
+  const _PhotoSection({required this.spec, required this.onChanged});
+  final WallpaperSpec spec;
+  final void Function(WallpaperSpec) onChanged;
+
+  Future<void> _pickOwn(BuildContext context) async {
+    try {
+      final x = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 2400, imageQuality: 85);
+      if (x == null) return;
+      final ext = x.name.toLowerCase().endsWith('.png') ? 'png' : 'jpg';
+      final stored = await storeLocalImage(await x.readAsBytes(), ext: ext);
+      onChanged(spec.copyWith(photo: stored).copyWithCredit(null, null));
+    } catch (e) {
+      if (context.mounted) showError(context, e);
+    }
+  }
+
+  Future<void> _browse(BuildContext context, WidgetRef ref) async {
+    final photo = await showAdaptiveSheet<PickedPhoto>(context: context, heightFactor: 0.9, builder: (_) => const PhotoPicker());
+    if (photo == null) return;
+    onChanged(spec.copyWith(photo: photo.url).copyWithCredit(photo.author, photo.authorUrl));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final remote = ref.watch(backendProvider).wallpapersEnabled;
+    final photo = spec.photo;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
+          spacing: AppSpace.sm,
+          runSpacing: AppSpace.sm,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('pickPhoto'),
+              onPressed: () => _pickOwn(context),
+              icon: const Icon(LucideIcons.imagePlus, size: 18),
+              label: Text(l10n.yourPhoto),
+            ),
+            if (remote)
+              OutlinedButton.icon(
+                key: const Key('browsePhotos'),
+                onPressed: () => _browse(context, ref),
+                icon: const Icon(LucideIcons.images, size: 18),
+                label: Text(l10n.browsePhotos),
+              ),
+            if (photo != null)
+              TextButton.icon(
+                key: const Key('removePhoto'),
+                onPressed: () => onChanged(spec.copyWith(clearPhoto: true)),
+                icon: const Icon(LucideIcons.x, size: 18),
+                label: Text(l10n.removePhoto),
+              ),
+          ],
+        ),
+        if (photo == null) ...[
+          const SizedBox(height: AppSpace.xs),
+          FormNote(l10n.photoHelp),
+        ] else ...[
+          if ((spec.photoCredit ?? '').isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpace.xs, left: AppSpace.xxs),
+              child: InkWell(
+                onTap: spec.photoCreditUrl == null ? null : () => launchUrl(Uri.parse(spec.photoCreditUrl!), mode: LaunchMode.externalApplication),
+                child: Text(
+                  l10n.photoBy(spec.photoCredit!),
+                  style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, decoration: TextDecoration.underline),
+                ),
+              ),
+            ),
+          const SizedBox(height: AppSpace.sm),
+          AppCard(
+            padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.xxs, AppSpace.sm, AppSpace.xxs),
+            child: Column(
+              children: [
+                for (final (label, key, value, apply) in [
+                  (l10n.photoBlur, 'photoBlur', spec.photoBlur, (double v) => spec.copyWith(photoBlur: v)),
+                  (l10n.photoDim, 'photoDim', spec.photoDim, (double v) => spec.copyWith(photoDim: v)),
+                ])
+                  Row(
+                    children: [
+                      SizedBox(width: 56, child: Text(label, style: context.textTheme.bodyMedium)),
+                      Expanded(child: Slider(key: Key(key), value: value, onChanged: (v) => onChanged(apply(v)))),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

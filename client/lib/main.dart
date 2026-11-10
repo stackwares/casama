@@ -12,6 +12,7 @@ import 'core/supabase_backend.dart';
 import 'core/telemetry.dart';
 import 'core/theme.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'ui/glow_button.dart';
 
 /// Connects to the API and Supabase and returns the app widget with its backend.
 Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config) async {
@@ -112,7 +113,7 @@ class _StartupGateState extends State<StartupGate> {
                           const SizedBox(height: 8),
                           Text(l10n.cannotReachServerHelp(_config.apiUrl), textAlign: TextAlign.center),
                           const SizedBox(height: 16),
-                          FilledButton(key: const Key('startupRetry'), onPressed: _start, child: Text(l10n.retry)),
+                          GlowButton(key: const Key('startupRetry'), onPressed: _start, child: Text(l10n.retry)),
                           TextButton(
                             key: const Key('startupChangeServer'),
                             onPressed: () => changeServerDialog(

@@ -10,6 +10,7 @@ export 'package:kasama_api/src/auth/oauth.dart';
 
 
 export 'package:kasama_api/src/api/admin_api.dart';
+export 'package:kasama_api/src/api/appearance_api.dart';
 export 'package:kasama_api/src/api/approvals_api.dart';
 export 'package:kasama_api/src/api/billing_api.dart';
 export 'package:kasama_api/src/api/bots_api.dart';
@@ -215,6 +216,9 @@ export 'package:kasama_api/src/model/usage_event.dart';
 export 'package:kasama_api/src/model/usage_event_payload.dart';
 export 'package:kasama_api/src/model/usage_report.dart';
 export 'package:kasama_api/src/model/usage_report_by_bot_inner.dart';
+export 'package:kasama_api/src/model/usage_report_by_day_inner.dart';
+export 'package:kasama_api/src/model/usage_report_by_kind_inner.dart';
+export 'package:kasama_api/src/model/usage_report_by_model_inner.dart';
 export 'package:kasama_api/src/model/visibility.dart';
 export 'package:kasama_api/src/model/voice_session.dart';
 export 'package:kasama_api/src/model/voice_session_request.dart';
@@ -222,4 +226,7 @@ export 'package:kasama_api/src/model/voice_tool_request.dart';
 export 'package:kasama_api/src/model/voice_tool_result.dart';
 export 'package:kasama_api/src/model/voice_transcript_request.dart';
 export 'package:kasama_api/src/model/voice_transcript_request_turns_inner.dart';
+export 'package:kasama_api/src/model/wallpaper_download_request.dart';
+export 'package:kasama_api/src/model/wallpaper_photo.dart';
+export 'package:kasama_api/src/model/wallpaper_photo_list.dart';
 

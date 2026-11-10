@@ -162,6 +162,14 @@ class FakeBackend implements Backend {
   @override
   Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy}) async {}
   @override
+  bool wallpapersEnabled = false;
+  @override
+  Future<List<WallpaperPhoto>> searchWallpapers({String? query, int page = 1}) async => const [];
+  final wallpaperDownloads = <String>[];
+  @override
+  Future<void> trackWallpaperDownload(String downloadLocation) async => wallpaperDownloads.add(downloadLocation);
+
+  @override
   Future<UsageReport> usage(String orgId, {String period = 'day'}) async => UsageReport(
         period: period == 'day' ? UsageReportPeriodEnum.day : UsageReportPeriodEnum.month,
         since: DateTime(2026),

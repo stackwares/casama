@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { partsText } from "../src/run.ts";
+import { failureMessage, partsText } from "../src/run.ts";
 import { ToolRegistry } from "../src/tools/registry.ts";
 import {
   A2UI_BASIC_CATALOG,
@@ -109,5 +109,19 @@ describe("ui.show (D-086)", () => {
       { type: "ui_action", surface_id: "ui_1", name: "choose", context: { plan: "pro" } },
     ]);
     expect(answer).toContain('On your UI ui_1 I chose "choose" with: {"plan":"pro"}');
+  });
+
+  it("explains failures without leaking keys", () => {
+    expect(failureMessage("model_auth_failed", "401 bad key sk-or-v1-abcdefghijklmnop")).toBe(
+      "The model provider rejected the key. Check it in Settings → Model keys.",
+    );
+    const m = failureMessage(
+      "run_error",
+      "fetch failed: Bearer abc.def-123 for sk-live-1234567890abcd\nstack...",
+    );
+    expect(m).toContain("Something went wrong");
+    expect(m).not.toContain("abc.def-123");
+    expect(m).not.toContain("1234567890abcd");
+    expect(m).not.toContain("stack");
   });
 });

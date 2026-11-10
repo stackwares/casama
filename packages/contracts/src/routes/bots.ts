@@ -217,6 +217,8 @@ export const getUsage = createRoute({
   path: "/v1/usage",
   tags: ["usage"],
   security,
-  request: { query: z.object({ org_id: Uuid, period: z.enum(["day", "month"]).optional() }) },
+  request: {
+    query: z.object({ org_id: Uuid, period: z.enum(["day", "week", "month", "year"]).optional() }),
+  },
   responses: { 200: jsonResponse("Usage and cost by bot", UsageReport), 401: e401, 404: e404 },
 });
