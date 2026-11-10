@@ -144,12 +144,14 @@ export const HealthSummary = z.discriminatedUnion("type", [HealthDaySummary, Hea
 export const DeviceEventInput = z
   .object({
     id: z.string().min(1).max(200).openapi({ description: "Unique per event on the device, so a retry never fires twice" }),
-    type: z.enum(["wake", "arrive", "leave", "workout_ended", "notification", "focus_on", "focus_off"]),
+    type: z.enum(["wake", "arrive", "leave", "workout_ended", "notification", "focus_on", "focus_off", "file_added"]),
     at: z.iso.datetime({ offset: true }),
     place: z.string().max(60).optional(),
     app: z.string().max(200).optional(),
     title: z.string().max(300).optional(),
     text: z.string().max(2000).optional(),
+    folder: z.string().max(200).optional().openapi({ description: "file_added: the watched folder's name (Downloads)" }),
+    name: z.string().max(300).optional().openapi({ description: "file_added: the new file's name" }),
   })
   .openapi("DeviceEventInput");
 
@@ -174,3 +176,19 @@ export const SaveDevicePlaceRequest = z
     radius_m: z.number().int().min(50).max(2000).optional(),
   })
   .openapi("SaveDevicePlaceRequest");
+
+/**
+ * Activity recap (D-152): one summary per hour of front-app time and window titles, kept by the
+ * desktop app. Strict, so screenshots or keystrokes have nowhere to go.
+ */
+export const ActivitySummary = z
+  .object({
+    type: z.literal("hour"),
+    hour: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}$/),
+    total_minutes: n.min(0).max(60),
+    apps: z
+      .array(z.object({ app: z.string().max(100), minutes: n.min(0).max(60), titles: z.array(z.string().max(120)).max(5).optional() }).strict())
+      .max(30),
+  })
+  .strict()
+  .openapi("ActivitySummary");

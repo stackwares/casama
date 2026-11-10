@@ -148,13 +148,15 @@ const routineOut = (r: RoutineRow) => ({
     };
   })(),
   device: (() => {
-    const t = r.trigger as { type?: string; event?: string; place?: string; app?: string; minutes_before?: number };
+    const t = r.trigger as { type?: string; event?: string; place?: string; app?: string; minutes_before?: number; folder?: string; pattern?: string };
     if (t?.type !== "device" || !t.event) return null;
     return {
       event: t.event as "wake",
       ...(t.place ? { place: t.place } : {}),
       ...(t.app ? { app: t.app } : {}),
       ...(t.minutes_before !== undefined ? { minutes_before: t.minutes_before } : {}),
+      ...(t.folder ? { folder: t.folder } : {}),
+      ...(t.pattern ? { pattern: t.pattern } : {}),
     };
   })(),
   notify: r.notify,
@@ -658,6 +660,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       if (!d) throw new ApiError(400, "validation_failed", "A device routine needs its event");
       if ((d.event === "arrive" || d.event === "leave") && !d.place) throw new ApiError(400, "validation_failed", "Arrive and leave routines need a named place");
       if (d.event === "notification" && !d.app) throw new ApiError(400, "validation_failed", "Notification routines need the app to watch");
+      if (d.event === "file_added" && !d.folder) throw new ApiError(400, "validation_failed", "File routines need the watched folder");
       triggerJson = { type: trigger, ...d };
     }
     if (trigger === "github" || trigger === "webhook") {

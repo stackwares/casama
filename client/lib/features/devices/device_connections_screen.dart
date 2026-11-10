@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
@@ -10,6 +11,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../desktop/desktop_watch.dart';
 import 'device_labels.dart';
 import 'device_sync.dart';
 
@@ -92,6 +94,8 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
                   ),
                   const SizedBox(height: AppSpace.sm),
                 ],
+              // Desktop (D-152): folders whose new files can start routines.
+              if (ref.watch(deviceSyncProvider).folders != null) ...[const SizedBox(height: AppSpace.md), const _WatchedFolders()],
               if (others.isNotEmpty) ...[
                 const SizedBox(height: AppSpace.md),
                 SectionHeader(title: l10n.deviceOtherDevices),
@@ -338,6 +342,62 @@ class _AppsEditorState extends State<_AppsEditor> {
           decoration: InputDecoration(labelText: l10n.watchedAppAdd, hintText: 'com.mybank.app', suffixIcon: IconButton(key: const Key('watchedAppSave'), icon: const Icon(LucideIcons.plus), onPressed: _add)),
           onSubmitted: (_) => _add(),
         ),
+      ],
+    );
+  }
+}
+
+class _WatchedFolders extends ConsumerStatefulWidget {
+  const _WatchedFolders();
+  @override
+  ConsumerState<_WatchedFolders> createState() => _WatchedFoldersState();
+}
+
+class _WatchedFoldersState extends ConsumerState<_WatchedFolders> {
+  List<String> _folders = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    FolderWatcher.folders().then((f) {
+      if (mounted) setState(() => _folders = f);
+    });
+  }
+
+  Future<void> _save(List<String> f) async {
+    await FolderWatcher.setFolders(f);
+    await ref.read(deviceSyncProvider).folders?.start();
+    if (mounted) setState(() => _folders = f);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          title: l10n.watchedFolders,
+          trailing: TextButton.icon(
+            key: const Key('addWatchedFolder'),
+            onPressed: () async {
+              final dir = await FilePicker.getDirectoryPath();
+              if (dir == null || _folders.contains(dir)) return;
+              await _save([..._folders, dir]);
+            },
+            icon: const Icon(LucideIcons.folderPlus, size: 18),
+            label: Text(l10n.add),
+          ),
+        ),
+        FormNote(l10n.watchedFoldersHelp),
+        for (final f in _folders)
+          ListTile(
+            key: Key('watched-$f'),
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(LucideIcons.folderOpen),
+            title: Text(f, overflow: TextOverflow.ellipsis),
+            trailing: IconButton(tooltip: l10n.delete, icon: const Icon(LucideIcons.x, size: 18), onPressed: () => _save([..._folders]..remove(f))),
+          ),
       ],
     );
   }

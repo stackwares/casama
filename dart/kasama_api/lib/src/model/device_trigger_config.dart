@@ -27,6 +27,10 @@ class DeviceTriggerConfig {
      this.app,
 
      this.minutesBefore,
+
+     this.folder,
+
+     this.pattern,
   });
 
   @JsonKey(
@@ -82,6 +86,32 @@ class DeviceTriggerConfig {
 
 
 
+      /// file_added: a folder the desktop app watches (Downloads)
+  @JsonKey(
+    
+    name: r'folder',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? folder;
+
+
+
+      /// file_added: a file name pattern like *.pdf
+  @JsonKey(
+    
+    name: r'pattern',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? pattern;
+
+
+
 
 
     @override
@@ -89,14 +119,18 @@ class DeviceTriggerConfig {
       other.event == event &&
       other.place == place &&
       other.app == app &&
-      other.minutesBefore == minutesBefore;
+      other.minutesBefore == minutesBefore &&
+      other.folder == folder &&
+      other.pattern == pattern;
 
     @override
     int get hashCode =>
         event.hashCode +
         place.hashCode +
         app.hashCode +
-        minutesBefore.hashCode;
+        minutesBefore.hashCode +
+        folder.hashCode +
+        pattern.hashCode;
 
   factory DeviceTriggerConfig.fromJson(Map<String, dynamic> json) => _$DeviceTriggerConfigFromJson(json);
 
@@ -126,7 +160,9 @@ notification(r'notification'),
 @JsonValue(r'focus_on')
 focusOn(r'focus_on'),
 @JsonValue(r'focus_off')
-focusOff(r'focus_off');
+focusOff(r'focus_off'),
+@JsonValue(r'file_added')
+fileAdded(r'file_added');
 
 const DeviceTriggerConfigEventEnum(this.value);
 

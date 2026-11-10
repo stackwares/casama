@@ -5485,4 +5485,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String routineDevice(String event, String detail) {
     return 'On your phone: $event $detail';
   }
+
+  @override
+  String get ctxSelection => 'Selected text';
+
+  @override
+  String get ctxAddScreenshot => 'Add a screenshot';
+
+  @override
+  String get ctxScreenshotAdded => 'Screenshot added';
+
+  @override
+  String get ctxScreenshotFailed =>
+      'Couldn\'t take a screenshot. Allow screen recording for Kasama in your system settings.';
+
+  @override
+  String get watchedFolders => 'Watched folders';
+
+  @override
+  String get watchedFoldersHelp =>
+      'A new file in one of these folders can start a routine (for example, file new PDFs in Downloads). Only its name is shared; bots read the file only if they work on this computer.';
 }

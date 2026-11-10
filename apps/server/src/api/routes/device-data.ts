@@ -4,7 +4,7 @@
  * which bots may read which kinds. Everything here is the signed-in person's own data.
  */
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { HealthSummary, routes } from "@kasama/contracts";
+import { ActivitySummary, HealthSummary, routes } from "@kasama/contracts";
 import { contentKeys, type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
@@ -99,6 +99,8 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     const extras = new Set((s.kinds.health as { extras?: string[] } | undefined)?.extras ?? []);
     for (const r of b.readings) {
       if (!(r.kind in s.kinds)) throw new ApiError(400, "kind_off", `${r.kind} is turned off on this device`);
+      if (r.kind === "activity" && !ActivitySummary.safeParse(r.summary).success)
+        throw new ApiError(400, "bad_activity_summary", "Activity uploads are hourly summaries of app time and window titles only");
       if (r.kind === "health") {
         // Summaries only: anything else (raw samples, unknown fields) is refused.
         const parsed = HealthSummary.safeParse(r.summary);
@@ -204,6 +206,7 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     for (const e of b.events) {
       if ((e.type === "arrive" || e.type === "leave") && !e.place) throw new ApiError(400, "place_required", "Arrive and leave events need the named place");
       if (e.type === "notification" && !e.app) throw new ApiError(400, "app_required", "Notification events need the app");
+      if (e.type === "file_added" && (!e.folder || !e.name)) throw new ApiError(400, "file_required", "File events need the folder and the file name");
       // Notifications only from apps the person picked (and only with the kind on): others are dropped.
       if (e.type === "notification" && (!("notifications" in s.kinds) || !picked.some((p) => (e.app ?? "").toLowerCase().includes(p)))) continue;
       // Visits and notifications are kept only when that kind is on (and for its retention).

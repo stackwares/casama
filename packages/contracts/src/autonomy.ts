@@ -183,10 +183,12 @@ export const MessageTriggerConfig = z
 /** Device triggers (D-151): events from the routine creator's own phone or computer. */
 export const DeviceTriggerConfig = z
   .object({
-    event: z.enum(["wake", "arrive", "leave", "leave_now", "workout_ended", "notification", "focus_on", "focus_off"]),
+    event: z.enum(["wake", "arrive", "leave", "leave_now", "workout_ended", "notification", "focus_on", "focus_off", "file_added"]),
     place: z.string().trim().min(1).max(60).optional().openapi({ description: "arrive and leave: a named place (Home, Work, Gym)" }),
     app: z.string().trim().min(1).max(200).optional().openapi({ description: "notification: the watched app (its name or package id)" }),
     minutes_before: z.number().int().min(0).max(120).optional().openapi({ description: "leave_now: extra minutes on top of the travel time (default 5)" }),
+    folder: z.string().trim().min(1).max(200).optional().openapi({ description: "file_added: a folder the desktop app watches (Downloads)" }),
+    pattern: z.string().trim().min(1).max(100).optional().openapi({ description: "file_added: a file name pattern like *.pdf" }),
   })
   .openapi("DeviceTriggerConfig");
 

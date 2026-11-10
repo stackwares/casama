@@ -338,10 +338,12 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       schedule_cron: z.string().max(100).optional().describe("Repeat on this 5-field cron"),
       on_device_event: z
         .object({
-          event: z.enum(["wake", "arrive", "leave", "leave_now", "workout_ended", "notification", "focus_on", "focus_off"]),
+          event: z.enum(["wake", "arrive", "leave", "leave_now", "workout_ended", "notification", "focus_on", "focus_off", "file_added"]),
           place: z.string().max(60).optional().describe("arrive/leave: a named place like Home"),
           app: z.string().max(200).optional().describe("notification: the app to watch"),
           minutes_before: z.number().int().min(0).max(120).optional().describe("leave_now: buffer on top of travel time"),
+          folder: z.string().max(200).optional().describe("file_added: a folder the person's desktop app watches, like Downloads"),
+          pattern: z.string().max(100).optional().describe("file_added: a file name pattern like *.pdf"),
         })
         .optional()
         .describe("Run each time this happens on the person's own phone (they must share that kind in Device connections)"),
@@ -363,6 +365,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         const d = args.on_device_event;
         if ((d.event === "arrive" || d.event === "leave") && !d.place) throw new ToolError("place_required", "Arrive and leave need a named place.");
         if (d.event === "notification" && !d.app) throw new ToolError("app_required", "Notification routines need the app to watch.");
+        if (d.event === "file_added" && !d.folder) throw new ToolError("folder_required", "File routines need the watched folder.");
         const person = await actingUserOf(db, ctx.runId);
         if (!person) throw new ToolError("no_person", "Device routines need a person: this run isn't acting for anyone.");
         const [r] = await db.execute<{ id: string }>(sql`

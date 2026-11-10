@@ -9,6 +9,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../core/router.dart';
 import 'companion.dart';
+import '../desktop/desktop_context.dart';
 
 bool get isDesktop =>
     !kIsWeb && const {TargetPlatform.macOS, TargetPlatform.windows, TargetPlatform.linux}.contains(defaultTargetPlatform);
@@ -80,8 +81,13 @@ class DesktopShell {
   }
 
   void openQuickAsk() {
-    _showWindow();
-    ref.read(routerProvider).push('/quick-ask');
+    // Read what's in front (selection, window, tab) before Kasama's window takes focus (D-152).
+    unawaited(() async {
+      final c = await ref.read(desktopContextReaderProvider).capture().timeout(const Duration(milliseconds: 2500), onTimeout: () => const DesktopContext()).catchError((_) => const DesktopContext());
+      ref.read(pendingDesktopContextProvider.notifier).set(c.isEmpty ? null : c);
+      _showWindow();
+      ref.read(routerProvider).push('/quick-ask');
+    }());
   }
 
   Future<void> stop() async {

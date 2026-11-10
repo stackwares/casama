@@ -9387,6 +9387,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On your phone: {event} {detail}'**
   String routineDevice(String event, String detail);
+
+  /// No description provided for @ctxSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected text'**
+  String get ctxSelection;
+
+  /// No description provided for @ctxAddScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a screenshot'**
+  String get ctxAddScreenshot;
+
+  /// No description provided for @ctxScreenshotAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot added'**
+  String get ctxScreenshotAdded;
+
+  /// No description provided for @ctxScreenshotFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t take a screenshot. Allow screen recording for Kasama in your system settings.'**
+  String get ctxScreenshotFailed;
+
+  /// No description provided for @watchedFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Watched folders'**
+  String get watchedFolders;
+
+  /// No description provided for @watchedFoldersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A new file in one of these folders can start a routine (for example, file new PDFs in Downloads). Only its name is shared; bots read the file only if they work on this computer.'**
+  String get watchedFoldersHelp;
 }
 
 class _AppLocalizationsDelegate

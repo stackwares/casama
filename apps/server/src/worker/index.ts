@@ -36,6 +36,7 @@ import {
   registerPhoneCallTools,
   registerDataTools,
   registerDeviceTools,
+  registerDesktopContextTools,
   registerCallTools,
   registerPaymentTools,
   registerLinkTools,
@@ -354,6 +355,8 @@ export async function startWorker(opts: WorkerOptions) {
   });
   // Device connections (D-149): the person's own phone and computer data, per-bot grants.
   registerDeviceTools(tools, { db, waitMs: opts.deviceWaitMs });
+  // Desktop context (D-152): file search on the person's own computer.
+  registerDesktopContextTools(tools, { db });
   // Paid data (D-138): the workspace's own Treg key, else Kasama's resale key when it's on.
   registerDataTools(tools, {
     db,

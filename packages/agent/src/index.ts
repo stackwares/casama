@@ -64,3 +64,4 @@ export * from "./secret-store.ts";
 export * from "./team-computer.ts";
 export * from "./device-data.ts";
 export * from "./travel.ts";
+export * from "./desktop-context.ts";

@@ -21,6 +21,10 @@ abstract class _$DeviceEventInputCWProxy {
 
   DeviceEventInput text(String? text);
 
+  DeviceEventInput folder(String? folder);
+
+  DeviceEventInput name(String? name);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `DeviceEventInput(...).copyWith.fieldName(value)`.
@@ -37,6 +41,8 @@ abstract class _$DeviceEventInputCWProxy {
     String? app,
     String? title,
     String? text,
+    String? folder,
+    String? name,
   });
 }
 
@@ -68,6 +74,12 @@ class _$DeviceEventInputCWProxyImpl implements _$DeviceEventInputCWProxy {
   @override
   DeviceEventInput text(String? text) => call(text: text);
 
+  @override
+  DeviceEventInput folder(String? folder) => call(folder: folder);
+
+  @override
+  DeviceEventInput name(String? name) => call(name: name);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `DeviceEventInput(...).copyWith.fieldName(value)`.
@@ -85,6 +97,8 @@ class _$DeviceEventInputCWProxyImpl implements _$DeviceEventInputCWProxy {
     Object? app = const $CopyWithPlaceholder(),
     Object? title = const $CopyWithPlaceholder(),
     Object? text = const $CopyWithPlaceholder(),
+    Object? folder = const $CopyWithPlaceholder(),
+    Object? name = const $CopyWithPlaceholder(),
   }) {
     return DeviceEventInput(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -115,6 +129,14 @@ class _$DeviceEventInputCWProxyImpl implements _$DeviceEventInputCWProxy {
           ? _value.text
           // ignore: cast_nullable_to_non_nullable
           : text as String?,
+      folder: folder == const $CopyWithPlaceholder()
+          ? _value.folder
+          // ignore: cast_nullable_to_non_nullable
+          : folder as String?,
+      name: name == const $CopyWithPlaceholder()
+          ? _value.name
+          // ignore: cast_nullable_to_non_nullable
+          : name as String?,
     );
   }
 }
@@ -144,6 +166,8 @@ DeviceEventInput _$DeviceEventInputFromJson(Map<String, dynamic> json) =>
         app: $checkedConvert('app', (v) => v as String?),
         title: $checkedConvert('title', (v) => v as String?),
         text: $checkedConvert('text', (v) => v as String?),
+        folder: $checkedConvert('folder', (v) => v as String?),
+        name: $checkedConvert('name', (v) => v as String?),
       );
       return val;
     });
@@ -157,6 +181,8 @@ Map<String, dynamic> _$DeviceEventInputToJson(DeviceEventInput instance) =>
       'app': ?instance.app,
       'title': ?instance.title,
       'text': ?instance.text,
+      'folder': ?instance.folder,
+      'name': ?instance.name,
     };
 
 const _$DeviceEventInputTypeEnumEnumMap = {
@@ -167,4 +193,5 @@ const _$DeviceEventInputTypeEnumEnumMap = {
   DeviceEventInputTypeEnum.notification: 'notification',
   DeviceEventInputTypeEnum.focusOn: 'focus_on',
   DeviceEventInputTypeEnum.focusOff: 'focus_off',
+  DeviceEventInputTypeEnum.fileAdded: 'file_added',
 };

@@ -3034,5 +3034,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "ctxSelection": "Selected text",
+  "ctxAddScreenshot": "Add a screenshot",
+  "ctxScreenshotAdded": "Screenshot added",
+  "ctxScreenshotFailed": "Couldn't take a screenshot. Allow screen recording for Kasama in your system settings.",
+  "watchedFolders": "Watched folders",
+  "watchedFoldersHelp": "A new file in one of these folders can start a routine (for example, file new PDFs in Downloads). Only its name is shared; bots read the file only if they work on this computer."
 }

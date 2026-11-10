@@ -4904,7 +4904,8 @@
               "workout_ended",
               "notification",
               "focus_on",
-              "focus_off"
+              "focus_off",
+              "file_added"
             ]
           },
           "place": {
@@ -4924,6 +4925,18 @@
             "minimum": 0,
             "maximum": 120,
             "description": "leave_now: extra minutes on top of the travel time (default 5)"
+          },
+          "folder": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "file_added: a folder the desktop app watches (Downloads)"
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "file_added: a file name pattern like *.pdf"
           }
         },
         "required": [
@@ -11186,7 +11199,8 @@
               "workout_ended",
               "notification",
               "focus_on",
-              "focus_off"
+              "focus_off",
+              "file_added"
             ]
           },
           "at": {
@@ -11208,6 +11222,16 @@
           "text": {
             "type": "string",
             "maxLength": 2000
+          },
+          "folder": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "file_added: the watched folder's name (Downloads)"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 300,
+            "description": "file_added: the new file's name"
           }
         },
         "required": [

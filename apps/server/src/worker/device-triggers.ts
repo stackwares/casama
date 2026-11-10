@@ -9,7 +9,7 @@ import type { Database } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { createRoutineRun } from "./routines.ts";
 
-export type DeviceEventType = "wake" | "arrive" | "leave" | "leave_now" | "workout_ended" | "notification" | "focus_on" | "focus_off";
+export type DeviceEventType = "wake" | "arrive" | "leave" | "leave_now" | "workout_ended" | "notification" | "focus_on" | "focus_off" | "file_added";
 export interface DeviceEvent {
   id: string;
   type: DeviceEventType;
@@ -18,6 +18,8 @@ export interface DeviceEvent {
   app?: string;
   title?: string;
   text?: string;
+  folder?: string;
+  name?: string;
   /** Extra context for the run (leave-now: the event and travel time). */
   detail?: string;
 }
@@ -46,10 +48,18 @@ export function describeDeviceEvent(e: DeviceEvent): string {
       return `The person turned on Focus / Do Not Disturb${e.title ? ` (${e.title})` : ""}.`;
     case "focus_off":
       return "The person turned off Focus / Do Not Disturb.";
+    case "file_added":
+      return `A new file arrived in the watched folder ${e.folder}: ${e.name}. It's on the person's own computer.`;
   }
 }
 
-type RoutineRow = Parameters<typeof createRoutineRun>[1] & { trigger: { type?: string; event?: string; place?: string; app?: string }; kind?: string; last_run_at?: Date | null };
+type RoutineRow = Parameters<typeof createRoutineRun>[1] & { trigger: { type?: string; event?: string; place?: string; app?: string; folder?: string; pattern?: string }; kind?: string; last_run_at?: Date | null };
+
+/** "*.pdf", "Invoice-*" → a case-insensitive whole-name match. */
+export function matchesPattern(name: string, pattern: string): boolean {
+  const re = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".");
+  return new RegExp(`^${re}$`, "i").test(name);
+}
 
 /**
  * Starts the person's routines for one event (once per event id). Returns the new run ids, for the
@@ -71,6 +81,8 @@ export async function fireDeviceEvent(db: Database, userId: string, e: DeviceEve
       const t = r.trigger ?? {};
       if (t.place && (e.place ?? "").toLowerCase() !== t.place.toLowerCase()) continue;
       if (t.app && !(e.app ?? "").toLowerCase().includes(t.app.toLowerCase())) continue;
+      if (t.folder && (e.folder ?? "").toLowerCase() !== t.folder.toLowerCase()) continue;
+      if (t.pattern && !matchesPattern(e.name ?? "", t.pattern)) continue;
       // Wake-ups and briefs: once a morning.
       if ((e.type === "wake" || r.kind === "brief") && r.last_run_at && Date.now() - new Date(r.last_run_at).getTime() < 14 * 3600_000) continue;
       if ((r.kind === "brief" || r.kind === "scan") && (await checkinCapReached(tx as Database, r.bot_id))) continue;

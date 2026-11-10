@@ -1646,3 +1646,46 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - Leave-now asks for the location, then fires at travel (with traffic) plus buffer and not before, with the right maps request. The location is cleared afterwards, and it fires only once.
   - pgTAP: places and the event log are owner-only and written only through the API.
   - App: geofence-to-event mapping, code masking, places watching, notification filtering and masking, the locate answer, and Places off.
+
+## D-152 Desktop context
+
+- **Quick ask carries context, read only when the hotkey is pressed:**
+  - Before Kasama's window comes forward, the desktop app reads the front app and window title, the selected text and the browser tab:
+    - macOS: System Events, the Accessibility attribute `AXSelectedText` through JXA, and Apple Events to Chrome, Arc, Brave, Edge, Vivaldi, Opera or Safari for the tab.
+    - Windows: the foreground window through user32, plus UI Automation `TextPattern` for the selection.
+    - Linux: `xdotool` and the primary selection.
+  - Each part is a chip the person can switch off before sending. The kept parts go after their text as "From: app — window / Browser tab / Selected text".
+  - A screenshot is taken only when they tap "Add a screenshot". Kasama's own window steps aside for it, and the image is uploaded to the bot's computer like a chat attachment.
+  - Missing tools or permissions mean less context, never an error. The context is used once.
+  - macOS has an Apple Events purpose string and the automation entitlement. Selection and window titles need Accessibility permission.
+- **File search on the person's own computer:**
+  - `desktop.files.search(query)` works only when the bot's computer is that person's local device (D-066, owner-only as before). It searches only inside the folders they allowed (`local_devices.allowed_roots`):
+    - macOS: Spotlight (`mdfind -onlyin`).
+    - Windows: the Windows Search index (`SystemIndex` scoped to each folder).
+    - Linux: `locate`, falling back to `find`.
+  - Results are filtered to the allowed folders again on the server before the model sees them.
+- **Folder watchers are triggers:**
+  - Device routines take `event: "file_added"` with `folder` (the watched folder's name) and an optional `pattern` (`*.pdf`).
+  - The desktop app watches folders the person picks (Settings → Device connections → Watched folders). It waits until a new file stops growing, skips partial downloads and hidden files, and reports only the folder name and file name.
+  - The run is told the file is on the person's computer, so a bot working there can read it.
+- **Activity recap (off by default):**
+  - The Activity kind on a desktop samples the front app and window title every 30 seconds (never the selection, screenshots or keystrokes). It keeps them in hourly buckets on the computer and uploads one summary per finished hour: minutes per app, top three window titles.
+  - A strict server schema (`ActivitySummary`) refuses anything else.
+  - Bots read it with `device.read activity` for end-of-day recaps and time tracking, with the same grants, retention and private-model option as other kinds.
+- **Not in this step:**
+  - macOS Calendar and Reminders need a native EventKit channel; macOS Contacts works (D-149).
+  - The web app's share target and on-request "show my screen" snapshot.
+  - The Windows browser tab.
+  - All listed for Oliver.
+- **Tests:**
+  - API (`desktop-context.test.ts`):
+    - A PDF dropped in Downloads starts the "file it" routine with the file name. A JPEG, another folder and a missing name don't.
+    - Pattern matching.
+    - File search is refused off a personal computer. On it, it runs Spotlight inside the allowed folder only and drops paths outside it.
+  - Agent: each platform's search command, with quoting that can't be broken out of.
+  - App:
+    - Mac and Linux context reading, including missing tools.
+    - The context block keeping only the switched-on parts.
+    - Partial-download filtering.
+    - Hourly activity summaries uploaded once the hour ends.
+    - Quick ask with hotkey context: chips, leaving the window out, and the sent text.

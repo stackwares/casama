@@ -11,10 +11,15 @@ import '../../core/backend.dart';
 import '../../core/providers.dart';
 import 'device_collector.dart';
 import 'device_events.dart';
+import '../desktop/desktop_context.dart';
+import '../desktop/desktop_watch.dart';
 
 /// Keeps this device's shared data up to date and answers runs' requests (D-149).
 class DeviceSync {
-  DeviceSync(this.backend, this.collector, {DeviceTriggerPlatform? triggers, this.now = DateTime.now}) : triggers = triggers ?? PluginTriggerPlatform();
+  DeviceSync(this.backend, this.collector, {DeviceTriggerPlatform? triggers, this.activity, this.folders, this.now = DateTime.now}) : triggers = triggers ?? PluginTriggerPlatform();
+  /// Desktop only (D-152): the activity recap and watched folders.
+  final ActivityTracker? activity;
+  final FolderWatcher? folders;
   final Backend backend;
   final DeviceCollector collector;
   final DeviceTriggerPlatform triggers;
@@ -27,6 +32,7 @@ class DeviceSync {
     ...collector.supported,
     if (triggers.supportsPlaces) DeviceKind.places,
     if (triggers.supportsNotifications) DeviceKind.notifications,
+    if (activity != null) DeviceKind.activity,
   };
   AppLifecycleListener? _life;
   bool _busy = false;
@@ -89,6 +95,8 @@ class DeviceSync {
       on ? await refreshPlaces() : await triggers.stopPlaces();
     } else if (kind == DeviceKind.notifications) {
       on ? _watchNotifications(kinds[kind.value]) : await _stopNotifications();
+    } else if (kind == DeviceKind.activity) {
+      on ? activity?.start(key) : activity?.stop();
     } else if (on) {
       await _upload(key, kind, settings: kinds[kind.value]);
     }
@@ -98,6 +106,7 @@ class DeviceSync {
   Future<bool> _permission(DeviceKind kind, DeviceKindSettings? settings) => switch (kind) {
     DeviceKind.places => triggers.requestPlaces(),
     DeviceKind.notifications => triggers.requestNotifications(),
+    DeviceKind.activity => Future.value(activity != null),
     _ => collector.requestPermission(kind, settings: settings),
   };
 
@@ -216,13 +225,17 @@ class DeviceSync {
 
   Future<void> _startTriggers() async {
     await DeviceEventQueue.flush(backend);
+    await folders?.start();
     final s = await current();
     if (s == null) return;
+    if (s.kinds.containsKey('activity')) activity?.start(s.deviceKey);
     if (s.kinds.containsKey('places') && triggers.supportsPlaces) await refreshPlaces();
     if (s.kinds.containsKey('notifications') && triggers.supportsNotifications) _watchNotifications(s.kinds['notifications']);
   }
 
   void dispose() {
+    activity?.stop();
+    unawaited(folders?.stop());
     unawaited(_notifications?.cancel());
     unawaited(_sub?.cancel());
     _sub = null;
@@ -235,7 +248,14 @@ final deviceCollectorProvider = Provider<DeviceCollector>((ref) => PluginDeviceC
 final deviceTriggerPlatformProvider = Provider<DeviceTriggerPlatform>((ref) => PluginTriggerPlatform());
 
 final deviceSyncProvider = Provider<DeviceSync>((ref) {
-  final sync = DeviceSync(ref.watch(backendProvider), ref.watch(deviceCollectorProvider), triggers: ref.watch(deviceTriggerPlatformProvider));
+  final backend = ref.watch(backendProvider);
+  final sync = DeviceSync(
+    backend,
+    ref.watch(deviceCollectorProvider),
+    triggers: ref.watch(deviceTriggerPlatformProvider),
+    activity: desktopContextSupported ? ActivityTracker(backend, ref.watch(desktopContextReaderProvider)) : null,
+    folders: desktopContextSupported ? FolderWatcher(backend) : null,
+  );
   ref.onDispose(sync.dispose);
   ref.listen(signedInProvider, (_, next) {
     if (next.value == true && sync.supported.isNotEmpty) sync.start();

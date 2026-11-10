@@ -4,6 +4,8 @@
 <dict>
 	<key>NSContactsUsageDescription</key>
 	<string>Your bots can look up people you know, only when you turn on Contacts in Device connections.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Quick ask reads the front window's title and your browser's current tab, only when you press the shortcut.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Kasama uses the microphone for dictation and voice calls with your bots.</string>
 	<key>CFBundleDevelopmentRegion</key>

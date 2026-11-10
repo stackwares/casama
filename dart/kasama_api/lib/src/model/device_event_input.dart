@@ -33,6 +33,10 @@ class DeviceEventInput {
      this.title,
 
      this.text,
+
+     this.folder,
+
+     this.name,
   });
 
       /// Unique per event on the device, so a retry never fires twice
@@ -120,6 +124,32 @@ class DeviceEventInput {
 
 
 
+      /// file_added: the watched folder's name (Downloads)
+  @JsonKey(
+    
+    name: r'folder',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? folder;
+
+
+
+      /// file_added: the new file's name
+  @JsonKey(
+    
+    name: r'name',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? name;
+
+
+
 
 
     @override
@@ -130,7 +160,9 @@ class DeviceEventInput {
       other.place == place &&
       other.app == app &&
       other.title == title &&
-      other.text == text;
+      other.text == text &&
+      other.folder == folder &&
+      other.name == name;
 
     @override
     int get hashCode =>
@@ -140,7 +172,9 @@ class DeviceEventInput {
         place.hashCode +
         app.hashCode +
         title.hashCode +
-        text.hashCode;
+        text.hashCode +
+        folder.hashCode +
+        name.hashCode;
 
   factory DeviceEventInput.fromJson(Map<String, dynamic> json) => _$DeviceEventInputFromJson(json);
 
@@ -168,7 +202,9 @@ notification(r'notification'),
 @JsonValue(r'focus_on')
 focusOn(r'focus_on'),
 @JsonValue(r'focus_off')
-focusOff(r'focus_off');
+focusOff(r'focus_off'),
+@JsonValue(r'file_added')
+fileAdded(r'file_added');
 
 const DeviceEventInputTypeEnum(this.value);
 

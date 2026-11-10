@@ -137,7 +137,7 @@ class _RoutineCard extends ConsumerWidget {
       RoutineTrigger.webhook => (LucideIcons.webhook, l10n.routineWebhook),
       RoutineTrigger.calendarEvent => (LucideIcons.calendarClock, l10n.routineCalendar(r.calendar?.offsetMinutes ?? 0)),
       RoutineTrigger.message => (LucideIcons.mailOpen, l10n.routineMessage),
-      RoutineTrigger.device => (LucideIcons.smartphone, l10n.routineDevice(r.device?.event.value.replaceAll('_', ' ') ?? '', r.device?.place ?? r.device?.app ?? '')),
+      RoutineTrigger.device => (LucideIcons.smartphone, l10n.routineDevice(r.device?.event.value.replaceAll('_', ' ') ?? '', r.device?.place ?? r.device?.app ?? r.device?.folder ?? '')),
     };
     final next = r.enabled && r.nextRunAt != null ? l10n.nextRun(_formatWhen(context, r.nextRunAt!)) : null;
     final last = r.lastRunAt != null ? l10n.lastRun(_formatWhen(context, r.lastRunAt!)) : null;

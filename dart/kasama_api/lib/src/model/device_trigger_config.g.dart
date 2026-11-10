@@ -15,6 +15,10 @@ abstract class _$DeviceTriggerConfigCWProxy {
 
   DeviceTriggerConfig minutesBefore(int? minutesBefore);
 
+  DeviceTriggerConfig folder(String? folder);
+
+  DeviceTriggerConfig pattern(String? pattern);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `DeviceTriggerConfig(...).copyWith.fieldName(value)`.
@@ -28,6 +32,8 @@ abstract class _$DeviceTriggerConfigCWProxy {
     String? place,
     String? app,
     int? minutesBefore,
+    String? folder,
+    String? pattern,
   });
 }
 
@@ -52,6 +58,12 @@ class _$DeviceTriggerConfigCWProxyImpl implements _$DeviceTriggerConfigCWProxy {
   DeviceTriggerConfig minutesBefore(int? minutesBefore) =>
       call(minutesBefore: minutesBefore);
 
+  @override
+  DeviceTriggerConfig folder(String? folder) => call(folder: folder);
+
+  @override
+  DeviceTriggerConfig pattern(String? pattern) => call(pattern: pattern);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `DeviceTriggerConfig(...).copyWith.fieldName(value)`.
@@ -66,6 +78,8 @@ class _$DeviceTriggerConfigCWProxyImpl implements _$DeviceTriggerConfigCWProxy {
     Object? place = const $CopyWithPlaceholder(),
     Object? app = const $CopyWithPlaceholder(),
     Object? minutesBefore = const $CopyWithPlaceholder(),
+    Object? folder = const $CopyWithPlaceholder(),
+    Object? pattern = const $CopyWithPlaceholder(),
   }) {
     return DeviceTriggerConfig(
       event: event == const $CopyWithPlaceholder() || event == null
@@ -84,6 +98,14 @@ class _$DeviceTriggerConfigCWProxyImpl implements _$DeviceTriggerConfigCWProxy {
           ? _value.minutesBefore
           // ignore: cast_nullable_to_non_nullable
           : minutesBefore as int?,
+      folder: folder == const $CopyWithPlaceholder()
+          ? _value.folder
+          // ignore: cast_nullable_to_non_nullable
+          : folder as String?,
+      pattern: pattern == const $CopyWithPlaceholder()
+          ? _value.pattern
+          // ignore: cast_nullable_to_non_nullable
+          : pattern as String?,
     );
   }
 }
@@ -114,6 +136,8 @@ DeviceTriggerConfig _$DeviceTriggerConfigFromJson(Map<String, dynamic> json) =>
           'minutes_before',
           (v) => (v as num?)?.toInt(),
         ),
+        folder: $checkedConvert('folder', (v) => v as String?),
+        pattern: $checkedConvert('pattern', (v) => v as String?),
       );
       return val;
     }, fieldKeyMap: const {'minutesBefore': 'minutes_before'});
@@ -125,6 +149,8 @@ Map<String, dynamic> _$DeviceTriggerConfigToJson(
   'place': ?instance.place,
   'app': ?instance.app,
   'minutes_before': ?instance.minutesBefore,
+  'folder': ?instance.folder,
+  'pattern': ?instance.pattern,
 };
 
 const _$DeviceTriggerConfigEventEnumEnumMap = {
@@ -136,4 +162,5 @@ const _$DeviceTriggerConfigEventEnumEnumMap = {
   DeviceTriggerConfigEventEnum.notification: 'notification',
   DeviceTriggerConfigEventEnum.focusOn: 'focus_on',
   DeviceTriggerConfigEventEnum.focusOff: 'focus_off',
+  DeviceTriggerConfigEventEnum.fileAdded: 'file_added',
 };
