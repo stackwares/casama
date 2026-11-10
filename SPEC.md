@@ -864,7 +864,7 @@ The aim is the shortest path from discovering Kasama to a working bot, plus publ
 
 ## Post-v1 roadmap
 
-After launch, Kasama builds these features to lead the open-source agent platforms instead of matching them. They come in three waves; build each wave in the order listed unless the product owner reorders it. Each row's acceptance criterion is the test that proves it works, and every item follows the v1 rules (contracts first, RLS and policy tests on every new table, ARB strings, tests in CI).
+After launch, Kasama builds these features to lead the open-source agent platforms instead of matching them. They come in four waves; build each wave in the order listed unless the product owner reorders it. Each row's acceptance criterion is the test that proves it works, and every item follows the v1 rules (contracts first, RLS and policy tests on every new table, ARB strings, tests in CI).
 
 | Area                   | Feature                                                                                                                                                            | Acceptance criterion                                                                                                                | Wave |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ---- |
@@ -896,7 +896,10 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 | Self-improving skills  | Bots propose a skill after repeating a task and propose fixes when a skill fails                                                                                   | After the same kind of task twice the bot offers a skill; a failure produces a proposed fix shown as a diff                         | 2    |
 | Step replay            | Replay recorded browser and desktop steps without model calls; the bot takes over when a step breaks                                                              | A recorded form fill replays with new values at zero model tokens, and recovers after the page layout changes                       | 2    |
 | Password managers      | 1Password and Bitwarden logins filled into the bot's browser without the model seeing them                                                                        | A bot signs in with a vault item; the password never appears in events, logs or model input; other sites are refused                | 2    |
+| Welcome chat           | New users land in a chat with a ready personal bot that asks what to focus on, then shows a matching intro, one relevant connection and a first task; the form wizard becomes "Set up manually" | A new user goes from sign-in to a first suggested task without a form; picking Coding offers GitHub, not Google; with no model, the scripted questions and the model card still show | 2    |
 | Bot sharing            | Per-bot access (chat, edit, admin) and private bots; a bot acting for a person sees only what that person can                                                     | A chat-only member cannot edit a bot; a bot asked by member A cannot read a folder only member B can see                            | 2    |
+| Calendar triggers      | Routines start a set time before or after calendar events (connected Google or Outlook), with the event in context | A routine set for 15 min before meetings with outside guests runs within 1 min of that time and skips other events | 2    |
+| Bot-to-bot switch      | An admin setting stops bots from messaging, @mentioning and delegating to each other in a workspace | With the switch off, a bot's @mention of another bot is not delivered and the timeline says why; subagents still work | 2    |
 | Chat apps              | Telegram, email, Slack, WhatsApp, SMS, iMessage, Feishu and Messenger; routines started by an email or chat message                                                | The channel gate passes, and an email that matches a routine's filter starts that routine                                           | 3    |
 | Phone-call voice       | The bot calls the user with a native incoming-call screen                                                                                                          | The phone rings on the lock screen on iOS and Android; answering starts the live call within 2 s                                    | 3    |
 | Encryption at rest     | Content encrypted before it reaches Postgres, with a local key or AWS KMS                                                                                          | A database dump shows no message, event, memory or summary text, and the app works unchanged                                        | 3    |
@@ -909,6 +912,11 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 | Linked agents          | A person's bot coordinates with a trusted contact's bot, across workspaces or servers                                                                             | Two users' bots agree a meeting time without either seeing the other's calendar details; revoking the link stops requests           | 3    |
 | Voice upgrades         | Wake word, interrupting the bot mid-sentence, and an optional animated avatar in live calls                                                                       | The wake word opens a live call within 1 s; speaking over the bot stops its speech within 300 ms                                    | 3    |
 | Ops extras             | Infisical, audit-log forwarding, Cloudflare AI Gateway, one-click local server, sign-up allowlist, encrypted backups, team computer folders, Helm chart, warm pool | Each works on a fresh self-hosted install                                                                                           | 3    |
+| Device connections     | Bots use data the user shares from their phone and computer: calendar, reminders, contacts, named places, photos, and Android notifications from apps they pick | A bot with calendar access answers "what's on tomorrow" from the phone and a bot without it cannot; turning a type off deletes its stored data | 4    |
+| Health data            | Daily summaries from Apple Health and Health Connect (sleep, activity, workouts, heart) for the bots the user allows, optionally on a private model only | The wake-up brief cites last night's sleep from a test device; model input holds the summary only, never raw samples | 4    |
+| Device triggers        | Routines start when the user wakes up, arrives at or leaves a named place, needs to leave for an event, finishes a workout, or gets a notification from a watched app | Arriving at Home on a test device starts the routine within 2 min; no GPS trail is stored | 4    |
+| Desktop context        | Quick ask attaches the selection, front window, browser tab or a screenshot; bots search the user's files, watch folders and write an end-of-day recap | The hotkey on selected text in any app sends it with the window title; a PDF dropped in Downloads starts a "file it" routine | 4    |
+| Attention rules        | Proactive messages wait while the user is asleep, focused, driving or in a meeting unless urgent, and each says why it was sent | A non-urgent suggestion during a calendar meeting arrives in the next brief instead of as a push | 4    |
 
 ### Local MCP servers on the user's computer
 
@@ -1085,10 +1093,47 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - Connect 1Password (service account) or Bitwarden (Secrets Manager or an organization vault) per workspace or person, choosing which vaults or collections bots may use.
 - The executor fills logins into the bot's browser only for the item's own URLs, like `{{secret}}`; the model sees `[login:Name]`, never the password. One-time codes stored in an item use the sign-in codes flow.
 
+### Welcome chat
+
+- First run (signed in, no invite): the app creates a personal workspace ("<first name>'s space") and a personal bot (named from the product-name constant, with a mascot avatar; renamable in chat) and opens its chat. Joining by invite link skips this. The three-step wizard stays behind "Set up manually".
+- The opening is scripted: normal bot messages with A2UI cards, stored like any message, with no model call. First "What should I help with first?" (up to three of Email and calendar, Work projects, Coding, Research, Sales and customers, Personal errands, Something else with free text), then "Just me, my team or my business?". Both can be skipped, which gives a general intro.
+- Then a scripted intro written for the picks (ARB strings in Kasama's own words) and one main connection card, with "More apps" below it:
+
+  | Pick | Main connection | First value without a connection |
+  | --- | --- | --- |
+  | Email and calendar | Google or Microsoft (see Google sign-in and permissions) | — |
+  | Work projects | Notion, Linear or Jira | "Tell me a project" creates a project |
+  | Coding | GitHub, and coding agents on the user's computer | "Point me at a repo" |
+  | Research | None | "Give me a topic" leads to a report or page |
+  | Sales and customers | HubSpot, plus Google or Microsoft | "Who should I research first?" |
+  | Personal errands | Calendar | "What's one errand I can take off your plate?" |
+  | Something else | Chosen by the bot from the description once a model is available | Model-written |
+
+- No model yet (self-hosted): before anything that needs the model, an inline card offers Continue with ChatGPT, a model key or a local model. Kasama Cloud's starter credits skip this card.
+- First value: with email or calendar connected, a catch-up run (after an explicit consent line) reads the next 14 days of calendar and, only if inbox access was granted, the last 14 days of email. It posts "Here's what I noticed" (3–5 items), up to three one-tap task cards and a morning brief offer (check-ins). Without connections, the bot posts the first task card for the pick.
+- The setup interview (D-105) then runs in the same chat with two or three questions, followed by a "What I learned" card listing the memories saved (up to 10) to edit or delete. Then the chat is open.
+- The picks are saved as memories, shape the personal bot's instructions, choose which starter bots it suggests and set what check-ins cover. "My team" or "My business" adds an invite-link card and suggests shared bots.
+- Wave 4 adds the picks "Health and habits" and phone connections.
+
+### Google sign-in and permissions
+
+- Kasama Cloud uses its own Google OAuth app with only non-sensitive and sensitive scopes: sign-in (`openid`, `email`, `profile`), `calendar.events`, `gmail.send` and `drive.file` (files the user picks with Google's file picker). These need Google's free verification (a verified domain, a privacy policy on it and a demo video) and no yearly security assessment.
+- Reading the inbox needs a restricted scope (`gmail.modify`), requested only when the user turns on an inbox feature (incremental authorization). Until Kasama passes Google's restricted-scope verification and its yearly security assessment, Kasama Cloud provides inbox access through Composio's managed Google sign-in, shown as a separate, clearly explained step; Zapier's MCP server (one-click, D-089) also works. When verification passes, inbox access moves into Kasama's own app and users reconnect once.
+- Self-hosted servers use their own Google client, published to production rather than Testing (Testing ends sign-ins after 7 days); unverified apps work for up to 100 users, and Google's Gmail MCP server works with that client.
+- Forwarding mail to the bot's own address (Chat apps: email) needs no Google permission at all.
+
 ### Bot sharing
 
 - `bot_access` (bot\_id, user\_id or role, access chat, edit or admin). The workspace default stays "everyone can chat"; private bots are visible only to people listed.
 - A bot acting for a person (the run's acting user, as with ChatGPT plans in D-091) sees only the files, connections and knowledge that person can access.
+
+### Calendar triggers
+
+- Routine triggers gain `calendar_event`: an offset before or after events from a connected Google or Outlook calendar, with filters (calendar, has outside guests, title match, has a video link). The worker checks connected calendars every 5 minutes, or uses the provider's change notifications where offered, and schedules the run with the event (title, time, attendees, link, description) in context. Wave 4 adds the phone's calendar.
+
+### Bot-to-bot switch
+
+- Workspace setting `allow_bot_to_bot` (default on), changed by owners and admins. When off, bots cannot @mention or message each other in group chats and `bots.delegate` to peer bots is refused; subagents still work. The sending bot's timeline and the chat say why.
 
 ### Chat apps
 
@@ -1155,6 +1200,53 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - Team computer layout: a `bots/<name>/` folder per bot and a `shared/` folder, plus a cap on simultaneous desktops per team computer.
 - A Helm chart for self-hosters on Kubernetes (separate from the Kubernetes sandbox provider).
 - Warm pool of computers (D-033), once first-command latency matters in practice.
+
+### Device connections
+
+- Collected by the Kasama app on phones and by the desktop companion on computers. Every type is off until the user turns it on per device in Settings → Device connections; the system permission prompt appears only then.
+- Access per bot: a bot that needs a type asks with a one-tap card, and a personal starter bot's setup interview asks for calendar, places and health. The owner revokes access from the card, the bot or Settings.
+- Owner only: the data belongs to a person, not the workspace, and is used only by runs acting for that person (the D-091 rule). Teammates' bots never see it.
+- Devices upload summaries in the background (health background delivery, geofences, Android WorkManager, companion timers) into `device_readings` (user\_id, device\_id, kind, period\_start, period\_end, summary jsonb, collected\_at). `device.read(kind, range)` returns summaries with their age and asks an online device for a fresh read (10 s timeout).
+- Writing: `device.calendar.create` and `device.reminders.create` go through action rules (default: ask). Health stays read-only.
+- Places: named places only (Home, Work, Gym; up to 20 on iOS), stored as arrive and leave visits, never a GPS trail. "Where am I now" is a one-off read that is not stored.
+- Android notifications: only from apps the user picks; one-time codes are masked on the device.
+- Retention: daily summaries 12 months; place visits and notifications 90 days; adjustable down to 7 days or "live only". Turning a type off deletes its data, and the privacy export and account deletion include it.
+- Each run's timeline shows exactly what device data reached the model. Per type, the owner can require a private model (for example a local one) whenever that data is in context.
+
+| Kind | iOS | Android | macOS | Windows | Linux | Web |
+| --- | --- | --- | --- | --- | --- | --- |
+| Calendar | Yes | Yes | Yes | Through a connected calendar | Through a connected calendar | — |
+| Reminders | Yes | — | Yes | — | — | — |
+| Contacts | Yes | Yes | Yes | — | — | — |
+| Named places | Yes (up to 20) | Yes | — | — | — | Location once, on request |
+| Photos | Picked photos, recent screenshots | Same | Screenshots folder | Screenshots folder | Screenshots folder | File picker |
+| Health | Apple Health | Health Connect | — | — | — | — |
+| Selection, window, browser tab | — | — | Yes | Yes | Partial | — |
+| File search, folder watch | — | — | Spotlight | Windows Search | Yes | — |
+
+### Health data
+
+- Read-only through the `health` package (Apple Health and Health Connect): sleep (stages, start and end), steps, active energy, workouts, resting heart rate, heart-rate variability and weight. Cycle tracking, blood glucose and blood pressure are separate switches, off by default. Data from watches and rings arrives through Health or Health Connect.
+- A daily summary each morning and a summary after each workout; trends against the user's own 30-day baseline are computed on the server without a model.
+- No medical claims: neutral wording ("lower than your usual"), and health tools carry a "not medical advice" rule.
+- Kasama Cloud stores health data only with encryption at rest on; self-hosted servers keep it on their own machine. Store requirements: purpose strings, a privacy policy, Google's Health Connect declaration, and never using the data for ads or training.
+
+### Device triggers
+
+- New trigger kinds for routines and watchers: wake up (sleep end, or the first unlock on Android), arrive at or leave a named place, leave now (travel time to the next event's location crosses a threshold, using a maps provider on the workspace's own key: Google Maps or Mapbox), workout ended, a notification from a watched app, and Focus or Do Not Disturb turning on or off.
+- Events reach the server within 2 minutes and the run gets the event in context. Check-ins use the wake-up trigger, so the morning brief follows the user's real wake time.
+
+### Desktop context
+
+- The quick-ask hotkey attaches, only when pressed, the selected text, the front app and window title, the current browser tab or a screenshot (Accessibility on macOS, UI Automation on Windows, X11 on Linux).
+- `desktop.files.search` uses Spotlight, Windows Search or locate inside allowed folders; folder watchers are triggers.
+- Activity recap, off by default: the companion logs front-app and window-title time locally and uploads an hourly summary, never screenshots or keystrokes. It powers end-of-day recaps and time tracking.
+- macOS also shares Calendar, Reminders and Contacts like the phone. The web app offers a share target and a "show my screen" snapshot, both only on request.
+
+### Attention rules
+
+- Every proactive message (check-ins, suggestions, triggers) carries an urgency. Non-urgent ones wait while the user is asleep, in a Focus mode, driving, in a calendar meeting or in quiet hours, and are bundled into the next brief. Non-urgent proactive pushes are capped at 5 per bot per day.
+- "Why am I seeing this?" on each proactive message lists the data and rule behind it, with "Less like this" (saved as a memory).
 
 ## Build plan
 
@@ -1288,14 +1380,15 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 Build these only after v1 launch unless the product owner reprioritizes. Designs and acceptance criteria are in the Post-v1 roadmap; each wave's gate is that every acceptance criterion in its rows passes.
 
 - [ ] Wave 1: local MCP servers, coding agents, ticket board, spaces, bots that manage bots, ask for a secret, sign-in codes for bots, search, skills library, setup interview and starter bots, lazy tool loading, run tracing, app polish, projects, check-ins, action rules, watchers, hosted MCP endpoint
-- [ ] Wave 2: group chats, pages, teach by showing, plugins, import an agent, routines and skills as files, knowledge sources, self-improving skills, step replay, password managers, bot sharing
+- [ ] Wave 2: group chats, pages, teach by showing, plugins, import an agent, routines and skills as files, knowledge sources, self-improving skills, step replay, password managers, welcome chat, bot sharing, calendar triggers, bot-to-bot switch
 - [ ] Wave 3: channel adapters in this order: Telegram, email (Resend), SMS (Twilio), Slack, WhatsApp, Messenger, iMessage, Feishu, each with sender allowlists, plus email and chat triggers for routines
 - [ ] Channel gate: a Telegram message and an email each get replies in the same thread; unknown senders are ignored
 - [ ] Wave 3: phone-call voice, encryption at rest, memory backends, paid data services, additional `SandboxProvider` adapters (Boat, boxd, CreateOS, Novita, Railway-backed runners, Kubernetes, Incus, Alibaba Wuying) passing the contract suite, agent-to-agent (A2A), calls for you, payments, linked agents, voice upgrades, and the ops extras
+- [ ] Wave 4: device connections, health data, device triggers, desktop context, attention rules
 
 ## Open decisions and risks
 
-Nine decisions have defaults the coding agent can build on now; confirm each by the time shown.
+Eleven decisions have defaults the coding agent can build on now; confirm each by the time shown.
 
 | Decision                      | Default in this spec                                                              | Confirm by |
 | ----------------------------- | --------------------------------------------------------------------------------- | ---------- |
@@ -1308,6 +1401,8 @@ Nine decisions have defaults the coding agent can build on now; confirm each by 
 | Name for workspaces in the UI | Keep "workspace"; switch to "space" if the product owner prefers                  | Post-v1 Wave 1 |
 | Page format                   | Self-contained HTML on a separate origin; A2UI stays for chat cards               | Post-v1 Wave 2 |
 | Paid data resale              | Treg adapter; hosted resale only after a written agreement with Treg              | Post-v1 Wave 3 |
+| Google inbox access           | Composio managed sign-in on Kasama Cloud until Kasama passes Google's restricted-scope review | Cloud launch |
+| Maps provider for leave-now   | Google Maps or Mapbox on the workspace's own key                                  | Post-v1 Wave 4 |
 
 | Risk                                                                                     | Impact                                     | Mitigation                                                                                                                 |
 | ---------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
@@ -1318,5 +1413,7 @@ Nine decisions have defaults the coding agent can build on now; confirm each by 
 | OpenAI changes or withdraws ChatGPT plan usage for third-party apps                      | People on plans lose model access          | Keep API keys and fallbacks first-class; feature flag; plan errors never switch billing silently                           |
 | Local MCP servers and coding agents act on the user's own machine                        | Unwanted changes to the user's files or accounts | Off until approved per server; shared folders only; overlay with Stop; high-risk actions always ask; pushes need approval  |
 | Prompt injection leads to harmful actions                                                | Trust and legal exposure                   | Untrusted-content labeling, approvals after untrusted input, secret placeholders, evals with injection tasks               |
+| Google limits or delays Gmail inbox access                                               | Weaker catch-up and inbox features         | Calendar, send and Drive use scopes with free review only; inbox through Composio until verified; Microsoft and forwarding as alternatives |
+| Health and location data raise store-review and privacy problems                         | App rejection or lost trust                | Off by default, per-bot access, summaries only, no GPS trail, encryption required on Cloud, precise purpose strings |
 | Meta app review delays for WhatsApp and Messenger                                        | Post-v1 channels ship late                 | Channels are post-v1; start Meta verification only when channel work begins                                                |
 | Scope is large for one team                                                              | Slow launch                                | Strict phase gates; every phase ships a usable product                                                                     |
