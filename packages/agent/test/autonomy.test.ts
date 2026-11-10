@@ -17,8 +17,8 @@ import {
   type FixtureFile,
   type FixtureTurn,
   hashEmbedder,
-  MemoryService, PostgresMemoryStore,
   NotificationService,
+  PostgresMemoryStore,
   RecordingPushSender,
   ReplayGateway,
   type RunDeps,
@@ -229,7 +229,10 @@ function makeDeps(fixtures: FixtureFile[], extra: Partial<RunDeps> = {}) {
     );
     return r?.key ?? null;
   };
-  const tools = builtinTools({ db: h.db, memory: async () => new PostgresMemoryStore(h.db, embedder) });
+  const tools = builtinTools({
+    db: h.db,
+    memory: async () => new PostgresMemoryStore(h.db, embedder),
+  });
   const deps: RunDeps = {
     db: h.db,
     gateway,

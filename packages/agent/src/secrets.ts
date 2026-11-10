@@ -41,7 +41,9 @@ export async function loadSecrets(
   const external = rows.filter((r) => r.store === "infisical").map((r) => r.name);
   if (external.length) {
     const { secretStoreFor } = await import("./secret-store.ts");
-    const values = await (await secretStoreFor(db, orgId, opts.fetch)).get(external).catch(() => new Map<string, string>());
+    const values = await (await secretStoreFor(db, orgId, opts.fetch))
+      .get(external)
+      .catch(() => new Map<string, string>());
     for (const r of rows) if (r.store === "infisical") r.value = values.get(r.name) ?? null;
   }
   return rows

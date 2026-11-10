@@ -63,7 +63,10 @@ export function preregisteredClients(env: AppDeps["env"]): Record<string, OAuthC
 }
 
 /** The catalog a server offers: on Kasama Cloud, inbox apps only through Composio, or not at all (D-130). */
-export function catalogFor(catalog: CatalogApp[], o: { cloud: boolean; composio: boolean }): CatalogApp[] {
+export function catalogFor(
+  catalog: CatalogApp[],
+  o: { cloud: boolean; composio: boolean },
+): CatalogApp[] {
   return catalog
     .filter((a) => !(o.cloud && a.inbox && !o.composio))
     .map((a) => (o.cloud && a.inbox ? { ...a, auth: ["managed"], oauthClient: undefined } : a));
@@ -224,7 +227,10 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     if (!a) throw new ApiError(404, "app_not_found", "No such app");
     if (!(await isAdmin(db, claims, body.org_id)))
       throw new ApiError(403, "forbidden", "Only owners and admins can connect apps");
-    if (!a.auth.includes(body.method) && !(body.method === "managed" && a.inbox && env.COMPOSIO_API_KEY))
+    if (
+      !a.auth.includes(body.method) &&
+      !(body.method === "managed" && a.inbox && env.COMPOSIO_API_KEY)
+    )
       throw new ApiError(400, "validation_failed", `${a.name} can't connect that way`);
     if (body.integration_id) {
       const [own] = await db.execute<{ ok: boolean }>(
@@ -237,7 +243,8 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
 
     if (body.method === "managed") {
       // Composio's managed sign-in on Kasama Cloud's own Composio account, one user per workspace.
-      if (!env.COMPOSIO_API_KEY) throw new ApiError(400, "managed_unavailable", `${a.name} isn't available on this server`);
+      if (!env.COMPOSIO_API_KEY)
+        throw new ApiError(400, "managed_unavailable", `${a.name} isn't available on this server`);
       const slug = a.id === "gmail_inbox" ? "gmail" : a.id;
       let [row] = await db.execute<{ id: string }>(
         sql`select id from public.integrations where org_id = ${body.org_id}::uuid and kind = 'composio' and config ->> 'managed' = 'true' limit 1`,
@@ -263,8 +270,18 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
         update public.integrations set config = jsonb_set(config, '{toolkits}', (
           select to_jsonb(array(select distinct x from jsonb_array_elements_text(coalesce(config -> 'toolkits', '[]'::jsonb) || to_jsonb(${slug}::text)) x)))
         ) where id = ${row?.id}::uuid`);
-      const [irow] = await db.select().from(integrations).where(eq(integrations.id, row?.id as string));
-      return c.json({ status: "authorize" as const, authorize_url: out.redirect_url, integration: integrationOut(irow!, []) }, 200);
+      const [irow] = await db
+        .select()
+        .from(integrations)
+        .where(eq(integrations.id, row?.id as string));
+      return c.json(
+        {
+          status: "authorize" as const,
+          authorize_url: out.redirect_url,
+          integration: integrationOut(irow!, []),
+        },
+        200,
+      );
     }
 
     if (body.method !== "oauth") {

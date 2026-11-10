@@ -23,7 +23,12 @@ export function registerEncryptionRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     if (!r?.member) throw new ApiError(404, "org_not_found", "Workspace not found");
     return r;
   };
-  const audit = (orgId: string, userId: string, action: string, metadata: Record<string, unknown>) =>
+  const audit = (
+    orgId: string,
+    userId: string,
+    action: string,
+    metadata: Record<string, unknown>,
+  ) =>
     db.execute(sql`
       insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${orgId}::uuid, 'user', ${userId}::uuid, ${action}, 'organization', ${orgId}::uuid, ${JSON.stringify(metadata)}::jsonb)`);
@@ -39,14 +44,19 @@ export function registerEncryptionRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     const claims = claimsOf(c);
     const { id } = c.req.valid("param");
     const { enabled } = c.req.valid("json");
-    if (!(await role(claims, id)).owner) throw new ApiError(403, "forbidden", "Only workspace owners can change encryption");
+    if (!(await role(claims, id)).owner)
+      throw new ApiError(403, "forbidden", "Only workspace owners can change encryption");
     try {
       const s = await setEncryption(db, id, enabled);
       await audit(id, claims.sub, enabled ? "encryption.enabled" : "encryption.disabled", {});
       return c.json(s, 200);
     } catch (e) {
       if ((e as Error).message === "not_configured")
-        throw new ApiError(409, "encryption_unavailable", "This server has no encryption key. Set CONTENT_ENCRYPTION_KEY or AWS KMS first.");
+        throw new ApiError(
+          409,
+          "encryption_unavailable",
+          "This server has no encryption key. Set CONTENT_ENCRYPTION_KEY or AWS KMS first.",
+        );
       throw e;
     }
   });
@@ -54,13 +64,15 @@ export function registerEncryptionRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
   app.openapi(routes.rotateEncryptionKey, async (c) => {
     const claims = claimsOf(c);
     const { id } = c.req.valid("param");
-    if (!(await role(claims, id)).owner) throw new ApiError(403, "forbidden", "Only workspace owners can rotate keys");
+    if (!(await role(claims, id)).owner)
+      throw new ApiError(403, "forbidden", "Only workspace owners can rotate keys");
     try {
       const s = await rotateEncryptionKey(db, id);
       await audit(id, claims.sub, "encryption.rotated", {});
       return c.json(s, 200);
     } catch (e) {
-      if ((e as Error).message === "no_key") throw new ApiError(409, "encryption_off", "Encryption isn't on for this workspace");
+      if ((e as Error).message === "no_key")
+        throw new ApiError(409, "encryption_off", "Encryption isn't on for this workspace");
       throw e;
     }
   });

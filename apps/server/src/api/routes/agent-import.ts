@@ -7,8 +7,13 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { botComputerId } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession, contentKeys } from "@kasama/db";
-import { AgentImportError, MEMORY_EXPORT_PROMPT, parseMemoryExport, planAgentImport } from "@kasama/domain";
+import { contentKeys, type JwtClaims, withUserSession } from "@kasama/db";
+import {
+  AgentImportError,
+  MEMORY_EXPORT_PROMPT,
+  parseMemoryExport,
+  planAgentImport,
+} from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { unzipSync } from "fflate";
 import { ApiError } from "../errors.ts";
@@ -25,7 +30,10 @@ const claimsOf = (c: { get(k: "claims"): JwtClaims | undefined }) => {
 
 /** Safe relative paths only: no absolute paths, no "..", forward slashes. */
 const cleanPath = (p: string) => {
-  const parts = p.replaceAll("\\", "/").split("/").filter((x) => x && x !== ".");
+  const parts = p
+    .replaceAll("\\", "/")
+    .split("/")
+    .filter((x) => x && x !== ".");
   if (parts.includes("..") || p.startsWith("/")) return null;
   return parts.join("/");
 };
@@ -47,7 +55,11 @@ export function registerAgentImportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
       if (!p || path.endsWith("/")) return;
       total += data.byteLength;
       if (files.size >= MAX_FILES || total > MAX_BYTES)
-        throw new ApiError(400, "import_too_large", "The folder is over 50 MB or 3,000 files. Leave out logs, sessions and databases.");
+        throw new ApiError(
+          400,
+          "import_too_large",
+          "The folder is over 50 MB or 3,000 files. Leave out logs, sessions and databases.",
+        );
       files.set(p, data);
     };
     if (b.zip_base64) {
@@ -68,7 +80,8 @@ export function registerAgentImportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
     try {
       plan = planAgentImport(files);
     } catch (err) {
-      if (err instanceof AgentImportError) throw new ApiError(400, "import_not_recognized", err.message);
+      if (err instanceof AgentImportError)
+        throw new ApiError(400, "import_not_recognized", err.message);
       throw err;
     }
     const [row] = await db.execute<{ id: string }>(sql`
@@ -93,7 +106,8 @@ export function registerAgentImportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
           format: "kasama.bot" as const,
           version: 1,
           name: plan.name,
-          description: plan.kind === "openclaw" ? "Imported from OpenClaw" : "Imported from Hermes Agent",
+          description:
+            plan.kind === "openclaw" ? "Imported from OpenClaw" : "Imported from Hermes Agent",
           persona_md: plan.persona_md,
           autonomy: "ask_risky" as const,
           skills: plan.skills.map(({ source: _s, ...k }) => k),
@@ -122,23 +136,40 @@ export function registerAgentImportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
       tx.execute<{ id: string; kind: string; org_id: string }>(sql`
         select id, kind, org_id from public.agent_imports where id = ${id}::uuid and expires_at > now()`),
     );
-    if (!imp) throw new ApiError(404, "import_not_found", "This upload has expired. Import the folder again.");
+    if (!imp)
+      throw new ApiError(
+        404,
+        "import_not_found",
+        "This upload has expired. Import the folder again.",
+      );
     const [bot] = await withUserSession(db, claims, (tx) =>
       tx.execute<{ manage: boolean; org_id: string }>(sql`
         select public.can_manage_bot(id) as manage, org_id from public.bots where id = ${bot_id}::uuid`),
     );
-    if (!bot || bot.org_id !== imp.org_id) throw new ApiError(404, "bot_not_found", "Bot not found");
-    if (!bot.manage) throw new ApiError(403, "forbidden", "Only people who manage this bot can add files to its computer");
+    if (!bot || bot.org_id !== imp.org_id)
+      throw new ApiError(404, "bot_not_found", "Bot not found");
+    if (!bot.manage)
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only people who manage this bot can add files to its computer",
+      );
     const computerId = await botComputerId(db, bot_id);
     if (!deps.computers || !computerId)
-      throw new ApiError(409, "no_computer", "This bot has no computer yet. Give it one, then copy the files.");
+      throw new ApiError(
+        409,
+        "no_computer",
+        "This bot has no computer yet. Give it one, then copy the files.",
+      );
     const h = await deps.computers.ensureRunning(computerId);
     const folder = `~/imported/${imp.kind}`;
     const files = await db.execute<{ path: string; content: Buffer }>(
       sql`select path, content from public.agent_import_files where import_id = ${id}::uuid`,
     );
     for (const f of files) await h.writeFile(`${folder}/${f.path}`, new Uint8Array(f.content));
-    await db.execute(sql`update public.agent_imports set bot_id = ${bot_id}::uuid, files_written_at = now() where id = ${id}::uuid`);
+    await db.execute(
+      sql`update public.agent_imports set bot_id = ${bot_id}::uuid, files_written_at = now() where id = ${id}::uuid`,
+    );
     return c.json({ written: files.length, folder }, 200);
   });
 
@@ -160,7 +191,8 @@ export function registerAgentImportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
         select public.can_manage_bot(id) as manage, org_id from public.bots where id = ${id}::uuid and archived_at is null`),
     );
     if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
-    if (!bot.manage) throw new ApiError(403, "forbidden", "Only people who manage this bot can change its memory");
+    if (!bot.manage)
+      throw new ApiError(403, "forbidden", "Only people who manage this bot can change its memory");
     const { memories } = c.req.valid("json");
     await db.transaction(async (tx) => {
       for (const m of memories)

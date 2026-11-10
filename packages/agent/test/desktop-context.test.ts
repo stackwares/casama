@@ -3,7 +3,12 @@ import { fileSearchCommand } from "../src/desktop-context.ts";
 
 describe("desktop file search", () => {
   it("uses each platform's own index, scoped to the allowed folders", () => {
-    const mac = fileSearchCommand("macos", ["/Users/ana/Documents", "/Users/ana/Downloads"], "tax 2026", 20);
+    const mac = fileSearchCommand(
+      "macos",
+      ["/Users/ana/Documents", "/Users/ana/Downloads"],
+      "tax 2026",
+      20,
+    );
     expect(mac).toContain("mdfind -onlyin '/Users/ana/Documents' 'tax 2026'");
     expect(mac).toContain("mdfind -onlyin '/Users/ana/Downloads' 'tax 2026'");
     expect(mac).toContain("head -n 20");
@@ -16,6 +21,8 @@ describe("desktop file search", () => {
     expect(win).toContain("file:C:/Users/Ana/Documents");
     expect(win).toContain("SELECT TOP 5 System.ItemPathDisplay FROM SystemIndex");
     // Quotes in the query can't break out of the shell argument.
-    expect(fileSearchCommand("macos", ["/x"], "a'; rm -rf ~; '", 5)).toContain(`'a'\\''; rm -rf ~; '\\'''`);
+    expect(fileSearchCommand("macos", ["/x"], "a'; rm -rf ~; '", 5)).toContain(
+      `'a'\\''; rm -rf ~; '\\'''`,
+    );
   });
 });

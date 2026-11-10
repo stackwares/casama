@@ -9,7 +9,18 @@ import type { Database } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { createRoutineRun } from "./routines.ts";
 
-export type DeviceEventType = "wake" | "arrive" | "leave" | "leave_now" | "workout_ended" | "notification" | "focus_on" | "focus_off" | "file_added" | "driving_on" | "driving_off";
+export type DeviceEventType =
+  | "wake"
+  | "arrive"
+  | "leave"
+  | "leave_now"
+  | "workout_ended"
+  | "notification"
+  | "focus_on"
+  | "focus_off"
+  | "file_added"
+  | "driving_on"
+  | "driving_off";
 export interface DeviceEvent {
   id: string;
   type: DeviceEventType;
@@ -57,11 +68,25 @@ export function describeDeviceEvent(e: DeviceEvent): string {
   }
 }
 
-type RoutineRow = Parameters<typeof createRoutineRun>[1] & { trigger: { type?: string; event?: string; place?: string; app?: string; folder?: string; pattern?: string }; kind?: string; last_run_at?: Date | null };
+type RoutineRow = Parameters<typeof createRoutineRun>[1] & {
+  trigger: {
+    type?: string;
+    event?: string;
+    place?: string;
+    app?: string;
+    folder?: string;
+    pattern?: string;
+  };
+  kind?: string;
+  last_run_at?: Date | null;
+};
 
 /** "*.pdf", "Invoice-*" → a case-insensitive whole-name match. */
 export function matchesPattern(name: string, pattern: string): boolean {
-  const re = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".");
+  const re = pattern
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*")
+    .replace(/\?/g, ".");
   return new RegExp(`^${re}$`, "i").test(name);
 }
 
@@ -69,7 +94,11 @@ export function matchesPattern(name: string, pattern: string): boolean {
  * Starts the person's routines for one event (once per event id). Returns the new run ids, for the
  * caller to start.
  */
-export async function fireDeviceEvent(db: Database, userId: string, e: DeviceEvent): Promise<string[]> {
+export async function fireDeviceEvent(
+  db: Database,
+  userId: string,
+  e: DeviceEvent,
+): Promise<string[]> {
   return db.transaction(async (tx) => {
     const fresh = await tx.execute(sql`
       insert into public.device_event_log (user_id, event_id, type) values (${userId}::uuid, ${e.id}, ${e.type})
@@ -88,8 +117,17 @@ export async function fireDeviceEvent(db: Database, userId: string, e: DeviceEve
       if (t.folder && (e.folder ?? "").toLowerCase() !== t.folder.toLowerCase()) continue;
       if (t.pattern && !matchesPattern(e.name ?? "", t.pattern)) continue;
       // Wake-ups and briefs: once a morning.
-      if ((e.type === "wake" || r.kind === "brief") && r.last_run_at && Date.now() - new Date(r.last_run_at).getTime() < 14 * 3600_000) continue;
-      if ((r.kind === "brief" || r.kind === "scan") && (await checkinCapReached(tx as Database, r.bot_id))) continue;
+      if (
+        (e.type === "wake" || r.kind === "brief") &&
+        r.last_run_at &&
+        Date.now() - new Date(r.last_run_at).getTime() < 14 * 3600_000
+      )
+        continue;
+      if (
+        (r.kind === "brief" || r.kind === "scan") &&
+        (await checkinCapReached(tx as Database, r.bot_id))
+      )
+        continue;
       runIds.push(await createRoutineRun(tx, r, "device", describeDeviceEvent(e)));
     }
     return runIds;
@@ -120,8 +158,15 @@ export async function checkLeaveNow(db: Database, deps: LeaveNowDeps): Promise<s
   const now = deps.now?.() ?? new Date();
   const runIds: string[] = [];
   // "Where am I now" answers never outlive 10 minutes.
-  await db.execute(sql`delete from public.device_requests where action = 'locate' and created_at < ${new Date(now.getTime() - 10 * 60_000).toISOString()}::timestamptz`);
-  const routines = await db.execute<{ id: string; org_id: string; created_by: string; trigger: { minutes_before?: number } }>(sql`
+  await db.execute(
+    sql`delete from public.device_requests where action = 'locate' and created_at < ${new Date(now.getTime() - 10 * 60_000).toISOString()}::timestamptz`,
+  );
+  const routines = await db.execute<{
+    id: string;
+    org_id: string;
+    created_by: string;
+    trigger: { minutes_before?: number };
+  }>(sql`
     select id, org_id, created_by, trigger from public.routines
     where enabled and created_by is not null and trigger ->> 'type' = 'device' and trigger ->> 'event' = 'leave_now'`);
   for (const r of routines) {
@@ -133,39 +178,69 @@ export async function checkLeaveNow(db: Database, deps: LeaveNowDeps): Promise<s
             and period_end >= ${now.toISOString()}::timestamptz and period_start <= ${new Date(now.getTime() + 3 * 3600_000).toISOString()}::timestamptz`);
         const next = days
           .flatMap((d) => d.summary?.events ?? [])
-          .filter((ev) => ev.location && ev.start && new Date(ev.start) > now && new Date(ev.start).getTime() - now.getTime() <= LEAVE_NOW_WINDOW_MIN * 60_000)
+          .filter(
+            (ev) =>
+              ev.location &&
+              ev.start &&
+              new Date(ev.start) > now &&
+              new Date(ev.start).getTime() - now.getTime() <= LEAVE_NOW_WINDOW_MIN * 60_000,
+          )
           .sort((a, b) => String(a.start).localeCompare(String(b.start)))[0];
         if (!next?.start || !next.location) return;
         const eventId = `leave_now:${r.id}:${next.start}:${(next.title ?? "").slice(0, 60)}`;
-        const [seen] = await db.execute(sql`select 1 from public.device_event_log where user_id = ${r.created_by}::uuid and event_id = ${eventId}`);
+        const [seen] = await db.execute(
+          sql`select 1 from public.device_event_log where user_id = ${r.created_by}::uuid and event_id = ${eventId}`,
+        );
         if (seen) return;
         // Where the person is now: a live read, never stored as a trail.
-        const [loc] = await db.execute<{ id: string; status: string; result: { lat?: number; lng?: number } | null }>(sql`
+        const [loc] = await db.execute<{
+          id: string;
+          status: string;
+          result: { lat?: number; lng?: number } | null;
+        }>(sql`
           select id, status, result from public.device_requests where user_id = ${r.created_by}::uuid and action = 'locate'
             and created_at > ${new Date(now.getTime() - 10 * 60_000).toISOString()}::timestamptz order by created_at desc limit 1`);
         if (!loc) {
           const [src] = await db.execute<{ id: string }>(sql`
             select id from public.device_sources where user_id = ${r.created_by}::uuid and kinds ? 'places'
               and last_seen_at > ${new Date(now.getTime() - 60 * 60_000).toISOString()}::timestamptz order by last_seen_at desc limit 1`);
-          if (src) await db.execute(sql`insert into public.device_requests (user_id, source_id, kind, action) values (${r.created_by}::uuid, ${src.id}::uuid, 'places', 'locate')`);
+          if (src)
+            await db.execute(
+              sql`insert into public.device_requests (user_id, source_id, kind, action) values (${r.created_by}::uuid, ${src.id}::uuid, 'places', 'locate')`,
+            );
           return;
         }
-        if (loc.status !== "done" || typeof loc.result?.lat !== "number" || typeof loc.result?.lng !== "number") return;
+        if (
+          loc.status !== "done" ||
+          typeof loc.result?.lat !== "number" ||
+          typeof loc.result?.lng !== "number"
+        )
+          return;
         const cached = travelCache.get(eventId);
-        let minutes: number | null = cached && now.getTime() - cached.at < 10 * 60_000 ? cached.minutes : null;
+        let minutes: number | null =
+          cached && now.getTime() - cached.at < 10 * 60_000 ? cached.minutes : null;
         if (minutes === null) {
           const maps = await deps.mapsKey(r.org_id);
           if (!maps) return;
-          minutes = await travelMinutes(maps.provider, maps.key, { lat: loc.result.lat, lng: loc.result.lng }, next.location, { fetch: deps.fetch, bases: deps.bases }).catch(() => null);
+          minutes = await travelMinutes(
+            maps.provider,
+            maps.key,
+            { lat: loc.result.lat, lng: loc.result.lng },
+            next.location,
+            { fetch: deps.fetch, bases: deps.bases },
+          ).catch(() => null);
           if (minutes === null) return;
           travelCache.set(eventId, { minutes, at: now.getTime() });
-          if (travelCache.size > 5000) travelCache.delete(travelCache.keys().next().value as string);
+          if (travelCache.size > 5000)
+            travelCache.delete(travelCache.keys().next().value as string);
         }
         const buffer = r.trigger.minutes_before ?? 5;
         const leaveAt = new Date(next.start).getTime() - (minutes + buffer) * 60_000;
         if (now.getTime() < leaveAt) return;
         // Used: the location goes.
-        await db.execute(sql`update public.device_requests set result = null where id = ${loc.id}::uuid`);
+        await db.execute(
+          sql`update public.device_requests set result = null where id = ${loc.id}::uuid`,
+        );
         travelCache.delete(eventId);
         runIds.push(
           ...(await fireDeviceEvent(db, r.created_by, {
@@ -177,7 +252,13 @@ export async function checkLeaveNow(db: Database, deps: LeaveNowDeps): Promise<s
         );
       })();
     } catch (err) {
-      console.error(JSON.stringify({ msg: "leave-now check failed", routine_id: r.id, error: (err as Error).message }));
+      console.error(
+        JSON.stringify({
+          msg: "leave-now check failed",
+          routine_id: r.id,
+          error: (err as Error).message,
+        }),
+      );
     }
   }
   return runIds;

@@ -152,7 +152,13 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
  * `phone`: an outbound call for the person (D-141): μ-law audio, the call's instructions, and only
  * an end_call function.
  */
-export async function voiceSession(rt: VoiceRuntime, orgId: string, botId: string, greeting?: string, phone?: boolean) {
+export async function voiceSession(
+  rt: VoiceRuntime,
+  orgId: string,
+  botId: string,
+  greeting?: string,
+  phone?: boolean,
+) {
   const bot = await botVoice(rt.db, botId);
   if (bot.org_id !== orgId) throw new Error("bot_not_found");
   const k = await rt.key(orgId, ["openai"]);
@@ -163,16 +169,26 @@ export async function voiceSession(rt: VoiceRuntime, orgId: string, botId: strin
     .available({ computer: rt.computers, desktop: false, vision: false })
     .filter((d) => !d.screen && d.name !== "computer.request_takeover");
   const tools: RealtimeTool[] = phone
-    ? [{ name: "end_call", description: "Hang up the call once you've said goodbye.", parameters: { type: "object", properties: {} } }]
+    ? [
+        {
+          name: "end_call",
+          description: "Hang up the call once you've said goodbye.",
+          parameters: { type: "object", properties: {} },
+        },
+      ]
     : rt.tools.specs(defs).map((s) => ({
         name: s.name,
         description: s.description.slice(0, 1024),
         parameters: s.inputSchema,
       }));
   const instructions = [
-    phone ? "" : `You are ${bot.name}, talking with the user on a live voice call. Keep replies short and natural.`,
+    phone
+      ? ""
+      : `You are ${bot.name}, talking with the user on a live voice call. Keep replies short and natural.`,
     bot.persona_md,
-    phone ? "" : "Use tools when needed; tell the user briefly what you are doing. Some actions may need their approval in the Kasama app.",
+    phone
+      ? ""
+      : "Use tools when needed; tell the user briefly what you are doing. Some actions may need their approval in the Kasama app.",
     greeting,
   ]
     .filter(Boolean)

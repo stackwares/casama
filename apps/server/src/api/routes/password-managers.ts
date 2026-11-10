@@ -25,7 +25,11 @@ type Row = {
   last_error: string | null;
   created_at: string;
 };
-const out = ({ org_id: _o, user_id, ...r }: Row) => ({ ...r, scope: user_id ? ("personal" as const) : ("workspace" as const), created_at: iso(r.created_at) });
+const out = ({ org_id: _o, user_id, ...r }: Row) => ({
+  ...r,
+  scope: user_id ? ("personal" as const) : ("workspace" as const),
+  created_at: iso(r.created_at),
+});
 
 const claimsOf = (c: { get(k: "claims"): JwtClaims | undefined }) => {
   const claims = c.get("claims");
@@ -39,10 +43,17 @@ export function registerPasswordManagerRoutes(app: OpenAPIHono<AppEnv>, deps: Ap
 
   const mine = async (claims: JwtClaims, id: string) => {
     const [r] = await withUserSession(db, claims, (tx) =>
-      tx.execute<Row & { admin: boolean }>(sql`select *, public.has_role(org_id, 'admin') as admin from public.password_managers where id = ${id}::uuid`),
+      tx.execute<Row & { admin: boolean }>(
+        sql`select *, public.has_role(org_id, 'admin') as admin from public.password_managers where id = ${id}::uuid`,
+      ),
     );
     if (!r) throw new ApiError(404, "password_manager_not_found", "Password manager not found");
-    if (r.user_id ? r.user_id !== claims.sub : !r.admin) throw new ApiError(403, "forbidden", "Only workspace admins can change the workspace's password managers");
+    if (r.user_id ? r.user_id !== claims.sub : !r.admin)
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only workspace admins can change the workspace's password managers",
+      );
     return r;
   };
   const client = async (r: Row) => {
@@ -54,7 +65,9 @@ export function registerPasswordManagerRoutes(app: OpenAPIHono<AppEnv>, deps: Ap
   app.openapi(routes.listPasswordManagers, async (c) => {
     const claims = claimsOf(c);
     const rows = await withUserSession(db, claims, (tx) =>
-      tx.execute<Row>(sql`select * from public.password_managers where org_id = ${c.req.valid("query").org_id}::uuid order by user_id nulls first, created_at`),
+      tx.execute<Row>(
+        sql`select * from public.password_managers where org_id = ${c.req.valid("query").org_id}::uuid order by user_id nulls first, created_at`,
+      ),
     );
     return c.json({ items: rows.map(out) }, 200);
   });
@@ -63,15 +76,26 @@ export function registerPasswordManagerRoutes(app: OpenAPIHono<AppEnv>, deps: Ap
     const claims = claimsOf(c);
     const b = c.req.valid("json");
     const [ok] = await withUserSession(db, claims, (tx) =>
-      tx.execute<{ member: boolean; admin: boolean }>(sql`select public.is_member(${b.org_id}::uuid) as member, public.has_role(${b.org_id}::uuid, 'admin') as admin`),
+      tx.execute<{ member: boolean; admin: boolean }>(
+        sql`select public.is_member(${b.org_id}::uuid) as member, public.has_role(${b.org_id}::uuid, 'admin') as admin`,
+      ),
     );
     if (!ok?.member) throw new ApiError(404, "org_not_found", "Workspace not found");
-    if (b.scope === "workspace" && !ok.admin) throw new ApiError(403, "forbidden", "Only workspace admins can connect a password manager for everyone");
+    if (b.scope === "workspace" && !ok.admin)
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only workspace admins can connect a password manager for everyone",
+      );
     // Check it works before saving.
     try {
       await clientFor(b.provider, b.url, b.token, fetchOut()).vaults();
     } catch (err) {
-      throw new ApiError(400, "password_manager_unreachable", `Couldn't reach it: ${(err as Error).message}`);
+      throw new ApiError(
+        400,
+        "password_manager_unreachable",
+        `Couldn't reach it: ${(err as Error).message}`,
+      );
     }
     const [row] = await db.execute<Row>(sql`
       insert into public.password_managers (org_id, user_id, provider, name, url, vault_secret_id, created_by)
@@ -92,14 +116,23 @@ export function registerPasswordManagerRoutes(app: OpenAPIHono<AppEnv>, deps: Ap
     try {
       vaults = await cl.vaults();
     } catch (err) {
-      throw new ApiError(400, "password_manager_unreachable", `Couldn't reach it: ${(err as Error).message}`);
+      throw new ApiError(
+        400,
+        "password_manager_unreachable",
+        `Couldn't reach it: ${(err as Error).message}`,
+      );
     }
     const items = await Promise.all(
       vaults.map(async (v) => ({
         id: v.id,
         name: v.name,
         allowed: r.allowed_vaults.includes(v.id),
-        logins: r.allowed_vaults.includes(v.id) ? await cl.items([v.id]).then((x) => x.length).catch(() => null) : null,
+        logins: r.allowed_vaults.includes(v.id)
+          ? await cl
+              .items([v.id])
+              .then((x) => x.length)
+              .catch(() => null)
+          : null,
       })),
     );
     return c.json({ items }, 200);

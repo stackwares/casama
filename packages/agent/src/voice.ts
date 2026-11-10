@@ -191,7 +191,15 @@ export async function createRealtimeSession(
           instructions: opts.instructions,
           audio: {
             // Barge-in (D-144): the person talking over the bot interrupts its reply.
-            input: { transcription: { model: "gpt-4o-mini-transcribe" }, turn_detection: { type: "server_vad", interrupt_response: true, create_response: true }, ...pcmu },
+            input: {
+              transcription: { model: "gpt-4o-mini-transcribe" },
+              turn_detection: {
+                type: "server_vad",
+                interrupt_response: true,
+                create_response: true,
+              },
+              ...pcmu,
+            },
             output: { voice: opts.voice ?? "marin", ...pcmu },
           },
           tools: opts.tools.map((t) => ({ type: "function", ...t })),

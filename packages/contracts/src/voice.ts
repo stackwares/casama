@@ -11,7 +11,10 @@ export const VoiceSessionRequest = z
   .object({
     bot_id: Uuid,
     conversation_id: Uuid.optional(),
-    call_id: Uuid.optional().openapi({ description: "An answered phone call (D-135): the session uses its conversation and the bot speaks first" }),
+    call_id: Uuid.optional().openapi({
+      description:
+        "An answered phone call (D-135): the session uses its conversation and the bot speaks first",
+    }),
   })
   .openapi("VoiceSessionRequest");
 

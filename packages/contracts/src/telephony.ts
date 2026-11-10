@@ -31,7 +31,17 @@ export const OutboundCall = z
     bot_id: Uuid,
     number: z.string(),
     purpose: z.string(),
-    status: z.enum(["queued", "ringing", "in_progress", "completed", "failed", "busy", "no_answer", "ended_by_user", "taken_over"]),
+    status: z.enum([
+      "queued",
+      "ringing",
+      "in_progress",
+      "completed",
+      "failed",
+      "busy",
+      "no_answer",
+      "ended_by_user",
+      "taken_over",
+    ]),
     transcript: z.array(z.object({ role: z.enum(["bot", "callee"]), text: z.string() })),
     seconds: z.number().int().nullable(),
     started_at: ts.nullable(),
@@ -40,4 +50,6 @@ export const OutboundCall = z
   })
   .openapi("OutboundCall");
 
-export const TakeOverCallRequest = z.object({ phone: e164.optional() }).openapi("TakeOverCallRequest");
+export const TakeOverCallRequest = z
+  .object({ phone: e164.optional() })
+  .openapi("TakeOverCallRequest");

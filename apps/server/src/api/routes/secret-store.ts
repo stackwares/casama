@@ -13,16 +13,32 @@ export function registerSecretStoreRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
   const admin = async (claims: JwtClaims | undefined, orgId: string) => {
     if (!claims) throw new ApiError(401, "unauthorized", "Missing or invalid bearer token");
     const [r] = await withUserSession(db, claims, (tx) =>
-      tx.execute<{ member: boolean; admin: boolean }>(sql`select public.has_role(${orgId}::uuid, 'member') as member, public.has_role(${orgId}::uuid, 'admin') as admin`),
+      tx.execute<{ member: boolean; admin: boolean }>(
+        sql`select public.has_role(${orgId}::uuid, 'member') as member, public.has_role(${orgId}::uuid, 'admin') as admin`,
+      ),
     );
     if (!r?.member) throw new ApiError(404, "org_not_found", "Workspace not found");
-    if (!r.admin) throw new ApiError(403, "forbidden", "Only admins can change where secrets are kept");
+    if (!r.admin)
+      throw new ApiError(403, "forbidden", "Only admins can change where secrets are kept");
     return claims;
   };
   const out = async (orgId: string) => {
-    const [s] = await db.execute<{ site_url: string; project_id: string; environment: string; secret_path: string }>(sql`
+    const [s] = await db.execute<{
+      site_url: string;
+      project_id: string;
+      environment: string;
+      secret_path: string;
+    }>(sql`
       select site_url, project_id, environment, secret_path from public.org_secret_stores where org_id = ${orgId}::uuid`);
-    return s ? { provider: "infisical" as const, ...s } : { provider: "vault" as const, site_url: null, project_id: null, environment: null, secret_path: null };
+    return s
+      ? { provider: "infisical" as const, ...s }
+      : {
+          provider: "vault" as const,
+          site_url: null,
+          project_id: null,
+          environment: null,
+          secret_path: null,
+        };
   };
 
   app.openapi(routes.getSecretStore, async (c) => {
@@ -47,18 +63,29 @@ export function registerSecretStoreRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
     try {
       await store.list();
     } catch (e) {
-      throw new ApiError(400, "infisical_failed", `Couldn't reach the Infisical project: ${(e as Error).message}`);
+      throw new ApiError(
+        400,
+        "infisical_failed",
+        `Couldn't reach the Infisical project: ${(e as Error).message}`,
+      );
     }
     let moved = 0;
     if (b.move_existing) {
       // Copy each Vault secret into Infisical, then drop it from Vault.
-      const rows = await db.execute<{ id: string; name: string; vault_secret_id: string; value: string | null }>(sql`
+      const rows = await db.execute<{
+        id: string;
+        name: string;
+        vault_secret_id: string;
+        value: string | null;
+      }>(sql`
         select s.id, s.name, s.vault_secret_id, v.decrypted_secret as value from public.secrets s
         join vault.decrypted_secrets v on v.id = s.vault_secret_id where s.org_id = ${id}::uuid and s.store = 'vault'`);
       for (const r of rows) {
         if (!r.value) continue;
         await store.put(r.name, r.value);
-        await db.execute(sql`update public.secrets set store = 'infisical', vault_secret_id = null where id = ${r.id}::uuid`);
+        await db.execute(
+          sql`update public.secrets set store = 'infisical', vault_secret_id = null where id = ${r.id}::uuid`,
+        );
         await db.execute(sql`delete from vault.secrets where id = ${r.vault_secret_id}::uuid`);
         moved++;
       }
@@ -82,18 +109,26 @@ export function registerSecretStoreRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
     const claims = await admin(c.get("claims"), id);
     // Copy Infisical-kept secrets back into Vault so nothing stops working.
     const store = await secretStoreFor(db, id, f());
-    const rows = await db.execute<{ id: string; name: string }>(sql`select id, name from public.secrets where org_id = ${id}::uuid and store = 'infisical'`);
+    const rows = await db.execute<{ id: string; name: string }>(
+      sql`select id, name from public.secrets where org_id = ${id}::uuid and store = 'infisical'`,
+    );
     if (rows.length && store.kind === "infisical") {
       let values: Map<string, string>;
       try {
         values = await store.get(rows.map((r) => r.name));
       } catch (e) {
-        throw new ApiError(400, "infisical_failed", `Couldn't read the secrets back from Infisical: ${(e as Error).message}`);
+        throw new ApiError(
+          400,
+          "infisical_failed",
+          `Couldn't read the secrets back from Infisical: ${(e as Error).message}`,
+        );
       }
       for (const r of rows) {
         const v = values.get(r.name);
         if (!v) continue;
-        await db.execute(sql`update public.secrets set store = 'vault', vault_secret_id = (select vault.create_secret(${v}, null, 'named secret')) where id = ${r.id}::uuid`);
+        await db.execute(
+          sql`update public.secrets set store = 'vault', vault_secret_id = (select vault.create_secret(${v}, null, 'named secret')) where id = ${r.id}::uuid`,
+        );
       }
     }
     await db.execute(sql`

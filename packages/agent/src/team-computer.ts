@@ -1,6 +1,6 @@
 import type { Database } from "@kasama/db";
-import type { ExecOptions, SandboxHandle } from "@kasama/sandbox";
 import { slugify } from "@kasama/domain";
+import type { ExecOptions, SandboxHandle } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
 
 /**
@@ -49,7 +49,8 @@ export function inTeamFolder(h: SandboxHandle, folder: string): SandboxHandle {
     const v = (p ?? "").trim().replace(/^\.\/+/, "");
     if (!v || v === ".") return own;
     if (v.startsWith("/") || v.startsWith("~")) return v;
-    if (v === "shared" || v.startsWith("shared/") || v === "bots" || v.startsWith("bots/")) return v;
+    if (v === "shared" || v.startsWith("shared/") || v === "bots" || v.startsWith("bots/"))
+      return v;
     return `${own}/${v}`;
   };
   const absolute = (p: string | undefined) => {
@@ -59,7 +60,9 @@ export function inTeamFolder(h: SandboxHandle, folder: string): SandboxHandle {
   let made: Promise<void> | null = null;
   const ensure = () => {
     made ??= (async () => {
-      for await (const _ of h.exec(`mkdir -p ${WORKSPACE}/${own} ${WORKSPACE}/shared`, { timeoutMs: 30_000 })) {
+      for await (const _ of h.exec(`mkdir -p ${WORKSPACE}/${own} ${WORKSPACE}/shared`, {
+        timeoutMs: 30_000,
+      })) {
         // drain
       }
     })().catch(() => {
@@ -104,8 +107,12 @@ export async function claimDesktop(
   return db.transaction(async (tx) => {
     // One claim at a time per computer, so two bots can't both take the last place.
     await tx.execute(sql`select 1 from public.computers where id = ${c.id}::uuid for update`);
-    await tx.execute(sql`delete from public.computer_desktop_leases where computer_id = ${c.id}::uuid and expires_at < now()`);
-    const [cap] = await tx.execute<{ max_desktops: number }>(sql`select max_desktops from public.computers where id = ${c.id}::uuid`);
+    await tx.execute(
+      sql`delete from public.computer_desktop_leases where computer_id = ${c.id}::uuid and expires_at < now()`,
+    );
+    const [cap] = await tx.execute<{ max_desktops: number }>(
+      sql`select max_desktops from public.computers where id = ${c.id}::uuid`,
+    );
     const others = await tx.execute<{ name: string }>(sql`
       select b.name from public.computer_desktop_leases l join public.bots b on b.id = l.bot_id
       where l.computer_id = ${c.id}::uuid and l.bot_id <> ${botId}::uuid order by l.expires_at`);

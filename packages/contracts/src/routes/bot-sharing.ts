@@ -36,5 +36,12 @@ export const listMembers = createRoute({
   security,
   summary: "The people in a workspace",
   request: { params: idParam },
-  responses: { 200: jsonResponse("Members", z.object({ items: z.array(WorkspaceMember) }).openapi("WorkspaceMemberList")), 401: e401, 404: e404 },
+  responses: {
+    200: jsonResponse(
+      "Members",
+      z.object({ items: z.array(WorkspaceMember) }).openapi("WorkspaceMemberList"),
+    ),
+    401: e401,
+    404: e404,
+  },
 });

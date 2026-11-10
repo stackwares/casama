@@ -38,11 +38,19 @@ export function signAuditBatch(secret: string, body: string, t = Math.floor(Date
 }
 
 export function otlpLogs(rows: AuditRow[]) {
-  const attr = (key: string, v: unknown) => ({ key, value: { stringValue: typeof v === "string" ? v : JSON.stringify(v ?? null) } });
+  const attr = (key: string, v: unknown) => ({
+    key,
+    value: { stringValue: typeof v === "string" ? v : JSON.stringify(v ?? null) },
+  });
   return {
     resourceLogs: [
       {
-        resource: { attributes: [attr("service.name", "kasama"), attr("kasama.org_id", rows[0]?.org_id ?? "")] },
+        resource: {
+          attributes: [
+            attr("service.name", "kasama"),
+            attr("kasama.org_id", rows[0]?.org_id ?? ""),
+          ],
+        },
         scopeLogs: [
           {
             scope: { name: "kasama.audit" },
@@ -67,7 +75,16 @@ export function otlpLogs(rows: AuditRow[]) {
 }
 
 /** PUT an object with Signature Version 4 (path-style, so MinIO and R2 endpoints work too). */
-async function s3Put(o: { endpoint?: string; region: string; bucket: string; key: string; accessKeyId: string; secretAccessKey: string; body: string; fetch: typeof fetch }) {
+async function s3Put(o: {
+  endpoint?: string;
+  region: string;
+  bucket: string;
+  key: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  body: string;
+  fetch: typeof fetch;
+}) {
   const base = (o.endpoint ?? `https://s3.${o.region}.amazonaws.com`).replace(/\/$/, "");
   const url = new URL(`${base}/${o.bucket}/${o.key.split("/").map(encodeURIComponent).join("/")}`);
   const now = new Date();
@@ -75,18 +92,37 @@ async function s3Put(o: { endpoint?: string; region: string; bucket: string; key
   const day = amzDate.slice(0, 8);
   const sha = (s: string) => createHash("sha256").update(s).digest("hex");
   const payloadHash = sha(o.body);
-  const headers: Record<string, string> = { host: url.host, "x-amz-content-sha256": payloadHash, "x-amz-date": amzDate, "content-type": "application/x-ndjson" };
+  const headers: Record<string, string> = {
+    host: url.host,
+    "x-amz-content-sha256": payloadHash,
+    "x-amz-date": amzDate,
+    "content-type": "application/x-ndjson",
+  };
   const names = Object.keys(headers).sort();
-  const canonical = ["PUT", url.pathname, "", ...names.map((n) => `${n}:${headers[n]}`), "", names.join(";"), payloadHash].join("\n");
+  const canonical = [
+    "PUT",
+    url.pathname,
+    "",
+    ...names.map((n) => `${n}:${headers[n]}`),
+    "",
+    names.join(";"),
+    payloadHash,
+  ].join("\n");
   const scope = `${day}/${o.region}/s3/aws4_request`;
   const toSign = ["AWS4-HMAC-SHA256", amzDate, scope, sha(canonical)].join("\n");
   const hmac = (k: Buffer | string, s: string) => createHmac("sha256", k).update(s).digest();
-  const signing = hmac(hmac(hmac(hmac(`AWS4${o.secretAccessKey}`, day), o.region), "s3"), "aws4_request");
+  const signing = hmac(
+    hmac(hmac(hmac(`AWS4${o.secretAccessKey}`, day), o.region), "s3"),
+    "aws4_request",
+  );
   const signature = createHmac("sha256", signing).update(toSign).digest("hex");
   const { host: _h, ...send } = headers;
   return o.fetch(url.toString(), {
     method: "PUT",
-    headers: { ...send, authorization: `AWS4-HMAC-SHA256 Credential=${o.accessKeyId}/${scope}, SignedHeaders=${names.join(";")}, Signature=${signature}` },
+    headers: {
+      ...send,
+      authorization: `AWS4-HMAC-SHA256 Credential=${o.accessKeyId}/${scope}, SignedHeaders=${names.join(";")}, Signature=${signature}`,
+    },
     body: o.body,
   });
 }
@@ -98,7 +134,11 @@ export async function sendBatch(f: Forwarder, rows: AuditRow[], fetchFn: typeof 
     const body = JSON.stringify({ forwarder_id: f.id, events });
     const res = await fetchFn(String(f.config.url), {
       method: "POST",
-      headers: { "content-type": "application/json", "x-kasama-signature": signAuditBatch(f.secret ?? "", body), "x-kasama-batch": `${events[0]?.id}-${events.at(-1)?.id}` },
+      headers: {
+        "content-type": "application/json",
+        "x-kasama-signature": signAuditBatch(f.secret ?? "", body),
+        "x-kasama-batch": `${events[0]?.id}-${events.at(-1)?.id}`,
+      },
       body,
     });
     if (!res.ok) throw new Error(`The webhook answered ${res.status}`);
@@ -109,15 +149,23 @@ export async function sendBatch(f: Forwarder, rows: AuditRow[], fetchFn: typeof 
     try {
       extra = f.secret ? (JSON.parse(f.secret) as Record<string, string>) : {};
     } catch {}
-    const res = await fetchFn(`${String(f.config.url).replace(/\/$/, "").replace(/\/v1\/logs$/, "")}/v1/logs`, {
-      method: "POST",
-      headers: { "content-type": "application/json", ...extra },
-      body: JSON.stringify(otlpLogs(rows)),
-    });
+    const res = await fetchFn(
+      `${String(f.config.url)
+        .replace(/\/$/, "")
+        .replace(/\/v1\/logs$/, "")}/v1/logs`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json", ...extra },
+        body: JSON.stringify(otlpLogs(rows)),
+      },
+    );
     if (!res.ok) throw new Error(`The OTLP endpoint answered ${res.status}`);
     return;
   }
-  const creds = JSON.parse(f.secret ?? "{}") as { access_key_id?: string; secret_access_key?: string };
+  const creds = JSON.parse(f.secret ?? "{}") as {
+    access_key_id?: string;
+    secret_access_key?: string;
+  };
   const first = new Date(rows[0]?.created_at ?? Date.now());
   const key = `${(f.config.prefix ?? "kasama-audit").replace(/\/$/, "")}/${f.org_id}/${first.toISOString().slice(0, 10).replace(/-/g, "/")}/${first.getTime()}-${rows[0]?.id}.jsonl`;
   const res = await s3Put({
@@ -134,7 +182,10 @@ export async function sendBatch(f: Forwarder, rows: AuditRow[], fetchFn: typeof 
 }
 
 /** One pass for every enabled forwarder (the worker runs it every minute when licensed). */
-export async function forwardAuditLogs(db: Database, opts: { fetch?: typeof fetch; batch?: number; maxBatches?: number } = {}) {
+export async function forwardAuditLogs(
+  db: Database,
+  opts: { fetch?: typeof fetch; batch?: number; maxBatches?: number } = {},
+) {
   const forwarders = await db.execute<Forwarder>(sql`
     select f.id, f.org_id, f.kind, f.config, v.decrypted_secret as secret, f.cursor_at, f.cursor_id
     from public.audit_forwarders f left join vault.decrypted_secrets v on v.id = f.vault_secret_id where f.enabled`);
@@ -153,7 +204,9 @@ export async function forwardAuditLogs(db: Database, opts: { fetch?: typeof fetc
         await sendBatch(f, rows, opts.fetch);
       } catch (e) {
         // The cursor stays put: the same rows go again next time (at least once).
-        await db.execute(sql`update public.audit_forwarders set last_error = ${(e as Error).message.slice(0, 500)} where id = ${f.id}::uuid`);
+        await db.execute(
+          sql`update public.audit_forwarders set last_error = ${(e as Error).message.slice(0, 500)} where id = ${f.id}::uuid`,
+        );
         break;
       }
       const last = rows.at(-1) as AuditRow;

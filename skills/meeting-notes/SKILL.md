@@ -1,4 +1,5 @@
 ---
+
 name: meeting-notes
 description: Turn a meeting transcript or rough notes into a short summary with decisions, action items and open questions.
 ---

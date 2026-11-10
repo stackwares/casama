@@ -39,7 +39,8 @@ export class LocalKeyWrapper implements KeyWrapper {
   constructor(current: string, previous: string[] = []) {
     const parse = (k: string) => {
       const b = Buffer.from(k, "base64");
-      if (b.length !== 32) throw new Error("CONTENT_ENCRYPTION_KEY must be 32 bytes, base64-encoded");
+      if (b.length !== 32)
+        throw new Error("CONTENT_ENCRYPTION_KEY must be 32 bytes, base64-encoded");
       return b;
     };
     const fp = (b: Buffer) => `local:${createHash("sha256").update(b).digest("hex").slice(0, 12)}`;
@@ -56,7 +57,10 @@ export class LocalKeyWrapper implements KeyWrapper {
   }
   async unwrap(wrapped: string, wrapperId: string) {
     const k = this.keys.get(wrapperId);
-    if (!k) throw new Error(`No key for ${wrapperId}; keep the old CONTENT_ENCRYPTION_KEY in CONTENT_ENCRYPTION_KEY_PREVIOUS until rotation finishes`);
+    if (!k)
+      throw new Error(
+        `No key for ${wrapperId}; keep the old CONTENT_ENCRYPTION_KEY in CONTENT_ENCRYPTION_KEY_PREVIOUS until rotation finishes`,
+      );
     return gcmOpen(k, Buffer.from(wrapped, "base64"));
   }
 }
@@ -64,9 +68,29 @@ export class LocalKeyWrapper implements KeyWrapper {
 /** AWS KMS Encrypt and Decrypt (JSON 1.1 API, Signature Version 4), from AWS's public docs. */
 export class AwsKmsKeyWrapper implements KeyWrapper {
   readonly id: string;
-  private readonly o: { keyId: string; region: string; accessKeyId: string; secretAccessKey: string; sessionToken?: string; endpoint: string; fetch: typeof fetch };
-  constructor(o: { keyId: string; region: string; accessKeyId: string; secretAccessKey: string; sessionToken?: string; endpoint?: string; fetch?: typeof fetch }) {
-    this.o = { ...o, endpoint: o.endpoint ?? `https://kms.${o.region}.amazonaws.com`, fetch: o.fetch ?? fetch };
+  private readonly o: {
+    keyId: string;
+    region: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    sessionToken?: string;
+    endpoint: string;
+    fetch: typeof fetch;
+  };
+  constructor(o: {
+    keyId: string;
+    region: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    sessionToken?: string;
+    endpoint?: string;
+    fetch?: typeof fetch;
+  }) {
+    this.o = {
+      ...o,
+      endpoint: o.endpoint ?? `https://kms.${o.region}.amazonaws.com`,
+      fetch: o.fetch ?? fetch,
+    };
     this.id = `kms:${o.keyId}`;
   }
 
@@ -85,24 +109,44 @@ export class AwsKmsKeyWrapper implements KeyWrapper {
       ...(this.o.sessionToken ? { "x-amz-security-token": this.o.sessionToken } : {}),
     };
     const names = Object.keys(headers).sort();
-    const canonical = ["POST", url.pathname || "/", "", ...names.map((n) => `${n}:${headers[n]}`), "", names.join(";"), sha(payload)].join("\n");
+    const canonical = [
+      "POST",
+      url.pathname || "/",
+      "",
+      ...names.map((n) => `${n}:${headers[n]}`),
+      "",
+      names.join(";"),
+      sha(payload),
+    ].join("\n");
     const scope = `${day}/${this.o.region}/kms/aws4_request`;
     const toSign = ["AWS4-HMAC-SHA256", amzDate, scope, sha(canonical)].join("\n");
     const hmac = (k: Buffer | string, s: string) => createHmac("sha256", k).update(s).digest();
-    const signing = hmac(hmac(hmac(hmac(`AWS4${this.o.secretAccessKey}`, day), this.o.region), "kms"), "aws4_request");
+    const signing = hmac(
+      hmac(hmac(hmac(`AWS4${this.o.secretAccessKey}`, day), this.o.region), "kms"),
+      "aws4_request",
+    );
     const signature = createHmac("sha256", signing).update(toSign).digest("hex");
     const { host: _h, ...send } = headers;
     const res = await this.o.fetch(url.toString(), {
       method: "POST",
-      headers: { ...send, authorization: `AWS4-HMAC-SHA256 Credential=${this.o.accessKeyId}/${scope}, SignedHeaders=${names.join(";")}, Signature=${signature}` },
+      headers: {
+        ...send,
+        authorization: `AWS4-HMAC-SHA256 Credential=${this.o.accessKeyId}/${scope}, SignedHeaders=${names.join(";")}, Signature=${signature}`,
+      },
       body: payload,
     });
-    if (!res.ok) throw new Error(`AWS KMS ${target} failed with ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    if (!res.ok)
+      throw new Error(
+        `AWS KMS ${target} failed with ${res.status}: ${(await res.text()).slice(0, 200)}`,
+      );
     return (await res.json()) as Record<string, string>;
   }
 
   async wrap(dataKey: Buffer) {
-    const r = await this.call("Encrypt", { KeyId: this.o.keyId, Plaintext: dataKey.toString("base64") });
+    const r = await this.call("Encrypt", {
+      KeyId: this.o.keyId,
+      Plaintext: dataKey.toString("base64"),
+    });
     return r.CiphertextBlob as string;
   }
   async unwrap(wrapped: string) {
@@ -149,9 +193,11 @@ export class KeyRing {
     await this.refresh();
     if (!this.listening) {
       this.listening = true;
-      await sql.listen("kasama_org_keys", () => void this.refresh().catch(() => {})).catch(() => {
-        this.listening = false;
-      });
+      await sql
+        .listen("kasama_org_keys", () => void this.refresh().catch(() => {}))
+        .catch(() => {
+          this.listening = false;
+        });
     }
   }
 
@@ -166,7 +212,8 @@ export class KeyRing {
 
   async add(r: OrgKeyRow) {
     if (!this.wrapper) throw new Error("Encryption at rest isn't configured on this server");
-    if (!this.keys.has(r.id)) this.keys.set(r.id, await this.wrapper.unwrap(r.wrapped_key, r.wrapper));
+    if (!this.keys.has(r.id))
+      this.keys.set(r.id, await this.wrapper.unwrap(r.wrapped_key, r.wrapper));
     if (r.mode === "encrypting" || r.mode === "on") this.sealing.set(r.org_id, r.id);
     else this.sealing.delete(r.org_id);
   }
@@ -179,7 +226,10 @@ export class KeyRing {
   }
   async rewrap(wrapped: string, wrapperId: string) {
     if (!this.wrapper) throw new Error("Encryption at rest isn't configured on this server");
-    return { wrapped: await this.wrapper.wrap(await this.wrapper.unwrap(wrapped, wrapperId)), wrapper: this.wrapper.id };
+    return {
+      wrapped: await this.wrapper.wrap(await this.wrapper.unwrap(wrapped, wrapperId)),
+      wrapper: this.wrapper.id,
+    };
   }
 
   /** Whether any workspace seals writes (a cheap check before looking one up). */
@@ -250,7 +300,8 @@ export class KeyRing {
 }
 
 export const isSealed = (v: unknown) =>
-  (typeof v === "string" && v.startsWith(PREFIX)) || (!!v && typeof v === "object" && typeof (v as { $enc?: unknown }).$enc === "string");
+  (typeof v === "string" && v.startsWith(PREFIX)) ||
+  (!!v && typeof v === "object" && typeof (v as { $enc?: unknown }).$enc === "string");
 
 /** The process-wide key ring (the API and the worker configure it at startup). */
 export const contentKeys = new KeyRing();

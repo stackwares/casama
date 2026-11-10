@@ -49,6 +49,8 @@ describe("redactor merge (audit 2026-11)", () => {
   it("a rebuilt redactor keeps the values added during the run", () => {
     const before = new Redactor().add("login-password-123", "login");
     const after = new Redactor().add("new-secret-value", "API_KEY").merge(before);
-    expect(after.text("pw login-password-123 and new-secret-value")).toBe("pw [secret:login] and [secret:API_KEY]");
+    expect(after.text("pw login-password-123 and new-secret-value")).toBe(
+      "pw [secret:login] and [secret:API_KEY]",
+    );
   });
 });

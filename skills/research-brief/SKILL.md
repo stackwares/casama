@@ -1,4 +1,5 @@
 ---
+
 name: research-brief
 description: Research a question on the web and write a sourced brief with the answer first, key facts, disagreements and links.
 ---

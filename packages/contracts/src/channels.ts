@@ -2,7 +2,9 @@ import { z } from "@hono/zod-openapi";
 import { Uuid } from "./common.ts";
 
 const ts = z.iso.datetime({ offset: true });
-export const ChannelKind = z.enum(["telegram", "email", "sms", "slack", "whatsapp", "messenger", "feishu", "imessage"]).openapi("ChannelKind");
+export const ChannelKind = z
+  .enum(["telegram", "email", "sms", "slack", "whatsapp", "messenger", "feishu", "imessage"])
+  .openapi("ChannelKind");
 
 export const Channel = z
   .object({
@@ -35,7 +37,11 @@ export const CreateChannelRequest = z
   .openapi("CreateChannelRequest");
 
 export const UpdateChannelRequest = z
-  .object({ name: z.string().min(1).max(100).optional(), allowed_senders: z.array(z.string().min(1).max(300)).max(200).optional(), enabled: z.boolean().optional() })
+  .object({
+    name: z.string().min(1).max(100).optional(),
+    allowed_senders: z.array(z.string().min(1).max(300)).max(200).optional(),
+    enabled: z.boolean().optional(),
+  })
   .openapi("UpdateChannelRequest");
 
 export const ChannelEvent = z

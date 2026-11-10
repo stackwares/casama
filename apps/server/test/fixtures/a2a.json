@@ -5,28 +5,58 @@
       "when": { "systemIncludes": "extract lasting memories" },
       "events": [
         { "type": "text", "text": "{\"memories\":[]}" },
-        { "type": "finish", "usage": { "inputTokens": 50, "outputTokens": 5 }, "finishReason": "stop", "model": "" }
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 50, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
       ]
     },
     {
       "when": { "lastRole": "user", "lastUserIncludes": "Summarize the launch plan" },
       "events": [
-        { "type": "text", "text": "The launch is Tuesday at 9am; docs are ready and support is staffed." },
-        { "type": "finish", "usage": { "inputTokens": 200, "outputTokens": 20 }, "finishReason": "stop", "model": "" }
+        {
+          "type": "text",
+          "text": "The launch is Tuesday at 9am; docs are ready and support is staffed."
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 200, "outputTokens": 20 },
+          "finishReason": "stop",
+          "model": ""
+        }
       ]
     },
     {
       "when": { "lastRole": "user", "lastUserIncludes": "Ask the planner agent" },
       "events": [
-        { "type": "tool_call", "call": { "callId": "a1", "name": "a2a__planner__send", "args": { "task": "Summarize the launch plan" } } },
-        { "type": "finish", "usage": { "inputTokens": 300, "outputTokens": 20 }, "finishReason": "tool-calls", "model": "" }
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "a1",
+            "name": "a2a__planner__send",
+            "args": { "task": "Summarize the launch plan" }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 20 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
       ]
     },
     {
       "when": { "lastRole": "tool", "lastToolName": "a2a.planner.send" },
       "events": [
         { "type": "text", "text": "The planner says the launch is Tuesday at 9am." },
-        { "type": "finish", "usage": { "inputTokens": 400, "outputTokens": 20 }, "finishReason": "stop", "model": "" }
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 400, "outputTokens": 20 },
+          "finishReason": "stop",
+          "model": ""
+        }
       ]
     }
   ]

@@ -49,13 +49,19 @@ export function createPagesApp(deps: { db: Database; pdf?: PdfRenderer | null })
         },
       });
     }
-    return new Response(html, { headers: { ...PAGE_HEADERS, "content-type": "text/html; charset=utf-8" } });
+    return new Response(html, {
+      headers: { ...PAGE_HEADERS, "content-type": "text/html; charset=utf-8" },
+    });
   };
 
   // Clean up used and expired view tokens now and then.
   app.use("*", async (_c, next) => {
     if (Math.random() < 0.01)
-      void db.execute(sql`delete from public.page_view_tokens where expires_at < now() - interval '1 day'`).catch(() => {});
+      void db
+        .execute(
+          sql`delete from public.page_view_tokens where expires_at < now() - interval '1 day'`,
+        )
+        .catch(() => {});
     await next();
   });
 
@@ -63,7 +69,11 @@ export function createPagesApp(deps: { db: Database; pdf?: PdfRenderer | null })
 
   // A view link from the app: single use, 60 s, bound to the page and the viewer.
   app.get("/v/:token", async (c) => {
-    const [link] = await db.execute<{ page_id: string; user_id: string; format: "html" | "pdf" }>(sql`
+    const [link] = await db.execute<{
+      page_id: string;
+      user_id: string;
+      format: "html" | "pdf";
+    }>(sql`
       update public.page_view_tokens set used_at = now()
       where token_hash = ${hashPageToken(c.req.param("token"))} and kind = 'link' and used_at is null and expires_at > now()
       returning page_id, user_id, format`);
@@ -91,7 +101,9 @@ export function createPagesApp(deps: { db: Database; pdf?: PdfRenderer | null })
     if (!s) return null;
     // Still allowed? (Access is checked again as the viewer, so removing them works at once.)
     const [page] = await withUserSession(db, { sub: s.user_id, role: "authenticated" }, (tx) =>
-      tx.execute<PageRow>(sql`select id, title, html, data, updated_at from public.pages where id = ${id}::uuid`),
+      tx.execute<PageRow>(
+        sql`select id, title, html, data, updated_at from public.pages where id = ${id}::uuid`,
+      ),
     );
     return page ?? null;
   };

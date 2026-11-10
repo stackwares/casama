@@ -1,7 +1,6 @@
 import { serve } from "@hono/node-server";
 import { ComputerService, createSafeFetch } from "@kasama/agent";
 import { contentKeys, createDb } from "@kasama/db";
-import { configureContentKeys } from "./content-keys.ts";
 import { createLogger, initObservability, shutdownObservability } from "@kasama/observability";
 import { LocalProvider, SupervisorProvider, unavailableProvider } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
@@ -11,6 +10,7 @@ import { KASAMA_VERSION } from "./api/routes/admin.ts";
 import { attachTerminal } from "./api/routes/computers.ts";
 import { attachStream, liveConfigFromEnv } from "./api/routes/live.ts";
 import { attachLocalConnect, DeviceRegistry, internalToken } from "./api/routes/local.ts";
+import { attachTelephony } from "./api/routes/telephony.ts";
 import { pgRunEventHub } from "./api/run-event-hub.ts";
 import { dbosWorkflows } from "./api/workflows.ts";
 import {
@@ -19,12 +19,12 @@ import {
   inlineOrFile,
   kasamaCloudProvider,
 } from "./billing/index.ts";
+import { configureContentKeys } from "./content-keys.ts";
 import { loadEnv } from "./env.ts";
 import { createPagesApp } from "./pages/app.ts";
 import { abuseControlsOn } from "./services/abuse.ts";
 import { disabledEmail, resendEmail } from "./services/email.ts";
 import { chromiumPdf } from "./services/pdf.ts";
-import { attachTelephony } from "./api/routes/telephony.ts";
 
 const env = loadEnv();
 // Encryption at rest (D-136): the key that wraps workspace data keys, if configured.
@@ -63,9 +63,13 @@ process.once("SIGINT", () => void shutdown("SIGINT"));
 // Without INTERNAL_TOKEN the internal endpoints use a token derived from DATABASE_URL, which a weak
 // database URL makes guessable (audit 2026-11). install.sh and the Helm chart always set one.
 if (!env.INTERNAL_TOKEN && env.NODE_ENV === "production")
-  logger.warn("INTERNAL_TOKEN is not set: internal endpoints fall back to a token derived from DATABASE_URL. Set a random 32+ character INTERNAL_TOKEN.");
+  logger.warn(
+    "INTERNAL_TOKEN is not set: internal endpoints fall back to a token derived from DATABASE_URL. Set a random 32+ character INTERNAL_TOKEN.",
+  );
 // Private networks outbound calls may reach (OUTBOUND_ALLOW_CIDRS; SSRF guard otherwise).
-const allowCidrs = env.OUTBOUND_ALLOW_CIDRS?.split(",").map((c) => c.trim()).filter(Boolean);
+const allowCidrs = env.OUTBOUND_ALLOW_CIDRS?.split(",")
+  .map((c) => c.trim())
+  .filter(Boolean);
 if (env.MODE === "api") {
   const handle = createDb(env.DATABASE_URL);
   stoppers.push(handle.close);
@@ -137,7 +141,9 @@ if (env.MODE === "api") {
       env.TELEMETRY === "on" ? { url: env.TELEMETRY_URL, version: KASAMA_VERSION } : undefined,
     cloud,
     databaseUrl: env.WORKER_DATABASE_URL ?? env.DATABASE_URL,
-    apiDatabaseRole: env.WORKER_DATABASE_URL ? decodeURIComponent(new URL(env.DATABASE_URL).username) || undefined : undefined,
+    apiDatabaseRole: env.WORKER_DATABASE_URL
+      ? decodeURIComponent(new URL(env.DATABASE_URL).username) || undefined
+      : undefined,
     pagesUrl: env.PAGES_URL,
     publicApiUrl: env.PUBLIC_API_URL,
     auditForwarding: await import("@kasama/ee")
@@ -148,13 +154,24 @@ if (env.MODE === "api") {
       ? {
           url: env.AI_GATEWAY_URL,
           token: env.AI_GATEWAY_TOKEN,
-          providers: env.AI_GATEWAY_PROVIDERS ? (env.AI_GATEWAY_PROVIDERS.split(",").map((p) => p.trim()) as never) : undefined,
+          providers: env.AI_GATEWAY_PROVIDERS
+            ? (env.AI_GATEWAY_PROVIDERS.split(",").map((p) => p.trim()) as never)
+            : undefined,
         }
       : undefined,
-    dataResale: env.TREG_RESALE === "on" && env.TREG_API_KEY ? { tregKey: env.TREG_API_KEY, tregUrl: env.TREG_API_URL } : undefined,
+    dataResale:
+      env.TREG_RESALE === "on" && env.TREG_API_KEY
+        ? { tregKey: env.TREG_API_KEY, tregUrl: env.TREG_API_URL }
+        : undefined,
     apns:
       env.APNS_KEY_P8 && env.APNS_KEY_ID && env.APNS_TEAM_ID
-        ? { keyP8: inlineOrFile(env.APNS_KEY_P8), keyId: env.APNS_KEY_ID, teamId: env.APNS_TEAM_ID, topic: env.APNS_VOIP_TOPIC, url: env.APNS_URL }
+        ? {
+            keyP8: inlineOrFile(env.APNS_KEY_P8),
+            keyId: env.APNS_KEY_ID,
+            teamId: env.APNS_TEAM_ID,
+            topic: env.APNS_VOIP_TOPIC,
+            url: env.APNS_URL,
+          }
         : undefined,
     fcmServiceAccountJson: env.FCM_SERVICE_ACCOUNT
       ? inlineOrFile(env.FCM_SERVICE_ACCOUNT)

@@ -31,9 +31,17 @@ export const CreatePasswordManagerRequest = z
   .openapi("CreatePasswordManagerRequest");
 
 export const UpdatePasswordManagerRequest = z
-  .object({ allowed_vaults: z.array(z.string().max(200)).max(100), allowed_bot_ids: z.array(Uuid).max(200).nullable().optional() })
+  .object({
+    allowed_vaults: z.array(z.string().max(200)).max(100),
+    allowed_bot_ids: z.array(Uuid).max(200).nullable().optional(),
+  })
   .openapi("UpdatePasswordManagerRequest");
 
 export const PasswordManagerVault = z
-  .object({ id: z.string(), name: z.string(), allowed: z.boolean(), logins: z.number().int().nullable() })
+  .object({
+    id: z.string(),
+    name: z.string(),
+    allowed: z.boolean(),
+    logins: z.number().int().nullable(),
+  })
   .openapi("PasswordManagerVault");

@@ -1,4 +1,5 @@
 ---
+
 name: weekly-report
 description: Write a concise weekly status report from tickets, chats and notes, grouped into done, in progress, blocked and next.
 ---

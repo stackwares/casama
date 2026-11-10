@@ -1,6 +1,6 @@
 # Supabase API gateway (declarative). Placeholders are filled from the environment at start.
 # Single quotes: the container expands this file through a shell echo, which drops double quotes.
-_format_version: '2.1'
+_format_version: "2.1"
 _transform: true
 consumers:
   - username: anon

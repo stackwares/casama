@@ -6,12 +6,12 @@
  * sign-offs, and never runs a paused, blocked, done or cancelled project.
  */
 import type { Database } from "@kasama/db";
+import { contentKeys } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import type { NotificationService } from "./notifications.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
-import { contentKeys } from "@kasama/db";
 
 type StartRun = (runId: string) => Promise<void>;
 

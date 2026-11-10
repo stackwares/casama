@@ -15,7 +15,9 @@ export const ImportWorkspaceFilesRequest = z
   .object({
     zip_base64: z.string().max(70_000_000).optional(),
     files: z
-      .array(z.object({ path: z.string().min(1).max(1000), content_base64: z.string().max(14_000_000) }))
+      .array(
+        z.object({ path: z.string().min(1).max(1000), content_base64: z.string().max(14_000_000) }),
+      )
       .max(5000)
       .optional(),
     dry_run: z.boolean().optional(),

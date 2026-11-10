@@ -5,7 +5,13 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { sandboxContract } from "../src/contract.ts";
 import { daytonaProvider, e2bProvider, type HostedProvider } from "../src/hosted.ts";
-import { boatProvider, incusProvider, kubernetesProvider, novitaProvider, railwayProvider } from "../src/hosted-more.ts";
+import {
+  boatProvider,
+  incusProvider,
+  kubernetesProvider,
+  novitaProvider,
+  railwayProvider,
+} from "../src/hosted-more.ts";
 import { FsObjectStore } from "../src/object-store.ts";
 import {
   dockerAvailable,
@@ -89,20 +95,38 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
 
   // More providers (D-139), each against a stand-in that speaks its API.
   sandboxContract("novita", async () => {
-    const plane = await startMockControlPlane({ kind: "e2b", images, network: `${stack.prefix}-control` });
+    const plane = await startMockControlPlane({
+      kind: "e2b",
+      images,
+      network: `${stack.prefix}-control`,
+    });
     planes.push(plane);
     const provider = novitaProvider(
-      { apiKey: plane.apiKey, apiUrl: plane.url, templates: { headless: "kasama-headless", desktop: "kasama-desktop" }, portUrl: (id, port) => plane.portUrl(id, port) },
+      {
+        apiKey: plane.apiKey,
+        apiUrl: plane.url,
+        templates: { headless: "kasama-headless", desktop: "kasama-desktop" },
+        portUrl: (id, port) => plane.portUrl(id, port),
+      },
       hostedOpts(),
     );
     return { provider };
   });
 
   sandboxContract("kubernetes", async () => {
-    const plane = await startMockControlPlane({ kind: "kubernetes", images, network: `${stack.prefix}-control` });
+    const plane = await startMockControlPlane({
+      kind: "kubernetes",
+      images,
+      network: `${stack.prefix}-control`,
+    });
     planes.push(plane);
     const provider = kubernetesProvider(
-      { apiUrl: plane.url, token: plane.apiKey, namespace: "kasama", images: { headless: "kasama-headless", desktop: "kasama-desktop" } },
+      {
+        apiUrl: plane.url,
+        token: plane.apiKey,
+        namespace: "kasama",
+        images: { headless: "kasama-headless", desktop: "kasama-desktop" },
+      },
       hostedOpts(),
     );
     return {
@@ -115,7 +139,11 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
   });
 
   sandboxContract("incus", async () => {
-    const plane = await startMockControlPlane({ kind: "incus", images, network: `${stack.prefix}-control` });
+    const plane = await startMockControlPlane({
+      kind: "incus",
+      images,
+      network: `${stack.prefix}-control`,
+    });
     planes.push(plane);
     const provider = incusProvider(
       {
@@ -131,17 +159,39 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
   });
 
   sandboxContract("boat", async () => {
-    const plane = await startMockControlPlane({ kind: "boat", images, network: `${stack.prefix}-control` });
+    const plane = await startMockControlPlane({
+      kind: "boat",
+      images,
+      network: `${stack.prefix}-control`,
+    });
     planes.push(plane);
-    const provider = boatProvider({ apiKey: plane.apiKey, apiUrl: plane.url, images: { headless: "kasama-headless", desktop: "kasama-desktop" } }, hostedOpts());
+    const provider = boatProvider(
+      {
+        apiKey: plane.apiKey,
+        apiUrl: plane.url,
+        images: { headless: "kasama-headless", desktop: "kasama-desktop" },
+      },
+      hostedOpts(),
+    );
     return { provider };
   });
 
   sandboxContract("railway", async () => {
-    const plane = await startMockControlPlane({ kind: "railway", images, network: `${stack.prefix}-control` });
+    const plane = await startMockControlPlane({
+      kind: "railway",
+      images,
+      network: `${stack.prefix}-control`,
+    });
     planes.push(plane);
     const provider = railwayProvider(
-      { token: plane.apiKey, projectId: "proj_1", environmentId: "env_1", apiUrl: plane.url, images: { headless: "kasama-headless", desktop: "kasama-desktop" }, domainScheme: "http" },
+      {
+        token: plane.apiKey,
+        projectId: "proj_1",
+        environmentId: "env_1",
+        apiUrl: plane.url,
+        images: { headless: "kasama-headless", desktop: "kasama-desktop" },
+        domainScheme: "http",
+      },
       hostedOpts(),
     );
     return { provider };

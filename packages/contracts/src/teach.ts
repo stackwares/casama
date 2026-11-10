@@ -28,7 +28,11 @@ export const TeachDraft = z
     description: z.string(),
     body: z.string(),
     inputs: z.array(
-      z.object({ name: z.string(), description: z.string().optional(), secret: z.boolean().optional() }),
+      z.object({
+        name: z.string(),
+        description: z.string().optional(),
+        secret: z.boolean().optional(),
+      }),
     ),
     checks: z.array(z.string()),
   })

@@ -14,4 +14,6 @@ export const EncryptionStatus = z
   })
   .openapi("EncryptionStatus");
 
-export const SetEncryptionRequest = z.object({ enabled: z.boolean() }).openapi("SetEncryptionRequest");
+export const SetEncryptionRequest = z
+  .object({ enabled: z.boolean() })
+  .openapi("SetEncryptionRequest");

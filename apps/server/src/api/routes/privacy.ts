@@ -105,9 +105,14 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       body.a2a_enabled != null
     ) {
       if (body.a2a_enabled != null) {
-        await db.execute(sql`update public.organizations set a2a_enabled = ${body.a2a_enabled} where id = ${id}::uuid`);
+        await db.execute(
+          sql`update public.organizations set a2a_enabled = ${body.a2a_enabled} where id = ${id}::uuid`,
+        );
         // Turning it off unpublishes every bot.
-        if (!body.a2a_enabled) await db.execute(sql`update public.bots set a2a_published = false where org_id = ${id}::uuid`);
+        if (!body.a2a_enabled)
+          await db.execute(
+            sql`update public.bots set a2a_published = false where org_id = ${id}::uuid`,
+          );
       }
       if (body.allow_bot_to_bot != null)
         await db.execute(sql`

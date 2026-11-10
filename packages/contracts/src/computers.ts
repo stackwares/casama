@@ -23,7 +23,9 @@ export const Computer = z
       disk_gb: z.number().optional(),
     }),
     has_snapshot: z.boolean(),
-    max_desktops: z.number().int().openapi({ description: "Team computers: bots that may use the desktop at the same time (D-148)" }),
+    max_desktops: z.number().int().openapi({
+      description: "Team computers: bots that may use the desktop at the same time (D-148)",
+    }),
     last_active_at: ts.nullable(),
     error: z.string().nullable(),
     created_at: ts,
@@ -63,9 +65,21 @@ export const CreateComputerRequest = z
     owner_bot_id: Uuid.optional().openapi({ description: "Required for private computers" }),
     profile: z.enum(["headless", "desktop"]).optional(),
     provider: z
-      .enum(["docker", "e2b", "daytona", "kasama-cloud", "novita", "kubernetes", "incus", "boat", "railway"])
+      .enum([
+        "docker",
+        "e2b",
+        "daytona",
+        "kasama-cloud",
+        "novita",
+        "kubernetes",
+        "incus",
+        "boat",
+        "railway",
+      ])
       .optional()
-      .openapi({ description: "Hosted providers must be configured on the supervisor (D-057, D-139)" }),
+      .openapi({
+        description: "Hosted providers must be configured on the supervisor (D-057, D-139)",
+      }),
   })
   .openapi("CreateComputerRequest");
 
@@ -76,7 +90,13 @@ export const UpdateComputerRequest = z
       .enum(["headless", "desktop"])
       .optional()
       .openapi({ description: "Takes effect on the next start (a running computer restarts)" }),
-    max_desktops: z.number().int().min(1).max(10).optional().openapi({ description: "Team computers only (D-148)" }),
+    max_desktops: z
+      .number()
+      .int()
+      .min(1)
+      .max(10)
+      .optional()
+      .openapi({ description: "Team computers only (D-148)" }),
   })
   .openapi("UpdateComputerRequest");
 

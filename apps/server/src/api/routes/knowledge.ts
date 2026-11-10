@@ -47,10 +47,18 @@ export function registerKnowledgeRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
       ),
     );
     if (!r?.ok)
-      throw new ApiError(403, "forbidden", botId ? "Only people who manage this bot can change its knowledge" : "Only workspace admins can change shared knowledge");
+      throw new ApiError(
+        403,
+        "forbidden",
+        botId
+          ? "Only people who manage this bot can change its knowledge"
+          : "Only workspace admins can change shared knowledge",
+      );
   };
   const visible = async (claims: JwtClaims, id: string) => {
-    const [r] = await withUserSession(db, claims, (tx) => tx.execute<Row>(sql`select * from public.knowledge_sources where id = ${id}::uuid`));
+    const [r] = await withUserSession(db, claims, (tx) =>
+      tx.execute<Row>(sql`select * from public.knowledge_sources where id = ${id}::uuid`),
+    );
     if (!r) throw new ApiError(404, "knowledge_source_not_found", "Knowledge source not found");
     return r;
   };
@@ -73,7 +81,8 @@ export function registerKnowledgeRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     if (b.kind === "upload") {
       if (!b.files?.length) throw new ApiError(400, "no_files", "Add at least one file");
       const total = b.files.reduce((n, f) => n + f.content_base64.length * 0.75, 0);
-      if (total > 100_000_000) throw new ApiError(400, "too_large", "Uploads can total up to 100 MB per source");
+      if (total > 100_000_000)
+        throw new ApiError(400, "too_large", "Uploads can total up to 100 MB per source");
     } else if (b.kind === "website") {
       let u: URL;
       try {
@@ -81,14 +90,18 @@ export function registerKnowledgeRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
       } catch {
         throw new ApiError(400, "bad_url", "Give the website's address (https://…)");
       }
-      if (!/^https?:$/.test(u.protocol)) throw new ApiError(400, "bad_url", "Websites need an http or https address");
+      if (!/^https?:$/.test(u.protocol))
+        throw new ApiError(400, "bad_url", "Websites need an http or https address");
       config = { url: u.href, max_pages: b.max_pages ?? 50 };
     } else if (b.kind === "github") {
       const g = parseGitHubUrl(b.repo_url ?? "");
       config = { owner: g.owner, repo: g.repo, path: g.path, ref: g.ref ?? undefined };
     } else {
-      if (!b.integration_id || !b.documents?.length) throw new ApiError(400, "bad_connection", "Pick a connection and the documents to read");
-      const [i] = await db.execute<{ id: string }>(sql`select id from public.integrations where id = ${b.integration_id}::uuid and org_id = ${b.org_id}::uuid`);
+      if (!b.integration_id || !b.documents?.length)
+        throw new ApiError(400, "bad_connection", "Pick a connection and the documents to read");
+      const [i] = await db.execute<{ id: string }>(
+        sql`select id from public.integrations where id = ${b.integration_id}::uuid and org_id = ${b.org_id}::uuid`,
+      );
       if (!i) throw new ApiError(404, "integration_not_found", "Connection not found");
       config = { integration_id: b.integration_id, documents: b.documents };
     }

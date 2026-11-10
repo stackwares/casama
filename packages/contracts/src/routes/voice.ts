@@ -1,12 +1,12 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 import {
+  PhoneCall,
   Transcription,
   VoiceSession,
   VoiceSessionRequest,
   VoiceToolRequest,
   VoiceToolResult,
-  PhoneCall,
   VoiceTranscriptRequest,
 } from "../voice.ts";
 
@@ -95,7 +95,10 @@ export const listRingingCalls = createRoute({
   tags: ["voice"],
   security: [{ bearerAuth: [] }],
   summary: "Calls ringing for you now (the in-app banner on desktop and web)",
-  responses: { 200: jsonResponse("Calls", z.object({ items: z.array(PhoneCall) }).openapi("PhoneCallList")), 401: problemResponses[401] },
+  responses: {
+    200: jsonResponse("Calls", z.object({ items: z.array(PhoneCall) }).openapi("PhoneCallList")),
+    401: problemResponses[401],
+  },
 });
 export const getVoiceCall = createRoute({
   operationId: "getVoiceCall",
@@ -104,7 +107,11 @@ export const getVoiceCall = createRoute({
   tags: ["voice"],
   security: [{ bearerAuth: [] }],
   request: { params: callParam },
-  responses: { 200: jsonResponse("Call", PhoneCall), 401: problemResponses[401], 404: problemResponses[404] },
+  responses: {
+    200: jsonResponse("Call", PhoneCall),
+    401: problemResponses[401],
+    404: problemResponses[404],
+  },
 });
 export const answerVoiceCall = createRoute({
   operationId: "answerVoiceCall",
@@ -114,7 +121,12 @@ export const answerVoiceCall = createRoute({
   security: [{ bearerAuth: [] }],
   summary: "Answer a call; then start a voice session with its call_id",
   request: { params: callParam },
-  responses: { 200: jsonResponse("Call", PhoneCall), 401: problemResponses[401], 404: problemResponses[404], 409: problemResponses[409] },
+  responses: {
+    200: jsonResponse("Call", PhoneCall),
+    401: problemResponses[401],
+    404: problemResponses[404],
+    409: problemResponses[409],
+  },
 });
 export const declineVoiceCall = createRoute({
   operationId: "declineVoiceCall",
@@ -124,5 +136,9 @@ export const declineVoiceCall = createRoute({
   security: [{ bearerAuth: [] }],
   summary: "Decline a call; the reason arrives as a normal notification",
   request: { params: callParam },
-  responses: { 200: jsonResponse("Call", PhoneCall), 401: problemResponses[401], 404: problemResponses[404] },
+  responses: {
+    200: jsonResponse("Call", PhoneCall),
+    401: problemResponses[401],
+    404: problemResponses[404],
+  },
 });

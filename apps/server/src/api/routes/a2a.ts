@@ -7,7 +7,13 @@
  */
 import { createHash, randomUUID } from "node:crypto";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { A2A_VERSION, type A2aAgentCard, type A2aMessage, type A2aState, type A2aTask } from "@kasama/agent";
+import {
+  A2A_VERSION,
+  type A2aAgentCard,
+  type A2aMessage,
+  type A2aState,
+  type A2aTask,
+} from "@kasama/agent";
 import { routes } from "@kasama/contracts";
 import { contentKeys, type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
@@ -18,30 +24,63 @@ const hash = (t: string) => createHash("sha256").update(t).digest("hex");
 const WAIT_MS = 55_000;
 
 /** JSON-RPC error codes: the standard ones plus A2A's TaskNotFound (-32001) and others. */
-const E = { parse: -32700, invalid: -32600, method: -32601, params: -32602, internal: -32603, notFound: -32001, notCancelable: -32002, version: -32009 };
+const E = {
+  parse: -32700,
+  invalid: -32600,
+  method: -32601,
+  params: -32602,
+  internal: -32603,
+  notFound: -32001,
+  notCancelable: -32002,
+  version: -32009,
+};
 
 export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db } = deps;
-  const base = (c: { req: { url: string } }) => (deps.env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
+  const base = (c: { req: { url: string } }) =>
+    (deps.env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
 
   const published = async (botId: string) => {
     if (!/^[0-9a-f-]{36}$/.test(botId)) return null;
-    const [b] = await db.execute<{ id: string; org_id: string; name: string; persona_md: string | null }>(sql`
+    const [b] = await db.execute<{
+      id: string;
+      org_id: string;
+      name: string;
+      persona_md: string | null;
+    }>(sql`
       select b.id, b.org_id, b.name, b.persona_md from public.bots b join public.organizations o on o.id = b.org_id
       where b.id = ${botId}::uuid and b.archived_at is null and b.a2a_published and o.a2a_enabled`);
     return b ?? null;
   };
 
-  const card = (c: { req: { url: string } }, b: NonNullable<Awaited<ReturnType<typeof published>>>): A2aAgentCard => ({
+  const card = (
+    c: { req: { url: string } },
+    b: NonNullable<Awaited<ReturnType<typeof published>>>,
+  ): A2aAgentCard => ({
     name: b.name,
-    description: (b.persona_md || `${b.name}, an AI teammate on Kasama.`).replace(/\s+/g, " ").slice(0, 500),
+    description: (b.persona_md || `${b.name}, an AI teammate on Kasama.`)
+      .replace(/\s+/g, " ")
+      .slice(0, 500),
     version: "1.0.0",
-    supportedInterfaces: [{ url: `${base(c)}/a2a/${b.id}`, protocolBinding: "JSONRPC", protocolVersion: A2A_VERSION }],
+    supportedInterfaces: [
+      { url: `${base(c)}/a2a/${b.id}`, protocolBinding: "JSONRPC", protocolVersion: A2A_VERSION },
+    ],
     capabilities: { streaming: false, pushNotifications: false },
     defaultInputModes: ["text/plain"],
     defaultOutputModes: ["text/plain"],
-    skills: [{ id: "chat", name: "Ask the bot", description: `Give ${b.name} a task in plain language; it works with its own tools and returns the result.`, tags: ["assistant"] }],
-    securitySchemes: { workspaceKey: { httpAuthSecurityScheme: { scheme: "Bearer", bearerFormat: "Kasama workspace API key" } } },
+    skills: [
+      {
+        id: "chat",
+        name: "Ask the bot",
+        description: `Give ${b.name} a task in plain language; it works with its own tools and returns the result.`,
+        tags: ["assistant"],
+      },
+    ],
+    securitySchemes: {
+      workspaceKey: {
+        httpAuthSecurityScheme: { scheme: "Bearer", bearerFormat: "Kasama workspace API key" },
+      },
+    },
     securityRequirements: [{ workspaceKey: [] }],
   });
 
@@ -57,12 +96,21 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       if (l) b = { id: botId, ...l };
     }
     if (!b) return c.json({ error: "not_found" }, 404);
-    c.header("cache-control", tok.startsWith("klink_") ? "private, no-store" : "public, max-age=300");
+    c.header(
+      "cache-control",
+      tok.startsWith("klink_") ? "private, no-store" : "public, max-age=300",
+    );
     return c.json(card(c, b));
   });
 
   // --- tasks ---------------------------------------------------------------------
-  type Row = { id: string; context_id: string; run_id: string | null; status: string | null; cancel: boolean };
+  type Row = {
+    id: string;
+    context_id: string;
+    run_id: string | null;
+    status: string | null;
+    cancel: boolean;
+  };
   const stateOf = (status: string | null): A2aState =>
     status === "completed"
       ? "TASK_STATE_COMPLETED"
@@ -73,15 +121,28 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           : status === "queued"
             ? "TASK_STATE_SUBMITTED"
             : "TASK_STATE_WORKING";
-  const agentMsg = (text: string, t: Row): A2aMessage => ({ role: "ROLE_AGENT", parts: [{ text }], messageId: randomUUID(), contextId: t.context_id, taskId: t.id });
+  const agentMsg = (text: string, t: Row): A2aMessage => ({
+    role: "ROLE_AGENT",
+    parts: [{ text }],
+    messageId: randomUUID(),
+    contextId: t.context_id,
+    taskId: t.id,
+  });
 
   const taskOf = async (t: Row): Promise<A2aTask> => {
     const state = stateOf(t.status);
-    const out: A2aTask = { id: t.id, contextId: t.context_id, status: { state, timestamp: new Date().toISOString() } };
+    const out: A2aTask = {
+      id: t.id,
+      contextId: t.context_id,
+      status: { state, timestamp: new Date().toISOString() },
+    };
     if (state === "TASK_STATE_COMPLETED" && t.run_id) {
       const [m] = await db.execute<{ content: Array<{ type?: string; text?: string }> }>(sql`
         select content from public.messages where run_id = ${t.run_id}::uuid and role = 'assistant' order by created_at desc limit 1`);
-      const text = (Array.isArray(m?.content) ? m.content : []).filter((p) => p.type === "text").map((p) => p.text ?? "").join("");
+      const text = (Array.isArray(m?.content) ? m.content : [])
+        .filter((p) => p.type === "text")
+        .map((p) => p.text ?? "")
+        .join("");
       out.artifacts = [{ artifactId: `${t.id}-answer`, name: "answer", parts: [{ text }] }];
       // A linked request's answer goes on the link's record too (D-143).
       await db.execute(sql`
@@ -103,7 +164,8 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   };
 
   app.post("/a2a/:botId", async (c) => {
-    const rpcError = (id: unknown, code: number, message: string, status = 200) => c.json({ jsonrpc: "2.0", id: id ?? null, error: { code, message } }, status as 200);
+    const rpcError = (id: unknown, code: number, message: string, status = 200) =>
+      c.json({ jsonrpc: "2.0", id: id ?? null, error: { code, message } }, status as 200);
     const tok = (c.req.header("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
     const botId = c.req.param("botId");
     // A linked bot on another Kasama server (D-143) calls with its link's token, whether or not
@@ -112,7 +174,13 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     let b = tok.startsWith("klink_") ? null : await published(botId);
     let linkOwner: string | null = null;
     if (tok.startsWith("klink_") && /^[0-9a-f-]{36}$/.test(botId)) {
-      const [l] = await db.execute<{ id: string; owner_user_id: string; org_id: string; name: string; persona_md: string | null }>(sql`
+      const [l] = await db.execute<{
+        id: string;
+        owner_user_id: string;
+        org_id: string;
+        name: string;
+        persona_md: string | null;
+      }>(sql`
         select l.id, l.owner_user_id, bo.org_id, bo.name, bo.persona_md from public.bot_links l join public.bots bo on bo.id = l.bot_id
         where l.inbound_token_hash = ${createHash("sha256").update(tok).digest("hex")} and l.status = 'active' and l.bot_id = ${botId}::uuid and bo.archived_at is null`);
       if (l) {
@@ -126,12 +194,12 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const [key] = linkOwner
       ? [{ user_id: linkOwner }]
       : tok.startsWith("ksk_")
-      ? await db.execute<{ user_id: string }>(sql`
+        ? await db.execute<{ user_id: string }>(sql`
           update public.mcp_tokens set last_used_at = now()
           where token_hash = ${hash(tok)} and kind = 'api_key' and revoked_at is null and org_id = ${b.org_id}::uuid
             and exists (select 1 from public.memberships m where m.user_id = mcp_tokens.user_id and m.org_id = mcp_tokens.org_id)
           returning user_id`)
-      : [];
+        : [];
     if (!key) {
       c.header("www-authenticate", 'Bearer realm="kasama-a2a"');
       return rpcError(null, E.invalid, "Use a workspace API key (Bearer ksk_…)", 401);
@@ -143,11 +211,24 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     } catch {
       return rpcError(null, E.parse, "Parse error");
     }
-    if (version && !/^1(\.\d+)?$/.test(version.trim())) return c.json({ jsonrpc: "2.0", id: req.id ?? null, error: { code: E.version, message: `A2A version ${version} isn't supported`, data: [{ "@type": "VersionNotSupported", supportedVersions: [A2A_VERSION] }] } });
-    if (req.jsonrpc !== "2.0" || typeof req.method !== "string") return rpcError(req.id, E.invalid, "Invalid request");
+    if (version && !/^1(\.\d+)?$/.test(version.trim()))
+      return c.json({
+        jsonrpc: "2.0",
+        id: req.id ?? null,
+        error: {
+          code: E.version,
+          message: `A2A version ${version} isn't supported`,
+          data: [{ "@type": "VersionNotSupported", supportedVersions: [A2A_VERSION] }],
+        },
+      });
+    if (req.jsonrpc !== "2.0" || typeof req.method !== "string")
+      return rpcError(req.id, E.invalid, "Invalid request");
     const claims: JwtClaims = { sub: key.user_id, role: "authenticated", aal: "aal1" };
-    const [visible] = await withUserSession(db, claims, (tx) => tx.execute<{ ok: boolean }>(sql`select public.can_access_bot(${b.id}::uuid) as ok`));
-    if (!visible?.ok) return rpcError(req.id, E.invalid, "This key's person can't use this bot", 403);
+    const [visible] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ ok: boolean }>(sql`select public.can_access_bot(${b.id}::uuid) as ok`),
+    );
+    if (!visible?.ok)
+      return rpcError(req.id, E.invalid, "This key's person can't use this bot", 403);
     const p = req.params ?? {};
     const ok = (result: unknown) => c.json({ jsonrpc: "2.0", id: req.id ?? null, result });
 
@@ -155,10 +236,18 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       switch (req.method) {
         case "SendMessage": {
           const m = p.message as A2aMessage | undefined;
-          const text = (m?.parts ?? []).map((x) => x.text ?? "").filter(Boolean).join("\n").trim();
-          if (!m || m.role !== "ROLE_USER" || !text) return rpcError(req.id, E.params, "message needs role ROLE_USER and a text part");
+          const text = (m?.parts ?? [])
+            .map((x) => x.text ?? "")
+            .filter(Boolean)
+            .join("\n")
+            .trim();
+          if (m?.role !== "ROLE_USER" || !text)
+            return rpcError(req.id, E.params, "message needs role ROLE_USER and a text part");
           // The same context continues the same conversation; a task id continues its task's context.
-          let contextId = typeof m.contextId === "string" && /^[0-9a-f-]{36}$/.test(m.contextId) ? m.contextId : null;
+          let contextId =
+            typeof m.contextId === "string" && /^[0-9a-f-]{36}$/.test(m.contextId)
+              ? m.contextId
+              : null;
           if (m.taskId) {
             const prev = await load(m.taskId, b.id, key.user_id);
             if (!prev) return rpcError(req.id, E.notFound, "Task not found");
@@ -184,7 +273,9 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
             values (${b.org_id}::uuid, ${conversationId}::uuid, 'user', ${key.user_id}::uuid,
                     ${contentKeys.sealJson(b.org_id, [{ type: "text", text: `(Sent over A2A)\n${text}` }])}::jsonb, ${run?.id}::uuid)`);
-          await db.execute(sql`update public.conversations set last_message_at = now() where id = ${conversationId}::uuid`);
+          await db.execute(
+            sql`update public.conversations set last_message_at = now() where id = ${conversationId}::uuid`,
+          );
           const [t] = await db.execute<{ id: string }>(sql`
             insert into public.a2a_tasks (org_id, bot_id, caller_user_id, context_id, conversation_id, run_id)
             values (${b.org_id}::uuid, ${b.id}::uuid, ${key.user_id}::uuid, ${contextId}::uuid, ${conversationId}::uuid, ${run?.id}::uuid) returning id`);
@@ -203,7 +294,12 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           const cfg = (p.configuration ?? {}) as { returnImmediately?: boolean };
           const until = Date.now() + (cfg.returnImmediately ? 0 : WAIT_MS);
           let row = (await load(t?.id as string, b.id, key.user_id)) as Row;
-          while (Date.now() < until && !["completed", "failed", "cancelled", "waiting_approval", "waiting_takeover"].includes(row.status ?? "")) {
+          while (
+            Date.now() < until &&
+            !["completed", "failed", "cancelled", "waiting_approval", "waiting_takeover"].includes(
+              row.status ?? "",
+            )
+          ) {
             await new Promise((r) => setTimeout(r, 200));
             row = (await load(row.id, b.id, key.user_id)) as Row;
           }
@@ -216,14 +312,20 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         case "CancelTask": {
           const t = await load(String(p.id ?? ""), b.id, key.user_id);
           if (!t) return rpcError(req.id, E.notFound, "Task not found");
-          if (["completed", "failed", "cancelled"].includes(t.status ?? "")) return rpcError(req.id, E.notCancelable, "Task cannot be canceled");
-          await db.execute(sql`update public.runs set cancel_requested_at = now() where id = ${t.run_id}::uuid`);
+          if (["completed", "failed", "cancelled"].includes(t.status ?? ""))
+            return rpcError(req.id, E.notCancelable, "Task cannot be canceled");
+          await db.execute(
+            sql`update public.runs set cancel_requested_at = now() where id = ${t.run_id}::uuid`,
+          );
           await deps.workflows.signalRun(t.run_id as string).catch(() => {});
           const out = await taskOf(t);
           return ok({ ...out, status: { ...out.status, state: "TASK_STATE_CANCELED" } });
         }
         case "ListTasks": {
-          const ctx = typeof p.contextId === "string" && /^[0-9a-f-]{36}$/.test(p.contextId) ? p.contextId : null;
+          const ctx =
+            typeof p.contextId === "string" && /^[0-9a-f-]{36}$/.test(p.contextId)
+              ? p.contextId
+              : null;
           const size = Math.min(Math.max(Number(p.pageSize ?? 50), 1), 100);
           const rows = await db.execute<Row>(sql`
             select t.id, t.context_id, t.run_id, r.status, r.cancel_requested_at is not null as cancel
@@ -250,7 +352,11 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!b) throw new ApiError(404, "bot_not_found", "Bot not found");
     return b;
   };
-  const status = (c: { req: { url: string } }, id: string, b: { a2a_published: boolean; enabled: boolean }) => ({
+  const status = (
+    c: { req: { url: string } },
+    id: string,
+    b: { a2a_published: boolean; enabled: boolean },
+  ) => ({
     workspace_enabled: b.enabled,
     published: b.a2a_published,
     agent_card_url: `${base(c)}/a2a/${id}/.well-known/agent-card.json`,
@@ -269,8 +375,10 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const { id } = c.req.valid("param");
     const { published: on } = c.req.valid("json");
     const b = await manageBot(claims, id);
-    if (!b.manage) throw new ApiError(403, "forbidden", "Only people who manage this bot can publish it");
-    if (on && !b.enabled) throw new ApiError(409, "a2a_off", "Turn on agent-to-agent in workspace settings first");
+    if (!b.manage)
+      throw new ApiError(403, "forbidden", "Only people who manage this bot can publish it");
+    if (on && !b.enabled)
+      throw new ApiError(409, "a2a_off", "Turn on agent-to-agent in workspace settings first");
     await db.execute(sql`update public.bots set a2a_published = ${on} where id = ${id}::uuid`);
     await db.execute(sql`
       insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)

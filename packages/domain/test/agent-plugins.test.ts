@@ -1,18 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { checkManifest, checkMcp, checkPlugin, insidePlugin, MCP_SCHEMA_1_0, PLUGIN_SCHEMA_1_0, PluginError } from "../src/agent-plugins.ts";
+import {
+  checkManifest,
+  checkMcp,
+  checkPlugin,
+  insidePlugin,
+  MCP_SCHEMA_1_0,
+  PLUGIN_SCHEMA_1_0,
+  PluginError,
+} from "../src/agent-plugins.ts";
 
-const files = (o: Record<string, unknown>) => new Map(Object.entries(o).map(([k, v]) => [k, typeof v === "string" ? v : JSON.stringify(v)]));
+const files = (o: Record<string, unknown>) =>
+  new Map(Object.entries(o).map(([k, v]) => [k, typeof v === "string" ? v : JSON.stringify(v)]));
 
 describe("Agent Plugins 1.0", () => {
   it("rejects bad manifests and only warns about unknown fields", () => {
     expect(() => checkManifest({ name: "x" })).toThrow(PluginError);
-    expect(() => checkManifest({ $schema: "https://agent-plugins.org/schemas/2.0.0/plugin.schema.json", name: "x" })).toThrow(/Unsupported/);
+    expect(() =>
+      checkManifest({
+        $schema: "https://agent-plugins.org/schemas/2.0.0/plugin.schema.json",
+        name: "x",
+      }),
+    ).toThrow(/Unsupported/);
     for (const name of ["Bad", "a--b", "a..b", "-a", "a-", "x".repeat(65)])
-      expect(() => checkManifest({ $schema: PLUGIN_SCHEMA_1_0, name })).toThrow(/valid plugin name/);
+      expect(() => checkManifest({ $schema: PLUGIN_SCHEMA_1_0, name })).toThrow(
+        /valid plugin name/,
+      );
     const w: string[] = [];
-    expect(checkManifest({ $schema: PLUGIN_SCHEMA_1_0, name: "a", version: "not-semver", hooks: {} }, w)).toMatchObject({ name: "a", version: "not-semver" });
+    expect(
+      checkManifest({ $schema: PLUGIN_SCHEMA_1_0, name: "a", version: "not-semver", hooks: {} }, w),
+    ).toMatchObject({ name: "a", version: "not-semver" });
     expect(w).toEqual(["Ignored unknown field hooks"]);
-    expect(() => checkManifest({ $schema: PLUGIN_SCHEMA_1_0, name: "a", author: { name: "x", phone: "1" } })).toThrow(/author.phone/);
+    expect(() =>
+      checkManifest({ $schema: PLUGIN_SCHEMA_1_0, name: "a", author: { name: "x", phone: "1" } }),
+    ).toThrow(/author.phone/);
   });
 
   it("checks servers per entry, beyond the schema", () => {
@@ -21,12 +41,21 @@ describe("Agent Plugins 1.0", () => {
       {
         $schema: MCP_SCHEMA_1_0,
         mcpServers: {
-          ok: { type: "stdio", command: "./bin/server", args: ["--data", "${PLUGIN_DATA}/db"], cwd: "${PLUGIN_ROOT}" },
+          ok: {
+            type: "stdio",
+            command: "./bin/server",
+            args: ["--data", "${PLUGIN_DATA}/db"],
+            cwd: "${PLUGIN_ROOT}",
+          },
           npx: { type: "stdio", command: "npx", args: ["-y", "pkg"] },
           shell: { type: "stdio", command: "node server.js" },
           escape: { type: "stdio", command: "./bin/x", cwd: "./../up" },
           envroot: { type: "stdio", command: "x", env: { PLUGIN_ROOT: "/" } },
-          remote: { type: "streamable-http", url: "https://mcp.example.com/mcp", headers: { "X-Client": "kasama" } },
+          remote: {
+            type: "streamable-http",
+            url: "https://mcp.example.com/mcp",
+            headers: { "X-Client": "kasama" },
+          },
           plain: { type: "streamable-http", url: "http://mcp.example.com/mcp" },
           local: { type: "streamable-http", url: "http://127.0.0.1:9000/mcp" },
           dup: { type: "streamable-http", url: "https://a.example", headers: { A: "1", a: "2" } },
@@ -54,8 +83,18 @@ describe("Agent Plugins 1.0", () => {
           extensions: {
             "com.kasama": {
               secrets: [
-                { name: "WEATHER_KEY", server: "forecast", env: "WEATHER_API_KEY", description: "API key" },
-                { name: "MAPS_TOKEN", server: "maps", header: "Authorization", format: "Bearer {{value}}" },
+                {
+                  name: "WEATHER_KEY",
+                  server: "forecast",
+                  env: "WEATHER_API_KEY",
+                  description: "API key",
+                },
+                {
+                  name: "MAPS_TOKEN",
+                  server: "maps",
+                  header: "Authorization",
+                  format: "Bearer {{value}}",
+                },
                 { name: "LOST", server: "nope", env: "X" },
               ],
             },

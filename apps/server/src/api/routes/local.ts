@@ -162,7 +162,13 @@ function requireClaims(claims: JwtClaims | undefined): JwtClaims {
 
 type DeviceRow = typeof localDevices.$inferSelect;
 const caps = (c: unknown) =>
-  (c ?? {}) as { shell?: boolean; files?: boolean; browser?: boolean; desktop?: boolean; messages?: boolean };
+  (c ?? {}) as {
+    shell?: boolean;
+    files?: boolean;
+    browser?: boolean;
+    desktop?: boolean;
+    messages?: boolean;
+  };
 
 export function registerLocalRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db } = deps;
@@ -411,11 +417,11 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
             where ch.kind = 'imessage' and ch.enabled and ch.config ->> 'computer_id' = ${computerId}
               and d.computer_id = ${computerId}::uuid and d.enabled and ch.bot_id = any(d.allowed_bot_ids) limit 1`)
         : runId
-        ? await deps.db.execute<{ ok: boolean }>(sql`
+          ? await deps.db.execute<{ ok: boolean }>(sql`
             select r.bot_id = any(d.allowed_bot_ids) and d.enabled as ok
             from public.runs r, public.local_devices d
             where r.id = ${runId}::uuid and d.computer_id = ${computerId}::uuid`)
-        : [];
+          : [];
       if (!allowed?.ok)
         return c.json(
           { code: "bot_not_allowed", message: "This bot is not allowed to use that computer" },

@@ -21,7 +21,13 @@ import { iso } from "../util.ts";
 /** Calls bridged by this process, so "end" can hang up right away. */
 const bridges = new Map<string, () => void>();
 
-type Tel = { account_sid: string; from_number: string; token: string; allow_personal_numbers: boolean; daily_cap: number };
+type Tel = {
+  account_sid: string;
+  from_number: string;
+  token: string;
+  allow_personal_numbers: boolean;
+  daily_cap: number;
+};
 async function telephony(db: AppDeps["db"], orgId: string) {
   const [t] = await db.execute<Tel>(sql`
     select t.account_sid, t.from_number, v.decrypted_secret as token, t.allow_personal_numbers, t.daily_cap
@@ -29,7 +35,12 @@ async function telephony(db: AppDeps["db"], orgId: string) {
   return t ?? null;
 }
 const twilioOf = (deps: AppDeps, t: Tel) =>
-  new TwilioClient({ accountSid: t.account_sid, authToken: t.token, apiUrl: deps.env.TWILIO_API_URL, fetch: deps.apps?.fetch ?? fetch });
+  new TwilioClient({
+    accountSid: t.account_sid,
+    authToken: t.token,
+    apiUrl: deps.env.TWILIO_API_URL,
+    fetch: deps.apps?.fetch ?? fetch,
+  });
 
 const STATUS: Record<string, string> = {
   queued: "queued",
@@ -52,7 +63,9 @@ export function registerTelephonyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
   };
   const admin = async (claims: JwtClaims, orgId: string) => {
     const [r] = await withUserSession(db, claims, (tx) =>
-      tx.execute<{ admin: boolean; member: boolean }>(sql`select public.has_role(${orgId}::uuid, 'admin') as admin, public.has_role(${orgId}::uuid, 'member') as member`),
+      tx.execute<{ admin: boolean; member: boolean }>(
+        sql`select public.has_role(${orgId}::uuid, 'admin') as admin, public.has_role(${orgId}::uuid, 'member') as member`,
+      ),
     );
     if (!r?.member) throw new ApiError(404, "org_not_found", "Workspace not found");
     if (!r.admin) throw new ApiError(403, "forbidden", "Only admins can set up phone calls");
@@ -60,8 +73,20 @@ export function registerTelephonyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
   const settingsOut = async (orgId: string) => {
     const t = await telephony(db, orgId);
     return t
-      ? { connected: true, account_sid: t.account_sid, from_number: t.from_number, allow_personal_numbers: t.allow_personal_numbers, daily_cap: t.daily_cap }
-      : { connected: false, account_sid: null, from_number: null, allow_personal_numbers: false, daily_cap: 10 };
+      ? {
+          connected: true,
+          account_sid: t.account_sid,
+          from_number: t.from_number,
+          allow_personal_numbers: t.allow_personal_numbers,
+          daily_cap: t.daily_cap,
+        }
+      : {
+          connected: false,
+          account_sid: null,
+          from_number: null,
+          allow_personal_numbers: false,
+          daily_cap: 10,
+        };
   };
 
   app.openapi(routes.getTelephony, async (c) => {
@@ -79,10 +104,20 @@ export function registerTelephonyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     const token = b.auth_token ?? cur?.token;
     if (!token) throw new ApiError(400, "validation_failed", "Paste the Twilio auth token");
     // Check the account answers before saving.
-    const res = await (deps.apps?.fetch ?? fetch)(`${(deps.env.TWILIO_API_URL ?? "https://api.twilio.com").replace(/\/$/, "")}/2010-04-01/Accounts/${b.account_sid}.json`, {
-      headers: { authorization: `Basic ${Buffer.from(`${b.account_sid}:${token}`).toString("base64")}` },
-    }).catch(() => null);
-    if (!res?.ok) throw new ApiError(400, "twilio_failed", "Twilio didn't accept that account SID and auth token");
+    const res = await (deps.apps?.fetch ?? fetch)(
+      `${(deps.env.TWILIO_API_URL ?? "https://api.twilio.com").replace(/\/$/, "")}/2010-04-01/Accounts/${b.account_sid}.json`,
+      {
+        headers: {
+          authorization: `Basic ${Buffer.from(`${b.account_sid}:${token}`).toString("base64")}`,
+        },
+      },
+    ).catch(() => null);
+    if (!res?.ok)
+      throw new ApiError(
+        400,
+        "twilio_failed",
+        "Twilio didn't accept that account SID and auth token",
+      );
     await db.execute(sql`
       with old as (select vault_secret_id from public.org_telephony where org_id = ${id}::uuid)
       delete from vault.secrets where id in (select vault_secret_id from old) and ${b.auth_token ? 1 : 0} = 1`);
@@ -145,16 +180,23 @@ export function registerTelephonyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
   };
   const live = (s: string) => ["queued", "ringing", "in_progress"].includes(s);
 
-  app.openapi(routes.getOutboundCall, async (c) => c.json(callOut(await myCall(claimsOf(c), c.req.valid("param").id)), 200));
+  app.openapi(routes.getOutboundCall, async (c) =>
+    c.json(callOut(await myCall(claimsOf(c), c.req.valid("param").id)), 200),
+  );
 
   app.openapi(routes.endOutboundCall, async (c) => {
     const claims = claimsOf(c);
     const call = await myCall(claims, c.req.valid("param").id);
     if (live(call.status)) {
-      await db.execute(sql`update public.outbound_calls set status = 'ended_by_user', ended_at = now() where id = ${call.id}::uuid`);
+      await db.execute(
+        sql`update public.outbound_calls set status = 'ended_by_user', ended_at = now() where id = ${call.id}::uuid`,
+      );
       bridges.get(call.id)?.();
       const t = await telephony(db, call.org_id);
-      if (t && call.provider_call_id) await twilioOf(deps, t).updateCall(call.provider_call_id, { status: "completed" }).catch(() => {});
+      if (t && call.provider_call_id)
+        await twilioOf(deps, t)
+          .updateCall(call.provider_call_id, { status: "completed" })
+          .catch(() => {});
     }
     return c.json(callOut(await myCall(claims, call.id)), 200);
   });
@@ -163,18 +205,25 @@ export function registerTelephonyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     const claims = claimsOf(c);
     const call = await myCall(claims, c.req.valid("param").id);
     const { phone } = c.req.valid("json");
-    if (!live(call.status) || !call.provider_call_id) throw new ApiError(409, "call_over", "This call has already ended");
-    if (phone) await db.execute(sql`update public.profiles set phone_number = ${phone} where user_id = ${claims.sub}::uuid`);
+    if (!live(call.status) || !call.provider_call_id)
+      throw new ApiError(409, "call_over", "This call has already ended");
+    if (phone)
+      await db.execute(
+        sql`update public.profiles set phone_number = ${phone} where user_id = ${claims.sub}::uuid`,
+      );
     const [p] = await db.execute<{ phone_number: string | null; display_name: string | null }>(sql`
       select phone_number, display_name from public.profiles where user_id = ${claims.sub}::uuid`);
-    if (!p?.phone_number) throw new ApiError(400, "phone_required", "Add your phone number to take over calls");
+    if (!p?.phone_number)
+      throw new ApiError(400, "phone_required", "Add your phone number to take over calls");
     const t = await telephony(db, call.org_id);
     if (!t) throw new ApiError(409, "no_telephony", "Phone calls aren't set up");
     // Twilio leaves the media stream and connects the other side to the person's phone.
     await twilioOf(deps, t).updateCall(call.provider_call_id, {
       twiml: `<Response><Say>One moment, connecting you now.</Say><Dial callerId="${t.from_number}">${p.phone_number}</Dial></Response>`,
     });
-    await db.execute(sql`update public.outbound_calls set status = 'taken_over' where id = ${call.id}::uuid`);
+    await db.execute(
+      sql`update public.outbound_calls set status = 'taken_over' where id = ${call.id}::uuid`,
+    );
     bridges.get(call.id)?.();
     return c.json(callOut(await myCall(claims, call.id)), 200);
   });
@@ -183,13 +232,21 @@ export function registerTelephonyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
   app.post("/hooks/telephony/:id", async (c) => {
     const id = c.req.param("id");
     if (!/^[0-9a-f-]{36}$/.test(id)) return c.text("", 404);
-    const [call] = await db.execute<{ org_id: string; status: string }>(sql`select org_id, status from public.outbound_calls where id = ${id}::uuid`);
+    const [call] = await db.execute<{ org_id: string; status: string }>(
+      sql`select org_id, status from public.outbound_calls where id = ${id}::uuid`,
+    );
     const t = call ? await telephony(db, call.org_id) : null;
     if (!call || !t) return c.text("", 404);
-    const params = Object.fromEntries(new URLSearchParams(await c.req.text())) as Record<string, string>;
+    const params = Object.fromEntries(new URLSearchParams(await c.req.text())) as Record<
+      string,
+      string
+    >;
     const u = new URL(c.req.url);
-    const url = deps.env.PUBLIC_API_URL ? `${deps.env.PUBLIC_API_URL.replace(/\/$/, "")}${u.pathname}${u.search}` : c.req.url;
-    if (c.req.header("x-twilio-signature") !== twilioSignature(url, params, t.token)) return c.text("bad signature", 401);
+    const url = deps.env.PUBLIC_API_URL
+      ? `${deps.env.PUBLIC_API_URL.replace(/\/$/, "")}${u.pathname}${u.search}`
+      : c.req.url;
+    if (c.req.header("x-twilio-signature") !== twilioSignature(url, params, t.token))
+      return c.text("bad signature", 401);
     const status = STATUS[params.CallStatus ?? ""] ?? null;
     const seconds = params.CallDuration ? Number(params.CallDuration) : null;
     // A call the person ended or took over keeps that status; only its length is added.
@@ -216,7 +273,9 @@ export function registerTelephonyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
 export function attachTelephony(server: Server, deps: AppDeps) {
   const wss = new WebSocketServer({ noServer: true });
   server.on("upgrade", (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-    const id = new URL(req.url ?? "/", "http://api").pathname.match(/^\/telephony\/stream\/([0-9a-f-]{36})$/)?.[1];
+    const id = new URL(req.url ?? "/", "http://api").pathname.match(
+      /^\/telephony\/stream\/([0-9a-f-]{36})$/,
+    )?.[1];
     if (!id) return;
     wss.handleUpgrade(req, socket, head, (twilio) => bridge(deps, id, twilio));
   });
@@ -242,7 +301,12 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
   twilio.on("close", close);
   twilio.on("error", close);
   twilio.on("message", async (raw) => {
-    let m: { event?: string; streamSid?: string; start?: { streamSid: string; callSid: string; customParameters?: Record<string, string> }; media?: { payload: string } };
+    let m: {
+      event?: string;
+      streamSid?: string;
+      start?: { streamSid: string; callSid: string; customParameters?: Record<string, string> };
+      media?: { payload: string };
+    };
     try {
       m = JSON.parse(String(raw));
     } catch {
@@ -251,22 +315,46 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
     if (m.event === "start" && !started) {
       started = true;
       streamSid = m.start?.streamSid ?? m.streamSid ?? "";
-      const [call] = await db.execute<{ org_id: string; bot_id: string; user_id: string; number: string; purpose: string; notes: string | null; status: string; token: string }>(sql`
+      const [call] = await db.execute<{
+        org_id: string;
+        bot_id: string;
+        user_id: string;
+        number: string;
+        purpose: string;
+        notes: string | null;
+        status: string;
+        token: string;
+      }>(sql`
         select c.org_id, c.bot_id, c.user_id, c.number, c.purpose, c.notes, c.status, c.stream_token_hash as token from public.outbound_calls c where c.id = ${id}::uuid`);
       // The stream proves itself with the call's one-time token (sent as a TwiML parameter).
-      if (!call || call.token !== hashStreamToken(m.start?.customParameters?.token ?? "") || !["ringing", "in_progress", "queued"].includes(call.status)) return close();
-      await db.execute(sql`update public.outbound_calls set status = 'in_progress', started_at = coalesce(started_at, now()), stream_token_hash = 'used' where id = ${id}::uuid`);
+      if (
+        !call ||
+        call.token !== hashStreamToken(m.start?.customParameters?.token ?? "") ||
+        !["ringing", "in_progress", "queued"].includes(call.status)
+      )
+        return close();
+      await db.execute(
+        sql`update public.outbound_calls set status = 'in_progress', started_at = coalesce(started_at, now()), stream_token_hash = 'used' where id = ${id}::uuid`,
+      );
       const [who] = await db.execute<{ name: string; bot: string }>(sql`
         select coalesce(p.display_name, split_part(u.email, '@', 1), 'the person') as name, b.name as bot
         from public.bots b, auth.users u left join public.profiles p on p.user_id = u.id where b.id = ${call.bot_id}::uuid and u.id = ${call.user_id}::uuid`);
       const s = await deps.workflows.voiceSession(
         call.org_id,
         call.bot_id,
-        callInstructions({ personName: who?.name ?? "the person", botName: who?.bot ?? "the assistant", purpose: call.purpose, notes: call.notes, number: call.number }),
+        callInstructions({
+          personName: who?.name ?? "the person",
+          botName: who?.bot ?? "the assistant",
+          purpose: call.purpose,
+          notes: call.notes,
+          number: call.number,
+        }),
         true,
       );
       if (!s.ok) {
-        await db.execute(sql`update public.outbound_calls set status = 'failed', error = ${s.error}, ended_at = now() where id = ${id}::uuid`);
+        await db.execute(
+          sql`update public.outbound_calls set status = 'failed', error = ${s.error}, ended_at = now() where id = ${id}::uuid`,
+        );
         return close();
       }
       const wsUrl = `${(deps.env.OPENAI_REALTIME_URL ?? "wss://api.openai.com/v1/realtime").replace(/\/$/, "")}?model=${encodeURIComponent(s.model)}`;
@@ -284,11 +372,15 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
         }
         switch (e.type) {
           case "response.output_audio.delta":
-            if (e.delta && twilio.readyState === WebSocket.OPEN) twilio.send(JSON.stringify({ event: "media", streamSid, media: { payload: e.delta } }));
+            if (e.delta && twilio.readyState === WebSocket.OPEN)
+              twilio.send(
+                JSON.stringify({ event: "media", streamSid, media: { payload: e.delta } }),
+              );
             break;
           case "input_audio_buffer.speech_started":
             // Barge-in: the other person talks over the bot, so stop its audio.
-            if (twilio.readyState === WebSocket.OPEN) twilio.send(JSON.stringify({ event: "clear", streamSid }));
+            if (twilio.readyState === WebSocket.OPEN)
+              twilio.send(JSON.stringify({ event: "clear", streamSid }));
             ai?.send(JSON.stringify({ type: "response.cancel" }));
             break;
           case "conversation.item.input_audio_transcription.completed":

@@ -15,7 +15,13 @@ export const listSkillProposals = createRoute({
   security,
   summary: "Skills and skill edits bots proposed from their runs (D-126)",
   request: { query: z.object({ org_id: Uuid, bot_id: Uuid.optional() }) },
-  responses: { 200: jsonResponse("Proposals", z.object({ items: z.array(SkillProposal) }).openapi("SkillProposalList")), 401: e401 },
+  responses: {
+    200: jsonResponse(
+      "Proposals",
+      z.object({ items: z.array(SkillProposal) }).openapi("SkillProposalList"),
+    ),
+    401: e401,
+  },
 });
 
 export const acceptSkillProposal = createRoute({
@@ -26,7 +32,13 @@ export const acceptSkillProposal = createRoute({
   security,
   summary: "Save the proposed skill or edit, optionally changed first",
   request: { params: idParam, body: jsonBody(AcceptSkillProposalRequest) },
-  responses: { 200: jsonResponse("Accepted", SkillProposal), 401: e401, 403: e403, 404: e404, 409: e409 },
+  responses: {
+    200: jsonResponse("Accepted", SkillProposal),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });
 
 export const dismissSkillProposal = createRoute({
@@ -36,7 +48,13 @@ export const dismissSkillProposal = createRoute({
   tags,
   security,
   request: { params: idParam },
-  responses: { 200: jsonResponse("Dismissed", SkillProposal), 401: e401, 403: e403, 404: e404, 409: e409 },
+  responses: {
+    200: jsonResponse("Dismissed", SkillProposal),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });
 
 export const getSkillStats = createRoute({

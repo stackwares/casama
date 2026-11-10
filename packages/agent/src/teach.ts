@@ -76,8 +76,15 @@ export function registerTeachTools(registry: ToolRegistry, deps: { db: Database 
       const [s] = await db.execute<{ id: string }>(sql`
         update public.teach_sessions set draft = ${JSON.stringify(draft)}::jsonb, status = 'drafted'
         where run_id = ${ctx.runId}::uuid and status = 'drafting' returning id`);
-      if (!s) throw new ToolError("not_teaching", "There's no recording to draft a skill from in this chat.");
-      return { content: `Saved the draft skill ${args.name} for review.`, preview: `draft ${args.name}` };
+      if (!s)
+        throw new ToolError(
+          "not_teaching",
+          "There's no recording to draft a skill from in this chat.",
+        );
+      return {
+        content: `Saved the draft skill ${args.name} for review.`,
+        preview: `draft ${args.name}`,
+      };
     },
   });
 }

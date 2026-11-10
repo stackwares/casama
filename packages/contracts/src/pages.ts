@@ -29,9 +29,7 @@ export const PageViewLinkRequest = z
   .object({ format: z.enum(["html", "pdf"]).optional() })
   .openapi("PageViewLinkRequest");
 
-export const PageViewLink = z
-  .object({ url: z.url(), expires_at: ts })
-  .openapi("PageViewLink");
+export const PageViewLink = z.object({ url: z.url(), expires_at: ts }).openapi("PageViewLink");
 
 export const UpdatePageRequest = z
   .object({

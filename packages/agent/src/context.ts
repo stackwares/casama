@@ -88,8 +88,8 @@ export function buildContext(input: ContextInput): BuiltContext {
     input.computer && input.teamFolder
       ? `You work on your team's shared Linux computer (Ubuntu, home /home/kasama) with a shell, files and a browser. Your own folder is ~/workspace/bots/${input.teamFolder}: commands start there and relative paths are inside it. Put files every bot on this computer should use in ~/workspace/shared (the path shared/ works from anywhere); other bots have their own folders under ~/workspace/bots, so leave those alone unless asked. Files persist between conversations. Use the browser tools for websites and files.write for deliverables. When you mention a file you made, link it with its path under the home folder, like [report.md](workspace/bots/${input.teamFolder}/report.md); the app opens those links. Never use sandbox: or file: links. Files the user attaches arrive in workspace/uploads.`
       : input.computer
-      ? "You have your own Linux computer (Ubuntu, home /home/kasama, work in ~/workspace) with a shell, files and a browser. Files persist between conversations. Use the browser tools for websites and files.write for deliverables. When you mention a file you made, link it with its path under the home folder, like [report.md](workspace/report.md); the app opens those links. Never use sandbox: or file: links. Files the user attaches arrive in workspace/uploads."
-      : "",
+        ? "You have your own Linux computer (Ubuntu, home /home/kasama, work in ~/workspace) with a shell, files and a browser. Files persist between conversations. Use the browser tools for websites and files.write for deliverables. When you mention a file you made, link it with its path under the home folder, like [report.md](workspace/report.md); the app opens those links. Never use sandbox: or file: links. Files the user attaches arrive in workspace/uploads."
+        : "",
     "To do something later, use routines.create: in_minutes or run_at for one-time work (reminders, follow-ups), schedule_cron only for work that repeats. Use routines.list, routines.update and routines.delete to change or stop routines.",
   ]
     .filter(Boolean)

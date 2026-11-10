@@ -165,8 +165,13 @@ export function createKasamaMcpServer(
       const b = await resolveBot(bot, workspace);
       // A conversation id must be one of this bot's (so a workspace-scoped token stays in its workspace).
       if (conversation_id) {
-        const mine = (await api.call<{ items: Array<{ id: string }> }>(`/v1/bots/${encodeURIComponent(b.id)}/conversations?limit=200`)).items;
-        if (!mine.some((c) => c.id === conversation_id)) throw new Error(`No conversation ${conversation_id} with ${b.name}.`);
+        const mine = (
+          await api.call<{ items: Array<{ id: string }> }>(
+            `/v1/bots/${encodeURIComponent(b.id)}/conversations?limit=200`,
+          )
+        ).items;
+        if (!mine.some((c) => c.id === conversation_id))
+          throw new Error(`No conversation ${conversation_id} with ${b.name}.`);
       }
       const conv =
         conversation_id ??
@@ -221,7 +226,8 @@ export function createKasamaMcpServer(
     async ({ run_id }) => {
       const run = await api.call<{ bot_id: string }>(`/v1/runs/${encodeURIComponent(run_id)}`);
       // Only runs of bots in the token's workspace (hosted /mcp, D-117).
-      if (opts.scopeOrgId && !(await bots()).some((b) => b.id === run.bot_id)) throw new Error("No such run in this workspace.");
+      if (opts.scopeOrgId && !(await bots()).some((b) => b.id === run.bot_id))
+        throw new Error("No such run in this workspace.");
       const events = (
         await api.call<{ items: Array<{ type: string; payload: Record<string, unknown> }> }>(
           `/v1/runs/${run_id}/events?limit=200`,

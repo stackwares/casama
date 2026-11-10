@@ -90,7 +90,7 @@ export function registerChatGptRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           .from(modelCredentials)
           .where(eq(modelCredentials.id, body.credential_id ?? "")),
       );
-      if (!cred || cred.provider !== "chatgpt" || cred.orgId !== body.org_id)
+      if (cred?.provider !== "chatgpt" || cred.orgId !== body.org_id)
         throw new ApiError(404, "credential_not_found", "Credential not found");
       if (cred.ownerUserId !== claims.sub)
         throw new ApiError(

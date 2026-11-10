@@ -1,9 +1,15 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { checkinCapReached, describeEvent, scanContext, takeHeldForBrief, wrapUntrusted } from "@kasama/agent";
+import {
+  checkinCapReached,
+  describeEvent,
+  scanContext,
+  takeHeldForBrief,
+  wrapUntrusted,
+} from "@kasama/agent";
 import type { Database } from "@kasama/db";
+import { contentKeys } from "@kasama/db";
 import { nextRunAt } from "@kasama/domain";
 import { sql } from "drizzle-orm";
-import { contentKeys } from "@kasama/db";
 
 interface RoutineRow {
   id: string;
@@ -104,8 +110,15 @@ export async function claimDueRoutines(
           // A brief that already ran this morning on wake-up (D-151) skips its scheduled time.
           // Only a wake-up brief counts: a brief scheduled twice a day keeps both runs.
           let briefed = false;
-          if (r.kind === "brief" && r.last_run_at && now.getTime() - new Date(r.last_run_at as string).getTime() < 14 * 3600_000 && r.last_run_id) {
-            const [last] = await tx.execute<{ trigger: string }>(sql`select trigger from public.runs where id = ${r.last_run_id as string}::uuid`);
+          if (
+            r.kind === "brief" &&
+            r.last_run_at &&
+            now.getTime() - new Date(r.last_run_at as string).getTime() < 14 * 3600_000 &&
+            r.last_run_id
+          ) {
+            const [last] = await tx.execute<{ trigger: string }>(
+              sql`select trigger from public.runs where id = ${r.last_run_id as string}::uuid`,
+            );
             briefed = last?.trigger === "device";
           }
           if (!capped && !briefed) made = await createRoutineRun(tx, r, "routine");
@@ -124,7 +137,13 @@ export async function claimDueRoutines(
         });
         if (made) runIds.push(made);
       } catch (err) {
-        console.error(JSON.stringify({ msg: "routine claim failed", routine_id: r.id, error: (err as Error).message }));
+        console.error(
+          JSON.stringify({
+            msg: "routine claim failed",
+            routine_id: r.id,
+            error: (err as Error).message,
+          }),
+        );
         const next = (() => {
           try {
             return r.schedule_cron ? nextRunAt(r.schedule_cron, r.timezone, now) : null;
@@ -144,8 +163,14 @@ export async function claimDueRoutines(
 }
 
 /** Chat apps (D-134): a routine started by an inbound email or chat message. */
-export async function startRoutineForMessage(db: Database, routineId: string, eventText: string): Promise<string | null> {
-  const [r] = await db.execute<RoutineRow>(sql`select * from public.routines where id = ${routineId}::uuid and enabled`);
+export async function startRoutineForMessage(
+  db: Database,
+  routineId: string,
+  eventText: string,
+): Promise<string | null> {
+  const [r] = await db.execute<RoutineRow>(
+    sql`select * from public.routines where id = ${routineId}::uuid and enabled`,
+  );
   if (!r) return null;
   return createRoutineRun(db, r, "message", eventText);
 }
@@ -153,14 +178,20 @@ export async function startRoutineForMessage(db: Database, routineId: string, ev
 /** Calendar triggers (D-132): routine runs for events whose time has come, with the event in context. */
 export async function fireDueCalendarRuns(db: Database, now = new Date()): Promise<string[]> {
   return db.transaction(async (tx) => {
-    const due = await tx.execute<{ routine_id: string; event_id: string; event: import("@kasama/agent").CalEvent }>(sql`
+    const due = await tx.execute<{
+      routine_id: string;
+      event_id: string;
+      event: import("@kasama/agent").CalEvent;
+    }>(sql`
       select f.routine_id, f.event_id, f.event from public.calendar_fires f join public.routines r on r.id = f.routine_id
       where f.fired_at is null and r.enabled and f.fire_at <= ${now.toISOString()}::timestamptz
         and f.fire_at > ${new Date(now.getTime() - 10 * 60_000).toISOString()}::timestamptz
       order by f.fire_at limit 50 for update of f skip locked`);
     const runIds: string[] = [];
     for (const f of due) {
-      const [r] = await tx.execute<RoutineRow>(sql`select * from public.routines where id = ${f.routine_id}::uuid`);
+      const [r] = await tx.execute<RoutineRow>(
+        sql`select * from public.routines where id = ${f.routine_id}::uuid`,
+      );
       if (!r) continue;
       const runId = await createRoutineRun(tx, r, "calendar", describeEvent(f.event));
       runIds.push(runId);

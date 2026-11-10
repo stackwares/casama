@@ -51,7 +51,9 @@ export function parseMarkdown(text: string, fallbackTitle: string): ParsedDoc {
 }
 
 export function parseHtml(html: string, fallbackTitle: string): ParsedDoc {
-  const title = decodeEntities(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1]?.trim() ?? "") || fallbackTitle;
+  const title =
+    decodeEntities(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1]?.trim() ?? "") ||
+    fallbackTitle;
   const body = html
     .replace(/<head[\s\S]*?<\/head>/gi, " ")
     .replace(/<(script|style|noscript|template|svg)[\s\S]*?<\/\1>/gi, " ")
@@ -59,11 +61,19 @@ export function parseHtml(html: string, fallbackTitle: string): ParsedDoc {
     .replace(/<(nav|footer)[\s\S]*?<\/\1>/gi, " ");
   // Headings become Markdown headings; block ends become new lines.
   const md = body
-    .replace(/<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi, (_, n, t) => `\n${"#".repeat(Number(n))} ${t.replace(/<[^>]+>/g, "").trim()}\n`)
+    .replace(
+      /<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi,
+      (_, n, t) => `\n${"#".repeat(Number(n))} ${t.replace(/<[^>]+>/g, "").trim()}\n`,
+    )
     .replace(/<(br|\/p|\/div|\/li|\/tr|\/section|\/article)[^>]*>/gi, "\n")
     .replace(/<li[^>]*>/gi, "- ")
     .replace(/<[^>]+>/g, " ");
-  const doc = parseMarkdown(decodeEntities(md).replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n\n"), title);
+  const doc = parseMarkdown(
+    decodeEntities(md)
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n\s*\n+/g, "\n\n"),
+    title,
+  );
   return { title, sections: doc.sections };
 }
 
@@ -103,8 +113,13 @@ export function parseCsv(text: string, title: string): ParsedDoc {
   if (!header) return { title, sections: [] };
   const sections: Section[] = [];
   for (let i = 0; i < rows.length; i += 20) {
-    const part = rows.slice(i, i + 20).map((r) => header.map((h, j) => `${h}: ${r[j] ?? ""}`).join("; "));
-    sections.push({ location: `rows ${i + 2}–${Math.min(i + 21, rows.length + 1)}`, text: part.join("\n") });
+    const part = rows
+      .slice(i, i + 20)
+      .map((r) => header.map((h, j) => `${h}: ${r[j] ?? ""}`).join("; "));
+    sections.push({
+      location: `rows ${i + 2}–${Math.min(i + 21, rows.length + 1)}`,
+      text: part.join("\n"),
+    });
   }
   return { title, sections };
 }
@@ -115,7 +130,11 @@ export function parseDocx(bytes: Uint8Array, title: string): ParsedDoc {
   if (!xml) throw new Error("Not a Word document (no word/document.xml)");
   const lines: string[] = [];
   for (const p of xml.match(/<w:p[ >][\s\S]*?<\/w:p>/g) ?? []) {
-    const text = decodeEntities((p.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g) ?? []).map((t) => t.replace(/<[^>]+>/g, "")).join(""));
+    const text = decodeEntities(
+      (p.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g) ?? [])
+        .map((t) => t.replace(/<[^>]+>/g, ""))
+        .join(""),
+    );
     const style = /<w:pStyle w:val="(Heading|Title)(\d?)"/i.exec(p);
     lines.push(style && text ? `${"#".repeat(Math.min(Number(style[2] || 1), 6))} ${text}` : text);
   }
@@ -125,7 +144,16 @@ export function parseDocx(bytes: Uint8Array, title: string): ParsedDoc {
 /** A PDF literal string's bytes, with its escapes. */
 function pdfString(s: string) {
   return s.replace(/\\([nrtbf()\\]|[0-7]{1,3})/g, (_, e: string) => {
-    const map: Record<string, string> = { n: "\n", r: "\r", t: "\t", b: "\b", f: "\f", "(": "(", ")": ")", "\\": "\\" };
+    const map: Record<string, string> = {
+      n: "\n",
+      r: "\r",
+      t: "\t",
+      b: "\b",
+      f: "\f",
+      "(": "(",
+      ")": ")",
+      "\\": "\\",
+    };
     return map[e] ?? String.fromCharCode(Number.parseInt(e, 8));
   });
 }
@@ -149,19 +177,26 @@ export function parsePdf(bytes: Uint8Array, title: string): ParsedDoc {
     if (!/\b(Tj|TJ)\b/.test(content)) continue;
     const out: string[] = [];
     // Text show operators: (..) Tj, [(..) n (..)] TJ, and line moves as spaces or new lines.
-    const tok = /\((?:\\.|[^\\)])*\)\s*Tj|\[((?:\((?:\\.|[^\\)])*\)|[^\]])*)\]\s*TJ|T\*|-?[\d.]+\s+-?[\d.]+\s+T[dD]|ET/g;
+    const tok =
+      /\((?:\\.|[^\\)])*\)\s*Tj|\[((?:\((?:\\.|[^\\)])*\)|[^\]])*)\]\s*TJ|T\*|-?[\d.]+\s+-?[\d.]+\s+T[dD]|ET/g;
     for (let t = tok.exec(content); t; t = tok.exec(content)) {
       const s = t[0];
       if (s.endsWith("Tj")) out.push(pdfString(s.slice(1, s.lastIndexOf(")"))));
       else if (s.endsWith("TJ"))
         out.push(
           [...(t[1] ?? "").matchAll(/\((?:\\.|[^\\)])*\)|-?\d+(\.\d+)?/g)]
-            .map(([x]) => (x.startsWith("(") ? pdfString(x.slice(1, -1)) : Number(x) < -200 ? " " : ""))
+            .map(([x]) =>
+              x.startsWith("(") ? pdfString(x.slice(1, -1)) : Number(x) < -200 ? " " : "",
+            )
             .join(""),
         );
       else out.push("\n");
     }
-    const text = out.join("").replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
+    const text = out
+      .join("")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n\s*\n+/g, "\n")
+      .trim();
     if (text) pages.push(text);
   }
   return { title, sections: pages.map((text, i) => ({ location: `page ${i + 1}`, text })) };
@@ -175,13 +210,21 @@ export function parseDocument(name: string, bytes: Uint8Array, contentType = "")
   if (ext === "pdf" || contentType.includes("pdf")) return parsePdf(bytes, base);
   if (ext === "docx") return parseDocx(bytes, base);
   if (ext === "csv" || contentType.includes("csv")) return parseCsv(text(), base);
-  if (ext === "html" || ext === "htm" || contentType.includes("html")) return parseHtml(text(), base);
-  if (["md", "markdown", "txt", "text", "mdx", "rst"].includes(ext) || contentType.startsWith("text/")) return parseMarkdown(text(), base);
+  if (ext === "html" || ext === "htm" || contentType.includes("html"))
+    return parseHtml(text(), base);
+  if (
+    ["md", "markdown", "txt", "text", "mdx", "rst"].includes(ext) ||
+    contentType.startsWith("text/")
+  )
+    return parseMarkdown(text(), base);
   throw new Error(`Unsupported file type: .${ext} (PDF, DOCX, Markdown, HTML, CSV or text)`);
 }
 
 /** Splits sections into chunks of about `size` characters, on paragraph and sentence ends. */
-export function chunkSections(sections: Section[], size = 1500): Array<Section & { position: number }> {
+export function chunkSections(
+  sections: Section[],
+  size = 1500,
+): Array<Section & { position: number }> {
   const out: Array<Section & { position: number }> = [];
   for (const s of sections) {
     const paras = s.text.split(/\n{2,}/);

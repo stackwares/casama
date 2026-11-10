@@ -15,7 +15,13 @@ export const listKnowledgeSources = createRoute({
   security,
   summary: "A bot's knowledge sources and the workspace's shared ones (D-125)",
   request: { query: z.object({ org_id: Uuid, bot_id: Uuid.optional() }) },
-  responses: { 200: jsonResponse("Sources", z.object({ items: z.array(KnowledgeSource) }).openapi("KnowledgeSourceList")), 401: e401 },
+  responses: {
+    200: jsonResponse(
+      "Sources",
+      z.object({ items: z.array(KnowledgeSource) }).openapi("KnowledgeSourceList"),
+    ),
+    401: e401,
+  },
 });
 
 export const createKnowledgeSource = createRoute({
@@ -24,9 +30,16 @@ export const createKnowledgeSource = createRoute({
   path: "/v1/knowledge-sources",
   tags,
   security,
-  summary: "Add files, a website, a GitHub repository or documents from a connection; the worker reads it within a minute",
+  summary:
+    "Add files, a website, a GitHub repository or documents from a connection; the worker reads it within a minute",
   request: { body: jsonBody(CreateKnowledgeSourceRequest) },
-  responses: { 201: jsonResponse("Source", KnowledgeSource), 400: e400, 401: e401, 403: e403, 404: e404 },
+  responses: {
+    201: jsonResponse("Source", KnowledgeSource),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+  },
 });
 
 export const resyncKnowledgeSource = createRoute({
@@ -46,5 +59,10 @@ export const deleteKnowledgeSource = createRoute({
   tags,
   security,
   request: { params: idParam },
-  responses: { 200: jsonResponse("Deleted", z.object({ deleted: Uuid }).openapi("DeletedKnowledgeSource")), 401: e401, 403: e403, 404: e404 },
+  responses: {
+    200: jsonResponse("Deleted", z.object({ deleted: Uuid }).openapi("DeletedKnowledgeSource")),
+    401: e401,
+    403: e403,
+    404: e404,
+  },
 });

@@ -34,7 +34,13 @@ export const writeAgentImportFiles = createRoute({
   security,
   summary: "Copy the files nothing mapped to into ~/imported/ on the bot's computer",
   request: { params: z.object({ id: Uuid }), body: jsonBody(WriteAgentImportFilesRequest) },
-  responses: { 200: jsonResponse("Written", WriteAgentImportFilesResponse), 401: e401, 403: e403, 404: e404, 409: e409 },
+  responses: {
+    200: jsonResponse("Written", WriteAgentImportFilesResponse),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });
 
 export const getMemoryImportPrompt = createRoute({
@@ -66,7 +72,10 @@ export const saveImportedMemories = createRoute({
   summary: "Add the memories the person kept",
   request: { params: z.object({ id: Uuid }), body: jsonBody(SaveImportedMemoriesRequest) },
   responses: {
-    200: jsonResponse("Saved", z.object({ saved: z.number().int() }).openapi("SavedImportedMemories")),
+    200: jsonResponse(
+      "Saved",
+      z.object({ saved: z.number().int() }).openapi("SavedImportedMemories"),
+    ),
     401: e401,
     403: e403,
     404: e404,

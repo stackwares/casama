@@ -24,13 +24,22 @@ export const SEALED_COLUMNS = [
 export type EncryptionMode = "off" | "encrypting" | "on" | "decrypting";
 
 export async function encryptionStatus(db: Database, orgId: string) {
-  const [o] = await db.execute<{ mode: EncryptionMode; wrapper: string | null; rotated_at: string | null; created_at: string | null }>(sql`
+  const [o] = await db.execute<{
+    mode: EncryptionMode;
+    wrapper: string | null;
+    rotated_at: string | null;
+    created_at: string | null;
+  }>(sql`
     select o.content_encryption as mode, k.wrapper, k.rotated_at, k.created_at
     from public.organizations o left join public.org_keys k on k.org_id = o.id where o.id = ${orgId}::uuid`);
   return {
     mode: o?.mode ?? "off",
     available: contentKeys.configured,
-    key: o?.wrapper ? (o.wrapper.startsWith("kms:") ? ("aws_kms" as const) : ("server_key" as const)) : null,
+    key: o?.wrapper
+      ? o.wrapper.startsWith("kms:")
+        ? ("aws_kms" as const)
+        : ("server_key" as const)
+      : null,
     rotated_at: o?.rotated_at ? new Date(o.rotated_at).toISOString() : null,
     since: o?.created_at ? new Date(o.created_at).toISOString() : null,
   };
@@ -40,7 +49,9 @@ export async function encryptionStatus(db: Database, orgId: string) {
 export async function setEncryption(db: Database, orgId: string, enabled: boolean) {
   if (enabled) {
     if (!contentKeys.configured) throw new Error("not_configured");
-    const [k] = await db.execute<{ id: string }>(sql`select id from public.org_keys where org_id = ${orgId}::uuid`);
+    const [k] = await db.execute<{ id: string }>(
+      sql`select id from public.org_keys where org_id = ${orgId}::uuid`,
+    );
     if (!k) {
       const nk = await contentKeys.newKey();
       await db.execute(sql`
@@ -63,7 +74,9 @@ export async function rotateEncryptionKey(db: Database, orgId: string) {
     select id, wrapped_key, wrapper from public.org_keys where org_id = ${orgId}::uuid`);
   if (!k) throw new Error("no_key");
   const r = await contentKeys.rewrap(k.wrapped_key, k.wrapper);
-  await db.execute(sql`update public.org_keys set wrapped_key = ${r.wrapped}, wrapper = ${r.wrapper}, rotated_at = now() where id = ${k.id}::uuid`);
+  await db.execute(
+    sql`update public.org_keys set wrapped_key = ${r.wrapped}, wrapper = ${r.wrapper}, rotated_at = now() where id = ${k.id}::uuid`,
+  );
   return encryptionStatus(db, orgId);
 }
 
@@ -71,7 +84,9 @@ export async function rotateEncryptionKey(db: Database, orgId: string) {
 export async function rewrapAllKeys(db: Database) {
   const id = contentKeys.wrapperId;
   if (!id) return 0;
-  const old = await db.execute<{ org_id: string }>(sql`select org_id from public.org_keys where wrapper <> ${id}`);
+  const old = await db.execute<{ org_id: string }>(
+    sql`select org_id from public.org_keys where wrapper <> ${id}`,
+  );
   for (const k of old) await rotateEncryptionKey(db, k.org_id);
   return old.length;
 }
@@ -83,7 +98,11 @@ const keyCols = (key: readonly string[]) => sql.raw(key.map((k) => `"${k}"`).joi
  * column for workspaces that encrypt, and opens sealed rows for workspaces turning it off. A
  * workspace whose pass finds nothing left moves to `on` (or `off`, and its key is deleted).
  */
-export async function sweepEncryption(db: Database, batch = 500, opts: { recheckOn?: boolean } = {}) {
+export async function sweepEncryption(
+  db: Database,
+  batch = 500,
+  opts: { recheckOn?: boolean } = {},
+) {
   // Fully sealed workspaces are only re-checked when asked (the worker does it every 15 minutes):
   // a scan per sealed column per workspace every minute costs more than it catches (audit 2026-11).
   const recheck = opts.recheckOn ?? new Date().getMinutes() % 15 === 0;
@@ -97,7 +116,9 @@ export async function sweepEncryption(db: Database, batch = 500, opts: { recheck
     for (const c of SEALED_COLUMNS) {
       const col = sql.raw(`"${c.column}"`);
       const t = sql.raw(`public.${c.table}`);
-      const sealedCond = c.json ? sql`(jsonb_typeof(${col}) = 'object' and ${col} ? '$enc')` : sql`${col} like 'enc:v1:%'`;
+      const sealedCond = c.json
+        ? sql`(jsonb_typeof(${col}) = 'object' and ${col} ? '$enc')`
+        : sql`${col} like 'enc:v1:%'`;
       const want = o.mode === "decrypting" ? sealedCond : sql`not ${sealedCond}`;
       const nonEmpty = c.json ? sql`true` : sql`${col} is not null and ${col} <> ''`;
       // Once a workspace is fully sealed, only recent rows are checked (catching any missed write path).
@@ -117,17 +138,27 @@ export async function sweepEncryption(db: Database, batch = 500, opts: { recheck
               ? contentKeys.sealJson(o.id, r.value)
               : contentKeys.seal(o.id, r.value as string);
         const where = sql.join(
-          c.key.map((k) => sql`${sql.raw(`"${k}"`)} = ${String(r[k])}${sql.raw(k === "seq" || k === "version" ? "::int" : "::uuid")}`),
+          c.key.map(
+            (k) =>
+              sql`${sql.raw(`"${k}"`)} = ${String(r[k])}${sql.raw(k === "seq" || k === "version" ? "::int" : "::uuid")}`,
+          ),
           sql` and `,
         );
-        await db.execute(sql`update ${t} set ${col} = ${value}${c.json ? sql`::jsonb` : sql``} where ${where}`);
+        await db.execute(
+          sql`update ${t} set ${col} = ${value}${c.json ? sql`::jsonb` : sql``} where ${where}`,
+        );
         changed++;
       }
       left += rows.length;
     }
-    if (left === 0 && o.mode === "encrypting") await db.execute(sql`update public.organizations set content_encryption = 'on' where id = ${o.id}::uuid and content_encryption = 'encrypting'`);
+    if (left === 0 && o.mode === "encrypting")
+      await db.execute(
+        sql`update public.organizations set content_encryption = 'on' where id = ${o.id}::uuid and content_encryption = 'encrypting'`,
+      );
     if (left === 0 && o.mode === "decrypting") {
-      await db.execute(sql`update public.organizations set content_encryption = 'off' where id = ${o.id}::uuid and content_encryption = 'decrypting'`);
+      await db.execute(
+        sql`update public.organizations set content_encryption = 'off' where id = ${o.id}::uuid and content_encryption = 'decrypting'`,
+      );
       await db.execute(sql`delete from public.org_keys where org_id = ${o.id}::uuid`);
     }
   }

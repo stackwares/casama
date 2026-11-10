@@ -25,7 +25,10 @@ export async function actingUserOf(db: Database, runId: string): Promise<string 
  * Who a run's messages and schedules belong to: the person it acts for (walking up sub-runs and
  * routines), else the bot's creator; with that person's timezone. One rule for every tool.
  */
-export async function personForRun(db: Database, runId: string): Promise<{ userId: string | null; timezone: string | null }> {
+export async function personForRun(
+  db: Database,
+  runId: string,
+): Promise<{ userId: string | null; timezone: string | null }> {
   const acting = await actingUserOf(db, runId);
   const [r] = await db.execute<{ user_id: string | null; timezone: string | null }>(sql`
     select coalesce(${acting}::uuid, b.created_by) as user_id, p.timezone

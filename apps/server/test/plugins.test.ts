@@ -31,34 +31,61 @@ const mcp = (remote: string, extra: Record<string, unknown> = {}) =>
   JSON.stringify({
     $schema: "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
     mcpServers: {
-      forecast: { type: "stdio", command: "./bin/forecast", args: ["--data", "${PLUGIN_DATA}/cache"] },
+      forecast: {
+        type: "stdio",
+        command: "./bin/forecast",
+        args: ["--data", "${PLUGIN_DATA}/cache"],
+      },
       maps: { type: "streamable-http", url: remote },
       ...extra,
     },
   });
 const blobs: Record<string, () => string> = {
-  p1: () => manifest("1.0.0", [
-    { name: "WEATHER_KEY", server: "forecast", env: "WEATHER_API_KEY", description: "Weather API key" },
-    { name: "MAPS_TOKEN", server: "maps", header: "Authorization", format: "Bearer {{value}}" },
-  ]),
-  p2: () => manifest("2.0.0", [
-    { name: "WEATHER_KEY", server: "forecast", env: "WEATHER_API_KEY", description: "Weather API key" },
-    { name: "MAPS_TOKEN", server: "maps", header: "Authorization", format: "Bearer {{value}}" },
-  ]),
+  p1: () =>
+    manifest("1.0.0", [
+      {
+        name: "WEATHER_KEY",
+        server: "forecast",
+        env: "WEATHER_API_KEY",
+        description: "Weather API key",
+      },
+      { name: "MAPS_TOKEN", server: "maps", header: "Authorization", format: "Bearer {{value}}" },
+    ]),
+  p2: () =>
+    manifest("2.0.0", [
+      {
+        name: "WEATHER_KEY",
+        server: "forecast",
+        env: "WEATHER_API_KEY",
+        description: "Weather API key",
+      },
+      { name: "MAPS_TOKEN", server: "maps", header: "Authorization", format: "Bearer {{value}}" },
+    ]),
   m1: () => mcp(`${servicesUrl}/remote`),
   m2: () => mcp(`${servicesUrl}/remote`, { tides: { type: "stdio", command: "./bin/tides" } }),
-  s1: () => "---\nname: plan-trip\ndescription: Plan a trip around the weather\n---\n\nCheck the forecast first.\n",
-  s2: () => "---\nname: plan-trip\ndescription: Plan a trip around the weather\n---\n\nCheck the forecast and tides first.\n",
+  s1: () =>
+    "---\nname: plan-trip\ndescription: Plan a trip around the weather\n---\n\nCheck the forecast first.\n",
+  s2: () =>
+    "---\nname: plan-trip\ndescription: Plan a trip around the weather\n---\n\nCheck the forecast and tides first.\n",
   bin: () => "#!/bin/sh\nexec node server.js\n",
 };
 const tree = (p: string, m: string, s: string) => [
   { path: "plugins/weather/plugin.json", type: "blob", sha: p, size: 300, mode: "100644" },
   { path: "plugins/weather/mcp.json", type: "blob", sha: m, size: 300, mode: "100644" },
-  { path: "plugins/weather/skills/plan-trip/SKILL.md", type: "blob", sha: s, size: 100, mode: "100644" },
+  {
+    path: "plugins/weather/skills/plan-trip/SKILL.md",
+    type: "blob",
+    sha: s,
+    size: 100,
+    mode: "100644",
+  },
   { path: "plugins/weather/bin/forecast", type: "blob", sha: "bin", size: 30, mode: "100755" },
   { path: "other/README.md", type: "blob", sha: "bin", size: 30, mode: "100644" },
 ];
-const trees: Record<string, unknown[]> = { [C1]: tree("p1", "m1", "s1"), [C2]: tree("p2", "m2", "s2") };
+const trees: Record<string, unknown[]> = {
+  [C1]: tree("p1", "m1", "s1"),
+  [C2]: tree("p2", "m2", "s2"),
+};
 
 /** The fake computer: what computerd was told, and MCP requests forwarded to a local server. */
 const computer = {
@@ -93,7 +120,11 @@ const mcpServer = (tool: string) => {
   const server = new McpServer({ name: tool, version: "1.0.0" });
   server.registerTool(
     tool,
-    { description: `The ${tool}`, inputSchema: { place: z.string() }, annotations: { readOnlyHint: true } },
+    {
+      description: `The ${tool}`,
+      inputSchema: { place: z.string() },
+      annotations: { readOnlyHint: true },
+    },
     async ({ place }) => ({ content: [{ type: "text", text: `${tool} for ${place}` }] }),
   );
   return server;
@@ -105,7 +136,8 @@ beforeAll(async () => {
     for await (const c of req) chunks.push(c as Buffer);
     const raw = Buffer.concat(chunks).toString();
     const url = new URL(req.url ?? "/", "http://x");
-    const send = (v: unknown, status = 200) => res.writeHead(status, { "content-type": "application/json" }).end(JSON.stringify(v));
+    const send = (v: unknown, status = 200) =>
+      res.writeHead(status, { "content-type": "application/json" }).end(JSON.stringify(v));
     if (url.pathname === "/repos/acme/agent-plugins") return send({ default_branch: "main" });
     if (url.pathname === "/repos/acme/agent-plugins/commits/main") return send({ sha: head });
     const t = /^\/repos\/acme\/agent-plugins\/git\/trees\/([0-9a-f]{40})$/.exec(url.pathname);
@@ -135,8 +167,13 @@ beforeAll(async () => {
   };
   owner = await h.user("plugins@example.com");
   member = await h.user("plugins-member@example.com");
-  orgId = (await j(await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "P" } }))).id;
-  await h.tdb.admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${member.id}, 'member')`;
+  orgId = (
+    await j(
+      await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "P" } }),
+    )
+  ).id;
+  await h.tdb
+    .admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${member.id}, 'member')`;
   const cred = await j(
     await h.request("/v1/credentials", {
       method: "POST",
@@ -149,11 +186,16 @@ beforeAll(async () => {
       await h.request("/v1/bots", {
         method: "POST",
         token: owner.token,
-        json: { org_id: orgId, name: "Planner", model_policy: { primary: { credential_id: cred.id, model: "m" } } },
+        json: {
+          org_id: orgId,
+          name: "Planner",
+          model_policy: { primary: { credential_id: cred.id, model: "m" } },
+        },
       }),
     )
   ).id;
-  await h.tdb.admin`insert into public.computers (org_id, kind, owner_bot_id, name, provider) values (${orgId}, 'private', ${botId}, 'Planner computer', 'e2b')`;
+  await h.tdb
+    .admin`insert into public.computers (org_id, kind, owner_bot_id, name, provider) values (${orgId}, 'private', ${botId}, 'Planner computer', 'e2b')`;
 }, 60_000);
 afterAll(async () => {
   await h?.stop();
@@ -166,19 +208,42 @@ describe("plugins", () => {
   let pluginId: string;
 
   it("previews what a plugin adds: skills, servers, hosts and secrets", async () => {
-    const p = await j(await h.request("/v1/plugins/preview", { method: "POST", token: owner.token, json: { org_id: orgId, url: URL_ } }));
-    expect(p).toMatchObject({ name: "weather", version: "1.0.0", repo: "acme/agent-plugins", path: "plugins/weather", commit: C1 });
-    expect(p.skills).toEqual([{ name: "plan-trip", description: "Plan a trip around the weather" }]);
-    expect(p.servers.map((s: { key: string; type: string }) => `${s.key}:${s.type}`)).toEqual(["forecast:stdio", "maps:streamable-http"]);
+    const p = await j(
+      await h.request("/v1/plugins/preview", {
+        method: "POST",
+        token: owner.token,
+        json: { org_id: orgId, url: URL_ },
+      }),
+    );
+    expect(p).toMatchObject({
+      name: "weather",
+      version: "1.0.0",
+      repo: "acme/agent-plugins",
+      path: "plugins/weather",
+      commit: C1,
+    });
+    expect(p.skills).toEqual([
+      { name: "plan-trip", description: "Plan a trip around the weather" },
+    ]);
+    expect(p.servers.map((s: { key: string; type: string }) => `${s.key}:${s.type}`)).toEqual([
+      "forecast:stdio",
+      "maps:streamable-http",
+    ]);
     expect(p.hosts).toEqual(["127.0.0.1"]);
     expect(p.secrets.map((s: { name: string }) => s.name)).toEqual(["WEATHER_KEY", "MAPS_TOKEN"]);
   });
 
   it("installs pinned to the commit, needs its secrets, and lists every server's tools", async () => {
     const base = { org_id: orgId, bot_id: botId, url: URL_, commit: C1 };
-    const missing = await h.request("/v1/plugins", { method: "POST", token: owner.token, json: base });
+    const missing = await h.request("/v1/plugins", {
+      method: "POST",
+      token: owner.token,
+      json: base,
+    });
     expect(missing.status).toBe(400);
-    expect((await h.request("/v1/plugins", { method: "POST", token: member.token, json: base })).status).toBe(403);
+    expect(
+      (await h.request("/v1/plugins", { method: "POST", token: member.token, json: base })).status,
+    ).toBe(403);
     const res = await h.request("/v1/plugins", {
       method: "POST",
       token: owner.token,
@@ -201,20 +266,46 @@ describe("plugins", () => {
       args: ["--data", "/home/kasama/.kasama/plugin-data/weather/cache"],
       cwd: "/home/kasama/.kasama/plugins/weather",
     });
-    expect(spec.env).toMatchObject({ WEATHER_API_KEY: "wk-123", PLUGIN_ROOT: "/home/kasama/.kasama/plugins/weather" });
-    expect(new TextDecoder().decode(computer.files.get("/home/kasama/.kasama/plugins/weather/bin/forecast"))).toContain("exec node");
-    expect(computer.files.has("/home/kasama/.kasama/plugins/weather/skills/plan-trip/SKILL.md")).toBe(false);
-    expect(computer.commands.some((c) => c.startsWith("chmod +x") && c.includes("bin/forecast"))).toBe(true);
-    const [cfg] = await h.tdb.admin<{ config: unknown }[]>`select config from public.integrations where kind = 'computer_mcp'`;
+    expect(spec.env).toMatchObject({
+      WEATHER_API_KEY: "wk-123",
+      PLUGIN_ROOT: "/home/kasama/.kasama/plugins/weather",
+    });
+    expect(
+      new TextDecoder().decode(
+        computer.files.get("/home/kasama/.kasama/plugins/weather/bin/forecast"),
+      ),
+    ).toContain("exec node");
+    expect(
+      computer.files.has("/home/kasama/.kasama/plugins/weather/skills/plan-trip/SKILL.md"),
+    ).toBe(false);
+    expect(
+      computer.commands.some((c) => c.startsWith("chmod +x") && c.includes("bin/forecast")),
+    ).toBe(true);
+    const [cfg] = await h.tdb.admin<
+      { config: unknown }[]
+    >`select config from public.integrations where kind = 'computer_mcp'`;
     expect(JSON.stringify(cfg?.config)).not.toContain("wk-123");
   });
 
   it("a run calls the plugin's tool on the bot's computer", async () => {
     forgetPluginSync();
-    const [rec] = await h.tdb.admin<{ id: string; name: string }[]>`select id, name from public.integrations where kind = 'computer_mcp'`;
+    const [rec] = await h.tdb.admin<
+      { id: string; name: string }[]
+    >`select id, name from public.integrations where kind = 'computer_mcp'`;
     const adapter = new ComputerMcpAdapter(
-      { id: rec!.id, org_id: orgId, kind: "computer_mcp", name: rec!.name, config: {}, secret: null },
-      { fetch, secrets: [], computerMcp: computerMcpFor(h.handle.db, botId, async () => handle as never) },
+      {
+        id: rec!.id,
+        org_id: orgId,
+        kind: "computer_mcp",
+        name: rec!.name,
+        config: {},
+        secret: null,
+      },
+      {
+        fetch,
+        secrets: [],
+        computerMcp: computerMcpFor(h.handle.db, botId, async () => handle as never),
+      },
     );
     expect(await adapter.callTool("forecast", { place: "Cebu" })).toBe("forecast for Cebu");
     await adapter.close();
@@ -232,19 +323,33 @@ describe("plugins", () => {
       servers_removed: [],
       secrets_added: [],
     });
-    const up = await h.request(`/v1/plugins/${pluginId}/update`, { method: "POST", token: owner.token, json: { commit: C2 } });
+    const up = await h.request(`/v1/plugins/${pluginId}/update`, {
+      method: "POST",
+      token: owner.token,
+      json: { commit: C2 },
+    });
     const p = await j(up);
     expect(up.status, JSON.stringify(p)).toBe(200);
     expect(p.commit).toBe(C2);
     expect(p.servers.map((s: { key: string }) => s.key)).toEqual(["forecast", "maps", "tides"]);
-    expect(Object.values(computer.servers).find((s) => s.command.endsWith("forecast"))?.env?.WEATHER_API_KEY).toBe("wk-123");
-    const [sk] = await h.tdb.admin<{ body_md: string }[]>`select body_md from public.skills where plugin_id = ${pluginId}`;
+    expect(
+      Object.values(computer.servers).find((s) => s.command.endsWith("forecast"))?.env
+        ?.WEATHER_API_KEY,
+    ).toBe("wk-123");
+    const [sk] = await h.tdb.admin<
+      { body_md: string }[]
+    >`select body_md from public.skills where plugin_id = ${pluginId}`;
     expect(sk?.body_md).toContain("tides");
   });
 
   it("uninstalling removes everything it added", async () => {
-    expect((await h.request(`/v1/plugins/${pluginId}`, { method: "DELETE", token: member.token })).status).toBe(403);
-    expect((await h.request(`/v1/plugins/${pluginId}`, { method: "DELETE", token: owner.token })).status).toBe(200);
+    expect(
+      (await h.request(`/v1/plugins/${pluginId}`, { method: "DELETE", token: member.token }))
+        .status,
+    ).toBe(403);
+    expect(
+      (await h.request(`/v1/plugins/${pluginId}`, { method: "DELETE", token: owner.token })).status,
+    ).toBe(200);
     const [n] = await h.tdb.admin<{ skills: number; ints: number; files: number }[]>`
       select (select count(*)::int from public.skills where source = 'plugin') as skills,
              (select count(*)::int from public.integrations where plugin_id is not null or kind = 'computer_mcp') as ints,
@@ -252,6 +357,8 @@ describe("plugins", () => {
     expect(n).toEqual({ skills: 0, ints: 0, files: 0 });
     expect(computer.servers).toEqual({});
     expect(computer.commands.at(-1)).toContain("rm -rf");
-    expect((await j(await h.request(`/v1/plugins?bot_id=${botId}`, { token: owner.token }))).items).toEqual([]);
+    expect(
+      (await j(await h.request(`/v1/plugins?bot_id=${botId}`, { token: owner.token }))).items,
+    ).toEqual([]);
   });
 });

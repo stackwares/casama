@@ -2,7 +2,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { applyCheckins } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession, contentKeys } from "@kasama/db";
+import { contentKeys, type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -118,7 +118,10 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         // Text is taken here, not in SQL: content may be sealed (D-136).
         briefs: out.briefs.map(({ content, ...b }) => ({
           ...b,
-          text: (Array.isArray(content) ? content : []).filter((p) => p.type === "text").map((p) => p.text ?? "").join(" "),
+          text: (Array.isArray(content) ? content : [])
+            .filter((p) => p.type === "text")
+            .map((p) => p.text ?? "")
+            .join(" "),
           created_at: iso(b.created_at),
         })),
         suggestions: out.suggestions.map((s) => ({

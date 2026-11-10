@@ -15,16 +15,27 @@ const bot = async (name: string, extra: Record<string, unknown> = {}) =>
       await h.request("/v1/bots", {
         method: "POST",
         token: owner.token,
-        json: { org_id: orgId, name, persona_md: `You are ${name}.`, visibility: "team", model_policy: { primary: { credential_id: cred, model: "fixture-main" } }, ...extra },
+        json: {
+          org_id: orgId,
+          name,
+          persona_md: `You are ${name}.`,
+          visibility: "team",
+          model_policy: { primary: { credential_id: cred, model: "fixture-main" } },
+          ...extra,
+        },
       }),
     )
   ).id as string;
 const settle = async () => {
   for (let i = 0; i < 300; i++) {
-    const [r] = await h.tdb.admin<{ n: number }[]>`select count(*)::int as n from public.runs where status in ('queued', 'running')`;
+    const [r] = await h.tdb.admin<
+      { n: number }[]
+    >`select count(*)::int as n from public.runs where status in ('queued', 'running')`;
     if (!r?.n) {
       await new Promise((res) => setTimeout(res, 150));
-      const [again] = await h.tdb.admin<{ n: number }[]>`select count(*)::int as n from public.runs where status in ('queued', 'running')`;
+      const [again] = await h.tdb.admin<
+        { n: number }[]
+      >`select count(*)::int as n from public.runs where status in ('queued', 'running')`;
       if (!again?.n) return;
     }
     await new Promise((res) => setTimeout(res, 100));
@@ -47,22 +58,37 @@ beforeAll(async () => {
   h = await startHarness({ worker: { fixtures: FIXTURES } });
   owner = await h.user("group-owner@example.com");
   member = await h.user("group-member@example.com");
-  orgId = (await j(await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "G" } }))).id;
-  await h.tdb.admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${member.id}, 'member')`;
-  await h.tdb.admin`update public.entitlements set limits = limits - 'max_bots' where org_id = ${orgId}`;
+  orgId = (
+    await j(
+      await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "G" } }),
+    )
+  ).id;
+  await h.tdb
+    .admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${member.id}, 'member')`;
+  await h.tdb
+    .admin`update public.entitlements set limits = limits - 'max_bots' where org_id = ${orgId}`;
   cred = (
     await j(
       await h.request("/v1/credentials", {
         method: "POST",
         token: owner.token,
-        json: { org_id: orgId, provider: "openrouter", label: "k", api_key: "sk-or-v1-abcdefabcdef" },
+        json: {
+          org_id: orgId,
+          provider: "openrouter",
+          label: "k",
+          api_key: "sk-or-v1-abcdefabcdef",
+        },
       }),
     )
   ).id;
   lead = await bot("Lead");
   writer = await bot("Writer");
   designer = await bot("Designer");
-  const res = await h.request("/v1/conversations", { method: "POST", token: owner.token, json: { bot_id: lead, bot_ids: [writer, designer], title: "Launch" } });
+  const res = await h.request("/v1/conversations", {
+    method: "POST",
+    token: owner.token,
+    json: { bot_id: lead, bot_ids: [writer, designer], title: "Launch" },
+  });
   expect(res.status).toBe(201);
   const c = await j(res);
   expect(c).toMatchObject({ kind: "group", bot_ids: [lead, writer, designer] });
@@ -71,7 +97,13 @@ beforeAll(async () => {
 afterAll(async () => h?.stop());
 
 const send = async (text: string) =>
-  j(await h.request(`/v1/conversations/${conv}/messages`, { method: "POST", token: owner.token, json: { text } }));
+  j(
+    await h.request(`/v1/conversations/${conv}/messages`, {
+      method: "POST",
+      token: owner.token,
+      json: { text },
+    }),
+  );
 
 describe("group chats", () => {
   it("@everyone gets a plan from the lead and work from each assigned bot", async () => {
@@ -80,8 +112,13 @@ describe("group chats", () => {
     await settle();
     const r = await replies(conv);
     expect(r[0]).toBe("Lead: Plan: @Writer write the launch copy. @Designer make the banner.");
-    expect(r.slice(1).sort()).toEqual(["Designer: Banner done.", "Writer: Copy done: Meet Kasama."]);
-    const [hops] = await h.tdb.admin<{ max: number }[]>`select max(hop)::int as max from public.runs where conversation_id = ${conv}`;
+    expect(r.slice(1).sort()).toEqual([
+      "Designer: Banner done.",
+      "Writer: Copy done: Meet Kasama.",
+    ]);
+    const [hops] = await h.tdb.admin<
+      { max: number }[]
+    >`select max(hop)::int as max from public.runs where conversation_id = ${conv}`;
     expect(hops?.max).toBe(1);
   });
 
@@ -100,34 +137,85 @@ describe("group chats", () => {
   it("bot-to-bot mentions stop after 6 hops", async () => {
     const ping = await bot("Ping");
     const pong = await bot("Pong");
-    const c = await j(await h.request("/v1/conversations", { method: "POST", token: owner.token, json: { bot_id: ping, bot_ids: [pong] } }));
+    const c = await j(
+      await h.request("/v1/conversations", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: ping, bot_ids: [pong] },
+      }),
+    );
     if (!c.id) throw new Error(JSON.stringify(c));
-    await h.request(`/v1/conversations/${c.id}/messages`, { method: "POST", token: owner.token, json: { text: "@Ping start" } });
+    await h.request(`/v1/conversations/${c.id}/messages`, {
+      method: "POST",
+      token: owner.token,
+      json: { text: "@Ping start" },
+    });
     await settle();
-    const [n] = await h.tdb.admin<{ n: number; max: number }[]>`select count(*)::int as n, max(hop)::int as max from public.runs where conversation_id = ${c.id}`;
+    const [n] = await h.tdb.admin<
+      { n: number; max: number }[]
+    >`select count(*)::int as n, max(hop)::int as max from public.runs where conversation_id = ${c.id}`;
     expect(n).toEqual({ n: 7, max: 6 });
   });
 
   it("a member only sees a group chat if they can see every bot in it", async () => {
     const secret = await bot("Secret", { visibility: "private" });
-    const hidden = await j(await h.request("/v1/conversations", { method: "POST", token: owner.token, json: { bot_id: lead, bot_ids: [secret] } }));
-    const visible = await j(await h.request(`/v1/group-chats?org_id=${orgId}`, { token: member.token }));
+    const hidden = await j(
+      await h.request("/v1/conversations", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: lead, bot_ids: [secret] },
+      }),
+    );
+    const visible = await j(
+      await h.request(`/v1/group-chats?org_id=${orgId}`, { token: member.token }),
+    );
     const ids = visible.items.map((g: { id: string }) => g.id);
     expect(ids).toContain(conv);
     expect(ids).not.toContain(hidden.id);
-    expect((await h.request(`/v1/conversations/${hidden.id}/messages`, { method: "POST", token: member.token, json: { text: "hi" } })).status).toBe(404);
+    expect(
+      (
+        await h.request(`/v1/conversations/${hidden.id}/messages`, {
+          method: "POST",
+          token: member.token,
+          json: { text: "hi" },
+        })
+      ).status,
+    ).toBe(404);
   });
   it("with the bot-to-bot switch off, a bot's @mention isn't delivered and the timeline says why", async () => {
-    const off = await h.request(`/v1/orgs/${orgId}/settings`, { method: "PATCH", token: owner.token, json: { allow_bot_to_bot: false } });
+    const off = await h.request(`/v1/orgs/${orgId}/settings`, {
+      method: "PATCH",
+      token: owner.token,
+      json: { allow_bot_to_bot: false },
+    });
     expect(off.status).toBe(200);
     expect((await j(off)).allow_bot_to_bot).toBe(false);
-    const c = await j(await h.request("/v1/conversations", { method: "POST", token: owner.token, json: { bot_id: lead, bot_ids: [writer, designer], title: "Quiet" } }));
-    await h.request(`/v1/conversations/${c.id}/messages`, { method: "POST", token: owner.token, json: { text: "@everyone let's ship the launch" } });
+    const c = await j(
+      await h.request("/v1/conversations", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: lead, bot_ids: [writer, designer], title: "Quiet" },
+      }),
+    );
+    await h.request(`/v1/conversations/${c.id}/messages`, {
+      method: "POST",
+      token: owner.token,
+      json: { text: "@everyone let's ship the launch" },
+    });
     await settle();
-    expect(await replies(c.id)).toEqual(["Lead: Plan: @Writer write the launch copy. @Designer make the banner."]);
+    expect(await replies(c.id)).toEqual([
+      "Lead: Plan: @Writer write the launch copy. @Designer make the banner.",
+    ]);
     const [ev] = await h.tdb.admin<{ payload: { code: string; message: string } }[]>`
       select e.payload from public.run_events e join public.runs r on r.id = e.run_id where r.conversation_id = ${c.id} and e.type = 'notice'`;
-    expect(ev?.payload).toEqual({ code: "bot_to_bot_off", message: "@Writer, @Designer weren't told: bots can't message each other in this workspace." });
-    await h.request(`/v1/orgs/${orgId}/settings`, { method: "PATCH", token: owner.token, json: { allow_bot_to_bot: true } });
+    expect(ev?.payload).toEqual({
+      code: "bot_to_bot_off",
+      message: "@Writer, @Designer weren't told: bots can't message each other in this workspace.",
+    });
+    await h.request(`/v1/orgs/${orgId}/settings`, {
+      method: "PATCH",
+      token: owner.token,
+      json: { allow_bot_to_bot: true },
+    });
   });
 });

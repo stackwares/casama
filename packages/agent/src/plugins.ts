@@ -59,17 +59,28 @@ export async function syncPluginComputer(db: Database, h: SandboxHandle, compute
   const hash = createHash("sha256").update(JSON.stringify(rows)).digest("hex");
   if (synced.get(h.ref) === hash) return;
   const home = await homeOf(h);
-  const plugins = new Map(rows.map((r) => [r.config.plugin_id, { name: r.config.plugin, commit: r.commit_sha }]));
+  const plugins = new Map(
+    rows.map((r) => [r.config.plugin_id, { name: r.config.plugin, commit: r.commit_sha }]),
+  );
   for (const [id, p] of plugins) {
     const root = pluginRoot(home, p.name);
-    const marker = await h.readFile(`${root}/.kasama-commit`).then((b) => new TextDecoder().decode(b)).catch(() => "");
+    const marker = await h
+      .readFile(`${root}/.kasama-commit`)
+      .then((b) => new TextDecoder().decode(b))
+      .catch(() => "");
     if (marker.trim() === p.commit) continue;
     const files = await db.execute<{ path: string; content: Buffer; executable: boolean }>(
       sql`select path, content, executable from public.plugin_files where plugin_id = ${id}::uuid`,
     );
-    await collectExec(h.exec(`rm -rf "${root}" && mkdir -p "${root}" "${pluginData(home, p.name)}"`, { timeoutMs: 30_000 }));
+    await collectExec(
+      h.exec(`rm -rf "${root}" && mkdir -p "${root}" "${pluginData(home, p.name)}"`, {
+        timeoutMs: 30_000,
+      }),
+    );
     for (const f of files) await h.writeFile(`${root}/${f.path}`, new Uint8Array(f.content));
-    const exe = files.filter((f) => f.executable).map((f) => `"${root}/${f.path.replaceAll('"', "")}"`);
+    const exe = files
+      .filter((f) => f.executable)
+      .map((f) => `"${root}/${f.path.replaceAll('"', "")}"`);
     if (exe.length) await collectExec(h.exec(`chmod +x ${exe.join(" ")}`, { timeoutMs: 30_000 }));
     await h.writeFile(`${root}/.kasama-commit`, new TextEncoder().encode(p.commit));
   }
@@ -86,7 +97,11 @@ export async function syncPluginComputer(db: Database, h: SandboxHandle, compute
       kind: "stdio",
       command: c.command.startsWith("./") ? `${roots.root}/${c.command.slice(2)}` : c.command,
       args: c.args.map(x),
-      cwd: c.cwd ? (c.cwd.startsWith("./") ? `${roots.root}/${c.cwd.slice(2)}` : x(c.cwd)) : roots.root,
+      cwd: c.cwd
+        ? c.cwd.startsWith("./")
+          ? `${roots.root}/${c.cwd.slice(2)}`
+          : x(c.cwd)
+        : roots.root,
       env: {
         ...Object.fromEntries(Object.entries(c.env).map(([k, v]) => [k, x(v)])),
         ...secretEnv,
@@ -103,7 +118,8 @@ export async function syncPluginComputer(db: Database, h: SandboxHandle, compute
 export function computerMcpFetch(h: SandboxHandle, key: string): typeof fetch {
   if (!h.mcpFetch) throw new Error("This computer can't run plugin servers");
   const send = h.mcpFetch.bind(h);
-  return (async (_url: string | URL | Request, init?: RequestInit) => send(key, init ?? {})) as typeof fetch;
+  return (async (_url: string | URL | Request, init?: RequestInit) =>
+    send(key, init ?? {})) as typeof fetch;
 }
 
 /** Forget what was synced (tests, and after uninstalling). */
@@ -118,7 +134,11 @@ export async function botComputerId(db: Database, botId: string) {
 }
 
 /** Everything a computer_mcp adapter needs, given a way to reach the bot's computer. */
-export function computerMcpFor(db: Database, botId: string, computer: () => Promise<SandboxHandle>) {
+export function computerMcpFor(
+  db: Database,
+  botId: string,
+  computer: () => Promise<SandboxHandle>,
+) {
   return async (rec: { name: string }) => {
     const id = await botComputerId(db, botId);
     if (!id) throw new Error("This bot has no computer for its plugin servers");

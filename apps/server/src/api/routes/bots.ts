@@ -1,7 +1,14 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { existingWelcome, handleWelcomeAction, memoryStoreFor, type StoredMemory, startWelcome, storeFromConfig } from "@kasama/agent";
+import {
+  existingWelcome,
+  handleWelcomeAction,
+  memoryStoreFor,
+  type StoredMemory,
+  startWelcome,
+  storeFromConfig,
+} from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, schema, withUserSession, contentKeys } from "@kasama/db";
+import { contentKeys, type JwtClaims, schema, withUserSession } from "@kasama/db";
 import { parseMentions, templateById } from "@kasama/domain";
 import { withSpan } from "@kasama/observability";
 import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
@@ -14,7 +21,7 @@ import { iso } from "../util.ts";
 import type { ModelListOutcome } from "../workflows.ts";
 import { applyTemplate } from "./autonomy.ts";
 
-const { bots, conversations, runs, memories, modelCredentials } = schema;
+const { bots, conversations, runs, modelCredentials } = schema;
 const TERMINAL_EVENTS = new Set(["run.completed", "run.failed", "run.cancelled"]);
 const TERMINAL_STATUS = new Set(["completed", "failed", "cancelled"]);
 
@@ -116,11 +123,17 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   /** Loads a run the caller can see, or 404. */
   const visibleRun = async (claims: JwtClaims, id: string) => {
-    const [run, visible] = await withUserSession(db, claims, async (tx) => [
-      (await tx.select().from(runs).where(eq(runs.id, id)))[0],
-      // A private conversation's runs (personal device data) are only for its starter (audit 2026-11).
-      (await tx.execute<{ ok: boolean }>(sql`select public.run_visible(${id}::uuid) as ok`))[0]?.ok,
-    ] as const);
+    const [run, visible] = await withUserSession(
+      db,
+      claims,
+      async (tx) =>
+        [
+          (await tx.select().from(runs).where(eq(runs.id, id)))[0],
+          // A private conversation's runs (personal device data) are only for its starter (audit 2026-11).
+          (await tx.execute<{ ok: boolean }>(sql`select public.run_visible(${id}::uuid) as ok`))[0]
+            ?.ok,
+        ] as const,
+    );
     if (!run || !visible) throw new ApiError(404, "run_not_found", "Run not found");
     return run;
   };
@@ -279,18 +292,33 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         .where(eq(bots.id, body.bot_id));
       if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
       // A group chat (D-118): the lead first, then the others, all in this workspace and visible to you.
-      const ids = body.bot_ids ? [body.bot_id, ...body.bot_ids.filter((b) => b !== body.bot_id)] : [];
-      if (ids.length > 10) throw new ApiError(400, "too_many_bots", "A group chat has up to 10 bots");
-      if (body.bot_ids && ids.length < 2) throw new ApiError(400, "too_few_bots", "A group chat needs at least 2 bots");
+      const ids = body.bot_ids
+        ? [body.bot_id, ...body.bot_ids.filter((b) => b !== body.bot_id)]
+        : [];
+      if (ids.length > 10)
+        throw new ApiError(400, "too_many_bots", "A group chat has up to 10 bots");
+      if (body.bot_ids && ids.length < 2)
+        throw new ApiError(400, "too_few_bots", "A group chat needs at least 2 bots");
       if (ids.length) {
         const seen = await tx.execute<{ id: string }>(sql`
           select id from public.bots where org_id = ${bot.orgId}::uuid and archived_at is null and public.can_access_bot(id)
             and id in (select jsonb_array_elements_text(${JSON.stringify(ids)}::jsonb)::uuid)`);
-        if (seen.length !== ids.length) throw new ApiError(400, "bot_not_found", "Every bot must be in this workspace and visible to you");
+        if (seen.length !== ids.length)
+          throw new ApiError(
+            400,
+            "bot_not_found",
+            "Every bot must be in this workspace and visible to you",
+          );
       }
       const [row] = await tx
         .insert(conversations)
-        .values({ orgId: bot.orgId, botId: body.bot_id, title: body.title, createdBy: claims.sub, kind: ids.length ? "group" : "direct" })
+        .values({
+          orgId: bot.orgId,
+          botId: body.bot_id,
+          title: body.title,
+          createdBy: claims.sub,
+          kind: ids.length ? "group" : "direct",
+        })
         .returning();
       for (const [i, b] of ids.entries())
         await tx.execute(sql`
@@ -334,7 +362,12 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             where conversation_id in (select jsonb_array_elements_text(${JSON.stringify(rows.map((r) => r.id))}::jsonb)::uuid)
             order by position`)
         : [];
-      return rows.map((r) => convOut(r, members.filter((m) => m.conversation_id === r.id).map((m) => m.bot_id)));
+      return rows.map((r) =>
+        convOut(
+          r,
+          members.filter((m) => m.conversation_id === r.id).map((m) => m.bot_id),
+        ),
+      );
     });
     return c.json({ items: out }, 200);
   });
@@ -416,7 +449,9 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   /** A message in a group chat (D-118): the mentioned bots (or @everyone's lead, or whoever spoke last) each get a run. */
   const sendGroup = async (claims: JwtClaims, id: string, text: string, parts: unknown[]) => {
     const created = await withUserSession(db, claims, async (tx) => {
-      const [conv] = await tx.execute<{ org_id: string; bot_id: string }>(sql`select org_id, bot_id from public.conversations where id = ${id}::uuid`);
+      const [conv] = await tx.execute<{ org_id: string; bot_id: string }>(
+        sql`select org_id, bot_id from public.conversations where id = ${id}::uuid`,
+      );
       if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
       const members = await tx.execute<{ id: string; name: string; role: string }>(sql`
         select b.id, b.name, cb.role from public.conversation_bots cb join public.bots b on b.id = cb.bot_id
@@ -427,7 +462,9 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         const [last] = await tx.execute<{ bot_id: string }>(sql`
           select bot_id from public.messages where conversation_id = ${id}::uuid and role = 'assistant' and bot_id is not null
           order by created_at desc limit 1`);
-        targets = [last?.bot_id && members.some((m) => m.id === last.bot_id) ? last.bot_id : conv.bot_id];
+        targets = [
+          last?.bot_id && members.some((m) => m.id === last.bot_id) ? last.bot_id : conv.bot_id,
+        ];
       }
       const [msg] = await tx.execute<{ id: string }>(sql`
         insert into public.messages (org_id, conversation_id, role, author_user_id, content)
@@ -439,11 +476,18 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           values (${conv.org_id}::uuid, ${botId}::uuid, ${id}::uuid, ${claims.sub}::uuid, 'chat', ${msg?.id}::uuid) returning id`);
         if (run) runIds.push(run.id);
       }
-      await tx.execute(sql`update public.conversations set last_message_at = now() where id = ${id}::uuid`);
+      await tx.execute(
+        sql`update public.conversations set last_message_at = now() where id = ${id}::uuid`,
+      );
       return { messageId: msg?.id as string, runIds };
     });
     for (const r of created.runIds) await deps.workflows.startRun(r);
-    return { message_id: created.messageId, run_id: created.runIds[0] as string, conversation_id: id, run_ids: created.runIds };
+    return {
+      message_id: created.messageId,
+      run_id: created.runIds[0] as string,
+      conversation_id: id,
+      run_ids: created.runIds,
+    };
   };
 
   app.openapi(routes.sendMessage, async (c) => {
@@ -451,7 +495,9 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const { id } = c.req.valid("param");
     const { text, attachments, ui_action, skills: picked } = c.req.valid("json");
     const [kind] = await withUserSession(db, claims, (tx) =>
-      tx.execute<{ kind: string }>(sql`select kind from public.conversations where id = ${id}::uuid`),
+      tx.execute<{ kind: string }>(
+        sql`select kind from public.conversations where id = ${id}::uuid`,
+      ),
     );
     if (kind?.kind === "group")
       return c.json(
@@ -465,14 +511,20 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     // Welcome chat (D-129): its scripted card actions are answered without a model.
     if (ui_action?.name.startsWith("welcome.")) {
       const [conv] = await withUserSession(db, claims, (tx) =>
-        tx.execute<{ org_id: string; bot_id: string; welcome: unknown }>(sql`select org_id, bot_id, welcome from public.conversations where id = ${id}::uuid`),
+        tx.execute<{ org_id: string; bot_id: string; welcome: unknown }>(
+          sql`select org_id, bot_id, welcome from public.conversations where id = ${id}::uuid`,
+        ),
       );
       if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
       if (conv.welcome) {
         const r = await handleWelcomeAction(
           { db, modelOverrides: modelOverrides(deps.env) },
           { orgId: conv.org_id, botId: conv.bot_id, conversationId: id, userId: claims.sub },
-          { name: ui_action.name, surface_id: ui_action.surface_id, context: ui_action.context as Record<string, unknown> | undefined },
+          {
+            name: ui_action.name,
+            surface_id: ui_action.surface_id,
+            context: ui_action.context as Record<string, unknown> | undefined,
+          },
           text,
         );
         if (r.queue) await deps.workflows.startRun(r.runId);
@@ -540,28 +592,67 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = requireClaims(c.get("claims"));
     const b = c.req.valid("json");
     const found = await existingWelcome(db, claims.sub);
-    if (found) return c.json({ org_id: found.orgId, bot_id: found.botId, conversation_id: found.conversationId, created: false }, 200);
-    const [m] = await db.execute<{ n: number }>(sql`select count(*)::int as n from public.memberships where user_id = ${claims.sub}::uuid`);
+    if (found)
+      return c.json(
+        {
+          org_id: found.orgId,
+          bot_id: found.botId,
+          conversation_id: found.conversationId,
+          created: false,
+        },
+        200,
+      );
+    const [m] = await db.execute<{ n: number }>(
+      sql`select count(*)::int as n from public.memberships where user_id = ${claims.sub}::uuid`,
+    );
     if ((m?.n ?? 0) > 0) throw new ApiError(409, "has_workspace", "You already have a workspace");
     const email = typeof claims.email === "string" ? claims.email : "";
-    const first = (b.first_name ?? (claims.user_metadata as { full_name?: string } | undefined)?.full_name?.split(" ")[0] ?? email.split("@")[0] ?? "").trim();
-    const name = `${first ? `${first[0]?.toUpperCase()}${first.slice(1)}` : "My"}'s space`.slice(0, 80);
+    const first = (
+      b.first_name ??
+      (claims.user_metadata as { full_name?: string } | undefined)?.full_name?.split(" ")[0] ??
+      email.split("@")[0] ??
+      ""
+    ).trim();
+    const name = `${first ? `${first[0]?.toUpperCase()}${first.slice(1)}` : "My"}'s space`.slice(
+      0,
+      80,
+    );
     let orgId: string | undefined;
     for (let attempt = 0; attempt < 5 && !orgId; attempt++) {
-      const slug = `${(first || "space").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "space"}-${Math.random().toString(36).slice(2, 8)}`;
+      const slug = `${
+        (first || "space")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")
+          .slice(0, 30) || "space"
+      }-${Math.random().toString(36).slice(2, 8)}`;
       try {
         const [row] = await withUserSession(db, claims, (tx) =>
-          tx.execute<{ id: string }>(sql`select id from public.create_organization(${name}, ${slug})`),
+          tx.execute<{ id: string }>(
+            sql`select id from public.create_organization(${name}, ${slug})`,
+          ),
         );
         orgId = row?.id;
       } catch (err) {
-        if ((err as { code?: string }).code !== "23505" && (err as { cause?: { code?: string } }).cause?.code !== "23505") throw err;
+        if (
+          (err as { code?: string }).code !== "23505" &&
+          (err as { cause?: { code?: string } }).cause?.code !== "23505"
+        )
+          throw err;
       }
     }
     if (!orgId) throw new ApiError(409, "slug_taken", "Could not create your space; try again");
     if (deps.billing?.enabled) await deps.billing.recompute(orgId);
-    const w = await startWelcome(db, { orgId, userId: claims.sub, firstName: first, botName: b.bot_name ?? "Kasama" });
-    return c.json({ org_id: w.orgId, bot_id: w.botId, conversation_id: w.conversationId, created: true }, 200);
+    const w = await startWelcome(db, {
+      orgId,
+      userId: claims.sub,
+      firstName: first,
+      botName: b.bot_name ?? "Kasama",
+    });
+    return c.json(
+      { org_id: w.orgId, bot_id: w.botId, conversation_id: w.conversationId, created: true },
+      200,
+    );
   });
 
   app.openapi(routes.getRun, async (c) => {
@@ -846,7 +937,9 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const storeOf = async (orgId: string) => memoryStoreFor(db, orgId, null, memFetch());
   const memoryBot = async (claims: JwtClaims, botId: string, manage = false) => {
     const [b] = await withUserSession(db, claims, (tx) =>
-      tx.execute<{ org_id: string; manage: boolean }>(sql`select org_id, public.can_manage_bot(id) as manage from public.bots where id = ${botId}::uuid`),
+      tx.execute<{ org_id: string; manage: boolean }>(
+        sql`select org_id, public.can_manage_bot(id) as manage from public.bots where id = ${botId}::uuid`,
+      ),
     );
     if (!b) throw new ApiError(404, "bot_not_found", "Bot not found");
     if (manage && !b.manage) throw new ApiError(404, "memory_not_found", "Memory not found");
@@ -867,11 +960,23 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const rows = await withUserSession(db, claims, async (tx) => {
-      const [conv] = await tx.execute<{ id: string }>(sql`select id from public.conversations where id = ${id}::uuid`);
+      const [conv] = await tx.execute<{ id: string }>(
+        sql`select id from public.conversations where id = ${id}::uuid`,
+      );
       if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
-      return tx.execute<Record<string, unknown>>(sql`select * from public.conversation_thread(${id}::uuid)`);
+      return tx.execute<Record<string, unknown>>(
+        sql`select * from public.conversation_thread(${id}::uuid)`,
+      );
     });
-    return c.json({ items: rows.map((r) => ({ ...r, created_at: r.created_at ? iso(r.created_at as string) : null })) }, 200);
+    return c.json(
+      {
+        items: rows.map((r) => ({
+          ...r,
+          created_at: r.created_at ? iso(r.created_at as string) : null,
+        })),
+      },
+      200,
+    );
   });
 
   app.openapi(routes.updateMemory, async (c) => {
@@ -894,10 +999,20 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   // Memory backends (D-137) -----------------------------------------------------
   const backendOut = async (orgId: string) => {
-    const [b] = await db.execute<{ provider: "honcho"; base_url: string | null; workspace: string | null; updated_at: string }>(sql`
+    const [b] = await db.execute<{
+      provider: "honcho";
+      base_url: string | null;
+      workspace: string | null;
+      updated_at: string;
+    }>(sql`
       select provider, base_url, workspace, updated_at from public.org_memory_backends where org_id = ${orgId}::uuid`);
     return b
-      ? { provider: b.provider, base_url: b.base_url, workspace: b.workspace, updated_at: iso(b.updated_at) }
+      ? {
+          provider: b.provider,
+          base_url: b.base_url,
+          workspace: b.workspace,
+          updated_at: iso(b.updated_at),
+        }
       : { provider: "postgres" as const, base_url: null, workspace: null, updated_at: null };
   };
   const orgRole = async (claims: JwtClaims, orgId: string) => {
@@ -920,20 +1035,38 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const b = c.req.valid("json");
-    if (!(await orgRole(claims, id)).admin) throw new ApiError(403, "forbidden", "Only admins can change where memory is kept");
-    const store = storeFromConfig({ provider: b.provider, key: b.api_key, base_url: b.base_url, workspace: b.workspace }, id, memFetch());
+    if (!(await orgRole(claims, id)).admin)
+      throw new ApiError(403, "forbidden", "Only admins can change where memory is kept");
+    const store = storeFromConfig(
+      { provider: b.provider, key: b.api_key, base_url: b.base_url, workspace: b.workspace },
+      id,
+      memFetch(),
+    );
     try {
       await store.list("00000000-0000-0000-0000-000000000000");
     } catch (e) {
-      throw new ApiError(400, "memory_backend_failed", `Couldn't reach ${b.provider === "honcho" ? "Honcho" : "Supermemory"}: ${(e as Error).message}`);
+      throw new ApiError(
+        400,
+        "memory_backend_failed",
+        `Couldn't reach ${b.provider === "honcho" ? "Honcho" : "Supermemory"}: ${(e as Error).message}`,
+      );
     }
     if (b.copy_existing) {
       // Copy the built-in memories first, so nothing is lost when the switch happens.
       const old = await storeOf(id);
-      const bots = await db.execute<{ id: string }>(sql`select id from public.bots where org_id = ${id}::uuid`);
+      const bots = await db.execute<{ id: string }>(
+        sql`select id from public.bots where org_id = ${id}::uuid`,
+      );
       for (const bot of bots)
         for (const m of await old.list(bot.id))
-          await store.write({ orgId: id, botId: bot.id, kind: m.kind, content: m.content, importance: m.importance, pinned: m.pinned });
+          await store.write({
+            orgId: id,
+            botId: bot.id,
+            kind: m.kind,
+            content: m.content,
+            importance: m.importance,
+            pinned: m.pinned,
+          });
     }
     await db.execute(sql`
       with old as (select vault_secret_id from public.org_memory_backends where org_id = ${id}::uuid)
@@ -951,7 +1084,8 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.deleteMemoryBackend, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
-    if (!(await orgRole(claims, id)).admin) throw new ApiError(403, "forbidden", "Only admins can change where memory is kept");
+    if (!(await orgRole(claims, id)).admin)
+      throw new ApiError(403, "forbidden", "Only admins can change where memory is kept");
     await db.execute(sql`
       with gone as (delete from public.org_memory_backends where org_id = ${id}::uuid returning vault_secret_id)
       delete from vault.secrets where id in (select vault_secret_id from gone)`);

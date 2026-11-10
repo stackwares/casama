@@ -102,7 +102,7 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         Promise.all(checks),
         new Promise<null>((r) => setTimeout(() => r(null), 1500)),
       ]);
-      if (settled && settled.some((s, i) => s !== rows[i]?.state)) rows = await list();
+      if (settled?.some((s, i) => s !== rows[i]?.state)) rows = await list();
     }
     return c.json({ items: rows.map(out) }, 200);
   });
@@ -330,7 +330,11 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const current = await visible(claims, id);
     await canManage(claims, current.orgId, current.ownerBotId);
     if (body.max_desktops != null && current.kind !== "team")
-      throw new ApiError(400, "team_computer_only", "Only team computers are shared, so only they have a desktop cap");
+      throw new ApiError(
+        400,
+        "team_computer_only",
+        "Only team computers are shared, so only they have a desktop cap",
+      );
     await db
       .update(computers)
       .set({

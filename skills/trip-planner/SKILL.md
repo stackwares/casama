@@ -1,4 +1,5 @@
 ---
+
 name: trip-planner
 description: Plan a trip day by day within a budget, with travel times, bookings to make and a packing list.
 ---

@@ -11,8 +11,18 @@ const google = JSON.stringify({
       attendees: [{ email: "ana@acme.test", self: true }, { email: "lee@globex.test" }],
       hangoutLink: "https://meet.google.com/abc-defg-hij",
     },
-    { id: "e2", summary: "Team standup", start: { dateTime: "2026-11-11T09:00:00Z" }, attendees: [{ email: "ana@acme.test", self: true }, { email: "ben@acme.test" }] },
-    { id: "e3", summary: "Cancelled", status: "cancelled", start: { dateTime: "2026-11-11T11:00:00Z" } },
+    {
+      id: "e2",
+      summary: "Team standup",
+      start: { dateTime: "2026-11-11T09:00:00Z" },
+      attendees: [{ email: "ana@acme.test", self: true }, { email: "ben@acme.test" }],
+    },
+    {
+      id: "e3",
+      summary: "Cancelled",
+      status: "cancelled",
+      start: { dateTime: "2026-11-11T11:00:00Z" },
+    },
   ],
 });
 const graph = JSON.stringify({
@@ -31,14 +41,25 @@ describe("calendar triggers", () => {
   it("reads Google and Microsoft event shapes, skipping cancelled ones", () => {
     const g = parseEvents(google);
     expect(g.map((e) => e.id)).toEqual(["e1", "e2"]);
-    expect(g[0]).toMatchObject({ title: "Pricing call with Globex", selfEmail: "ana@acme.test", link: "https://meet.google.com/abc-defg-hij" });
+    expect(g[0]).toMatchObject({
+      title: "Pricing call with Globex",
+      selfEmail: "ana@acme.test",
+      link: "https://meet.google.com/abc-defg-hij",
+    });
     const m = parseEvents(graph);
-    expect(m[0]).toMatchObject({ title: "Review", attendees: ["x@other.test"], link: "https://teams.microsoft.com/l/meetup-join/123" });
+    expect(m[0]).toMatchObject({
+      title: "Review",
+      attendees: ["x@other.test"],
+      link: "https://teams.microsoft.com/l/meetup-join/123",
+    });
     expect(parseEvents("not json")).toEqual([]);
   });
 
   it("filters by outside guests, title and video link", () => {
-    const [ext, internal] = parseEvents(google) as [ReturnType<typeof parseEvents>[0], ReturnType<typeof parseEvents>[0]];
+    const [ext, internal] = parseEvents(google) as [
+      ReturnType<typeof parseEvents>[0],
+      ReturnType<typeof parseEvents>[0],
+    ];
     const t = { type: "calendar_event" as const, integration_id: "i", offset_minutes: -15 };
     expect(eventMatches(ext, { ...t, outside_guests: true }, null)).toBe(true);
     expect(eventMatches(internal, { ...t, outside_guests: true }, null)).toBe(false);
@@ -50,7 +71,11 @@ describe("calendar triggers", () => {
   it("names list arguments the way the tool's schema does", () => {
     const from = new Date("2026-11-11T00:00:00Z");
     const to = new Date("2026-11-12T00:00:00Z");
-    expect(listArgs({ properties: { timeMin: {}, timeMax: {}, singleEvents: {} } }, from, to)).toEqual({ timeMin: from.toISOString(), timeMax: to.toISOString(), singleEvents: true });
-    expect(Object.keys(listArgs({ properties: { startDateTime: {}, endDateTime: {} } }, from, to))).toEqual(["startDateTime", "endDateTime"]);
+    expect(
+      listArgs({ properties: { timeMin: {}, timeMax: {}, singleEvents: {} } }, from, to),
+    ).toEqual({ timeMin: from.toISOString(), timeMax: to.toISOString(), singleEvents: true });
+    expect(
+      Object.keys(listArgs({ properties: { startDateTime: {}, endDateTime: {} } }, from, to)),
+    ).toEqual(["startDateTime", "endDateTime"]);
   });
 });

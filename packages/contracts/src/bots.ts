@@ -93,7 +93,9 @@ export const Conversation = z
     title: z.string().nullable(),
     last_message_at: ts.nullable(),
     kind: z.enum(["direct", "group"]),
-    bot_ids: z.array(Uuid).openapi({ description: "Group chats: every bot, the lead first (D-118)" }),
+    bot_ids: z
+      .array(Uuid)
+      .openapi({ description: "Group chats: every bot, the lead first (D-118)" }),
     created_at: ts,
   })
   .openapi("Conversation");
@@ -102,12 +104,10 @@ export const CreateConversationRequest = z
   .object({
     bot_id: Uuid.openapi({ description: "The bot, or a group chat's lead" }),
     title: z.string().max(200).optional(),
-    bot_ids: z
-      .array(Uuid)
-      .min(1)
-      .max(10)
-      .optional()
-      .openapi({ description: "A group chat (D-118): the other bots (the lead may be listed too); 2 to 10 bots in all" }),
+    bot_ids: z.array(Uuid).min(1).max(10).optional().openapi({
+      description:
+        "A group chat (D-118): the other bots (the lead may be listed too); 2 to 10 bots in all",
+    }),
   })
   .openapi("CreateConversationRequest");
 
@@ -420,7 +420,10 @@ export const UsageReport = z
   .openapi("UsageReport");
 
 export const StartWelcomeRequest = z
-  .object({ first_name: z.string().max(80).optional(), bot_name: z.string().min(1).max(80).optional() })
+  .object({
+    first_name: z.string().max(80).optional(),
+    bot_name: z.string().min(1).max(80).optional(),
+  })
   .openapi("StartWelcomeRequest");
 export const WelcomeChat = z
   .object({ org_id: Uuid, bot_id: Uuid, conversation_id: Uuid, created: z.boolean() })

@@ -17,7 +17,9 @@ describe("pages", () => {
     });
     expect(html.match(/kasama-data/g)).toHaveLength(1);
     expect(html).toContain('<meta name="robots" content="noindex,nofollow">');
-    expect(html).toContain("Updated <time datetime=\"2026-11-10T09:30:00.000Z\">2026-11-10 09:30 UTC</time></div></body>");
+    expect(html).toContain(
+      'Updated <time datetime="2026-11-10T09:30:00.000Z">2026-11-10 09:30 UTC</time></div></body>',
+    );
   });
 
   it("wraps a fragment and escapes the title", () => {

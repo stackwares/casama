@@ -2,7 +2,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { callGreeting, callNotAnswered, VOICE_PRICES } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, schema, withUserSession, contentKeys } from "@kasama/db";
+import { contentKeys, type JwtClaims, schema, withUserSession } from "@kasama/db";
 import { eq, sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -93,10 +93,15 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     // An answered phone call (D-135): its conversation, and the bot opens with why it called.
     let greeting: string | undefined;
     if (call_id) {
-      const [call] = await db.execute<{ reason: string; conversation_id: string | null; bot_id: string }>(sql`
+      const [call] = await db.execute<{
+        reason: string;
+        conversation_id: string | null;
+        bot_id: string;
+      }>(sql`
         select reason, conversation_id, bot_id from public.voice_calls
         where id = ${call_id}::uuid and user_id = ${claims.sub}::uuid and status = 'answered'`);
-      if (!call || call.bot_id !== bot.id) throw new ApiError(404, "call_not_found", "Call not found");
+      if (!call || call.bot_id !== bot.id)
+        throw new ApiError(404, "call_not_found", "Call not found");
       greeting = callGreeting(call.reason);
       conversation_id = call.conversation_id ?? conversation_id;
     }
@@ -224,8 +229,21 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   });
 
   // Phone calls (D-135) -------------------------------------------------------
-  type CallRow = { id: string; bot_id: string; bot_name: string; reason: string; status: "ringing"; conversation_id: string | null; expires_at: string; created_at: string };
-  const callOut = (r: CallRow) => ({ ...r, expires_at: new Date(r.expires_at).toISOString(), created_at: new Date(r.created_at).toISOString() });
+  type CallRow = {
+    id: string;
+    bot_id: string;
+    bot_name: string;
+    reason: string;
+    status: "ringing";
+    conversation_id: string | null;
+    expires_at: string;
+    created_at: string;
+  };
+  const callOut = (r: CallRow) => ({
+    ...r,
+    expires_at: new Date(r.expires_at).toISOString(),
+    created_at: new Date(r.created_at).toISOString(),
+  });
   const myCall = async (claims: JwtClaims, id: string) => {
     const [r] = await db.execute<CallRow>(sql`
       select vc.id, vc.bot_id, b.name as bot_name, vc.reason, vc.status, vc.conversation_id, vc.expires_at, vc.created_at

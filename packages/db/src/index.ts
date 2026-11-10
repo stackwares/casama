@@ -1,9 +1,9 @@
 import { sql } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { contentKeys } from "./content-crypto.ts";
 import * as relations from "./generated/relations.ts";
 import * as schema from "./generated/schema.ts";
-import { contentKeys } from "./content-crypto.ts";
 
 export { schema };
 export const fullSchema = { ...schema, ...relations };

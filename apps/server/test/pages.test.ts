@@ -41,13 +41,23 @@ beforeAll(async () => {
   h = await startHarness({ env: { PAGES_URL: "https://pages.example.com" } });
   pages = createPagesApp({
     db: h.handle.db,
-    pdf: { render: async (html) => (printed.push(html), new TextEncoder().encode("%PDF-1.7 fake")) },
+    pdf: {
+      render: async (html) => (printed.push(html), new TextEncoder().encode("%PDF-1.7 fake")),
+    },
   });
   owner = await h.user("pages@example.com");
   member = await h.user("teammate@example.com");
-  orgId = (await j(await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "P" } }))).id;
+  orgId = (
+    await j(
+      await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "P" } }),
+    )
+  ).id;
   const link = await j(
-    await h.request(`/v1/orgs/${orgId}/invite-links`, { method: "POST", token: owner.token, json: { role: "member" } }),
+    await h.request(`/v1/orgs/${orgId}/invite-links`, {
+      method: "POST",
+      token: owner.token,
+      json: { role: "member" },
+    }),
   );
   await h.request(`/v1/invite-links/${link.token}/accept`, { method: "POST", token: member.token });
   const cred = await j(
@@ -62,7 +72,11 @@ beforeAll(async () => {
       await h.request("/v1/bots", {
         method: "POST",
         token: owner.token,
-        json: { org_id: orgId, name: "Reporter", model_policy: { primary: { credential_id: cred.id, model: "m" } } },
+        json: {
+          org_id: orgId,
+          name: "Reporter",
+          model_policy: { primary: { credential_id: cred.id, model: "m" } },
+        },
       }),
     )
   ).id;
@@ -83,14 +97,33 @@ describe("pages", () => {
   let pageId: string;
 
   it("a bot publishes a private page; only the person it was for opens it, with a strict CSP", async () => {
-    const r = await tool("pages.publish", { title: "Sales", html: HTML, data: JSON.stringify({ total: 42, note: "</script><b>x" }) });
+    const r = await tool("pages.publish", {
+      title: "Sales",
+      html: HTML,
+      data: JSON.stringify({ total: 42, note: "</script><b>x" }),
+    });
     pageId = /page ([0-9a-f-]{36})/.exec(r.content)![1] as string;
     const list = await j(await h.request(`/v1/pages?org_id=${orgId}`, { token: owner.token }));
     expect(list.items).toHaveLength(1);
-    expect(list.items[0]).toMatchObject({ title: "Sales", visibility: "private", version: 1, can_manage: true });
+    expect(list.items[0]).toMatchObject({
+      title: "Sales",
+      visibility: "private",
+      version: 1,
+      can_manage: true,
+    });
     // A teammate can see the bot but not a private page.
-    expect((await j(await h.request(`/v1/pages?org_id=${orgId}`, { token: member.token }))).items).toHaveLength(0);
-    expect((await h.request(`/v1/pages/${pageId}/view-link`, { method: "POST", token: member.token, json: {} })).status).toBe(404);
+    expect(
+      (await j(await h.request(`/v1/pages?org_id=${orgId}`, { token: member.token }))).items,
+    ).toHaveLength(0);
+    expect(
+      (
+        await h.request(`/v1/pages/${pageId}/view-link`, {
+          method: "POST",
+          token: member.token,
+          json: {},
+        })
+      ).status,
+    ).toBe(404);
 
     const link = await viewLink(pageId, owner.token);
     expect(link).toMatch(/^https:\/\/pages\.example\.com\/v\//);
@@ -118,7 +151,9 @@ describe("pages", () => {
     const cookie = setCookie.split(";")[0] as string;
     expect((await pages.request(`/p/${pageId}`, { headers: { cookie } })).status).toBe(200);
     // Another page id with the same cookie: no.
-    expect((await pages.request(`/p/${crypto.randomUUID()}`, { headers: { cookie } })).status).toBe(404);
+    expect((await pages.request(`/p/${crypto.randomUUID()}`, { headers: { cookie } })).status).toBe(
+      404,
+    );
   });
 
   it("update_data changes the data only and keeps versions; revert brings one back", async () => {
@@ -128,49 +163,79 @@ describe("pages", () => {
     expect(d.versions.map((v: { version: number }) => v.version)).toEqual([2, 1]);
     expect(await (await open(await viewLink(pageId, owner.token))).text()).toContain('"total":99');
     const reverted = await j(
-      await h.request(`/v1/pages/${pageId}/revert`, { method: "POST", token: owner.token, json: { version: 1 } }),
+      await h.request(`/v1/pages/${pageId}/revert`, {
+        method: "POST",
+        token: owner.token,
+        json: { version: 1 },
+      }),
     );
     expect(reverted.version).toBe(3);
     expect(await (await open(await viewLink(pageId, owner.token))).text()).toContain('"total":42');
     // Only the last 20 are kept.
-    for (let i = 0; i < 22; i++) await tool("pages.update_data", { page_id: pageId, data: JSON.stringify({ total: i }) });
+    for (let i = 0; i < 22; i++)
+      await tool("pages.update_data", { page_id: pageId, data: JSON.stringify({ total: i }) });
     const kept = await j(await h.request(`/v1/pages/${pageId}`, { token: owner.token }));
     expect(kept.versions).toHaveLength(20);
     expect(kept.versions[0].version).toBe(25);
   });
 
   it("workspace pages open for teammates; public links work signed out, expire and are revocable", async () => {
-    expect(reg.get("pages.share")!.riskFor!({ page_id: pageId, visibility: "public" } as never)).toBe("high");
+    expect(
+      reg.get("pages.share")!.riskFor!({ page_id: pageId, visibility: "public" } as never),
+    ).toBe("high");
     await tool("pages.share", { page_id: pageId, visibility: "workspace" });
-    expect((await j(await h.request(`/v1/pages?org_id=${orgId}`, { token: member.token }))).items).toHaveLength(1);
+    expect(
+      (await j(await h.request(`/v1/pages?org_id=${orgId}`, { token: member.token }))).items,
+    ).toHaveLength(1);
     expect((await open(await viewLink(pageId, member.token))).status).toBe(200);
     // Teammates can open it but not change it.
     expect(
-      (await h.request(`/v1/pages/${pageId}`, { method: "PATCH", token: member.token, json: { visibility: "public" } })).status,
+      (
+        await h.request(`/v1/pages/${pageId}`, {
+          method: "PATCH",
+          token: member.token,
+          json: { visibility: "public" },
+        })
+      ).status,
     ).toBe(403);
 
     const shared = await j(
-      await h.request(`/v1/pages/${pageId}`, { method: "PATCH", token: owner.token, json: { visibility: "public", expires_in_days: 7 } }),
+      await h.request(`/v1/pages/${pageId}`, {
+        method: "PATCH",
+        token: owner.token,
+        json: { visibility: "public", expires_in_days: 7 },
+      }),
     );
     expect(shared.public_url).toMatch(/^https:\/\/pages\.example\.com\/s\//);
     expect(shared.page).toMatchObject({ visibility: "public" });
     const pub = await pages.request(pathOf(shared.public_url));
     expect(pub.status).toBe(200);
     expect(pub.headers.get("x-robots-tag")).toContain("noindex");
-    const [audit] = await h.tdb.admin<{ action: string }[]>`select action from public.audit_log where target_id = ${pageId}`;
+    const [audit] = await h.tdb.admin<
+      { action: string }[]
+    >`select action from public.audit_log where target_id = ${pageId}`;
     expect(audit?.action).toBe("page.made_public");
 
     // Expired: gone.
-    await h.tdb.admin`update public.pages set expires_at = now() - interval '1 minute' where id = ${pageId}`;
+    await h.tdb
+      .admin`update public.pages set expires_at = now() - interval '1 minute' where id = ${pageId}`;
     expect((await pages.request(pathOf(shared.public_url))).status).toBe(404);
     // Sharing again gives a new link; the old one stays dead; taking it back kills the new one.
     const again = await j(
-      await h.request(`/v1/pages/${pageId}`, { method: "PATCH", token: owner.token, json: { visibility: "public" } }),
+      await h.request(`/v1/pages/${pageId}`, {
+        method: "PATCH",
+        token: owner.token,
+        json: { visibility: "public" },
+      }),
     );
     expect(again.public_url).not.toBe(shared.public_url);
     expect((await pages.request(pathOf(shared.public_url))).status).toBe(404);
     expect((await pages.request(pathOf(again.public_url))).status).toBe(200);
-    await h.request(`/v1/pages/${pageId}`, { method: "PATCH", token: owner.token, json: { visibility: "workspace" } });
+    await h.request(`/v1/pages/${pageId}`, {
+      method: "PATCH",
+      token: owner.token,
+      json: { visibility: "workspace" },
+    });
     expect((await pages.request(pathOf(again.public_url))).status).toBe(404);
   });
 
@@ -202,8 +267,12 @@ describe("pages", () => {
     expect(rt).toMatchObject({ schedule_cron: "0 8 * * *", enabled: true });
     expect(rt?.instructions_md).toContain("pages.update_data");
     expect(rt?.instructions_md).toContain(pageId);
-    expect((await h.request(`/v1/pages/${pageId}`, { method: "DELETE", token: member.token })).status).toBe(403);
-    expect((await h.request(`/v1/pages/${pageId}`, { method: "DELETE", token: owner.token })).status).toBe(200);
+    expect(
+      (await h.request(`/v1/pages/${pageId}`, { method: "DELETE", token: member.token })).status,
+    ).toBe(403);
+    expect(
+      (await h.request(`/v1/pages/${pageId}`, { method: "DELETE", token: owner.token })).status,
+    ).toBe(200);
     const [after] = await h.tdb.admin<
       { enabled: boolean }[]
     >`select enabled from public.routines where id = ${p!.refresh_routine_id}`;
@@ -219,7 +288,12 @@ describe("pages", () => {
       { id: string }[]
     >`insert into public.bots (org_id, name, model_policy, created_by) select org_id, 'Other', model_policy, created_by from public.bots where id = ${botId} returning id`;
     await expect(
-      reg.get("pages.update_data")!.execute({ page_id: id, data: "{}" } as never, { ...(ctx() as object), botId: other!.id } as never),
+      reg
+        .get("pages.update_data")!
+        .execute(
+          { page_id: id, data: "{}" } as never,
+          { ...(ctx() as object), botId: other!.id } as never,
+        ),
     ).rejects.toThrow(/no page/);
   });
 });

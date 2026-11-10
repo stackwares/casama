@@ -5,13 +5,13 @@
  */
 import { createHash } from "node:crypto";
 import type { Database } from "@kasama/db";
+import { contentKeys } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import { createAdapter, loadIntegration } from "./integrations.ts";
 import { loadSecrets } from "./secrets.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
-import { contentKeys } from "@kasama/db";
 
 type StartRun = (runId: string) => Promise<void>;
 

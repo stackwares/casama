@@ -26,11 +26,21 @@ export function registerWorkspaceFileRoutes(app: OpenAPIHono<AppEnv>, deps: AppD
     const [r] = await withUserSession(db, claims, (tx) =>
       tx.execute<{ ok: boolean }>(sql`select public.has_role(${orgId}::uuid, 'admin') as ok`),
     );
-    if (!r?.ok) throw new ApiError(403, "forbidden", "Only workspace admins can export, import or sync routines and skills");
+    if (!r?.ok)
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only workspace admins can export, import or sync routines and skills",
+      );
   };
-  const base = (c: { req: { url: string } }) => (deps.env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
+  const base = (c: { req: { url: string } }) =>
+    (deps.env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
 
-  const status = async (c: { req: { url: string } }, orgId: string, secret: string | null = null) => {
+  const status = async (
+    c: { req: { url: string } },
+    orgId: string,
+    secret: string | null = null,
+  ) => {
     const [g] = await db.execute<{
       repo: string;
       branch: string;
@@ -69,7 +79,10 @@ export function registerWorkspaceFileRoutes(app: OpenAPIHono<AppEnv>, deps: AppD
       {
         zip_base64: Buffer.from(zip).toString("base64"),
         count: files.size,
-        files: [...files].map(([path, b]) => ({ path, content_base64: Buffer.from(b).toString("base64") })),
+        files: [...files].map(([path, b]) => ({
+          path,
+          content_base64: Buffer.from(b).toString("base64"),
+        })),
       },
       200,
     );
@@ -83,22 +96,33 @@ export function registerWorkspaceFileRoutes(app: OpenAPIHono<AppEnv>, deps: AppD
     const files = new Map<string, Uint8Array>();
     if (b.zip_base64) {
       try {
-        for (const [k, v] of Object.entries(unzipSync(Buffer.from(b.zip_base64, "base64")))) if (!k.endsWith("/")) files.set(k, v);
+        for (const [k, v] of Object.entries(unzipSync(Buffer.from(b.zip_base64, "base64"))))
+          if (!k.endsWith("/")) files.set(k, v);
       } catch {
         throw new ApiError(400, "import_bad_zip", "That isn't a ZIP file we can read.");
       }
-    } else for (const f of b.files ?? []) files.set(f.path, Buffer.from(f.content_base64, "base64"));
+    } else
+      for (const f of b.files ?? []) files.set(f.path, Buffer.from(f.content_base64, "base64"));
     // A ZIP of the folder itself: drop the shared top folder.
     const keys = [...files.keys()];
     const top = keys[0]?.split("/")[0];
-    if (top && keys.every((k) => k.startsWith(`${top}/`)) && !["workspace"].includes(top) && keys.some((k) => k === `${top}/kasama.json`)) {
+    if (
+      top &&
+      keys.every((k) => k.startsWith(`${top}/`)) &&
+      !["workspace"].includes(top) &&
+      keys.some((k) => k === `${top}/kasama.json`)
+    ) {
       for (const k of keys) {
         files.set(k.slice(top.length + 1), files.get(k) as Uint8Array);
         files.delete(k);
       }
     }
-    for (const k of [...files.keys()]) if (k.split("/").includes("..") || k.startsWith("/")) files.delete(k);
-    const r = await applyWorkspaceFiles(db, id, files, { dryRun: b.dry_run ?? false, actorUserId: claims.sub });
+    for (const k of [...files.keys()])
+      if (k.split("/").includes("..") || k.startsWith("/")) files.delete(k);
+    const r = await applyWorkspaceFiles(db, id, files, {
+      dryRun: b.dry_run ?? false,
+      actorUserId: claims.sub,
+    });
     if (!b.dry_run && (r.created.length || r.updated.length))
       await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
         values (${id}::uuid, 'user', ${claims.sub}::uuid, 'files.imported', 'organization', ${id}::uuid, ${JSON.stringify({ created: r.created.length, updated: r.updated.length })}::jsonb)`);
@@ -122,7 +146,8 @@ export function registerWorkspaceFileRoutes(app: OpenAPIHono<AppEnv>, deps: AppD
     );
     let secret: string | null = null;
     const path = (b.path ?? "").replace(/^\/+|\/+$/g, "");
-    if (path.split("/").includes("..")) throw new ApiError(400, "bad_path", "The folder can't contain ..");
+    if (path.split("/").includes(".."))
+      throw new ApiError(400, "bad_path", "The folder can't contain ..");
     if (!existing) {
       secret = randomBytes(24).toString("hex");
       await db.execute(sql`
@@ -130,7 +155,10 @@ export function registerWorkspaceFileRoutes(app: OpenAPIHono<AppEnv>, deps: AppD
         values (${id}::uuid, ${b.repo}, ${b.branch ?? "main"}, ${path}, ${b.enabled ?? true},
                 (select vault.create_secret(${secret}, null, 'git sync webhook')), ${claims.sub}::uuid)`);
     } else {
-      const moved = existing.repo !== b.repo || existing.branch !== (b.branch ?? existing.branch) || existing.path !== path;
+      const moved =
+        existing.repo !== b.repo ||
+        existing.branch !== (b.branch ?? existing.branch) ||
+        existing.path !== path;
       // Pointing at another repo, branch or folder starts from a clean slate.
       await db.execute(sql`
         update public.org_git_sync set repo = ${b.repo}, branch = ${b.branch ?? existing.branch}, path = ${path}, enabled = ${b.enabled ?? true},
@@ -146,7 +174,9 @@ export function registerWorkspaceFileRoutes(app: OpenAPIHono<AppEnv>, deps: AppD
     const claims = claimsOf(c);
     const { id } = c.req.valid("param");
     await admin(claims, id);
-    const rows = await db.execute(sql`update public.org_git_sync set dirty_at = now(), checked_at = null where org_id = ${id}::uuid returning org_id`);
+    const rows = await db.execute(
+      sql`update public.org_git_sync set dirty_at = now(), checked_at = null where org_id = ${id}::uuid returning org_id`,
+    );
     if (!rows.length) throw new ApiError(404, "git_sync_not_found", "Git sync isn't set up");
     return c.json(await status(c, id), 200);
   });
@@ -170,10 +200,18 @@ export function registerWorkspaceFileRoutes(app: OpenAPIHono<AppEnv>, deps: AppD
       select v.decrypted_secret as secret from public.org_git_sync g left join vault.decrypted_secrets v on v.id = g.webhook_secret_id
       where g.org_id = ${org}::uuid and g.enabled`);
     const sig = c.req.header("x-hub-signature-256") ?? "";
-    const want = g?.secret ? `sha256=${createHmac("sha256", g.secret).update(body).digest("hex")}` : "";
-    if (!want || sig.length !== want.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(want)))
+    const want = g?.secret
+      ? `sha256=${createHmac("sha256", g.secret).update(body).digest("hex")}`
+      : "";
+    if (
+      !want ||
+      sig.length !== want.length ||
+      !timingSafeEqual(Buffer.from(sig), Buffer.from(want))
+    )
       return c.json({ code: "bad_signature", message: "Signature doesn't match" }, 401);
-    await db.execute(sql`update public.org_git_sync set checked_at = null where org_id = ${org}::uuid`);
+    await db.execute(
+      sql`update public.org_git_sync set checked_at = null where org_id = ${org}::uuid`,
+    );
     return c.json({ ok: true }, 202);
   });
 }

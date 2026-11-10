@@ -15,7 +15,10 @@ export const listChannels = createRoute({
   security,
   summary: "A bot's chat apps (D-134)",
   request: { query: z.object({ bot_id: Uuid }) },
-  responses: { 200: jsonResponse("Channels", z.object({ items: z.array(Channel) }).openapi("ChannelList")), 401: e401 },
+  responses: {
+    200: jsonResponse("Channels", z.object({ items: z.array(Channel) }).openapi("ChannelList")),
+    401: e401,
+  },
 });
 
 export const createChannel = createRoute({
@@ -46,7 +49,12 @@ export const deleteChannel = createRoute({
   tags,
   security,
   request: { params: idParam },
-  responses: { 200: jsonResponse("Deleted", z.object({ deleted: Uuid }).openapi("DeletedChannel")), 401: e401, 403: e403, 404: e404 },
+  responses: {
+    200: jsonResponse("Deleted", z.object({ deleted: Uuid }).openapi("DeletedChannel")),
+    401: e401,
+    403: e403,
+    404: e404,
+  },
 });
 
 export const listChannelEvents = createRoute({
@@ -57,5 +65,12 @@ export const listChannelEvents = createRoute({
   security,
   summary: "Recent messages in and out, including ignored senders",
   request: { params: idParam },
-  responses: { 200: jsonResponse("Events", z.object({ items: z.array(ChannelEvent) }).openapi("ChannelEventList")), 401: e401, 404: e404 },
+  responses: {
+    200: jsonResponse(
+      "Events",
+      z.object({ items: z.array(ChannelEvent) }).openapi("ChannelEventList"),
+    ),
+    401: e401,
+    404: e404,
+  },
 });

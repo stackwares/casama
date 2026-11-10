@@ -11,13 +11,13 @@ import { SignJWT } from "jose";
 import { createApp } from "../src/api/app.ts";
 import { createTokenVerifier } from "../src/api/auth.ts";
 import { attachLocalConnect, DeviceRegistry, internalToken } from "../src/api/routes/local.ts";
+import { attachTelephony } from "../src/api/routes/telephony.ts";
 import { pgRunEventHub, type RunEventHub } from "../src/api/run-event-hub.ts";
 import type { AppDeps } from "../src/api/types.ts";
 import { dbosWorkflows, type Workflows } from "../src/api/workflows.ts";
 import { billingFromEnv, kasamaCloudProvider } from "../src/billing/index.ts";
 import { loadEnv } from "../src/env.ts";
 import type { EmailMessage, EmailSender } from "../src/services/email.ts";
-import { attachTelephony } from "../src/api/routes/telephony.ts";
 
 export const JWT_SECRET = "test-secret-at-least-32-characters-long!!";
 
@@ -139,7 +139,10 @@ export async function startHarness(
     // The worker runs as its least-privilege role (D-095), so tests prove the grants are enough.
     await tdb.admin.unsafe("alter role kasama_worker login password 'kasama-worker-test'");
     // A non-superuser stand-in for the API's role (production's `postgres` on Supabase isn't one).
-    if (opts.worker.apiDatabaseRole) await tdb.admin.unsafe(`do $$ begin create role "${opts.worker.apiDatabaseRole}" nologin; exception when duplicate_object then null; end $$`);
+    if (opts.worker.apiDatabaseRole)
+      await tdb.admin.unsafe(
+        `do $$ begin create role "${opts.worker.apiDatabaseRole}" nologin; exception when duplicate_object then null; end $$`,
+      );
     const workerUrl = tdb.url.replace("postgres@", "kasama_worker:kasama-worker-test@");
     worker = await startWorker({
       databaseUrl: workerUrl,
@@ -156,7 +159,10 @@ export async function startHarness(
       providerBases: opts.worker.providerBases,
       deviceWaitMs: opts.worker.deviceWaitMs,
       apiDatabaseRole: opts.worker.apiDatabaseRole,
-      publicApiUrl: opts.worker.publicApiUrl === "self" ? `http://127.0.0.1:${localPort}` : opts.worker.publicApiUrl,
+      publicApiUrl:
+        opts.worker.publicApiUrl === "self"
+          ? `http://127.0.0.1:${localPort}`
+          : opts.worker.publicApiUrl,
       chatgpt: opts.worker.chatgpt,
       local: localOpts,
       billing: billing.enabled ? billing : undefined,

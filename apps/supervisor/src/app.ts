@@ -3,7 +3,6 @@ import type { Duplex } from "node:stream";
 import { serve } from "@hono/node-server";
 import {
   type ComputerSpec,
-  type DockerProvider,
   SandboxError,
   type SandboxProvider,
   type SnapshotRef,
@@ -54,7 +53,9 @@ export function createSupervisorApp(
   });
 
   app.get("/healthz", async (c) =>
-    c.json({ ok: provider.opts?.docker ? await provider.opts.docker.ping().catch(() => false) : true }),
+    c.json({
+      ok: provider.opts?.docker ? await provider.opts.docker.ping().catch(() => false) : true,
+    }),
   );
 
   app.use("/computers/*", async (c, next) => {
@@ -204,15 +205,23 @@ export function createSupervisorApp(
   // Plugin MCP servers inside the computer (D-121): the list, and raw MCP requests to one.
   app.put("/computers/:ref/mcp-servers", async (c) => {
     const h = await running(c.req.param("ref"), c);
-    if (!h.setMcpServers) throw new SandboxError("not_supported", "This computer can't run MCP servers", 501);
+    if (!h.setMcpServers)
+      throw new SandboxError("not_supported", "This computer can't run MCP servers", 501);
     await h.setMcpServers(await c.req.json());
     return c.json({ ok: true });
   });
   app.on(["GET", "POST", "DELETE"], "/computers/:ref/mcp/:key", async (c) => {
     const h = await running(c.req.param("ref"), c);
-    if (!h.mcpFetch) throw new SandboxError("not_supported", "This computer can't run MCP servers", 501);
+    if (!h.mcpFetch)
+      throw new SandboxError("not_supported", "This computer can't run MCP servers", 501);
     const headers: Record<string, string> = {};
-    for (const k of ["content-type", "accept", "mcp-session-id", "mcp-protocol-version", "last-event-id"]) {
+    for (const k of [
+      "content-type",
+      "accept",
+      "mcp-session-id",
+      "mcp-protocol-version",
+      "last-event-id",
+    ]) {
       const v = c.req.header(k);
       if (v) headers[k] = v;
     }

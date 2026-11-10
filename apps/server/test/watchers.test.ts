@@ -94,19 +94,17 @@ const ctx = () => ({ runId, botId, orgId, output: async () => {}, emit: async ()
 describe("watchers", () => {
   it("a page watcher records a baseline, ignores unchanged checks, and wakes the bot on a change", async () => {
     registerWatcherTools(reg, { db: h.handle.db });
-    await reg
-      .get("watchers.create")!
-      .execute(
-        {
-          name: "Price drop",
-          kind: "page_change",
-          url: pageUrl,
-          anchor: "Price",
-          condition: "the price changes",
-          check_every_minutes: 5,
-        } as never,
-        ctx(),
-      );
+    await reg.get("watchers.create")!.execute(
+      {
+        name: "Price drop",
+        kind: "page_change",
+        url: pageUrl,
+        anchor: "Price",
+        condition: "the price changes",
+        check_every_minutes: 5,
+      } as never,
+      ctx(),
+    );
     const t0 = new Date();
     expect(await check(t0)).toEqual([]); // baseline
     const before = await tokens();
@@ -126,16 +124,14 @@ describe("watchers", () => {
   });
 
   it("a time watcher fires once and finishes; a reply watcher fires on a person's comment", async () => {
-    await reg
-      .get("watchers.create")!
-      .execute(
-        {
-          name: "Call back",
-          kind: "time",
-          at: new Date(Date.now() + 60_000).toISOString(),
-        } as never,
-        ctx(),
-      );
+    await reg.get("watchers.create")!.execute(
+      {
+        name: "Call back",
+        kind: "time",
+        at: new Date(Date.now() + 60_000).toISOString(),
+      } as never,
+      ctx(),
+    );
     const [task] = await h.tdb.admin<
       { id: string }[]
     >`insert into public.tasks (org_id, title) values (${orgId}, 'Quote') returning id`;

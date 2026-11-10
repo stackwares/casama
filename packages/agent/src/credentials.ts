@@ -59,8 +59,12 @@ export class CredentialResolver {
   private viaGateway(provider: ProviderId, baseUrl: string | null) {
     const path = AI_GATEWAY_PATHS[provider];
     const g = this.gateway;
-    if (!g || baseUrl || !path || (g.providers && !g.providers.includes(provider))) return { baseUrl: baseUrl ?? undefined };
-    return { baseUrl: `${g.url.replace(/\/$/, "")}/${path}`, headers: g.token ? { "cf-aig-authorization": `Bearer ${g.token}` } : undefined };
+    if (!g || baseUrl || !path || (g.providers && !g.providers.includes(provider)))
+      return { baseUrl: baseUrl ?? undefined };
+    return {
+      baseUrl: `${g.url.replace(/\/$/, "")}/${path}`,
+      headers: g.token ? { "cf-aig-authorization": `Bearer ${g.token}` } : undefined,
+    };
   }
 
   private now() {

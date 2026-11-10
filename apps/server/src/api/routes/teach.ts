@@ -7,8 +7,13 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { activeUserLease, captureTeachContext } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, pgErrorCode, withUserSession, contentKeys } from "@kasama/db";
-import { focusedIsPassword, nextSecretName, type TeachStepView, teachTranscript } from "@kasama/domain";
+import { contentKeys, type JwtClaims, pgErrorCode, withUserSession } from "@kasama/db";
+import {
+  focusedIsPassword,
+  nextSecretName,
+  type TeachStepView,
+  teachTranscript,
+} from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -82,12 +87,19 @@ export function registerTeachRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const holdsControl = async (s: { computer_id: string }, claims: JwtClaims) =>
     (await activeUserLease(db, s.computer_id))?.holderId === claims.sub;
   const computers = () => {
-    if (!deps.computers) throw new ApiError(503, "computers_unavailable", "Computers aren't set up on this server");
+    if (!deps.computers)
+      throw new ApiError(503, "computers_unavailable", "Computers aren't set up on this server");
     return deps.computers;
   };
 
   /** A chat with the bot started by this person, with one message and a run. */
-  const startChat = async (s: SessionRow, claims: JwtClaims, title: string, text: string, trigger: string) => {
+  const startChat = async (
+    s: SessionRow,
+    claims: JwtClaims,
+    title: string,
+    text: string,
+    trigger: string,
+  ) => {
     const created = await withUserSession(db, claims, async (tx) => {
       const [conv] = await tx.execute<{ id: string }>(sql`
         insert into public.conversations (org_id, bot_id, title, created_by, last_message_at)
@@ -113,9 +125,14 @@ export function registerTeachRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         where b.id = ${bot_id}::uuid and b.archived_at is null`),
     );
     if (!ok) throw new ApiError(404, "not_found", "Bot or computer not found");
-    if (!ok.manage) throw new ApiError(403, "forbidden", "Only people who manage this bot can teach it skills");
+    if (!ok.manage)
+      throw new ApiError(403, "forbidden", "Only people who manage this bot can teach it skills");
     if (!(await holdsControl({ computer_id }, claims)))
-      throw new ApiError(409, "not_in_control", "Take control of the computer first; recording only runs while you have control");
+      throw new ApiError(
+        409,
+        "not_in_control",
+        "Take control of the computer first; recording only runs while you have control",
+      );
     try {
       const [s] = await db.execute<SessionRow>(sql`
         insert into public.teach_sessions (org_id, bot_id, computer_id, user_id)
@@ -124,7 +141,8 @@ export function registerTeachRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         values (${ok.org_id}::uuid, 'user', ${claims.sub}::uuid, 'teach.recording_started', 'computer', ${computer_id}::uuid)`);
       return c.json(await full(s as SessionRow), 201);
     } catch (err) {
-      if (pgErrorCode(err) === "23505") throw new ApiError(409, "already_recording", "This computer is already being recorded");
+      if (pgErrorCode(err) === "23505")
+        throw new ApiError(409, "already_recording", "This computer is already being recorded");
       throw err;
     }
   });
@@ -134,9 +152,13 @@ export function registerTeachRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     let s = await session(claims, c.req.valid("param").id);
     // A drafting run that ended without a draft.
     if (s.status === "drafting" && s.run_id) {
-      const [r] = await db.execute<{ status: string }>(sql`select status from public.runs where id = ${s.run_id}::uuid`);
+      const [r] = await db.execute<{ status: string }>(
+        sql`select status from public.runs where id = ${s.run_id}::uuid`,
+      );
       if (r && ["completed", "failed", "cancelled"].includes(r.status)) {
-        await db.execute(sql`update public.teach_sessions set status = 'failed' where id = ${s.id}::uuid and status = 'drafting'`);
+        await db.execute(
+          sql`update public.teach_sessions set status = 'failed' where id = ${s.id}::uuid and status = 'drafting'`,
+        );
         s = await session(claims, s.id);
       }
     }
@@ -146,9 +168,14 @@ export function registerTeachRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.addTeachStep, async (c) => {
     const claims = claimsOf(c);
     const s = await session(claims, c.req.valid("param").id);
-    if (s.status !== "recording") throw new ApiError(409, "not_recording", "This recording has stopped");
+    if (s.status !== "recording")
+      throw new ApiError(409, "not_recording", "This recording has stopped");
     if (!(await holdsControl(s, claims)))
-      throw new ApiError(409, "control_ended", "You no longer have control of the computer, so recording stopped");
+      throw new ApiError(
+        409,
+        "control_ended",
+        "You no longer have control of the computer, so recording stopped",
+      );
     const b = c.req.valid("json");
     const h = await computers().ensureRunning(s.computer_id);
     const ctx = await captureTeachContext(h);
@@ -184,7 +211,8 @@ export function registerTeachRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.stopTeach, async (c) => {
     const claims = claimsOf(c);
     const s = await session(claims, c.req.valid("param").id);
-    if (s.status !== "recording") throw new ApiError(409, "not_recording", "This recording has already stopped");
+    if (s.status !== "recording")
+      throw new ApiError(409, "not_recording", "This recording has already stopped");
     const recorded = await steps(s.id, true);
     if (!recorded.length) throw new ApiError(409, "nothing_recorded", "Nothing was recorded yet");
     const view: TeachStepView[] = recorded.map((r) => ({ ...r, secretName: r.secret_name }));
@@ -200,7 +228,11 @@ export function registerTeachRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = claimsOf(c);
     const s = await session(claims, c.req.valid("param").id);
     if (s.status !== "drafted" && s.status !== "failed")
-      throw new ApiError(409, "no_draft", s.status === "saved" ? "This skill is already saved" : "The draft isn't ready yet");
+      throw new ApiError(
+        409,
+        "no_draft",
+        s.status === "saved" ? "This skill is already saved" : "The draft isn't ready yet",
+      );
     const b = c.req.valid("json");
     let skillId: string;
     try {
@@ -215,11 +247,15 @@ export function registerTeachRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       skillId = row.id;
     } catch (err) {
       const code = pgErrorCode(err);
-      if (code === "23505") throw new ApiError(409, "skill_exists", `This bot already has a skill named ${b.name}`);
-      if (code === "42501") throw new ApiError(403, "forbidden", "You can't add skills to this bot");
+      if (code === "23505")
+        throw new ApiError(409, "skill_exists", `This bot already has a skill named ${b.name}`);
+      if (code === "42501")
+        throw new ApiError(403, "forbidden", "You can't add skills to this bot");
       throw err;
     }
-    await db.execute(sql`update public.teach_sessions set status = 'saved', skill_id = ${skillId}::uuid where id = ${s.id}::uuid`);
+    await db.execute(
+      sql`update public.teach_sessions set status = 'saved', skill_id = ${skillId}::uuid where id = ${s.id}::uuid`,
+    );
     let tried: { conversation_id: string; run_id: string } | null = null;
     if (b.try_now) {
       tried = await startChat(
@@ -231,7 +267,14 @@ export function registerTeachRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       );
       await deps.workflows.startRun(tried.run_id);
     }
-    return c.json({ skill_id: skillId, conversation_id: tried?.conversation_id ?? null, run_id: tried?.run_id ?? null }, 200);
+    return c.json(
+      {
+        skill_id: skillId,
+        conversation_id: tried?.conversation_id ?? null,
+        run_id: tried?.run_id ?? null,
+      },
+      200,
+    );
   });
 
   app.openapi(routes.cancelTeach, async (c) => {

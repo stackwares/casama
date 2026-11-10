@@ -46,9 +46,7 @@
                   "secret": true
                 }
               ],
-              "checks": [
-                "The portal shows Expense submitted"
-              ]
+              "checks": ["The portal shows Expense submitted"]
             }
           }
         },

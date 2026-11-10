@@ -5,7 +5,12 @@
       "when": { "systemIncludes": "extract lasting memories" },
       "events": [
         { "type": "text", "text": "{\"memories\":[]}" },
-        { "type": "finish", "usage": { "inputTokens": 50, "outputTokens": 5 }, "finishReason": "stop", "model": "" }
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 50, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
       ]
     },
     {
@@ -13,16 +18,30 @@
       "events": [
         {
           "type": "tool_call",
-          "call": { "callId": "d1", "name": "data__call", "args": { "endpoint": "places.search", "params": { "q": "coffee near Ferry Building" } } }
+          "call": {
+            "callId": "d1",
+            "name": "data__call",
+            "args": { "endpoint": "places.search", "params": { "q": "coffee near Ferry Building" } }
+          }
         },
-        { "type": "finish", "usage": { "inputTokens": 300, "outputTokens": 20 }, "finishReason": "tool-calls", "model": "" }
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 20 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
       ]
     },
     {
       "when": { "lastRole": "tool", "lastToolName": "data.call" },
       "events": [
         { "type": "text", "text": "Blue Bottle and Sightglass are closest." },
-        { "type": "finish", "usage": { "inputTokens": 400, "outputTokens": 20 }, "finishReason": "stop", "model": "" }
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 400, "outputTokens": 20 },
+          "finishReason": "stop",
+          "model": ""
+        }
       ]
     }
   ]

@@ -45,7 +45,16 @@ export const runEventPayloads = {
   }),
   // Device connections (D-149).
   "device.access_requested": z.object({
-    kind: z.enum(["calendar", "reminders", "contacts", "places", "photos", "health", "notifications", "activity"]),
+    kind: z.enum([
+      "calendar",
+      "reminders",
+      "contacts",
+      "places",
+      "photos",
+      "health",
+      "notifications",
+      "activity",
+    ]),
     reason: z.string(),
     bot_id: id,
   }),

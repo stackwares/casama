@@ -152,10 +152,12 @@ export class DockerProvider implements SandboxProvider {
 
   /** Only computers a pool member can stand in for: headless, default size, no extra env. */
   private poolable(spec: ComputerSpec) {
-    if (!this.opts.warmPool || spec.profile !== "headless" || spec.ref.startsWith("pool-")) return false;
+    if (!this.opts.warmPool || spec.profile !== "headless" || spec.ref.startsWith("pool-"))
+      return false;
     if (spec.env && Object.keys(spec.env).length) return false;
     const d = this.opts.defaults ?? {};
-    const same = (a: number | undefined, b: number | undefined, def: number) => a == null || a === (b ?? def);
+    const same = (a: number | undefined, b: number | undefined, def: number) =>
+      a == null || a === (b ?? def);
     return same(spec.size?.cpus, d.cpus, 1) && same(spec.size?.memoryMb, d.memoryMb, 1024);
   }
 
@@ -197,7 +199,8 @@ export class DockerProvider implements SandboxProvider {
     this.filling ??= (async () => {
       try {
         const members = await this.poolMembers();
-        for (const m of members.filter((x) => !x.running)) await this.destroy(m.pool).catch(() => {});
+        for (const m of members.filter((x) => !x.running))
+          await this.destroy(m.pool).catch(() => {});
         for (let i = members.filter((x) => x.running).length; i < (this.opts.warmPool ?? 0); i++) {
           const pool = `pool-${randomUUID().replace(/-/g, "").slice(0, 20)}`;
           await this.start({ ref: pool, profile: "headless" }, { [POOL_LABEL]: pool });
@@ -210,7 +213,10 @@ export class DockerProvider implements SandboxProvider {
   }
 
   /** Cold start: network, volume, egress registration, container, then wait for computerd. */
-  private async start(spec: ComputerSpec, extraLabels: Record<string, string> = {}): Promise<SandboxHandle> {
+  private async start(
+    spec: ComputerSpec,
+    extraLabels: Record<string, string> = {},
+  ): Promise<SandboxHandle> {
     const n = this.names(spec.ref);
     const d = this.opts.docker;
 
@@ -260,7 +266,12 @@ export class DockerProvider implements SandboxProvider {
       Hostname: "computer",
       User: "1000:1000",
       Env: Object.entries(env).map(([k, v]) => `${k}=${v}`),
-      Labels: { [LABEL]: spec.ref, "dev.kasama.profile": spec.profile, ...spec.labels, ...extraLabels },
+      Labels: {
+        [LABEL]: spec.ref,
+        "dev.kasama.profile": spec.profile,
+        ...spec.labels,
+        ...extraLabels,
+      },
       HostConfig: {
         NetworkMode: n.network,
         Runtime: this.opts.runtime,
@@ -316,7 +327,12 @@ export class DockerProvider implements SandboxProvider {
   async destroy(ref: string) {
     const d = this.opts.docker;
     if (!this.aliases.has(ref))
-      this.learn(ref, await d.inspectOrNull<ContainerInspect>(`/containers/${this.names(ref).container}/json`).catch(() => null));
+      this.learn(
+        ref,
+        await d
+          .inspectOrNull<ContainerInspect>(`/containers/${this.names(ref).container}/json`)
+          .catch(() => null),
+      );
     const n = this.names(ref);
     const key = this.aliases.get(ref) ?? ref;
     await d

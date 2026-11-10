@@ -2,15 +2,16 @@
  * Enterprise routes (D-073), registered by the API. Each checks the license feature and the
  * caller's workspace role; without a valid key they answer 402 license_required.
  */
-import { type Database, type JwtClaims, withUserSession } from "@kasama/db";
+
 import { createHmac } from "node:crypto";
 import { resolveTxt } from "node:dns/promises";
+import { type Database, type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import type { Context, Hono } from "hono";
 import { type EeFeature, type License, verifyLicense } from "./license.ts";
 
-export { type License, verifyLicense } from "./license.ts";
 export { forwardAuditLogs, otlpLogs, sendBatch, signAuditBatch } from "./audit-forward.ts";
+export { type License, verifyLicense } from "./license.ts";
 
 export interface EeDeps {
   db: Database;
@@ -82,13 +83,27 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
     const orgId = c.req.param("id");
     const g = await guard(c, "audit_forwarding", orgId);
     if (g.error) return g.error;
-    const b = (await c.req.json().catch(() => ({}))) as { kind?: string; config?: Record<string, unknown>; secret?: string; from?: "now" | "start" };
+    const b = (await c.req.json().catch(() => ({}))) as {
+      kind?: string;
+      config?: Record<string, unknown>;
+      secret?: string;
+      from?: "now" | "start";
+    };
     const cfg = b.config ?? {};
     const okUrl = (u: unknown) => typeof u === "string" && /^https?:\/\//.test(u);
-    if (b.kind === "webhook" && (!okUrl(cfg.url) || !b.secret)) return problem(c, 400, "validation_failed", "A webhook needs config.url and a signing secret");
-    if (b.kind === "otlp" && !okUrl(cfg.url)) return problem(c, 400, "validation_failed", "OTLP needs config.url");
-    if (b.kind === "s3" && (typeof cfg.bucket !== "string" || !b.secret)) return problem(c, 400, "validation_failed", "S3 needs config.bucket and credentials");
-    if (!["webhook", "otlp", "s3"].includes(String(b.kind))) return problem(c, 400, "validation_failed", "kind is webhook, otlp or s3");
+    if (b.kind === "webhook" && (!okUrl(cfg.url) || !b.secret))
+      return problem(
+        c,
+        400,
+        "validation_failed",
+        "A webhook needs config.url and a signing secret",
+      );
+    if (b.kind === "otlp" && !okUrl(cfg.url))
+      return problem(c, 400, "validation_failed", "OTLP needs config.url");
+    if (b.kind === "s3" && (typeof cfg.bucket !== "string" || !b.secret))
+      return problem(c, 400, "validation_failed", "S3 needs config.bucket and credentials");
+    if (!["webhook", "otlp", "s3"].includes(String(b.kind)))
+      return problem(c, 400, "validation_failed", "kind is webhook, otlp or s3");
     // From now on (default), or the whole history from the start.
     const [r] = await deps.db.execute<Record<string, unknown>>(sql`
       insert into public.audit_forwarders (org_id, kind, config, vault_secret_id, cursor_at, cursor_id)
@@ -185,7 +200,10 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
   // SSO domains must be proven (audit 2026-11): a TXT record kasama-verification=<code> on each
   // domain, where the code is tied to this workspace. Otherwise any admin could claim gmail.com.
   const verificationCode = (orgId: string, domain: string) =>
-    createHmac("sha256", deps.verificationSecret ?? "kasama-sso").update(`sso:${orgId}:${domain}`).digest("hex").slice(0, 32);
+    createHmac("sha256", deps.verificationSecret ?? "kasama-sso")
+      .update(`sso:${orgId}:${domain}`)
+      .digest("hex")
+      .slice(0, 32);
   const domainVerified = async (orgId: string, domain: string) => {
     const want = `kasama-verification=${verificationCode(orgId, domain)}`;
     const records = await (deps.resolveTxt ?? resolveTxt)(domain).catch(() => [] as string[][]);
@@ -196,8 +214,13 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
     const g = await guard(c, "sso", orgId);
     if (g.error) return g.error;
     const domain = (c.req.query("domain") ?? "").toLowerCase().trim();
-    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) return problem(c, 400, "validation_failed", "Give a domain like acme.com");
-    return c.json({ domain, record_type: "TXT", record: `kasama-verification=${verificationCode(orgId, domain)}` });
+    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain))
+      return problem(c, 400, "validation_failed", "Give a domain like acme.com");
+    return c.json({
+      domain,
+      record_type: "TXT",
+      record: `kasama-verification=${verificationCode(orgId, domain)}`,
+    });
   });
 
   app.post("/v1/orgs/:id/sso", async (c) => {
@@ -230,7 +253,13 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
     const taken = await deps.db.execute<{ key: string }>(sql`
       select key from public.instance_settings where key like 'sso:%' and key <> ${`sso:${orgId}`}
         and exists (select 1 from jsonb_array_elements_text(value -> 'domains') d where d = any(${`{${domains.join(",")}}`}::text[]))`);
-    if (taken.length) return problem(c, 409, "domain_taken", "Another workspace already uses one of these domains for SSO");
+    if (taken.length)
+      return problem(
+        c,
+        409,
+        "domain_taken",
+        "Another workspace already uses one of these domains for SSO",
+      );
     const unverified: string[] = [];
     for (const d of domains) if (!(await domainVerified(orgId, d))) unverified.push(d);
     if (unverified.length)

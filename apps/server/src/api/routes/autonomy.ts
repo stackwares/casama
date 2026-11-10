@@ -1,8 +1,15 @@
 import { randomBytes } from "node:crypto";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { startTicketWork, secretStoreFor } from "@kasama/agent";
+import { secretStoreFor, startTicketWork } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type Database, type JwtClaims, pgErrorCode, schema, withUserSession, contentKeys } from "@kasama/db";
+import {
+  contentKeys,
+  type Database,
+  type JwtClaims,
+  pgErrorCode,
+  schema,
+  withUserSession,
+} from "@kasama/db";
 import {
   BOT_TEMPLATES,
   isValidCron,
@@ -133,10 +140,24 @@ const routineOut = (r: RoutineRow) => ({
     const t = r.trigger as Record<string, unknown> & { type?: string };
     if (t?.type !== "message") return null;
     const { type: _t, ...rest } = t;
-    return rest as { channel_id?: string; channel_kind?: "email"; sender?: string; subject_match?: string; text_match?: string };
+    return rest as {
+      channel_id?: string;
+      channel_kind?: "email";
+      sender?: string;
+      subject_match?: string;
+      text_match?: string;
+    };
   })(),
   calendar: (() => {
-    const t = r.trigger as { type?: string; integration_id?: string; offset_minutes?: number; calendar?: string; outside_guests?: boolean; title_match?: string; has_video_link?: boolean };
+    const t = r.trigger as {
+      type?: string;
+      integration_id?: string;
+      offset_minutes?: number;
+      calendar?: string;
+      outside_guests?: boolean;
+      title_match?: string;
+      has_video_link?: boolean;
+    };
     if (t?.type !== "calendar_event" || !t.integration_id) return null;
     return {
       integration_id: t.integration_id,
@@ -148,7 +169,15 @@ const routineOut = (r: RoutineRow) => ({
     };
   })(),
   device: (() => {
-    const t = r.trigger as { type?: string; event?: string; place?: string; app?: string; minutes_before?: number; folder?: string; pattern?: string };
+    const t = r.trigger as {
+      type?: string;
+      event?: string;
+      place?: string;
+      app?: string;
+      minutes_before?: number;
+      folder?: string;
+      pattern?: string;
+    };
     if (t?.type !== "device" || !t.event) return null;
     return {
       event: t.event as "wake",
@@ -328,8 +357,15 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const store = await secretStoreFor(db, ask.org_id, deps.apps?.fetch ?? fetch);
     if (store.kind === "infisical") {
       // Infisical keeps the value (D-145); Kasama keeps the name, hosts and bot.
-      const [existing] = await db.execute<{ id: string }>(sql`select id from public.secrets where org_id = ${ask.org_id}::uuid and name = ${ask.name}`);
-      if (existing && !admin) throw new ApiError(409, "secret_exists", `A secret named ${ask.name} already exists. Ask an admin to replace it.`);
+      const [existing] = await db.execute<{ id: string }>(
+        sql`select id from public.secrets where org_id = ${ask.org_id}::uuid and name = ${ask.name}`,
+      );
+      if (existing && !admin)
+        throw new ApiError(
+          409,
+          "secret_exists",
+          `A secret named ${ask.name} already exists. Ask an admin to replace it.`,
+        );
       await store.put(ask.name, value);
     }
     const secretId = await db.transaction(async (tx) => {
@@ -421,8 +457,11 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     // The workspace's secret store (D-145): Vault, or its own Infisical project.
     const store = await secretStoreFor(db, body.org_id, deps.apps?.fetch ?? fetch);
     if (store.kind === "infisical") {
-      const [dup] = await db.execute<{ id: string }>(sql`select id from public.secrets where org_id = ${body.org_id}::uuid and name = ${body.name}`);
-      if (dup) throw new ApiError(409, "secret_exists", `A secret named ${body.name} already exists`);
+      const [dup] = await db.execute<{ id: string }>(
+        sql`select id from public.secrets where org_id = ${body.org_id}::uuid and name = ${body.name}`,
+      );
+      if (dup)
+        throw new ApiError(409, "secret_exists", `A secret named ${body.name} already exists`);
       await store.put(body.name, body.value).catch((e: Error) => {
         throw new ApiError(502, "secret_store_failed", e.message);
       });
@@ -431,7 +470,9 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       const row = await db.transaction(async (tx) => {
         const [v] =
           store.kind === "vault"
-            ? await tx.execute<{ id: string }>(sql`select vault.create_secret(${body.value}, null, 'named secret') as id`)
+            ? await tx.execute<{ id: string }>(
+                sql`select vault.create_secret(${body.value}, null, 'named secret') as id`,
+              )
             : [];
         const [r] = await tx
           .insert(secrets)
@@ -470,7 +511,9 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const vaultId = rows[0]?.vaultSecretId;
     if (vaultId) await db.execute(sql`delete from vault.secrets where id = ${vaultId}::uuid`);
     if (rows[0]?.store === "infisical")
-      await (await secretStoreFor(db, rows[0].orgId, deps.apps?.fetch ?? fetch)).delete(rows[0].name).catch(() => {});
+      await (await secretStoreFor(db, rows[0].orgId, deps.apps?.fetch ?? fetch))
+        .delete(rows[0].name)
+        .catch(() => {});
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${rows[0]?.orgId}::uuid, 'user', ${claims.sub}::uuid, 'secret.deleted', 'secret', ${id}::uuid,
               ${JSON.stringify({ name: rows[0]?.name })}::jsonb)`);
@@ -511,9 +554,14 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     if (!(await isAdmin(db, claims, body.org_id)))
       throw new ApiError(403, "forbidden", "Only owners and admins can add integrations");
     if (body.kind === "a2a" && typeof body.config.url !== "string")
-      throw new ApiError(400, "validation_failed", "A2A agents need config.url (their address or agent card)", {
-        errors: [{ path: "config.url", message: "Required" }],
-      });
+      throw new ApiError(
+        400,
+        "validation_failed",
+        "A2A agents need config.url (their address or agent card)",
+        {
+          errors: [{ path: "config.url", message: "Required" }],
+        },
+      );
     if (body.kind === "mcp" && typeof body.config.url !== "string") {
       throw new ApiError(400, "validation_failed", "MCP integrations need config.url", {
         errors: [{ path: "config.url", message: "Required" }],
@@ -644,12 +692,21 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     if (trigger === "message") {
       const m = body.message ?? {};
       if (!m.channel_id && !m.channel_kind && !m.sender && !m.subject_match && !m.text_match)
-        throw new ApiError(400, "validation_failed", "A message routine needs at least one filter (chat app, sender, subject or words)");
+        throw new ApiError(
+          400,
+          "validation_failed",
+          "A message routine needs at least one filter (chat app, sender, subject or words)",
+        );
       triggerJson = { type: trigger, ...m };
     }
     if (trigger === "calendar_event") {
       const cal = body.calendar;
-      if (!cal) throw new ApiError(400, "validation_failed", "A calendar routine needs its calendar and offset");
+      if (!cal)
+        throw new ApiError(
+          400,
+          "validation_failed",
+          "A calendar routine needs its calendar and offset",
+        );
       const [i] = await db.execute<{ id: string }>(sql`
         select id from public.integrations where id = ${cal.integration_id}::uuid and org_id = ${bot.orgId}::uuid`);
       if (!i) throw new ApiError(404, "integration_not_found", "Connect a calendar first");
@@ -658,9 +715,16 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     if (trigger === "device") {
       const d = body.device;
       if (!d) throw new ApiError(400, "validation_failed", "A device routine needs its event");
-      if ((d.event === "arrive" || d.event === "leave") && !d.place) throw new ApiError(400, "validation_failed", "Arrive and leave routines need a named place");
-      if (d.event === "notification" && !d.app) throw new ApiError(400, "validation_failed", "Notification routines need the app to watch");
-      if (d.event === "file_added" && !d.folder) throw new ApiError(400, "validation_failed", "File routines need the watched folder");
+      if ((d.event === "arrive" || d.event === "leave") && !d.place)
+        throw new ApiError(
+          400,
+          "validation_failed",
+          "Arrive and leave routines need a named place",
+        );
+      if (d.event === "notification" && !d.app)
+        throw new ApiError(400, "validation_failed", "Notification routines need the app to watch");
+      if (d.event === "file_added" && !d.folder)
+        throw new ApiError(400, "validation_failed", "File routines need the watched folder");
       triggerJson = { type: trigger, ...d };
     }
     if (trigger === "github" || trigger === "webhook") {
@@ -919,7 +983,9 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         .update(tasks)
         .set({
           ...(b.title !== undefined ? { title: b.title } : {}),
-          ...(b.details_md !== undefined ? { detailsMd: contentKeys.seal(cur.orgId, b.details_md) } : {}),
+          ...(b.details_md !== undefined
+            ? { detailsMd: contentKeys.seal(cur.orgId, b.details_md) }
+            : {}),
           ...(b.status !== undefined ? { status: b.status } : {}),
           ...(b.priority !== undefined ? { priority: b.priority } : {}),
           ...(b.assignee_bot_id !== undefined ? { assigneeBotId: b.assignee_bot_id } : {}),

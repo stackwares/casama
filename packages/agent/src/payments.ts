@@ -55,7 +55,12 @@ export interface CardDetails {
 
 export interface PaymentProvider {
   readonly name: string;
-  issueCard(o: { amountCents: number; currency: string; merchant: string; requestId: string }): Promise<IssuedCard>;
+  issueCard(o: {
+    amountCents: number;
+    currency: string;
+    merchant: string;
+    requestId: string;
+  }): Promise<IssuedCard>;
   cardDetails(cardId: string): Promise<CardDetails>;
   cancelCard(cardId: string): Promise<void>;
 }
@@ -64,13 +69,26 @@ export interface PaymentProvider {
 export class StripeIssuingProvider implements PaymentProvider {
   readonly name = "stripe";
   private readonly o: { key: string; cardholder: string; api: string; fetch: typeof fetch };
-  constructor(o: { secretKey: string; cardholderId: string; apiUrl?: string; fetch?: typeof fetch }) {
-    this.o = { key: o.secretKey, cardholder: o.cardholderId, api: (o.apiUrl ?? "https://api.stripe.com").replace(/\/$/, ""), fetch: o.fetch ?? fetch };
+  constructor(o: {
+    secretKey: string;
+    cardholderId: string;
+    apiUrl?: string;
+    fetch?: typeof fetch;
+  }) {
+    this.o = {
+      key: o.secretKey,
+      cardholder: o.cardholderId,
+      api: (o.apiUrl ?? "https://api.stripe.com").replace(/\/$/, ""),
+      fetch: o.fetch ?? fetch,
+    };
   }
   private async req<T>(method: string, path: string, params?: Array<[string, string]>) {
     const res = await this.o.fetch(`${this.o.api}${path}`, {
       method,
-      headers: { authorization: `Bearer ${this.o.key}`, "content-type": "application/x-www-form-urlencoded" },
+      headers: {
+        authorization: `Bearer ${this.o.key}`,
+        "content-type": "application/x-www-form-urlencoded",
+      },
       body: params ? new URLSearchParams(params).toString() : undefined,
     });
     const text = await res.text();
@@ -84,8 +102,24 @@ export class StripeIssuingProvider implements PaymentProvider {
     return JSON.parse(text) as T;
   }
   /** Creates the cardholder cards are issued to (once, from settings). */
-  static async createCardholder(o: { secretKey: string; apiUrl?: string; fetch?: typeof fetch }, c: { name: string; email: string; line1: string; city: string; state?: string; postal_code: string; country: string }) {
-    const p = new StripeIssuingProvider({ secretKey: o.secretKey, cardholderId: "", apiUrl: o.apiUrl, fetch: o.fetch });
+  static async createCardholder(
+    o: { secretKey: string; apiUrl?: string; fetch?: typeof fetch },
+    c: {
+      name: string;
+      email: string;
+      line1: string;
+      city: string;
+      state?: string;
+      postal_code: string;
+      country: string;
+    },
+  ) {
+    const p = new StripeIssuingProvider({
+      secretKey: o.secretKey,
+      cardholderId: "",
+      apiUrl: o.apiUrl,
+      fetch: o.fetch,
+    });
     return p.req<{ id: string }>("POST", "/v1/issuing/cardholders", [
       ["type", "individual"],
       ["name", c.name],
@@ -98,7 +132,12 @@ export class StripeIssuingProvider implements PaymentProvider {
       ["billing[address][country]", c.country],
     ]);
   }
-  async issueCard(o: { amountCents: number; currency: string; merchant: string; requestId: string }) {
+  async issueCard(o: {
+    amountCents: number;
+    currency: string;
+    merchant: string;
+    requestId: string;
+  }) {
     const limit = Math.ceil(o.amountCents * (1 + PAYMENT_TOLERANCE));
     const r = await this.req<{ id: string; last4: string }>("POST", "/v1/issuing/cards", [
       ["cardholder", this.o.cardholder],
@@ -107,26 +146,44 @@ export class StripeIssuingProvider implements PaymentProvider {
       ["status", "active"],
       ["spending_controls[spending_limits][0][amount]", String(limit)],
       ["spending_controls[spending_limits][0][interval]", "all_time"],
-      ...BLOCKED_CATEGORIES.map((c, i) => [`spending_controls[blocked_categories][${i}]`, c] as [string, string]),
+      ...BLOCKED_CATEGORIES.map(
+        (c, i) => [`spending_controls[blocked_categories][${i}]`, c] as [string, string],
+      ),
       ["metadata[kasama_request]", o.requestId],
       ["metadata[merchant]", o.merchant.slice(0, 200)],
     ]);
     return { id: r.id, last4: r.last4 };
   }
   async cardDetails(cardId: string) {
-    const r = await this.req<{ number: string; cvc: string; exp_month: number; exp_year: number; cardholder?: { name?: string } }>(
+    const r = await this.req<{
+      number: string;
+      cvc: string;
+      exp_month: number;
+      exp_year: number;
+      cardholder?: { name?: string };
+    }>(
       "GET",
       `/v1/issuing/cards/${encodeURIComponent(cardId)}?expand[]=number&expand[]=cvc&expand[]=cardholder`,
     );
-    return { number: r.number, cvc: r.cvc, exp_month: r.exp_month, exp_year: r.exp_year, name: r.cardholder?.name ?? "" };
+    return {
+      number: r.number,
+      cvc: r.cvc,
+      exp_month: r.exp_month,
+      exp_year: r.exp_year,
+      name: r.cardholder?.name ?? "",
+    };
   }
   async cancelCard(cardId: string) {
-    await this.req("POST", `/v1/issuing/cards/${encodeURIComponent(cardId)}`, [["status", "canceled"]]);
+    await this.req("POST", `/v1/issuing/cards/${encodeURIComponent(cardId)}`, [
+      ["status", "canceled"],
+    ]);
   }
 }
 
 export const formatMoney = (cents: number, currency: string) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() }).format(cents / 100);
+  new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() }).format(
+    cents / 100,
+  );
 
 /** Loose merchant match for authorizations: a distinctive word of the approved merchant appears in the descriptor. */
 export function merchantMatches(approved: string, descriptor: string) {
@@ -134,31 +191,53 @@ export function merchantMatches(approved: string, descriptor: string) {
   const d = norm(descriptor);
   const words = norm(approved)
     .split(/\s+/)
-    .filter((w) => w.length >= 3 && !["the", "inc", "llc", "ltd", "com", "www", "and", "shop", "store"].includes(w));
+    .filter(
+      (w) =>
+        w.length >= 3 &&
+        !["the", "inc", "llc", "ltd", "com", "www", "and", "shop", "store"].includes(w),
+    );
   return words.length === 0 ? false : words.some((w) => d.includes(w));
 }
 
 export interface PaymentDeps {
   db: Database;
-  providerFor: (orgId: string) => Promise<{ provider: PaymentProvider; monthlyCapUsd: number; botMonthlyCapUsd: number } | null>;
+  providerFor: (orgId: string) => Promise<{
+    provider: PaymentProvider;
+    monthlyCapUsd: number;
+    botMonthlyCapUsd: number;
+  } | null>;
 }
 
 const CARD = /\{\{card:([0-9a-f-]{36}):(number|cvc|exp_month|exp_year|exp|name)\}\}/g;
 export const hasCardPlaceholders = (v: unknown) => JSON.stringify(v ?? null).includes("{{card:");
 
 /** Fills {{card:<request>:field}} for this run's issued, unexpired cards; values go to `onValue` for redaction. */
-export async function resolveCardPlaceholders<T>(deps: PaymentDeps, run: { orgId: string; runId: string }, value: T, opts: { onValue?: (v: string, label: string) => void } = {}): Promise<T> {
+export async function resolveCardPlaceholders<T>(
+  deps: PaymentDeps,
+  run: { orgId: string; runId: string },
+  value: T,
+  opts: { onValue?: (v: string, label: string) => void } = {},
+): Promise<T> {
   const ids = [...new Set([...JSON.stringify(value).matchAll(CARD)].map((m) => m[1] as string))];
   if (!ids.length) return value;
   const p = await deps.providerFor(run.orgId);
   if (!p) throw new ToolError("no_payments", "Payments aren't set up for this workspace.");
   const details = new Map<string, CardDetails>();
   for (const id of ids) {
-    const [r] = await deps.db.execute<{ provider_card_id: string | null; status: string; expired: boolean }>(sql`
+    const [r] = await deps.db.execute<{
+      provider_card_id: string | null;
+      status: string;
+      expired: boolean;
+    }>(sql`
       select provider_card_id, status, expires_at < now() as expired from public.payment_requests
       where id = ${id}::uuid and org_id = ${run.orgId}::uuid and run_id = ${run.runId}::uuid`);
-    if (!r?.provider_card_id) throw new ToolError("card_not_found", "That card isn't one this task was given.");
-    if (r.status !== "issued" || r.expired) throw new ToolError("card_unusable", `That card was ${r.expired ? "expired" : r.status}; request a new one.`);
+    if (!r?.provider_card_id)
+      throw new ToolError("card_not_found", "That card isn't one this task was given.");
+    if (r.status !== "issued" || r.expired)
+      throw new ToolError(
+        "card_unusable",
+        `That card was ${r.expired ? "expired" : r.status}; request a new one.`,
+      );
     details.set(id, await p.provider.cardDetails(r.provider_card_id));
   }
   const replace = (s: string) =>
@@ -176,7 +255,13 @@ export async function resolveCardPlaceholders<T>(deps: PaymentDeps, run: { orgId
       return v;
     });
   const walk = (v: unknown): unknown =>
-    typeof v === "string" ? replace(v) : Array.isArray(v) ? v.map(walk) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)])) : v;
+    typeof v === "string"
+      ? replace(v)
+      : Array.isArray(v)
+        ? v.map(walk)
+        : v && typeof v === "object"
+          ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)]))
+          : v;
   return walk(value) as T;
 }
 
@@ -187,7 +272,9 @@ export async function expireCards(deps: PaymentDeps) {
   for (const r of due) {
     const p = await deps.providerFor(r.org_id).catch(() => null);
     await p?.provider.cancelCard(r.provider_card_id).catch(() => {});
-    await deps.db.execute(sql`update public.payment_requests set status = 'expired' where id = ${r.id}::uuid and status = 'issued'`);
+    await deps.db.execute(
+      sql`update public.payment_requests set status = 'expired' where id = ${r.id}::uuid and status = 'issued'`,
+    );
   }
   return due.length;
 }
@@ -208,13 +295,21 @@ export function registerPaymentTools(registry: ToolRegistry, deps: PaymentDeps) 
       reason: z.string().min(1).max(500),
     }),
     async approvalDetails(args) {
-      return { amount: formatMoney(Math.round(args.amount * 100), args.currency), price: formatMoney(Math.round(args.amount * 100), args.currency), merchant: args.merchant };
+      return {
+        amount: formatMoney(Math.round(args.amount * 100), args.currency),
+        price: formatMoney(Math.round(args.amount * 100), args.currency),
+        merchant: args.merchant,
+      };
     },
     async execute(args, ctx) {
       const banned = bannedPurchase(args.merchant, args.reason);
       if (banned) throw new ToolError("payment_banned", banned);
       const p = await deps.providerFor(ctx.orgId);
-      if (!p) throw new ToolError("no_payments", "Payments aren't set up. An owner connects a card issuing account in workspace settings → Payments.");
+      if (!p)
+        throw new ToolError(
+          "no_payments",
+          "Payments aren't set up. An owner connects a card issuing account in workspace settings → Payments.",
+        );
       const user = await actingUserOf(db, ctx.runId);
       if (!user) throw new ToolError("no_person", "There's nobody to pay for.");
       const cents = Math.round(args.amount * 100);
@@ -225,9 +320,20 @@ export function registerPaymentTools(registry: ToolRegistry, deps: PaymentDeps) 
                coalesce(sum(amount_cents) filter (where bot_id = ${ctx.botId}::uuid), 0)::text as bot,
                (select payments_monthly_cap_usd::text from public.bots where id = ${ctx.botId}::uuid) as bot_cap
         from public.payment_requests where org_id = ${ctx.orgId}::uuid and status in ('issued', 'used') and created_at >= date_trunc('month', now())`);
-      const botCap = spent?.bot_cap !== null && spent?.bot_cap !== undefined ? Number(spent.bot_cap) : p.botMonthlyCapUsd;
-      if (Number(spent?.org ?? 0) + cents > p.monthlyCapUsd * 100) throw new ToolError("payment_cap", `This would go over the workspace's monthly limit of ${formatMoney(p.monthlyCapUsd * 100, "USD")}.`);
-      if (Number(spent?.bot ?? 0) + cents > botCap * 100) throw new ToolError("payment_cap", `This would go over this bot's monthly limit of ${formatMoney(botCap * 100, "USD")}.`);
+      const botCap =
+        spent?.bot_cap !== null && spent?.bot_cap !== undefined
+          ? Number(spent.bot_cap)
+          : p.botMonthlyCapUsd;
+      if (Number(spent?.org ?? 0) + cents > p.monthlyCapUsd * 100)
+        throw new ToolError(
+          "payment_cap",
+          `This would go over the workspace's monthly limit of ${formatMoney(p.monthlyCapUsd * 100, "USD")}.`,
+        );
+      if (Number(spent?.bot ?? 0) + cents > botCap * 100)
+        throw new ToolError(
+          "payment_cap",
+          `This would go over this bot's monthly limit of ${formatMoney(botCap * 100, "USD")}.`,
+        );
       const [row] = await db.execute<{ id: string }>(sql`
         insert into public.payment_requests (org_id, bot_id, run_id, user_id, merchant, amount_cents, currency, reason, expires_at)
         values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, ${user}::uuid, ${args.merchant}, ${cents}, ${currency}, ${args.reason},
@@ -235,10 +341,19 @@ export function registerPaymentTools(registry: ToolRegistry, deps: PaymentDeps) 
         returning id`);
       const id = row?.id as string;
       try {
-        const card = await p.provider.issueCard({ amountCents: cents, currency, merchant: args.merchant, requestId: id });
-        await db.execute(sql`update public.payment_requests set status = 'issued', provider_card_id = ${card.id}, last4 = ${card.last4} where id = ${id}::uuid`);
+        const card = await p.provider.issueCard({
+          amountCents: cents,
+          currency,
+          merchant: args.merchant,
+          requestId: id,
+        });
+        await db.execute(
+          sql`update public.payment_requests set status = 'issued', provider_card_id = ${card.id}, last4 = ${card.last4} where id = ${id}::uuid`,
+        );
       } catch (e) {
-        await db.execute(sql`update public.payment_requests set status = 'failed', error = ${(e as Error).message.slice(0, 500)} where id = ${id}::uuid`);
+        await db.execute(
+          sql`update public.payment_requests set status = 'failed', error = ${(e as Error).message.slice(0, 500)} where id = ${id}::uuid`,
+        );
         throw new ToolError("card_failed", `The card couldn't be issued: ${(e as Error).message}`);
       }
       const f = (field: string) => `{{card:${id}:${field}}}`;

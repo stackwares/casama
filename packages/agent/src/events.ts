@@ -32,7 +32,9 @@ export async function sealRunPayload(db: Database, runId: string, payload: unkno
   if (!contentKeys.anySealing) return JSON.stringify(payload);
   let org = runOrgs.get(runId);
   if (!org) {
-    const [r] = await db.execute<{ org_id: string }>(sql`select org_id from public.runs where id = ${runId}::uuid`);
+    const [r] = await db.execute<{ org_id: string }>(
+      sql`select org_id from public.runs where id = ${runId}::uuid`,
+    );
     org = r?.org_id ?? "";
     if (runOrgs.size > 5000) runOrgs.clear();
     runOrgs.set(runId, org);

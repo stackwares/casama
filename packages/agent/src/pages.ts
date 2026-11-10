@@ -5,12 +5,12 @@
  */
 import { createHash, randomBytes } from "node:crypto";
 import type { Database } from "@kasama/db";
+import { contentKeys } from "@kasama/db";
 import { isValidCron, isValidTimezone, nextRunAt, PAGE_AUTHORING_NOTE } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
-import { contentKeys } from "@kasama/db";
 
 export const PAGE_HTML_MAX = 2_000_000;
 export const PAGE_DATA_MAX = 1_000_000;
@@ -24,7 +24,9 @@ export async function savePageVersion(
   pageId: string,
   change: { html?: string; data?: unknown; title?: string },
 ) {
-  const [o] = await db.execute<{ org_id: string }>(sql`select org_id from public.pages where id = ${pageId}::uuid`);
+  const [o] = await db.execute<{ org_id: string }>(
+    sql`select org_id from public.pages where id = ${pageId}::uuid`,
+  );
   const [p] = await db.execute<{ version: number; org_id: string }>(sql`
     update public.pages set
       html = coalesce(${contentKeys.seal(o?.org_id, change.html ?? null)}, html),
@@ -66,7 +68,10 @@ const parseJson = (s: string | undefined) => {
   }
 };
 
-export function registerPageTools(registry: ToolRegistry, deps: { db: Database; pagesUrl: string }) {
+export function registerPageTools(
+  registry: ToolRegistry,
+  deps: { db: Database; pagesUrl: string },
+) {
   const { db } = deps;
   const ownPage = async (botId: string, id: string) => {
     const [p] = await db.execute<{ id: string; title: string; visibility: string }>(sql`
@@ -84,7 +89,11 @@ export function registerPageTools(registry: ToolRegistry, deps: { db: Database; 
     schema: z.object({
       title: z.string().min(1).max(200),
       html: z.string().max(PAGE_HTML_MAX).optional(),
-      path: z.string().max(1000).optional().describe("An HTML file on your computer instead of html"),
+      path: z
+        .string()
+        .max(1000)
+        .optional()
+        .describe("An HTML file on your computer instead of html"),
       data: z.string().max(PAGE_DATA_MAX).optional().describe("JSON for the data block"),
       page_id: z.uuid().optional().describe("Replace this page's layout (and data, if given)"),
       visibility: z.enum(["private", "workspace"]).optional(),
@@ -94,7 +103,8 @@ export function registerPageTools(registry: ToolRegistry, deps: { db: Database; 
     async execute(args, ctx) {
       let html = args.html;
       if (!html && args.path) {
-        if (!ctx.computer) throw new ToolError("no_computer", "This bot has no computer available.");
+        if (!ctx.computer)
+          throw new ToolError("no_computer", "This bot has no computer available.");
         html = new TextDecoder().decode(await (await ctx.computer()).readFile(args.path));
       }
       if (!html) throw new ToolError("missing_html", "Give the page's html or a path to it.");
@@ -107,7 +117,9 @@ export function registerPageTools(registry: ToolRegistry, deps: { db: Database; 
         await ownPage(ctx.botId, id);
         version = await savePageVersion(db, id, { html, data, title: args.title });
         if (args.visibility)
-          await db.execute(sql`update public.pages set visibility = ${args.visibility} where id = ${id}::uuid and visibility <> 'public'`);
+          await db.execute(
+            sql`update public.pages set visibility = ${args.visibility} where id = ${id}::uuid and visibility <> 'public'`,
+          );
       } else {
         const user = await actingUserOf(db, ctx.runId);
         const [run] = await db.execute<{ conversation_id: string | null }>(
@@ -123,7 +135,8 @@ export function registerPageTools(registry: ToolRegistry, deps: { db: Database; 
           insert into public.page_versions (page_id, version, org_id, html, data)
           select id, version, org_id, html, data from public.pages where id = ${id}::uuid`);
       }
-      if (args.refresh_cron) await linkRefresh(db, ctx, id, args.title, args.refresh_cron, args.refresh_instructions);
+      if (args.refresh_cron)
+        await linkRefresh(db, ctx, id, args.title, args.refresh_cron, args.refresh_instructions);
       return {
         content: `Published "${args.title}" (page ${id}, version ${version}). The person can open it from Pages in Kasama.`,
         preview: args.title,
@@ -140,7 +153,10 @@ export function registerPageTools(registry: ToolRegistry, deps: { db: Database; 
     async execute(args, ctx) {
       const p = await ownPage(ctx.botId, args.page_id);
       const version = await savePageVersion(db, p.id, { data: parseJson(args.data) });
-      return { content: `Updated the data on "${p.title}" (version ${version}).`, preview: p.title };
+      return {
+        content: `Updated the data on "${p.title}" (version ${version}).`,
+        preview: p.title,
+      };
     },
   });
 
@@ -163,7 +179,9 @@ export function registerPageTools(registry: ToolRegistry, deps: { db: Database; 
         pagesUrl: deps.pagesUrl,
       });
       return {
-        content: url ? `"${p.title}" is public at ${url}` : `"${p.title}" is now ${args.visibility}.`,
+        content: url
+          ? `"${p.title}" is public at ${url}`
+          : `"${p.title}" is now ${args.visibility}.`,
         preview: `${p.title}: ${args.visibility}`,
       };
     },
@@ -176,11 +194,22 @@ export function registerPageTools(registry: ToolRegistry, deps: { db: Database; 
     risk: "low",
     schema: z.object({}),
     async execute(_args, ctx) {
-      const rows = await db.execute<{ id: string; title: string; visibility: string; version: number; updated_at: string }>(sql`
+      const rows = await db.execute<{
+        id: string;
+        title: string;
+        visibility: string;
+        version: number;
+        updated_at: string;
+      }>(sql`
         select id, title, visibility, version, updated_at from public.pages where bot_id = ${ctx.botId}::uuid order by updated_at desc limit 50`);
       return {
         content: rows.length
-          ? rows.map((r) => `- ${r.title} (${r.id}, ${r.visibility}, v${r.version}, updated ${new Date(r.updated_at).toISOString()})`).join("\n")
+          ? rows
+              .map(
+                (r) =>
+                  `- ${r.title} (${r.id}, ${r.visibility}, v${r.version}, updated ${new Date(r.updated_at).toISOString()})`,
+              )
+              .join("\n")
           : "No pages yet.",
       };
     },
@@ -196,10 +225,13 @@ async function linkRefresh(
   cron: string,
   instructions?: string,
 ) {
-  if (!isValidCron(cron)) throw new ToolError("bad_cron", "refresh_cron must be a five-field cron expression.");
+  if (!isValidCron(cron))
+    throw new ToolError("bad_cron", "refresh_cron must be a five-field cron expression.");
   const user = await actingUserOf(db, ctx.runId);
   const [tz] = user
-    ? await db.execute<{ timezone: string | null }>(sql`select timezone from public.profiles where user_id = ${user}::uuid`)
+    ? await db.execute<{ timezone: string | null }>(
+        sql`select timezone from public.profiles where user_id = ${user}::uuid`,
+      )
     : [];
   const zone = tz?.timezone && isValidTimezone(tz.timezone) ? tz.timezone : "UTC";
   const text = `Refresh the page "${title}" (page_id ${pageId}). ${instructions ?? "Gather fresh data for it."} Then call pages.update_data with the new JSON. Don't change the layout.`;
@@ -218,5 +250,7 @@ async function linkRefresh(
     values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${user ?? null}::uuid, ${`Refresh: ${title}`.slice(0, 120)}, ${text}, ${cron}, ${zone},
             '{"type":"schedule"}'::jsonb, false, ${next}::timestamptz)
     returning id`);
-  await db.execute(sql`update public.pages set refresh_routine_id = ${r?.id}::uuid where id = ${pageId}::uuid`);
+  await db.execute(
+    sql`update public.pages set refresh_routine_id = ${r?.id}::uuid where id = ${pageId}::uuid`,
+  );
 }

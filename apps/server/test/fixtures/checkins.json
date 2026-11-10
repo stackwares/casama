@@ -62,9 +62,7 @@
                   "url": "https://mail.example/reply"
                 }
               },
-              "sources": [
-                "mail:123"
-              ],
+              "sources": ["mail:123"],
               "urgency": "urgent"
             }
           }

@@ -16,12 +16,9 @@ export const search = createRoute({
     query: z.object({
       org_id: Uuid,
       q: z.string().min(2).max(200),
-      files: z
-        .enum(["true", "false"])
-        .optional()
-        .openapi({
-          description: "Also search file names and contents on awake computers (default true)",
-        }),
+      files: z.enum(["true", "false"]).optional().openapi({
+        description: "Also search file names and contents on awake computers (default true)",
+      }),
     }),
   },
   responses: { 200: jsonResponse("Results grouped by kind", SearchResponse), 400: e400, 401: e401 },

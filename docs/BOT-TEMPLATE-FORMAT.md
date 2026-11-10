@@ -18,10 +18,18 @@ template repository accepts the same files.
       "name": "dunning",
       "description": "Follow-up cadence for overdue invoices",
       "body_md": "1. Day 7: a friendly reminder...",
-      "files": [{ "path": "templates/email.md", "content_base64": "SGVsbG8ge25hbWV9", "executable": false }]
+      "files": [
+        { "path": "templates/email.md", "content_base64": "SGVsbG8ge25hbWV9", "executable": false }
+      ]
     }
   ],
-  "routines": [{ "name": "Weekly chase", "instructions_md": "Chase overdue invoices.", "schedule_cron": "0 9 * * 1" }],
+  "routines": [
+    {
+      "name": "Weekly chase",
+      "instructions_md": "Chase overdue invoices.",
+      "schedule_cron": "0 9 * * 1"
+    }
+  ],
   "connections": [{ "kind": "composio", "name": "Gmail" }],
   "memories": []
 }

@@ -4,8 +4,8 @@
  * ticket moves on (review, done, or blocked) if the bot didn't move it itself.
  */
 import type { Database } from "@kasama/db";
-import { sql } from "drizzle-orm";
 import { contentKeys } from "@kasama/db";
+import { sql } from "drizzle-orm";
 
 type TicketRow = {
   id: string;

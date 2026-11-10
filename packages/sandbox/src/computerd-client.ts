@@ -163,7 +163,10 @@ export class ComputerdClient {
         headers: { ...(init.headers as Record<string, string>), ...this.authHeaders },
       });
     } catch (err) {
-      throw new SandboxError("computer_unreachable", `computerd unreachable: ${(err as Error).message}`);
+      throw new SandboxError(
+        "computer_unreachable",
+        `computerd unreachable: ${(err as Error).message}`,
+      );
     }
   }
 

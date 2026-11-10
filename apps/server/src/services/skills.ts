@@ -196,11 +196,21 @@ export class GitHubReader {
       tree: Array<{ path: string; type: string; sha: string; size?: number; mode: string }>;
     }>(`/repos/${r.owner}/${r.repo}/git/trees/${commit}?recursive=1`);
     const prefix = r.path ? `${r.path}/` : "";
-    const blobs = tree.tree.filter((e) => e.type === "blob" && e.path.startsWith(prefix) && e.mode !== "120000");
+    const blobs = tree.tree.filter(
+      (e) => e.type === "blob" && e.path.startsWith(prefix) && e.mode !== "120000",
+    );
     if (blobs.length > limits.maxFiles)
-      throw new ApiError(400, "plugin_too_large", `A plugin can have up to ${limits.maxFiles} files.`);
+      throw new ApiError(
+        400,
+        "plugin_too_large",
+        `A plugin can have up to ${limits.maxFiles} files.`,
+      );
     if (blobs.reduce((n, e) => n + (e.size ?? 0), 0) > limits.maxBytes)
-      throw new ApiError(400, "plugin_too_large", `A plugin's files can total up to ${limits.maxBytes / 1024 / 1024} MB.`);
+      throw new ApiError(
+        400,
+        "plugin_too_large",
+        `A plugin's files can total up to ${limits.maxBytes / 1024 / 1024} MB.`,
+      );
     return Promise.all(
       blobs.map(async (e) => {
         const b = await this.get<{ content: string; encoding: string }>(

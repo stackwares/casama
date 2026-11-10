@@ -1,4 +1,5 @@
 ---
+
 name: csv-cleanup
 description: Clean a messy CSV file - trim spaces, normalize headers, drop empty and duplicate rows - and report what changed.
 ---

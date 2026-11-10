@@ -20,7 +20,12 @@ export type A2aState =
   | "TASK_STATE_INPUT_REQUIRED"
   | "TASK_STATE_REJECTED"
   | "TASK_STATE_AUTH_REQUIRED";
-export const TERMINAL: A2aState[] = ["TASK_STATE_COMPLETED", "TASK_STATE_FAILED", "TASK_STATE_CANCELED", "TASK_STATE_REJECTED"];
+export const TERMINAL: A2aState[] = [
+  "TASK_STATE_COMPLETED",
+  "TASK_STATE_FAILED",
+  "TASK_STATE_CANCELED",
+  "TASK_STATE_REJECTED",
+];
 
 export interface A2aPart {
   text?: string;
@@ -52,20 +57,37 @@ export interface A2aAgentCard {
   capabilities: { streaming?: boolean; pushNotifications?: boolean };
   defaultInputModes: string[];
   defaultOutputModes: string[];
-  skills: Array<{ id: string; name: string; description: string; tags: string[]; examples?: string[] }>;
+  skills: Array<{
+    id: string;
+    name: string;
+    description: string;
+    tags: string[];
+    examples?: string[];
+  }>;
   securitySchemes?: Record<string, unknown>;
   securityRequirements?: Array<Record<string, string[]>>;
 }
 
 export const a2aPartsText = (parts: A2aPart[] | undefined) =>
   (parts ?? [])
-    .map((p) => p.text ?? (p.url ? `[file: ${p.filename ?? p.url}]` : p.data !== undefined ? JSON.stringify(p.data) : ""))
+    .map(
+      (p) =>
+        p.text ??
+        (p.url
+          ? `[file: ${p.filename ?? p.url}]`
+          : p.data !== undefined
+            ? JSON.stringify(p.data)
+            : ""),
+    )
     .filter(Boolean)
     .join("\n");
 
 /** The agent's answer in a task: its artifacts, else its latest status message. */
 export function taskText(t: A2aTask) {
-  const fromArtifacts = (t.artifacts ?? []).map((a) => a2aPartsText(a.parts)).filter(Boolean).join("\n\n");
+  const fromArtifacts = (t.artifacts ?? [])
+    .map((a) => a2aPartsText(a.parts))
+    .filter(Boolean)
+    .join("\n\n");
   return fromArtifacts || a2aPartsText(t.status.message?.parts);
 }
 
@@ -86,19 +108,35 @@ export class A2aClient {
     this.o = { url: o.url.replace(/\/$/, ""), token: o.token ?? null, fetch: o.fetch ?? fetch };
   }
   private headers() {
-    return { "content-type": "application/json", accept: "application/json", "a2a-version": A2A_VERSION, ...(this.o.token ? { authorization: `Bearer ${this.o.token}` } : {}) };
+    return {
+      "content-type": "application/json",
+      accept: "application/json",
+      "a2a-version": A2A_VERSION,
+      ...(this.o.token ? { authorization: `Bearer ${this.o.token}` } : {}),
+    };
   }
 
   /** Reads the agent card and picks its JSON-RPC interface. */
   async discover() {
     if (this.card) return this.card;
-    const cardUrl = this.o.url.endsWith(".json") ? this.o.url : `${this.o.url}/.well-known/agent-card.json`;
-    const res = await this.o.fetch(cardUrl, { headers: { accept: "application/json", ...(this.o.token ? { authorization: `Bearer ${this.o.token}` } : {}) } });
+    const cardUrl = this.o.url.endsWith(".json")
+      ? this.o.url
+      : `${this.o.url}/.well-known/agent-card.json`;
+    const res = await this.o.fetch(cardUrl, {
+      headers: {
+        accept: "application/json",
+        ...(this.o.token ? { authorization: `Bearer ${this.o.token}` } : {}),
+      },
+    });
     if (!res.ok) throw new Error(`The agent card at ${cardUrl} answered ${res.status}`);
     const card = (await res.json()) as A2aAgentCard & { url?: string };
-    const rpc = (card.supportedInterfaces ?? []).find((i) => i.protocolBinding === "JSONRPC" && String(i.protocolVersion).startsWith("1"));
-    this.endpoint = rpc?.url ?? card.url ?? this.o.url.replace(/\/\.well-known\/agent-card\.json$/, "");
-    if (!rpc && !card.url) throw new Error(`${card.name ?? "The agent"} doesn't offer A2A ${A2A_VERSION} over JSON-RPC`);
+    const rpc = (card.supportedInterfaces ?? []).find(
+      (i) => i.protocolBinding === "JSONRPC" && String(i.protocolVersion).startsWith("1"),
+    );
+    this.endpoint =
+      rpc?.url ?? card.url ?? this.o.url.replace(/\/\.well-known\/agent-card\.json$/, "");
+    if (!rpc && !card.url)
+      throw new Error(`${card.name ?? "The agent"} doesn't offer A2A ${A2A_VERSION} over JSON-RPC`);
     this.card = card;
     return card;
   }
@@ -124,7 +162,16 @@ export class A2aClient {
   }
 
   /** Sends a task and waits (polling GetTask) until it's done, needs input, or the time runs out. */
-  async send(text: string, opts: { contextId?: string; taskId?: string; signal?: AbortSignal; onProgress?: (s: string) => void; waitMs?: number } = {}) {
+  async send(
+    text: string,
+    opts: {
+      contextId?: string;
+      taskId?: string;
+      signal?: AbortSignal;
+      onProgress?: (s: string) => void;
+      waitMs?: number;
+    } = {},
+  ) {
     const message: A2aMessage = {
       role: "ROLE_USER",
       parts: [{ text }],
@@ -134,16 +181,35 @@ export class A2aClient {
     };
     const r = await this.rpc<{ task?: A2aTask; message?: A2aMessage }>(
       "SendMessage",
-      { message, configuration: { acceptedOutputModes: ["text/plain", "application/json"], returnImmediately: false } },
+      {
+        message,
+        configuration: {
+          acceptedOutputModes: ["text/plain", "application/json"],
+          returnImmediately: false,
+        },
+      },
       opts.signal,
     );
-    if (r.message) return { kind: "message" as const, text: a2aPartsText(r.message.parts), contextId: r.message.contextId ?? null, task: null };
+    if (r.message)
+      return {
+        kind: "message" as const,
+        text: a2aPartsText(r.message.parts),
+        contextId: r.message.contextId ?? null,
+        task: null,
+      };
     let task = r.task as A2aTask;
     const until = Date.now() + (opts.waitMs ?? 10 * 60_000);
-    while (!TERMINAL.includes(task.status.state) && task.status.state !== "TASK_STATE_INPUT_REQUIRED" && task.status.state !== "TASK_STATE_AUTH_REQUIRED") {
+    while (
+      !TERMINAL.includes(task.status.state) &&
+      task.status.state !== "TASK_STATE_INPUT_REQUIRED" &&
+      task.status.state !== "TASK_STATE_AUTH_REQUIRED"
+    ) {
       if (Date.now() > until) break;
       if (opts.signal?.aborted) throw new Error("cancelled");
-      opts.onProgress?.(a2aPartsText(task.status.message?.parts) || task.status.state.replace("TASK_STATE_", "").toLowerCase());
+      opts.onProgress?.(
+        a2aPartsText(task.status.message?.parts) ||
+          task.status.state.replace("TASK_STATE_", "").toLowerCase(),
+      );
       await new Promise((res) => setTimeout(res, 1500));
       task = await this.rpc<A2aTask>("GetTask", { id: task.id }, opts.signal);
     }
@@ -155,7 +221,8 @@ export class A2aClient {
 export class A2aAdapter implements IntegrationAdapter {
   private readonly client: A2aClient;
   constructor(rec: IntegrationRecord, ctx: { fetch: typeof fetch }) {
-    if (typeof rec.config.url !== "string") throw new Error("A2A integrations need config.url (the agent's address or agent card)");
+    if (typeof rec.config.url !== "string")
+      throw new Error("A2A integrations need config.url (the agent's address or agent card)");
     this.client = new A2aClient({ url: rec.config.url, token: rec.secret, fetch: ctx.fetch });
   }
 
@@ -165,12 +232,22 @@ export class A2aAdapter implements IntegrationAdapter {
     return [
       {
         name: "send",
-        description: `Hand a task to ${card.name}, an outside AI agent (A2A): ${card.description}${skills ? ` Skills: ${skills}` : ""}. Returns its answer. To continue the same conversation, pass the context_id from its last answer.`.slice(0, 1024),
+        description:
+          `Hand a task to ${card.name}, an outside AI agent (A2A): ${card.description}${skills ? ` Skills: ${skills}` : ""}. Returns its answer. To continue the same conversation, pass the context_id from its last answer.`.slice(
+            0,
+            1024,
+          ),
         inputSchema: {
           type: "object",
           properties: {
-            task: { type: "string", description: "What you want it to do, with everything it needs" },
-            context_id: { type: "string", description: "Continue an earlier conversation with this agent" },
+            task: {
+              type: "string",
+              description: "What you want it to do, with everything it needs",
+            },
+            context_id: {
+              type: "string",
+              description: "Continue an earlier conversation with this agent",
+            },
             task_id: { type: "string", description: "Answer a task that asked you for more input" },
           },
           required: ["task"],

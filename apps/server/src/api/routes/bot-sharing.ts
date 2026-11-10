@@ -17,12 +17,23 @@ export function registerBotSharingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
 
   const view = async (claims: JwtClaims, id: string) => {
     const [b] = await withUserSession(db, claims, (tx) =>
-      tx.execute<{ org_id: string; visibility: "private" | "team"; created_by: string | null; admin: boolean; manage: boolean }>(sql`
+      tx.execute<{
+        org_id: string;
+        visibility: "private" | "team";
+        created_by: string | null;
+        admin: boolean;
+        manage: boolean;
+      }>(sql`
         select org_id, visibility, created_by, public.can_admin_bot(id) as admin, public.can_manage_bot(id) as manage
         from public.bots where id = ${id}::uuid`),
     );
     if (!b) throw new ApiError(404, "bot_not_found", "Bot not found");
-    const entries = await db.execute<{ user_id: string | null; email: string | null; role: "member" | null; access: "chat" }>(sql`
+    const entries = await db.execute<{
+      user_id: string | null;
+      email: string | null;
+      role: "member" | null;
+      access: "chat";
+    }>(sql`
       select a.user_id, u.email, a.role, a.access from public.bot_access a left join auth.users u on u.id = a.user_id
       where a.bot_id = ${id}::uuid order by a.role nulls last, u.email`);
     return {
@@ -46,18 +57,28 @@ export function registerBotSharingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     const claims = claimsOf(c);
     const { id } = c.req.valid("param");
     const { bot } = await view(claims, id);
-    if (!bot.admin) throw new ApiError(403, "forbidden", "Only the bot's creator, its admins and workspace admins can change who has access");
+    if (!bot.admin)
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only the bot's creator, its admins and workspace admins can change who has access",
+      );
     const b = c.req.valid("json");
-    for (const e of b.entries) if (!!e.user_id === !!e.role) throw new ApiError(400, "validation_failed", "Each entry names one person or one role");
+    for (const e of b.entries)
+      if (!!e.user_id === !!e.role)
+        throw new ApiError(400, "validation_failed", "Each entry names one person or one role");
     const people = b.entries.filter((e) => e.user_id).map((e) => e.user_id as string);
     if (people.length) {
       const members = await db.execute<{ user_id: string }>(sql`
         select user_id from public.memberships where org_id = ${bot.org_id}::uuid
           and user_id = any(array(select jsonb_array_elements_text(${JSON.stringify(people)}::jsonb))::uuid[])`);
-      if (members.length !== new Set(people).size) throw new ApiError(400, "not_a_member", "Everyone on the list must be in this workspace");
+      if (members.length !== new Set(people).size)
+        throw new ApiError(400, "not_a_member", "Everyone on the list must be in this workspace");
     }
     await db.transaction(async (tx) => {
-      await tx.execute(sql`update public.bots set visibility = ${b.visibility} where id = ${id}::uuid`);
+      await tx.execute(
+        sql`update public.bots set visibility = ${b.visibility} where id = ${id}::uuid`,
+      );
       await tx.execute(sql`delete from public.bot_access where bot_id = ${id}::uuid`);
       for (const e of b.entries)
         await tx.execute(sql`
@@ -74,7 +95,9 @@ export function registerBotSharingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
   app.openapi(routes.listMembers, async (c) => {
     const claims = claimsOf(c);
     const { id } = c.req.valid("param");
-    const [m] = await withUserSession(db, claims, (tx) => tx.execute<{ ok: boolean }>(sql`select public.is_member(${id}::uuid) as ok`));
+    const [m] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ ok: boolean }>(sql`select public.is_member(${id}::uuid) as ok`),
+    );
     if (!m?.ok) throw new ApiError(404, "org_not_found", "Workspace not found");
     const rows = await db.execute<{ user_id: string; email: string | null; role: "member" }>(sql`
       select m.user_id, u.email, m.role from public.memberships m left join auth.users u on u.id = m.user_id

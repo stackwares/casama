@@ -24,9 +24,16 @@ export const setEncryption = createRoute({
   path: "/v1/orgs/{id}/encryption",
   tags,
   security,
-  summary: "Turn encryption at rest on or off (owners); existing rows are sealed or opened in the background",
+  summary:
+    "Turn encryption at rest on or off (owners); existing rows are sealed or opened in the background",
   request: { params, body: jsonBody(SetEncryptionRequest) },
-  responses: { 200: jsonResponse("Status", EncryptionStatus), 401: e401, 403: e403, 404: e404, 409: e409 },
+  responses: {
+    200: jsonResponse("Status", EncryptionStatus),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });
 
 export const rotateEncryptionKey = createRoute({
@@ -37,5 +44,11 @@ export const rotateEncryptionKey = createRoute({
   security,
   summary: "Rewrap the workspace's data key with the server's current key (rows are not rewritten)",
   request: { params },
-  responses: { 200: jsonResponse("Status", EncryptionStatus), 401: e401, 403: e403, 404: e404, 409: e409 },
+  responses: {
+    200: jsonResponse("Status", EncryptionStatus),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });

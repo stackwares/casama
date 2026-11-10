@@ -54,7 +54,11 @@ export function registerPageRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const managed = async (claims: JwtClaims, id: string) => {
     const row = await visible(claims, id);
     if (!row.can_manage)
-      throw new ApiError(403, "forbidden", "Only the person it was made for or the bot's managers can change this page");
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only the person it was made for or the bot's managers can change this page",
+      );
     return row;
   };
 
@@ -75,7 +79,10 @@ export function registerPageRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       tx.execute<{ version: number; created_at: string }>(sql`
         select version, created_at from public.page_versions where page_id = ${row.id}::uuid order by version desc`),
     );
-    return c.json({ ...out(row), versions: versions.map((v) => ({ ...v, created_at: iso(v.created_at) })) }, 200);
+    return c.json(
+      { ...out(row), versions: versions.map((v) => ({ ...v, created_at: iso(v.created_at) })) },
+      200,
+    );
   });
 
   app.openapi(routes.createPageViewLink, async (c) => {
@@ -93,7 +100,10 @@ export function registerPageRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = claimsOf(c);
     const row = await managed(claims, c.req.valid("param").id);
     const { visibility, expires_in_days } = c.req.valid("json");
-    const url = await setPageVisibility(db, row.id, visibility, { expiresInDays: expires_in_days, pagesUrl: pagesUrl() });
+    const url = await setPageVisibility(db, row.id, visibility, {
+      expiresInDays: expires_in_days,
+      pagesUrl: pagesUrl(),
+    });
     if (visibility === "public" || row.visibility === "public")
       await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
         values (${row.org_id}::uuid, 'user', ${claims.sub}::uuid, ${visibility === "public" ? "page.made_public" : "page.unpublished"}, 'page', ${row.id}::uuid,
@@ -107,7 +117,12 @@ export function registerPageRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const { version } = c.req.valid("json");
     const [v] = await db.execute<{ html: string; data: unknown }>(sql`
       select html, data from public.page_versions where page_id = ${row.id}::uuid and version = ${version}`);
-    if (!v) throw new ApiError(404, "version_not_found", "That version isn't kept any more (pages keep their last 20)");
+    if (!v)
+      throw new ApiError(
+        404,
+        "version_not_found",
+        "That version isn't kept any more (pages keep their last 20)",
+      );
     await savePageVersion(db, row.id, { html: v.html, data: v.data });
     return c.json(out(await visible(claims, row.id)), 200);
   });
@@ -115,9 +130,13 @@ export function registerPageRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.deletePage, async (c) => {
     const claims = claimsOf(c);
     const row = await managed(claims, c.req.valid("param").id);
-    await withUserSession(db, claims, (tx) => tx.execute(sql`delete from public.pages where id = ${row.id}::uuid`));
+    await withUserSession(db, claims, (tx) =>
+      tx.execute(sql`delete from public.pages where id = ${row.id}::uuid`),
+    );
     if (row.refresh_routine_id)
-      await db.execute(sql`update public.routines set enabled = false where id = ${row.refresh_routine_id}::uuid`);
+      await db.execute(
+        sql`update public.routines set enabled = false where id = ${row.refresh_routine_id}::uuid`,
+      );
     return c.json({ deleted: row.id }, 200);
   });
 }

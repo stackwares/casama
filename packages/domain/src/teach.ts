@@ -62,7 +62,10 @@ export const TEACH_INSTRUCTIONS = [
 ].join("\n");
 
 /** The drafting run's message: instructions plus the recording, trimmed to fit. */
-export function teachTranscript(steps: TeachStepView[], opts: { snapshotChars?: number; maxChars?: number } = {}) {
+export function teachTranscript(
+  steps: TeachStepView[],
+  opts: { snapshotChars?: number; maxChars?: number } = {},
+) {
   const per = opts.snapshotChars ?? 1500;
   const max = opts.maxChars ?? 60_000;
   const lines = [TEACH_INSTRUCTIONS, "", `Recording (${steps.length} steps):`];
@@ -71,7 +74,8 @@ export function teachTranscript(steps: TeachStepView[], opts: { snapshotChars?: 
     if (s.url && s.url !== lastUrl) lines.push(`\nOn ${s.url}`);
     lastUrl = s.url ?? lastUrl;
     lines.push(`${s.seq}. ${describeStep(s)}`);
-    if (s.snapshot) lines.push(`   Screen after: ${s.snapshot.slice(0, per).replaceAll("\n", "\n   ")}`);
+    if (s.snapshot)
+      lines.push(`   Screen after: ${s.snapshot.slice(0, per).replaceAll("\n", "\n   ")}`);
   }
   const text = lines.join("\n");
   return text.length > max ? `${text.slice(0, max)}\n…(recording trimmed)` : text;

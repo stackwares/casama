@@ -53,7 +53,14 @@ export interface AgentImportPlan {
 
 export class AgentImportError extends Error {}
 
-const LIMITS = { persona: 20_000, memory: 8000, memories: 200, skills: 30, routines: 20, dailyNotes: 60 };
+const LIMITS = {
+  persona: 20_000,
+  memory: 8000,
+  memories: 200,
+  skills: 30,
+  routines: 20,
+  dailyNotes: 60,
+};
 
 const SKIP: Array<[RegExp, string]> = [
   [/(^|\/)\.env(\..*)?$/, "secrets"],
@@ -75,7 +82,16 @@ const b64 = (b: Uint8Array) => Buffer.from(b).toString("base64");
 
 /** Strips a folder all files share (a ZIP of ".openclaw/" or "workspace/"), and finds the root. */
 function rootOf(paths: string[]) {
-  const markers = ["SOUL.md", "AGENTS.md", "IDENTITY.md", "memories/MEMORY.md", "memories/USER.md", "cron/jobs.json", "workspace/SOUL.md", "workspace/AGENTS.md"];
+  const markers = [
+    "SOUL.md",
+    "AGENTS.md",
+    "IDENTITY.md",
+    "memories/MEMORY.md",
+    "memories/USER.md",
+    "cron/jobs.json",
+    "workspace/SOUL.md",
+    "workspace/AGENTS.md",
+  ];
   let best: string | null = null;
   for (const p of paths)
     for (const m of markers)
@@ -86,15 +102,22 @@ function rootOf(paths: string[]) {
   return best;
 }
 
-export function detectAgentKind(files: Map<string, Uint8Array>): { kind: AgentKind; root: string } | null {
+export function detectAgentKind(
+  files: Map<string, Uint8Array>,
+): { kind: AgentKind; root: string } | null {
   const paths = [...files.keys()];
   const root = rootOf(paths);
   if (root === null) return null;
   const has = (p: string) => files.has(root + p);
-  if (has("memories/MEMORY.md") || has("memories/USER.md") || (has("SOUL.md") && has("config.yaml")))
+  if (
+    has("memories/MEMORY.md") ||
+    has("memories/USER.md") ||
+    (has("SOUL.md") && has("config.yaml"))
+  )
     return { kind: "hermes", root };
   const jobs = files.get(`${root}cron/jobs.json`);
-  if (jobs && /"prompt"\s*:/.test(text(jobs)) && !/"payload"\s*:/.test(text(jobs))) return { kind: "hermes", root };
+  if (jobs && /"prompt"\s*:/.test(text(jobs)) && !/"payload"\s*:/.test(text(jobs)))
+    return { kind: "hermes", root };
   return { kind: "openclaw", root };
 }
 
@@ -129,7 +152,8 @@ export function cronFromText(s: string): string | null {
   let m = /^every\s+(\d+)\s*(m|min|mins|minutes?|h|hr|hrs|hours?)$/.exec(t);
   if (m) {
     const n = Number(m[1]);
-    if (m[2]?.startsWith("m")) return n > 0 && n < 60 && 60 % n === 0 ? `*/${n} * * * *` : n === 60 ? "0 * * * *" : null;
+    if (m[2]?.startsWith("m"))
+      return n > 0 && n < 60 && 60 % n === 0 ? `*/${n} * * * *` : n === 60 ? "0 * * * *" : null;
     if (n === 1) return "0 * * * *";
     return n > 0 && n < 24 && 24 % n === 0 ? `0 */${n} * * *` : n === 24 ? "0 0 * * *" : null;
   }
@@ -151,11 +175,24 @@ const cronFromEvery = (ms: number) => {
 };
 
 const skillName = (raw: string) =>
-  raw.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^[^a-z0-9]+/, "").slice(0, 63) || "imported-skill";
+  raw
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^[^a-z0-9]+/, "")
+    .slice(0, 63) || "imported-skill";
 
-function readSkills(files: Map<string, Uint8Array>, root: string, used: Set<string>, notes: string[]) {
+function readSkills(
+  files: Map<string, Uint8Array>,
+  root: string,
+  used: Set<string>,
+  notes: string[],
+) {
   const skills: ImportedSkill[] = [];
-  const mds = [...files.keys()].filter((p) => p.startsWith(root) && /(^|\/)skills\/(.+\/)?SKILL\.md$/.test(p.slice(root.length))).sort();
+  const mds = [...files.keys()]
+    .filter(
+      (p) => p.startsWith(root) && /(^|\/)skills\/(.+\/)?SKILL\.md$/.test(p.slice(root.length)),
+    )
+    .sort();
   for (const p of mds) {
     const folder = p.slice(0, -"SKILL.md".length);
     const raw = text(files.get(p) as Uint8Array);
@@ -163,13 +200,21 @@ function readSkills(files: Map<string, Uint8Array>, root: string, used: Set<stri
     const meta = fm ? parseFrontMatter(fm[1] ?? "") : {};
     const body = (fm ? (fm[2] ?? "") : raw).trim();
     const folderName = folder.replace(/\/$/, "").split("/").pop() ?? "skill";
-    let name = SKILL_NAME.test(meta.name ?? "") ? (meta.name as string) : skillName(meta.name || folderName);
+    let name = SKILL_NAME.test(meta.name ?? "")
+      ? (meta.name as string)
+      : skillName(meta.name || folderName);
     if (used.has(name)) {
       let i = 2;
       while (used.has(`${name}-${i}`)) i++;
       name = `${name}-${i}`;
     }
-    const description = (meta.description || body.split("\n").find((l) => l.trim() && !l.startsWith("#")) || name).trim().slice(0, 300);
+    const description = (
+      meta.description ||
+      body.split("\n").find((l) => l.trim() && !l.startsWith("#")) ||
+      name
+    )
+      .trim()
+      .slice(0, 300);
     const extra = [...files.keys()].filter((f) => f.startsWith(folder) && f !== p);
     if (extra.length > 60) {
       notes.push(`Skill ${name}: kept the first 60 of its ${extra.length} files`);
@@ -182,7 +227,10 @@ function readSkills(files: Map<string, Uint8Array>, root: string, used: Set<stri
       name,
       description,
       body_md: body.slice(0, 50_000),
-      files: extra.map((f) => ({ path: f.slice(folder.length), content_base64: b64(files.get(f) as Uint8Array) })),
+      files: extra.map((f) => ({
+        path: f.slice(folder.length),
+        content_base64: b64(files.get(f) as Uint8Array),
+      })),
       source: p.slice(root.length),
     });
   }
@@ -191,12 +239,21 @@ function readSkills(files: Map<string, Uint8Array>, root: string, used: Set<stri
 
 type Job = Record<string, unknown>;
 const jobsOf = (raw: unknown): Job[] => {
-  const list = Array.isArray(raw) ? raw : raw && typeof raw === "object" && Array.isArray((raw as { jobs?: unknown }).jobs) ? (raw as { jobs: unknown[] }).jobs : [];
+  const list = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === "object" && Array.isArray((raw as { jobs?: unknown }).jobs)
+      ? (raw as { jobs: unknown[] }).jobs
+      : [];
   return list.filter((j): j is Job => !!j && typeof j === "object");
 };
 const str = (v: unknown) => (typeof v === "string" ? v : undefined);
 
-function readJobs(files: Map<string, Uint8Array>, path: string, kind: AgentKind, notes: string[]): ImportedRoutine[] {
+function readJobs(
+  files: Map<string, Uint8Array>,
+  path: string,
+  kind: AgentKind,
+  notes: string[],
+): ImportedRoutine[] {
   const f = files.get(path);
   if (!f) return [];
   let raw: unknown;
@@ -209,21 +266,32 @@ function readJobs(files: Map<string, Uint8Array>, path: string, kind: AgentKind,
   const out: ImportedRoutine[] = [];
   for (const j of jobsOf(raw)) {
     const name = (str(j.name) ?? str(j.id) ?? str(j.jobId) ?? "Imported routine").slice(0, 120);
-    const sched = (j.schedule && typeof j.schedule === "object" ? j.schedule : {}) as Record<string, unknown>;
+    const sched = (j.schedule && typeof j.schedule === "object" ? j.schedule : {}) as Record<
+      string,
+      unknown
+    >;
     let cron: string | null = null;
     let instructions: string | undefined;
     if (kind === "openclaw") {
-      const payload = (j.payload && typeof j.payload === "object" ? j.payload : {}) as Record<string, unknown>;
+      const payload = (j.payload && typeof j.payload === "object" ? j.payload : {}) as Record<
+        string,
+        unknown
+      >;
       instructions = str(payload.message) ?? str(payload.text);
-      if (sched.kind === "cron") cron = str(sched.expr) && isValidCron(sched.expr as string) ? (sched.expr as string) : null;
-      else if (sched.kind === "every" && typeof sched.everyMs === "number") cron = cronFromEvery(sched.everyMs);
+      if (sched.kind === "cron")
+        cron = str(sched.expr) && isValidCron(sched.expr as string) ? (sched.expr as string) : null;
+      else if (sched.kind === "every" && typeof sched.everyMs === "number")
+        cron = cronFromEvery(sched.everyMs);
       else if (sched.kind === "at" || j.at) {
         notes.push(`"${name}" ran once at a set time; not imported as a routine`);
         continue;
       }
     } else {
       instructions = str(j.prompt);
-      cron = (str(sched.expr) && cronFromText(sched.expr as string)) || (str(sched.display) && cronFromText(sched.display as string)) || null;
+      cron =
+        (str(sched.expr) && cronFromText(sched.expr as string)) ||
+        (str(sched.display) && cronFromText(sched.display as string)) ||
+        null;
       if (j.state === "completed") {
         notes.push(`"${name}" had already finished; not imported`);
         continue;
@@ -243,7 +311,12 @@ function readJobs(files: Map<string, Uint8Array>, path: string, kind: AgentKind,
     }
     const tz = str(sched.tz) ?? str(j.timezone);
     if (tz) notes.push(`"${name}" used the ${tz} time zone; it now runs in yours`);
-    out.push({ name, instructions_md: instructions.slice(0, 20_000), schedule_cron: cron, source: path });
+    out.push({
+      name,
+      instructions_md: instructions.slice(0, 20_000),
+      schedule_cron: cron,
+      source: path,
+    });
   }
   return out;
 }
@@ -252,7 +325,9 @@ function readJobs(files: Map<string, Uint8Array>, path: string, kind: AgentKind,
 export function planAgentImport(files: Map<string, Uint8Array>): AgentImportPlan {
   const found = detectAgentKind(files);
   if (!found)
-    throw new AgentImportError("This doesn't look like an OpenClaw or Hermes Agent folder (no SOUL.md, AGENTS.md or memories/ found).");
+    throw new AgentImportError(
+      "This doesn't look like an OpenClaw or Hermes Agent folder (no SOUL.md, AGENTS.md or memories/ found).",
+    );
   const { kind, root } = found;
   const notes: string[] = [];
   const used = new Set<string>();
@@ -263,16 +338,21 @@ export function planAgentImport(files: Map<string, Uint8Array>): AgentImportPlan
     return text(f).trim();
   };
   // OpenClaw's home folder keeps the workspace in workspace/.
-  const ws = kind === "openclaw" && [...files.keys()].some((p) => p.startsWith(`${root}workspace/`)) ? "workspace/" : "";
+  const ws =
+    kind === "openclaw" && [...files.keys()].some((p) => p.startsWith(`${root}workspace/`))
+      ? "workspace/"
+      : "";
   const memories: ImportedMemory[] = [];
   const addAll = (kindOf: ImportedMemory["kind"], items: string[], source: string) => {
-    for (const c of items) memories.push({ kind: kindOf, content: c.slice(0, LIMITS.memory), source });
+    for (const c of items)
+      memories.push({ kind: kindOf, content: c.slice(0, LIMITS.memory), source });
   };
   let name = kind === "openclaw" ? "Imported OpenClaw agent" : "Imported Hermes agent";
   const parts: string[] = [];
   const soul = read(`${ws}SOUL.md`);
   if (soul) parts.push(soul);
-  const agents = read(`${ws}AGENTS.md`) ?? (kind === "hermes" ? (read(".hermes.md") ?? null) : null);
+  const agents =
+    read(`${ws}AGENTS.md`) ?? (kind === "hermes" ? (read(".hermes.md") ?? null) : null);
   if (agents) parts.push(`## How you work (imported)\n\n${agents}`);
   if (kind === "openclaw") {
     const identity = read(`${ws}IDENTITY.md`);
@@ -288,35 +368,58 @@ export function planAgentImport(files: Map<string, Uint8Array>): AgentImportPlan
       .filter((p) => new RegExp(`^${ws}memory/\\d{4}-\\d{2}-\\d{2}\\.md$`).test(p))
       .sort()
       .reverse();
-    if (daily.length > LIMITS.dailyNotes) notes.push(`Kept the newest ${LIMITS.dailyNotes} of ${daily.length} daily notes as memories; the rest are in ~/imported/`);
+    if (daily.length > LIMITS.dailyNotes)
+      notes.push(
+        `Kept the newest ${LIMITS.dailyNotes} of ${daily.length} daily notes as memories; the rest are in ~/imported/`,
+      );
     for (const p of daily.slice(0, LIMITS.dailyNotes)) {
       const t = read(p);
-      if (t) memories.push({ kind: "episode", content: `Notes from ${p.slice(-13, -3)}:\n${t}`.slice(0, LIMITS.memory), source: p });
+      if (t)
+        memories.push({
+          kind: "episode",
+          content: `Notes from ${p.slice(-13, -3)}:\n${t}`.slice(0, LIMITS.memory),
+          source: p,
+        });
     }
   } else {
-    for (const [file, k] of [["memories/MEMORY.md", "fact"], ["memories/USER.md", "preference"]] as const) {
+    for (const [file, k] of [
+      ["memories/MEMORY.md", "fact"],
+      ["memories/USER.md", "preference"],
+    ] as const) {
       const t = read(file);
       if (t)
         addAll(
           k,
-          t.split("§").map((e) => e.trim()).filter((e) => e.length >= 3),
+          t
+            .split("§")
+            .map((e) => e.trim())
+            .filter((e) => e.length >= 3),
           file,
         );
     }
   }
   let persona = parts.join("\n\n");
   if (persona.length > LIMITS.persona) {
-    notes.push("The persona was longer than 20,000 characters and was trimmed; the full files are in ~/imported/");
+    notes.push(
+      "The persona was longer than 20,000 characters and was trimmed; the full files are in ~/imported/",
+    );
     persona = persona.slice(0, LIMITS.persona);
     for (const p of [`${ws}SOUL.md`, `${ws}AGENTS.md`]) used.delete(root + p);
   }
   const skillsUsed = new Set<string>();
   let skills = readSkills(files, root + ws, skillsUsed, notes);
   for (const s of skillsUsed) if (s.includes("/")) used.add(s);
-  if (kind === "openclaw" && ws) skills.push(...readSkills(files, root, skillsUsed, notes).filter((s) => !s.source.startsWith("workspace/")));
+  if (kind === "openclaw" && ws)
+    skills.push(
+      ...readSkills(files, root, skillsUsed, notes).filter(
+        (s) => !s.source.startsWith("workspace/"),
+      ),
+    );
   for (const s of skillsUsed) if (s.includes("/")) used.add(s);
   if (skills.length > LIMITS.skills) {
-    notes.push(`Imported the first ${LIMITS.skills} of ${skills.length} skills; the rest are in ~/imported/`);
+    notes.push(
+      `Imported the first ${LIMITS.skills} of ${skills.length} skills; the rest are in ~/imported/`,
+    );
     for (const s of skills.slice(LIMITS.skills)) used.delete(root + ws + s.source);
     skills = skills.slice(0, LIMITS.skills);
   }
@@ -332,7 +435,9 @@ export function planAgentImport(files: Map<string, Uint8Array>): AgentImportPlan
     memories.length = LIMITS.memories;
   }
   if (kind === "openclaw" && files.has(`${root}${ws}HEARTBEAT.md`))
-    notes.push("HEARTBEAT.md (a periodic checklist) is in ~/imported/; make it a routine if you still want it");
+    notes.push(
+      "HEARTBEAT.md (a periodic checklist) is in ~/imported/; make it a routine if you still want it",
+    );
   const skipped: AgentImportPlan["skipped"] = [];
   const leftovers: string[] = [];
   for (const p of files.keys()) {
@@ -342,7 +447,18 @@ export function planAgentImport(files: Map<string, Uint8Array>): AgentImportPlan
     if (skip) skipped.push({ path: rel, reason: skip[1] });
     else leftovers.push(rel);
   }
-  return { kind, root, name: name.slice(0, 80), persona_md: persona, skills, routines, memories, leftovers: leftovers.sort(), skipped, notes };
+  return {
+    kind,
+    root,
+    name: name.slice(0, 80),
+    persona_md: persona,
+    skills,
+    routines,
+    memories,
+    leftovers: leftovers.sort(),
+    skipped,
+    notes,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -357,11 +473,16 @@ PREFERENCE: <how I like things done, my tastes, or how I want you to answer>
 Write each item as a short standalone sentence about me. Don't number the lines or add headings.`;
 
 /** Parses the answer to MEMORY_EXPORT_PROMPT; unlabeled lines become facts. */
-export function parseMemoryExport(answer: string): Array<{ kind: "fact" | "preference"; content: string }> {
+export function parseMemoryExport(
+  answer: string,
+): Array<{ kind: "fact" | "preference"; content: string }> {
   const out: Array<{ kind: "fact" | "preference"; content: string }> = [];
   const seen = new Set<string>();
   for (const raw of answer.split(/\r?\n/)) {
-    const line = raw.replace(/\*\*/g, "").replace(/^\s*([-*•]|\d+[.)])\s+/, "").trim();
+    const line = raw
+      .replace(/\*\*/g, "")
+      .replace(/^\s*([-*•]|\d+[.)])\s+/, "")
+      .trim();
     if (!line || /^```/.test(line)) continue;
     const m = /^(fact|preference|pref)\s*[:：-]\s*(.+)$/i.exec(line);
     const kind = m ? (m[1]?.toLowerCase().startsWith("pref") ? "preference" : "fact") : "fact";

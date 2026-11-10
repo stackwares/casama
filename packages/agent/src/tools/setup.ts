@@ -7,8 +7,8 @@ import { contentKeys, type Database } from "@kasama/db";
 import { isValidCron, isValidTimezone, nextRunAt } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
-import { ToolError, type ToolRegistry } from "./registry.ts";
 import { personForRun } from "../acting.ts";
+import { ToolError, type ToolRegistry } from "./registry.ts";
 
 export const SETUP_GUIDE = [
   "You are being set up by the person you'll work for. This conversation is your setup interview.",

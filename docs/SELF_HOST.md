@@ -84,35 +84,35 @@ connects to `http://localhost:8080`.
 
 All settings live in `infra/compose/.env`. Common ones:
 
-| Setting                                                                              | Purpose                                                              |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `KASAMA_SITE`, `KASAMA_PUBLIC_URL`                                                   | The domain (automatic HTTPS) or `:80` behind another proxy           |
-| `INSTANCE_ADMIN_EMAILS`                                                              | Comma-separated owners (default: the first account)                  |
-| `DISABLE_SIGNUP=true`                                                                | Invite-only after the first accounts exist                           |
+| Setting                                                                                               | Purpose                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `KASAMA_SITE`, `KASAMA_PUBLIC_URL`                                                                    | The domain (automatic HTTPS) or `:80` behind another proxy                                                                                     |
+| `INSTANCE_ADMIN_EMAILS`                                                                               | Comma-separated owners (default: the first account)                                                                                            |
+| `DISABLE_SIGNUP=true`                                                                                 | Invite-only after the first accounts exist                                                                                                     |
 | `SIGNUP_ALLOWED_EMAILS=ana@acme.com,@acme.com` with `SIGNUP_HOOK_ENABLED=true` and `AUTH_HOOK_SECRET` | Only these emails or domains can sign up (needs a domain with HTTPS: Supabase Auth calls the hook at `SIGNUP_HOOK_URI`, which install.sh sets) |
-| `AI_GATEWAY_URL=https://gateway.ai.cloudflare.com/v1/<account>/<gateway>`            | Model calls go through Cloudflare AI Gateway (caching, logs, limits) |
-| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ADMIN_EMAIL`, `EMAIL_AUTOCONFIRM=false` | Email confirmation and password reset through your SMTP server       |
-| `FCM_SERVICE_ACCOUNT`                                                                | Push: Firebase service account JSON (one line) for the apps' project |
-| `RESEND_API_KEY`                                                                     | Invite emails (otherwise invites return a code to share)             |
-| `COMPUTER_MEMORY_MB`, `RUN_CONCURRENCY`                                              | Computer size and worker parallelism                                 |
-| `WARM_POOL_SIZE`                                                                     | Started computers kept waiting, so a new one starts at once (0 = off) |
-| `SENTRY_DSN` or `POSTHOG_API_KEY`                                                    | Error reporting (off by default)                                     |
-| `TELEMETRY=on`                                                                       | Opt-in anonymous counts (see below; off by default)                  |
-| `KASAMA_CLOUD_URL`, `KASAMA_CLOUD_KEY`                                               | Cloud Connect: cloud computers and model credits                     |
-| `CHATGPT_SIGN_IN=off`                                                                | Hide ChatGPT plan sign-in (on by default when self-hosted)           |
-| `OUTBOUND_ALLOW_CIDRS=192.168.1.0/24`                                                  | Let bots and the server reach services on your LAN (Vaultwarden, Ollama); private networks are blocked otherwise|
-| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`                                 | Your own Google OAuth app for Google sign-in and Calendar, Gmail and Drive connections|
-| `MCP_OAUTH_CLIENTS`                                                                    | OAuth clients for other apps (JSON by app id) when they don't support dynamic registration|
-| `COMPOSIO_API_KEY`                                                                     | Composio connections (inbox features and more apps)                 |
-| `TREG_API_KEY`                                                                         | Paid data services for all workspaces (each workspace can also add its own key)|
-| `UNSPLASH_ACCESS_KEY`                                                                  | Wallpaper search in Appearance                                      |
-| `DEFAULT_MODEL_OPENROUTER`, `DEFAULT_MODEL_OPENAI`, `DEFAULT_REASONING_EFFORT`         | Defaults for new bots                                               |
-| `LAZY_TOOLS_THRESHOLD`                                                                 | Above this many tools, bots load tools on demand (default 30)       |
-| `HEALTH_REQUIRES_ENCRYPTION=on`                                                        | Store health data only with encryption at rest on (default: only on Kasama Cloud)|
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`                                           | Credentials for `CONTENT_KMS_KEY_ID` (encryption at rest with AWS KMS)|
-| `CORS_ORIGINS`, `RATE_LIMIT_PER_MINUTE`                                                | Extra web origins allowed to call the API; requests per minute per user|
-| `LANGFUSE_BASE_URL`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` or `OTEL_EXPORTER_OTLP_ENDPOINT` | Run tracing to Langfuse or any OpenTelemetry collector |
-| `UPDATE_CHECK_URL`                                                                     | Where the admin console checks for new releases (unset: no update checks)|
+| `AI_GATEWAY_URL=https://gateway.ai.cloudflare.com/v1/<account>/<gateway>`                             | Model calls go through Cloudflare AI Gateway (caching, logs, limits)                                                                           |
+| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ADMIN_EMAIL`, `EMAIL_AUTOCONFIRM=false`                  | Email confirmation and password reset through your SMTP server                                                                                 |
+| `FCM_SERVICE_ACCOUNT`                                                                                 | Push: Firebase service account JSON (one line) for the apps' project                                                                           |
+| `RESEND_API_KEY`                                                                                      | Invite emails (otherwise invites return a code to share)                                                                                       |
+| `COMPUTER_MEMORY_MB`, `RUN_CONCURRENCY`                                                               | Computer size and worker parallelism                                                                                                           |
+| `WARM_POOL_SIZE`                                                                                      | Started computers kept waiting, so a new one starts at once (0 = off)                                                                          |
+| `SENTRY_DSN` or `POSTHOG_API_KEY`                                                                     | Error reporting (off by default)                                                                                                               |
+| `TELEMETRY=on`                                                                                        | Opt-in anonymous counts (see below; off by default)                                                                                            |
+| `KASAMA_CLOUD_URL`, `KASAMA_CLOUD_KEY`                                                                | Cloud Connect: cloud computers and model credits                                                                                               |
+| `CHATGPT_SIGN_IN=off`                                                                                 | Hide ChatGPT plan sign-in (on by default when self-hosted)                                                                                     |
+| `OUTBOUND_ALLOW_CIDRS=192.168.1.0/24`                                                                 | Let bots and the server reach services on your LAN (Vaultwarden, Ollama); private networks are blocked otherwise                               |
+| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`                                                | Your own Google OAuth app for Google sign-in and Calendar, Gmail and Drive connections                                                         |
+| `MCP_OAUTH_CLIENTS`                                                                                   | OAuth clients for other apps (JSON by app id) when they don't support dynamic registration                                                     |
+| `COMPOSIO_API_KEY`                                                                                    | Composio connections (inbox features and more apps)                                                                                            |
+| `TREG_API_KEY`                                                                                        | Paid data services for all workspaces (each workspace can also add its own key)                                                                |
+| `UNSPLASH_ACCESS_KEY`                                                                                 | Wallpaper search in Appearance                                                                                                                 |
+| `DEFAULT_MODEL_OPENROUTER`, `DEFAULT_MODEL_OPENAI`, `DEFAULT_REASONING_EFFORT`                        | Defaults for new bots                                                                                                                          |
+| `LAZY_TOOLS_THRESHOLD`                                                                                | Above this many tools, bots load tools on demand (default 30)                                                                                  |
+| `HEALTH_REQUIRES_ENCRYPTION=on`                                                                       | Store health data only with encryption at rest on (default: only on Kasama Cloud)                                                              |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`                                                          | Credentials for `CONTENT_KMS_KEY_ID` (encryption at rest with AWS KMS)                                                                         |
+| `CORS_ORIGINS`, `RATE_LIMIT_PER_MINUTE`                                                               | Extra web origins allowed to call the API; requests per minute per user                                                                        |
+| `LANGFUSE_BASE_URL`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` or `OTEL_EXPORTER_OTLP_ENDPOINT`    | Run tracing to Langfuse or any OpenTelemetry collector                                                                                         |
+| `UPDATE_CHECK_URL`                                                                                    | Where the admin console checks for new releases (unset: no update checks)                                                                      |
 
 Object storage defaults to a Docker volume; `--profile s3` adds SeaweedFS, and any S3-compatible
 store (Cloudflare R2, AWS S3) works with the `OBJECT_STORE=s3` settings described in

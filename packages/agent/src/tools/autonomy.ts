@@ -1,4 +1,5 @@
 import type { Database } from "@kasama/db";
+import { contentKeys } from "@kasama/db";
 import {
   isValidCron,
   isValidTimezone,
@@ -8,15 +9,14 @@ import {
 } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
+import { actingUserOf, personForRun } from "../acting.ts";
 import { wrapUntrusted } from "../context.ts";
+import { sealRunPayload } from "../events.ts";
 import { MEDIA_PRICES, type MediaProvider } from "../media.ts";
 import type { NotificationService } from "../notifications.ts";
 import type { SearchProvider } from "../search.ts";
 import { startTicketWork } from "../tickets.ts";
 import { type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
-import { contentKeys } from "@kasama/db";
-import { sealRunPayload } from "../events.ts";
-import { actingUserOf, personForRun } from "../acting.ts";
 
 export interface AutonomyToolDeps {
   db: Database;
@@ -55,9 +55,14 @@ async function ancestry(db: Database, runId: string) {
 /** Final text of a finished run (from its message.completed event). */
 async function finalText(db: Database, runId: string) {
   // Read in the app, not in SQL: the payload may be sealed (D-136).
-  const [e] = await db.execute<{ payload: { content?: Array<{ type?: string; text?: string }> } }>(sql`
+  const [e] = await db.execute<{
+    payload: { content?: Array<{ type?: string; text?: string }> };
+  }>(sql`
     select payload from public.run_events where run_id = ${runId}::uuid and type = 'message.completed' order by seq desc limit 1`);
-  return (e?.payload.content ?? []).filter((p) => p.type === "text").map((p) => p.text ?? "").join("");
+  return (e?.payload.content ?? [])
+    .filter((p) => p.type === "text")
+    .map((p) => p.text ?? "")
+    .join("");
 }
 
 async function emit(db: Database, runId: string, type: string, payload: Record<string, unknown>) {
@@ -339,23 +344,52 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       schedule_cron: z.string().max(100).optional().describe("Repeat on this 5-field cron"),
       on_device_event: z
         .object({
-          event: z.enum(["wake", "arrive", "leave", "leave_now", "workout_ended", "notification", "focus_on", "focus_off", "file_added"]),
+          event: z.enum([
+            "wake",
+            "arrive",
+            "leave",
+            "leave_now",
+            "workout_ended",
+            "notification",
+            "focus_on",
+            "focus_off",
+            "file_added",
+          ]),
           place: z.string().max(60).optional().describe("arrive/leave: a named place like Home"),
           app: z.string().max(200).optional().describe("notification: the app to watch"),
-          minutes_before: z.number().int().min(0).max(120).optional().describe("leave_now: buffer on top of travel time"),
-          folder: z.string().max(200).optional().describe("file_added: a folder the person's desktop app watches, like Downloads"),
-          pattern: z.string().max(100).optional().describe("file_added: a file name pattern like *.pdf"),
+          minutes_before: z
+            .number()
+            .int()
+            .min(0)
+            .max(120)
+            .optional()
+            .describe("leave_now: buffer on top of travel time"),
+          folder: z
+            .string()
+            .max(200)
+            .optional()
+            .describe("file_added: a folder the person's desktop app watches, like Downloads"),
+          pattern: z
+            .string()
+            .max(100)
+            .optional()
+            .describe("file_added: a file name pattern like *.pdf"),
         })
         .optional()
-        .describe("Run each time this happens on the person's own phone (they must share that kind in Device connections)"),
+        .describe(
+          "Run each time this happens on the person's own phone (they must share that kind in Device connections)",
+        ),
       timezone: z.string().max(64).optional(),
       notify: z.boolean().optional(),
     }),
     async execute(args, ctx) {
       const target = await routineBot(args.bot, ctx);
-      const kinds = [args.in_minutes != null, !!args.run_at, !!args.schedule_cron, !!args.on_device_event].filter(
-        Boolean,
-      ).length;
+      const kinds = [
+        args.in_minutes != null,
+        !!args.run_at,
+        !!args.schedule_cron,
+        !!args.on_device_event,
+      ].filter(Boolean).length;
       if (kinds !== 1)
         throw new ToolError(
           "invalid_schedule",
@@ -364,16 +398,26 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       if (args.on_device_event) {
         // Device triggers (D-151) belong to the person this run acts for: their events, their routine.
         const d = args.on_device_event;
-        if ((d.event === "arrive" || d.event === "leave") && !d.place) throw new ToolError("place_required", "Arrive and leave need a named place.");
-        if (d.event === "notification" && !d.app) throw new ToolError("app_required", "Notification routines need the app to watch.");
-        if (d.event === "file_added" && !d.folder) throw new ToolError("folder_required", "File routines need the watched folder.");
+        if ((d.event === "arrive" || d.event === "leave") && !d.place)
+          throw new ToolError("place_required", "Arrive and leave need a named place.");
+        if (d.event === "notification" && !d.app)
+          throw new ToolError("app_required", "Notification routines need the app to watch.");
+        if (d.event === "file_added" && !d.folder)
+          throw new ToolError("folder_required", "File routines need the watched folder.");
         const person = await actingUserOf(db, ctx.runId);
-        if (!person) throw new ToolError("no_person", "Device routines need a person: this run isn't acting for anyone.");
+        if (!person)
+          throw new ToolError(
+            "no_person",
+            "Device routines need a person: this run isn't acting for anyone.",
+          );
         const [r] = await db.execute<{ id: string }>(sql`
           insert into public.routines (org_id, bot_id, created_by, name, instructions_md, timezone, trigger, notify)
           values (${ctx.orgId}::uuid, ${target}::uuid, ${person}::uuid, ${args.name}, ${args.instructions}, ${args.timezone ?? "UTC"},
                   ${JSON.stringify({ type: "device", ...d })}::jsonb, ${args.notify ?? true}) returning id`);
-        return { content: `Created routine ${r?.id}: it runs on ${d.event}${d.place ? ` (${d.place})` : ""}${d.app ? ` (${d.app})` : ""}.`, preview: `${args.name} · on ${d.event}` };
+        return {
+          content: `Created routine ${r?.id}: it runs on ${d.event}${d.place ? ` (${d.place})` : ""}${d.app ? ` (${d.app})` : ""}.`,
+          preview: `${args.name} · on ${d.event}`,
+        };
       }
       if (args.schedule_cron && !isValidCron(args.schedule_cron))
         throw new ToolError("invalid_cron", "Use a 5-field cron expression like '0 8 * * *'.");
@@ -655,9 +699,14 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       if (peer.id === ctx.botId)
         throw new ToolError("delegation_cycle", "Use subagent.spawn to hand work to yourself.");
       // Bot-to-bot switch (D-133): handing work to peer bots can be turned off; subagents still work.
-      const [org] = await deps.db.execute<{ allow: boolean }>(sql`select allow_bot_to_bot as allow from public.organizations where id = ${ctx.orgId}::uuid`);
+      const [org] = await deps.db.execute<{ allow: boolean }>(
+        sql`select allow_bot_to_bot as allow from public.organizations where id = ${ctx.orgId}::uuid`,
+      );
       if (org && !org.allow)
-        throw new ToolError("bot_to_bot_off", "Bots can't hand work to each other in this workspace (an admin turned it off). Use subagent.spawn instead.");
+        throw new ToolError(
+          "bot_to_bot_off",
+          "Bots can't hand work to each other in this workspace (an admin turned it off). Use subagent.spawn instead.",
+        );
       const r = await runChildTask(ctx, {
         botId: peer.id,
         task: args.task,

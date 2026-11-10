@@ -22,7 +22,10 @@ export const SkillProposal = z
 
 export const AcceptSkillProposalRequest = z
   .object({
-    name: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,62}$/).optional(),
+    name: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9_-]{0,62}$/)
+      .optional(),
     description: z.string().min(1).max(300).optional(),
     body_md: z.string().min(1).max(50_000).optional(),
   })
@@ -37,6 +40,14 @@ export const SkillStats = z
     success_rate: z.number().nullable(),
     last_failure_at: ts.nullable(),
     last_failure_run_id: Uuid.nullable(),
-    revisions: z.array(z.object({ id: Uuid, description: z.string(), body_md: z.string(), by_bot: z.boolean(), created_at: ts })),
+    revisions: z.array(
+      z.object({
+        id: Uuid,
+        description: z.string(),
+        body_md: z.string(),
+        by_bot: z.boolean(),
+        created_at: ts,
+      }),
+    ),
   })
   .openapi("SkillStats");

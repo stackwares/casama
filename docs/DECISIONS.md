@@ -434,7 +434,6 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Composio and Pipedream** are guided: a key step with a link to get one free, then a searchable app directory where picking an app opens the provider's hosted sign-in. Connected accounts show with their status. Written from their public API docs and tested against fakes only.
 - **Logos** come from Simple Icons (CC0), shown on brand-colored tiles. Apps without one get their initial.
 
-
 ## D-090 Usage answers, truthful computer state, resizable computer panel
 
 - Bots have a read-only `usage.report` tool: the workspace's spend and usage for a day, week, month or year, by bot, model, day and metered kind. "Ask a bot about this" on the Usage screen now picks a bot, starts a new chat and sends the summary directly, instead of passing it through Quick ask. Quick ask is also keyed by its address, so it never shows stale text.
@@ -674,7 +673,6 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Approvals:** `decide_approval` over MCP is refused unless the workspace turns on `mcp_decide_approvals` (Workspace settings → Connect AI apps); with a full sign-in it behaves like the app. A high-risk step still waits for approval either way.
 - **App and docs:** Workspace settings → Connect AI apps shows the `/mcp` address, API keys (create, shown once, revoke; admins) and the approvals switch; `docs/MCP.md` has copy-paste configs (OAuth by URL, Cursor and Claude Code with a key, local stdio). `PUBLIC_API_URL` sets the advertised address (else the request's origin).
 - **Tests:** a real MCP client over HTTP (`hosted-mcp.test.ts`: 401 challenge and metadata, registration, PKCE (a wrong verifier fails and spends the code), consent, refresh, one-workspace scope, asking a bot, a high-risk step waiting, approvals refused until allowed, API key revoked), widget tests (`mcp_test.dart`).
-
 
 ## D-118 Group chats
 

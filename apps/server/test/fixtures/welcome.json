@@ -55,10 +55,7 @@
             "name": "setup__apply",
             "args": {
               "instructions": "You are Kasama, a coding assistant for Ana. Be brief and review code carefully.",
-              "memories": [
-                "Prefers TypeScript",
-                "Reviews PRs in the morning"
-              ]
+              "memories": ["Prefers TypeScript", "Reviews PRs in the morning"]
             }
           }
         },

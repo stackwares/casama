@@ -3,10 +3,10 @@
  * Exports run under the user's session, so they contain exactly what RLS lets the user see.
  */
 import type { ComputerService } from "@kasama/agent";
+import { memoryBackendConfig, storeFromConfig } from "@kasama/agent";
 import { type Database, type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
-import { memoryBackendConfig, storeFromConfig } from "@kasama/agent";
 
 /** Per-workspace tables in the export, in a readable order. */
 const ORG_TABLES = [
@@ -65,9 +65,15 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
         null,
       push_devices: await q(sql`select * from public.devices where user_id = ${claims.sub}::uuid`),
       // Device connections (D-149): the person's own shared device data.
-      device_sources: await q(sql`select id, name, platform, kinds, last_seen_at, created_at from public.device_sources where user_id = ${claims.sub}::uuid`),
-      device_readings: await q(sql`select source_id, kind, period_start, period_end, external_id, summary, collected_at from public.device_readings where user_id = ${claims.sub}::uuid`),
-      device_grants: await q(sql`select bot_id, kind, created_at from public.device_grants where user_id = ${claims.sub}::uuid`),
+      device_sources: await q(
+        sql`select id, name, platform, kinds, last_seen_at, created_at from public.device_sources where user_id = ${claims.sub}::uuid`,
+      ),
+      device_readings: await q(
+        sql`select source_id, kind, period_start, period_end, external_id, summary, collected_at from public.device_readings where user_id = ${claims.sub}::uuid`,
+      ),
+      device_grants: await q(
+        sql`select bot_id, kind, created_at from public.device_grants where user_id = ${claims.sub}::uuid`,
+      ),
       notifications: await q(
         sql`select * from public.notifications where user_id = ${claims.sub}::uuid`,
       ),
@@ -92,7 +98,9 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
       const backend = await memoryBackendConfig(db, org.id as string);
       if (backend) {
         const store = storeFromConfig(backend, org.id as string);
-        const bots = await q(sql`select id from public.bots where org_id = ${org.id as string}::uuid`);
+        const bots = await q(
+          sql`select id from public.bots where org_id = ${org.id as string}::uuid`,
+        );
         const all = [];
         for (const b of bots) all.push(...(await store.list(b.id as string).catch(() => [])));
         put(`${dir}/memories.json`, all);
@@ -150,8 +158,12 @@ export async function purgeDueAccounts(db: Database, computers?: ComputerService
       // So is memory kept in Honcho or Supermemory (D-137).
       const backend = await memoryBackendConfig(db, org.id);
       if (backend) {
-        const bots = await db.execute<{ id: string }>(sql`select id from public.bots where org_id = ${org.id}::uuid`);
-        await storeFromConfig(backend, org.id).deleteAll(bots.map((b) => b.id)).catch(() => {});
+        const bots = await db.execute<{ id: string }>(
+          sql`select id from public.bots where org_id = ${org.id}::uuid`,
+        );
+        await storeFromConfig(backend, org.id)
+          .deleteAll(bots.map((b) => b.id))
+          .catch(() => {});
       }
       await db.execute(sql`delete from public.organizations where id = ${org.id}::uuid`);
     }

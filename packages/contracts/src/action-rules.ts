@@ -22,11 +22,9 @@ export const ActionRuleOut = z
     match_value: z.string(),
     target: ActionRuleTarget.nullable(),
     rule: z.enum(["allow", "allow_within_limits", "ask", "hand_off"]),
-    preview: z
-      .string()
-      .openapi({
-        description: "In plain language, e.g. Sends messages to anyone at acme.com without asking",
-      }),
+    preview: z.string().openapi({
+      description: "In plain language, e.g. Sends messages to anyone at acme.com without asking",
+    }),
     created_at: z.iso.datetime({ offset: true }),
   })
   .openapi("ActionRule");

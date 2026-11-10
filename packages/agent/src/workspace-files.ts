@@ -5,13 +5,13 @@
 import type { Database } from "@kasama/db";
 import {
   type FolderIndex,
+  fileSlug,
   INDEX_FILE,
   nextRunAt,
   parseIndex,
   parseWorkspaceFiles,
   renderRoutineFile,
   renderSkillFile,
-  fileSlug,
   WORKSPACE_FOLDER,
 } from "@kasama/domain";
 import { sql } from "drizzle-orm";
@@ -38,7 +38,9 @@ export async function exportWorkspaceFiles(db: Database, orgId: string) {
     index.bots[f] = { id: b.id, name: b.name };
     folderOf.set(b.id, f);
   }
-  const files = new Map<string, Uint8Array>([[INDEX_FILE, enc(`${JSON.stringify(index, null, 2)}\n`)]]);
+  const files = new Map<string, Uint8Array>([
+    [INDEX_FILE, enc(`${JSON.stringify(index, null, 2)}\n`)],
+  ]);
   const routines = await db.execute<{
     id: string;
     bot_id: string;
@@ -57,7 +59,8 @@ export async function exportWorkspaceFiles(db: Database, orgId: string) {
     if (!folder) continue;
     let p = `${folder}/routines/${fileSlug(r.name)}.md`;
     for (let i = 2; files.has(p); i++) p = `${folder}/routines/${fileSlug(r.name)}-${i}.md`;
-    const trigger = r.trigger?.type === "webhook" || r.trigger?.type === "github" ? r.trigger.type : "schedule";
+    const trigger =
+      r.trigger?.type === "webhook" || r.trigger?.type === "github" ? r.trigger.type : "schedule";
     files.set(
       p,
       enc(
@@ -74,7 +77,14 @@ export async function exportWorkspaceFiles(db: Database, orgId: string) {
       ),
     );
   }
-  const skills = await db.execute<{ id: string; bot_id: string | null; name: string; description: string; body_md: string; enabled: boolean }>(sql`
+  const skills = await db.execute<{
+    id: string;
+    bot_id: string | null;
+    name: string;
+    description: string;
+    body_md: string;
+    enabled: boolean;
+  }>(sql`
     select id, bot_id, name, description, body_md, enabled from public.skills
     where org_id = ${orgId}::uuid and plugin_id is null order by name`);
   const skillFiles = await db.execute<{ skill_id: string; path: string; content: Buffer }>(sql`
@@ -84,8 +94,20 @@ export async function exportWorkspaceFiles(db: Database, orgId: string) {
     const folder = s.bot_id ? folderOf.get(s.bot_id) : WORKSPACE_FOLDER;
     if (!folder) continue;
     const dir = `${folder}/skills/${s.name}/`;
-    files.set(`${dir}SKILL.md`, enc(renderSkillFile({ id: s.id, name: s.name, description: s.description, enabled: s.enabled, body: s.body_md })));
-    for (const f of skillFiles) if (f.skill_id === s.id) files.set(dir + f.path, new Uint8Array(f.content));
+    files.set(
+      `${dir}SKILL.md`,
+      enc(
+        renderSkillFile({
+          id: s.id,
+          name: s.name,
+          description: s.description,
+          enabled: s.enabled,
+          body: s.body_md,
+        }),
+      ),
+    );
+    for (const f of skillFiles)
+      if (f.skill_id === s.id) files.set(dir + f.path, new Uint8Array(f.content));
   }
   return files;
 }
@@ -107,12 +129,19 @@ export async function applyWorkspaceFiles(
   db: Database,
   orgId: string,
   files: Map<string, Uint8Array>,
-  opts: { dryRun?: boolean; actorUserId?: string | null; deletedPaths?: string[]; previous?: Map<string, Uint8Array> } = {},
+  opts: {
+    dryRun?: boolean;
+    actorUserId?: string | null;
+    deletedPaths?: string[];
+    previous?: Map<string, Uint8Array>;
+  } = {},
 ): Promise<ApplyResult> {
   const result: ApplyResult = { created: [], updated: [], deleted: [], unchanged: 0, errors: [] };
   const parsed = parseWorkspaceFiles(files);
   result.errors.push(...parsed.errors);
-  const index = parseIndex(files.get(INDEX_FILE) ? new TextDecoder().decode(files.get(INDEX_FILE)) : undefined);
+  const index = parseIndex(
+    files.get(INDEX_FILE) ? new TextDecoder().decode(files.get(INDEX_FILE)) : undefined,
+  );
   const bots = await db.execute<{ id: string; name: string }>(
     sql`select id, name from public.bots where org_id = ${orgId}::uuid and archived_at is null`,
   );
@@ -120,11 +149,15 @@ export async function applyWorkspaceFiles(
     if (folder === WORKSPACE_FOLDER) return null;
     const byIndex = index?.bots[folder];
     if (byIndex && bots.some((b) => b.id === byIndex.id)) return byIndex.id;
-    return bots.find((b) => fileSlug(b.name) === folder || (byIndex && b.name === byIndex.name))?.id;
+    return bots.find((b) => fileSlug(b.name) === folder || (byIndex && b.name === byIndex.name))
+      ?.id;
   };
-  const write = async (fn: (tx: Database) => Promise<void>) => (opts.dryRun ? undefined : db.transaction(async (tx) => fn(tx as never)));
+  const write = async (fn: (tx: Database) => Promise<void>) =>
+    opts.dryRun ? undefined : db.transaction(async (tx) => fn(tx as never));
   const [tz] = opts.actorUserId
-    ? await db.execute<{ timezone: string | null }>(sql`select timezone from public.profiles where user_id = ${opts.actorUserId}::uuid`)
+    ? await db.execute<{ timezone: string | null }>(
+        sql`select timezone from public.profiles where user_id = ${opts.actorUserId}::uuid`,
+      )
     : [];
   void tz;
 
@@ -190,7 +223,13 @@ export async function applyWorkspaceFiles(
       result.errors.push(`${path}: no bot matches the folder "${folder}"`);
       continue;
     }
-    const [existing] = await db.execute<{ id: string; description: string; body_md: string; enabled: boolean; plugin_id: string | null }>(sql`
+    const [existing] = await db.execute<{
+      id: string;
+      description: string;
+      body_md: string;
+      enabled: boolean;
+      plugin_id: string | null;
+    }>(sql`
       select id, description, body_md, enabled, plugin_id from public.skills
       where org_id = ${orgId}::uuid and bot_id is not distinct from ${botId}::uuid and name = ${s.name} limit 1`);
     if (existing?.plugin_id) {
@@ -198,7 +237,9 @@ export async function applyWorkspaceFiles(
       continue;
     }
     const oldFiles = existing
-      ? await db.execute<{ path: string; content: Buffer }>(sql`select path, content from public.skill_files where skill_id = ${existing.id}::uuid`)
+      ? await db.execute<{ path: string; content: Buffer }>(
+          sql`select path, content from public.skill_files where skill_id = ${existing.id}::uuid`,
+        )
       : [];
     const filesSame =
       oldFiles.length === extra.length &&
@@ -206,7 +247,13 @@ export async function applyWorkspaceFiles(
         const o = oldFiles.find((x) => x.path === f.path);
         return o && Buffer.compare(Buffer.from(o.content), Buffer.from(f.content)) === 0;
       });
-    if (existing && existing.description === s.description && existing.body_md.trim() === s.body.trim() && existing.enabled === s.enabled && filesSame) {
+    if (
+      existing &&
+      existing.description === s.description &&
+      existing.body_md.trim() === s.body.trim() &&
+      existing.enabled === s.enabled &&
+      filesSame
+    ) {
       result.unchanged++;
       continue;
     }
@@ -214,7 +261,9 @@ export async function applyWorkspaceFiles(
     await write(async (tx) => {
       let id = existing?.id;
       if (id)
-        await tx.execute(sql`update public.skills set description = ${s.description}, body_md = ${s.body}, enabled = ${s.enabled}, updated_at = now(), updated_by_bot = null where id = ${id}::uuid`);
+        await tx.execute(
+          sql`update public.skills set description = ${s.description}, body_md = ${s.body}, enabled = ${s.enabled}, updated_at = now(), updated_by_bot = null where id = ${id}::uuid`,
+        );
       else {
         const [row] = await tx.execute<{ id: string }>(sql`
           insert into public.skills (org_id, bot_id, name, description, body_md, enabled, source)
@@ -233,16 +282,28 @@ export async function applyWorkspaceFiles(
 
   // Deletions (git sync): items whose files were removed from the repo.
   if (opts.deletedPaths?.length && opts.previous) {
-    const prev = parseWorkspaceFiles(new Map([...opts.previous].filter(([p]) => opts.deletedPaths?.includes(p))));
+    const prev = parseWorkspaceFiles(
+      new Map([...opts.previous].filter(([p]) => opts.deletedPaths?.includes(p))),
+    );
     for (const r of prev.routines)
       if (r.routine.id) {
         result.deleted.push(r.path);
-        await write(async (tx) => void (await tx.execute(sql`delete from public.routines where id = ${r.routine.id}::uuid and org_id = ${orgId}::uuid and kind = 'task'`)));
+        await write(
+          async (tx) =>
+            void (await tx.execute(
+              sql`delete from public.routines where id = ${r.routine.id}::uuid and org_id = ${orgId}::uuid and kind = 'task'`,
+            )),
+        );
       }
     for (const s of prev.skills)
       if (s.skill.id) {
         result.deleted.push(s.path);
-        await write(async (tx) => void (await tx.execute(sql`delete from public.skills where id = ${s.skill.id}::uuid and org_id = ${orgId}::uuid and plugin_id is null`)));
+        await write(
+          async (tx) =>
+            void (await tx.execute(
+              sql`delete from public.skills where id = ${s.skill.id}::uuid and org_id = ${orgId}::uuid and plugin_id is null`,
+            )),
+        );
       }
   }
   return result;

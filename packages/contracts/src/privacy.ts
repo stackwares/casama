@@ -26,10 +26,12 @@ export const OrgSettings = z
       description: "Allow approving or denying actions from AI apps connected over MCP (D-117)",
     }),
     allow_bot_to_bot: z.boolean().openapi({
-      description: "Bots may @mention, message and delegate to each other (D-133); subagents always work",
+      description:
+        "Bots may @mention, message and delegate to each other (D-133); subagents always work",
     }),
     a2a_enabled: z.boolean().openapi({
-      description: "Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys (D-140)",
+      description:
+        "Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys (D-140)",
     }),
     llm_tracing: z.boolean().openapi({
       description:

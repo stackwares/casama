@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { DBOS, DBOSClient } from "@dbos-inc/dbos-sdk";
 import {
   AiSdkGateway,
+  ApnsVoipSender,
   BraveSearchProvider,
   builtinTools,
   ComputerService,
@@ -14,8 +15,8 @@ import {
   type FixtureTurn,
   hashEmbedder,
   LangfuseSink,
-  MemoryService,
   type ModelGateway,
+  memoryStoreFor,
   NotificationService,
   openAiEmbedder,
   type PushSender,
@@ -24,36 +25,34 @@ import {
   recordingGateway,
   registerAutonomyTools,
   registerBotTools,
+  registerCallTools,
+  registerChannelTools,
   registerCodingTools,
   registerComputerTools,
-  registerDesktopTools,
-  registerPageTools,
-  registerTeachTools,
-  registerKnowledgeTools,
-  registerReplayTools,
-  registerLoginTools,
-  registerChannelTools,
-  registerPhoneCallTools,
   registerDataTools,
-  registerDeviceTools,
   registerDesktopContextTools,
-  registerCallTools,
-  registerPaymentTools,
+  registerDesktopTools,
+  registerDeviceTools,
+  registerKnowledgeTools,
   registerLinkTools,
-  StripeIssuingProvider,
-  TwilioClient,
-  TregProvider,
-  memoryStoreFor,
-  ApnsVoipSender,
-  type VoipSender,
+  registerLoginTools,
+  registerPageTools,
+  registerPaymentTools,
+  registerPhoneCallTools,
   registerProjectTools,
+  registerReplayTools,
   registerSecretRequestTool,
   registerSetupTools,
   registerSkillTools,
   registerSuggestionTools,
+  registerTeachTools,
   registerToolsLoad,
   registerWatcherTools,
+  StripeIssuingProvider,
   TavilySearchProvider,
+  TregProvider,
+  TwilioClient,
+  type VoipSender,
 } from "@kasama/agent";
 import { contentKeys, createDb, type Database } from "@kasama/db";
 import type { Logger } from "@kasama/observability";
@@ -219,7 +218,8 @@ export async function startWorker(opts: WorkerOptions) {
   if (computers) computers.requireVerifiedEmail = opts.requireVerifiedEmail ?? false;
   const tools = builtinTools({
     db,
-    memory: async (orgId) => memoryStoreFor(db, orgId, await embedderFor(orgId), opts.providerBases ? fetch : fetchOut),
+    memory: async (orgId) =>
+      memoryStoreFor(db, orgId, await embedderFor(orgId), opts.providerBases ? fetch : fetchOut),
   });
   if (computers) {
     registerComputerTools(tools);
@@ -300,7 +300,10 @@ export async function startWorker(opts: WorkerOptions) {
     fetch: fetchOut,
     startRun: async (runId) => {
       if (!client) throw new Error("worker not started");
-      await client.enqueue({ queueName: QUEUES.subruns, workflowName: "agentRun", workflowID: runId }, runId);
+      await client.enqueue(
+        { queueName: QUEUES.subruns, workflowName: "agentRun", workflowID: runId },
+        runId,
+      );
     },
   });
   // Check-in scans leave suggestions (D-114).
@@ -317,12 +320,22 @@ export async function startWorker(opts: WorkerOptions) {
   const payments = {
     db,
     providerFor: async (orgId: string) => {
-      const [p] = await db.execute<{ key: string | null; cardholder_id: string; monthly_cap_usd: string; bot_monthly_cap_usd: string }>(sql`
+      const [p] = await db.execute<{
+        key: string | null;
+        cardholder_id: string;
+        monthly_cap_usd: string;
+        bot_monthly_cap_usd: string;
+      }>(sql`
         select v.decrypted_secret as key, p.cardholder_id, p.monthly_cap_usd, p.bot_monthly_cap_usd
         from public.org_payments p left join vault.decrypted_secrets v on v.id = p.vault_secret_id where p.org_id = ${orgId}::uuid`);
       if (!p?.key) return null;
       return {
-        provider: new StripeIssuingProvider({ secretKey: p.key, cardholderId: p.cardholder_id, apiUrl: opts.providerBases?.stripe, fetch: opts.providerBases?.stripe ? fetch : fetchOut }),
+        provider: new StripeIssuingProvider({
+          secretKey: p.key,
+          cardholderId: p.cardholder_id,
+          apiUrl: opts.providerBases?.stripe,
+          fetch: opts.providerBases?.stripe ? fetch : fetchOut,
+        }),
         monthlyCapUsd: Number(p.monthly_cap_usd),
         botMonthlyCapUsd: Number(p.bot_monthly_cap_usd),
       };
@@ -335,7 +348,13 @@ export async function startWorker(opts: WorkerOptions) {
     notifications,
     publicApiUrl: opts.publicApiUrl,
     twilioFor: async (orgId) => {
-      const [t] = await db.execute<{ account_sid: string; from_number: string; token: string | null; allow_personal_numbers: boolean; daily_cap: number }>(sql`
+      const [t] = await db.execute<{
+        account_sid: string;
+        from_number: string;
+        token: string | null;
+        allow_personal_numbers: boolean;
+        daily_cap: number;
+      }>(sql`
         select t.account_sid, t.from_number, v.decrypted_secret as token, t.allow_personal_numbers, t.daily_cap
         from public.org_telephony t left join vault.decrypted_secrets v on v.id = t.vault_secret_id where t.org_id = ${orgId}::uuid`);
       if (!t?.token) return null;
@@ -365,9 +384,24 @@ export async function startWorker(opts: WorkerOptions) {
     dataFor: async (orgId) => {
       const tregFetch = opts.providerBases?.treg ? fetch : fetchOut;
       const own = await providerKey(orgId, ["treg"]);
-      if (own?.key) return { provider: new TregProvider({ key: own.key, base: opts.providerBases?.treg, fetch: tregFetch }), resale: false };
+      if (own?.key)
+        return {
+          provider: new TregProvider({
+            key: own.key,
+            base: opts.providerBases?.treg,
+            fetch: tregFetch,
+          }),
+          resale: false,
+        };
       if (opts.dataResale)
-        return { provider: new TregProvider({ key: opts.dataResale.tregKey, base: opts.dataResale.tregUrl ?? opts.providerBases?.treg, fetch: tregFetch }), resale: true };
+        return {
+          provider: new TregProvider({
+            key: opts.dataResale.tregKey,
+            base: opts.dataResale.tregUrl ?? opts.providerBases?.treg,
+            fetch: tregFetch,
+          }),
+          resale: true,
+        };
       return null;
     },
   });
@@ -427,7 +461,10 @@ export async function startWorker(opts: WorkerOptions) {
       lazyToolsThreshold: opts.lazyToolsThreshold,
       startRun: async (runId) => {
         if (!client) throw new Error("worker not started");
-        await client.enqueue({ queueName: QUEUES.runs, workflowName: "agentRun", workflowID: runId }, runId);
+        await client.enqueue(
+          { queueName: QUEUES.runs, workflowName: "agentRun", workflowID: runId },
+          runId,
+        );
       },
       langfuse: opts.langfuse ? new LangfuseSink(opts.langfuse) : undefined,
     },
@@ -446,8 +483,14 @@ export async function startWorker(opts: WorkerOptions) {
   if (opts.apiDatabaseRole) {
     const role = opts.apiDatabaseRole.replace(/"/g, "");
     await db
-      .execute(sql.raw(`grant usage on schema dbos to "${role}"; grant all on all tables in schema dbos to "${role}"; grant all on all sequences in schema dbos to "${role}"`))
-      .catch((e: Error) => opts.logger?.warn?.("couldn't grant the API role access to dbos", { error: e.message }));
+      .execute(
+        sql.raw(
+          `grant usage on schema dbos to "${role}"; grant all on all tables in schema dbos to "${role}"; grant all on all sequences in schema dbos to "${role}"`,
+        ),
+      )
+      .catch((e: Error) =>
+        opts.logger?.warn?.("couldn't grant the API role access to dbos", { error: e.message }),
+      );
   }
   // Dispatch polling: runs and voice are latency-sensitive (a run should start, and a forwarded
   // voice tool call answer, well within a second); background queues poll less often.

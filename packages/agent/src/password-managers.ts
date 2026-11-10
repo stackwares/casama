@@ -42,10 +42,16 @@ export interface PasswordManagerClient {
 const LOGIN = /\{\{login:([^:{}]{1,100}):(username|password|otp)\}\}/g;
 export const hasLoginPlaceholders = (v: unknown) => JSON.stringify(v ?? null).includes("{{login:");
 
-async function getJson<T>(f: typeof fetch, url: string, headers: Record<string, string>): Promise<T> {
+async function getJson<T>(
+  f: typeof fetch,
+  url: string,
+  headers: Record<string, string>,
+): Promise<T> {
   const r = await f(url, { headers: { accept: "application/json", ...headers } });
-  if (r.status === 401 || r.status === 403) throw new ToolError("password_manager_auth", "The password manager rejected the token");
-  if (!r.ok) throw new ToolError("password_manager_error", `The password manager answered ${r.status}`);
+  if (r.status === 401 || r.status === 403)
+    throw new ToolError("password_manager_auth", "The password manager rejected the token");
+  if (!r.ok)
+    throw new ToolError("password_manager_error", `The password manager answered ${r.status}`);
   return (await r.json()) as T;
 }
 
@@ -53,23 +59,53 @@ async function getJson<T>(f: typeof fetch, url: string, headers: Record<string, 
 export function onePassword(base: string, token: string, f: typeof fetch): PasswordManagerClient {
   const url = base.replace(/\/$/, "");
   const h = { authorization: `Bearer ${token}` };
-  type Item = { id: string; title: string; category: string; vault: { id: string }; urls?: Array<{ href: string }>; fields?: Array<{ purpose?: string; type?: string; value?: string; totp?: string; label?: string }> };
+  type Item = {
+    id: string;
+    title: string;
+    category: string;
+    vault: { id: string };
+    urls?: Array<{ href: string }>;
+    fields?: Array<{
+      purpose?: string;
+      type?: string;
+      value?: string;
+      totp?: string;
+      label?: string;
+    }>;
+  };
   return {
     async vaults() {
-      return (await getJson<Array<{ id: string; name: string }>>(f, `${url}/v1/vaults`, h)).map((v) => ({ id: v.id, name: v.name }));
+      return (await getJson<Array<{ id: string; name: string }>>(f, `${url}/v1/vaults`, h)).map(
+        (v) => ({ id: v.id, name: v.name }),
+      );
     },
     async items(vaultIds) {
       const out: LoginItem[] = [];
       for (const v of vaultIds) {
-        for (const it of await getJson<Item[]>(f, `${url}/v1/vaults/${encodeURIComponent(v)}/items`, h)) {
+        for (const it of await getJson<Item[]>(
+          f,
+          `${url}/v1/vaults/${encodeURIComponent(v)}/items`,
+          h,
+        )) {
           if (it.category !== "LOGIN") continue;
-          out.push({ id: it.id, vault: v, title: it.title, username: null, urls: (it.urls ?? []).map((u) => u.href), hasOtp: false });
+          out.push({
+            id: it.id,
+            vault: v,
+            title: it.title,
+            username: null,
+            urls: (it.urls ?? []).map((u) => u.href),
+            hasOtp: false,
+          });
         }
       }
       return out;
     },
     async secret(item) {
-      const it = await getJson<Item>(f, `${url}/v1/vaults/${encodeURIComponent(item.vault)}/items/${encodeURIComponent(item.id)}`, h);
+      const it = await getJson<Item>(
+        f,
+        `${url}/v1/vaults/${encodeURIComponent(item.vault)}/items/${encodeURIComponent(item.id)}`,
+        h,
+      );
       const fields = it.fields ?? [];
       const otp = fields.find((x) => x.type === "OTP");
       return {
@@ -86,24 +122,52 @@ export function bitwarden(base: string, token: string, f: typeof fetch): Passwor
   const url = base.replace(/\/$/, "");
   const h: Record<string, string> = token ? { authorization: `Bearer ${token}` } : {};
   type Res<T> = { success: boolean; data: { data?: T[] } & Record<string, unknown> };
-  type Item = { id: string; name: string; type: number; collectionIds?: string[]; login?: { username?: string; password?: string; totp?: string; uris?: Array<{ uri: string }> } };
+  type Item = {
+    id: string;
+    name: string;
+    type: number;
+    collectionIds?: string[];
+    login?: { username?: string; password?: string; totp?: string; uris?: Array<{ uri: string }> };
+  };
   return {
     async vaults() {
-      return ((await getJson<Res<{ id: string; name: string }>>(f, `${url}/list/object/collections`, h)).data.data ?? []).map((c) => ({ id: c.id, name: c.name }));
+      return (
+        (await getJson<Res<{ id: string; name: string }>>(f, `${url}/list/object/collections`, h))
+          .data.data ?? []
+      ).map((c) => ({ id: c.id, name: c.name }));
     },
     async items(vaultIds) {
       const out: LoginItem[] = [];
       for (const c of vaultIds) {
-        for (const it of (await getJson<Res<Item>>(f, `${url}/list/object/items?collectionid=${encodeURIComponent(c)}`, h)).data.data ?? []) {
+        for (const it of (
+          await getJson<Res<Item>>(
+            f,
+            `${url}/list/object/items?collectionid=${encodeURIComponent(c)}`,
+            h,
+          )
+        ).data.data ?? []) {
           if (it.type !== 1 || !it.login) continue;
-          out.push({ id: it.id, vault: c, title: it.name, username: it.login.username ?? null, urls: (it.login.uris ?? []).map((u) => u.uri), hasOtp: !!it.login.totp });
+          out.push({
+            id: it.id,
+            vault: c,
+            title: it.name,
+            username: it.login.username ?? null,
+            urls: (it.login.uris ?? []).map((u) => u.uri),
+            hasOtp: !!it.login.totp,
+          });
         }
       }
       return out;
     },
     async secret(item) {
-      const it = (await getJson<{ data: Item }>(f, `${url}/object/item/${encodeURIComponent(item.id)}`, h)).data;
-      return { username: it.login?.username ?? null, password: it.login?.password ?? null, totp: it.login?.totp ?? null };
+      const it = (
+        await getJson<{ data: Item }>(f, `${url}/object/item/${encodeURIComponent(item.id)}`, h)
+      ).data;
+      return {
+        username: it.login?.username ?? null,
+        password: it.login?.password ?? null,
+        totp: it.login?.totp ?? null,
+      };
     },
   };
 }
@@ -127,9 +191,19 @@ export function itemCoversHost(item: LoginItem, host: string | null) {
 }
 
 /** The password managers a run may use: the workspace's, and those of the person it acts for. */
-export async function managersFor(db: Database, run: { orgId: string; botId: string; runId: string }) {
+export async function managersFor(
+  db: Database,
+  run: { orgId: string; botId: string; runId: string },
+) {
   const user = await actingUserOf(db, run.runId);
-  return db.execute<{ id: string; provider: string; name: string; url: string; token: string | null; allowed_vaults: string[] }>(sql`
+  return db.execute<{
+    id: string;
+    provider: string;
+    name: string;
+    url: string;
+    token: string | null;
+    allowed_vaults: string[];
+  }>(sql`
     select m.id, m.provider, m.name, m.url, v.decrypted_secret as token, m.allowed_vaults from public.password_managers m
     left join vault.decrypted_secrets v on v.id = m.vault_secret_id
     where m.org_id = ${run.orgId}::uuid and cardinality(m.allowed_vaults) > 0
@@ -139,14 +213,21 @@ export async function managersFor(db: Database, run: { orgId: string; botId: str
 }
 
 /** Every login the run may use, across its password managers. */
-export async function loginsFor(db: Database, run: { orgId: string; botId: string; runId: string }, f: typeof fetch) {
+export async function loginsFor(
+  db: Database,
+  run: { orgId: string; botId: string; runId: string },
+  f: typeof fetch,
+) {
   const out: Array<{ manager: string; client: PasswordManagerClient; item: LoginItem }> = [];
   for (const m of await managersFor(db, run)) {
     const client = clientFor(m.provider, m.url, m.token ?? "", f);
     try {
-      for (const item of await client.items(m.allowed_vaults)) out.push({ manager: m.name, client, item });
+      for (const item of await client.items(m.allowed_vaults))
+        out.push({ manager: m.name, client, item });
     } catch (err) {
-      await db.execute(sql`update public.password_managers set status = 'error', last_error = ${(err as Error).message.slice(0, 500)} where id = ${m.id}::uuid`);
+      await db.execute(
+        sql`update public.password_managers set status = 'error', last_error = ${(err as Error).message.slice(0, 500)} where id = ${m.id}::uuid`,
+      );
     }
   }
   return out;
@@ -166,10 +247,17 @@ export async function resolveLoginPlaceholders<T>(
   const filled = new Map<string, LoginSecret>();
   for (const name of new Set(wanted)) {
     const matches = logins.filter((l) => l.item.title.toLowerCase() === name.toLowerCase());
-    if (!matches.length) throw new ToolError("login_not_found", `There's no login named "${name}" in the password managers this bot may use.`);
+    if (!matches.length)
+      throw new ToolError(
+        "login_not_found",
+        `There's no login named "${name}" in the password managers this bot may use.`,
+      );
     const usable = matches.find((l) => itemCoversHost(l.item, host));
     if (!usable)
-      throw new ToolError("login_host_not_allowed", `The login "${name}" is only for ${matches[0]?.item.urls.join(", ") || "its own sites"}, not ${host ?? "this destination"}.`);
+      throw new ToolError(
+        "login_host_not_allowed",
+        `The login "${name}" is only for ${matches[0]?.item.urls.join(", ") || "its own sites"}, not ${host ?? "this destination"}.`,
+      );
     filled.set(name.toLowerCase(), await usable.client.secret(usable.item));
   }
   const replace = (s: string) =>
@@ -177,7 +265,8 @@ export async function resolveLoginPlaceholders<T>(
       const sec = filled.get(name.toLowerCase()) as LoginSecret;
       let v: string | null;
       if (field === "otp") {
-        if (!sec.totp) throw new ToolError("login_no_otp", `The login "${name}" has no one-time code.`);
+        if (!sec.totp)
+          throw new ToolError("login_no_otp", `The login "${name}" has no one-time code.`);
         v = /^\d{6,8}$/.test(sec.totp) ? sec.totp : totpCode(parseTotp(sec.totp), opts.nowMs);
       } else v = field === "username" ? sec.username : sec.password;
       if (!v) throw new ToolError("login_field_missing", `The login "${name}" has no ${field}.`);
@@ -185,26 +274,44 @@ export async function resolveLoginPlaceholders<T>(
       return v;
     });
   const walk = (v: unknown): unknown =>
-    typeof v === "string" ? replace(v) : Array.isArray(v) ? v.map(walk) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)])) : v;
+    typeof v === "string"
+      ? replace(v)
+      : Array.isArray(v)
+        ? v.map(walk)
+        : v && typeof v === "object"
+          ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)]))
+          : v;
   return walk(value) as T;
 }
 
-export function registerLoginTools(registry: ToolRegistry, deps: { db: Database; fetch: typeof fetch }) {
+export function registerLoginTools(
+  registry: ToolRegistry,
+  deps: { db: Database; fetch: typeof fetch },
+) {
   registry.register({
     name: "logins.list",
     readOnly: true,
     description:
-      'Logins from the password managers you may use, for signing in to sites. You never see passwords: put {{login:Name:username}}, {{login:Name:password}} or {{login:Name:otp}} (the current one-time code) in browser.fill, and they are filled only on that login\'s own sites.',
+      "Logins from the password managers you may use, for signing in to sites. You never see passwords: put {{login:Name:username}}, {{login:Name:password}} or {{login:Name:otp}} (the current one-time code) in browser.fill, and they are filled only on that login's own sites.",
     risk: "low",
-    schema: z.object({ site: z.string().max(200).optional().describe("Only logins for this site") }),
+    schema: z.object({
+      site: z.string().max(200).optional().describe("Only logins for this site"),
+    }),
     async execute(args, ctx) {
       const all = await loginsFor(deps.db, ctx, deps.fetch);
-      const list = args.site ? all.filter((l) => itemCoversHost(l.item, args.site?.replace(/^https?:\/\//, "").split("/")[0] ?? null)) : all;
+      const list = args.site
+        ? all.filter((l) =>
+            itemCoversHost(l.item, args.site?.replace(/^https?:\/\//, "").split("/")[0] ?? null),
+          )
+        : all;
       if (!list.length) return { content: "No logins available.", preview: "0 logins" };
       return {
         content: list
           .slice(0, 100)
-          .map((l) => `[login:${l.item.title}] ${l.item.urls.join(", ") || "(no sites)"}${l.item.hasOtp ? " · has one-time codes" : ""} (${l.manager})`)
+          .map(
+            (l) =>
+              `[login:${l.item.title}] ${l.item.urls.join(", ") || "(no sites)"}${l.item.hasOtp ? " · has one-time codes" : ""} (${l.manager})`,
+          )
           .join("\n"),
         preview: `${list.length} logins`,
       };

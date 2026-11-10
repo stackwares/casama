@@ -5,21 +5,48 @@
       "when": { "systemIncludes": "extract lasting memories" },
       "events": [
         { "type": "text", "text": "{\"memories\":[]}" },
-        { "type": "finish", "usage": { "inputTokens": 50, "outputTokens": 5 }, "finishReason": "stop", "model": "" }
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 50, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
       ]
     },
     {
       "when": { "lastRole": "user", "lastUserIncludes": "train tickets" },
       "events": [
-        { "type": "tool_call", "call": { "callId": "p1", "name": "payments__request", "args": { "merchant": "Amtrak", "amount": 89.5, "currency": "usd", "reason": "Two tickets NYC to Boston on Friday" } } },
-        { "type": "finish", "usage": { "inputTokens": 300, "outputTokens": 20 }, "finishReason": "tool-calls", "model": "" }
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "p1",
+            "name": "payments__request",
+            "args": {
+              "merchant": "Amtrak",
+              "amount": 89.5,
+              "currency": "usd",
+              "reason": "Two tickets NYC to Boston on Friday"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 20 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
       ]
     },
     {
       "when": { "lastRole": "tool", "lastToolName": "payments.request" },
       "events": [
         { "type": "text", "text": "I have a card ready for the Amtrak checkout." },
-        { "type": "finish", "usage": { "inputTokens": 400, "outputTokens": 20 }, "finishReason": "stop", "model": "" }
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 400, "outputTokens": 20 },
+          "finishReason": "stop",
+          "model": ""
+        }
       ]
     }
   ]

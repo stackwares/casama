@@ -1,26 +1,27 @@
 import { createDb, type DbHandle } from "@kasama/db";
 import { createAuthUser, startTestDatabase, type TestDatabase } from "@kasama/db/testing";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { forcedIds, runSpanId, runTraceId } from "@kasama/observability";
 import { trace } from "@opentelemetry/api";
 import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
   TracerProvider,
 } from "@opentelemetry/sdk-trace";
-import { forcedIds, runSpanId, runTraceId } from "@kasama/observability";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
-import { LangfuseSink } from "../src/langfuse.ts";
-import { planLazyTools, registerToolsLoad, toolGroup } from "../src/lazy-tools.ts";
 import {
   builtinTools,
   CredentialResolver,
   directSteps,
   type FixtureFile,
   hashEmbedder,
-  MemoryService, PostgresMemoryStore,
+  MemoryService,
+  PostgresMemoryStore,
   ReplayGateway,
   runAgent,
 } from "../src/index.ts";
+import { LangfuseSink } from "../src/langfuse.ts";
+import { planLazyTools, registerToolsLoad, toolGroup } from "../src/lazy-tools.ts";
 
 const SECRET = "sk-live-SECRET-1234567890";
 

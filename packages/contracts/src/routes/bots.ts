@@ -1,6 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import {
   Bot,
+  BotA2a,
   ChatGptSignInCompleteRequest,
   ChatGptSignInStart,
   ChatGptSignInStartRequest,
@@ -10,24 +11,23 @@ import {
   CreateCredentialRequest,
   Credential,
   CredentialTestResult,
+  EditMessageRequest,
   Memory,
+  MemoryBackend,
   ModelOptionList,
   Run,
   RunEventsPage,
   SendMessageRequest,
   SendMessageResponse,
-  EditMessageRequest,
-  SwitchBranchRequest,
-  SwitchBranchResponse,
+  SetMemoryBackendRequest,
   StartSetupResponse,
   StartWelcomeRequest,
-  WelcomeChat,
+  SwitchBranchRequest,
+  SwitchBranchResponse,
   TestCredentialRequest,
   UpdateCredentialRequest,
   UsageReport,
-  BotA2a,
-  MemoryBackend,
-  SetMemoryBackendRequest,
+  WelcomeChat,
 } from "../bots.ts";
 import { IdempotencyKeyHeader, jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 
@@ -370,7 +370,8 @@ export const startWelcome = createRoute({
   path: "/v1/welcome",
   tags: ["bots"],
   security: [{ bearerAuth: [] }],
-  summary: "A new person's personal workspace, bot and welcome chat (D-129); the same chat again if it exists",
+  summary:
+    "A new person's personal workspace, bot and welcome chat (D-129); the same chat again if it exists",
   request: { body: jsonBody(StartWelcomeRequest) },
   responses: {
     200: jsonResponse("Welcome chat", WelcomeChat),
@@ -386,10 +387,14 @@ export const getConversationThread = createRoute({
   path: "/v1/conversations/{id}/thread",
   tags: ["chat"],
   security,
-  summary: "The branch being shown, oldest first (what conversation_thread returns, with content opened)",
+  summary:
+    "The branch being shown, oldest first (what conversation_thread returns, with content opened)",
   request: { params: idParam },
   responses: {
-    200: jsonResponse("Messages", z.object({ items: z.array(z.record(z.string(), z.unknown())) }).openapi("ConversationThread")),
+    200: jsonResponse(
+      "Messages",
+      z.object({ items: z.array(z.record(z.string(), z.unknown())) }).openapi("ConversationThread"),
+    ),
     401: e401,
     404: e404,
   },
@@ -404,7 +409,11 @@ export const updateMemory = createRoute({
   security,
   request: {
     params: memoryParams,
-    body: jsonBody(z.object({ content: z.string().min(1).max(8000).optional(), pinned: z.boolean().optional() }).openapi("UpdateMemoryRequest")),
+    body: jsonBody(
+      z
+        .object({ content: z.string().min(1).max(8000).optional(), pinned: z.boolean().optional() })
+        .openapi("UpdateMemoryRequest"),
+    ),
   },
   responses: { 200: jsonResponse("Memory", Memory), 401: e401, 404: e404 },
 });
@@ -416,7 +425,11 @@ export const deleteMemory = createRoute({
   tags: ["memory"],
   security,
   request: { params: memoryParams },
-  responses: { 200: jsonResponse("Deleted", z.object({ deleted: z.string() }).openapi("DeletedMemory")), 401: e401, 404: e404 },
+  responses: {
+    200: jsonResponse("Deleted", z.object({ deleted: z.string() }).openapi("DeletedMemory")),
+    401: e401,
+    404: e404,
+  },
 });
 
 // Memory backends (D-137)
@@ -437,7 +450,13 @@ export const setMemoryBackend = createRoute({
   security,
   summary: "Keep bot memory in Honcho or Supermemory with the workspace's own key (admins)",
   request: { params: idParam, body: jsonBody(SetMemoryBackendRequest) },
-  responses: { 200: jsonResponse("Backend", MemoryBackend), 400: e400, 401: e401, 403: e403, 404: e404 },
+  responses: {
+    200: jsonResponse("Backend", MemoryBackend),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+  },
 });
 export const deleteMemoryBackend = createRoute({
   operationId: "deleteMemoryBackend",
@@ -467,6 +486,9 @@ export const setBotA2a = createRoute({
   tags: ["a2a"],
   security,
   summary: "Publish a bot as an A2A agent (the workspace must have A2A on)",
-  request: { params: idParam, body: jsonBody(z.object({ published: z.boolean() }).openapi("SetBotA2aRequest")) },
+  request: {
+    params: idParam,
+    body: jsonBody(z.object({ published: z.boolean() }).openapi("SetBotA2aRequest")),
+  },
   responses: { 200: jsonResponse("A2A", BotA2a), 401: e401, 403: e403, 404: e404, 409: e409 },
 });

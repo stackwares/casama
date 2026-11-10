@@ -4,7 +4,12 @@ import { Uuid } from "./common.ts";
 const ts = z.iso.datetime({ offset: true });
 
 export const ReplayParamInfo = z
-  .object({ name: z.string(), description: z.string().optional(), default: z.string().optional(), secret: z.boolean().optional() })
+  .object({
+    name: z.string(),
+    description: z.string().optional(),
+    default: z.string().optional(),
+    secret: z.boolean().optional(),
+  })
   .openapi("ReplayParamInfo");
 
 export const Replay = z
@@ -27,7 +32,12 @@ export const Replay = z
 export const RunReplayRequest = z
   .object({ params: z.record(z.string(), z.string().max(2000)).optional() })
   .openapi("RunReplayRequest");
-export const RunReplayResponse = z.object({ conversation_id: Uuid, run_id: Uuid }).openapi("RunReplayResponse");
+export const RunReplayResponse = z
+  .object({ conversation_id: Uuid, run_id: Uuid })
+  .openapi("RunReplayResponse");
 export const ReplayFromTeachRequest = z
-  .object({ name: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,62}$/), description: z.string().max(300).optional() })
+  .object({
+    name: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,62}$/),
+    description: z.string().max(300).optional(),
+  })
   .openapi("ReplayFromTeachRequest");

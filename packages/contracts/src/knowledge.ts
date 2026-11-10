@@ -27,7 +27,12 @@ export const CreateKnowledgeSourceRequest = z
     kind: z.enum(["upload", "website", "github", "connection"]),
     name: z.string().min(1).max(200),
     /** upload */
-    files: z.array(z.object({ name: z.string().min(1).max(300), content_base64: z.string().max(34_000_000) })).max(50).optional(),
+    files: z
+      .array(
+        z.object({ name: z.string().min(1).max(300), content_base64: z.string().max(34_000_000) }),
+      )
+      .max(50)
+      .optional(),
     /** website */
     url: z.string().max(2000).optional(),
     max_pages: z.number().int().min(1).max(200).optional(),
@@ -36,7 +41,14 @@ export const CreateKnowledgeSourceRequest = z
     /** connection */
     integration_id: Uuid.optional(),
     documents: z
-      .array(z.object({ tool: z.string().min(1).max(200), args: z.record(z.string(), z.unknown()).optional(), title: z.string().min(1).max(300), url: z.string().max(2000).optional() }))
+      .array(
+        z.object({
+          tool: z.string().min(1).max(200),
+          args: z.record(z.string(), z.unknown()).optional(),
+          title: z.string().min(1).max(300),
+          url: z.string().max(2000).optional(),
+        }),
+      )
       .max(100)
       .optional(),
   })

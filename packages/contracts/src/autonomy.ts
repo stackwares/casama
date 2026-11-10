@@ -162,7 +162,12 @@ export const RoutineTrigger = z
 export const CalendarTriggerConfig = z
   .object({
     integration_id: Uuid.openapi({ description: "A connected Google or Outlook calendar" }),
-    offset_minutes: z.number().int().min(-1440).max(1440).openapi({ description: "Relative to the event's start; -15 is 15 minutes before" }),
+    offset_minutes: z
+      .number()
+      .int()
+      .min(-1440)
+      .max(1440)
+      .openapi({ description: "Relative to the event's start; -15 is 15 minutes before" }),
     calendar: z.string().max(200).optional(),
     outside_guests: z.boolean().optional(),
     title_match: z.string().max(200).optional(),
@@ -173,8 +178,14 @@ export const CalendarTriggerConfig = z
 export const MessageTriggerConfig = z
   .object({
     channel_id: Uuid.optional(),
-    channel_kind: z.enum(["telegram", "email", "sms", "slack", "whatsapp", "messenger", "feishu", "imessage"]).optional(),
-    sender: z.string().max(300).optional().openapi({ description: "An address or id; *@domain for email" }),
+    channel_kind: z
+      .enum(["telegram", "email", "sms", "slack", "whatsapp", "messenger", "feishu", "imessage"])
+      .optional(),
+    sender: z
+      .string()
+      .max(300)
+      .optional()
+      .openapi({ description: "An address or id; *@domain for email" }),
     subject_match: z.string().max(200).optional(),
     text_match: z.string().max(200).optional(),
   })
@@ -183,12 +194,52 @@ export const MessageTriggerConfig = z
 /** Device triggers (D-151): events from the routine creator's own phone or computer. */
 export const DeviceTriggerConfig = z
   .object({
-    event: z.enum(["wake", "arrive", "leave", "leave_now", "workout_ended", "notification", "focus_on", "focus_off", "file_added"]),
-    place: z.string().trim().min(1).max(60).optional().openapi({ description: "arrive and leave: a named place (Home, Work, Gym)" }),
-    app: z.string().trim().min(1).max(200).optional().openapi({ description: "notification: the watched app (its name or package id)" }),
-    minutes_before: z.number().int().min(0).max(120).optional().openapi({ description: "leave_now: extra minutes on top of the travel time (default 5)" }),
-    folder: z.string().trim().min(1).max(200).optional().openapi({ description: "file_added: a folder the desktop app watches (Downloads)" }),
-    pattern: z.string().trim().min(1).max(100).optional().openapi({ description: "file_added: a file name pattern like *.pdf" }),
+    event: z.enum([
+      "wake",
+      "arrive",
+      "leave",
+      "leave_now",
+      "workout_ended",
+      "notification",
+      "focus_on",
+      "focus_off",
+      "file_added",
+    ]),
+    place: z
+      .string()
+      .trim()
+      .min(1)
+      .max(60)
+      .optional()
+      .openapi({ description: "arrive and leave: a named place (Home, Work, Gym)" }),
+    app: z
+      .string()
+      .trim()
+      .min(1)
+      .max(200)
+      .optional()
+      .openapi({ description: "notification: the watched app (its name or package id)" }),
+    minutes_before: z
+      .number()
+      .int()
+      .min(0)
+      .max(120)
+      .optional()
+      .openapi({ description: "leave_now: extra minutes on top of the travel time (default 5)" }),
+    folder: z
+      .string()
+      .trim()
+      .min(1)
+      .max(200)
+      .optional()
+      .openapi({ description: "file_added: a folder the desktop app watches (Downloads)" }),
+    pattern: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .optional()
+      .openapi({ description: "file_added: a file name pattern like *.pdf" }),
   })
   .openapi("DeviceTriggerConfig");
 
@@ -239,9 +290,16 @@ export const CreateRoutineRequest = z
       .max(20)
       .optional()
       .openapi({ description: "GitHub event names to accept" }),
-    calendar: CalendarTriggerConfig.optional().openapi({ description: "Required for calendar_event triggers (D-132)" }),
-    message: MessageTriggerConfig.optional().openapi({ description: "Filters for message triggers: an email or chat message that matches starts the routine (D-134)" }),
-    device: DeviceTriggerConfig.optional().openapi({ description: "Required for device triggers (D-151): the event on your own phone or computer" }),
+    calendar: CalendarTriggerConfig.optional().openapi({
+      description: "Required for calendar_event triggers (D-132)",
+    }),
+    message: MessageTriggerConfig.optional().openapi({
+      description:
+        "Filters for message triggers: an email or chat message that matches starts the routine (D-134)",
+    }),
+    device: DeviceTriggerConfig.optional().openapi({
+      description: "Required for device triggers (D-151): the event on your own phone or computer",
+    }),
   })
   .openapi("CreateRoutineRequest");
 

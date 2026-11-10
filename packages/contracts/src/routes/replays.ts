@@ -15,7 +15,10 @@ export const listReplays = createRoute({
   security,
   summary: "A bot's saved replays (D-127)",
   request: { query: z.object({ bot_id: Uuid }) },
-  responses: { 200: jsonResponse("Replays", z.object({ items: z.array(Replay) }).openapi("ReplayList")), 401: e401 },
+  responses: {
+    200: jsonResponse("Replays", z.object({ items: z.array(Replay) }).openapi("ReplayList")),
+    401: e401,
+  },
 });
 
 export const runReplay = createRoute({
@@ -26,7 +29,13 @@ export const runReplay = createRoute({
   security,
   summary: "Run a replay without the model; the bot takes over if a step fails",
   request: { params: idParam, body: jsonBody(RunReplayRequest) },
-  responses: { 202: jsonResponse("Started", RunReplayResponse), 400: e400, 401: e401, 403: e403, 404: e404 },
+  responses: {
+    202: jsonResponse("Started", RunReplayResponse),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+  },
 });
 
 export const deleteReplay = createRoute({
@@ -36,7 +45,12 @@ export const deleteReplay = createRoute({
   tags,
   security,
   request: { params: idParam },
-  responses: { 200: jsonResponse("Deleted", z.object({ deleted: Uuid }).openapi("DeletedReplay")), 401: e401, 403: e403, 404: e404 },
+  responses: {
+    200: jsonResponse("Deleted", z.object({ deleted: Uuid }).openapi("DeletedReplay")),
+    401: e401,
+    403: e403,
+    404: e404,
+  },
 });
 
 export const replayFromTeach = createRoute({

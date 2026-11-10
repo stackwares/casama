@@ -33,7 +33,14 @@ export const installPlugin = createRoute({
   security,
   summary: "Install a plugin for a bot, pinned to the previewed commit",
   request: { body: jsonBody(InstallPluginRequest) },
-  responses: { 201: jsonResponse("Installed", Plugin), 400: e400, 401: e401, 403: e403, 404: e404, 409: e409 },
+  responses: {
+    201: jsonResponse("Installed", Plugin),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });
 
 export const listPlugins = createRoute({
@@ -43,7 +50,10 @@ export const listPlugins = createRoute({
   tags,
   security,
   request: { query: z.object({ bot_id: Uuid }) },
-  responses: { 200: jsonResponse("Plugins", z.object({ items: z.array(Plugin) }).openapi("PluginList")), 401: e401 },
+  responses: {
+    200: jsonResponse("Plugins", z.object({ items: z.array(Plugin) }).openapi("PluginList")),
+    401: e401,
+  },
 });
 
 export const getPluginUpdate = createRoute({
@@ -64,7 +74,14 @@ export const updatePlugin = createRoute({
   tags,
   security,
   request: { params: idParam, body: jsonBody(UpdatePluginRequest) },
-  responses: { 200: jsonResponse("Updated", Plugin), 400: e400, 401: e401, 403: e403, 404: e404, 409: e409 },
+  responses: {
+    200: jsonResponse("Updated", Plugin),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });
 
 export const uninstallPlugin = createRoute({

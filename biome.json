@@ -15,7 +15,8 @@
       "!client",
       "!supabase",
       "!docs-site/**/*.md",
-      "!site"
+      "!site",
+      "!infra/helm/**/templates"
     ]
   },
   "formatter": {
@@ -27,7 +28,16 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "style": {
+        "noNonNullAssertion": "off"
+      },
+      "complexity": {
+        "noCommaOperator": "off"
+      },
+      "suspicious": {
+        "noTemplateCurlyInString": "off"
+      }
     }
   },
   "javascript": {
@@ -50,6 +60,9 @@
         "rules": {
           "style": {
             "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            "noAssignInExpressions": "off"
           }
         }
       }

@@ -37,5 +37,9 @@ export const SetBotAccessRequest = z
   .openapi("SetBotAccessRequest");
 
 export const WorkspaceMember = z
-  .object({ user_id: Uuid, email: z.string().nullable(), role: z.enum(["owner", "admin", "member"]) })
+  .object({
+    user_id: Uuid,
+    email: z.string().nullable(),
+    role: z.enum(["owner", "admin", "member"]),
+  })
   .openapi("WorkspaceMember");

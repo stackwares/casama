@@ -7,10 +7,17 @@ import { sql } from "drizzle-orm";
 import { wrapUntrusted } from "./context.ts";
 import { type NamedSecret, resolvePlaceholders } from "./secrets.ts";
 
-export type IntegrationKind = "mcp" | "openapi" | "composio" | "pipedream" | "local_mcp" | "computer_mcp" | "a2a";
+export type IntegrationKind =
+  | "mcp"
+  | "openapi"
+  | "composio"
+  | "pipedream"
+  | "local_mcp"
+  | "computer_mcp"
+  | "a2a";
 
-import type { Risk } from "./tools/registry.ts";
 import { A2aAdapter } from "./a2a.ts";
+import type { Risk } from "./tools/registry.ts";
 
 export interface IntegrationToolInfo {
   /** Name inside the integration (the full tool name adds kind and integration name). */
@@ -593,7 +600,10 @@ export class ComputerMcpAdapter implements IntegrationAdapter {
 
   private async connect() {
     if (this.client) return this.client;
-    if (!this.ctx.computerMcp) throw new Error("This plugin's server runs on the bot's computer, which isn't available here");
+    if (!this.ctx.computerMcp)
+      throw new Error(
+        "This plugin's server runs on the bot's computer, which isn't available here",
+      );
     const client = new Client({ name: "kasama", version: "0.1.0" });
     const transport = new StreamableHTTPClientTransport(new URL("http://computer/mcp"), {
       fetch: (await this.ctx.computerMcp(this.rec)) as never,
@@ -609,18 +619,27 @@ export class ComputerMcpAdapter implements IntegrationAdapter {
       name: t.name,
       description: t.description ?? t.name,
       inputSchema: (t.inputSchema as Record<string, unknown>) ?? { type: "object" },
-      risk: (t.annotations?.readOnlyHint ? "low" : t.annotations?.destructiveHint ? "high" : "medium") as Risk,
+      risk: (t.annotations?.readOnlyHint
+        ? "low"
+        : t.annotations?.destructiveHint
+          ? "high"
+          : "medium") as Risk,
     }));
   }
 
   async callTool(name: string, args: Record<string, unknown>, opts: CallToolOptions = {}) {
-    const r = (await (await this.connect()).callTool({ name, arguments: args }, undefined, {
+    const r = (await (
+      await this.connect()
+    ).callTool({ name, arguments: args }, undefined, {
       signal: opts.signal,
       timeout: 30 * 60_000,
       resetTimeoutOnProgress: true,
-      onprogress: (p) => opts.onProgress?.(p.message ?? `${p.progress}${p.total ? `/${p.total}` : ""}`),
+      onprogress: (p) =>
+        opts.onProgress?.(p.message ?? `${p.progress}${p.total ? `/${p.total}` : ""}`),
     })) as { content?: Array<{ type: string; text?: string }>; isError?: boolean };
-    const text = (r.content ?? []).map((c) => (c.type === "text" ? (c.text ?? "") : `[${c.type}]`)).join("\n");
+    const text = (r.content ?? [])
+      .map((c) => (c.type === "text" ? (c.text ?? "") : `[${c.type}]`))
+      .join("\n");
     if (r.isError) throw new Error(text || "The tool failed");
     return text;
   }

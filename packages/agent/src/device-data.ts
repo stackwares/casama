@@ -11,7 +11,16 @@ import { actingUserOf } from "./acting.ts";
 import { wrapUntrusted } from "./context.ts";
 import { type ToolContext, ToolError, type ToolRegistry } from "./tools/registry.ts";
 
-export const DEVICE_KINDS = ["calendar", "reminders", "contacts", "places", "photos", "health", "notifications", "activity"] as const;
+export const DEVICE_KINDS = [
+  "calendar",
+  "reminders",
+  "contacts",
+  "places",
+  "photos",
+  "health",
+  "notifications",
+  "activity",
+] as const;
 export type DeviceKind = (typeof DEVICE_KINDS)[number];
 const KIND = z.enum(DEVICE_KINDS);
 
@@ -40,7 +49,13 @@ const LABEL: Record<DeviceKind, string> = {
 const ONLINE_MS = 15 * 60_000;
 
 type Settings = { retention_days?: number; private_model?: boolean };
-type Source = { id: string; name: string; platform: string; kinds: Record<string, Settings>; last_seen_at: Date };
+type Source = {
+  id: string;
+  name: string;
+  platform: string;
+  kinds: Record<string, Settings>;
+  last_seen_at: Date;
+};
 
 /** A model server on this machine or a private network (a local model). */
 export function isPrivateBaseUrl(url: string | null | undefined): boolean {
@@ -56,10 +71,24 @@ export function isPrivateBaseUrl(url: string | null | undefined): boolean {
   const m = host.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
   if (!m) return /^f[cd][0-9a-f]{2}:/.test(host);
   const [a, b] = [Number(m[1]), Number(m[2])];
-  return a === 127 || a === 10 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31) || (a === 100 && b >= 64 && b <= 127);
+  return (
+    a === 127 ||
+    a === 10 ||
+    (a === 192 && b === 168) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 100 && b >= 64 && b <= 127)
+  );
 }
 
-type HealthDay = { type?: string; date?: string; sleep?: { minutes?: number }; steps?: number; active_energy_kcal?: number; resting_hr?: number; hrv_ms?: number };
+type HealthDay = {
+  type?: string;
+  date?: string;
+  sleep?: { minutes?: number };
+  steps?: number;
+  active_energy_kcal?: number;
+  resting_hr?: number;
+  hrv_ms?: number;
+};
 const HEALTH_METRICS: Array<[string, (d: HealthDay) => number | undefined]> = [
   ["sleep_minutes", (d) => d.sleep?.minutes],
   ["steps", (d) => d.steps],
@@ -74,8 +103,12 @@ const HEALTH_METRICS: Array<[string, (d: HealthDay) => number | undefined]> = [
  */
 export function healthTrends(history: HealthDay[], day: HealthDay) {
   if (!day.date) return {};
-  const start = new Date(new Date(`${day.date}T00:00:00Z`).getTime() - 30 * 86_400_000).toISOString().slice(0, 10);
-  const prior = history.filter((h) => h.type === "day" && h.date && h.date < day.date! && h.date >= start);
+  const start = new Date(new Date(`${day.date}T00:00:00Z`).getTime() - 30 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const prior = history.filter(
+    (h) => h.type === "day" && h.date && h.date < day.date! && h.date >= start,
+  );
   const out: Record<string, { value: number; usual: number; compared: string }> = {};
   for (const [name, get] of HEALTH_METRICS) {
     const value = get(day);
@@ -86,7 +119,12 @@ export function healthTrends(history: HealthDay[], day: HealthDay) {
     out[name] = {
       value,
       usual: Math.round(usual * 10) / 10,
-      compared: ratio > 1.1 ? "higher than your usual" : ratio < 0.9 ? "lower than your usual" : "about your usual",
+      compared:
+        ratio > 1.1
+          ? "higher than your usual"
+          : ratio < 0.9
+            ? "lower than your usual"
+            : "about your usual",
     };
   }
   return out;
@@ -104,17 +142,30 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
   const { db } = deps;
   const owner = async (ctx: ToolContext) => {
     const user = await actingUserOf(db, ctx.runId);
-    if (!user) throw new ToolError("no_person", "This run isn't acting for a person, so there's no device data to use.");
+    if (!user)
+      throw new ToolError(
+        "no_person",
+        "This run isn't acting for a person, so there's no device data to use.",
+      );
     return user;
   };
   const allowed = async (user: string, botId: string, kind: DeviceKind) =>
-    (await db.execute(sql`select 1 from public.device_grants where user_id = ${user}::uuid and bot_id = ${botId}::uuid and kind = ${kind}`)).length > 0;
+    (
+      await db.execute(
+        sql`select 1 from public.device_grants where user_id = ${user}::uuid and bot_id = ${botId}::uuid and kind = ${kind}`,
+      )
+    ).length > 0;
   const needGrant = async (user: string, ctx: ToolContext, kind: DeviceKind) => {
     if (!(await allowed(user, ctx.botId, kind)))
-      throw new ToolError("no_device_access", `You don't have access to the person's ${LABEL[kind]}. Ask with device.request_access (they get a one-tap card), and carry on without it meanwhile.`);
+      throw new ToolError(
+        "no_device_access",
+        `You don't have access to the person's ${LABEL[kind]}. Ask with device.request_access (they get a one-tap card), and carry on without it meanwhile.`,
+      );
   };
   const sources = async (user: string, kind: DeviceKind) =>
-    db.execute<Source>(sql`select id, name, platform, kinds, last_seen_at from public.device_sources where user_id = ${user}::uuid and kinds ? ${kind} order by last_seen_at desc`);
+    db.execute<Source>(
+      sql`select id, name, platform, kinds, last_seen_at from public.device_sources where user_id = ${user}::uuid and kinds ? ${kind} order by last_seen_at desc`,
+    );
   /** Every model this bot may use runs on a private server. */
   const privateModels = async (ctx: ToolContext) => {
     const rows = await db.execute<{ base_url: string | null }>(sql`
@@ -128,21 +179,37 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
     return rows.length > 0 && rows.every((r) => isPrivateBaseUrl(r.base_url));
   };
   /** Asks an online device to do something and waits for its answer; null if it didn't answer in time. */
-  const ask = async (user: string, s: Source, kind: string, action: string, params: Record<string, unknown>, runId: string, waitMs: number) => {
+  const ask = async (
+    user: string,
+    s: Source,
+    kind: string,
+    action: string,
+    params: Record<string, unknown>,
+    runId: string,
+    waitMs: number,
+  ) => {
     const [req] = await db.execute<{ id: string }>(sql`
       insert into public.device_requests (user_id, source_id, kind, action, params, run_id)
       values (${user}::uuid, ${s.id}::uuid, ${kind}, ${action}, ${JSON.stringify(params)}::jsonb, ${runId}::uuid) returning id`);
     const until = Date.now() + waitMs;
     while (Date.now() < until) {
       await sleep(Math.min(250, waitMs));
-      const [r] = await db.execute<{ status: string; result: Record<string, unknown> | null }>(sql`select status, result from public.device_requests where id = ${req!.id}::uuid`);
+      const [r] = await db.execute<{ status: string; result: Record<string, unknown> | null }>(
+        sql`select status, result from public.device_requests where id = ${req!.id}::uuid`,
+      );
       if (r && r.status !== "pending") return r;
     }
     return null;
   };
   const age = (d: Date) => {
     const m = Math.round((Date.now() - new Date(d).getTime()) / 60_000);
-    return m < 2 ? "just now" : m < 120 ? `${m} min ago` : m < 2880 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`;
+    return m < 2
+      ? "just now"
+      : m < 120
+        ? `${m} min ago`
+        : m < 2880
+          ? `${Math.round(m / 60)} h ago`
+          : `${Math.round(m / 1440)} days ago`;
   };
 
   registry.register({
@@ -154,8 +221,14 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
     risk: "low",
     schema: z.object({
       kind: KIND,
-      from: z.iso.datetime({ offset: true }).optional().describe("Start of the range (default: now minus 1 day)"),
-      to: z.iso.datetime({ offset: true }).optional().describe("End of the range (default: now plus 14 days)"),
+      from: z.iso
+        .datetime({ offset: true })
+        .optional()
+        .describe("Start of the range (default: now minus 1 day)"),
+      to: z.iso
+        .datetime({ offset: true })
+        .optional()
+        .describe("End of the range (default: now plus 14 days)"),
     }),
     async execute(args, ctx) {
       const user = await owner(ctx);
@@ -163,20 +236,46 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
       await needGrant(user, ctx, kind);
       const list = await sources(user, kind);
       if (!list.length)
-        throw new ToolError("device_kind_off", `The person hasn't turned on ${LABEL[kind]} on any device. They can in Settings → Device connections.`);
+        throw new ToolError(
+          "device_kind_off",
+          `The person hasn't turned on ${LABEL[kind]} on any device. They can in Settings → Device connections.`,
+        );
       if (list.some((s) => s.kinds[kind]?.private_model) && !(await privateModels(ctx)))
-        throw new ToolError("private_model_required", `The person keeps their ${LABEL[kind]} to private models only, and this bot uses a hosted model.`);
+        throw new ToolError(
+          "private_model_required",
+          `The person keeps their ${LABEL[kind]} to private models only, and this bot uses a hosted model.`,
+        );
       const from = args.from ?? new Date(Date.now() - 86_400_000).toISOString();
       const to = args.to ?? new Date(Date.now() + 14 * 86_400_000).toISOString();
       // A fresh read from the most recently seen device, if it's around.
       let live: unknown[] = [];
       const online = list.find((s) => Date.now() - new Date(s.last_seen_at).getTime() < ONLINE_MS);
       if (online) {
-        const r = await ask(user, online, kind, "read", { from, to }, ctx.runId, deps.waitMs?.read ?? 10_000);
-        if (!r) await db.execute(sql`update public.device_requests set status = 'expired' where run_id = ${ctx.runId}::uuid and status = 'pending' and action = 'read'`);
-        live = ((r?.result as { live?: unknown[] } | null)?.live ?? []).map((x) => ({ ...(x as object), age: "just now" }));
+        const r = await ask(
+          user,
+          online,
+          kind,
+          "read",
+          { from, to },
+          ctx.runId,
+          deps.waitMs?.read ?? 10_000,
+        );
+        if (!r)
+          await db.execute(
+            sql`update public.device_requests set status = 'expired' where run_id = ${ctx.runId}::uuid and status = 'pending' and action = 'read'`,
+          );
+        live = ((r?.result as { live?: unknown[] } | null)?.live ?? []).map((x) => ({
+          ...(x as object),
+          age: "just now",
+        }));
       }
-      const rows = await db.execute<{ period_start: Date; period_end: Date; summary: unknown; collected_at: Date; source: string }>(sql`
+      const rows = await db.execute<{
+        period_start: Date;
+        period_end: Date;
+        summary: unknown;
+        collected_at: Date;
+        source: string;
+      }>(sql`
         select r.period_start, r.period_end, r.summary, r.collected_at, s.name as source from public.device_readings r
         join public.device_sources s on s.id = r.source_id
         where r.user_id = ${user}::uuid and r.kind = ${kind} and r.period_end >= ${from}::timestamptz and r.period_start <= ${to}::timestamptz
@@ -192,39 +291,84 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
       const withTrend = (summary: unknown) => {
         const d = summary as HealthDay;
         if (kind !== "health" || d?.type !== "day") return {};
-        const t = healthTrends([...history, ...(live as Array<{ summary?: HealthDay }>).map((l) => l.summary ?? {})], d);
+        const t = healthTrends(
+          [...history, ...(live as Array<{ summary?: HealthDay }>).map((l) => l.summary ?? {})],
+          d,
+        );
         return Object.keys(t).length ? { vs_usual: t } : {};
       };
       const items = [
-        ...rows.map((r) => ({ from: new Date(r.period_start).toISOString(), to: new Date(r.period_end).toISOString(), device: r.source, age: age(r.collected_at), summary: r.summary, ...withTrend(r.summary) })),
+        ...rows.map((r) => ({
+          from: new Date(r.period_start).toISOString(),
+          to: new Date(r.period_end).toISOString(),
+          device: r.source,
+          age: age(r.collected_at),
+          summary: r.summary,
+          ...withTrend(r.summary),
+        })),
         ...(live as Array<{ summary?: unknown }>).map((l) => ({ ...l, ...withTrend(l.summary) })),
       ];
       // The person's own data is in this conversation now: it becomes private to them (audit 2026-11).
-      await db.execute(sql`update public.conversations set private = true where id = (select conversation_id from public.runs where id = ${ctx.runId}::uuid)`);
+      await db.execute(
+        sql`update public.conversations set private = true where id = (select conversation_id from public.runs where id = ${ctx.runId}::uuid)`,
+      );
       // The timeline shows exactly what device data reached the model.
-      await ctx.emit("device.data_used", { kind, count: items.length, from, to, devices: [...new Set(rows.map((r) => r.source))] });
-      if (!items.length) return { content: `No ${LABEL[kind]} between ${from} and ${to}.`, preview: `0 ${LABEL[kind]} items` };
-      const extra = kind === "health" ? "\nHealth data is for context only: describe it neutrally (\"lower than your usual\"), never as a diagnosis, and say it isn't medical advice when giving health suggestions." : "";
-      return { content: wrapUntrusted(`device ${kind}`, items.map((i) => JSON.stringify(i)).join("\n")) + extra, preview: `${items.length} ${LABEL[kind]} items` };
+      await ctx.emit("device.data_used", {
+        kind,
+        count: items.length,
+        from,
+        to,
+        devices: [...new Set(rows.map((r) => r.source))],
+      });
+      if (!items.length)
+        return {
+          content: `No ${LABEL[kind]} between ${from} and ${to}.`,
+          preview: `0 ${LABEL[kind]} items`,
+        };
+      const extra =
+        kind === "health"
+          ? '\nHealth data is for context only: describe it neutrally ("lower than your usual"), never as a diagnosis, and say it isn\'t medical advice when giving health suggestions.'
+          : "";
+      return {
+        content:
+          wrapUntrusted(`device ${kind}`, items.map((i) => JSON.stringify(i)).join("\n")) + extra,
+        preview: `${items.length} ${LABEL[kind]} items`,
+      };
     },
   });
 
   registry.register({
     name: "device.request_access",
     readOnly: true,
-    description: "Ask the person for access to one kind of their device data. They see a one-tap card; carry on without it until they allow it.",
+    description:
+      "Ask the person for access to one kind of their device data. They see a one-tap card; carry on without it until they allow it.",
     risk: "low",
-    schema: z.object({ kind: KIND, reason: z.string().trim().min(1).max(300).describe("Why you need it, in one short sentence") }),
+    schema: z.object({
+      kind: KIND,
+      reason: z.string().trim().min(1).max(300).describe("Why you need it, in one short sentence"),
+    }),
     async execute(args, ctx) {
       const user = await owner(ctx);
       const kind = args.kind as DeviceKind;
-      if (await allowed(user, ctx.botId, kind)) return { content: `You already have access to their ${LABEL[kind]}.`, preview: "already allowed" };
+      if (await allowed(user, ctx.botId, kind))
+        return {
+          content: `You already have access to their ${LABEL[kind]}.`,
+          preview: "already allowed",
+        };
       await ctx.emit("device.access_requested", { kind, reason: args.reason, bot_id: ctx.botId });
-      return { content: `Asked for their ${LABEL[kind]}. They'll see a card to allow it; don't wait for it.`, preview: `asked for ${LABEL[kind]}` };
+      return {
+        content: `Asked for their ${LABEL[kind]}. They'll see a card to allow it; don't wait for it.`,
+        preview: `asked for ${LABEL[kind]}`,
+      };
     },
   });
 
-  const write = (name: string, kind: "calendar" | "reminders", description: string, schema: z.ZodObject<z.ZodRawShape>) =>
+  const write = (
+    name: string,
+    kind: "calendar" | "reminders",
+    description: string,
+    schema: z.ZodObject<z.ZodRawShape>,
+  ) =>
     registry.register({
       name,
       description,
@@ -236,12 +380,33 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
         const user = await owner(ctx);
         await needGrant(user, ctx, kind);
         const list = await sources(user, kind);
-        const target = list.find((s) => Date.now() - new Date(s.last_seen_at).getTime() < ONLINE_MS) ?? list[0];
-        if (!target) throw new ToolError("device_kind_off", `The person hasn't turned on ${LABEL[kind]} on any device.`);
+        const target =
+          list.find((s) => Date.now() - new Date(s.last_seen_at).getTime() < ONLINE_MS) ?? list[0];
+        if (!target)
+          throw new ToolError(
+            "device_kind_off",
+            `The person hasn't turned on ${LABEL[kind]} on any device.`,
+          );
         const action = `${kind}.create`;
-        const r = await ask(user, target, kind, action, args as Record<string, unknown>, ctx.runId, deps.waitMs?.write ?? 20_000);
-        if (!r) return { content: `Sent to ${target.name}; it will be added when the device is next online.`, preview: `queued on ${target.name}` };
-        if (r.status !== "done") throw new ToolError("device_failed", `${target.name} couldn't add it: ${String((r.result as { error?: string } | null)?.error ?? "unknown error")}`);
+        const r = await ask(
+          user,
+          target,
+          kind,
+          action,
+          args as Record<string, unknown>,
+          ctx.runId,
+          deps.waitMs?.write ?? 20_000,
+        );
+        if (!r)
+          return {
+            content: `Sent to ${target.name}; it will be added when the device is next online.`,
+            preview: `queued on ${target.name}`,
+          };
+        if (r.status !== "done")
+          throw new ToolError(
+            "device_failed",
+            `${target.name} couldn't add it: ${String((r.result as { error?: string } | null)?.error ?? "unknown error")}`,
+          );
         return { content: `Added on ${target.name}.`, preview: `added on ${target.name}` };
       },
     });
@@ -261,7 +426,11 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
     "device.reminders.create",
     "reminders",
     "Add a reminder on the person's phone or computer.",
-    z.object({ title: z.string().trim().min(1).max(200), due: z.iso.datetime({ offset: true }).optional(), notes: z.string().max(2000).optional() }),
+    z.object({
+      title: z.string().trim().min(1).max(200),
+      due: z.iso.datetime({ offset: true }).optional(),
+      notes: z.string().max(2000).optional(),
+    }),
   );
 }
 
@@ -277,11 +446,19 @@ export async function purgeDeviceData(db: Database) {
         and r.period_end < now() - make_interval(days => coalesce((s.kinds -> r.kind ->> 'retention_days')::int, (${defaults}::jsonb ->> r.kind)::int, 365))
       returning 1)
     select count(*)::int as n from gone`);
-  await db.execute(sql`update public.device_requests set status = 'expired' where status = 'pending' and created_at < now() - interval '1 hour'`);
+  await db.execute(
+    sql`update public.device_requests set status = 'expired' where status = 'pending' and created_at < now() - interval '1 hour'`,
+  );
   // The event log is kept 30 days ("where am I now" answers are cleared by checkLeaveNow each minute).
-  await db.execute(sql`delete from public.device_event_log where received_at < now() - interval '30 days'`);
-  await db.execute(sql`delete from public.device_requests where created_at < now() - interval '7 days'`);
+  await db.execute(
+    sql`delete from public.device_event_log where received_at < now() - interval '30 days'`,
+  );
+  await db.execute(
+    sql`delete from public.device_requests where created_at < now() - interval '7 days'`,
+  );
   // Read notifications go after 180 days (the inbox shows the latest 100).
-  await db.execute(sql`delete from public.notifications where read_at is not null and created_at < now() - interval '180 days'`);
+  await db.execute(
+    sql`delete from public.notifications where read_at is not null and created_at < now() - interval '180 days'`,
+  );
   return removed?.n ?? 0;
 }

@@ -2,7 +2,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { replayFromTeach } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, pgErrorCode, withUserSession, contentKeys } from "@kasama/db";
+import { contentKeys, type JwtClaims, pgErrorCode, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -40,7 +40,9 @@ export function registerReplayRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db } = deps;
   const visible = async (claims: JwtClaims, id: string) => {
     const [r] = await withUserSession(db, claims, (tx) =>
-      tx.execute<Row & { manage: boolean }>(sql`select *, public.can_manage_bot(bot_id) as manage from public.replays where id = ${id}::uuid`),
+      tx.execute<Row & { manage: boolean }>(
+        sql`select *, public.can_manage_bot(bot_id) as manage from public.replays where id = ${id}::uuid`,
+      ),
     );
     if (!r) throw new ApiError(404, "replay_not_found", "Replay not found");
     return r;
@@ -49,7 +51,9 @@ export function registerReplayRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.listReplays, async (c) => {
     const claims = claimsOf(c);
     const rows = await withUserSession(db, claims, (tx) =>
-      tx.execute<Row>(sql`select * from public.replays where bot_id = ${c.req.valid("query").bot_id}::uuid order by name`),
+      tx.execute<Row>(
+        sql`select * from public.replays where bot_id = ${c.req.valid("query").bot_id}::uuid order by name`,
+      ),
     );
     return c.json({ items: rows.map(out) }, 200);
   });
@@ -58,9 +62,18 @@ export function registerReplayRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = claimsOf(c);
     const r = await visible(claims, c.req.valid("param").id);
     const params = c.req.valid("json").params ?? {};
-    const missing = r.params.filter((p) => params[p.name] === undefined && p.default === undefined).map((p) => p.name);
-    if (missing.length) throw new ApiError(400, "missing_params", `The replay needs: ${missing.join(", ")}`);
-    const text = `Run the replay "${r.name}"${Object.keys(params).length ? ` with ${Object.entries(params).map(([k, v]) => `${k} = ${v}`).join(", ")}` : ""}.`;
+    const missing = r.params
+      .filter((p) => params[p.name] === undefined && p.default === undefined)
+      .map((p) => p.name);
+    if (missing.length)
+      throw new ApiError(400, "missing_params", `The replay needs: ${missing.join(", ")}`);
+    const text = `Run the replay "${r.name}"${
+      Object.keys(params).length
+        ? ` with ${Object.entries(params)
+            .map(([k, v]) => `${k} = ${v}`)
+            .join(", ")}`
+        : ""
+    }.`;
     const created = await withUserSession(db, claims, async (tx) => {
       const [conv] = await tx.execute<{ id: string }>(sql`
         insert into public.conversations (org_id, bot_id, title, created_by, last_message_at)
@@ -81,7 +94,12 @@ export function registerReplayRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.deleteReplay, async (c) => {
     const claims = claimsOf(c);
     const r = await visible(claims, c.req.valid("param").id);
-    if (!r.manage) throw new ApiError(403, "forbidden", "Only people who manage this bot can delete its replays");
+    if (!r.manage)
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only people who manage this bot can delete its replays",
+      );
     await db.execute(sql`delete from public.replays where id = ${r.id}::uuid`);
     return c.json({ deleted: r.id }, 200);
   });
@@ -95,12 +113,32 @@ export function registerReplayRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         select id, org_id, bot_id, public.can_manage_bot(bot_id) as manage from public.teach_sessions where id = ${id}::uuid`),
     );
     if (!s) throw new ApiError(404, "teach_not_found", "Recording not found");
-    if (!s.manage) throw new ApiError(403, "forbidden", "Only people who manage this bot can save replays for it");
-    const steps = await db.execute<{ seq: number; kind: string; x: number | null; y: number | null; button: number | null; text: string | null; key: string | null; secret_name: string | null; url: string | null }>(
+    if (!s.manage)
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only people who manage this bot can save replays for it",
+      );
+    const steps = await db.execute<{
+      seq: number;
+      kind: string;
+      x: number | null;
+      y: number | null;
+      button: number | null;
+      text: string | null;
+      key: string | null;
+      secret_name: string | null;
+      url: string | null;
+    }>(
       sql`select seq, kind, x, y, button, text, key, secret_name, url from public.teach_steps where session_id = ${id}::uuid order by seq`,
     );
     const r = replayFromTeach(steps);
-    if (!r.steps.length) throw new ApiError(409, "nothing_to_replay", "The recording has no clicks, typing or keys to replay");
+    if (!r.steps.length)
+      throw new ApiError(
+        409,
+        "nothing_to_replay",
+        "The recording has no clicks, typing or keys to replay",
+      );
     try {
       const [row] = await db.execute<Row>(sql`
         insert into public.replays (org_id, bot_id, name, description, params, steps, source, source_id, created_by)
@@ -109,7 +147,8 @@ export function registerReplayRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         returning *`);
       return c.json(out(row as Row), 201);
     } catch (err) {
-      if (pgErrorCode(err) === "23505") throw new ApiError(409, "replay_exists", `This bot already has a replay named ${b.name}`);
+      if (pgErrorCode(err) === "23505")
+        throw new ApiError(409, "replay_exists", `This bot already has a replay named ${b.name}`);
       throw err;
     }
   });

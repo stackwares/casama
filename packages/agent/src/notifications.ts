@@ -16,13 +16,18 @@ export interface PushMessage {
 export interface PushSender {
   send(tokens: string[], message: PushMessage): Promise<{ invalidTokens: string[] }>;
   /** A data-only, high-priority message that rings (Android calls, D-135). */
-  sendCall?(tokens: string[], data: Record<string, string>, ttlSeconds: number): Promise<{ invalidTokens: string[] }>;
+  sendCall?(
+    tokens: string[],
+    data: Record<string, string>,
+    ttlSeconds: number,
+  ): Promise<{ invalidTokens: string[] }>;
 }
 
 /** Records pushes (tests and installs without FCM). */
 export class RecordingPushSender implements PushSender {
   readonly sent: Array<{ tokens: string[]; message: PushMessage; at: number }> = [];
-  readonly calls: Array<{ tokens: string[]; data: Record<string, string>; ttlSeconds: number }> = [];
+  readonly calls: Array<{ tokens: string[]; data: Record<string, string>; ttlSeconds: number }> =
+    [];
   async send(tokens: string[], message: PushMessage) {
     this.sent.push({ tokens, message, at: Date.now() });
     return { invalidTokens: [] };
@@ -100,11 +105,16 @@ export class FcmPushSender implements PushSender {
     const invalidTokens: string[] = [];
     const access = await this.accessToken();
     for (const token of tokens) {
-      const res = await this.fetchImpl(`https://fcm.googleapis.com/v1/projects/${this.account.project_id}/messages:send`, {
-        method: "POST",
-        headers: { authorization: `Bearer ${access}`, "content-type": "application/json" },
-        body: JSON.stringify({ message: { token, data, android: { priority: "HIGH", ttl: `${ttlSeconds}s` } } }),
-      });
+      const res = await this.fetchImpl(
+        `https://fcm.googleapis.com/v1/projects/${this.account.project_id}/messages:send`,
+        {
+          method: "POST",
+          headers: { authorization: `Bearer ${access}`, "content-type": "application/json" },
+          body: JSON.stringify({
+            message: { token, data, android: { priority: "HIGH", ttl: `${ttlSeconds}s` } },
+          }),
+        },
+      );
       if (res.status === 404 || res.status === 400) invalidTokens.push(token);
     }
     return { invalidTokens };
@@ -142,7 +152,9 @@ export class NotificationService {
         : null;
     // Quiet hours (D-109): the inbox row now, the push when the window ends (unless urgent).
     const later = urgent || held ? null : await this.quietUntil(userId, message.bot_id ?? null);
-    const payload = proactive ? { ...message, why: proactive.why, urgency: proactive.urgency } : message;
+    const payload = proactive
+      ? { ...message, why: proactive.why, urgency: proactive.urgency }
+      : message;
     const [row] = await this.db.execute<{ id: string }>(sql`
       insert into public.notifications (user_id, org_id, kind, payload, push_status, push_after, urgency, held_reason)
       values (${userId}::uuid, ${orgId}::uuid, ${kind}, ${JSON.stringify(payload)}::jsonb,

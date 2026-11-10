@@ -10,7 +10,10 @@ export const BotLink = z
     name: z.string(),
     status: z.enum(["pending", "active", "revoked"]),
     peer_bot_name: z.string().nullable(),
-    remote_url: z.string().nullable().openapi({ description: "The other Kasama server, when the contact is on another one" }),
+    remote_url: z
+      .string()
+      .nullable()
+      .openapi({ description: "The other Kasama server, when the contact is on another one" }),
     exchanges: z.number().int(),
     created_at: ts,
     activated_at: ts.nullable(),
@@ -22,7 +25,11 @@ export const CreatedBotLink = BotLink.extend({
   invite: z.string(),
 }).openapi("CreatedBotLink");
 
-export const CreateBotLinkRequest = z.object({ name: z.string().min(1).max(100).openapi({ description: "What you call this contact" }) }).openapi("CreateBotLinkRequest");
+export const CreateBotLinkRequest = z
+  .object({
+    name: z.string().min(1).max(100).openapi({ description: "What you call this contact" }),
+  })
+  .openapi("CreateBotLinkRequest");
 export const AcceptBotLinkRequest = z
   .object({ invite: z.string().min(10).max(2000), bot_id: Uuid, name: z.string().min(1).max(100) })
   .openapi("AcceptBotLinkRequest");

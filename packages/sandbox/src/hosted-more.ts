@@ -5,12 +5,23 @@
  * Request shapes come from each provider's public API docs; they are tested against local
  * stand-ins (src/testing-hosted.ts) through the shared contract suite.
  */
-import { call, e2bControlPlane, type HostedControlPlane, HostedProvider, type HostedProviderOptions } from "./hosted.ts";
+import {
+  call,
+  e2bControlPlane,
+  type HostedControlPlane,
+  HostedProvider,
+  type HostedProviderOptions,
+} from "./hosted.ts";
 import { type ComputerSpec, SandboxError } from "./types.ts";
 
-const shortRef = (ref: string) => ref.replace(/[^a-z0-9]/gi, "").toLowerCase().slice(0, 20);
+const shortRef = (ref: string) =>
+  ref
+    .replace(/[^a-z0-9]/gi, "")
+    .toLowerCase()
+    .slice(0, 20);
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const imageFor = (spec: ComputerSpec, images: { headless: string; desktop: string }) => (spec.profile === "desktop" ? images.desktop : images.headless);
+const imageFor = (spec: ComputerSpec, images: { headless: string; desktop: string }) =>
+  spec.profile === "desktop" ? images.desktop : images.headless;
 
 // ---------------------------------------------------------------------------
 // Novita Agent Sandbox: E2B-compatible API and port URLs, on Novita's domain.
@@ -25,7 +36,11 @@ export interface NovitaOptions {
 }
 
 export function novitaControlPlane(o: NovitaOptions): HostedControlPlane {
-  return e2bControlPlane({ ...o, apiUrl: o.apiUrl ?? "https://api.sandbox.novita.ai", domain: o.domain ?? "sandbox.novita.ai" });
+  return e2bControlPlane({
+    ...o,
+    apiUrl: o.apiUrl ?? "https://api.sandbox.novita.ai",
+    domain: o.domain ?? "sandbox.novita.ai",
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -86,7 +101,14 @@ export function kubernetesControlPlane(o: KubernetesOptions): HostedControlPlane
                   env: Object.entries(env).map(([n, value]) => ({ name: n, value })),
                   ports: [{ containerPort: 7070 }, { containerPort: 8080 }],
                   ...(cpus || mem
-                    ? { resources: { limits: { ...(cpus ? { cpu: String(cpus) } : {}), ...(mem ? { memory: `${mem}Mi` } : {}) } } }
+                    ? {
+                        resources: {
+                          limits: {
+                            ...(cpus ? { cpu: String(cpus) } : {}),
+                            ...(mem ? { memory: `${mem}Mi` } : {}),
+                          },
+                        },
+                      }
                     : {}),
                 },
               ],
@@ -108,22 +130,37 @@ export function kubernetesControlPlane(o: KubernetesOptions): HostedControlPlane
       throw new SandboxError("computer_start_timeout", "Kubernetes pod did not start");
     },
     async find(ref) {
-      const list = await call<{ items: Pod[] }>(`${pods}?labelSelector=${encodeURIComponent(`kasama_ref=${ref}`)}`, { headers, fetch: f }, "kubernetes");
-      const hit = list.items.find((p) => !p.metadata.deletionTimestamp && p.metadata.labels?.kasama_ref === ref);
+      const list = await call<{ items: Pod[] }>(
+        `${pods}?labelSelector=${encodeURIComponent(`kasama_ref=${ref}`)}`,
+        { headers, fetch: f },
+        "kubernetes",
+      );
+      const hit = list.items.find(
+        (p) => !p.metadata.deletionTimestamp && p.metadata.labels?.kasama_ref === ref,
+      );
       if (hit?.status?.podIP) ips.set(hit.metadata.name, hit.status.podIP);
       return hit ? { id: hit.metadata.name, running: hit.status?.phase === "Running" } : null;
     },
     async kill(id) {
       ips.delete(id);
-      await call(`${pods}/${encodeURIComponent(id)}`, { method: "DELETE", headers, fetch: f, expect: [200, 202, 404] }, "kubernetes");
+      await call(
+        `${pods}/${encodeURIComponent(id)}`,
+        { method: "DELETE", headers, fetch: f, expect: [200, 202, 404] },
+        "kubernetes",
+      );
     },
     async endpoint(id, port): Promise<{ url: string; headers: Record<string, string> }> {
       if (o.direct) {
-        const ip = ips.get(id) ?? (await call<Pod>(`${pods}/${id}`, { headers, fetch: f }, "kubernetes")).status?.podIP;
+        const ip =
+          ips.get(id) ??
+          (await call<Pod>(`${pods}/${id}`, { headers, fetch: f }, "kubernetes")).status?.podIP;
         if (!ip) throw new SandboxError("kubernetes_error", `Pod ${id} has no IP`);
         return { url: `http://${ip}:${port}`, headers: {} };
       }
-      return { url: `${pods}/${encodeURIComponent(id)}:${port}/proxy`, headers: { authorization: `Bearer ${o.token}` } };
+      return {
+        url: `${pods}/${encodeURIComponent(id)}:${port}/proxy`,
+        headers: { authorization: `Bearer ${o.token}` },
+      };
     },
   };
 }
@@ -146,20 +183,31 @@ export interface IncusOptions {
   portUrl?: (name: string, port: number) => Promise<string> | string;
 }
 
-type IncusOp = { type?: string; operation?: string; metadata?: { id?: string; status?: string; err?: string } };
+type IncusOp = {
+  type?: string;
+  operation?: string;
+  metadata?: { id?: string; status?: string; err?: string };
+};
 type IncusInstance = { name: string; status: string; config?: Record<string, string> };
 
 export function incusControlPlane(o: IncusOptions): HostedControlPlane {
   const api = o.apiUrl.replace(/\/$/, "");
   const q = o.project ? `project=${encodeURIComponent(o.project)}` : "";
   const qs = (extra = "") => [q, extra].filter(Boolean).join("&");
-  const headers: Record<string, string> = { "content-type": "application/json", ...(o.token ? { authorization: `Bearer ${o.token}` } : {}) };
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    ...(o.token ? { authorization: `Bearer ${o.token}` } : {}),
+  };
   const f = o.fetch;
-  const req = <T>(path: string, init: RequestInit & { expect?: number[] } = {}) => call<T>(`${api}${path}`, { headers, fetch: f, ...init }, "incus");
+  const req = <T>(path: string, init: RequestInit & { expect?: number[] } = {}) =>
+    call<T>(`${api}${path}`, { headers, fetch: f, ...init }, "incus");
   const waitOp = async (op: IncusOp) => {
     if (op.type !== "async" || !op.operation) return;
-    const r = await req<{ metadata?: { status?: string; err?: string } }>(`${op.operation}/wait?${qs("timeout=120")}`);
-    if (r.metadata?.status && r.metadata.status !== "Success") throw new SandboxError("incus_error", `Incus: ${r.metadata.err || r.metadata.status}`);
+    const r = await req<{ metadata?: { status?: string; err?: string } }>(
+      `${op.operation}/wait?${qs("timeout=120")}`,
+    );
+    if (r.metadata?.status && r.metadata.status !== "Success")
+      throw new SandboxError("incus_error", `Incus: ${r.metadata.err || r.metadata.status}`);
   };
   return {
     async create(spec, env) {
@@ -177,29 +225,49 @@ export function incusControlPlane(o: IncusOptions): HostedControlPlane {
             start: true,
             config,
             ...(o.profiles ? { profiles: o.profiles } : {}),
-            source: { type: "image", mode: "pull", server: o.registry, protocol: "oci", alias: imageFor(spec, o.images) },
+            source: {
+              type: "image",
+              mode: "pull",
+              server: o.registry,
+              protocol: "oci",
+              alias: imageFor(spec, o.images),
+            },
           }),
         }),
       );
       return { id: name, running: true };
     },
     async find(ref) {
-      const list = await req<{ metadata: IncusInstance[] }>(`/1.0/instances?${qs(`recursion=1&filter=${encodeURIComponent(`config.user.kasama_ref eq ${ref}`)}`)}`);
+      const list = await req<{ metadata: IncusInstance[] }>(
+        `/1.0/instances?${qs(`recursion=1&filter=${encodeURIComponent(`config.user.kasama_ref eq ${ref}`)}`)}`,
+      );
       const hit = (list.metadata ?? []).find((i) => i.config?.["user.kasama_ref"] === ref);
       return hit ? { id: hit.name, running: hit.status === "Running" } : null;
     },
     async kill(id) {
       const path = `/1.0/instances/${encodeURIComponent(id)}`;
-      const stop = await req<IncusOp>(`${path}/state?${qs()}`, { method: "PUT", body: JSON.stringify({ action: "stop", force: true, timeout: 10 }), expect: [200, 202, 404] }).catch(() => null);
+      const stop = await req<IncusOp>(`${path}/state?${qs()}`, {
+        method: "PUT",
+        body: JSON.stringify({ action: "stop", force: true, timeout: 10 }),
+        expect: [200, 202, 404],
+      }).catch(() => null);
       if (stop) await waitOp(stop).catch(() => {});
-      const del = await req<IncusOp | null>(`${path}?${qs()}`, { method: "DELETE", expect: [200, 202, 404] });
+      const del = await req<IncusOp | null>(`${path}?${qs()}`, {
+        method: "DELETE",
+        expect: [200, 202, 404],
+      });
       if (del) await waitOp(del).catch(() => {});
     },
     async endpoint(id, port) {
       if (o.portUrl) return { url: await o.portUrl(id, port), headers: {} };
-      const st = await req<{ metadata: { network?: Record<string, { addresses?: Array<{ family: string; address: string; scope: string }> }> } }>(
-        `/1.0/instances/${encodeURIComponent(id)}/state?${qs()}`,
-      );
+      const st = await req<{
+        metadata: {
+          network?: Record<
+            string,
+            { addresses?: Array<{ family: string; address: string; scope: string }> }
+          >;
+        };
+      }>(`/1.0/instances/${encodeURIComponent(id)}/state?${qs()}`);
       for (const [nic, n] of Object.entries(st.metadata.network ?? {})) {
         if (nic === "lo") continue;
         const a = n.addresses?.find((x) => x.family === "inet" && x.scope === "global");
@@ -235,7 +303,9 @@ export function boatControlPlane(o: BoatOptions): HostedControlPlane {
   return {
     async create(spec, env) {
       const image = imageFor(spec, o.images);
-      const envFlags = Object.keys(env).map((k) => `-e ${k}`).join(" ");
+      const envFlags = Object.keys(env)
+        .map((k) => `-e ${k}`)
+        .join(" ");
       const setupScript = [
         "set -e",
         `docker pull ${sh(image)}`,
@@ -261,19 +331,33 @@ export function boatControlPlane(o: BoatOptions): HostedControlPlane {
       return { id: r.sandbox.id, running: true };
     },
     async find(ref) {
-      const r = await call<{ sandboxes?: BoatSandbox[]; data?: BoatSandbox[] }>(`${api}/sandboxes?label=${encodeURIComponent(`kasama_ref=${ref}`)}`, { headers }, "boat");
-      const hit = (r.sandboxes ?? r.data ?? []).find((s) => s.labels?.kasama_ref === ref && s.state !== "deleted");
+      const r = await call<{ sandboxes?: BoatSandbox[]; data?: BoatSandbox[] }>(
+        `${api}/sandboxes?label=${encodeURIComponent(`kasama_ref=${ref}`)}`,
+        { headers },
+        "boat",
+      );
+      const hit = (r.sandboxes ?? r.data ?? []).find(
+        (s) => s.labels?.kasama_ref === ref && s.state !== "deleted",
+      );
       return hit ? { id: hit.id, running: (hit.state ?? "running") === "running" } : null;
     },
     async kill(id) {
       for (const k of [...urls.keys()]) if (k.startsWith(`${id}:`)) urls.delete(k);
-      await call(`${api}/sandboxes/${encodeURIComponent(id)}`, { method: "DELETE", headers, expect: [200, 202, 204, 404] }, "boat");
+      await call(
+        `${api}/sandboxes/${encodeURIComponent(id)}`,
+        { method: "DELETE", headers, expect: [200, 202, 204, 404] },
+        "boat",
+      );
     },
     async endpoint(id, port) {
       const key = `${id}:${port}`;
       const cached = urls.get(key);
       if (cached) return { url: cached, headers: {} };
-      const r = await call<{ url: string }>(`${api}/sandboxes/${encodeURIComponent(id)}/host`, { method: "POST", headers, body: JSON.stringify({ port, public: true }) }, "boat");
+      const r = await call<{ url: string }>(
+        `${api}/sandboxes/${encodeURIComponent(id)}/host`,
+        { method: "POST", headers, body: JSON.stringify({ port, public: true }) },
+        "boat",
+      );
       const url = r.url.replace(/\/$/, "");
       urls.set(key, url);
       return { url, headers: {} };
@@ -299,11 +383,24 @@ export interface RailwayOptions {
 
 export function railwayControlPlane(o: RailwayOptions): HostedControlPlane {
   const api = o.apiUrl ?? "https://backboard.railway.com/graphql/v2";
-  const headers = { "content-type": "application/json", ...(o.projectToken ? { "project-access-token": o.token } : { authorization: `Bearer ${o.token}` }) };
+  const headers = {
+    "content-type": "application/json",
+    ...(o.projectToken
+      ? { "project-access-token": o.token }
+      : { authorization: `Bearer ${o.token}` }),
+  };
   const domains = new Map<string, string>();
   const gql = async <T>(query: string, variables: Record<string, unknown>) => {
-    const r = await call<{ data?: T; errors?: Array<{ message: string }> }>(api, { method: "POST", headers, body: JSON.stringify({ query, variables }) }, "railway");
-    if (r.errors?.length) throw new SandboxError("railway_error", `Railway: ${r.errors.map((e) => e.message).join("; ")}`);
+    const r = await call<{ data?: T; errors?: Array<{ message: string }> }>(
+      api,
+      { method: "POST", headers, body: JSON.stringify({ query, variables }) },
+      "railway",
+    );
+    if (r.errors?.length)
+      throw new SandboxError(
+        "railway_error",
+        `Railway: ${r.errors.map((e) => e.message).join("; ")}`,
+      );
     return r.data as T;
   };
   const nameOf = (ref: string) => `kasama-${shortRef(ref)}`;
@@ -311,19 +408,31 @@ export function railwayControlPlane(o: RailwayOptions): HostedControlPlane {
     async create(spec, env) {
       const r = await gql<{ serviceCreate: { id: string } }>(
         "mutation ($input: ServiceCreateInput!) { serviceCreate(input: $input) { id name } }",
-        { input: { projectId: o.projectId, environmentId: o.environmentId, name: nameOf(spec.ref), source: { image: imageFor(spec, o.images) }, variables: env } },
+        {
+          input: {
+            projectId: o.projectId,
+            environmentId: o.environmentId,
+            name: nameOf(spec.ref),
+            source: { image: imageFor(spec, o.images) },
+            variables: env,
+          },
+        },
       );
-      await gql("mutation ($serviceId: String!, $environmentId: String!) { serviceInstanceDeployV2(serviceId: $serviceId, environmentId: $environmentId) }", {
-        serviceId: r.serviceCreate.id,
-        environmentId: o.environmentId,
-      });
+      await gql(
+        "mutation ($serviceId: String!, $environmentId: String!) { serviceInstanceDeployV2(serviceId: $serviceId, environmentId: $environmentId) }",
+        {
+          serviceId: r.serviceCreate.id,
+          environmentId: o.environmentId,
+        },
+      );
       return { id: r.serviceCreate.id, running: true };
     },
     async find(ref) {
-      const r = await gql<{ project: { services: { edges: Array<{ node: { id: string; name: string } }> } } }>(
-        "query ($id: String!) { project(id: $id) { services { edges { node { id name } } } } }",
-        { id: o.projectId },
-      );
+      const r = await gql<{
+        project: { services: { edges: Array<{ node: { id: string; name: string } }> } };
+      }>("query ($id: String!) { project(id: $id) { services { edges { node { id name } } } } }", {
+        id: o.projectId,
+      });
       const hit = r.project.services.edges.find((e) => e.node.name === nameOf(ref));
       return hit ? { id: hit.node.id, running: true } : null;
     },
@@ -349,15 +458,28 @@ export function railwayControlPlane(o: RailwayOptions): HostedControlPlane {
   };
 }
 
-export const novitaProvider = (o: NovitaOptions, h: HostedProviderOptions) => new HostedProvider("novita", novitaControlPlane(o), h);
-export const kubernetesProvider = (o: KubernetesOptions, h: HostedProviderOptions) => new HostedProvider("kubernetes", kubernetesControlPlane(o), h);
-export const incusProvider = (o: IncusOptions, h: HostedProviderOptions) => new HostedProvider("incus", incusControlPlane(o), h);
-export const boatProvider = (o: BoatOptions, h: HostedProviderOptions) => new HostedProvider("boat", boatControlPlane(o), h);
-export const railwayProvider = (o: RailwayOptions, h: HostedProviderOptions) => new HostedProvider("railway", railwayControlPlane(o), h);
+export const novitaProvider = (o: NovitaOptions, h: HostedProviderOptions) =>
+  new HostedProvider("novita", novitaControlPlane(o), h);
+export const kubernetesProvider = (o: KubernetesOptions, h: HostedProviderOptions) =>
+  new HostedProvider("kubernetes", kubernetesControlPlane(o), h);
+export const incusProvider = (o: IncusOptions, h: HostedProviderOptions) =>
+  new HostedProvider("incus", incusControlPlane(o), h);
+export const boatProvider = (o: BoatOptions, h: HostedProviderOptions) =>
+  new HostedProvider("boat", boatControlPlane(o), h);
+export const railwayProvider = (o: RailwayOptions, h: HostedProviderOptions) =>
+  new HostedProvider("railway", railwayControlPlane(o), h);
 
 /** A fetch that trusts a private CA and/or presents a client certificate (Kubernetes, Incus). */
-export async function tlsFetch(o: { ca?: string; cert?: string; key?: string }): Promise<typeof fetch> {
+export async function tlsFetch(o: {
+  ca?: string;
+  cert?: string;
+  key?: string;
+}): Promise<typeof fetch> {
   const { Agent, fetch: undiciFetch } = await import("undici");
   const dispatcher = new Agent({ connect: { ca: o.ca, cert: o.cert, key: o.key } });
-  return ((url: string | URL | Request, init?: RequestInit) => undiciFetch(url as string, { ...(init as object), dispatcher } as never)) as unknown as typeof fetch;
+  return ((url: string | URL | Request, init?: RequestInit) =>
+    undiciFetch(
+      url as string,
+      { ...(init as object), dispatcher } as never,
+    )) as unknown as typeof fetch;
 }

@@ -44,8 +44,7 @@ export function scriptJson(value: unknown) {
     .replaceAll(" ", "\\u2029");
 }
 
-const escapeHtml = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 const THEME = `:root{--k-bg:#fbf8fd;--k-fg:#1d1b20;--k-muted:#625b71;--k-accent:#6750a4;--k-surface:#f3edf7;--k-font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:light dark}
 @media (prefers-color-scheme:dark){:root{--k-bg:#141218;--k-fg:#e6e0e9;--k-muted:#cac4d0;--k-accent:#d0bcff;--k-surface:#211f26}}
@@ -70,6 +69,8 @@ export function renderPage(p: RenderablePage) {
     html = `<!doctype html><html><head><title>${escapeHtml(p.title)}</title></head><body>${html}</body></html>`;
   if (!/<head[\s>]/i.test(html)) html = html.replace(/<html[^>]*>/i, (m) => `${m}<head></head>`);
   html = html.replace(/<head[^>]*>/i, (m) => `${m}${head}`);
-  html = /<\/body>/i.test(html) ? html.replace(/<\/body>(?![\s\S]*<\/body>)/i, `${foot}</body>`) : `${html}${foot}`;
+  html = /<\/body>/i.test(html)
+    ? html.replace(/<\/body>(?![\s\S]*<\/body>)/i, `${foot}</body>`)
+    : `${html}${foot}`;
   return html;
 }

@@ -23,7 +23,13 @@ export const startTeach = createRoute({
   security,
   summary: "Start recording a task while you have control of a computer (D-120)",
   request: { body: jsonBody(StartTeachRequest) },
-  responses: { 201: jsonResponse("Recording", TeachSession), 401: e401, 403: e403, 404: e404, 409: e409 },
+  responses: {
+    201: jsonResponse("Recording", TeachSession),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });
 
 export const getTeach = createRoute({
@@ -53,8 +59,12 @@ export const markTeachSecret = createRoute({
   path: "/v1/teach/{id}/steps/{seq}/secret",
   tags,
   security,
-  summary: "Mark a typed value as a secret: its text is deleted and it becomes a {{secret:NAME}} input",
-  request: { params: z.object({ id: Uuid, seq: z.coerce.number().int().min(1) }), body: jsonBody(MarkTeachSecretRequest) },
+  summary:
+    "Mark a typed value as a secret: its text is deleted and it becomes a {{secret:NAME}} input",
+  request: {
+    params: z.object({ id: Uuid, seq: z.coerce.number().int().min(1) }),
+    body: jsonBody(MarkTeachSecretRequest),
+  },
   responses: { 200: jsonResponse("Step", TeachStep), 401: e401, 404: e404, 409: e409 },
 });
 
@@ -77,7 +87,13 @@ export const saveTeach = createRoute({
   security,
   summary: "Save the (edited) draft as one of the bot's skills, and optionally try it now",
   request: { params: idParam, body: jsonBody(SaveTeachRequest) },
-  responses: { 200: jsonResponse("Saved", SaveTeachResponse), 401: e401, 403: e403, 404: e404, 409: e409 },
+  responses: {
+    200: jsonResponse("Saved", SaveTeachResponse),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });
 
 export const cancelTeach = createRoute({

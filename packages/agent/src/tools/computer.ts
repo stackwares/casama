@@ -347,7 +347,8 @@ export function registerComputerTools(registry: ToolRegistry) {
     requires,
     schema: z.object({ path: z.string().max(500).optional() }),
     async execute(args, ctx) {
-      const asked = args.path ?? `screenshots/${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+      const asked =
+        args.path ?? `screenshots/${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
       // On a team computer relative paths are in the bot's folder (D-148).
       const path = (await needComputer(ctx)).resolvePath?.(asked) ?? asked;
       await browser(

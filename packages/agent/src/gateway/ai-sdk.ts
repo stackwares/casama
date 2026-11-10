@@ -30,7 +30,9 @@ export function languageModel(m: ResolvedModel): LanguageModel {
     case "anthropic":
       return createAnthropic({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
     case "google":
-      return createGoogleGenerativeAI({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
+      return createGoogleGenerativeAI({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(
+        m.model,
+      );
     case "xai":
       return createXai({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
     case "openrouter":
