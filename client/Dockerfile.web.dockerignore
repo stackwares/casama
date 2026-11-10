@@ -1,0 +1,19 @@
+# The web image needs the Flutter client (the repo-wide .dockerignore leaves it out of other images).
+**/node_modules
+**/.turbo
+**/dist
+**/.dart_tool
+**/build
+**/Pods
+**/.gradle
+.git
+supabase
+apps
+packages
+ee
+infra
+docs
+docs-site
+.env
+**/._*
+**/.DS_Store
