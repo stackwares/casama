@@ -4,6 +4,12 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
 
 /// What a bot remembers: view, edit, pin and delete (deleted memories are gone, not hidden).
 class MemoryScreen extends ConsumerWidget {
@@ -11,36 +17,16 @@ class MemoryScreen extends ConsumerWidget {
   final String botId;
 
   Future<void> _edit(BuildContext context, WidgetRef ref, Memory m) async {
-    final controller = TextEditingController(text: m.content);
-    final text = await showDialog<String>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(context.l10n.edit),
-        content: TextField(controller: controller, maxLines: 5, autofocus: true),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: Text(context.l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(c, controller.text.trim()), child: Text(context.l10n.save)),
-        ],
-      ),
-    );
-    controller.dispose();
+    final text = await showAdaptiveSheet<String>(context: context, builder: (_) => _EditMemoryForm(initial: m.content));
     if (text == null || text.isEmpty || !context.mounted) return;
     await runGuarded(context, () => ref.read(backendProvider).updateMemory(m.id, content: text));
     ref.invalidate(memoriesProvider(botId));
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref, Memory m) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        content: Text(context.l10n.deleteMemoryConfirm),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(context.l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(context.l10n.delete)),
-        ],
-      ),
-    );
-    if (ok != true || !context.mounted) return;
+    final l10n = context.l10n;
+    final ok = await showConfirm(context: context, title: l10n.deleteMemoryTitle, message: l10n.deleteMemoryConfirm, confirmLabel: l10n.delete, destructive: true);
+    if (!ok || !context.mounted) return;
     await runGuarded(context, () => ref.read(backendProvider).deleteMemory(m.id));
     ref.invalidate(memoriesProvider(botId));
   }
@@ -48,39 +34,125 @@ class MemoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final bot = ref.watch(botProvider(botId));
     final memories = ref.watch(memoriesProvider(botId));
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.memory)),
+    return SubPage(
+      title: l10n.memory,
+      subtitle: bot?.name,
       body: AsyncView(
         value: memories,
         onRetry: () => ref.invalidate(memoriesProvider(botId)),
         data: (items) => items.isEmpty
-            ? EmptyState(icon: Icons.psychology_outlined, message: l10n.noMemories)
-            : ListView(children: [
-                for (final m in items)
-                  ListTile(
-                    key: Key('memory-${m.id}'),
-                    leading: Icon(m.pinned ? Icons.push_pin : Icons.notes_outlined),
-                    title: Text(m.content),
-                    subtitle: Text('${m.kind.value} · ${relativeTime(m.updatedAt, context)}'),
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (v) async {
-                        if (v == 'edit') await _edit(context, ref, m);
-                        if (v == 'pin' && context.mounted) {
-                          await runGuarded(context, () => ref.read(backendProvider).updateMemory(m.id, pinned: !m.pinned));
-                          ref.invalidate(memoriesProvider(botId));
-                        }
-                        if (v == 'delete' && context.mounted) await _delete(context, ref, m);
-                      },
-                      itemBuilder: (_) => [
-                        PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
-                        PopupMenuItem(value: 'pin', child: Text(m.pinned ? l10n.unpin : l10n.pin)),
-                        PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
-                      ],
-                    ),
-                  ),
-              ]),
+            ? EmptyState(icon: Icons.psychology_outlined, title: l10n.noMemories, message: l10n.noMemoriesHelp)
+            : PageListView(
+                header: FormNote(l10n.memoryHelp),
+                itemCount: items.length,
+                itemBuilder: (context, i) => _MemoryCard(
+                  memory: items[i],
+                  onEdit: () => _edit(context, ref, items[i]),
+                  onDelete: () => _delete(context, ref, items[i]),
+                  onPin: () async {
+                    await runGuarded(context, () => ref.read(backendProvider).updateMemory(items[i].id, pinned: !items[i].pinned));
+                    ref.invalidate(memoriesProvider(botId));
+                  },
+                ).appListItemEntrance(i),
+              ),
       ),
+    );
+  }
+}
+
+class _MemoryCard extends StatelessWidget {
+  const _MemoryCard({required this.memory, required this.onEdit, required this.onDelete, required this.onPin});
+  final Memory memory;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback onPin;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
+    final m = memory;
+    final (label, color, icon) = switch (m.kind.value) {
+      'fact' => (l10n.memoryFact, colors.info, Icons.lightbulb_outline_rounded),
+      'preference' => (l10n.memoryPreference, colors.positive, Icons.favorite_border_rounded),
+      'summary' => (l10n.memorySummary, colors.warning, Icons.notes_rounded),
+      _ => (l10n.memoryEpisode, scheme.primary, Icons.history_rounded),
+    };
+    return AppCard(
+      key: Key('memory-${m.id}'),
+      onTap: onEdit,
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.xxs, 12),
+      borderColor: m.pinned ? scheme.primary.withValues(alpha: 0.45) : null,
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              StatusLabel(text: label, color: color, pill: true, icon: icon),
+              if (m.pinned) ...[const SizedBox(width: 6), StatusLabel(text: l10n.pinned, color: scheme.primary, pill: true, icon: Icons.push_pin_rounded)],
+              const Spacer(),
+              Text(relativeTime(m.updatedAt, context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+            ]),
+            const SizedBox(height: AppSpace.xs),
+            Text(m.content, style: context.textTheme.bodyMedium?.copyWith(height: 1.45)),
+          ]),
+        ),
+        PopupMenuButton<String>(
+          tooltip: l10n.moreActions,
+          icon: Icon(Icons.more_vert_rounded, color: scheme.onSurfaceVariant),
+          onSelected: (v) => switch (v) { 'edit' => onEdit(), 'pin' => onPin(), _ => onDelete() },
+          itemBuilder: (_) => [
+            PopupMenuItem(value: 'edit', child: ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.edit), dense: true)),
+            PopupMenuItem(
+              value: 'pin',
+              child: ListTile(leading: Icon(m.pinned ? Icons.push_pin_outlined : Icons.push_pin_rounded), title: Text(m.pinned ? l10n.unpin : l10n.pin), dense: true),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: ListTile(
+                leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
+                title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
+                dense: true,
+              ),
+            ),
+          ],
+        ),
+      ]),
+    );
+  }
+}
+
+class _EditMemoryForm extends StatefulWidget {
+  const _EditMemoryForm({required this.initial});
+  final String initial;
+
+  @override
+  State<_EditMemoryForm> createState() => _EditMemoryFormState();
+}
+
+class _EditMemoryFormState extends State<_EditMemoryForm> {
+  late final _text = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return FormSheet(
+      icon: Icons.psychology_outlined,
+      title: l10n.editMemory,
+      subtitle: l10n.editMemoryHelp,
+      submitLabel: l10n.save,
+      onSubmit: _text.text.trim().isEmpty ? null : () => Navigator.pop(context, _text.text.trim()),
+      children: [
+        TextField(controller: _text, autofocus: true, minLines: 3, maxLines: 8, onChanged: (_) => setState(() {})),
+      ],
     );
   }
 }

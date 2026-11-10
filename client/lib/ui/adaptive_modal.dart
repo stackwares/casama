@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
+import 'form_sheet.dart';
 
 bool _compact(BuildContext context) => AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
 
@@ -20,6 +21,8 @@ Future<T?> showAdaptiveSheet<T>({
   if (_compact(context)) {
     return showModalBottomSheet<T>(
       context: context,
+      // Above the shell (the phone's floating tab bar), not inside the tab's navigator.
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
@@ -46,6 +49,7 @@ Future<T?> showAdaptiveSheet<T>({
   }
   return showDialog<T>(
     context: context,
+    useRootNavigator: true,
     builder: (context) {
       final size = MediaQuery.sizeOf(context);
       final width = math.min(dialogMaxWidth, size.width - 80);
@@ -74,45 +78,22 @@ Future<bool> showConfirm({
   required String confirmLabel,
   String? cancelLabel,
   bool destructive = false,
+  IconData? icon,
+  Key? confirmKey,
 }) async {
-  final cancel = cancelLabel ?? MaterialLocalizations.of(context).cancelButtonLabel;
-  final scheme = context.colorScheme;
-  final confirmStyle = destructive ? FilledButton.styleFrom(backgroundColor: scheme.error, foregroundColor: scheme.onError) : null;
-  if (!_compact(context)) {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(title),
-        content: message == null ? null : Text(message),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(cancel)),
-          FilledButton(style: confirmStyle, onPressed: () => Navigator.pop(c, true), child: Text(confirmLabel)),
-        ],
-      ),
-    );
-    return ok ?? false;
-  }
-  final ok = await showModalBottomSheet<bool>(
+  final ok = await showAdaptiveSheet<bool>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    builder: (c) => SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.sm),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-          Text(title, style: c.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-          if (message != null) ...[
-            const SizedBox(height: 10),
-            Text(message, style: c.textTheme.bodyMedium?.copyWith(color: c.colorScheme.onSurfaceVariant, height: 1.4)),
-          ],
-          const SizedBox(height: AppSpace.xl),
-          SizedBox(height: 50, child: FilledButton(style: confirmStyle, onPressed: () => Navigator.pop(c, true), child: Text(confirmLabel))),
-          const SizedBox(height: AppSpace.xs),
-          SizedBox(height: 50, child: TextButton(onPressed: () => Navigator.pop(c, false), child: Text(cancel))),
-        ]),
-      ),
+    dialogMaxWidth: 460,
+    builder: (c) => FormSheet(
+      icon: icon ?? (destructive ? Icons.warning_amber_rounded : Icons.help_outline_rounded),
+      title: title,
+      subtitle: message,
+      submitLabel: confirmLabel,
+      submitKey: confirmKey,
+      cancelLabel: cancelLabel,
+      destructive: destructive,
+      onSubmit: () => Navigator.pop(c, true),
+      children: const [],
     ),
   );
   return ok ?? false;
@@ -129,19 +110,24 @@ class SheetTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.md, AppSpace.sm),
-      child: Row(children: [
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
-            if (subtitle != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(subtitle!, style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceVariant)),
-              ),
-          ]),
-        ),
-        ?trailing,
-      ]),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+                if (subtitle != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(subtitle!, style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+                  ),
+              ],
+            ),
+          ),
+          ?trailing,
+        ],
+      ),
     );
   }
 }

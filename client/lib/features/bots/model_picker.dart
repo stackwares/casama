@@ -38,7 +38,12 @@ class ModelPickerField extends ConsumerWidget {
             },
       child: InputDecorator(
         isEmpty: value.isEmpty,
-        decoration: InputDecoration(labelText: l10n.model, enabled: enabled, suffixIcon: const Icon(Icons.arrow_drop_down)),
+        decoration: InputDecoration(
+          labelText: l10n.model,
+          enabled: enabled,
+          prefixIcon: const Icon(Icons.auto_awesome_outlined, size: 20),
+          suffixIcon: const Icon(Icons.arrow_drop_down),
+        ),
         child: value.isEmpty
             ? null
             : Column(
@@ -147,8 +152,7 @@ class _ModelSheetState extends ConsumerState<_ModelSheet> {
                 for (final m in featured) () => tile(m),
                 if (rest.isNotEmpty) () => _Header(l10n.allModels),
                 for (final m in rest) () => tile(m),
-                if (featured.isEmpty && rest.isEmpty && typed.isEmpty)
-                  () => Padding(padding: const EdgeInsets.all(16), child: Text(l10n.noModelsFound)),
+                if (featured.isEmpty && rest.isEmpty && typed.isEmpty) () => Padding(padding: const EdgeInsets.all(16), child: Text(l10n.noModelsFound)),
               ];
               return ListView.builder(itemCount: rows.length, itemBuilder: (_, i) => rows[i]());
             },

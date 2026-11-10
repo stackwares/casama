@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
@@ -7,67 +8,112 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
+import '../../ui/shell_header.dart';
 
 String integrationKindLabel(BuildContext context, IntegrationKind kind) => switch (kind) {
-      IntegrationKind.mcp => context.l10n.kindMcp,
-      IntegrationKind.openapi => context.l10n.kindOpenapi,
-      IntegrationKind.composio => 'Composio',
-      IntegrationKind.pipedream => 'Pipedream Connect',
-    };
+  IntegrationKind.mcp => context.l10n.kindMcp,
+  IntegrationKind.openapi => context.l10n.kindOpenapi,
+  IntegrationKind.composio => 'Composio',
+  IntegrationKind.pipedream => 'Pipedream Connect',
+};
+
+IconData integrationKindIcon(IntegrationKind kind) => switch (kind) {
+  IntegrationKind.mcp => Icons.hub_outlined,
+  IntegrationKind.openapi => Icons.api_rounded,
+  IntegrationKind.composio => Icons.widgets_outlined,
+  IntegrationKind.pipedream => Icons.cable_rounded,
+};
 
 /// Workspace integrations: MCP servers, OpenAPI sources, Composio and Pipedream Connect.
 class IntegrationsScreen extends ConsumerWidget {
   const IntegrationsScreen({super.key});
 
+  Future<void> _add(BuildContext context, WidgetRef ref) async {
+    final added = await showAdaptiveSheet<bool>(context: context, builder: (_) => const AddIntegrationSheet());
+    if (added == true) ref.invalidate(integrationsProvider);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.integrations)),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('addIntegration'),
-        onPressed: () async {
-          final added = await showAdaptiveSheet<bool>(context: context, builder: (_) => const AddIntegrationSheet());
-          if (added == true) ref.invalidate(integrationsProvider);
-        },
-        icon: const Icon(Icons.add),
-        label: Text(l10n.addIntegration),
-      ),
+    return SubPage(
+      title: l10n.integrations,
+      actions: [HeaderIconButton(key: const Key('addIntegration'), icon: Icons.add_rounded, tooltip: l10n.addIntegration, onPressed: () => _add(context, ref))],
       body: AsyncView(
         value: ref.watch(integrationsProvider),
         onRetry: () => ref.invalidate(integrationsProvider),
         data: (items) => items.isEmpty
-            ? EmptyState(icon: Icons.extension_outlined, message: l10n.noIntegrations)
-            : ListView(children: [
-                for (final i in items)
-                  ListTile(
-                    key: Key('integration-${i.id}'),
-                    leading: Icon(
-                      switch (i.status) {
-                        IntegrationStatusEnum.ok => Icons.check_circle_outline,
-                        IntegrationStatusEnum.error => Icons.error_outline,
-                        IntegrationStatusEnum.pending => Icons.pending_outlined,
-                      },
-                      color: i.status == IntegrationStatusEnum.error ? Theme.of(context).colorScheme.error : null,
-                    ),
-                    title: Text(i.name),
-                    subtitle: Text([
-                      integrationKindLabel(context, i.kind),
-                      if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length),
-                      if (i.error != null) i.error!,
-                    ].join(' · ')),
-                    trailing: TextButton(
-                      key: Key('testIntegration-${i.id}'),
-                      onPressed: () async {
-                        final r = await runGuarded(context, () => ref.read(backendProvider).testIntegration(i.id));
-                        if (r == null || !context.mounted) return;
-                        ref.invalidate(integrationsProvider);
-                        showMessage(context, r.ok ? l10n.integrationOk(r.tools.length) : l10n.integrationFailed(r.error ?? ''));
-                      },
-                      child: Text(l10n.test),
-                    ),
-                  ),
-              ]),
+            ? EmptyState(
+                icon: Icons.extension_outlined,
+                title: l10n.noIntegrationsTitle,
+                message: l10n.noIntegrations,
+                action: FilledButton.icon(onPressed: () => _add(context, ref), icon: const Icon(Icons.add_rounded, size: 18), label: Text(l10n.addIntegration)),
+              )
+            : PageColumn(
+                children: [
+                  FormNote(l10n.integrationsHelp),
+                  const SizedBox(height: AppSpace.md),
+                  GroupedCard(children: [for (final i in items) _IntegrationRow(integration: i)]),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _IntegrationRow extends ConsumerStatefulWidget {
+  const _IntegrationRow({required this.integration});
+  final Integration integration;
+
+  @override
+  ConsumerState<_IntegrationRow> createState() => _IntegrationRowState();
+}
+
+class _IntegrationRowState extends ConsumerState<_IntegrationRow> {
+  var _testing = false;
+
+  Future<void> _test() async {
+    final l10n = context.l10n;
+    setState(() => _testing = true);
+    final r = await runGuarded(context, () => ref.read(backendProvider).testIntegration(widget.integration.id));
+    if (!mounted) return;
+    setState(() => _testing = false);
+    if (r == null) return;
+    ref.invalidate(integrationsProvider);
+    showMessage(context, r.ok ? l10n.integrationOk(r.tools.length) : l10n.integrationFailed(r.error ?? ''));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    final i = widget.integration;
+    final (statusText, statusColor) = switch (i.status) {
+      IntegrationStatusEnum.ok => (l10n.keyWorking, colors.positive),
+      IntegrationStatusEnum.error => (l10n.keyFailing, colors.negative),
+      IntegrationStatusEnum.pending => (l10n.keyUntested, context.colorScheme.onSurfaceVariant),
+    };
+    return GroupedTile(
+      key: Key('integration-${i.id}'),
+      icon: integrationKindIcon(i.kind),
+      iconColor: i.status == IntegrationStatusEnum.error ? colors.negative : null,
+      title: i.name,
+      subtitle: [integrationKindLabel(context, i.kind), if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length), if (i.error != null) i.error!].join(' · '),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          StatusLabel(text: statusText, color: statusColor, pill: true),
+          const SizedBox(width: AppSpace.xxs),
+          _testing
+              ? const SizedBox(
+                  width: 56,
+                  child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
+                )
+              : TextButton(key: Key('testIntegration-${i.id}'), onPressed: _test, child: Text(l10n.test)),
+        ],
       ),
     );
   }
@@ -91,6 +137,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
   final _apps = TextEditingController();
   final _secret = TextEditingController();
   var _busy = false;
+  var _showSecret = false;
 
   @override
   void dispose() {
@@ -102,22 +149,40 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
 
   List<String> _list(String s) => s.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
 
-
   Map<String, Object?> _config() => switch (_kind) {
-        IntegrationKind.mcp => {'url': _primary.text.trim()},
-        IntegrationKind.openapi => {
-            'spec': _primary.text.trim(),
-            if (_secondary.text.trim().isNotEmpty) 'base_url': _secondary.text.trim(),
-            // OpenAPI auth comes from a named secret so it obeys that secret's host allowlist.
-            if (_secret.text.trim().isNotEmpty) 'auth': {'type': 'bearer', 'secret': _secret.text.trim()},
-          },
-        IntegrationKind.composio => {'toolkits': _list(_primary.text)},
-        IntegrationKind.pipedream => {
-            'project_id': _primary.text.trim(),
-            'client_id': _secondary.text.trim(),
-            'apps': _list(_apps.text),
-          },
-      };
+    IntegrationKind.mcp => {'url': _primary.text.trim()},
+    IntegrationKind.openapi => {
+      'spec': _primary.text.trim(),
+      if (_secondary.text.trim().isNotEmpty) 'base_url': _secondary.text.trim(),
+      // OpenAPI auth comes from a named secret so it obeys that secret's host allowlist.
+      if (_secret.text.trim().isNotEmpty) 'auth': {'type': 'bearer', 'secret': _secret.text.trim()},
+    },
+    IntegrationKind.composio => {'toolkits': _list(_primary.text)},
+    IntegrationKind.pipedream => {'project_id': _primary.text.trim(), 'client_id': _secondary.text.trim(), 'apps': _list(_apps.text)},
+  };
+
+  Future<void> _save(String name) async {
+    setState(() => _busy = true);
+    final org = ref.read(currentOrgProvider)!;
+    final backend = ref.read(backendProvider);
+    final created = await runGuarded(context, () async {
+      final i = await backend.createIntegration(
+        org.id,
+        kind: _kind.value,
+        name: name,
+        config: _config(),
+        secret: _secret.text.isEmpty || _kind == IntegrationKind.openapi ? null : _secret.text,
+      );
+      // Prove the connection and cache tools right away; failures show on the list.
+      try {
+        await backend.testIntegration(i.id);
+      } catch (_) {}
+      return i;
+    });
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (created != null) Navigator.of(context).pop(true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,95 +200,81 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
     final primaryOk = primary.isNotEmpty && (!needsUrl || RegExp(r'^https?://').hasMatch(primary));
     // Say what is missing instead of leaving a disabled button unexplained.
     final missing = !nameOk ? l10n.integrationNeedsName : (!primaryOk ? l10n.integrationNeedsField(primaryLabel) : null);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.md),
-      child: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text(l10n.addIntegration, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
-          const SizedBox(height: AppSpace.md),
-          DropdownButtonFormField<IntegrationKind>(
-            key: const Key('integrationKind'),
-            initialValue: _kind,
-            decoration: InputDecoration(labelText: l10n.integrationType),
-            items: [for (final k in IntegrationKind.values) DropdownMenuItem(value: k, child: Text(integrationKindLabel(context, k)))],
-            onChanged: (v) => setState(() => _kind = v ?? _kind),
+    final secretIsName = _kind == IntegrationKind.openapi;
+    return FormSheet(
+      icon: Icons.extension_outlined,
+      title: l10n.addIntegration,
+      subtitle: l10n.integrationsHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveIntegration'),
+      busy: _busy,
+      onSubmit: missing != null ? null : () => _save(name),
+      footer: missing == null || _name.text.isEmpty ? null : FormNote(missing),
+      children: [
+        DropdownButtonFormField<IntegrationKind>(
+          key: const Key('integrationKind'),
+          initialValue: _kind,
+          decoration: InputDecoration(labelText: l10n.integrationType, prefixIcon: Icon(integrationKindIcon(_kind), size: 20)),
+          items: [for (final k in IntegrationKind.values) DropdownMenuItem(value: k, child: Text(integrationKindLabel(context, k)))],
+          onChanged: (v) => setState(() => _kind = v ?? _kind),
+        ),
+        TextField(
+          key: const Key('integrationName'),
+          controller: _name,
+          decoration: InputDecoration(
+            labelText: l10n.integrationName,
+            prefixIcon: const Icon(Icons.badge_outlined, size: 20),
+            helperText: _name.text.trim().isEmpty ? l10n.integrationNameHelp : (nameOk ? l10n.integrationSavedAs(name) : l10n.integrationNeedsName),
           ),
-          const SizedBox(height: 8),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          key: const Key('integrationPrimary'),
+          controller: _primary,
+          keyboardType: needsUrl ? TextInputType.url : TextInputType.text,
+          autocorrect: false,
+          decoration: InputDecoration(
+            labelText: primaryLabel,
+            hintText: needsUrl ? 'https://' : null,
+            prefixIcon: Icon(needsUrl ? Icons.link_rounded : Icons.list_alt_rounded, size: 20),
+            errorText: primary.isNotEmpty && !primaryOk ? l10n.integrationUrlInvalid : null,
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        if (secondaryLabel != null)
           TextField(
-            key: const Key('integrationName'),
-            controller: _name,
+            controller: _secondary,
+            autocorrect: false,
             decoration: InputDecoration(
-              labelText: l10n.integrationName,
-              helperText: _name.text.trim().isEmpty ? l10n.integrationNameHelp : (nameOk ? l10n.integrationSavedAs(name) : l10n.integrationNeedsName),
+              labelText: secondaryLabel,
+              prefixIcon: Icon(_kind == IntegrationKind.openapi ? Icons.dns_outlined : Icons.badge_outlined, size: 20),
             ),
-            onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: 8),
+        if (_kind == IntegrationKind.pipedream)
           TextField(
-            key: const Key('integrationPrimary'),
-            controller: _primary,
-            keyboardType: needsUrl ? TextInputType.url : TextInputType.text,
-            decoration: InputDecoration(
-              labelText: primaryLabel,
-              errorText: primary.isNotEmpty && !primaryOk ? l10n.integrationUrlInvalid : null,
-            ),
-            onChanged: (_) => setState(() {}),
+            controller: _apps,
+            decoration: InputDecoration(labelText: l10n.pipedreamApps, prefixIcon: const Icon(Icons.apps_rounded, size: 20)),
           ),
-          if (secondaryLabel != null) ...[
-            const SizedBox(height: 8),
-            TextField(controller: _secondary, decoration: InputDecoration(labelText: secondaryLabel)),
-          ],
-          if (_kind == IntegrationKind.pipedream) ...[
-            const SizedBox(height: 8),
-            TextField(controller: _apps, decoration: InputDecoration(labelText: l10n.pipedreamApps)),
-          ],
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('integrationSecret'),
-            controller: _secret,
-            obscureText: _kind != IntegrationKind.openapi,
-            decoration: InputDecoration(
-              labelText: secretLabel,
-              helperText: _kind == IntegrationKind.openapi ? l10n.authSecretNameHelp : l10n.storedEncrypted,
-            ),
-          ),
-          const SizedBox(height: AppSpace.md),
-          if (missing != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpace.xs),
-              child: Text(missing, textAlign: TextAlign.center, style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
-            ),
-          FilledButton(
-            key: const Key('saveIntegration'),
-            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-            onPressed: _busy || missing != null
+        TextField(
+          key: const Key('integrationSecret'),
+          controller: _secret,
+          obscureText: !secretIsName && !_showSecret,
+          autocorrect: false,
+          enableSuggestions: false,
+          decoration: InputDecoration(
+            labelText: secretLabel,
+            prefixIcon: Icon(secretIsName ? Icons.lock_outline_rounded : Icons.password_rounded, size: 20),
+            helperText: secretIsName ? l10n.authSecretNameHelp : l10n.storedEncrypted,
+            suffixIcon: secretIsName
                 ? null
-                : () async {
-                    setState(() => _busy = true);
-                    final org = ref.read(currentOrgProvider)!;
-                    final backend = ref.read(backendProvider);
-                    final created = await runGuarded(context, () async {
-                      final i = await backend.createIntegration(
-                        org.id,
-                        kind: _kind.value,
-                        name: name,
-                        config: _config(),
-                        secret: _secret.text.isEmpty || _kind == IntegrationKind.openapi ? null : _secret.text,
-                      );
-                      // Prove the connection and cache tools right away; failures show on the list.
-                      try {
-                        await backend.testIntegration(i.id);
-                      } catch (_) {}
-                      return i;
-                    });
-                    if (!context.mounted) return;
-                    setState(() => _busy = false);
-                    if (created != null) Navigator.of(context).pop(true);
-                  },
-            child: Text(l10n.save),
+                : IconButton(
+                    tooltip: _showSecret ? l10n.hide : l10n.show,
+                    icon: Icon(_showSecret ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+                    onPressed: () => setState(() => _showSecret = !_showSecret),
+                  ),
           ),
-        ]),
-      ),
+        ),
+      ],
     );
   }
 }
@@ -246,26 +297,50 @@ class BotIntegrationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final attached = ref.watch(botIntegrationIdsProvider(botId)).value ?? const <String>{};
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.botIntegrations)),
+    final bot = ref.watch(botProvider(botId));
+
+    Future<void> set(Integration i, bool v) async {
+      await runGuarded(context, () => ref.read(backendProvider).setBotIntegration(botId, i.id, v));
+      ref.invalidate(botIntegrationIdsProvider(botId));
+    }
+
+    return SubPage(
+      title: l10n.integrations,
+      subtitle: bot?.name,
       body: AsyncView(
         value: ref.watch(integrationsProvider),
         onRetry: () => ref.invalidate(integrationsProvider),
         data: (items) => items.isEmpty
-            ? EmptyState(icon: Icons.extension_outlined, message: l10n.noIntegrationsForBot)
-            : ListView(children: [
-                for (final i in items)
-                  SwitchListTile(
-                    key: Key('attach-${i.id}'),
-                    title: Text(i.name),
-                    subtitle: Text(integrationKindLabel(context, i.kind)),
-                    value: attached.contains(i.id),
-                    onChanged: (v) async {
-                      await runGuarded(context, () => ref.read(backendProvider).setBotIntegration(botId, i.id, v));
-                      ref.invalidate(botIntegrationIdsProvider(botId));
-                    },
+            ? EmptyState(
+                icon: Icons.extension_outlined,
+                title: l10n.noIntegrationsTitle,
+                message: l10n.noIntegrationsForBot,
+                action: FilledButton.tonalIcon(
+                  onPressed: () => context.push('/settings/integrations'),
+                  icon: const Icon(Icons.settings_outlined, size: 18),
+                  label: Text(l10n.openSettings),
+                ),
+              )
+            : PageColumn(
+                children: [
+                  FormNote(l10n.botIntegrationsHelp),
+                  const SizedBox(height: AppSpace.md),
+                  GroupedCard(
+                    children: [
+                      for (final i in items)
+                        GroupedTile(
+                          key: Key('attach-${i.id}'),
+                          icon: integrationKindIcon(i.kind),
+                          iconColor: attached.contains(i.id) ? null : context.colorScheme.onSurfaceVariant,
+                          title: i.name,
+                          subtitle: [integrationKindLabel(context, i.kind), if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length)].join(' · '),
+                          onTap: () => set(i, !attached.contains(i.id)),
+                          trailing: Switch(value: attached.contains(i.id), onChanged: (v) => set(i, v)),
+                        ),
+                    ],
                   ),
-              ]),
+                ],
+              ),
       ),
     );
   }

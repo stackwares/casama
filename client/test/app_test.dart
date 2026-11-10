@@ -154,7 +154,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ChatScreen), findsOneWidget);
     expect(find.text('Team computer'), findsOneWidget);
-    expect(find.text('sleeping'), findsOneWidget);
+    expect(find.text('Asleep'), findsOneWidget);
   });
 
   testWidgets('onboarding advances after creating a workspace', (tester) async {

@@ -6,11 +6,16 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 import '../../core/mobile_extras.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/bot_avatar.dart';
+import '../../ui/page.dart';
 
 /// Quick ask (global shortcut, share-to-bot target): pick a bot, type, send; opens the chat.
 class QuickAskScreen extends ConsumerStatefulWidget {
   const QuickAskScreen({super.key, this.initialText = '', this.fromShareExtension = false});
   final String initialText;
+
   /// Opened by the iOS share extension: the shared text waits in the App Group.
   final bool fromShareExtension;
 
@@ -57,38 +62,60 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = context.colorScheme;
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     _botId ??= bots.isEmpty ? null : bots.first.id;
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.quickAsk)),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          DropdownButtonFormField<String>(
-            key: const Key('quickAskBot'),
-            initialValue: _botId,
-            decoration: InputDecoration(labelText: l10n.bot),
-            items: [for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name))],
-            onChanged: (v) => setState(() => _botId = v),
+    final ready = _botId != null && _text.text.trim().isNotEmpty;
+    return SubPage(
+      title: l10n.quickAsk,
+      children: [
+        Text(l10n.quickAskIntro, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+        const SizedBox(height: AppSpace.lg),
+        if (bots.length > 1) ...[
+          SizedBox(
+            height: 44,
+            child: ListView.separated(
+              key: const Key('quickAskBot'),
+              scrollDirection: Axis.horizontal,
+              itemCount: bots.length,
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpace.xs),
+              itemBuilder: (context, i) {
+                final b = bots[i];
+                return ChoiceChip(
+                  selected: b.id == _botId,
+                  showCheckmark: false,
+                  avatar: BotAvatar(name: b.name, size: 22),
+                  label: Text(b.name),
+                  onSelected: (_) => setState(() => _botId = b.id),
+                );
+              },
+            ),
           ),
-          const SizedBox(height: 12),
-          TextField(
-            key: const Key('quickAskText'),
-            controller: _text,
-            autofocus: true,
-            minLines: 3,
-            maxLines: 10,
-            decoration: InputDecoration(hintText: l10n.quickAskHint),
-          ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
+          const SizedBox(height: AppSpace.md),
+        ],
+        TextField(
+          key: const Key('quickAskText'),
+          controller: _text,
+          autofocus: true,
+          minLines: 5,
+          maxLines: 12,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(hintText: bots.length == 1 ? l10n.quickAskHintBot(bots.single.name) : l10n.quickAskHint, alignLabelWithHint: true),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: AppSpace.lg),
+        SizedBox(
+          height: 50,
+          child: FilledButton.icon(
             key: const Key('quickAskSend'),
-            onPressed: _busy ? null : _send,
-            icon: const Icon(Icons.send),
+            onPressed: _busy || !ready ? null : _send,
+            icon: _busy
+                ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: scheme.onPrimary))
+                : const Icon(Icons.arrow_upward_rounded, size: 20),
             label: Text(l10n.send),
           ),
-        ]),
-      ),
+        ),
+      ],
     );
   }
 }

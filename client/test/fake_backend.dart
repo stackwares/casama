@@ -160,7 +160,7 @@ class FakeBackend implements Backend {
         ),
       ];
   @override
-  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy}) async {}
+  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy}) async {}
   @override
   Future<UsageReport> usage(String orgId, {String period = 'day'}) async => UsageReport(
         period: period == 'day' ? UsageReportPeriodEnum.day : UsageReportPeriodEnum.month,

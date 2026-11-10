@@ -15,11 +15,26 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
+import '../files/file_preview.dart';
 
-String computerStateLabel(ComputerState s) => s.value;
+String computerStateLabel(BuildContext context, ComputerState s) {
+  final l10n = context.l10n;
+  return switch (s) {
+    ComputerState.provisioning => l10n.stateProvisioning,
+    ComputerState.starting => l10n.stateStarting,
+    ComputerState.running => l10n.stateRunning,
+    ComputerState.idle => l10n.stateIdle,
+    ComputerState.sleeping => l10n.stateSleeping,
+    ComputerState.stopped => l10n.stateStopped,
+    ComputerState.error => l10n.stateError,
+  };
+}
 
 /// The team computer (or a bot's private one): state, screen, terminal, files, checkpoints.
 class ComputerScreen extends ConsumerWidget {
@@ -58,109 +73,139 @@ class ComputerPanel extends ConsumerWidget {
     final running = computer.state == ComputerState.running || computer.state == ComputerState.idle;
     return DefaultTabController(
       length: 4,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.sm, AppSpace.sm),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: (running ? context.appColors.working : context.colorScheme.onSurfaceVariant).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppRadius.icon),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    computer.profile == ComputerProfileEnum.desktop ? Icons.desktop_windows_rounded : Icons.terminal_rounded,
-                    size: 20,
-                    color: running ? context.appColors.working : context.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: AppSpace.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        computer.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 2),
-                      StatusLabel(
-                        text: computerStateLabel(computer.state),
-                        color: running ? context.appColors.working : context.colorScheme.onSurfaceVariant,
-                        pill: true,
-                      ),
-                    ],
-                  ),
-                ),
-                Wrap(
-                  spacing: 8,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          // Header, tabs and lists share one centered column on wide windows.
+          constraints: const BoxConstraints(maxWidth: kPageMaxWidth),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, AppSpace.sm),
+                child: Row(
                   children: [
-                    if (!running)
-                      FilledButton.tonal(
-                        onPressed: () async {
-                          await runGuarded(context, () => ref.read(backendProvider).startComputer(computer.id));
-                          ref.invalidate(computersProvider);
-                        },
-                        child: Text(l10n.computerStart),
-                      )
-                    else
-                      OutlinedButton(
-                        onPressed: () async {
-                          await runGuarded(context, () => ref.read(backendProvider).stopComputer(computer.id));
-                          ref.invalidate(computersProvider);
-                        },
-                        child: Text(l10n.computerSleep),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: (running ? context.appColors.working : context.colorScheme.onSurfaceVariant).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppRadius.icon),
                       ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TabBar(
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                padding: EdgeInsets.zero,
-                tabs: [
-                  Tab(text: l10n.screen),
-                  Tab(text: l10n.terminal),
-                  Tab(text: l10n.files),
-                  Tab(text: l10n.checkpoints),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpace.xs),
-          Expanded(
-            child: TabBarView(
-              children: [
-                computer.profile == ComputerProfileEnum.desktop
-                    ? _LiveEntry(computer: computer)
-                    : Column(
+                      alignment: Alignment.center,
+                      child: Icon(
+                        computer.profile == ComputerProfileEnum.desktop ? Icons.desktop_windows_rounded : Icons.terminal_rounded,
+                        size: 20,
+                        color: running ? context.appColors.working : context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _DesktopSwitch(computer: computer),
-                          Expanded(
-                            child: running
-                                ? _ScreenTab(computerId: computer.id)
-                                : EmptyState(icon: Icons.bedtime_outlined, message: l10n.computerAsleep),
+                          Text(
+                            computer.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 2),
+                          StatusLabel(
+                            text: computerStateLabel(context, computer.state),
+                            color: running ? context.appColors.working : context.colorScheme.onSurfaceVariant,
+                            pill: true,
                           ),
                         ],
                       ),
-                TerminalTab(computerId: computer.id),
-                FilesTab(computerId: computer.id),
-                CheckpointsTab(computerId: computer.id),
-              ],
-            ),
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        if (!running)
+                          FilledButton.tonalIcon(
+                            onPressed: () async {
+                              await runGuarded(context, () => ref.read(backendProvider).startComputer(computer.id));
+                              ref.invalidate(computersProvider);
+                            },
+                            icon: const Icon(Icons.power_settings_new_rounded, size: 18),
+                            label: Text(l10n.computerStart),
+                          )
+                        else
+                          OutlinedButton.icon(
+                            onPressed: () async {
+                              await runGuarded(context, () => ref.read(backendProvider).stopComputer(computer.id));
+                              ref.invalidate(computersProvider);
+                            },
+                            icon: const Icon(Icons.bedtime_outlined, size: 18),
+                            label: Text(l10n.computerSleep),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TabBar(
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    padding: EdgeInsets.zero,
+                    tabs: [
+                      _IconTab(icon: Icons.monitor_rounded, text: l10n.screen),
+                      _IconTab(icon: Icons.terminal_rounded, text: l10n.terminal),
+                      _IconTab(icon: Icons.folder_outlined, text: l10n.files),
+                      _IconTab(icon: Icons.history_rounded, text: l10n.checkpoints),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpace.xs),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    computer.profile == ComputerProfileEnum.desktop
+                        ? _LiveEntry(computer: computer)
+                        : Column(
+                            children: [
+                              _DesktopSwitch(computer: computer),
+                              Expanded(
+                                child: running ? _ScreenTab(computerId: computer.id) : EmptyState(icon: Icons.bedtime_outlined, message: l10n.computerAsleep),
+                              ),
+                            ],
+                          ),
+                    TerminalTab(computerId: computer.id),
+                    FilesTab(computerId: computer.id),
+                    CheckpointsTab(computerId: computer.id),
+                  ],
+                ),
+              ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A pill tab with a leading icon.
+class _IconTab extends StatelessWidget {
+  const _IconTab({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    // Phones keep all four tabs in view; the icons come back where there is room.
+    final roomy = AppBreakpoints.of(MediaQuery.sizeOf(context).width) != WindowSize.compact;
+    return Tab(
+      height: 40,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (roomy) ...[Icon(icon, size: 18), const SizedBox(width: 6)],
+          Text(text),
         ],
       ),
     );
@@ -208,32 +253,38 @@ class _DesktopSwitchState extends ConsumerState<_DesktopSwitch> {
       padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, AppSpace.xxs),
       child: AppCard(
         padding: const EdgeInsets.all(14),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Icon(Icons.info_outline_rounded, size: 18, color: scheme.primary),
-            const SizedBox(width: AppSpace.xs),
-            Expanded(
-              child: Text(l10n.headlessScreenNote, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline_rounded, size: 18, color: scheme.primary),
+                const SizedBox(width: AppSpace.xs),
+                Expanded(
+                  child: Text(l10n.headlessScreenNote, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+                ),
+              ],
             ),
-          ]),
-          const SizedBox(height: AppSpace.sm),
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: FilledButton.tonalIcon(
-              key: const Key('switchToDesktop'),
-              icon: const Icon(Icons.desktop_windows_outlined, size: 18),
-              label: Text(l10n.switchToDesktop),
-              onPressed: _busy
-                  ? null
-                  : () async {
-                      setState(() => _busy = true);
-                      await runGuarded(context, () => ref.read(backendProvider).updateComputer(widget.computer.id, profile: 'desktop'));
-                      ref.invalidate(computersProvider);
-                      if (mounted) setState(() => _busy = false);
-                    },
+            const SizedBox(height: AppSpace.sm),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: FilledButton.tonalIcon(
+                key: const Key('switchToDesktop'),
+                icon: const Icon(Icons.desktop_windows_outlined, size: 18),
+                label: Text(l10n.switchToDesktop),
+                onPressed: _busy
+                    ? null
+                    : () async {
+                        setState(() => _busy = true);
+                        await runGuarded(context, () => ref.read(backendProvider).updateComputer(widget.computer.id, profile: 'desktop'));
+                        ref.invalidate(computersProvider);
+                        if (mounted) setState(() => _busy = false);
+                      },
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }
@@ -283,7 +334,7 @@ class _ScreenTabState extends ConsumerState<_ScreenTab> {
       return EmptyState(
         icon: Icons.desktop_windows_outlined,
         message: context.l10n.noScreen,
-        action: OutlinedButton(onPressed: _load, child: Text(context.l10n.refresh)),
+        action: OutlinedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded, size: 18), label: Text(context.l10n.refresh)),
       );
     }
     return InteractiveViewer(child: Center(child: Image.memory(_png!, gaplessPlayback: true)));
@@ -339,9 +390,14 @@ class _TerminalTabState extends ConsumerState<TerminalTab> with AutomaticKeepAli
     super.build(context);
     if (!_connected) {
       return EmptyState(
-        icon: Icons.terminal,
-        message: context.l10n.terminal,
-        action: FilledButton(onPressed: () => runGuarded(context, _connect), child: Text(context.l10n.connectTerminal)),
+        icon: Icons.terminal_rounded,
+        title: context.l10n.terminal,
+        message: context.l10n.terminalHelp,
+        action: FilledButton.icon(
+          onPressed: () => runGuarded(context, _connect),
+          icon: const Icon(Icons.power_rounded, size: 18),
+          label: Text(context.l10n.connectTerminal),
+        ),
       );
     }
     return Padding(padding: const EdgeInsets.all(8), child: TerminalView(_terminal, autofocus: true));
@@ -408,55 +464,163 @@ class _FilesTabState extends ConsumerState<FilesTab> {
     );
   }
 
+  Future<void> _delete(ComputerFileEntry e) async {
+    final l10n = context.l10n;
+    final ok = await showConfirm(context: context, title: l10n.deleteFileTitle(e.name), confirmLabel: l10n.delete, destructive: true);
+    if (!ok || !mounted) return;
+    await runGuarded(context, () => ref.read(backendProvider).deleteFile(widget.computerId, e.path));
+    _reload();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      children: [
-        Row(
+    final scheme = context.colorScheme;
+    final crumbs = _path.split('/')..removeWhere((p) => p.isEmpty);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final side = pageSide(constraints.maxWidth);
+        return Column(
           children: [
-            IconButton(onPressed: _path.isEmpty ? null : () => _open(_parent), icon: const Icon(Icons.arrow_upward)),
-            Expanded(child: Text(_path.isEmpty ? '~/workspace' : '~/workspace/$_path', overflow: TextOverflow.ellipsis)),
-            IconButton(tooltip: l10n.refresh, onPressed: _reload, icon: const Icon(Icons.refresh)),
-            IconButton(tooltip: l10n.upload, onPressed: _upload, icon: const Icon(Icons.upload_file)),
-          ],
-        ),
-        Expanded(
-          child: FutureBuilder<List<ComputerFileEntry>>(
-            future: _entries,
-            builder: (context, snap) {
-              if (snap.hasError) return Center(child: Text(errorText(context, snap.error!)));
-              if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-              final items = snap.data!;
-              if (items.isEmpty) return EmptyState(icon: Icons.folder_open, message: l10n.emptyFolder);
-              return ListView(
+            Padding(
+              padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.sm),
+              child: Row(
                 children: [
-                  for (final e in items)
-                    ListTile(
-                      leading: Icon(e.type.name == 'dir' ? Icons.folder : Icons.insert_drive_file_outlined),
-                      title: Text(e.name),
-                      subtitle: e.type.name == 'dir' ? null : Text('${e.size} bytes'),
-                      onTap: e.type.name == 'dir' ? () => _open(_path.isEmpty ? e.name : '$_path/${e.name}') : () => _download(e),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (v) async {
-                          if (v == 'download') await _download(e);
-                          if (v == 'delete' && context.mounted) {
-                            await runGuarded(context, () => ref.read(backendProvider).deleteFile(widget.computerId, e.path));
-                            _reload();
-                          }
-                        },
-                        itemBuilder: (_) => [
-                          if (e.type.name != 'dir') PopupMenuItem(value: 'download', child: Text(l10n.download)),
-                          PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
-                        ],
+                  if (_path.isNotEmpty) ...[
+                    IconButton.filledTonal(tooltip: l10n.up, onPressed: () => _open(_parent), icon: const Icon(Icons.arrow_upward_rounded, size: 20)),
+                    const SizedBox(width: AppSpace.xs),
+                  ],
+                  Expanded(
+                    child: LayoutBuilder(
+                      // Starts at the left; long paths scroll so the current folder stays visible.
+                      builder: (context, bar) => SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        reverse: true,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minWidth: bar.maxWidth),
+                          child: Row(
+                            children: [
+                              _Crumb(icon: Icons.home_work_outlined, label: 'workspace', onTap: crumbs.isEmpty ? null : () => _open('')),
+                              for (var i = 0; i < crumbs.length; i++) ...[
+                                Icon(Icons.chevron_right_rounded, size: 18, color: scheme.onSurfaceVariant),
+                                _Crumb(label: crumbs[i], onTap: i == crumbs.length - 1 ? null : () => _open(crumbs.sublist(0, i + 1).join('/'))),
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
                     ),
+                  ),
+                  IconButton(tooltip: l10n.refresh, onPressed: _reload, icon: const Icon(Icons.refresh_rounded)),
+                  FilledButton.tonalIcon(onPressed: _upload, icon: const Icon(Icons.upload_rounded, size: 18), label: Text(l10n.upload)),
                 ],
-              );
-            },
-          ),
+              ),
+            ),
+            Expanded(
+              child: FutureBuilder<List<ComputerFileEntry>>(
+                future: _entries,
+                builder: (context, snap) {
+                  if (snap.hasError) return EmptyState(icon: Icons.error_outline_rounded, isError: true, message: errorText(context, snap.error!));
+                  if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+                  final items = [...snap.data!]
+                    ..sort((a, b) {
+                      final ad = a.type.name == 'dir', bd = b.type.name == 'dir';
+                      if (ad != bd) return ad ? -1 : 1;
+                      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+                    });
+                  if (items.isEmpty) {
+                    return EmptyState(
+                      icon: Icons.folder_open_rounded,
+                      title: l10n.emptyFolder,
+                      message: l10n.emptyFolderHelp,
+                      action: OutlinedButton.icon(onPressed: _upload, icon: const Icon(Icons.upload_rounded, size: 18), label: Text(l10n.upload)),
+                    );
+                  }
+                  return ListView(
+                    padding: EdgeInsets.fromLTRB(side, 0, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
+                    children: [
+                      GroupedCard(
+                        children: [
+                          for (final e in items)
+                            if (e.type.name == 'dir')
+                              GroupedTile(
+                                icon: Icons.folder_rounded,
+                                iconColor: context.appColors.warning,
+                                title: e.name,
+                                onTap: () => _open(_path.isEmpty ? e.name : '$_path/${e.name}'),
+                              )
+                            else
+                              GroupedTile(
+                                icon: fileIconFor(e.name),
+                                title: e.name,
+                                subtitle: formatBytes(e.size),
+                                onTap: () => showComputerFile(context, computerId: widget.computerId, path: e.path),
+                                trailing: PopupMenuButton<String>(
+                                  tooltip: l10n.moreActions,
+                                  icon: Icon(Icons.more_vert_rounded, color: scheme.onSurfaceVariant),
+                                  onSelected: (v) async {
+                                    if (v == 'download') await _download(e);
+                                    if (v == 'delete') await _delete(e);
+                                  },
+                                  itemBuilder: (_) => [
+                                    PopupMenuItem(
+                                      value: 'download',
+                                      child: ListTile(dense: true, leading: const Icon(Icons.ios_share_rounded), title: Text(l10n.download)),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: ListTile(
+                                        dense: true,
+                                        leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
+                                        title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _Crumb extends StatelessWidget {
+  const _Crumb({required this.label, this.icon, this.onTap});
+  final String label;
+  final IconData? icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final current = onTap == null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[Icon(icon, size: 16, color: current ? scheme.onSurface : scheme.primary), const SizedBox(width: 4)],
+            Text(
+              label,
+              style: context.textTheme.labelLarge?.copyWith(
+                color: current ? scheme.onSurface : scheme.primary,
+                fontWeight: current ? FontWeight.w700 : FontWeight.w600,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -486,20 +650,37 @@ class _CheckpointsTabState extends ConsumerState<CheckpointsTab> {
         if (snap.hasError) return Center(child: Text(errorText(context, snap.error!)));
         if (!snap.hasData) return const Center(child: CircularProgressIndicator());
         final items = snap.data!;
-        if (items.isEmpty) return EmptyState(icon: Icons.restore, message: context.l10n.noCheckpoints);
-        return ListView(
-          children: [
-            for (final cp in items)
-              ListTile(
-                leading: const Icon(Icons.restore),
-                title: Text(cp.label),
-                subtitle: Text(relativeTime(cp.createdAt, context)),
-                trailing: TextButton(
-                  onPressed: () => confirmRestore(context, ref, widget.computerId, cp.id),
-                  child: Text(context.l10n.restore),
+        if (items.isEmpty) {
+          return EmptyState(icon: Icons.history_rounded, title: context.l10n.noCheckpointsTitle, message: context.l10n.noCheckpoints);
+        }
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final side = pageSide(constraints.maxWidth);
+            return ListView(
+              padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
+              children: [
+                FormNote(context.l10n.checkpointsHelp),
+                const SizedBox(height: AppSpace.md),
+                GroupedCard(
+                  children: [
+                    for (final cp in items)
+                      GroupedTile(
+                        icon: Icons.bookmark_outline_rounded,
+                        iconColor: context.appColors.warning,
+                        title: cp.label,
+                        subtitle: relativeTime(cp.createdAt, context),
+                        trailing: OutlinedButton.icon(
+                          onPressed: () => confirmRestore(context, ref, widget.computerId, cp.id),
+                          style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+                          icon: const Icon(Icons.restore_rounded, size: 16),
+                          label: Text(context.l10n.restore),
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-          ],
+              ],
+            );
+          },
         );
       },
     );

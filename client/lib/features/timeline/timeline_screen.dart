@@ -6,8 +6,14 @@ import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
-import '../../core/theme.dart';
+import '../../core/backend.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/app_card.dart';
+import '../../ui/page.dart';
+import '../../ui/segmented.dart';
+import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
 
 /// A bot's recent runs.
@@ -19,30 +25,105 @@ class ActivityScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final runs = ref.watch(runsProvider(botId));
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.activity)),
+    return SubPage(
+      title: l10n.activity,
+      subtitle: ref.watch(botProvider(botId))?.name,
+      actions: [HeaderIconButton(icon: Icons.refresh_rounded, tooltip: l10n.refresh, onPressed: () => ref.invalidate(runsProvider(botId)))],
       body: AsyncView(
         value: runs,
         onRetry: () => ref.invalidate(runsProvider(botId)),
         data: (items) => items.isEmpty
-            ? EmptyState(icon: Icons.timeline, message: l10n.noRuns)
+            ? EmptyState(icon: Icons.timeline_rounded, title: l10n.noRuns, message: l10n.noRunsHelp)
             : RefreshIndicator(
                 onRefresh: () async => ref.invalidate(runsProvider(botId)),
-                child: ListView(children: [
-                  for (final r in items)
-                    ListTile(
-                      leading: Icon(switch (r.status) {
-                        'completed' => Icons.check_circle_outline,
-                        'failed' => Icons.error_outline,
-                        'cancelled' => Icons.stop_circle_outlined,
-                        _ => Icons.pending_outlined,
-                      }),
-                      title: Text('${r.trigger} · ${r.status}'),
-                      subtitle: Text('${relativeTime(r.createdAt, context)} · ${formatUsd(r.costUsd)}'),
-                      onTap: () => context.push('/bots/$botId/runs/${r.id}'),
-                    ),
-                ]),
+                child: PageListView(
+                  itemCount: items.length,
+                  itemBuilder: (context, i) => _RunCard(run: items[i], onTap: () => context.push('/bots/$botId/runs/${items[i].id}')).appListItemEntrance(i),
+                ),
               ),
+      ),
+    );
+  }
+}
+
+(String, Color, IconData) runStatusStyle(BuildContext context, String status) {
+  final colors = context.appColors;
+  final l10n = context.l10n;
+  return switch (status) {
+    'completed' => (l10n.runCompleted, colors.positive, Icons.check_rounded),
+    'failed' => (l10n.runStatusFailed, colors.negative, Icons.priority_high_rounded),
+    'cancelled' => (l10n.runStatusStopped, context.colorScheme.onSurfaceVariant, Icons.stop_rounded),
+    'paused' || 'waiting' => (l10n.runWaiting, colors.waiting, Icons.pause_rounded),
+    _ => (l10n.runWorking, colors.working, Icons.more_horiz_rounded),
+  };
+}
+
+String _triggerLabel(BuildContext context, String trigger) => switch (trigger) {
+  'chat' => context.l10n.triggerChat,
+  'routine' || 'schedule' || 'cron' => context.l10n.triggerRoutine,
+  'webhook' => context.l10n.triggerWebhook,
+  _ => trigger.isEmpty ? trigger : trigger[0].toUpperCase() + trigger.substring(1),
+};
+
+class _RunCard extends StatelessWidget {
+  const _RunCard({required this.run, required this.onTap});
+  final RunSummary run;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final (label, color, icon) = runStatusStyle(context, run.status);
+    final triggerIcon = switch (run.trigger) {
+      'chat' => Icons.chat_bubble_outline_rounded,
+      'webhook' => Icons.webhook_rounded,
+      _ => Icons.schedule_rounded,
+    };
+    return AppCard(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, 12, AppSpace.sm, 12),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: context.isDark ? 0.2 : 0.12),
+              borderRadius: BorderRadius.circular(AppRadius.icon + 2),
+            ),
+            alignment: Alignment.center,
+            child: Icon(triggerIcon, color: color, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        _triggerLabel(context, run.trigger),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    StatusLabel(text: label, color: color, pill: true, icon: icon),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(relativeTime(run.createdAt, context), style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+          Text(
+            formatUsd(run.costUsd),
+            style: context.textTheme.labelLarge?.copyWith(fontFeatures: AppText.tabular, color: scheme.onSurfaceVariant),
+          ),
+          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+        ],
       ),
     );
   }
@@ -51,11 +132,11 @@ class ActivityScreen extends ConsumerWidget {
 enum EventFilter { all, tools, messages, system }
 
 bool matchesFilter(EventFilter f, String type) => switch (f) {
-      EventFilter.all => true,
-      EventFilter.tools => type.startsWith('tool.') || type.startsWith('checkpoint.'),
-      EventFilter.messages => type.startsWith('message.'),
-      EventFilter.system => !type.startsWith('tool.') && !type.startsWith('message.'),
-    };
+  EventFilter.all => true,
+  EventFilter.tools => type.startsWith('tool.') || type.startsWith('checkpoint.'),
+  EventFilter.messages => type.startsWith('message.'),
+  EventFilter.system => !type.startsWith('tool.') && !type.startsWith('message.'),
+};
 
 /// Every event of one run, with filters; checkpoints can be restored from here.
 class RunTimelineScreen extends ConsumerStatefulWidget {
@@ -76,53 +157,74 @@ class _RunTimelineScreenState extends ConsumerState<RunTimelineScreen> {
     final events = ref.watch(runEventsProvider(widget.runId));
     final computer = computerForBot(ref.watch(computersProvider).value ?? const [], widget.botId);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.timelineTitle),
-        actions: [IconButton(onPressed: () => ref.invalidate(runEventsProvider(widget.runId)), icon: const Icon(Icons.refresh))],
+      appBar: ShellHeader(
+        title: l10n.timelineTitle,
+        subtitle: ref.watch(botProvider(widget.botId))?.name,
+        actions: [HeaderIconButton(icon: Icons.refresh_rounded, tooltip: l10n.refresh, onPressed: () => ref.invalidate(runEventsProvider(widget.runId)))],
       ),
-      body: Column(children: [
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: SegmentedButton<EventFilter>(
-            segments: [
-              ButtonSegment(value: EventFilter.all, label: Text(l10n.allEvents)),
-              ButtonSegment(value: EventFilter.tools, label: Text(l10n.filterTools)),
-              ButtonSegment(value: EventFilter.messages, label: Text(l10n.filterMessages)),
-              ButtonSegment(value: EventFilter.system, label: Text(l10n.filterSystem)),
-            ],
-            selected: {_filter},
-            onSelectionChanged: (s) => setState(() => _filter = s.first),
-          ),
-        ),
-        Expanded(
-          child: AsyncView(
-            value: events,
-            onRetry: () => ref.invalidate(runEventsProvider(widget.runId)),
-            data: (items) {
-              final shown = items.where((e) => matchesFilter(_filter, e.type) && e.type != 'message.delta' || (_filter == EventFilter.messages && e.type == 'message.delta')).toList();
-              return ListView.builder(
-                itemCount: shown.length,
-                itemBuilder: (context, i) => TimelineTile(
-                  item: shown[i],
-                  onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: kPageMaxWidth);
+          return Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.sm),
+                child: AppSegmentedControl<EventFilter>(
+                  values: EventFilter.values,
+                  labels: {
+                    EventFilter.all: l10n.allEvents,
+                    EventFilter.tools: l10n.filterTools,
+                    EventFilter.messages: l10n.filterMessages,
+                    EventFilter.system: l10n.filterSystem,
+                  },
+                  groupValue: _filter,
+                  onValueChanged: (f) => setState(() => _filter = f),
                 ),
-              );
-            },
-          ),
-        ),
-      ]),
+              ),
+              Expanded(
+                child: AsyncView(
+                  value: events,
+                  onRetry: () => ref.invalidate(runEventsProvider(widget.runId)),
+                  data: (items) {
+                    final shown = items
+                        .where(
+                          (e) => matchesFilter(_filter, e.type) && e.type != 'message.delta' || (_filter == EventFilter.messages && e.type == 'message.delta'),
+                        )
+                        .toList();
+                    if (shown.isEmpty) return EmptyState(icon: Icons.filter_alt_off_outlined, message: l10n.noEventsForFilter);
+                    return ListView.builder(
+                      padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom),
+                      itemCount: shown.length,
+                      itemBuilder: (context, i) => TimelineTile(
+                        item: shown[i],
+                        first: i == 0,
+                        last: i == shown.length - 1,
+                        onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
 
-/// One event in the timeline.
+/// One event in the timeline: a tinted dot on a rail, the event type, its time and a summary.
 class TimelineTile extends StatelessWidget {
-  const TimelineTile({super.key, required this.item, this.onRestore});
+  const TimelineTile({super.key, required this.item, this.onRestore, this.first = false, this.last = false});
   final RunEventItem item;
   final void Function(String checkpointId)? onRestore;
+  final bool first;
+  final bool last;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
     final payload = item.envelope.payload;
     final time = item.envelope.ts.toLocal();
     final hh = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:${time.second.toString().padLeft(2, '0')}';
@@ -139,17 +241,92 @@ class TimelineTile extends StatelessWidget {
       SkillLoadedItem(:final event) => event.payload.name,
       _ => payload.isEmpty ? '' : jsonEncode(payload),
     };
-    return ListTile(
-      dense: true,
-      leading: Text('#${item.seq}', style: monoStyle),
-      title: Text(item.type, style: monoStyle.copyWith(fontWeight: FontWeight.w600)),
-      subtitle: Text(summary, maxLines: 4, overflow: TextOverflow.ellipsis),
-      trailing: item is CheckpointCreatedItem && onRestore != null
-          ? TextButton(
-              onPressed: () => onRestore!((item as CheckpointCreatedItem).event.payload.checkpointId),
-              child: Text(context.l10n.restore),
-            )
-          : Text(hh, style: Theme.of(context).textTheme.bodySmall),
+    final t = item.type;
+    final (icon, color) = switch (t) {
+      'tool.started' => (Icons.play_arrow_rounded, colors.info),
+      'tool.completed' => (Icons.check_rounded, colors.positive),
+      'tool.failed' || 'run.failed' => (Icons.priority_high_rounded, colors.negative),
+      'tool.output' => (Icons.terminal_rounded, scheme.onSurfaceVariant),
+      'run.started' => (Icons.flag_rounded, scheme.primary),
+      'run.completed' => (Icons.done_all_rounded, colors.positive),
+      'usage' => (Icons.payments_outlined, colors.positive),
+      _ when t.startsWith('message.') => (Icons.chat_bubble_outline_rounded, scheme.primary),
+      _ when t.startsWith('checkpoint.') => (Icons.bookmark_outline_rounded, colors.warning),
+      _ when t.startsWith('computer.') => (Icons.desktop_windows_outlined, colors.working),
+      _ when t.startsWith('skill.') => (Icons.menu_book_outlined, colors.info),
+      _ when t.startsWith('approval.') || t.startsWith('takeover.') => (Icons.back_hand_outlined, colors.waiting),
+      _ => (Icons.circle, scheme.onSurfaceVariant),
+    };
+    final rail = colors.hairline;
+    final checkpoint = item is CheckpointCreatedItem && onRestore != null;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 32,
+            child: Column(
+              children: [
+                Container(width: 2, height: 10, color: first ? Colors.transparent : rail),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: context.isDark ? 0.22 : 0.13),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(icon, size: icon == Icons.circle ? 8 : 15, color: color),
+                ),
+                Expanded(child: Container(width: 2, color: last ? Colors.transparent : rail)),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpace.sm),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: AppSpace.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          t,
+                          style: AppText.mono.copyWith(fontSize: 13, fontWeight: FontWeight.w700, color: scheme.onSurface),
+                        ),
+                      ),
+                      Text(
+                        '#${item.seq}  $hh',
+                        style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, fontFeatures: AppText.tabular),
+                      ),
+                    ],
+                  ),
+                  if (summary.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      summary,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.4),
+                    ),
+                  ],
+                  if (checkpoint) ...[
+                    const SizedBox(height: 6),
+                    OutlinedButton.icon(
+                      onPressed: () => onRestore!((item as CheckpointCreatedItem).event.payload.checkpointId),
+                      style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 12)),
+                      icon: const Icon(Icons.restore_rounded, size: 16),
+                      label: Text(context.l10n.restore),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -5,7 +5,15 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/bot_avatar.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
+import '../../ui/shell_header.dart';
+import 'computer_screen.dart';
 
 /// Team and private computers: create, rename, switch between headless and desktop, delete.
 class ComputersScreen extends ConsumerWidget {
@@ -19,107 +27,169 @@ class ComputersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final bots = ref.watch(botsProvider).value ?? const <Bot>[];
-    String owner(Computer c) {
-      if (c.kind == ComputerKindEnum.team) return l10n.teamComputer;
-      for (final b in bots) {
-        if (b.id == c.ownerBotId) return l10n.privateComputerOf(b.name);
-      }
-      return l10n.privateComputer;
-    }
-
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.computers)),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('newComputer'),
-        onPressed: () => _create(context, ref),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.newComputer),
-      ),
+    return SubPage(
+      title: l10n.computers,
+      actions: [HeaderIconButton(key: const Key('newComputer'), icon: Icons.add_rounded, tooltip: l10n.newComputer, onPressed: () => _create(context, ref))],
       body: AsyncView(
         value: ref.watch(computersProvider),
         onRetry: () => ref.invalidate(computersProvider),
-        data: (items) => ListView(children: [
-          for (final c in items)
-            ListTile(
-              key: Key('computer-${c.id}'),
-              leading: Icon(c.profile == ComputerProfileEnum.desktop ? Icons.desktop_windows_outlined : Icons.terminal),
-              title: Text(c.name),
-              subtitle: Text([
-                owner(c),
-                c.profile == ComputerProfileEnum.desktop ? l10n.profileDesktop : l10n.profileHeadless,
-                c.provider,
-                c.state.value,
-              ].join(' · ')),
-              trailing: PopupMenuButton<String>(
-                key: Key('computerMenu-${c.id}'),
-                onSelected: (v) async {
-                  final backend = ref.read(backendProvider);
-                  switch (v) {
-                    case 'live':
-                      context.push('/computer/live?c=${c.id}');
-                      return;
-                    case 'profile':
-                      await runGuarded(
-                        context,
-                        () => backend.updateComputer(
-                          c.id,
-                          profile: c.profile == ComputerProfileEnum.desktop ? 'headless' : 'desktop',
-                        ),
-                      );
-                    case 'rename':
-                      final name = await _ask(context, l10n.rename, c.name);
-                      if (name == null || name.isEmpty) return;
-                      if (!context.mounted) return;
-                      await runGuarded(context, () => backend.updateComputer(c.id, name: name));
-                    case 'delete':
-                      final ok = await showDialog<bool>(
-                        context: context,
-                        builder: (d) => AlertDialog(
-                          content: Text(l10n.deleteComputerConfirm(c.name)),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(d, false), child: Text(l10n.cancel)),
-                            FilledButton(onPressed: () => Navigator.pop(d, true), child: Text(l10n.delete)),
-                          ],
-                        ),
-                      );
-                      if (ok != true || !context.mounted) return;
-                      await runGuarded(context, () => backend.deleteComputer(c.id));
-                  }
-                  ref.invalidate(computersProvider);
-                },
-                itemBuilder: (_) => [
-                  if (c.profile == ComputerProfileEnum.desktop) PopupMenuItem(value: 'live', child: Text(l10n.liveView)),
-                  PopupMenuItem(
-                    value: 'profile',
-                    child: Text(c.profile == ComputerProfileEnum.desktop ? l10n.switchToHeadless : l10n.switchToDesktop),
-                  ),
-                  PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
-                  PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
-                ],
-              ),
-            ),
-        ]),
+        data: (items) => PageListView(
+          header: FormNote(l10n.computersHelp),
+          itemCount: items.length,
+          itemBuilder: (context, i) => _ComputerCard(computer: items[i]).appListItemEntrance(i),
+        ),
       ),
     );
   }
 }
 
-Future<String?> _ask(BuildContext context, String title, String initial) async {
-  final controller = TextEditingController(text: initial);
-  final value = await showDialog<String>(
-    context: context,
-    builder: (c) => AlertDialog(
-      title: Text(title),
-      content: TextField(controller: controller, autofocus: true),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(c), child: Text(context.l10n.cancel)),
-        FilledButton(onPressed: () => Navigator.pop(c, controller.text.trim()), child: Text(context.l10n.save)),
-      ],
-    ),
-  );
-  controller.dispose();
-  return value;
+class _ComputerCard extends ConsumerWidget {
+  const _ComputerCard({required this.computer});
+  final Computer computer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
+    final c = computer;
+    final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    Bot? ownerBot;
+    for (final b in bots) {
+      if (b.id == c.ownerBotId) ownerBot = b;
+    }
+    final desktop = c.profile == ComputerProfileEnum.desktop;
+    final running = c.state == ComputerState.running || c.state == ComputerState.idle;
+    final owner = c.kind == ComputerKindEnum.team
+        ? l10n.teamComputer
+        : (ownerBot != null ? l10n.privateComputerOf(ownerBot.name) : (c.kind == ComputerKindEnum.local ? l10n.thisDevice : l10n.privateComputer));
+    final stateColor = running ? colors.working : (c.state == ComputerState.error ? colors.negative : scheme.onSurfaceVariant);
+    final backend = ref.read(backendProvider);
+
+    Future<void> action(String v) async {
+      switch (v) {
+        case 'live':
+          context.push('/computer/live?c=${c.id}');
+          return;
+        case 'profile':
+          await runGuarded(context, () => backend.updateComputer(c.id, profile: desktop ? 'headless' : 'desktop'));
+        case 'rename':
+          final name = await showTextPrompt(
+            context,
+            title: l10n.renameComputer,
+            label: l10n.computerName,
+            initial: c.name,
+            submitLabel: l10n.save,
+            icon: Icons.edit_outlined,
+          );
+          if (name == null || !context.mounted) return;
+          await runGuarded(context, () => backend.updateComputer(c.id, name: name));
+        case 'delete':
+          final ok = await showConfirm(
+            context: context,
+            title: l10n.deleteComputerTitle(c.name),
+            message: l10n.deleteComputerConfirm(c.name),
+            confirmLabel: l10n.delete,
+            destructive: true,
+          );
+          if (!ok || !context.mounted) return;
+          await runGuarded(context, () => backend.deleteComputer(c.id));
+      }
+      ref.invalidate(computersProvider);
+    }
+
+    return AppCard(
+      key: Key('computer-${c.id}'),
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.xxs, 14),
+      child: Row(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(color: stateColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.icon + 2)),
+                alignment: Alignment.center,
+                child: Icon(desktop ? Icons.desktop_windows_rounded : Icons.terminal_rounded, color: stateColor, size: 22),
+              ),
+              if (ownerBot != null)
+                Positioned(
+                  right: -6,
+                  bottom: -6,
+                  child: BotAvatar(name: ownerBot.name, size: 22, ringColor: scheme.surfaceContainerLow),
+                ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  c.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(owner, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    StatusLabel(text: computerStateLabel(context, c.state), color: stateColor, pill: true),
+                    StatusLabel(
+                      text: desktop ? l10n.profileDesktop : l10n.profileHeadless,
+                      color: scheme.onSurfaceVariant,
+                      pill: true,
+                      icon: desktop ? Icons.desktop_windows_outlined : Icons.terminal_rounded,
+                    ),
+                    if (c.provider != 'docker') StatusLabel(text: c.provider, color: scheme.onSurfaceVariant, pill: true),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          PopupMenuButton<String>(
+            key: Key('computerMenu-${c.id}'),
+            tooltip: l10n.moreActions,
+            icon: Icon(Icons.more_vert_rounded, color: scheme.onSurfaceVariant),
+            onSelected: action,
+            itemBuilder: (_) => [
+              if (desktop)
+                PopupMenuItem(
+                  value: 'live',
+                  child: ListTile(dense: true, leading: const Icon(Icons.live_tv_outlined), title: Text(l10n.liveView)),
+                ),
+              PopupMenuItem(
+                value: 'profile',
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(desktop ? Icons.terminal_rounded : Icons.desktop_windows_outlined),
+                  title: Text(desktop ? l10n.switchToHeadless : l10n.switchToDesktop),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'rename',
+                child: ListTile(dense: true, leading: const Icon(Icons.edit_outlined), title: Text(l10n.rename)),
+              ),
+              if (c.kind != ComputerKindEnum.team)
+                PopupMenuItem(
+                  value: 'delete',
+                  child: ListTile(
+                    dense: true,
+                    leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
+                    title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class NewComputerSheet extends ConsumerStatefulWidget {
@@ -141,65 +211,56 @@ class _NewComputerSheetState extends ConsumerState<NewComputerSheet> {
     super.dispose();
   }
 
+  Future<void> _create() async {
+    setState(() => _busy = true);
+    final org = ref.read(currentOrgProvider)!;
+    final c = await runGuarded(
+      context,
+      () => ref
+          .read(backendProvider)
+          .createComputer(org.id, name: _name.text.trim(), private: true, ownerBotId: _botId, profile: _desktop ? 'desktop' : 'headless'),
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (c != null) Navigator.of(context).pop(true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     _botId ??= bots.isEmpty ? null : bots.first.id;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(l10n.newComputer, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 4),
-        Text(l10n.newComputerHelp, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 12),
+    return FormSheet(
+      icon: Icons.add_to_queue_rounded,
+      title: l10n.newComputer,
+      subtitle: l10n.newComputerHelp,
+      submitLabel: l10n.create,
+      submitKey: const Key('createComputer'),
+      busy: _busy,
+      onSubmit: _botId == null || _name.text.trim().isEmpty ? null : _create,
+      children: [
         DropdownButtonFormField<String>(
           key: const Key('computerBot'),
           initialValue: _botId,
-          decoration: InputDecoration(labelText: l10n.forBot),
+          decoration: InputDecoration(labelText: l10n.forBot, prefixIcon: const Icon(Icons.smart_toy_outlined, size: 20)),
           items: [for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name))],
           onChanged: (v) => setState(() => _botId = v),
         ),
-        const SizedBox(height: 8),
         TextField(
           key: const Key('computerName'),
           controller: _name,
-          decoration: InputDecoration(labelText: l10n.computerName),
+          decoration: InputDecoration(labelText: l10n.computerName, prefixIcon: const Icon(Icons.badge_outlined, size: 20)),
           onChanged: (_) => setState(() {}),
         ),
-        SwitchListTile(
+        FormSwitch(
           key: const Key('computerDesktop'),
-          contentPadding: EdgeInsets.zero,
-          title: Text(l10n.withDesktop),
-          subtitle: Text(l10n.withDesktopHelp),
+          icon: Icons.desktop_windows_outlined,
+          title: l10n.withDesktop,
+          subtitle: l10n.withDesktopHelp,
           value: _desktop,
           onChanged: (v) => setState(() => _desktop = v),
         ),
-        const SizedBox(height: 8),
-        FilledButton(
-          key: const Key('createComputer'),
-          onPressed: _busy || _botId == null || _name.text.trim().isEmpty
-              ? null
-              : () async {
-                  setState(() => _busy = true);
-                  final org = ref.read(currentOrgProvider)!;
-                  final c = await runGuarded(
-                    context,
-                    () => ref.read(backendProvider).createComputer(
-                          org.id,
-                          name: _name.text.trim(),
-                          private: true,
-                          ownerBotId: _botId,
-                          profile: _desktop ? 'desktop' : 'headless',
-                        ),
-                  );
-                  if (!context.mounted) return;
-                  setState(() => _busy = false);
-                  if (c != null) Navigator.of(context).pop(true);
-                },
-          child: Text(l10n.create),
-        ),
-      ]),
+      ],
     );
   }
 }

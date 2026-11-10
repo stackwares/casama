@@ -703,13 +703,13 @@ abstract class AppLocalizations {
   /// No description provided for @emptyFolder.
   ///
   /// In en, this message translates to:
-  /// **'This folder is empty.'**
+  /// **'This folder is empty'**
   String get emptyFolder;
 
   /// No description provided for @noCheckpoints.
   ///
   /// In en, this message translates to:
-  /// **'No checkpoints yet. They are saved before risky changes.'**
+  /// **'They\'re saved automatically before risky changes, so you can undo them.'**
   String get noCheckpoints;
 
   /// No description provided for @computerAsleep.
@@ -1225,19 +1225,19 @@ abstract class AppLocalizations {
   /// No description provided for @noIntegrations.
   ///
   /// In en, this message translates to:
-  /// **'No integrations yet. Connect an MCP server, an OpenAPI source, Composio or Pipedream.'**
+  /// **'Connect an MCP server, an OpenAPI source, Composio or Pipedream to give bots more tools.'**
   String get noIntegrations;
 
   /// No description provided for @noIntegrationsForBot.
   ///
   /// In en, this message translates to:
-  /// **'Add integrations in Settings first.'**
+  /// **'Add integrations in Settings first, then turn them on for this bot here.'**
   String get noIntegrationsForBot;
 
   /// No description provided for @noNotifications.
   ///
   /// In en, this message translates to:
-  /// **'No notifications yet.'**
+  /// **'No notifications yet'**
   String get noNotifications;
 
   /// No description provided for @noRoutines.
@@ -1255,7 +1255,7 @@ abstract class AppLocalizations {
   /// No description provided for @noTasks.
   ///
   /// In en, this message translates to:
-  /// **'The task board is empty.'**
+  /// **'No tasks yet'**
   String get noTasks;
 
   /// No description provided for @notifications.
@@ -1585,7 +1585,7 @@ abstract class AppLocalizations {
   /// No description provided for @botComputerDefault.
   ///
   /// In en, this message translates to:
-  /// **'Default (its private computer, else the team computer)'**
+  /// **'Its private computer if it has one, otherwise the team computer'**
   String get botComputerDefault;
 
   /// No description provided for @botInControl.
@@ -3141,6 +3141,570 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Asked you to take over'**
   String get toolTakeover;
+
+  /// No description provided for @secretsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots put a secret in requests by its name. It\'s only sent to the hosts you allow and the model never sees it.'**
+  String get secretsHelp;
+
+  /// No description provided for @deleteSecretTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String deleteSecretTitle(String name);
+
+  /// No description provided for @deleteSecretBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots that use it will stop being able to reach that service.'**
+  String get deleteSecretBody;
+
+  /// No description provided for @hide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get hide;
+
+  /// No description provided for @show.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get show;
+
+  /// No description provided for @deleteMemoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this memory?'**
+  String get deleteMemoryTitle;
+
+  /// No description provided for @noMemoriesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'As you chat, the bot keeps what matters: facts, preferences and summaries of past work.'**
+  String get noMemoriesHelp;
+
+  /// No description provided for @memoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned memories are always in the bot\'s context. Edit anything that\'s wrong; deleted memories are gone for good.'**
+  String get memoryHelp;
+
+  /// No description provided for @memoryFact.
+  ///
+  /// In en, this message translates to:
+  /// **'Fact'**
+  String get memoryFact;
+
+  /// No description provided for @memoryPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Preference'**
+  String get memoryPreference;
+
+  /// No description provided for @memorySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get memorySummary;
+
+  /// No description provided for @memoryEpisode.
+  ///
+  /// In en, this message translates to:
+  /// **'Episode'**
+  String get memoryEpisode;
+
+  /// No description provided for @pinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get pinned;
+
+  /// No description provided for @editMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit memory'**
+  String get editMemory;
+
+  /// No description provided for @editMemoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The bot uses this the next time it\'s relevant.'**
+  String get editMemoryHelp;
+
+  /// No description provided for @modelKeysIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.'**
+  String get modelKeysIntro;
+
+  /// No description provided for @yourKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Your keys'**
+  String get yourKeys;
+
+  /// No description provided for @keyWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working'**
+  String get keyWorking;
+
+  /// No description provided for @keyFailing.
+  ///
+  /// In en, this message translates to:
+  /// **'Failing'**
+  String get keyFailing;
+
+  /// No description provided for @keyUntested.
+  ///
+  /// In en, this message translates to:
+  /// **'Not tested'**
+  String get keyUntested;
+
+  /// No description provided for @skillsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A skill is a set of instructions a bot loads when a task calls for it, like your house style for reports.'**
+  String get skillsHelp;
+
+  /// No description provided for @deleteSkillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the skill “{name}”?'**
+  String deleteSkillTitle(String name);
+
+  /// No description provided for @editSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit skill'**
+  String get editSkill;
+
+  /// No description provided for @deleteSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete skill'**
+  String get deleteSkill;
+
+  /// No description provided for @skillDescriptionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots read this to decide when the skill applies.'**
+  String get skillDescriptionHelp;
+
+  /// No description provided for @skillBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'# Steps\n1. …'**
+  String get skillBodyHint;
+
+  /// No description provided for @computersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.'**
+  String get computersHelp;
+
+  /// No description provided for @thisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get thisDevice;
+
+  /// No description provided for @renameComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename computer'**
+  String get renameComputer;
+
+  /// No description provided for @deleteComputerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String deleteComputerTitle(String name);
+
+  /// No description provided for @privacyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your chats, memories and files belong to you. Export them any time, or delete your account.'**
+  String get privacyIntro;
+
+  /// No description provided for @yourData.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data'**
+  String get yourData;
+
+  /// No description provided for @dangerZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Danger zone'**
+  String get dangerZone;
+
+  /// No description provided for @quotasHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a field empty for no limit.'**
+  String get quotasHelp;
+
+  /// No description provided for @serviceOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get serviceOff;
+
+  /// No description provided for @serviceDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Down'**
+  String get serviceDown;
+
+  /// No description provided for @serviceOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get serviceOk;
+
+  /// No description provided for @inviteMemberHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll get an email with a link to join this workspace.'**
+  String get inviteMemberHelp;
+
+  /// No description provided for @sendInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Send invite'**
+  String get sendInvite;
+
+  /// No description provided for @inviteReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite ready'**
+  String get inviteReady;
+
+  /// No description provided for @inviteCodeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Email isn\'t set up on this server, so share this code with {email}. They paste it when joining.'**
+  String inviteCodeHelp(String email);
+
+  /// No description provided for @copyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get copyCode;
+
+  /// No description provided for @thinking0.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get thinking0;
+
+  /// No description provided for @computerAndTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer and tools'**
+  String get computerAndTools;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get saveChanges;
+
+  /// No description provided for @autonomyAskAlwaysHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks with you before every action that changes something.'**
+  String get autonomyAskAlwaysHelp;
+
+  /// No description provided for @autonomyAskRiskyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Works on its own, but asks before anything risky, like deleting files or spending money.'**
+  String get autonomyAskRiskyHelp;
+
+  /// No description provided for @autonomyAutonomousHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Acts without asking. Best for routines you trust.'**
+  String get autonomyAutonomousHelp;
+
+  /// No description provided for @usageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Model spend this month'**
+  String get usageSubtitle;
+
+  /// No description provided for @skillsRowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructions bots load when a task needs them'**
+  String get skillsRowHelp;
+
+  /// No description provided for @integrationsRowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP servers and connected apps'**
+  String get integrationsRowHelp;
+
+  /// No description provided for @secretsRowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Tokens and passwords, sent only where you allow'**
+  String get secretsRowHelp;
+
+  /// No description provided for @computersRowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The team computer and private ones'**
+  String get computersRowHelp;
+
+  /// No description provided for @companionRowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Let bots use this device\'s apps and files'**
+  String get companionRowHelp;
+
+  /// No description provided for @privacyRowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Export your data or delete your account'**
+  String get privacyRowHelp;
+
+  /// No description provided for @adminRowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Users, workspaces, quotas and services'**
+  String get adminRowHelp;
+
+  /// No description provided for @noIntegrationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No integrations yet'**
+  String get noIntegrationsTitle;
+
+  /// No description provided for @integrationsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations give bots more tools: an MCP server, an OpenAPI source, Composio or Pipedream. Each tool is named after its integration.'**
+  String get integrationsHelp;
+
+  /// No description provided for @botIntegrationsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the integrations this bot may use. Its tools show up the next time it runs.'**
+  String get botIntegrationsHelp;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
+  /// No description provided for @noRunsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Each time this bot works, from a chat, a routine or a webhook, the run shows up here with what it did and what it cost.'**
+  String get noRunsHelp;
+
+  /// No description provided for @runCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get runCompleted;
+
+  /// No description provided for @runWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get runWaiting;
+
+  /// No description provided for @runWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working'**
+  String get runWorking;
+
+  /// No description provided for @triggerChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get triggerChat;
+
+  /// No description provided for @triggerRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine'**
+  String get triggerRoutine;
+
+  /// No description provided for @noEventsForFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing of this kind in this run.'**
+  String get noEventsForFilter;
+
+  /// No description provided for @runStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get runStatusFailed;
+
+  /// No description provided for @runStatusStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get runStatusStopped;
+
+  /// No description provided for @quickAskIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a quick request. It starts a new chat with the bot you pick.'**
+  String get quickAskIntro;
+
+  /// No description provided for @quickAskHintBot.
+  ///
+  /// In en, this message translates to:
+  /// **'What should {bot} do?'**
+  String quickAskHintBot(String bot);
+
+  /// No description provided for @noNotificationsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine results, budget alerts and requests from your bots show up here.'**
+  String get noNotificationsHelp;
+
+  /// No description provided for @noTasksHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots and people add tasks here to hand work to each other.'**
+  String get noTasksHelp;
+
+  /// No description provided for @stateProvisioning.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up'**
+  String get stateProvisioning;
+
+  /// No description provided for @stateStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting'**
+  String get stateStarting;
+
+  /// No description provided for @stateRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get stateRunning;
+
+  /// No description provided for @stateIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get stateIdle;
+
+  /// No description provided for @stateSleeping.
+  ///
+  /// In en, this message translates to:
+  /// **'Asleep'**
+  String get stateSleeping;
+
+  /// No description provided for @stateStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get stateStopped;
+
+  /// No description provided for @stateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get stateError;
+
+  /// No description provided for @terminalHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A shell on this computer. Bots use the same one, so you can see and fix what they did.'**
+  String get terminalHelp;
+
+  /// No description provided for @up.
+  ///
+  /// In en, this message translates to:
+  /// **'Up'**
+  String get up;
+
+  /// No description provided for @emptyFolderHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Files your bots make, and files you upload, show up here.'**
+  String get emptyFolderHelp;
+
+  /// No description provided for @noCheckpointsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No checkpoints yet'**
+  String get noCheckpointsTitle;
+
+  /// No description provided for @checkpointsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A checkpoint saves this computer before a risky change. Restoring puts its files back as they were.'**
+  String get checkpointsHelp;
+
+  /// No description provided for @deleteFileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String deleteFileTitle(String name);
+
+  /// No description provided for @botComputerAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get botComputerAuto;
+
+  /// No description provided for @botComputerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Where this bot runs commands, browses and keeps its files.'**
+  String get botComputerHelp;
+
+  /// No description provided for @billingOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No limits here'**
+  String get billingOffTitle;
+
+  /// No description provided for @revokeKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke the key for {name}?'**
+  String revokeKeyTitle(String name);
+
+  /// No description provided for @revokeKeyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'That server stops using cloud computers and credits right away.'**
+  String get revokeKeyBody;
+
+  /// No description provided for @handBackHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The bot picks up where you left off. Tell it what you did, if it helps.'**
+  String get handBackHelp;
+
+  /// No description provided for @serverHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your own Kasama server. Enter the address you or your admin set up.'**
+  String get serverHelp;
+
+  /// No description provided for @ssoHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your work email and we\'ll send you to your company\'s sign-in page.'**
+  String get ssoHelp;
 }
 
 class _AppLocalizationsDelegate

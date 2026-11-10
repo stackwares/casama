@@ -10,6 +10,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
+import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../settings/model_keys_screen.dart';
 import 'model_picker.dart';
@@ -42,32 +43,28 @@ class BotsList extends ConsumerWidget {
               icon: Icons.smart_toy_outlined,
               title: l10n.noBots,
               message: l10n.noBotsHelp,
-              action: FilledButton.icon(
-                onPressed: () => showCreateBot(context, ref),
-                icon: const Icon(Icons.add_rounded),
-                label: Text(l10n.newBot),
-              ),
+              action: FilledButton.icon(onPressed: () => showCreateBot(context, ref), icon: const Icon(Icons.add_rounded), label: Text(l10n.newBot)),
             )
           : RefreshIndicator(
               onRefresh: () async {
                 ref.invalidate(botsProvider);
                 ref.invalidate(usageTodayProvider);
               },
-              child: ListView.separated(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpace.gutter,
-                  AppSpace.xs,
-                  AppSpace.gutter,
-                  AppSpace.xl + MediaQuery.paddingOf(context).bottom,
-                ),
-                itemCount: items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpace.xs),
-                itemBuilder: (context, i) => _BotCard(
-                  key: Key('bot-${items[i].id}'),
-                  bot: items[i],
-                  cost: costFor(items[i].id),
-                  selected: items[i].id == selectedBotId,
-                ).appListItemEntrance(i),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final side = pageSide(constraints.maxWidth);
+                  return ListView.separated(
+                    padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: AppSpace.xs),
+                    itemBuilder: (context, i) => _BotCard(
+                      key: Key('bot-${items[i].id}'),
+                      bot: items[i],
+                      cost: costFor(items[i].id),
+                      selected: items[i].id == selectedBotId,
+                    ).appListItemEntrance(i),
+                  );
+                },
               ),
             ),
     );
@@ -224,24 +221,25 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (!widget.embedded) Row(
-            children: [
-              AnimatedSwitcher(
-                duration: AppMotion.of(context, AppMotion.fast),
-                child: BotAvatar(key: ValueKey(_finalName(context)), name: _finalName(context), size: 52),
-              ),
-              const SizedBox(width: AppSpace.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.newBot, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
-                    Text(l10n.newBotSubtitle, style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceVariant)),
-                  ],
+          if (!widget.embedded)
+            Row(
+              children: [
+                AnimatedSwitcher(
+                  duration: AppMotion.of(context, AppMotion.fast),
+                  child: BotAvatar(key: ValueKey(_finalName(context)), name: _finalName(context), size: 52),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: AppSpace.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.newBot, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+                      Text(l10n.newBotSubtitle, style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           if (!widget.embedded) const SizedBox(height: AppSpace.lg),
           TemplatePicker(
             selected: _templateId,

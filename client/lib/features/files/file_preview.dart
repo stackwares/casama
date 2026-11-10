@@ -250,6 +250,13 @@ class FilePreview extends ConsumerWidget {
                   ],
                 ),
               ),
+              // Dialogs (larger windows) have no drag handle, so give them a way out.
+              if (AppBreakpoints.of(MediaQuery.sizeOf(context).width) != WindowSize.compact)
+                IconButton(
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: const Icon(Icons.close_rounded),
+                ),
             ],
           ),
         ),

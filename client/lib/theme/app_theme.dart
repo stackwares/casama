@@ -8,12 +8,22 @@ import 'app_tokens.dart';
 /// and cards stay neutral whatever is picked.
 enum AppAccent {
   kasama('Kasama', Color(0xFF0F766E)),
+  emerald('Emerald', Color(0xFF059669)),
+  green('Green', Color(0xFF16A34A)),
+  lime('Lime', Color(0xFF65A30D)),
+  amber('Amber', Color(0xFFD97706)),
+  orange('Orange', Color(0xFFEA580C)),
+  red('Red', Color(0xFFDC2626)),
+  rose('Rose', Color(0xFFE11D48)),
+  pink('Pink', Color(0xFFDB2777)),
+  fuchsia('Fuchsia', Color(0xFFC026D3)),
+  purple('Purple', Color(0xFF9333EA)),
+  violet('Violet', Color(0xFF7C3AED)),
   indigo('Indigo', Color(0xFF4F46E5)),
   blue('Blue', Color(0xFF2563EB)),
-  green('Green', Color(0xFF15803D)),
-  orange('Orange', Color(0xFFEA580C)),
-  rose('Rose', Color(0xFFE11D48)),
-  purple('Purple', Color(0xFF7C3AED));
+  sky('Sky', Color(0xFF0284C7)),
+  cyan('Cyan', Color(0xFF0891B2)),
+  slate('Graphite', Color(0xFF475569));
 
   const AppAccent(this.label, this.seed);
   final String label;
@@ -154,6 +164,8 @@ abstract final class AppTheme {
         disabledBorder: fieldBorder.copyWith(borderSide: BorderSide(color: colors.hairline.withValues(alpha: 0.5))),
         focusedBorder: fieldBorder.copyWith(borderSide: BorderSide(color: scheme.primary, width: 1.5)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        helperMaxLines: 3,
+        errorMaxLines: 3,
         hintStyle: textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant.withValues(alpha: 0.8)),
       ),
       bottomSheetTheme: base.bottomSheetTheme.copyWith(

@@ -9,7 +9,9 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/form_sheet.dart';
 import '../../ui/app_card.dart';
+import '../../ui/page.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 
@@ -36,41 +38,68 @@ class RoutinesScreen extends ConsumerWidget {
                 message: l10n.noRoutinesHelp,
                 action: FilledButton.icon(onPressed: () => _create(context, ref), icon: const Icon(Icons.add_rounded), label: Text(l10n.newRoutine)),
               )
-            : LayoutBuilder(builder: (context, constraints) {
-                final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: 720);
-                return ListView.separated(
-                  padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: AppSpace.xs),
-                  itemBuilder: (context, i) => _RoutineCard(routine: items[i]).appListItemEntrance(i),
-                );
-              }),
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: kPageMaxWidth);
+                  return ListView.separated(
+                    padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: AppSpace.xs),
+                    itemBuilder: (context, i) => _RoutineCard(routine: items[i]).appListItemEntrance(i),
+                  );
+                },
+              ),
       ),
     );
   }
 
   Future<void> _create(BuildContext context, WidgetRef ref) async {
-    final created = await showAdaptiveSheet<CreatedRoutine>(context: context, builder: (_) => NewRoutineSheet(botId: botId));
+    final created = await showAdaptiveSheet<CreatedRoutine>(
+      context: context,
+      builder: (_) => NewRoutineSheet(botId: botId),
+    );
     if (created == null || !context.mounted) return;
     ref.invalidate(routinesProvider(botId));
     if (created.webhookUrl != null) {
       final l10n = context.l10n;
-      await showDialog<void>(
+      await showAdaptiveSheet<void>(
         context: context,
-        builder: (c) => AlertDialog(
-          title: Text(l10n.webhookCreated),
-          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(l10n.webhookShownOnce),
-            const SizedBox(height: 12),
-            SelectableText('${l10n.webhookUrl}: ${created.webhookUrl}'),
-            const SizedBox(height: 8),
-            SelectableText('${l10n.webhookSecret}: ${created.webhookSecret ?? ''}', key: const Key('webhookSecret')),
-          ]),
-          actions: [
-            TextButton(onPressed: () => Clipboard.setData(ClipboardData(text: created.webhookSecret ?? '')), child: Text(l10n.copySecret)),
-            FilledButton(onPressed: () => Navigator.pop(c), child: Text(l10n.close)),
-          ],
-        ),
+        builder: (c) {
+          final colors = c.appColors;
+          Widget field(String label, String value, {Key? key}) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: c.textTheme.labelMedium?.copyWith(color: c.colorScheme.onSurfaceVariant)),
+              const SizedBox(height: 4),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.codeBackground,
+                  borderRadius: BorderRadius.circular(AppRadius.row),
+                  border: Border.all(color: colors.hairline),
+                ),
+                child: SelectableText(value, key: key, style: AppText.mono.copyWith(fontSize: 13)),
+              ),
+            ],
+          );
+          return FormSheet(
+            icon: Icons.webhook_rounded,
+            title: l10n.webhookCreated,
+            subtitle: l10n.webhookShownOnce,
+            submitLabel: l10n.copySecret,
+            submitIcon: Icons.content_copy_rounded,
+            cancelLabel: l10n.close,
+            onSubmit: () {
+              Clipboard.setData(ClipboardData(text: created.webhookSecret ?? ''));
+              showMessage(c, l10n.copied);
+            },
+            children: [
+              field(l10n.webhookUrl, created.webhookUrl ?? ''),
+              field(l10n.webhookSecret, created.webhookSecret ?? '', key: const Key('webhookSecret')),
+            ],
+          );
+        },
       );
     }
   }
@@ -116,71 +145,83 @@ class _RoutineCard extends ConsumerWidget {
     return AppCard(
       key: Key('routine-${r.id}'),
       padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.xs, 14),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(color: tint.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.icon)),
-          alignment: Alignment.center,
-          child: Icon(icon, size: 20, color: tint),
-        ),
-        const SizedBox(width: AppSpace.sm),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(r.name, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 2),
-            Text(schedule, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
-            if (next != null || last != null || !r.enabled) ...[
-              const SizedBox(height: 6),
-              Wrap(spacing: AppSpace.xs, runSpacing: 4, children: [
-                if (!r.enabled) StatusLabel(text: l10n.routineOff, color: scheme.onSurfaceVariant, pill: true),
-                if (next != null) StatusLabel(text: next, color: context.appColors.positive, pill: true, icon: Icons.schedule_rounded),
-                if (last != null) Text(last, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
-              ]),
-            ],
-          ]),
-        ),
-        Switch(
-          key: Key('routineEnabled-${r.id}'),
-          value: r.enabled,
-          onChanged: (v) async {
-            await runGuarded(context, () => ref.read(backendProvider).setRoutineEnabled(r.id, v));
-            ref.invalidate(routinesProvider(r.botId));
-          },
-        ),
-        MenuAnchor(
-          alignmentOffset: const Offset(-120, 0),
-          menuChildren: [
-            MenuItemButton(
-              key: Key('runRoutine-${r.id}'),
-              leadingIcon: const Icon(Icons.play_arrow_rounded, size: 20),
-              onPressed: () async {
-                final runId = await runGuarded(context, () => ref.read(backendProvider).runRoutine(r.id));
-                if (runId != null && context.mounted) {
-                  final router = GoRouter.maybeOf(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(l10n.routineStarted),
-                    action: router == null ? null : SnackBarAction(label: l10n.viewRun, onPressed: () => router.go('/bots/${r.botId}/runs/$runId')),
-                  ));
-                }
-              },
-              child: Text(l10n.runNow),
-            ),
-            MenuItemButton(
-              key: Key('deleteRoutine-${r.id}'),
-              leadingIcon: Icon(Icons.delete_outline_rounded, size: 20, color: scheme.error),
-              onPressed: () => _delete(context, ref),
-              child: Text(l10n.delete, style: TextStyle(color: scheme.error)),
-            ),
-          ],
-          builder: (context, controller, _) => IconButton(
-            key: Key('routineMenu-${r.id}'),
-            tooltip: l10n.moreActions,
-            icon: const Icon(Icons.more_vert_rounded),
-            onPressed: () => controller.isOpen ? controller.close() : controller.open(),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(color: tint.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.icon)),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 20, color: tint),
           ),
-        ),
-      ]),
+          const SizedBox(width: AppSpace.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(r.name, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                Text(schedule, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                if (next != null || last != null || !r.enabled) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: AppSpace.xs,
+                    runSpacing: 4,
+                    children: [
+                      if (!r.enabled) StatusLabel(text: l10n.routineOff, color: scheme.onSurfaceVariant, pill: true),
+                      if (next != null) StatusLabel(text: next, color: context.appColors.positive, pill: true, icon: Icons.schedule_rounded),
+                      if (last != null) Text(last, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Switch(
+            key: Key('routineEnabled-${r.id}'),
+            value: r.enabled,
+            onChanged: (v) async {
+              await runGuarded(context, () => ref.read(backendProvider).setRoutineEnabled(r.id, v));
+              ref.invalidate(routinesProvider(r.botId));
+            },
+          ),
+          MenuAnchor(
+            alignmentOffset: const Offset(-120, 0),
+            menuChildren: [
+              MenuItemButton(
+                key: Key('runRoutine-${r.id}'),
+                leadingIcon: const Icon(Icons.play_arrow_rounded, size: 20),
+                onPressed: () async {
+                  final runId = await runGuarded(context, () => ref.read(backendProvider).runRoutine(r.id));
+                  if (runId != null && context.mounted) {
+                    final router = GoRouter.maybeOf(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.routineStarted),
+                        action: router == null ? null : SnackBarAction(label: l10n.viewRun, onPressed: () => router.go('/bots/${r.botId}/runs/$runId')),
+                      ),
+                    );
+                  }
+                },
+                child: Text(l10n.runNow),
+              ),
+              MenuItemButton(
+                key: Key('deleteRoutine-${r.id}'),
+                leadingIcon: Icon(Icons.delete_outline_rounded, size: 20, color: scheme.error),
+                onPressed: () => _delete(context, ref),
+                child: Text(l10n.delete, style: TextStyle(color: scheme.error)),
+              ),
+            ],
+            builder: (context, controller, _) => IconButton(
+              key: Key('routineMenu-${r.id}'),
+              tooltip: l10n.moreActions,
+              icon: const Icon(Icons.more_vert_rounded),
+              onPressed: () => controller.isOpen ? controller.close() : controller.open(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -254,92 +295,106 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
     ];
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.md),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(l10n.newRoutine, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
-        const SizedBox(height: AppSpace.md),
-        TextField(
-          key: const Key('routineName'),
-          controller: _name,
-          decoration: InputDecoration(labelText: l10n.routineName),
-          onChanged: (_) => setState(() {}),
-        ),
-        const SizedBox(height: AppSpace.sm),
-        TextField(
-          key: const Key('routineInstructions'),
-          controller: _instructions,
-          decoration: InputDecoration(labelText: l10n.routineInstructions, hintText: l10n.routineInstructionsHint),
-          maxLines: 4,
-          minLines: 2,
-          onChanged: (_) => setState(() {}),
-        ),
-        const SizedBox(height: AppSpace.md),
-        AppSegmentedControl<String>(
-          values: const ['once', 'schedule', 'github', 'webhook'],
-          labels: {'once': l10n.triggerOnce, 'schedule': l10n.triggerSchedule, 'github': l10n.triggerGithub, 'webhook': l10n.triggerWebhook},
-          groupValue: _trigger,
-          onValueChanged: (v) => setState(() => _trigger = v),
-        ),
-        if (_trigger == 'once') ...[
-          const SizedBox(height: AppSpace.sm),
-          Wrap(spacing: 8, runSpacing: 4, children: [
-            for (final q in quick)
-              ChoiceChip(
-                label: Text(q.$1),
-                selected: (_runAt.difference(q.$2).inMinutes).abs() < 1,
-                onSelected: (_) => setState(() => _runAt = q.$2),
-              ),
-          ]),
-          const SizedBox(height: AppSpace.xs),
-          OutlinedButton.icon(
-            key: const Key('routineRunAt'),
-            onPressed: _pickTime,
-            icon: const Icon(Icons.event_rounded, size: 18),
-            label: Text(_formatWhen(context, _runAt)),
-          ),
-        ],
-        if (_trigger == 'schedule') ...[
-          const SizedBox(height: AppSpace.sm),
-          Wrap(spacing: 8, runSpacing: 4, children: [
-            for (final p in schedulePresets)
-              ChoiceChip(label: Text(_presetLabel(p.$2)), selected: _cron.text == p.$1, onSelected: (_) => setState(() => _cron.text = p.$1)),
-          ]),
-          const SizedBox(height: AppSpace.sm),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.newRoutine, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+          const SizedBox(height: AppSpace.md),
           TextField(
-            key: const Key('routineCron'),
-            controller: _cron,
-            decoration: InputDecoration(labelText: l10n.cronExpression, helperText: l10n.cronHelp),
+            key: const Key('routineName'),
+            controller: _name,
+            decoration: InputDecoration(labelText: l10n.routineName),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: AppSpace.sm),
-          TextField(key: const Key('routineTimezone'), controller: _timezone, decoration: InputDecoration(labelText: l10n.timezone)),
+          TextField(
+            key: const Key('routineInstructions'),
+            controller: _instructions,
+            decoration: InputDecoration(labelText: l10n.routineInstructions, hintText: l10n.routineInstructionsHint),
+            maxLines: 4,
+            minLines: 2,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: AppSpace.md),
+          AppSegmentedControl<String>(
+            values: const ['once', 'schedule', 'github', 'webhook'],
+            labels: {'once': l10n.triggerOnce, 'schedule': l10n.triggerSchedule, 'github': l10n.triggerGithub, 'webhook': l10n.triggerWebhook},
+            groupValue: _trigger,
+            onValueChanged: (v) => setState(() => _trigger = v),
+          ),
+          if (_trigger == 'once') ...[
+            const SizedBox(height: AppSpace.sm),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final q in quick)
+                  ChoiceChip(label: Text(q.$1), selected: (_runAt.difference(q.$2).inMinutes).abs() < 1, onSelected: (_) => setState(() => _runAt = q.$2)),
+              ],
+            ),
+            const SizedBox(height: AppSpace.xs),
+            OutlinedButton.icon(
+              key: const Key('routineRunAt'),
+              onPressed: _pickTime,
+              icon: const Icon(Icons.event_rounded, size: 18),
+              label: Text(_formatWhen(context, _runAt)),
+            ),
+          ],
+          if (_trigger == 'schedule') ...[
+            const SizedBox(height: AppSpace.sm),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final p in schedulePresets)
+                  ChoiceChip(label: Text(_presetLabel(p.$2)), selected: _cron.text == p.$1, onSelected: (_) => setState(() => _cron.text = p.$1)),
+              ],
+            ),
+            const SizedBox(height: AppSpace.sm),
+            TextField(
+              key: const Key('routineCron'),
+              controller: _cron,
+              decoration: InputDecoration(labelText: l10n.cronExpression, helperText: l10n.cronHelp),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: AppSpace.sm),
+            TextField(
+              key: const Key('routineTimezone'),
+              controller: _timezone,
+              decoration: InputDecoration(labelText: l10n.timezone),
+            ),
+          ],
+          const SizedBox(height: AppSpace.md),
+          FilledButton(
+            key: const Key('createRoutine'),
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+            onPressed: _busy || !valid
+                ? null
+                : () async {
+                    setState(() => _busy = true);
+                    final created = await runGuarded(
+                      context,
+                      () => ref
+                          .read(backendProvider)
+                          .createRoutine(
+                            widget.botId,
+                            name: _name.text.trim(),
+                            instructions: _instructions.text.trim(),
+                            trigger: _trigger,
+                            cron: _cron.text.trim(),
+                            runAt: _runAt,
+                            timezone: _timezone.text.trim().isEmpty ? null : _timezone.text.trim(),
+                          ),
+                    );
+                    if (!context.mounted) return;
+                    setState(() => _busy = false);
+                    if (created != null) Navigator.of(context).pop(created);
+                  },
+            child: Text(l10n.create),
+          ),
         ],
-        const SizedBox(height: AppSpace.md),
-        FilledButton(
-          key: const Key('createRoutine'),
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-          onPressed: _busy || !valid
-              ? null
-              : () async {
-                  setState(() => _busy = true);
-                  final created = await runGuarded(
-                    context,
-                    () => ref.read(backendProvider).createRoutine(
-                          widget.botId,
-                          name: _name.text.trim(),
-                          instructions: _instructions.text.trim(),
-                          trigger: _trigger,
-                          cron: _cron.text.trim(),
-                          runAt: _runAt,
-                          timezone: _timezone.text.trim().isEmpty ? null : _timezone.text.trim(),
-                        ),
-                  );
-                  if (!context.mounted) return;
-                  setState(() => _busy = false);
-                  if (created != null) Navigator.of(context).pop(created);
-                },
-          child: Text(l10n.create),
-        ),
-      ]),
+      ),
     );
   }
 }

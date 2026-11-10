@@ -138,11 +138,12 @@ class SupabaseBackend implements Backend {
   Future<List<Template>> templates() async => (await api.bots.listTemplates()).data!.items;
 
   @override
-  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy}) async {
+  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy}) async {
     await supabase.from('bots').update({
       'name': ?name,
       'persona_md': ?persona,
       'autonomy': ?autonomy,
+      'model_policy': ?modelPolicy,
     }).eq('id', botId);
   }
 

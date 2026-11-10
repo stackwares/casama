@@ -3,13 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
+import '../../ui/shell_header.dart';
 
 /// Named secrets bots reference as {{secret:NAME}}; each is only sent to its allowed hosts.
 class SecretsScreen extends ConsumerWidget {
   const SecretsScreen({super.key});
 
   Future<void> _add(BuildContext context, WidgetRef ref) async {
-    final result = await showDialog<(String, String, List<String>)>(context: context, builder: (_) => const _AddSecretDialog());
+    final result = await showAdaptiveSheet<(String, String, List<String>)>(context: context, builder: (_) => const _AddSecretForm());
     if (result == null || !context.mounted) return;
     final org = ref.read(currentOrgProvider)!;
     await runGuarded(context, () => ref.read(backendProvider).createSecret(org.id, name: result.$1, value: result.$2, hosts: result.$3));
@@ -19,52 +26,67 @@ class SecretsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.secrets)),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('addSecret'),
-        onPressed: () => _add(context, ref),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.addSecret),
-      ),
+    final add = FilledButton.icon(
+      key: const Key('addSecret'),
+      onPressed: () => _add(context, ref),
+      icon: const Icon(Icons.add_rounded, size: 18),
+      label: Text(l10n.addSecret),
+    );
+    return SubPage(
+      title: l10n.secrets,
+      actions: [HeaderIconButton(icon: Icons.add_rounded, tooltip: l10n.addSecret, onPressed: () => _add(context, ref))],
       body: AsyncView(
         value: ref.watch(secretsProvider),
         onRetry: () => ref.invalidate(secretsProvider),
         data: (items) => items.isEmpty
-            ? EmptyState(icon: Icons.lock_outline, message: l10n.noSecrets)
-            : ListView(children: [
-                for (final s in items)
-                  ListTile(
-                    key: Key('secret-${s.id}'),
-                    leading: const Icon(Icons.lock_outline),
-                    title: Text(s.name),
-                    subtitle: Text(l10n.onlySentTo(s.allowedHosts.join(', '))),
-                    trailing: IconButton(
-                      tooltip: l10n.delete,
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () async {
-                        await runGuarded(context, () => ref.read(backendProvider).deleteSecret(s.id));
-                        ref.invalidate(secretsProvider);
-                      },
+            ? EmptyState(icon: Icons.lock_outline_rounded, title: l10n.noSecrets, message: l10n.secretsHelp, action: add)
+            : PageColumn(children: [
+                FormNote(l10n.secretsHelp),
+                const SizedBox(height: AppSpace.md),
+                GroupedCard(children: [
+                  for (final s in items)
+                    GroupedTile(
+                      key: Key('secret-${s.id}'),
+                      icon: Icons.key_rounded,
+                      iconColor: context.appColors.warning,
+                      title: s.name,
+                      subtitle: l10n.onlySentTo(s.allowedHosts.join(', ')),
+                      trailing: IconButton(
+                        tooltip: l10n.delete,
+                        icon: Icon(Icons.delete_outline_rounded, color: context.colorScheme.onSurfaceVariant),
+                        onPressed: () async {
+                          final ok = await showConfirm(
+                            context: context,
+                            title: l10n.deleteSecretTitle(s.name),
+                            message: l10n.deleteSecretBody,
+                            confirmLabel: l10n.delete,
+                            destructive: true,
+                          );
+                          if (!ok || !context.mounted) return;
+                          await runGuarded(context, () => ref.read(backendProvider).deleteSecret(s.id));
+                          ref.invalidate(secretsProvider);
+                        },
+                      ),
                     ),
-                  ),
+                ]),
               ]),
       ),
     );
   }
 }
 
-class _AddSecretDialog extends StatefulWidget {
-  const _AddSecretDialog();
+class _AddSecretForm extends StatefulWidget {
+  const _AddSecretForm();
 
   @override
-  State<_AddSecretDialog> createState() => _AddSecretDialogState();
+  State<_AddSecretForm> createState() => _AddSecretFormState();
 }
 
-class _AddSecretDialogState extends State<_AddSecretDialog> {
+class _AddSecretFormState extends State<_AddSecretForm> {
   final _name = TextEditingController();
   final _value = TextEditingController();
   final _hosts = TextEditingController();
+  var _show = false;
 
   @override
   void dispose() {
@@ -79,39 +101,64 @@ class _AddSecretDialogState extends State<_AddSecretDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final valid = RegExp(r'^[A-Z][A-Z0-9_]{0,63}$').hasMatch(_name.text) && _value.text.isNotEmpty && _hostList.isNotEmpty;
-    return AlertDialog(
-      title: Text(l10n.addSecret),
-      content: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(
-            key: const Key('secretName'),
-            controller: _name,
-            decoration: InputDecoration(labelText: l10n.secretName, helperText: l10n.secretNameHelp),
-            textCapitalization: TextCapitalization.characters,
-            onChanged: (_) => setState(() {}),
+    final nameOk = RegExp(r'^[A-Z][A-Z0-9_]{0,63}$').hasMatch(_name.text);
+    final valid = nameOk && _value.text.isNotEmpty && _hostList.isNotEmpty;
+    return FormSheet(
+      icon: Icons.key_rounded,
+      iconColor: context.appColors.warning,
+      title: l10n.addSecret,
+      subtitle: l10n.secretsHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveSecret'),
+      onSubmit: valid ? () => Navigator.pop(context, (_name.text, _value.text, _hostList)) : null,
+      children: [
+        TextField(
+          key: const Key('secretName'),
+          controller: _name,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: l10n.secretName,
+            hintText: 'GITHUB_TOKEN',
+            helperText: l10n.secretNameHelp,
+            prefixIcon: const Icon(Icons.tag_rounded, size: 20),
+            errorText: _name.text.isNotEmpty && !nameOk ? l10n.secretNameHelp : null,
           ),
-          TextField(
-            key: const Key('secretValue'),
-            controller: _value,
-            obscureText: true,
-            decoration: InputDecoration(labelText: l10n.secretValue),
-            onChanged: (_) => setState(() {}),
+          textCapitalization: TextCapitalization.characters,
+          onChanged: (v) {
+            final upper = v.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9_]'), '_');
+            if (upper != v) _name.value = TextEditingValue(text: upper, selection: TextSelection.collapsed(offset: upper.length));
+            setState(() {});
+          },
+        ),
+        TextField(
+          key: const Key('secretValue'),
+          controller: _value,
+          obscureText: !_show,
+          autocorrect: false,
+          enableSuggestions: false,
+          decoration: InputDecoration(
+            labelText: l10n.secretValue,
+            prefixIcon: const Icon(Icons.password_rounded, size: 20),
+            suffixIcon: IconButton(
+              tooltip: _show ? l10n.hide : l10n.show,
+              icon: Icon(_show ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+              onPressed: () => setState(() => _show = !_show),
+            ),
           ),
-          TextField(
-            key: const Key('secretHosts'),
-            controller: _hosts,
-            decoration: InputDecoration(labelText: l10n.allowedHosts, helperText: l10n.allowedHostsHelp),
-            onChanged: (_) => setState(() {}),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          key: const Key('secretHosts'),
+          controller: _hosts,
+          keyboardType: TextInputType.url,
+          autocorrect: false,
+          decoration: InputDecoration(
+            labelText: l10n.allowedHosts,
+            hintText: 'api.github.com',
+            helperText: l10n.allowedHostsHelp,
+            prefixIcon: const Icon(Icons.dns_outlined, size: 20),
           ),
-        ]),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
-        FilledButton(
-          key: const Key('saveSecret'),
-          onPressed: valid ? () => Navigator.pop(context, (_name.text, _value.text, _hostList)) : null,
-          child: Text(l10n.save),
+          onChanged: (_) => setState(() {}),
         ),
       ],
     );

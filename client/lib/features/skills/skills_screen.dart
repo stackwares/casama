@@ -4,14 +4,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
+import '../../ui/shell_header.dart';
 
 /// Skills: Markdown instruction packs that bots load on demand.
 class SkillsScreen extends ConsumerWidget {
   const SkillsScreen({super.key});
 
   Future<void> _edit(BuildContext context, WidgetRef ref, [SkillView? skill]) async {
-    await showAdaptiveSheet<void>(context: context, heightFactor: 0.85, builder: (_) => _SkillEditor(skill: skill));
+    await showAdaptiveSheet<void>(context: context, dialogMaxWidth: 680, builder: (_) => _SkillEditor(skill: skill));
     ref.invalidate(skillsProvider);
   }
 
@@ -19,42 +25,52 @@ class SkillsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final skills = ref.watch(skillsProvider);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.skills)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _edit(context, ref),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.newSkill),
-      ),
+    return SubPage(
+      title: l10n.skills,
+      actions: [HeaderIconButton(icon: Icons.add_rounded, tooltip: l10n.newSkill, onPressed: () => _edit(context, ref))],
       body: AsyncView(
         value: skills,
         onRetry: () => ref.invalidate(skillsProvider),
         data: (items) => items.isEmpty
-            ? EmptyState(icon: Icons.menu_book_outlined, message: l10n.noSkills)
-            : ListView(children: [
-                for (final s in items)
-                  SwitchListTile(
-                    title: Text(s.name),
-                    subtitle: Text(s.description),
-                    value: s.enabled,
-                    onChanged: (v) async {
-                      final org = ref.read(currentOrgProvider)!;
-                      await runGuarded(
-                        context,
-                        () => ref.read(backendProvider).saveSkill(
-                              org.id,
-                              id: s.id,
-                              botId: s.botId,
-                              name: s.name,
-                              description: s.description,
-                              bodyMd: s.bodyMd,
-                              enabled: v,
-                            ),
-                      );
-                      ref.invalidate(skillsProvider);
-                    },
-                    secondary: IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _edit(context, ref, s)),
-                  ),
+            ? EmptyState(
+                icon: Icons.menu_book_outlined,
+                title: l10n.noSkills,
+                message: l10n.skillsHelp,
+                action: FilledButton.icon(onPressed: () => _edit(context, ref), icon: const Icon(Icons.add_rounded, size: 18), label: Text(l10n.newSkill)),
+              )
+            : PageColumn(children: [
+                FormNote(l10n.skillsHelp),
+                const SizedBox(height: AppSpace.md),
+                GroupedCard(children: [
+                  for (final s in items)
+                    GroupedTile(
+                      key: Key('skill-${s.id}'),
+                      icon: Icons.menu_book_outlined,
+                      iconColor: s.enabled ? null : context.colorScheme.onSurfaceVariant,
+                      title: s.name,
+                      subtitle: s.description,
+                      onTap: () => _edit(context, ref, s),
+                      trailing: Switch(
+                        value: s.enabled,
+                        onChanged: (v) async {
+                          final org = ref.read(currentOrgProvider)!;
+                          await runGuarded(
+                            context,
+                            () => ref.read(backendProvider).saveSkill(
+                                  org.id,
+                                  id: s.id,
+                                  botId: s.botId,
+                                  name: s.name,
+                                  description: s.description,
+                                  bodyMd: s.bodyMd,
+                                  enabled: v,
+                                ),
+                          );
+                          ref.invalidate(skillsProvider);
+                        },
+                      ),
+                    ),
+                ]),
               ]),
       ),
     );
@@ -73,6 +89,7 @@ class _SkillEditorState extends ConsumerState<_SkillEditor> {
   late final _name = TextEditingController(text: widget.skill?.name ?? '');
   late final _description = TextEditingController(text: widget.skill?.description ?? '');
   late final _body = TextEditingController(text: widget.skill?.bodyMd ?? '');
+  var _busy = false;
 
   @override
   void dispose() {
@@ -82,49 +99,76 @@ class _SkillEditorState extends ConsumerState<_SkillEditor> {
     super.dispose();
   }
 
+  Future<void> _save() async {
+    setState(() => _busy = true);
+    final org = ref.read(currentOrgProvider)!;
+    final ok = await runGuarded(context, () async {
+      await ref.read(backendProvider).saveSkill(
+            org.id,
+            id: widget.skill?.id,
+            botId: widget.skill?.botId,
+            name: _name.text.trim(),
+            description: _description.text.trim(),
+            bodyMd: _body.text,
+            enabled: widget.skill?.enabled ?? true,
+          );
+      return true;
+    });
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok == true) Navigator.pop(context);
+  }
+
+  Future<void> _delete() async {
+    final l10n = context.l10n;
+    final ok = await showConfirm(context: context, title: l10n.deleteSkillTitle(widget.skill!.name), confirmLabel: l10n.delete, destructive: true);
+    if (!ok || !mounted) return;
+    await runGuarded(context, () => ref.read(backendProvider).deleteSkill(widget.skill!.id));
+    if (mounted) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        TextField(controller: _name, decoration: InputDecoration(labelText: l10n.skillName)),
-        const SizedBox(height: 8),
-        TextField(controller: _description, decoration: InputDecoration(labelText: l10n.skillDescription)),
-        const SizedBox(height: 8),
-        TextField(controller: _body, decoration: InputDecoration(labelText: l10n.skillBody), maxLines: 10, minLines: 5),
-        const SizedBox(height: 12),
-        Row(children: [
-          if (widget.skill != null)
-            TextButton(
-              onPressed: () async {
-                await runGuarded(context, () => ref.read(backendProvider).deleteSkill(widget.skill!.id));
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: Text(l10n.delete),
+    final valid = _name.text.trim().isNotEmpty && _description.text.trim().isNotEmpty && _body.text.trim().isNotEmpty;
+    return FormSheet(
+      icon: Icons.menu_book_outlined,
+      title: widget.skill == null ? l10n.newSkill : l10n.editSkill,
+      subtitle: l10n.skillsHelp,
+      submitLabel: l10n.save,
+      busy: _busy,
+      onSubmit: valid ? _save : null,
+      footer: widget.skill == null
+          ? null
+          : Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: _busy ? null : _delete,
+                style: TextButton.styleFrom(foregroundColor: context.colorScheme.error),
+                icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                label: Text(l10n.deleteSkill),
+              ),
             ),
-          const Spacer(),
-          FilledButton(
-            onPressed: () async {
-              final org = ref.read(currentOrgProvider)!;
-              final ok = await runGuarded(context, () async {
-                await ref.read(backendProvider).saveSkill(
-                      org.id,
-                      id: widget.skill?.id,
-                      botId: widget.skill?.botId,
-                      name: _name.text.trim(),
-                      description: _description.text.trim(),
-                      bodyMd: _body.text,
-                      enabled: widget.skill?.enabled ?? true,
-                    );
-                return true;
-              });
-              if (ok == true && context.mounted) Navigator.pop(context);
-            },
-            child: Text(l10n.save),
-          ),
-        ]),
-      ]),
+      children: [
+        TextField(
+          controller: _name,
+          decoration: InputDecoration(labelText: l10n.skillName, hintText: 'weekly-report', prefixIcon: const Icon(Icons.tag_rounded, size: 20)),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          controller: _description,
+          decoration: InputDecoration(labelText: l10n.skillDescription, helperText: l10n.skillDescriptionHelp, prefixIcon: const Icon(Icons.short_text_rounded, size: 20)),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          controller: _body,
+          style: AppText.mono.copyWith(fontSize: 14),
+          decoration: InputDecoration(labelText: l10n.skillBody, alignLabelWithHint: true, hintText: l10n.skillBodyHint),
+          maxLines: 14,
+          minLines: 6,
+          onChanged: (_) => setState(() {}),
+        ),
+      ],
     );
   }
 }

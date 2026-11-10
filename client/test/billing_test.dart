@@ -118,6 +118,7 @@ void main() {
     await tester.tap(find.byKey(const Key('createConnectKey')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('instanceName')), 'home-server');
+    await tester.pump();
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
     expect(find.text('KASAMA_CLOUD_KEY=kcc_secret_shown_once'), findsOneWidget);

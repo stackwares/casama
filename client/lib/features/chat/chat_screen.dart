@@ -946,8 +946,14 @@ class _MoreMenu extends StatelessWidget {
       onPressed: onPressed,
       child: Padding(padding: const EdgeInsets.only(right: 24), child: Text(label)),
     );
+    // A fixed width lets the menu's right edge line up with the button (42 wide with its padding).
+    const menuWidth = 260.0;
     return MenuAnchor(
-      alignmentOffset: const Offset(-140, 6),
+      alignmentOffset: const Offset(-(menuWidth - 42), 6),
+      style: const MenuStyle(
+        minimumSize: WidgetStatePropertyAll(Size(menuWidth, 0)),
+        maximumSize: WidgetStatePropertyAll(Size(menuWidth, double.infinity)),
+      ),
       menuChildren: [
         item(Icons.timeline_rounded, l10n.activity, () => context.push('/bots/$botId/activity')),
         if (showComputer) item(Icons.desktop_windows_outlined, l10n.navComputer, () => context.go('/computer')),

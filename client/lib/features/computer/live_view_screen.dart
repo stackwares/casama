@@ -10,6 +10,11 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 import '../../core/live.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
 import '../../ui/shell_header.dart';
 
 /// Watch a computer's desktop live and take control (deep link: /computer/live?c=&takeover=).
@@ -159,13 +164,10 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   }
 
   Future<void> _handBack() async {
-    final text = await showDialog<String>(context: context, builder: (_) => const _HandBackDialog());
+    final text = await showAdaptiveSheet<String>(context: context, builder: (_) => const _HandBackDialog());
     if (text == null || !mounted) return;
     _conn?.releaseControl();
-    final l = await runGuarded(
-      context,
-      () => ref.read(backendProvider).releaseLease(widget.computerId, note: text.isEmpty ? null : text),
-    );
+    final l = await runGuarded(context, () => ref.read(backendProvider).releaseLease(widget.computerId, note: text.isEmpty ? null : text));
     if (mounted && l != null) setState(() => _lease = l);
   }
 
@@ -242,14 +244,16 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     final holder = _lease == null
         ? ''
         : _lease!.you
-            ? l10n.youAreInControl
-            : (_lease!.holderType == LeaseHolderTypeEnum.user ? l10n.someoneElseInControl : l10n.botInControl);
+        ? l10n.youAreInControl
+        : (_lease!.holderType == LeaseHolderTypeEnum.user ? l10n.someoneElseInControl : l10n.botInControl);
     final size = conn?.screenSize.value ?? const Size(1280, 800);
 
     final video = state == LiveState.fallback || conn?.renderer == null
         ? (_shot == null
-            ? Center(child: Text(l10n.connectingLive, style: const TextStyle(color: Colors.white70)))
-            : Image.memory(_shot!, gaplessPlayback: true, fit: BoxFit.fill))
+              ? Center(
+                  child: Text(l10n.connectingLive, style: const TextStyle(color: Colors.white70)),
+                )
+              : Image.memory(_shot!, gaplessPlayback: true, fit: BoxFit.fill))
         : RTCVideoView(conn!.renderer!, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain);
 
     return Scaffold(
@@ -258,130 +262,160 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
         actions: [
           if (_rtt != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Center(child: Text(l10n.latencyMs(_rtt!.round()), key: const Key('latency'), style: theme.textTheme.labelMedium)),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Center(
+                child: StatusLabel(
+                  key: const Key('latency'),
+                  text: l10n.latencyMs(_rtt!.round()),
+                  color: _rtt! < 120 ? context.appColors.positive : context.appColors.warning,
+                  pill: true,
+                  icon: Icons.network_check_rounded,
+                ),
+              ),
             ),
           if (_controlling) ...[
-            IconButton(
+            HeaderIconButton(
               tooltip: l10n.rightClickNextTap,
-              isSelected: _rightClick,
-              icon: const Icon(Icons.mouse_outlined),
+              selected: _rightClick,
+              icon: Icons.mouse_outlined,
               onPressed: () => setState(() => _rightClick = !_rightClick),
             ),
-            IconButton(
-              tooltip: l10n.showKeyboard,
-              icon: const Icon(Icons.keyboard_outlined),
-              onPressed: () => _typingFocus.requestFocus(),
-            ),
+            HeaderIconButton(tooltip: l10n.showKeyboard, icon: Icons.keyboard_outlined, onPressed: () => _typingFocus.requestFocus()),
           ],
         ],
       ),
-      body: Column(children: [
-        if (takeover != null)
-          MaterialBanner(
-            key: const Key('takeoverBanner'),
-            leading: const Icon(Icons.front_hand_outlined),
-            content: Text(l10n.botAsksForHelp(takeover.reason)),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  await runGuarded(context, () => ref.read(backendProvider).dismissTakeover(takeover!.id));
-                  ref.invalidate(takeoversProvider);
-                },
-                child: Text(l10n.dismiss),
+      body: Column(
+        children: [
+          if (takeover != null)
+            Container(
+              key: const Key('takeoverBanner'),
+              margin: const EdgeInsets.fromLTRB(AppSpace.gutter, AppSpace.xs, AppSpace.gutter, 0),
+              padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
+              decoration: BoxDecoration(
+                color: context.appColors.waiting.withValues(alpha: context.isDark ? 0.18 : 0.1),
+                borderRadius: BorderRadius.circular(AppRadius.row),
+                border: Border.all(color: context.appColors.waiting.withValues(alpha: 0.4)),
               ),
-            ],
-          ),
-        Container(
-          width: double.infinity,
-          color: theme.colorScheme.surfaceContainerHighest,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: Row(children: [
-            Icon(
-              state == LiveState.live ? Icons.circle : Icons.circle_outlined,
-              size: 10,
-              color: state == LiveState.live ? Colors.green : theme.colorScheme.outline,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                [
-                  switch (state) {
-                    LiveState.live => l10n.live,
-                    LiveState.fallback => l10n.screenshotMode,
-                    LiveState.closed => l10n.paused,
-                    LiveState.connecting => l10n.connectingLive,
-                  },
-                  if (holder.isNotEmpty) holder,
-                ].join(' · '),
-                key: const Key('liveStatus'),
+              child: Row(
+                children: [
+                  Icon(Icons.front_hand_rounded, size: 20, color: context.appColors.waiting),
+                  const SizedBox(width: AppSpace.sm),
+                  Expanded(child: Text(l10n.botAsksForHelp(takeover.reason), style: theme.textTheme.bodyMedium?.copyWith(height: 1.35))),
+                  TextButton(
+                    onPressed: () async {
+                      await runGuarded(context, () => ref.read(backendProvider).dismissTakeover(takeover!.id));
+                      ref.invalidate(takeoversProvider);
+                    },
+                    child: Text(l10n.dismiss),
+                  ),
+                ],
               ),
             ),
-            if (_lease?.you == true)
-              FilledButton.tonal(key: const Key('handBack'), onPressed: _handBack, child: Text(l10n.handBack))
-            else
-              FilledButton(
-                key: const Key('takeControl'),
-                onPressed: _busy || (_lease?.holderType == LeaseHolderTypeEnum.user) ? null : _takeControl,
-                child: Text(l10n.takeControl),
-              ),
-          ]),
-        ),
-        if (_lease?.you == true)
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
-            child: Text(l10n.takeoverPrivacy, style: theme.textTheme.bodySmall),
-          ),
-        Expanded(
-          child: Container(
-            color: Colors.black,
-            child: Focus(
-              focusNode: _focus,
-              onKeyEvent: _key,
-              child: InteractiveViewer(
-                transformationController: _transform,
-                minScale: 1,
-                maxScale: 5,
-                panEnabled: !_controlling,
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: size.width / size.height,
-                    child: LayoutBuilder(
-                      builder: (context, box) {
-                        final s = Size(box.maxWidth, box.maxHeight);
-                        return Listener(
-                          key: const Key('liveSurface'),
-                          onPointerHover: (e) => _pointer(e, s),
-                          onPointerMove: (e) => _pointer(e, s),
-                          onPointerDown: (e) {
-                            _focus.requestFocus();
-                            _pointer(e, s, down: true);
-                          },
-                          onPointerUp: (e) => _pointer(e, s, down: false),
-                          onPointerSignal: (e) {
-                            if (e is PointerScrollEvent && _controlling) {
-                              _send(NekoInput.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round()));
-                            }
-                          },
-                          child: video,
-                        );
+            padding: const EdgeInsets.fromLTRB(AppSpace.gutter, AppSpace.sm, AppSpace.gutter, AppSpace.sm),
+            child: Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: switch (state) {
+                      LiveState.live => context.appColors.positive,
+                      LiveState.fallback => context.appColors.warning,
+                      _ => theme.colorScheme.outline,
+                    },
+                  ),
+                ),
+                const SizedBox(width: AppSpace.xs),
+                Expanded(
+                  child: Text(
+                    [
+                      switch (state) {
+                        LiveState.live => l10n.live,
+                        LiveState.fallback => l10n.screenshotMode,
+                        LiveState.closed => l10n.paused,
+                        LiveState.connecting => l10n.connectingLive,
                       },
+                      if (holder.isNotEmpty) holder,
+                    ].join(' · '),
+                    key: const Key('liveStatus'),
+                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (_lease?.you == true)
+                  FilledButton.tonalIcon(
+                    key: const Key('handBack'),
+                    onPressed: _handBack,
+                    icon: const Icon(Icons.undo_rounded, size: 18),
+                    label: Text(l10n.handBack),
+                  )
+                else
+                  FilledButton.icon(
+                    key: const Key('takeControl'),
+                    onPressed: _busy || (_lease?.holderType == LeaseHolderTypeEnum.user) ? null : _takeControl,
+                    icon: const Icon(Icons.mouse_rounded, size: 18),
+                    label: Text(l10n.takeControl),
+                  ),
+              ],
+            ),
+          ),
+          if (_lease?.you == true)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpace.gutter, 0, AppSpace.gutter, AppSpace.sm),
+              child: FormNote(l10n.takeoverPrivacy, icon: Icons.lock_outline_rounded),
+            ),
+          Expanded(
+            child: Container(
+              color: Colors.black,
+              child: Focus(
+                focusNode: _focus,
+                onKeyEvent: _key,
+                child: InteractiveViewer(
+                  transformationController: _transform,
+                  minScale: 1,
+                  maxScale: 5,
+                  panEnabled: !_controlling,
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: size.width / size.height,
+                      child: LayoutBuilder(
+                        builder: (context, box) {
+                          final s = Size(box.maxWidth, box.maxHeight);
+                          return Listener(
+                            key: const Key('liveSurface'),
+                            onPointerHover: (e) => _pointer(e, s),
+                            onPointerMove: (e) => _pointer(e, s),
+                            onPointerDown: (e) {
+                              _focus.requestFocus();
+                              _pointer(e, s, down: true);
+                            },
+                            onPointerUp: (e) => _pointer(e, s, down: false),
+                            onPointerSignal: (e) {
+                              if (e is PointerScrollEvent && _controlling) {
+                                _send(NekoInput.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round()));
+                              }
+                            },
+                            child: video,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-        // Hidden field that brings up the phone keyboard.
-        SizedBox(
-          height: 1,
-          child: Opacity(
-            opacity: 0,
-            child: TextField(focusNode: _typingFocus, controller: _typing, onChanged: _onTyped, autocorrect: false, enableSuggestions: false),
+          // Hidden field that brings up the phone keyboard.
+          SizedBox(
+            height: 1,
+            child: Opacity(
+              opacity: 0,
+              child: TextField(focusNode: _typingFocus, controller: _typing, onChanged: _onTyped, autocorrect: false, enableSuggestions: false),
+            ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
@@ -406,20 +440,21 @@ class _HandBackDialogState extends State<_HandBackDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.handBack),
-      content: TextField(
-        key: const Key('handBackNote'),
-        controller: _note,
-        decoration: InputDecoration(labelText: l10n.handBackNote, hintText: l10n.handBackNoteHint),
-        maxLines: 3,
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
-        FilledButton(
-          key: const Key('confirmHandBack'),
-          onPressed: () => Navigator.pop(context, _note.text.trim()),
-          child: Text(l10n.handBack),
+    return FormSheet(
+      icon: Icons.undo_rounded,
+      title: l10n.handBack,
+      subtitle: l10n.handBackHelp,
+      submitLabel: l10n.handBack,
+      submitKey: const Key('confirmHandBack'),
+      onSubmit: () => Navigator.pop(context, _note.text.trim()),
+      children: [
+        TextField(
+          key: const Key('handBackNote'),
+          controller: _note,
+          autofocus: true,
+          decoration: InputDecoration(labelText: l10n.handBackNote, hintText: l10n.handBackNoteHint, alignLabelWithHint: true),
+          minLines: 2,
+          maxLines: 4,
         ),
       ],
     );

@@ -191,8 +191,8 @@
   "refresh": "Refresh",
   "upload": "Upload",
   "download": "Download",
-  "emptyFolder": "This folder is empty.",
-  "noCheckpoints": "No checkpoints yet. They are saved before risky changes.",
+  "emptyFolder": "This folder is empty",
+  "noCheckpoints": "They're saved automatically before risky changes, so you can undo them.",
   "computerAsleep": "The computer is asleep. Its files are saved and it wakes up when needed.",
   "connectTerminal": "Connect",
   "terminalDisconnected": "Disconnected.",
@@ -341,12 +341,12 @@
   "mondaysAt9": "Mondays at 9:00",
   "newRoutine": "New routine",
   "noApprovals": "Nothing needs your approval right now.",
-  "noIntegrations": "No integrations yet. Connect an MCP server, an OpenAPI source, Composio or Pipedream.",
-  "noIntegrationsForBot": "Add integrations in Settings first.",
-  "noNotifications": "No notifications yet.",
+  "noIntegrations": "Connect an MCP server, an OpenAPI source, Composio or Pipedream to give bots more tools.",
+  "noIntegrationsForBot": "Add integrations in Settings first, then turn them on for this bot here.",
+  "noNotifications": "No notifications yet",
   "noRoutines": "No routines yet. Routines run this bot on a schedule or when a webhook arrives.",
   "noSecrets": "No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.",
-  "noTasks": "The task board is empty.",
+  "noTasks": "No tasks yet",
   "notifications": "Notifications",
   "openInbox": "Open inbox",
   "pipedreamApps": "Apps (comma-separated)",
@@ -487,7 +487,7 @@
   "weekdaysAt9": "Weekdays at 9:00",
   "botBackInControl": "The bot is back in control",
   "botComputer": "Computer",
-  "botComputerDefault": "Default (its private computer, else the team computer)",
+  "botComputerDefault": "Its private computer if it has one, otherwise the team computer",
   "botInControl": "Bot in control",
   "computerName": "Name",
   "computers": "Computers",
@@ -1084,5 +1084,148 @@
   "toolNotify": "Sent you a notification",
   "toolHttp": "Called a web API",
   "toolMedia": "Made an image",
-  "toolTakeover": "Asked you to take over"
+  "toolTakeover": "Asked you to take over",
+  "secretsHelp": "Bots put a secret in requests by its name. It's only sent to the hosts you allow and the model never sees it.",
+  "deleteSecretTitle": "Delete {name}?",
+  "@deleteSecretTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteSecretBody": "Bots that use it will stop being able to reach that service.",
+  "hide": "Hide",
+  "show": "Show",
+  "deleteMemoryTitle": "Delete this memory?",
+  "noMemoriesHelp": "As you chat, the bot keeps what matters: facts, preferences and summaries of past work.",
+  "memoryHelp": "Pinned memories are always in the bot's context. Edit anything that's wrong; deleted memories are gone for good.",
+  "memoryFact": "Fact",
+  "memoryPreference": "Preference",
+  "memorySummary": "Summary",
+  "memoryEpisode": "Episode",
+  "pinned": "Pinned",
+  "editMemory": "Edit memory",
+  "editMemoryHelp": "The bot uses this the next time it's relevant.",
+  "modelKeysIntro": "Bots think with your own model provider keys. Keys are stored encrypted and never shown again.",
+  "yourKeys": "Your keys",
+  "keyWorking": "Working",
+  "keyFailing": "Failing",
+  "keyUntested": "Not tested",
+  "skillsHelp": "A skill is a set of instructions a bot loads when a task calls for it, like your house style for reports.",
+  "deleteSkillTitle": "Delete the skill “{name}”?",
+  "@deleteSkillTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "editSkill": "Edit skill",
+  "deleteSkill": "Delete skill",
+  "skillDescriptionHelp": "Bots read this to decide when the skill applies.",
+  "skillBodyHint": "# Steps\n1. …",
+  "computersHelp": "Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.",
+  "thisDevice": "This device",
+  "renameComputer": "Rename computer",
+  "deleteComputerTitle": "Delete {name}?",
+  "@deleteComputerTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "privacyIntro": "Your chats, memories and files belong to you. Export them any time, or delete your account.",
+  "yourData": "Your data",
+  "dangerZone": "Danger zone",
+  "quotasHelp": "Leave a field empty for no limit.",
+  "serviceOff": "Off",
+  "serviceDown": "Down",
+  "serviceOk": "OK",
+  "inviteMemberHelp": "They'll get an email with a link to join this workspace.",
+  "sendInvite": "Send invite",
+  "inviteReady": "Invite ready",
+  "inviteCodeHelp": "Email isn't set up on this server, so share this code with {email}. They paste it when joining.",
+  "@inviteCodeHelp": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "copyCode": "Copy code",
+  "thinking0": "Model",
+  "computerAndTools": "Computer and tools",
+  "saveChanges": "Save changes",
+  "autonomyAskAlwaysHelp": "Checks with you before every action that changes something.",
+  "autonomyAskRiskyHelp": "Works on its own, but asks before anything risky, like deleting files or spending money.",
+  "autonomyAutonomousHelp": "Acts without asking. Best for routines you trust.",
+  "usageSubtitle": "Model spend this month",
+  "skillsRowHelp": "Instructions bots load when a task needs them",
+  "integrationsRowHelp": "MCP servers and connected apps",
+  "secretsRowHelp": "Tokens and passwords, sent only where you allow",
+  "computersRowHelp": "The team computer and private ones",
+  "companionRowHelp": "Let bots use this device's apps and files",
+  "privacyRowHelp": "Export your data or delete your account",
+  "adminRowHelp": "Users, workspaces, quotas and services",
+  "noIntegrationsTitle": "No integrations yet",
+  "integrationsHelp": "Integrations give bots more tools: an MCP server, an OpenAPI source, Composio or Pipedream. Each tool is named after its integration.",
+  "botIntegrationsHelp": "Turn on the integrations this bot may use. Its tools show up the next time it runs.",
+  "openSettings": "Open Settings",
+  "noRunsHelp": "Each time this bot works, from a chat, a routine or a webhook, the run shows up here with what it did and what it cost.",
+  "runCompleted": "Done",
+  "runWaiting": "Waiting",
+  "runWorking": "Working",
+  "triggerChat": "Chat",
+  "triggerRoutine": "Routine",
+  "noEventsForFilter": "Nothing of this kind in this run.",
+  "runStatusFailed": "Failed",
+  "runStatusStopped": "Stopped",
+  "quickAskIntro": "Send a quick request. It starts a new chat with the bot you pick.",
+  "quickAskHintBot": "What should {bot} do?",
+  "@quickAskHintBot": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      }
+    }
+  },
+  "noNotificationsHelp": "Routine results, budget alerts and requests from your bots show up here.",
+  "noTasksHelp": "Bots and people add tasks here to hand work to each other.",
+  "stateProvisioning": "Setting up",
+  "stateStarting": "Starting",
+  "stateRunning": "Running",
+  "stateIdle": "Idle",
+  "stateSleeping": "Asleep",
+  "stateStopped": "Stopped",
+  "stateError": "Error",
+  "terminalHelp": "A shell on this computer. Bots use the same one, so you can see and fix what they did.",
+  "up": "Up",
+  "emptyFolderHelp": "Files your bots make, and files you upload, show up here.",
+  "noCheckpointsTitle": "No checkpoints yet",
+  "checkpointsHelp": "A checkpoint saves this computer before a risky change. Restoring puts its files back as they were.",
+  "deleteFileTitle": "Delete {name}?",
+  "@deleteFileTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "botComputerAuto": "Automatic",
+  "botComputerHelp": "Where this bot runs commands, browses and keeps its files.",
+  "billingOffTitle": "No limits here",
+  "revokeKeyTitle": "Revoke the key for {name}?",
+  "@revokeKeyTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "revokeKeyBody": "That server stops using cloud computers and credits right away.",
+  "handBackHelp": "The bot picks up where you left off. Tell it what you did, if it helps.",
+  "serverHelp": "Use your own Kasama server. Enter the address you or your admin set up.",
+  "ssoHelp": "Enter your work email and we'll send you to your company's sign-in page."
 }

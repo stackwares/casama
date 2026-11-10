@@ -95,7 +95,7 @@ abstract class Backend {
   Future<List<Bot>> bots(String orgId);
   Future<Bot> createBot(String orgId, {required String name, required String credentialId, required String model, String persona, String? templateId});
   Future<List<Template>> templates();
-  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy});
+  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy});
   Future<UsageReport> usage(String orgId, {String period});
 
   // Chat

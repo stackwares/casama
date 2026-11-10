@@ -7,6 +7,12 @@ import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
 import '../../core/voice.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/app_card.dart';
+import '../../ui/bot_avatar.dart';
+import '../../ui/page.dart';
+import '../../ui/shell_header.dart';
 
 /// A live voice call with a bot (/bots/:id/call?c=conversation).
 class CallScreen extends ConsumerStatefulWidget {
@@ -85,10 +91,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       final conv = _conversationId;
       if (!mounted) return;
       if (conv != null && (turns.isNotEmpty || DateTime.now().difference(_started).inSeconds > 0)) {
-        await runGuarded(
-          context,
-          () => ref.read(backendProvider).saveVoiceTranscript(conv, turns, DateTime.now().difference(_started).inSeconds),
-        );
+        await runGuarded(context, () => ref.read(backendProvider).saveVoiceTranscript(conv, turns, DateTime.now().difference(_started).inSeconds));
       }
     }
     if (!mounted) return;
@@ -104,86 +107,198 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
+    final scheme = context.colorScheme;
     final bot = ref.watch(botProvider(widget.botId));
     final call = _call;
     final state = _error != null ? CallState.failed : (call?.state.value ?? CallState.connecting);
     final latency = call?.replyLatencyMs.value;
     final turns = call?.transcript.value ?? const <CallTurn>[];
+    final tint = switch (state) {
+      CallState.live => scheme.primary,
+      CallState.failed => scheme.error,
+      _ => scheme.onSurfaceVariant,
+    };
+    final name = bot?.name ?? '';
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.callWith(bot?.name ?? ''))),
-      body: Column(children: [
-        const SizedBox(height: 24),
-        CircleAvatar(
-          radius: 48,
-          backgroundColor: state == CallState.live ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest,
-          child: Icon(state == CallState.failed ? Icons.phone_disabled : Icons.graphic_eq, size: 48),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          switch (state) {
-            CallState.connecting => l10n.callConnecting,
-            CallState.live => l10n.callLive,
-            CallState.ended => l10n.callEnded,
-            CallState.failed => _error == null ? l10n.callFailed : errorText(context, _error!),
-          },
-          key: const Key('callStatus'),
-          style: theme.textTheme.titleMedium,
-          textAlign: TextAlign.center,
-        ),
-        if (latency != null) Text(l10n.replyLatency(latency), key: const Key('replyLatency'), style: theme.textTheme.bodySmall),
-        if (_activeTools.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Chip(avatar: const Icon(Icons.build_outlined, size: 16), label: Text(_activeTools.join(', '))),
-          ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: ListView(padding: const EdgeInsets.symmetric(horizontal: 16), children: [
-            for (final t in turns)
-              Align(
-                alignment: t.role == 'user' ? Alignment.centerRight : Alignment.centerLeft,
-                child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  padding: const EdgeInsets.all(10),
+      appBar: ShellHeader(title: l10n.callWith(name)),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final side = pageSide(constraints.maxWidth);
+          return Column(
+            children: [
+              const SizedBox(height: AppSpace.lg),
+              // Soft rings that brighten when the call is live.
+              AnimatedContainer(
+                duration: AppMotion.of(context, AppMotion.duration),
+                curve: AppMotion.curve,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: tint.withValues(alpha: state == CallState.live ? 0.08 : 0.04),
+                ),
+                child: AnimatedContainer(
+                  duration: AppMotion.of(context, AppMotion.duration),
+                  curve: AppMotion.curve,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: t.role == 'user' ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
+                    shape: BoxShape.circle,
+                    color: tint.withValues(alpha: state == CallState.live ? 0.14 : 0.07),
                   ),
-                  child: Text(t.text),
+                  child: state == CallState.failed
+                      ? Container(
+                          width: 96,
+                          height: 96,
+                          decoration: BoxDecoration(shape: BoxShape.circle, color: scheme.errorContainer),
+                          child: Icon(Icons.phone_disabled_rounded, size: 40, color: scheme.error),
+                        )
+                      : BotAvatar(name: name.isEmpty ? '?' : name, size: 96),
                 ),
               ),
-          ]),
-        ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              IconButton.filledTonal(
-                key: const Key('muteButton'),
-                iconSize: 32,
-                tooltip: _muted ? l10n.unmute : l10n.mute,
-                icon: Icon(_muted ? Icons.mic_off : Icons.mic),
-                onPressed: call == null
-                    ? null
-                    : () {
-                        setState(() => _muted = !_muted);
-                        call.setMuted(_muted);
-                      },
+              const SizedBox(height: AppSpace.md),
+              Text(name, style: context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4)),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (state == CallState.live) ...[
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(color: context.appColors.positive, shape: BoxShape.circle),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Flexible(
+                      child: Text(
+                        switch (state) {
+                          CallState.connecting => l10n.callConnecting,
+                          CallState.live => l10n.callLive,
+                          CallState.ended => l10n.callEnded,
+                          CallState.failed => _error == null ? l10n.callFailed : errorText(context, _error!),
+                        },
+                        key: const Key('callStatus'),
+                        style: context.textTheme.bodyLarge?.copyWith(color: state == CallState.failed ? scheme.error : scheme.onSurfaceVariant),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 32),
-              IconButton.filled(
-                key: const Key('hangUpButton'),
-                iconSize: 32,
-                style: IconButton.styleFrom(backgroundColor: theme.colorScheme.error, foregroundColor: theme.colorScheme.onError),
-                tooltip: l10n.hangUp,
-                icon: const Icon(Icons.call_end),
-                onPressed: _hangUp,
+              if (latency != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    l10n.replyLatency(latency),
+                    key: const Key('replyLatency'),
+                    style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, fontFeatures: AppText.tabular),
+                  ),
+                ),
+              if (_activeTools.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpace.sm),
+                  child: StatusLabel(text: _activeTools.join(', '), color: context.appColors.working, pill: true, icon: Icons.build_outlined),
+                ),
+              const SizedBox(height: AppSpace.md),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.md),
+                  children: [
+                    for (final t in turns)
+                      Align(
+                        alignment: t.role == 'user' ? Alignment.centerRight : Alignment.centerLeft,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: (constraints.maxWidth - side * 2) * 0.82),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: t.role == 'user' ? scheme.primary.withValues(alpha: context.isDark ? 0.24 : 0.12) : scheme.surfaceContainer,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Text(t.text, style: context.textTheme.bodyLarge?.copyWith(height: 1.4)),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ]),
-          ),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.sm, AppSpace.lg, AppSpace.lg),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _CallButton(
+                        buttonKey: const Key('muteButton'),
+                        icon: _muted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                        label: _muted ? l10n.unmute : l10n.mute,
+                        selected: _muted,
+                        onPressed: call == null
+                            ? null
+                            : () {
+                                setState(() => _muted = !_muted);
+                                call.setMuted(_muted);
+                              },
+                      ),
+                      const SizedBox(width: 48),
+                      _CallButton(
+                        buttonKey: const Key('hangUpButton'),
+                        icon: Icons.call_end_rounded,
+                        label: l10n.hangUp,
+                        destructive: true,
+                        onPressed: _hangUp,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// A round call control with its label underneath.
+class _CallButton extends StatelessWidget {
+  const _CallButton({
+    required this.buttonKey,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.selected = false,
+    this.destructive = false,
+  });
+  final Key buttonKey;
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool selected;
+  final bool destructive;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final bg = destructive ? scheme.error : (selected ? scheme.onSurface : scheme.surfaceContainerHigh);
+    final fg = destructive ? scheme.onError : (selected ? scheme.surface : scheme.onSurface);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          key: buttonKey,
+          tooltip: label,
+          onPressed: onPressed,
+          iconSize: 30,
+          style: IconButton.styleFrom(backgroundColor: bg, foregroundColor: fg, fixedSize: const Size(72, 72)),
+          icon: Icon(icon),
         ),
-      ]),
+        const SizedBox(height: 6),
+        Text(label, style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
+      ],
     );
   }
 }

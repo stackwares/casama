@@ -1,5 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import '../ui/adaptive_modal.dart';
+import '../ui/form_sheet.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'config.dart';
@@ -19,8 +23,7 @@ class ServerAddress {
     return fallback;
   }
 
-  static Future<void> save(String url) async =>
-      (await SharedPreferences.getInstance()).setString(_key, normalize(url));
+  static Future<void> save(String url) async => (await SharedPreferences.getInstance()).setString(_key, normalize(url));
 
   static Future<void> clear() async => (await SharedPreferences.getInstance()).remove(_key);
 
@@ -46,23 +49,25 @@ Future<void> changeServerDialog(
   required String label,
   required String cancel,
   required String connect,
+  String? help,
 }) async {
-  final url = await showDialog<String>(
+  final url = await showAdaptiveSheet<String>(
     context: context,
-    builder: (_) => _ServerDialog(current: current, title: title, label: label, cancel: cancel, connect: connect),
+    builder: (_) => _ServerForm(current: current, title: title, label: label, cancel: cancel, connect: connect, help: help),
   );
   if (url == null || url.trim().isEmpty) return;
   await onChangeServer?.call(ServerAddress.normalize(url));
 }
 
-class _ServerDialog extends StatefulWidget {
-  const _ServerDialog({required this.current, required this.title, required this.label, required this.cancel, required this.connect});
+class _ServerForm extends StatefulWidget {
+  const _ServerForm({required this.current, required this.title, required this.label, required this.cancel, required this.connect, this.help});
   final String current, title, label, cancel, connect;
+  final String? help;
   @override
-  State<_ServerDialog> createState() => _ServerDialogState();
+  State<_ServerForm> createState() => _ServerFormState();
 }
 
-class _ServerDialogState extends State<_ServerDialog> {
+class _ServerFormState extends State<_ServerForm> {
   late final _c = TextEditingController(text: widget.current);
   @override
   void dispose() {
@@ -71,19 +76,25 @@ class _ServerDialogState extends State<_ServerDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-        title: Text(widget.title),
-        content: TextField(
-          key: const Key('serverUrl'),
-          controller: _c,
-          autofocus: true,
-          keyboardType: TextInputType.url,
-          decoration: InputDecoration(labelText: widget.label, hintText: 'https://kasama.example.com'),
-          onSubmitted: (v) => Navigator.pop(context, v),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(widget.cancel)),
-          FilledButton(key: const Key('serverConnect'), onPressed: () => Navigator.pop(context, _c.text), child: Text(widget.connect)),
-        ],
-      );
+  Widget build(BuildContext context) => FormSheet(
+    icon: Icons.dns_outlined,
+    title: widget.title,
+    subtitle: widget.help,
+    submitLabel: widget.connect,
+    submitIcon: Icons.link_rounded,
+    submitKey: const Key('serverConnect'),
+    cancelLabel: widget.cancel,
+    onSubmit: () => Navigator.pop(context, _c.text),
+    children: [
+      TextField(
+        key: const Key('serverUrl'),
+        controller: _c,
+        autofocus: true,
+        autocorrect: false,
+        keyboardType: TextInputType.url,
+        decoration: InputDecoration(labelText: widget.label, hintText: 'https://kasama.example.com', prefixIcon: const Icon(Icons.public_rounded, size: 20)),
+        onSubmitted: (v) => Navigator.pop(context, v),
+      ),
+    ],
+  );
 }

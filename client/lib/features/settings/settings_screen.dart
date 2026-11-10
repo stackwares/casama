@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
@@ -11,6 +12,11 @@ import '../../theme/app_theme.dart';
 import '../../theme/app_tokens.dart';
 import '../../theme/appearance.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/bot_avatar.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
+import '../bots/model_picker.dart';
+import 'model_keys_screen.dart';
 import '../../ui/app_card.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
@@ -22,30 +28,25 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _invite(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final controller = TextEditingController();
-    final email = await showDialog<String>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(l10n.inviteMember),
-        content: TextField(controller: controller, decoration: InputDecoration(labelText: l10n.email), autofocus: true),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(c, controller.text.trim()), child: Text(l10n.inviteMember)),
-        ],
-      ),
+    final email = await showTextPrompt(
+      context,
+      title: l10n.inviteMember,
+      subtitle: l10n.inviteMemberHelp,
+      label: l10n.email,
+      hint: 'name@company.com',
+      submitLabel: l10n.sendInvite,
+      icon: Icons.person_add_alt_1_outlined,
+      fieldIcon: Icons.alternate_email_rounded,
+      keyboardType: TextInputType.emailAddress,
     );
-    controller.dispose();
     if (email == null || email.isEmpty || !context.mounted) return;
     final org = ref.read(currentOrgProvider)!;
     final invite = await runGuarded(context, () => ref.read(backendProvider).invite(org.id, email));
     if (invite == null || !context.mounted) return;
     if (invite.acceptToken != null) {
-      await showDialog<void>(
+      await showAdaptiveSheet<void>(
         context: context,
-        builder: (c) => AlertDialog(
-          content: SelectableText(l10n.inviteCodeToShare(invite.acceptToken!)),
-          actions: [TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.close))],
-        ),
+        builder: (_) => _InviteCode(email: email, code: invite.acceptToken!),
       );
     } else {
       showMessage(context, l10n.inviteSent(email));
@@ -66,149 +67,191 @@ class SettingsScreen extends ConsumerWidget {
     final colors = context.appColors;
     return Scaffold(
       appBar: ShellHeader(title: l10n.settings),
-      body: LayoutBuilder(builder: (context, constraints) {
-        final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: 640);
-        return ListView(
-          padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom),
-          children: [
-            AppCard(
-              padding: const EdgeInsets.all(AppSpace.md),
-              child: Row(children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.16), shape: BoxShape.circle),
-                  alignment: Alignment.center,
-                  child: Text(
-                    email.isEmpty ? '?' : email.characters.first.toUpperCase(),
-                    style: context.textTheme.titleLarge?.copyWith(color: scheme.primary, fontWeight: FontWeight.w800),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(email, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 2),
-                    Text(
-                      [org?.name ?? '', if (org != null) _roleLabel(context, org.role)].where((s) => s.isNotEmpty).join(' · '),
-                      style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: kPageMaxWidth);
+          return ListView(
+            padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom),
+            children: [
+              AppCard(
+                padding: const EdgeInsets.all(AppSpace.md),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.16), shape: BoxShape.circle),
+                      alignment: Alignment.center,
+                      child: Text(
+                        email.isEmpty ? '?' : email.characters.first.toUpperCase(),
+                        style: context.textTheme.titleLarge?.copyWith(color: scheme.primary, fontWeight: FontWeight.w800),
+                      ),
                     ),
-                  ]),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            email,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            [org?.name ?? '', if (org != null) _roleLabel(context, org.role)].where((s) => s.isNotEmpty).join(' · '),
+                            style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ]),
-            ).appCardEntrance(),
-            SectionHeader(title: l10n.workspace),
-            GroupedCard(children: [
-              GroupedTile(
-                icon: Icons.workspaces_outline,
-                title: org?.name ?? l10n.workspace,
-                subtitle: orgs.length > 1 ? l10n.switchWorkspace : null,
-                trailing: orgs.length > 1
-                    ? PopupMenuButton<String>(
-                        tooltip: l10n.switchWorkspace,
-                        icon: Icon(Icons.unfold_more_rounded, color: scheme.onSurfaceVariant),
-                        onSelected: (id) => ref.read(selectedOrgIdProvider.notifier).select(id),
-                        itemBuilder: (_) => [for (final o in orgs) PopupMenuItem(value: o.id, child: Text(o.name))],
-                      )
-                    : null,
+              ).appCardEntrance(),
+              SectionHeader(title: l10n.workspace),
+              GroupedCard(
+                children: [
+                  GroupedTile(
+                    icon: Icons.workspaces_outline,
+                    title: org?.name ?? l10n.workspace,
+                    subtitle: orgs.length > 1 ? l10n.switchWorkspace : null,
+                    trailing: orgs.length > 1
+                        ? PopupMenuButton<String>(
+                            tooltip: l10n.switchWorkspace,
+                            icon: Icon(Icons.unfold_more_rounded, color: scheme.onSurfaceVariant),
+                            onSelected: (id) => ref.read(selectedOrgIdProvider.notifier).select(id),
+                            itemBuilder: (_) => [for (final o in orgs) PopupMenuItem(value: o.id, child: Text(o.name))],
+                          )
+                        : null,
+                  ),
+                  if (isAdmin) GroupedTile(icon: Icons.person_add_alt_1_outlined, title: l10n.inviteMember, onTap: () => _invite(context, ref)),
+                  GroupedTile(
+                    icon: Icons.payments_outlined,
+                    iconColor: colors.positive,
+                    title: l10n.usage,
+                    trailing: Text(
+                      formatUsd(month?.totalCostUsd ?? 0),
+                      style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontFeatures: AppText.tabular),
+                    ),
+                    subtitle: l10n.usageSubtitle,
+                  ),
+                  if (billing?.enabled ?? false)
+                    GroupedTile(
+                      key: const Key('settingsBilling'),
+                      icon: Icons.workspace_premium_outlined,
+                      iconColor: colors.warning,
+                      title: l10n.billing,
+                      subtitle: billing!.planName,
+                      onTap: () => context.push('/settings/billing'),
+                    ),
+                ],
               ),
-              if (isAdmin) GroupedTile(icon: Icons.person_add_alt_1_outlined, title: l10n.inviteMember, onTap: () => _invite(context, ref)),
-              GroupedTile(
-                icon: Icons.payments_outlined,
-                iconColor: colors.positive,
-                title: l10n.usage,
-                trailing: Text(
-                  formatUsd(month?.totalCostUsd ?? 0),
-                  style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontFeatures: AppText.tabular),
-                ),
-                subtitle: l10n.usageMonth(formatUsd(month?.totalCostUsd ?? 0)),
+              SectionHeader(title: l10n.settingsBotsSection),
+              GroupedCard(
+                children: [
+                  GroupedTile(icon: Icons.key_outlined, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => context.push('/settings/keys')),
+                  GroupedTile(icon: Icons.menu_book_outlined, title: l10n.skills, subtitle: l10n.skillsRowHelp, onTap: () => context.push('/settings/skills')),
+                  GroupedTile(
+                    key: const Key('settingsIntegrations'),
+                    icon: Icons.extension_outlined,
+                    title: l10n.integrations,
+                    subtitle: l10n.integrationsRowHelp,
+                    onTap: () => context.push('/settings/integrations'),
+                  ),
+                  GroupedTile(
+                    key: const Key('settingsSecrets'),
+                    icon: Icons.lock_outline_rounded,
+                    title: l10n.secrets,
+                    subtitle: l10n.secretsRowHelp,
+                    onTap: () => context.push('/settings/secrets'),
+                  ),
+                  GroupedTile(
+                    key: const Key('settingsComputers'),
+                    icon: Icons.desktop_windows_outlined,
+                    title: l10n.computers,
+                    subtitle: l10n.computersRowHelp,
+                    onTap: () => context.push('/settings/computers'),
+                  ),
+                  if (ref.watch(companionProvider).supported)
+                    GroupedTile(
+                      key: const Key('settingsCompanion'),
+                      icon: Icons.laptop_mac_rounded,
+                      title: l10n.useThisComputer,
+                      subtitle: l10n.companionRowHelp,
+                      onTap: () => context.push('/settings/companion'),
+                    ),
+                ],
               ),
-              if (billing?.enabled ?? false)
-                GroupedTile(
-                  key: const Key('settingsBilling'),
-                  icon: Icons.workspace_premium_outlined,
-                  iconColor: colors.warning,
-                  title: l10n.billing,
-                  subtitle: billing!.planName,
-                  onTap: () => context.push('/settings/billing'),
-                ),
-            ]),
-            SectionHeader(title: l10n.settingsBotsSection),
-            GroupedCard(children: [
-              GroupedTile(icon: Icons.key_outlined, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => context.push('/settings/keys')),
-              GroupedTile(icon: Icons.menu_book_outlined, title: l10n.skills, onTap: () => context.push('/settings/skills')),
-              GroupedTile(
-                key: const Key('settingsIntegrations'),
-                icon: Icons.extension_outlined,
-                title: l10n.integrations,
-                onTap: () => context.push('/settings/integrations'),
+              SectionHeader(title: l10n.appearance),
+              const _AppearanceCard(),
+              SectionHeader(title: l10n.settingsMoreSection),
+              GroupedCard(
+                children: [
+                  GroupedTile(
+                    key: const Key('settingsPrivacy'),
+                    icon: Icons.privacy_tip_outlined,
+                    title: l10n.privacy,
+                    subtitle: l10n.privacyRowHelp,
+                    onTap: () => context.push('/settings/privacy'),
+                  ),
+                  if (ref.watch(adminOverviewProvider).value != null)
+                    GroupedTile(
+                      key: const Key('settingsAdmin'),
+                      icon: Icons.admin_panel_settings_outlined,
+                      title: l10n.adminConsole,
+                      subtitle: l10n.adminRowHelp,
+                      onTap: () => context.push('/settings/admin'),
+                    ),
+                  GroupedTile(
+                    icon: Icons.translate_rounded,
+                    title: l10n.language,
+                    trailing: Text(
+                      _languageName(Localizations.localeOf(context)),
+                      style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ),
+                ],
               ),
-              GroupedTile(key: const Key('settingsSecrets'), icon: Icons.lock_outline_rounded, title: l10n.secrets, onTap: () => context.push('/settings/secrets')),
-              GroupedTile(
-                key: const Key('settingsComputers'),
-                icon: Icons.desktop_windows_outlined,
-                title: l10n.computers,
-                onTap: () => context.push('/settings/computers'),
+              const SizedBox(height: AppSpace.lg),
+              GroupedCard(
+                children: [
+                  GroupedTile(
+                    icon: Icons.logout_rounded,
+                    title: l10n.signOut,
+                    destructive: true,
+                    showChevron: false,
+                    onTap: () async {
+                      final ok = await showConfirm(
+                        context: context,
+                        title: l10n.signOut,
+                        message: l10n.signOutConfirm,
+                        confirmLabel: l10n.signOut,
+                        destructive: true,
+                      );
+                      if (ok && context.mounted) await runGuarded(context, backend.signOut);
+                    },
+                  ),
+                ],
               ),
-              if (ref.watch(companionProvider).supported)
-                GroupedTile(
-                  key: const Key('settingsCompanion'),
-                  icon: Icons.laptop_mac_rounded,
-                  title: l10n.useThisComputer,
-                  onTap: () => context.push('/settings/companion'),
-                ),
-            ]),
-            SectionHeader(title: l10n.appearance),
-            const _AppearanceCard(),
-            SectionHeader(title: l10n.settingsMoreSection),
-            GroupedCard(children: [
-              GroupedTile(
-                key: const Key('settingsPrivacy'),
-                icon: Icons.privacy_tip_outlined,
-                title: l10n.privacy,
-                onTap: () => context.push('/settings/privacy'),
-              ),
-              if (ref.watch(adminOverviewProvider).value != null)
-                GroupedTile(
-                  key: const Key('settingsAdmin'),
-                  icon: Icons.admin_panel_settings_outlined,
-                  title: l10n.adminConsole,
-                  onTap: () => context.push('/settings/admin'),
-                ),
-              GroupedTile(
-                icon: Icons.translate_rounded,
-                title: l10n.language,
-                trailing: Text(
-                  Localizations.localeOf(context).toLanguageTag(),
-                  style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-              ),
-            ]),
-            const SizedBox(height: AppSpace.lg),
-            GroupedCard(children: [
-              GroupedTile(
-                icon: Icons.logout_rounded,
-                title: l10n.signOut,
-                destructive: true,
-                showChevron: false,
-                onTap: () async {
-                  final ok = await showConfirm(context: context, title: l10n.signOut, message: l10n.signOutConfirm, confirmLabel: l10n.signOut, destructive: true);
-                  if (ok && context.mounted) await runGuarded(context, backend.signOut);
-                },
-              ),
-            ]),
-          ],
-        );
-      }),
+            ],
+          );
+        },
+      ),
     );
   }
 }
 
+String _languageName(Locale locale) => switch (locale.languageCode) {
+  'en' => 'English',
+  _ => locale.toLanguageTag(),
+};
+
 String _roleLabel(BuildContext context, OrgRole role) => switch (role) {
-      OrgRole.owner => context.l10n.roleOwner,
-      OrgRole.admin => context.l10n.roleAdmin,
-      _ => context.l10n.roleMember,
-    };
+  OrgRole.owner => context.l10n.roleOwner,
+  OrgRole.admin => context.l10n.roleAdmin,
+  _ => context.l10n.roleMember,
+};
 
 /// Theme mode and accent color, kept on this device.
 class _AppearanceCard extends ConsumerWidget {
@@ -221,49 +264,84 @@ class _AppearanceCard extends ConsumerWidget {
     final notifier = ref.read(appearanceProvider.notifier);
     final scheme = context.colorScheme;
     return AppCard(
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        AppSegmentedControl<ThemeMode>(
-          values: const [ThemeMode.light, ThemeMode.system, ThemeMode.dark],
-          labels: {ThemeMode.light: l10n.themeLight, ThemeMode.system: l10n.themeSystem, ThemeMode.dark: l10n.themeDark},
-          icons: const {ThemeMode.light: Icons.light_mode_outlined, ThemeMode.system: Icons.brightness_auto_outlined, ThemeMode.dark: Icons.dark_mode_outlined},
-          groupValue: appearance.mode,
-          onValueChanged: notifier.setMode,
-        ),
-        const SizedBox(height: AppSpace.md),
-        Text(l10n.accentColor, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
-        const SizedBox(height: AppSpace.sm),
-        Wrap(spacing: 12, runSpacing: 12, children: [
-          for (final a in AppAccent.values)
-            Tooltip(
-              message: a.label,
-              excludeFromSemantics: true,
-              child: Semantics(
-                button: true,
-                selected: a == appearance.accent,
-                label: a.label,
-                child: InkResponse(
-                  key: Key('accent-${a.name}'),
-                  onTap: () => notifier.setAccent(a),
-                  radius: 22,
-                  child: AnimatedContainer(
-                    duration: AppMotion.of(context, AppMotion.fast),
-                    width: 36,
-                    height: 36,
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: a == appearance.accent ? a.seed : Colors.transparent, width: 2),
-                    ),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(color: a.seed, shape: BoxShape.circle),
-                      child: a == appearance.accent ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null,
-                    ),
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppSegmentedControl<ThemeMode>(
+            values: const [ThemeMode.light, ThemeMode.system, ThemeMode.dark],
+            labels: {ThemeMode.light: l10n.themeLight, ThemeMode.system: l10n.themeSystem, ThemeMode.dark: l10n.themeDark},
+            icons: const {
+              ThemeMode.light: Icons.light_mode_outlined,
+              ThemeMode.system: Icons.brightness_auto_outlined,
+              ThemeMode.dark: Icons.dark_mode_outlined,
+            },
+            groupValue: appearance.mode,
+            onValueChanged: notifier.setMode,
+          ),
+          const SizedBox(height: AppSpace.md),
+          Row(
+            children: [
+              Text(l10n.accentColor, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
+              const Spacer(),
+              AnimatedSwitcher(
+                duration: AppMotion.of(context, AppMotion.fast),
+                child: Text(
+                  appearance.accent.label,
+                  key: ValueKey(appearance.accent),
+                  style: context.textTheme.labelLarge?.copyWith(color: appearance.accent.seed, fontWeight: FontWeight.w700),
                 ),
               ),
-            ),
-        ]),
-      ]),
+            ],
+          ),
+          const SizedBox(height: AppSpace.sm),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Justify the swatches so every row spans the card evenly.
+              const size = 36.0, minGap = 10.0;
+              final count = AppAccent.values.length;
+              final fit = ((constraints.maxWidth + minGap) / (size + minGap)).floor().clamp(1, count);
+              final rows = (count / fit).ceil();
+              final perRow = (count / rows).ceil(); // balanced rows (9 + 8, not 13 + 4)
+              final gap = perRow > 1 ? (constraints.maxWidth - perRow * size) / (perRow - 1) : 0.0;
+              return Wrap(
+                spacing: gap,
+                runSpacing: 12,
+                children: [
+                  for (final a in AppAccent.values)
+                    Tooltip(
+                      message: a.label,
+                      excludeFromSemantics: true,
+                      child: Semantics(
+                        button: true,
+                        selected: a == appearance.accent,
+                        label: a.label,
+                        child: InkResponse(
+                          key: Key('accent-${a.name}'),
+                          onTap: () => notifier.setAccent(a),
+                          radius: 22,
+                          child: AnimatedContainer(
+                            duration: AppMotion.of(context, AppMotion.fast),
+                            width: 36,
+                            height: 36,
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: a == appearance.accent ? a.seed : Colors.transparent, width: 2),
+                            ),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(color: a.seed, shape: BoxShape.circle),
+                              child: a == appearance.accent ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -281,6 +359,9 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
   TextEditingController? _name;
   TextEditingController? _persona;
   String? _autonomy;
+  String? _credentialId;
+  String? _model;
+  var _busy = false;
 
   @override
   void dispose() {
@@ -289,99 +370,264 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
     super.dispose();
   }
 
+  bool _dirty(Bot bot) =>
+      _name!.text.trim() != bot.name ||
+      _persona!.text != bot.personaMd ||
+      _autonomy != bot.autonomy.value ||
+      _credentialId != bot.modelPolicy.primary?.credentialId ||
+      _model != bot.modelPolicy.primary?.model;
+
+  Future<void> _save(Bot bot) async {
+    final l10n = context.l10n;
+    setState(() => _busy = true);
+    final modelChanged = _credentialId != bot.modelPolicy.primary?.credentialId || _model != bot.modelPolicy.primary?.model;
+    final policy = modelChanged && _credentialId != null && (_model ?? '').isNotEmpty
+        ? {
+            ...bot.modelPolicy.toJson(),
+            'primary': {'credential_id': _credentialId, 'model': _model},
+          }
+        : null;
+    final ok = await runGuarded(context, () async {
+      await ref.read(backendProvider).updateBot(bot.id, name: _name!.text.trim(), persona: _persona!.text, autonomy: _autonomy, modelPolicy: policy);
+      return true;
+    });
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok == true) {
+      ref.invalidate(botsProvider);
+      showMessage(context, l10n.saved);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = context.colorScheme;
     final bot = ref.watch(botProvider(widget.botId));
     if (bot == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     _name ??= TextEditingController(text: bot.name);
     _persona ??= TextEditingController(text: bot.personaMd);
     _autonomy ??= bot.autonomy.value;
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.botSettings)),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        TextField(controller: _name, decoration: InputDecoration(labelText: l10n.botName)),
-        const SizedBox(height: 12),
-        TextField(controller: _persona, decoration: InputDecoration(labelText: l10n.persona), maxLines: 6, minLines: 3),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          initialValue: _autonomy,
-          decoration: InputDecoration(labelText: l10n.autonomy),
-          items: [
-            DropdownMenuItem(value: 'ask_always', child: Text(l10n.autonomyAskAlways)),
-            DropdownMenuItem(value: 'ask_risky', child: Text(l10n.autonomyAskRisky)),
-            DropdownMenuItem(value: 'autonomous', child: Text(l10n.autonomyAutonomous)),
-          ],
-          onChanged: (v) => setState(() => _autonomy = v),
-        ),
-        const SizedBox(height: 8),
-        ListTile(
-          key: const Key('botVoice'),
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.record_voice_over_outlined),
-          title: Text(l10n.voiceSettings),
-          subtitle: Text(l10n.voiceSettingsHelp),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => showDialog<void>(context: context, builder: (_) => VoiceSettingsDialog(botId: bot.id)),
-        ),
-        Builder(builder: (context) {
-          final computers = ref.watch(computersProvider).value ?? const <Computer>[];
-          final usable = computers
-              .where((c) => c.kind == ComputerKindEnum.team || c.kind == ComputerKindEnum.local || c.ownerBotId == bot.id)
-              .toList();
-          return DropdownButtonFormField<String?>(
-            key: const Key('botComputer'),
-            initialValue: usable.any((c) => c.id == bot.defaultComputerId) ? bot.defaultComputerId : null,
-            decoration: InputDecoration(labelText: l10n.botComputer),
-            items: [
-              DropdownMenuItem<String?>(value: null, child: Text(l10n.botComputerDefault)),
-              for (final c in usable) DropdownMenuItem<String?>(value: c.id, child: Text(c.name)),
+    _credentialId ??= bot.modelPolicy.primary?.credentialId;
+    _model ??= bot.modelPolicy.primary?.model;
+    final keys = (ref.watch(credentialsProvider).value ?? const <Credential>[])
+        .where(
+          (k) => const {
+            ProviderId.openrouter,
+            ProviderId.openai,
+            ProviderId.anthropic,
+            ProviderId.google,
+            ProviderId.xai,
+            ProviderId.openaiCompatible,
+          }.contains(k.provider),
+        )
+        .toList();
+    final computers = ref.watch(computersProvider).value ?? const <Computer>[];
+    final usable = computers.where((c) => c.kind == ComputerKindEnum.team || c.kind == ComputerKindEnum.local || c.ownerBotId == bot.id).toList();
+    final dirty = _dirty(bot);
+    final name = _name!.text.trim().isEmpty ? bot.name : _name!.text.trim();
+    final levels = [
+      ('ask_always', Icons.front_hand_outlined, l10n.autonomyAskAlways, l10n.autonomyAskAlwaysHelp),
+      ('ask_risky', Icons.shield_outlined, l10n.autonomyAskRisky, l10n.autonomyAskRiskyHelp),
+      ('autonomous', Icons.bolt_rounded, l10n.autonomyAutonomous, l10n.autonomyAutonomousHelp),
+    ];
+    return SubPage(
+      title: l10n.botSettings,
+      subtitle: bot.name,
+      actions: [
+        if (dirty)
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: FilledButton(onPressed: _busy ? null : () => _save(bot), child: Text(l10n.save)),
+          ),
+      ],
+      children: [
+        AppCard(
+          padding: const EdgeInsets.all(AppSpace.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpace.md,
+            children: [
+              Row(
+                children: [
+                  BotAvatar(name: name, size: 64, status: bot.status),
+                  const SizedBox(width: AppSpace.md),
+                  Expanded(
+                    child: TextField(
+                      controller: _name,
+                      decoration: InputDecoration(labelText: l10n.botName),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                ],
+              ),
+              TextField(
+                controller: _persona,
+                decoration: InputDecoration(labelText: l10n.persona, hintText: l10n.personaHint, alignLabelWithHint: true),
+                maxLines: 8,
+                minLines: 3,
+                onChanged: (_) => setState(() {}),
+              ),
             ],
-            onChanged: (v) async {
-              await runGuarded(context, () => ref.read(backendProvider).setBotComputer(bot.id, v));
-              ref.invalidate(botsProvider);
-            },
-          );
-        }),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.schedule),
-          title: Text(l10n.routines),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.push('/bots/${bot.id}/routines'),
+          ),
         ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.extension_outlined),
-          title: Text(l10n.botIntegrations),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.push('/bots/${bot.id}/integrations'),
+        SectionHeader(title: l10n.thinking0),
+        AppCard(
+          padding: const EdgeInsets.all(AppSpace.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpace.md,
+            children: [
+              DropdownButtonFormField<String>(
+                key: ValueKey('botKey-${keys.length}'),
+                initialValue: keys.any((k) => k.id == _credentialId) ? _credentialId : null,
+                decoration: InputDecoration(labelText: l10n.modelKey, prefixIcon: const Icon(Icons.key_rounded, size: 20)),
+                items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} · ${providerLabel(k.provider)}'))],
+                onChanged: (v) => setState(() {
+                  _credentialId = v;
+                  for (final k in keys) {
+                    if (k.id == v) _model = ref.read(backendProvider).defaultModelFor(k.provider.value) ?? _model;
+                  }
+                }),
+              ),
+              ModelPickerField(credentialId: _credentialId, value: _model ?? '', onChanged: (m) => setState(() => _model = m)),
+            ],
+          ),
         ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(l10n.model),
-          subtitle: Text(bot.modelPolicy.primary?.model ?? '—'),
+        SectionHeader(title: l10n.autonomy),
+        RadioGroup<String>(
+          groupValue: _autonomy,
+          onChanged: (v) => setState(() => _autonomy = v),
+          child: Column(
+            spacing: AppSpace.xs,
+            children: [
+              for (final (value, icon, title, help) in levels)
+                AppCard(
+                  key: Key('autonomy-$value'),
+                  onTap: () => setState(() => _autonomy = value),
+                  padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
+                  borderColor: _autonomy == value ? scheme.primary : null,
+                  borderWidth: _autonomy == value ? 1.5 : 1,
+                  color: _autonomy == value ? Color.alphaBlend(scheme.primary.withValues(alpha: 0.06), scheme.surfaceContainerLow) : null,
+                  child: Row(
+                    children: [
+                      Icon(icon, color: _autonomy == value ? scheme.primary : scheme.onSurfaceVariant),
+                      const SizedBox(width: AppSpace.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(title, style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700)),
+                            Text(help, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.35)),
+                          ],
+                        ),
+                      ),
+                      Radio<String>(value: value),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
-        const SizedBox(height: 12),
-        FilledButton(
-          onPressed: () async {
-            final ok = await runGuarded(context, () async {
-              await ref.read(backendProvider).updateBot(
-                    bot.id,
-                    name: _name!.text.trim(),
-                    persona: _persona!.text,
-                    autonomy: _autonomy,
-                  );
-              return true;
-            });
-            if (ok == true && context.mounted) {
-              ref.invalidate(botsProvider);
-              showMessage(context, l10n.saved);
-            }
-          },
-          child: Text(l10n.save),
+        SectionHeader(title: l10n.computerAndTools),
+        GroupedCard(
+          children: [
+            Builder(
+              builder: (context) {
+                final current = usable.where((c) => c.id == bot.defaultComputerId).firstOrNull;
+                return GroupedTile(
+                  key: const Key('botComputer'),
+                  icon: Icons.desktop_windows_outlined,
+                  title: l10n.botComputer,
+                  subtitle: current?.name ?? l10n.botComputerAuto,
+                  trailing: Icon(Icons.unfold_more_rounded, color: scheme.onSurfaceVariant),
+                  onTap: () async {
+                    final picked = await showChoiceSheet<String?>(
+                      context,
+                      title: l10n.botComputer,
+                      subtitle: l10n.botComputerHelp,
+                      icon: Icons.desktop_windows_outlined,
+                      selected: current?.id,
+                      choices: [
+                        Choice(value: null, label: l10n.botComputerAuto, subtitle: l10n.botComputerDefault, icon: Icons.auto_mode_rounded),
+                        for (final c in usable)
+                          Choice(
+                            value: c.id,
+                            label: c.name,
+                            subtitle: [
+                              if ((c.kind == ComputerKindEnum.team ? l10n.teamComputer : l10n.privateComputer) != c.name)
+                                c.kind == ComputerKindEnum.team ? l10n.teamComputer : l10n.privateComputer,
+                              c.profile == ComputerProfileEnum.desktop ? l10n.profileDesktop : l10n.profileHeadless,
+                            ].join(' · '),
+                            icon: c.profile == ComputerProfileEnum.desktop ? Icons.desktop_windows_rounded : Icons.terminal_rounded,
+                          ),
+                      ],
+                    );
+                    if (picked == null || !context.mounted) return;
+                    await runGuarded(context, () => ref.read(backendProvider).setBotComputer(bot.id, picked.value));
+                    ref.invalidate(botsProvider);
+                  },
+                );
+              },
+            ),
+            GroupedTile(
+              key: const Key('botVoice'),
+              icon: Icons.record_voice_over_outlined,
+              title: l10n.voiceSettings,
+              subtitle: l10n.voiceSettingsHelp,
+              onTap: () => showAdaptiveSheet<void>(
+                context: context,
+                builder: (_) => VoiceSettingsDialog(botId: bot.id),
+              ),
+            ),
+            GroupedTile(icon: Icons.schedule_rounded, title: l10n.routines, onTap: () => context.push('/bots/${bot.id}/routines')),
+            GroupedTile(icon: Icons.extension_outlined, title: l10n.botIntegrations, onTap: () => context.push('/bots/${bot.id}/integrations')),
+            GroupedTile(icon: Icons.psychology_outlined, title: l10n.memory, onTap: () => context.push('/bots/${bot.id}/memory')),
+          ],
         ),
-      ]),
+        const SizedBox(height: AppSpace.lg),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+          onPressed: _busy || !dirty ? null : () => _save(bot),
+          icon: const Icon(Icons.check_rounded, size: 20),
+          label: Text(l10n.saveChanges),
+        ),
+      ],
+    );
+  }
+}
+
+class _InviteCode extends StatelessWidget {
+  const _InviteCode({required this.email, required this.code});
+  final String email;
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return FormSheet(
+      icon: Icons.mark_email_read_outlined,
+      title: l10n.inviteReady,
+      subtitle: l10n.inviteCodeHelp(email),
+      submitLabel: l10n.copyCode,
+      submitIcon: Icons.copy_rounded,
+      cancelLabel: l10n.close,
+      onSubmit: () {
+        Clipboard.setData(ClipboardData(text: code));
+        Navigator.pop(context);
+        showMessage(context, l10n.copied);
+      },
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 14),
+          decoration: BoxDecoration(
+            color: context.appColors.codeBackground,
+            borderRadius: AppRadius.tileAll,
+            border: Border.all(color: context.appColors.hairline),
+          ),
+          child: SelectableText(code, style: AppText.mono.copyWith(fontSize: 15, fontWeight: FontWeight.w600)),
+        ),
+      ],
     );
   }
 }
@@ -399,6 +645,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
   String? _tts;
   String? _stt;
   final _voice = TextEditingController();
+  var _busy = false;
 
   @override
   void dispose() {
@@ -406,50 +653,64 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
     super.dispose();
   }
 
+  Future<void> _save() async {
+    setState(() => _busy = true);
+    final ok = await runGuarded(context, () async {
+      await ref.read(backendProvider).updateBotVoice(widget.botId, {
+        'tts_provider': ?_tts,
+        'stt_provider': ?_stt,
+        if (_voice.text.trim().isNotEmpty) 'tts_voice': _voice.text.trim(),
+      });
+      return true;
+    });
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok == true) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.voiceSettings),
-      content: Column(mainAxisSize: MainAxisSize.min, children: [
+    String label(String p) => switch (p) {
+      'elevenlabs' => 'ElevenLabs',
+      'openai' => 'OpenAI',
+      'cartesia' => 'Cartesia',
+      'fish_audio' => 'Fish Audio',
+      'deepgram' => 'Deepgram',
+      _ => p,
+    };
+    return FormSheet(
+      icon: Icons.record_voice_over_outlined,
+      title: l10n.voiceSettings,
+      subtitle: l10n.voiceSettingsHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveVoice'),
+      busy: _busy,
+      onSubmit: _save,
+      children: [
         DropdownButtonFormField<String?>(
           key: const Key('ttsProvider'),
           initialValue: _tts,
-          decoration: InputDecoration(labelText: l10n.readAloudProvider),
+          decoration: InputDecoration(labelText: l10n.readAloudProvider, prefixIcon: const Icon(Icons.volume_up_outlined, size: 20)),
           items: [
             DropdownMenuItem(value: null, child: Text(l10n.automatic)),
-            for (final p in const ['elevenlabs', 'openai', 'cartesia', 'fish_audio']) DropdownMenuItem(value: p, child: Text(p)),
+            for (final p in const ['elevenlabs', 'openai', 'cartesia', 'fish_audio']) DropdownMenuItem(value: p, child: Text(label(p))),
           ],
           onChanged: (v) => setState(() => _tts = v),
         ),
-        TextField(controller: _voice, decoration: InputDecoration(labelText: l10n.voiceId, helperText: l10n.voiceIdHelp)),
+        TextField(
+          controller: _voice,
+          decoration: InputDecoration(labelText: l10n.voiceId, helperText: l10n.voiceIdHelp, prefixIcon: const Icon(Icons.graphic_eq_rounded, size: 20)),
+        ),
         DropdownButtonFormField<String?>(
           key: const Key('sttProvider'),
           initialValue: _stt,
-          decoration: InputDecoration(labelText: l10n.dictationProvider),
+          decoration: InputDecoration(labelText: l10n.dictationProvider, prefixIcon: const Icon(Icons.mic_none_rounded, size: 20)),
           items: [
             DropdownMenuItem(value: null, child: Text(l10n.automatic)),
-            for (final p in const ['openai', 'deepgram']) DropdownMenuItem(value: p, child: Text(p)),
+            for (final p in const ['openai', 'deepgram']) DropdownMenuItem(value: p, child: Text(label(p))),
           ],
           onChanged: (v) => setState(() => _stt = v),
-        ),
-      ]),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
-        FilledButton(
-          key: const Key('saveVoice'),
-          onPressed: () async {
-            final ok = await runGuarded(context, () async {
-              await ref.read(backendProvider).updateBotVoice(widget.botId, {
-                'tts_provider': ?_tts,
-                'stt_provider': ?_stt,
-                if (_voice.text.trim().isNotEmpty) 'tts_voice': _voice.text.trim(),
-              });
-              return true;
-            });
-            if (ok == true && context.mounted) Navigator.pop(context);
-          },
-          child: Text(l10n.save),
         ),
       ],
     );

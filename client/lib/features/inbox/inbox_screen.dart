@@ -14,6 +14,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
+import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 
 /// Approvals waiting for you, notifications, and the shared task board.
@@ -74,25 +75,27 @@ class ApprovalsList extends ConsumerWidget {
                 ref.invalidate(approvalsProvider);
                 ref.invalidate(takeoversProvider);
               },
-              child: ListView(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpace.gutter,
-                  AppSpace.xs,
-                  AppSpace.gutter,
-                  AppSpace.xl + MediaQuery.paddingOf(context).bottom,
+              child: LayoutBuilder(
+                builder: (context, constraints) => ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    pageSide(constraints.maxWidth),
+                    AppSpace.xs,
+                    pageSide(constraints.maxWidth),
+                    AppSpace.xl + MediaQuery.paddingOf(context).bottom,
+                  ),
+                  children: [
+                    for (final t in takeovers)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpace.sm),
+                        child: TakeoverCard(takeover: t),
+                      ),
+                    for (final (i, a) in items.indexed)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpace.sm),
+                        child: ApprovalCard(approval: a).appListItemEntrance(i),
+                      ),
+                  ],
                 ),
-                children: [
-                  for (final t in takeovers)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpace.sm),
-                      child: TakeoverCard(takeover: t),
-                    ),
-                  for (final (i, a) in items.indexed)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpace.sm),
-                      child: ApprovalCard(approval: a).appListItemEntrance(i),
-                    ),
-                ],
               ),
             ),
     );
@@ -203,14 +206,24 @@ class _ApprovalCardState extends ConsumerState<ApprovalCard> {
             spacing: AppSpace.xs,
             runSpacing: AppSpace.xs,
             children: [
-              TextButton(onPressed: () => context.go('/bots/${a.botId}/runs/${a.runId}'), child: Text(l10n.viewRun)),
-              TextButton(
-                key: const Key('alwaysAllow'),
-                onPressed: _busy ? null : () => _decide(true, always: true),
-                child: Text(l10n.alwaysAllow),
+              TextButton.icon(
+                onPressed: () => context.go('/bots/${a.botId}/runs/${a.runId}'),
+                icon: const Icon(Icons.timeline_rounded, size: 18),
+                label: Text(l10n.viewRun),
               ),
-              OutlinedButton(key: const Key('deny'), onPressed: _busy ? null : () => _decide(false), child: Text(l10n.deny)),
-              FilledButton(key: const Key('approve'), onPressed: _busy ? null : () => _decide(true), child: Text(l10n.approve)),
+              TextButton(key: const Key('alwaysAllow'), onPressed: _busy ? null : () => _decide(true, always: true), child: Text(l10n.alwaysAllow)),
+              OutlinedButton.icon(
+                key: const Key('deny'),
+                onPressed: _busy ? null : () => _decide(false),
+                icon: const Icon(Icons.close_rounded, size: 18),
+                label: Text(l10n.deny),
+              ),
+              FilledButton.icon(
+                key: const Key('approve'),
+                onPressed: _busy ? null : () => _decide(true),
+                icon: const Icon(Icons.check_rounded, size: 18),
+                label: Text(l10n.approve),
+              ),
             ],
           ),
         ],
@@ -227,8 +240,8 @@ class ApprovalScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.approval)),
+    return SubPage(
+      title: l10n.approval,
       body: AsyncView(
         value: ref.watch(approvalsProvider),
         onRetry: () => ref.invalidate(approvalsProvider),
@@ -236,15 +249,16 @@ class ApprovalScreen extends ConsumerWidget {
           final match = items.where((a) => a.id == approvalId);
           if (match.isEmpty) {
             return EmptyState(
-              icon: Icons.task_alt,
+              icon: Icons.task_alt_rounded,
               message: l10n.approvalAlreadyDecided,
-              action: OutlinedButton(onPressed: () => context.go('/inbox'), child: Text(l10n.openInbox)),
+              action: FilledButton.tonalIcon(
+                onPressed: () => context.go('/inbox'),
+                icon: const Icon(Icons.inbox_outlined, size: 18),
+                label: Text(l10n.openInbox),
+              ),
             );
           }
-          return ListView(
-            padding: const EdgeInsets.all(12),
-            children: [ApprovalCard(approval: match.first)],
-          );
+          return PageColumn(children: [ApprovalCard(approval: match.first)]);
         },
       ),
     );
@@ -263,42 +277,112 @@ class NotificationsList extends ConsumerWidget {
       value: value,
       onRetry: () => ref.invalidate(notificationsProvider),
       data: (items) => items.isEmpty
-          ? EmptyState(icon: Icons.notifications_none, message: l10n.noNotifications)
-          : Column(
-              children: [
-                if (hasUnread)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => runGuarded(context, ref.read(notificationsProvider.notifier).markAllRead),
-                      child: Text(l10n.markAllRead),
-                    ),
-                  ),
-                Expanded(
-                  child: ListView(
+          ? EmptyState(icon: Icons.notifications_none_rounded, title: l10n.noNotifications, message: l10n.noNotificationsHelp)
+          : RefreshIndicator(
+              onRefresh: () async => ref.invalidate(notificationsProvider),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final side = pageSide(constraints.maxWidth);
+                  return ListView(
+                    padding: EdgeInsets.fromLTRB(side, AppSpace.xxs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
                     children: [
-                      for (final n in items)
-                        ListTile(
-                          key: Key('notification-${n.id}'),
-                          leading: Icon(switch (n.kind) {
-                            'approval' => Icons.verified_user_outlined,
-                            'routine' || 'routine_result' => Icons.schedule,
-                            'budget' => Icons.payments_outlined,
-                            _ => Icons.notifications_outlined,
-                          }, color: n.readAt == null ? Theme.of(context).colorScheme.primary : null),
-                          title: Text(n.title, style: n.readAt == null ? const TextStyle(fontWeight: FontWeight.w600) : null),
-                          subtitle: Text(n.body, maxLines: 2, overflow: TextOverflow.ellipsis),
-                          trailing: Text(relativeTime(n.createdAt, context), style: Theme.of(context).textTheme.bodySmall),
-                          onTap: () {
-                            if (n.readAt == null) unawaited(ref.read(notificationsProvider.notifier).markRead(n.id).catchError((_) {}));
-                            if (n.link != null && n.link!.startsWith('/')) context.go(n.link!);
-                          },
+                      if (hasUnread)
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: TextButton.icon(
+                            onPressed: () => runGuarded(context, ref.read(notificationsProvider.notifier).markAllRead),
+                            icon: const Icon(Icons.done_all_rounded, size: 18),
+                            label: Text(l10n.markAllRead),
+                          ),
                         ),
+                      GroupedCard(children: [for (final n in items) _NotificationRow(notification: n)]),
+                    ],
+                  );
+                },
+              ),
+            ),
+    );
+  }
+}
+
+class _NotificationRow extends ConsumerWidget {
+  const _NotificationRow({required this.notification});
+  final NotificationView notification;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
+    final n = notification;
+    final unread = n.readAt == null;
+    final (icon, color) = switch (n.kind) {
+      'approval' => (Icons.verified_user_outlined, colors.warning),
+      'routine' || 'routine_result' => (Icons.schedule_rounded, colors.info),
+      'budget' => (Icons.payments_outlined, colors.negative),
+      'takeover' => (Icons.back_hand_outlined, colors.waiting),
+      _ => (Icons.notifications_outlined, scheme.primary),
+    };
+    return InkWell(
+      key: Key('notification-${n.id}'),
+      onTap: () {
+        if (unread) unawaited(ref.read(notificationsProvider.notifier).markRead(n.id).catchError((_) {}));
+        if (n.link != null && n.link!.startsWith('/')) context.go(n.link!);
+      },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpace.md, 12, AppSpace.md, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: context.isDark ? 0.2 : 0.12),
+                borderRadius: BorderRadius.circular(AppRadius.icon),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 19, color: color),
+            ),
+            const SizedBox(width: AppSpace.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          n.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.bodyLarge?.copyWith(fontWeight: unread ? FontWeight.w700 : FontWeight.w500),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpace.xs),
+                      Text(relativeTime(n.createdAt, context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                      if (unread) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(color: scheme.primary, shape: BoxShape.circle),
+                        ),
+                      ],
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    n.body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.35),
+                  ),
+                ],
+              ),
             ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -312,51 +396,79 @@ class TaskBoard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    String label(String s) => switch (s) {
-      'todo' => l10n.taskTodo,
-      'doing' => l10n.taskDoing,
-      'blocked' => l10n.taskBlocked,
-      _ => l10n.taskDone,
+    final colors = context.appColors;
+    final scheme = context.colorScheme;
+    (String, Color, IconData) style(String s) => switch (s) {
+      'todo' => (l10n.taskTodo, scheme.onSurfaceVariant, Icons.radio_button_unchecked_rounded),
+      'doing' => (l10n.taskDoing, colors.working, Icons.play_circle_outline_rounded),
+      'blocked' => (l10n.taskBlocked, colors.negative, Icons.block_rounded),
+      _ => (l10n.taskDone, colors.positive, Icons.check_circle_outline_rounded),
     };
     return AsyncView(
       value: ref.watch(tasksProvider),
       onRetry: () => ref.invalidate(tasksProvider),
       data: (items) => items.isEmpty
-          ? EmptyState(icon: Icons.view_kanban_outlined, message: l10n.noTasks)
+          ? EmptyState(icon: Icons.view_kanban_outlined, title: l10n.noTasks, message: l10n.noTasksHelp)
           : RefreshIndicator(
               onRefresh: () async => ref.invalidate(tasksProvider),
-              child: ListView(
-                children: [
-                  for (final s in statuses)
-                    if (items.any((t) => t.status.value == s)) ...[
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                        child: Text(label(s), style: Theme.of(context).textTheme.titleSmall),
-                      ),
-                      for (final t in items.where((t) => t.status.value == s))
-                        ListTile(
-                          key: Key('task-${t.id}'),
-                          title: Text(t.title),
-                          subtitle: Text(
-                            [
-                              if (t.assigneeBotId != null) ref.watch(botProvider(t.assigneeBotId!))?.name ?? l10n.aBot,
-                              relativeTime(t.updatedAt, context),
-                            ].join(' · '),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final side = pageSide(constraints.maxWidth);
+                  return ListView(
+                    padding: EdgeInsets.fromLTRB(side, 0, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
+                    children: [
+                      for (final s in statuses)
+                        if (items.any((t) => t.status.value == s)) ...[
+                          SectionHeader(title: '${style(s).$1} · ${items.where((t) => t.status.value == s).length}'),
+                          GroupedCard(
+                            children: [
+                              for (final t in items.where((t) => t.status.value == s))
+                                GroupedTile(
+                                  key: Key('task-${t.id}'),
+                                  icon: style(s).$3,
+                                  iconColor: style(s).$2,
+                                  title: t.title,
+                                  subtitle: [
+                                    if (t.assigneeBotId != null) ref.watch(botProvider(t.assigneeBotId!))?.name ?? l10n.aBot,
+                                    relativeTime(t.updatedAt, context),
+                                  ].join(' · '),
+                                  trailing: PopupMenuButton<String>(
+                                    key: Key('taskStatus-${t.id}'),
+                                    tooltip: l10n.changeStatus,
+                                    initialValue: t.status.value,
+                                    onSelected: (v) async {
+                                      await runGuarded(context, () => ref.read(backendProvider).setTaskStatus(t.id, v));
+                                      ref.invalidate(tasksProvider);
+                                    },
+                                    itemBuilder: (_) => [
+                                      for (final o in statuses)
+                                        PopupMenuItem(
+                                          value: o,
+                                          child: ListTile(
+                                            dense: true,
+                                            leading: Icon(style(o).$3, color: style(o).$2),
+                                            title: Text(style(o).$1),
+                                          ),
+                                        ),
+                                    ],
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          StatusLabel(text: style(t.status.value).$1, color: style(t.status.value).$2, pill: true),
+                                          Icon(Icons.expand_more_rounded, size: 18, color: scheme.onSurfaceVariant),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                          trailing: PopupMenuButton<String>(
-                            key: Key('taskStatus-${t.id}'),
-                            tooltip: l10n.changeStatus,
-                            initialValue: t.status.value,
-                            onSelected: (v) async {
-                              await runGuarded(context, () => ref.read(backendProvider).setTaskStatus(t.id, v));
-                              ref.invalidate(tasksProvider);
-                            },
-                            itemBuilder: (_) => [for (final s in statuses) PopupMenuItem(value: s, child: Text(label(s)))],
-                            child: Chip(label: Text(label(t.status.value))),
-                          ),
-                        ),
+                        ],
                     ],
-                ],
+                  );
+                },
               ),
             ),
     );
@@ -371,41 +483,75 @@ class TakeoverCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final color = context.appColors.waiting;
     final bot = ref.watch(botProvider(takeover.botId));
-    return Card(
+    return AppCard(
       key: Key('takeover-${takeover.id}'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(l10n.botNeedsHelp(bot?.name ?? l10n.aBot), style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(takeover.reason),
-            const SizedBox(height: 4),
-            Text(relativeTime(takeover.createdAt, context), style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 12),
-            Wrap(
-              alignment: WrapAlignment.end,
-              spacing: 8,
-              children: [
-                OutlinedButton(
-                  key: const Key('dismissTakeover'),
-                  onPressed: () async {
-                    await runGuarded(context, () => ref.read(backendProvider).dismissTakeover(takeover.id));
-                    ref.invalidate(takeoversProvider);
-                  },
-                  child: Text(l10n.dismiss),
+      borderColor: color.withValues(alpha: 0.45),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  BotAvatar(name: bot?.name ?? '?', size: 36),
+                  Positioned(
+                    right: -4,
+                    bottom: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: scheme.surface, width: 2),
+                      ),
+                      child: const Icon(Icons.back_hand_rounded, size: 10, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.botNeedsHelp(bot?.name ?? l10n.aBot), style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, height: 1.3)),
+                    const SizedBox(height: 4),
+                    Text(takeover.reason, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
+                    const SizedBox(height: 4),
+                    Text(relativeTime(takeover.createdAt, context), style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                  ],
                 ),
-                FilledButton(
-                  key: const Key('openTakeover'),
-                  onPressed: () => context.push('/computer/live?c=${takeover.computerId}&takeover=${takeover.id}'),
-                  child: Text(l10n.takeControl),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpace.md),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: AppSpace.xs,
+            runSpacing: AppSpace.xs,
+            children: [
+              OutlinedButton(
+                key: const Key('dismissTakeover'),
+                onPressed: () async {
+                  await runGuarded(context, () => ref.read(backendProvider).dismissTakeover(takeover.id));
+                  ref.invalidate(takeoversProvider);
+                },
+                child: Text(l10n.dismiss),
+              ),
+              FilledButton.icon(
+                key: const Key('openTakeover'),
+                onPressed: () => context.push('/computer/live?c=${takeover.computerId}&takeover=${takeover.id}'),
+                icon: const Icon(Icons.mouse_outlined, size: 18),
+                label: Text(l10n.takeControl),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

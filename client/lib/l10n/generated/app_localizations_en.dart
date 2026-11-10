@@ -342,11 +342,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get download => 'Download';
 
   @override
-  String get emptyFolder => 'This folder is empty.';
+  String get emptyFolder => 'This folder is empty';
 
   @override
   String get noCheckpoints =>
-      'No checkpoints yet. They are saved before risky changes.';
+      'They\'re saved automatically before risky changes, so you can undo them.';
 
   @override
   String get computerAsleep =>
@@ -648,13 +648,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noIntegrations =>
-      'No integrations yet. Connect an MCP server, an OpenAPI source, Composio or Pipedream.';
+      'Connect an MCP server, an OpenAPI source, Composio or Pipedream to give bots more tools.';
 
   @override
-  String get noIntegrationsForBot => 'Add integrations in Settings first.';
+  String get noIntegrationsForBot =>
+      'Add integrations in Settings first, then turn them on for this bot here.';
 
   @override
-  String get noNotifications => 'No notifications yet.';
+  String get noNotifications => 'No notifications yet';
 
   @override
   String get noRoutines =>
@@ -665,7 +666,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.';
 
   @override
-  String get noTasks => 'The task board is empty.';
+  String get noTasks => 'No tasks yet';
 
   @override
   String get notifications => 'Notifications';
@@ -866,7 +867,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get botComputerDefault =>
-      'Default (its private computer, else the team computer)';
+      'Its private computer if it has one, otherwise the team computer';
 
   @override
   String get botInControl => 'Bot in control';
@@ -1816,4 +1817,329 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolTakeover => 'Asked you to take over';
+
+  @override
+  String get secretsHelp =>
+      'Bots put a secret in requests by its name. It\'s only sent to the hosts you allow and the model never sees it.';
+
+  @override
+  String deleteSecretTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get deleteSecretBody =>
+      'Bots that use it will stop being able to reach that service.';
+
+  @override
+  String get hide => 'Hide';
+
+  @override
+  String get show => 'Show';
+
+  @override
+  String get deleteMemoryTitle => 'Delete this memory?';
+
+  @override
+  String get noMemoriesHelp =>
+      'As you chat, the bot keeps what matters: facts, preferences and summaries of past work.';
+
+  @override
+  String get memoryHelp =>
+      'Pinned memories are always in the bot\'s context. Edit anything that\'s wrong; deleted memories are gone for good.';
+
+  @override
+  String get memoryFact => 'Fact';
+
+  @override
+  String get memoryPreference => 'Preference';
+
+  @override
+  String get memorySummary => 'Summary';
+
+  @override
+  String get memoryEpisode => 'Episode';
+
+  @override
+  String get pinned => 'Pinned';
+
+  @override
+  String get editMemory => 'Edit memory';
+
+  @override
+  String get editMemoryHelp =>
+      'The bot uses this the next time it\'s relevant.';
+
+  @override
+  String get modelKeysIntro =>
+      'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.';
+
+  @override
+  String get yourKeys => 'Your keys';
+
+  @override
+  String get keyWorking => 'Working';
+
+  @override
+  String get keyFailing => 'Failing';
+
+  @override
+  String get keyUntested => 'Not tested';
+
+  @override
+  String get skillsHelp =>
+      'A skill is a set of instructions a bot loads when a task calls for it, like your house style for reports.';
+
+  @override
+  String deleteSkillTitle(String name) {
+    return 'Delete the skill “$name”?';
+  }
+
+  @override
+  String get editSkill => 'Edit skill';
+
+  @override
+  String get deleteSkill => 'Delete skill';
+
+  @override
+  String get skillDescriptionHelp =>
+      'Bots read this to decide when the skill applies.';
+
+  @override
+  String get skillBodyHint => '# Steps\n1. …';
+
+  @override
+  String get computersHelp =>
+      'Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.';
+
+  @override
+  String get thisDevice => 'This device';
+
+  @override
+  String get renameComputer => 'Rename computer';
+
+  @override
+  String deleteComputerTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get privacyIntro =>
+      'Your chats, memories and files belong to you. Export them any time, or delete your account.';
+
+  @override
+  String get yourData => 'Your data';
+
+  @override
+  String get dangerZone => 'Danger zone';
+
+  @override
+  String get quotasHelp => 'Leave a field empty for no limit.';
+
+  @override
+  String get serviceOff => 'Off';
+
+  @override
+  String get serviceDown => 'Down';
+
+  @override
+  String get serviceOk => 'OK';
+
+  @override
+  String get inviteMemberHelp =>
+      'They\'ll get an email with a link to join this workspace.';
+
+  @override
+  String get sendInvite => 'Send invite';
+
+  @override
+  String get inviteReady => 'Invite ready';
+
+  @override
+  String inviteCodeHelp(String email) {
+    return 'Email isn\'t set up on this server, so share this code with $email. They paste it when joining.';
+  }
+
+  @override
+  String get copyCode => 'Copy code';
+
+  @override
+  String get thinking0 => 'Model';
+
+  @override
+  String get computerAndTools => 'Computer and tools';
+
+  @override
+  String get saveChanges => 'Save changes';
+
+  @override
+  String get autonomyAskAlwaysHelp =>
+      'Checks with you before every action that changes something.';
+
+  @override
+  String get autonomyAskRiskyHelp =>
+      'Works on its own, but asks before anything risky, like deleting files or spending money.';
+
+  @override
+  String get autonomyAutonomousHelp =>
+      'Acts without asking. Best for routines you trust.';
+
+  @override
+  String get usageSubtitle => 'Model spend this month';
+
+  @override
+  String get skillsRowHelp => 'Instructions bots load when a task needs them';
+
+  @override
+  String get integrationsRowHelp => 'MCP servers and connected apps';
+
+  @override
+  String get secretsRowHelp =>
+      'Tokens and passwords, sent only where you allow';
+
+  @override
+  String get computersRowHelp => 'The team computer and private ones';
+
+  @override
+  String get companionRowHelp => 'Let bots use this device\'s apps and files';
+
+  @override
+  String get privacyRowHelp => 'Export your data or delete your account';
+
+  @override
+  String get adminRowHelp => 'Users, workspaces, quotas and services';
+
+  @override
+  String get noIntegrationsTitle => 'No integrations yet';
+
+  @override
+  String get integrationsHelp =>
+      'Integrations give bots more tools: an MCP server, an OpenAPI source, Composio or Pipedream. Each tool is named after its integration.';
+
+  @override
+  String get botIntegrationsHelp =>
+      'Turn on the integrations this bot may use. Its tools show up the next time it runs.';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String get noRunsHelp =>
+      'Each time this bot works, from a chat, a routine or a webhook, the run shows up here with what it did and what it cost.';
+
+  @override
+  String get runCompleted => 'Done';
+
+  @override
+  String get runWaiting => 'Waiting';
+
+  @override
+  String get runWorking => 'Working';
+
+  @override
+  String get triggerChat => 'Chat';
+
+  @override
+  String get triggerRoutine => 'Routine';
+
+  @override
+  String get noEventsForFilter => 'Nothing of this kind in this run.';
+
+  @override
+  String get runStatusFailed => 'Failed';
+
+  @override
+  String get runStatusStopped => 'Stopped';
+
+  @override
+  String get quickAskIntro =>
+      'Send a quick request. It starts a new chat with the bot you pick.';
+
+  @override
+  String quickAskHintBot(String bot) {
+    return 'What should $bot do?';
+  }
+
+  @override
+  String get noNotificationsHelp =>
+      'Routine results, budget alerts and requests from your bots show up here.';
+
+  @override
+  String get noTasksHelp =>
+      'Bots and people add tasks here to hand work to each other.';
+
+  @override
+  String get stateProvisioning => 'Setting up';
+
+  @override
+  String get stateStarting => 'Starting';
+
+  @override
+  String get stateRunning => 'Running';
+
+  @override
+  String get stateIdle => 'Idle';
+
+  @override
+  String get stateSleeping => 'Asleep';
+
+  @override
+  String get stateStopped => 'Stopped';
+
+  @override
+  String get stateError => 'Error';
+
+  @override
+  String get terminalHelp =>
+      'A shell on this computer. Bots use the same one, so you can see and fix what they did.';
+
+  @override
+  String get up => 'Up';
+
+  @override
+  String get emptyFolderHelp =>
+      'Files your bots make, and files you upload, show up here.';
+
+  @override
+  String get noCheckpointsTitle => 'No checkpoints yet';
+
+  @override
+  String get checkpointsHelp =>
+      'A checkpoint saves this computer before a risky change. Restoring puts its files back as they were.';
+
+  @override
+  String deleteFileTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get botComputerAuto => 'Automatic';
+
+  @override
+  String get botComputerHelp =>
+      'Where this bot runs commands, browses and keeps its files.';
+
+  @override
+  String get billingOffTitle => 'No limits here';
+
+  @override
+  String revokeKeyTitle(String name) {
+    return 'Revoke the key for $name?';
+  }
+
+  @override
+  String get revokeKeyBody =>
+      'That server stops using cloud computers and credits right away.';
+
+  @override
+  String get handBackHelp =>
+      'The bot picks up where you left off. Tell it what you did, if it helps.';
+
+  @override
+  String get serverHelp =>
+      'Use your own Kasama server. Enter the address you or your admin set up.';
+
+  @override
+  String get ssoHelp =>
+      'Enter your work email and we\'ll send you to your company\'s sign-in page.';
 }

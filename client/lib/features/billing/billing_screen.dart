@@ -9,6 +9,13 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/billing.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
+import '../../ui/shell_header.dart';
 
 final _plansProvider = FutureProvider<PlanCatalog>((ref) => ref.watch(backendProvider).plans());
 final _usageProvider = FutureProvider<BillingUsage?>((ref) async {
@@ -34,23 +41,21 @@ final platformProvider = Provider<TargetPlatform>((ref) => defaultTargetPlatform
 
 /// Opens a URL outside the app (checkout, portal, store subscription settings). Overridable in tests.
 final openUrlProvider = Provider<Future<void> Function(String url)>(
-  (ref) => (url) async => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+  (ref) =>
+      (url) async => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
 );
 
 /// Shown when the server answers 402 (plan limit or out of credits).
 Future<void> showPaywall(BuildContext context, String message) async {
   final l10n = context.l10n;
-  final go = await showDialog<bool>(
+  final go = await showConfirm(
     context: context,
-    builder: (c) => AlertDialog(
-      icon: const Icon(Icons.workspace_premium_outlined),
-      title: Text(l10n.upgradeTitle),
-      content: Text(message),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.notNow)),
-        FilledButton(key: const Key('paywallSeePlans'), onPressed: () => Navigator.pop(c, true), child: Text(l10n.seePlans)),
-      ],
-    ),
+    icon: Icons.workspace_premium_outlined,
+    title: l10n.upgradeTitle,
+    message: message,
+    confirmLabel: l10n.seePlans,
+    cancelLabel: l10n.notNow,
+    confirmKey: const Key('paywallSeePlans'),
   );
   if (go == true && context.mounted) await context.push('/settings/billing');
 }
@@ -81,76 +86,76 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   String get _orgId => ref.read(currentOrgProvider)!.id;
 
   Future<void> _webCheckout({String? plan, String? pack}) => _run(() async {
-        final url = await ref.read(backendProvider).checkoutUrl(_orgId, planCode: plan, packCode: pack);
-        await ref.read(openUrlProvider)(url);
-      });
+    final url = await ref.read(backendProvider).checkoutUrl(_orgId, planCode: plan, packCode: pack);
+    await ref.read(openUrlProvider)(url);
+  });
 
   Future<void> _storeBuy(StoreProduct p) => _run(() => ref.read(storeProvider).buy(p, orgId: _orgId));
 
   Future<void> _restore() => _run(() async {
-        await ref.read(storeProvider).restore(orgId: _orgId);
-        if (mounted) showMessage(context, context.l10n.restoreStarted);
-      });
+    await ref.read(storeProvider).restore(orgId: _orgId);
+    if (mounted) showMessage(context, context.l10n.restoreStarted);
+  });
 
   Future<void> _manage(BillingSummary b) => _run(() async {
-        final source = b.source_.value;
-        final url = switch (source) {
-          'dodo' => await ref.read(backendProvider).billingPortalUrl(_orgId),
-          'app_store' => 'https://apps.apple.com/account/subscriptions',
-          _ => 'https://play.google.com/store/account/subscriptions?package=dev.kasama.app',
-        };
-        await ref.read(openUrlProvider)(url);
-      });
+    final source = b.source_.value;
+    final url = switch (source) {
+      'dodo' => await ref.read(backendProvider).billingPortalUrl(_orgId),
+      'app_store' => 'https://apps.apple.com/account/subscriptions',
+      _ => 'https://play.google.com/store/account/subscriptions?package=dev.kasama.app',
+    };
+    await ref.read(openUrlProvider)(url);
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final billing = ref.watch(billingProvider);
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.billing), actions: [
-        IconButton(
+    return SubPage(
+      title: l10n.billing,
+      actions: [
+        HeaderIconButton(
+          icon: Icons.refresh_rounded,
           tooltip: l10n.refresh,
-          icon: const Icon(Icons.refresh),
           onPressed: () {
             ref.invalidate(billingProvider);
             ref.invalidate(_usageProvider);
           },
         ),
-      ]),
+      ],
       body: AsyncView(
         value: billing,
         onRetry: () => ref.invalidate(billingProvider),
         data: (b) {
           if (b == null || !b.enabled) {
-            return EmptyState(icon: Icons.all_inclusive, message: l10n.billingOffSelfHosted);
+            return EmptyState(icon: Icons.all_inclusive_rounded, title: l10n.billingOffTitle, message: l10n.billingOffSelfHosted);
           }
           final org = ref.watch(currentOrgProvider);
           final isAdmin = org != null && org.role != OrgRole.member;
-          final channels = purchaseChannels(
-            platform: ref.watch(platformProvider),
-            isWeb: kIsWeb,
-            storefront: ref.watch(_storefrontProvider).value,
-          );
+          final channels = purchaseChannels(platform: ref.watch(platformProvider), isWeb: kIsWeb, storefront: ref.watch(_storefrontProvider).value);
           return AbsorbPointer(
             absorbing: _busy,
-            child: ListView(padding: const EdgeInsets.all(16), children: [
-              _CurrentPlan(summary: b, onManage: isAdmin && b.source_.value != 'default' ? () => _manage(b) : null),
-              const SizedBox(height: 16),
-              if (isAdmin) ..._plans(context, b, channels),
-              if (isAdmin && channels.contains(PurchaseChannel.web)) ..._packs(context),
-              if (isAdmin && (channels.contains(PurchaseChannel.appStore) || channels.contains(PurchaseChannel.googlePlay)))
-                Center(
-                  child: TextButton.icon(
-                    key: const Key('restorePurchases'),
-                    onPressed: _restore,
-                    icon: const Icon(Icons.restore),
-                    label: Text(l10n.restorePurchases),
+            child: PageColumn(
+              children: [
+                _CurrentPlan(summary: b, onManage: isAdmin && b.source_.value != 'default' ? () => _manage(b) : null).appCardEntrance(),
+                if (isAdmin) ..._plans(context, b, channels),
+                if (isAdmin && channels.contains(PurchaseChannel.web)) ..._packs(context),
+                if (isAdmin && (channels.contains(PurchaseChannel.appStore) || channels.contains(PurchaseChannel.googlePlay)))
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpace.sm),
+                    child: Center(
+                      child: TextButton.icon(
+                        key: const Key('restorePurchases'),
+                        onPressed: _restore,
+                        icon: const Icon(Icons.restore_rounded, size: 18),
+                        label: Text(l10n.restorePurchases),
+                      ),
+                    ),
                   ),
-                ),
-              const SizedBox(height: 8),
-              const _UsageSection(),
-              if (isAdmin) const _CloudConnectSection(),
-            ]),
+                const _UsageSection(),
+                if (isAdmin) const _CloudConnectSection(),
+              ],
+            ),
           );
         },
       ),
@@ -159,46 +164,61 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   List<Widget> _plans(BuildContext context, BillingSummary b, List<PurchaseChannel> channels) {
     final l10n = context.l10n;
+    final scheme = context.colorScheme;
     final catalog = ref.watch(_plansProvider).value;
     final products = ref.watch(_storeProductsProvider).value ?? const {};
     final source = ref.watch(storeProvider).source;
     if (catalog == null) return const [];
     return [
-      Text(l10n.plans, style: Theme.of(context).textTheme.titleMedium),
-      const SizedBox(height: 8),
+      SectionHeader(title: l10n.plans),
       for (final p in catalog.plans.where((p) => p.interval.value != 'none'))
-        Card(
-          key: Key('plan-${p.code}'),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Expanded(child: Text(p.name, style: Theme.of(context).textTheme.titleSmall)),
-                if (p.code == b.planCode) Chip(label: Text(l10n.currentPlan)),
-              ]),
-              const SizedBox(height: 4),
-              Text(_limitsText(context, p.limits), style: Theme.of(context).textTheme.bodySmall),
-              if (p.code != b.planCode) ...[
-                const SizedBox(height: 8),
-                Wrap(spacing: 8, runSpacing: 8, children: [
-                  if (source != null && products[p.storeProductIds[source]] != null && channels.any((c) => c != PurchaseChannel.web))
-                    FilledButton(
-                      key: Key('buyStore-${p.code}'),
-                      onPressed: () => _storeBuy(products[p.storeProductIds[source]]!),
-                      child: Text(l10n.subscribeFor(products[p.storeProductIds[source]]!.price)),
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpace.xs),
+          child: AppCard(
+            key: Key('plan-${p.code}'),
+            borderColor: p.code == b.planCode ? scheme.primary.withValues(alpha: 0.5) : null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(p.code == b.planCode ? Icons.check_circle_rounded : Icons.workspace_premium_outlined, size: 20, color: scheme.primary),
+                    const SizedBox(width: AppSpace.xs),
+                    Expanded(
+                      child: Text(p.name, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
                     ),
-                  if (channels.contains(PurchaseChannel.web) && p.web)
-                    OutlinedButton(
-                      key: Key('buyWeb-${p.code}'),
-                      onPressed: () => _webCheckout(plan: p.code),
-                      child: Text(l10n.subscribeOnWeb),
-                    ),
-                ]),
+                    if (p.code == b.planCode) StatusLabel(text: l10n.currentPlan, color: scheme.primary, pill: true),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(_limitsText(context, p.limits), style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+                if (p.code != b.planCode) ...[
+                  const SizedBox(height: AppSpace.sm),
+                  Wrap(
+                    spacing: AppSpace.xs,
+                    runSpacing: AppSpace.xs,
+                    children: [
+                      if (source != null && products[p.storeProductIds[source]] != null && channels.any((c) => c != PurchaseChannel.web))
+                        FilledButton.icon(
+                          key: Key('buyStore-${p.code}'),
+                          onPressed: () => _storeBuy(products[p.storeProductIds[source]]!),
+                          icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+                          label: Text(l10n.subscribeFor(products[p.storeProductIds[source]]!.price)),
+                        ),
+                      if (channels.contains(PurchaseChannel.web) && p.web)
+                        OutlinedButton.icon(
+                          key: Key('buyWeb-${p.code}'),
+                          onPressed: () => _webCheckout(plan: p.code),
+                          icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                          label: Text(l10n.subscribeOnWeb),
+                        ),
+                    ],
+                  ),
+                ],
               ],
-            ]),
+            ),
           ),
         ),
-      const SizedBox(height: 8),
     ];
   }
 
@@ -207,16 +227,20 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     final packs = ref.watch(_plansProvider).value?.packs.where((p) => p.web).toList() ?? const [];
     if (packs.isEmpty) return const [];
     return [
-      Text(l10n.credits, style: Theme.of(context).textTheme.titleMedium),
-      for (final p in packs)
-        ListTile(
-          key: Key('pack-${p.code}'),
-          leading: const Icon(Icons.add_card),
-          title: Text(p.name),
-          trailing: const Icon(Icons.open_in_new),
-          onTap: () => _webCheckout(pack: p.code),
-        ),
-      const SizedBox(height: 8),
+      SectionHeader(title: l10n.credits),
+      GroupedCard(
+        children: [
+          for (final p in packs)
+            GroupedTile(
+              key: Key('pack-${p.code}'),
+              icon: Icons.add_card_rounded,
+              iconColor: context.appColors.positive,
+              title: p.name,
+              trailing: Icon(Icons.open_in_new_rounded, size: 18, color: context.colorScheme.onSurfaceVariant),
+              onTap: () => _webCheckout(pack: p.code),
+            ),
+        ],
+      ),
     ];
   }
 }
@@ -238,6 +262,7 @@ class _CurrentPlan extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = context.colorScheme;
     final b = summary;
     final until = b.validUntil;
     final via = switch (b.source_.value) {
@@ -246,26 +271,84 @@ class _CurrentPlan extends StatelessWidget {
       'google_play' => l10n.viaGooglePlay,
       _ => null,
     };
-    return Card(
+    final muted = context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.4);
+    return AppCard(
       key: const Key('currentPlan'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(l10n.yourPlan, style: Theme.of(context).textTheme.labelMedium),
-          Text(b.planName, style: Theme.of(context).textTheme.headlineSmall),
-          if (via != null) Text(via),
-          if (until != null)
-            Text(b.cancelAtPeriodEnd
-                ? l10n.planEndsOn(MaterialLocalizations.of(context).formatMediumDate(until.toLocal()))
-                : l10n.planRenewsOn(MaterialLocalizations.of(context).formatMediumDate(until.toLocal()))),
-          const SizedBox(height: 8),
-          Text(l10n.creditsBalance(b.creditsUsd.toStringAsFixed(2)), key: const Key('creditsBalance')),
-          if (b.limits.isNotEmpty) Text(_limitsText(context, b.limits), style: Theme.of(context).textTheme.bodySmall),
+      padding: const EdgeInsets.all(AppSpace.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [scheme.primary, Color.lerp(scheme.primary, scheme.tertiary, 0.5)!],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.workspace_premium_rounded, color: scheme.onPrimary, size: 26),
+              ),
+              const SizedBox(width: AppSpace.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.yourPlan, style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                    Text(b.planName, style: context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4)),
+                    if (via != null) Text(via, style: muted),
+                    if (until != null)
+                      Text(
+                        b.cancelAtPeriodEnd
+                            ? l10n.planEndsOn(MaterialLocalizations.of(context).formatMediumDate(until.toLocal()))
+                            : l10n.planRenewsOn(MaterialLocalizations.of(context).formatMediumDate(until.toLocal())),
+                        style: muted,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpace.md),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(color: scheme.surfaceContainer, borderRadius: BorderRadius.circular(AppRadius.row)),
+            child: Row(
+              children: [
+                Icon(Icons.account_balance_wallet_outlined, size: 20, color: context.appColors.positive),
+                const SizedBox(width: AppSpace.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.creditsBalance(b.creditsUsd.toStringAsFixed(2)),
+                        key: const Key('creditsBalance'),
+                        style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontFeatures: AppText.tabular),
+                      ),
+                      if (b.limits.isNotEmpty) Text(_limitsText(context, b.limits), style: muted),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
           if (onManage != null) ...[
-            const SizedBox(height: 8),
-            OutlinedButton(key: const Key('manageSubscription'), onPressed: onManage, child: Text(l10n.manageSubscription)),
+            const SizedBox(height: AppSpace.md),
+            OutlinedButton.icon(
+              key: const Key('manageSubscription'),
+              onPressed: onManage,
+              icon: const Icon(Icons.tune_rounded, size: 18),
+              label: Text(l10n.manageSubscription),
+            ),
           ],
-        ]),
+        ],
       ),
     );
   }
@@ -277,25 +360,41 @@ class _UsageSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final scheme = context.colorScheme;
     final usage = ref.watch(_usageProvider).value;
     if (usage == null) return const SizedBox.shrink();
-    String label(BillingUsageItem i) {
-      final what = switch (i.kind) {
-        'computer_seconds' => l10n.usageComputerHours((i.quantity / 3600).toStringAsFixed(2)),
-        'stream_seconds' => l10n.usageLiveViewMinutes((i.quantity / 60).toStringAsFixed(0)),
-        'tokens_in' || 'tokens_out' => l10n.usageTokens(i.quantity.toInt()),
-        _ => i.kind,
+    (String, IconData) describe(BillingUsageItem i) {
+      final (what, icon) = switch (i.kind) {
+        'computer_seconds' => (l10n.usageComputerHours((i.quantity / 3600).toStringAsFixed(2)), Icons.desktop_windows_outlined),
+        'stream_seconds' => (l10n.usageLiveViewMinutes((i.quantity / 60).toStringAsFixed(0)), Icons.live_tv_outlined),
+        'tokens_in' || 'tokens_out' => (l10n.usageTokens(i.quantity.toInt()), Icons.auto_awesome_outlined),
+        _ => (i.kind, Icons.receipt_long_outlined),
       };
-      return i.instance == null ? what : '$what · ${i.instance}';
+      return (i.instance == null ? what : '$what · ${i.instance}', icon);
     }
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(l10n.thisMonth, style: Theme.of(context).textTheme.titleMedium),
-      if (usage.items.isEmpty) Padding(padding: const EdgeInsets.all(8), child: Text(l10n.noBillableUsage)),
-      for (final i in usage.items)
-        ListTile(dense: true, title: Text(label(i)), trailing: Text('\$${i.costUsd.toStringAsFixed(2)}')),
-      const SizedBox(height: 8),
-    ]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.thisMonth),
+        if (usage.items.isEmpty)
+          AppCard(child: FormNote(l10n.noBillableUsage, icon: Icons.receipt_long_outlined))
+        else
+          GroupedCard(
+            children: [
+              for (final i in usage.items)
+                GroupedTile(
+                  icon: describe(i).$2,
+                  title: describe(i).$1,
+                  trailing: Text(
+                    '\$${i.costUsd.toStringAsFixed(2)}',
+                    style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontFeatures: AppText.tabular, color: scheme.onSurface),
+                  ),
+                ),
+            ],
+          ),
+      ],
+    );
   }
 }
 
@@ -304,29 +403,25 @@ class _CloudConnectSection extends ConsumerWidget {
 
   Future<void> _create(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final name = await showDialog<String>(context: context, builder: (_) => const _InstanceNameDialog());
+    final name = await showTextPrompt(
+      context,
+      title: l10n.cloudConnectNewKey,
+      subtitle: l10n.cloudConnectHelp,
+      label: l10n.instanceName,
+      hint: 'home-server',
+      submitLabel: l10n.create,
+      icon: Icons.cloud_outlined,
+      fieldIcon: Icons.dns_outlined,
+      fieldKey: const Key('instanceName'),
+    );
     if (name == null || name.isEmpty || !context.mounted) return;
     final org = ref.read(currentOrgProvider)!;
     final created = await runGuarded(context, () => ref.read(backendProvider).createConnectKey(org.id, name));
     ref.invalidate(_connectKeysProvider);
     if (created == null || !context.mounted) return;
-    await showDialog<void>(
+    await showAdaptiveSheet<void>(
       context: context,
-      builder: (c) => AlertDialog(
-        title: Text(l10n.cloudConnectKeyCreated),
-        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(l10n.cloudConnectKeyOnce),
-          const SizedBox(height: 8),
-          SelectableText('KASAMA_CLOUD_KEY=${created.key}', key: const Key('connectKeyValue')),
-        ]),
-        actions: [
-          TextButton(
-            onPressed: () => Clipboard.setData(ClipboardData(text: created.key)),
-            child: Text(l10n.copy),
-          ),
-          FilledButton(onPressed: () => Navigator.pop(c), child: Text(l10n.close)),
-        ],
-      ),
+      builder: (_) => _KeyCreatedSheet(secret: created.key),
     );
   }
 
@@ -334,61 +429,84 @@ class _CloudConnectSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final keys = ref.watch(_connectKeysProvider).value ?? const <ConnectKey>[];
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(l10n.cloudConnect, style: Theme.of(context).textTheme.titleMedium),
-      Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Text(l10n.cloudConnectHelp)),
-      for (final k in keys)
-        ListTile(
-          leading: const Icon(Icons.dns_outlined),
-          title: Text(k.instanceName),
-          subtitle: Text(k.keyHint),
-          trailing: IconButton(
-            tooltip: l10n.revoke,
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () async {
-              await runGuarded(context, () => ref.read(backendProvider).revokeConnectKey(ref.read(currentOrgProvider)!.id, k.id));
-              ref.invalidate(_connectKeysProvider);
-            },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          title: l10n.cloudConnect,
+          trailing: TextButton.icon(
+            key: const Key('createConnectKey'),
+            onPressed: () => _create(context, ref),
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: Text(l10n.cloudConnectNewKey),
           ),
         ),
-      TextButton.icon(
-        key: const Key('createConnectKey'),
-        onPressed: () => _create(context, ref),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.cloudConnectNewKey),
-      ),
-    ]);
+        FormNote(l10n.cloudConnectHelp),
+        if (keys.isNotEmpty) ...[
+          const SizedBox(height: AppSpace.sm),
+          GroupedCard(
+            children: [
+              for (final k in keys)
+                GroupedTile(
+                  icon: Icons.dns_outlined,
+                  title: k.instanceName,
+                  subtitle: k.keyHint,
+                  trailing: IconButton(
+                    tooltip: l10n.revoke,
+                    icon: Icon(Icons.delete_outline_rounded, color: context.colorScheme.onSurfaceVariant),
+                    onPressed: () async {
+                      final ok = await showConfirm(
+                        context: context,
+                        title: l10n.revokeKeyTitle(k.instanceName),
+                        message: l10n.revokeKeyBody,
+                        confirmLabel: l10n.revoke,
+                        destructive: true,
+                      );
+                      if (!ok || !context.mounted) return;
+                      await runGuarded(context, () => ref.read(backendProvider).revokeConnectKey(ref.read(currentOrgProvider)!.id, k.id));
+                      ref.invalidate(_connectKeysProvider);
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
   }
 }
 
-class _InstanceNameDialog extends StatefulWidget {
-  const _InstanceNameDialog();
-  @override
-  State<_InstanceNameDialog> createState() => _InstanceNameDialogState();
-}
-
-class _InstanceNameDialogState extends State<_InstanceNameDialog> {
-  final _c = TextEditingController();
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
+/// Shows a new connect key once, with a copy button.
+class _KeyCreatedSheet extends StatelessWidget {
+  const _KeyCreatedSheet({required this.secret});
+  final String secret;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.cloudConnectNewKey),
-      content: TextField(
-        key: const Key('instanceName'),
-        controller: _c,
-        autofocus: true,
-        decoration: InputDecoration(labelText: l10n.instanceName),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
-        FilledButton(onPressed: () => Navigator.pop(context, _c.text.trim()), child: Text(l10n.create)),
+    final line = 'KASAMA_CLOUD_KEY=$secret';
+    return FormSheet(
+      icon: Icons.key_rounded,
+      iconColor: context.appColors.warning,
+      title: l10n.cloudConnectKeyCreated,
+      subtitle: l10n.cloudConnectKeyOnce,
+      submitLabel: l10n.copy,
+      submitIcon: Icons.content_copy_rounded,
+      cancelLabel: l10n.close,
+      onSubmit: () {
+        Clipboard.setData(ClipboardData(text: secret));
+        showMessage(context, l10n.copied);
+      },
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: context.appColors.codeBackground,
+            borderRadius: BorderRadius.circular(AppRadius.row),
+            border: Border.all(color: context.appColors.hairline),
+          ),
+          child: SelectableText(line, key: const Key('connectKeyValue'), style: AppText.mono.copyWith(fontSize: 13)),
+        ),
       ],
     );
   }
