@@ -31,6 +31,7 @@ import {
   registerSecretRequestTool,
   registerSetupTools,
   registerSkillTools,
+  registerSuggestionTools,
   registerToolsLoad,
   TavilySearchProvider,
 } from "@kasama/agent";
@@ -247,6 +248,8 @@ export async function startWorker(opts: WorkerOptions) {
       );
     },
   });
+  // Check-in scans leave suggestions (D-114).
+  registerSuggestionTools(tools, { db, notifications });
   // Projects (D-113): the tools start planning runs; the heartbeat lives in the minute tick.
   registerProjectTools(tools, {
     db,

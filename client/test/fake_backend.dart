@@ -205,6 +205,28 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  BotCheckins checkins = BotCheckins(enabled: false, briefTime: '08:00', scanEveryHours: 3, dailyCapUsd: 1);
+  final suggestionActions = <String>[];
+  @override
+  Future<BotCheckins> botCheckins(String botId) async => checkins;
+  @override
+  Future<BotCheckins> setBotCheckins(String botId, BotCheckins settings) async => checkins = settings;
+  @override
+  Future<ForYou> forYou(String orgId) async => ForYou(
+        briefs: [ForYouBrief(botId: botId, conversationId: convId, text: 'Today: 10:00 Standup.', createdAt: DateTime(2026, 11, 10, 8))],
+        suggestions: [
+          if (!suggestionActions.any((a) => a.endsWith(':s1')))
+            Suggestion(id: 's1', botId: botId, title: 'Reply to Ana', bodyMd: 'She asked twice.', proposedAction: null, sources: const [], urgency: SuggestionUrgencyEnum.urgent, expiresAt: DateTime(2026, 11, 12), createdAt: DateTime(2026, 11, 10)),
+        ],
+        approvals: const [],
+      );
+  @override
+  Future<AcceptedSuggestion> acceptSuggestion(String id) async {
+    suggestionActions.add('accept:$id');
+    return AcceptedSuggestion(conversationId: convId, runId: 'r-s');
+  }
+  @override
+  Future<void> dismissSuggestion(String id, {bool dontSuggestAgain = false}) async => suggestionActions.add('${dontSuggestAgain ? 'never' : 'dismiss'}:$id');
   ProjectDetail projectDetail = ProjectDetail(
     id: 'p1',
     orgId: orgId,

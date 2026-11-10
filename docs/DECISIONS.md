@@ -639,3 +639,13 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Drizzle:** the pull script now strips a list of cycle-making foreign keys from the generated schema (`projects_conversation_id_fkey` joins the earlier one).
 - **Tests:** API with a scripted model (`projects.test.ts`: planning, nothing before approval, three sessions across two milestones to done with no person, budget stop with a notification, resume), widget tests (`projects_test.dart`).
 
+## D-114 Check-ins
+
+- **Settings:** `bot_checkins` per bot (off by default; brief time, scan every 1–24 hours, default 3; daily cap, default $1), set by people who manage the bot (`PUT /v1/bots/{id}/checkins`). Briefs and suggestions go to the person who turned them on, in their timezone. Turning them on creates two routines (`routines.kind` brief and scan); turning them off disables them.
+- **Running:** check-in runs use the bot's cheap model when it has one, and skip once the day's check-in spend reaches the cap (the schedule still moves on). The brief is a normal routine with its own conversation and a routine notification. A scan keeps no conversation: its instructions (plus what's already pending or was dismissed in the last 14 days) travel as the run's task, and its routine never notifies, so a scan that finds nothing writes nothing and sends nothing.
+- **Suggestions:** `suggestions.add` stores title, body, proposed action (`{tool, args}`), sources, urgency and expiry (default 3 days) for the person, skipping repeats. Only urgent ones push, and through quiet hours (D-109), not around them. Accepting (`POST /v1/suggestions/{id}/accept`) starts a normal chat asking the bot to do it, so its tools go through the usual approvals; dismissing can pin a "don't suggest this again" memory.
+- **For you:** `GET /v1/for-you` returns the latest brief per bot (last 36 hours), pending suggestions (urgent first) and pending approvals. It's the first tab of the Inbox (`/inbox`; `?tab=0` approvals, `?tab=1` notifications as before). Pinned pages join when Pages exist (Wave 2).
+- **App:** bot settings → Check-ins (switch, brief time, scan interval, daily limit); Inbox → For you with brief cards and suggestion cards (Do it, Dismiss: just this once or don't suggest it again).
+- **Also fixed:** the Android launch background used a bare color as a drawable, which current Android tooling rejects; it's a `<color>` item now, so `flutter build apk` works again.
+- **Tests:** API with a scripted model (`checkins.test.ts`: routines created, brief on the cheap model in For you, an urgent suggestion with a notification, a quiet scan changing nothing, accept and dismiss, daily cap), widget tests (`checkins_test.dart`).
+

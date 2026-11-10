@@ -195,6 +195,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/projects.ts` (`projectHeartbeat` in the worker's minute tick, `startProjectRun`, `projects.create|plan|update|status`), `projects`/`project_milestones`, `project_id` on tickets, runs, conversations and routines, `apps/server/src/api/routes/projects.ts`, and the app's `features/projects/`.
 
+## Check-ins (D-114)
+
+- `packages/agent/src/checkins.ts` (`applyCheckins`, cap, scan context, `suggestions.add`), `routines.kind`, `bot_checkins`, `suggestions`, scan runs without a conversation in `worker/routines.ts`, `apps/server/src/api/routes/checkins.ts` (`/v1/bots/{id}/checkins`, `/v1/for-you`, accept and dismiss), and the Inbox's For you tab.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

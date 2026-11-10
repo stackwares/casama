@@ -345,6 +345,12 @@ abstract class Backend {
 
   // Task board
   Future<List<Task>> tasks(String orgId, {String? projectId});
+  // Check-ins (D-114)
+  Future<BotCheckins> botCheckins(String botId);
+  Future<BotCheckins> setBotCheckins(String botId, BotCheckins settings);
+  Future<ForYou> forYou(String orgId);
+  Future<AcceptedSuggestion> acceptSuggestion(String id);
+  Future<void> dismissSuggestion(String id, {bool dontSuggestAgain = false});
   // Projects (D-113)
   Future<List<Project>> projects(String orgId);
   Future<Project> createProject(String orgId, {required String title, required String goal, String doneCriteria, required String leadBotId, double? budgetUsd});

@@ -21,7 +21,7 @@ void main() {
   testWidgets('approvals inbox approves, denies and always-allows', (tester) async {
     await setSize(tester, const Size(500, 900));
     final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const InboxScreen()));
+    await tester.pumpWidget(harness(backend, const InboxScreen(initialTab: 0)));
     await tester.pumpAndSettle();
     expect(find.text('Approvals (1)'), findsOneWidget);
     expect(find.textContaining('Run a destructive shell command'), findsOneWidget);

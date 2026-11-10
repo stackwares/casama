@@ -1,6 +1,7 @@
 import 'package:kasama_api/src/model/abuse_event.dart';
 import 'package:kasama_api/src/model/abuse_event_list.dart';
 import 'package:kasama_api/src/model/accepted.dart';
+import 'package:kasama_api/src/model/accepted_suggestion.dart';
 import 'package:kasama_api/src/model/account_deletion.dart';
 import 'package:kasama_api/src/model/admin_org.dart';
 import 'package:kasama_api/src/model/admin_org_list.dart';
@@ -24,6 +25,7 @@ import 'package:kasama_api/src/model/billing_usage.dart';
 import 'package:kasama_api/src/model/billing_usage_item.dart';
 import 'package:kasama_api/src/model/bot.dart';
 import 'package:kasama_api/src/model/bot_budget.dart';
+import 'package:kasama_api/src/model/bot_checkins.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
 import 'package:kasama_api/src/model/bot_secret_request.dart';
 import 'package:kasama_api/src/model/bot_secret_request_list.dart';
@@ -92,8 +94,12 @@ import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
+import 'package:kasama_api/src/model/dismiss_suggestion_request.dart';
 import 'package:kasama_api/src/model/edit_message_request.dart';
 import 'package:kasama_api/src/model/file_search_result.dart';
+import 'package:kasama_api/src/model/for_you.dart';
+import 'package:kasama_api/src/model/for_you_approval.dart';
+import 'package:kasama_api/src/model/for_you_brief.dart';
 import 'package:kasama_api/src/model/fulfill_secret_request_body.dart';
 import 'package:kasama_api/src/model/git_hub_skill_preview.dart';
 import 'package:kasama_api/src/model/git_hub_skill_preview_request.dart';
@@ -206,6 +212,8 @@ import 'package:kasama_api/src/model/subrun_completed_event_payload.dart';
 import 'package:kasama_api/src/model/subrun_started_event.dart';
 import 'package:kasama_api/src/model/subrun_started_event_payload.dart';
 import 'package:kasama_api/src/model/subscription.dart';
+import 'package:kasama_api/src/model/suggestion.dart';
+import 'package:kasama_api/src/model/suggestion_proposed_action.dart';
 import 'package:kasama_api/src/model/suspend_org_request.dart';
 import 'package:kasama_api/src/model/switch_branch_request.dart';
 import 'package:kasama_api/src/model/switch_branch_response.dart';
@@ -290,6 +298,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AbuseEventList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Accepted':
           return Accepted.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AcceptedSuggestion':
+          return AcceptedSuggestion.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AccountDeletion':
           return AccountDeletion.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOrg':
@@ -342,6 +352,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Bot.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotBudget':
           return BotBudget.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotCheckins':
+          return BotCheckins.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotList':
           return BotList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotSecretRequest':
@@ -484,10 +496,18 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedId.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRoutine':
           return DeletedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DismissSuggestionRequest':
+          return DismissSuggestionRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'EditMessageRequest':
           return EditMessageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'FileSearchResult':
           return FileSearchResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ForYou':
+          return ForYou.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ForYouApproval':
+          return ForYouApproval.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ForYouBrief':
+          return ForYouBrief.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'FulfillSecretRequestBody':
           return FulfillSecretRequestBody.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GitHubSkillPreview':
@@ -748,6 +768,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SubrunStartedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Subscription':
           return Subscription.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Suggestion':
+          return Suggestion.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SuggestionProposedAction':
+          return SuggestionProposedAction.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SuspendOrgRequest':
           return SuspendOrgRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SwitchBranchRequest':

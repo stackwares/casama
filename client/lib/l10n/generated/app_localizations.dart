@@ -6483,6 +6483,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get projectCancelled;
+
+  /// No description provided for @forYou.
+  ///
+  /// In en, this message translates to:
+  /// **'For you'**
+  String get forYou;
+
+  /// No description provided for @forYouEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing for you right now'**
+  String get forYouEmpty;
+
+  /// No description provided for @forYouEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on check-ins in a bot\'s settings for a morning brief and suggestions through the day.'**
+  String get forYouEmptyHelp;
+
+  /// No description provided for @morningBriefFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning brief from {name}'**
+  String morningBriefFrom(String name);
+
+  /// No description provided for @suggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get suggestions;
+
+  /// No description provided for @suggestedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested by {name}'**
+  String suggestedBy(String name);
+
+  /// No description provided for @dismissSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss this suggestion?'**
+  String get dismissSuggestion;
+
+  /// No description provided for @justThisOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Just this once'**
+  String get justThisOnce;
+
+  /// No description provided for @dontSuggestAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t suggest it again'**
+  String get dontSuggestAgain;
+
+  /// No description provided for @doIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Do it'**
+  String get doIt;
+
+  /// No description provided for @checkins.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-ins'**
+  String get checkins;
+
+  /// No description provided for @checkinsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A morning brief and a look every few hours for things that need you. Off by default.'**
+  String get checkinsHelp;
+
+  /// No description provided for @briefTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning brief at'**
+  String get briefTime;
+
+  /// No description provided for @scanEvery.
+  ///
+  /// In en, this message translates to:
+  /// **'Look every'**
+  String get scanEvery;
+
+  /// No description provided for @hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour} other{{count} hours}}'**
+  String hours(int count);
+
+  /// No description provided for @dailyCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily limit'**
+  String get dailyCap;
+
+  /// No description provided for @on.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get on;
 }
 
 class _AppLocalizationsDelegate

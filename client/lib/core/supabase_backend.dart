@@ -878,6 +878,24 @@ class SupabaseBackend implements Backend {
   Future<List<Task>> tasks(String orgId, {String? projectId}) async => (await api.tasks.listTasks(orgId: orgId, projectId: projectId)).data!.items;
 
   @override
+  Future<BotCheckins> botCheckins(String botId) async => (await api.checkins.getBotCheckins(id: botId)).data!;
+
+  @override
+  Future<BotCheckins> setBotCheckins(String botId, BotCheckins settings) async =>
+      (await api.checkins.setBotCheckins(id: botId, botCheckins: settings)).data!;
+
+  @override
+  Future<ForYou> forYou(String orgId) async => (await api.checkins.getForYou(orgId: orgId)).data!;
+
+  @override
+  Future<AcceptedSuggestion> acceptSuggestion(String id) async => (await api.checkins.acceptSuggestion(id: id)).data!;
+
+  @override
+  Future<void> dismissSuggestion(String id, {bool dontSuggestAgain = false}) async {
+    await api.checkins.dismissSuggestion(id: id, dismissSuggestionRequest: DismissSuggestionRequest(dontSuggestAgain: dontSuggestAgain));
+  }
+
+  @override
   Future<List<Project>> projects(String orgId) async => (await api.projects.listProjects(orgId: orgId)).data!.items;
 
   @override

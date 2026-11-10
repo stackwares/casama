@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { wrapUntrusted } from "@kasama/agent";
+import { checkinCapReached, scanContext, wrapUntrusted } from "@kasama/agent";
 import type { Database } from "@kasama/db";
 import { nextRunAt } from "@kasama/domain";
 import { sql } from "drizzle-orm";
@@ -27,6 +27,19 @@ export async function createRoutineRun(
   trigger: "routine" | "webhook",
   eventText?: string,
 ) {
+  // Check-in scans (D-114) keep no conversation: a quiet scan writes nothing. Their instructions
+  // travel as the run's task, with what was already suggested.
+  if (r.kind === "scan") {
+    const task = `${r.instructions_md}${await scanContext(tx as Database, r.bot_id)}`;
+    const [run] = await tx.execute<{ id: string }>(sql`
+      insert into public.runs (org_id, bot_id, created_by, trigger, routine_id, budget)
+      values (${r.org_id}::uuid, ${r.bot_id}::uuid, ${r.created_by}::uuid, ${trigger}, ${r.id}::uuid, ${JSON.stringify({ task })}::jsonb)
+      returning id`);
+    await tx.execute(
+      sql`update public.routines set last_run_id = ${run?.id}::uuid, last_run_at = now() where id = ${r.id}::uuid`,
+    );
+    return run?.id as string;
+  }
   let conversationId = r.conversation_id;
   if (!conversationId) {
     const [conv] = await tx.execute<{ id: string }>(sql`
@@ -72,7 +85,11 @@ export async function claimDueRoutines(
       for update skip locked`);
     const runIds: string[] = [];
     for (const r of due) {
-      runIds.push(await createRoutineRun(tx, r, "routine"));
+      // Check-ins over today's cap skip this time (the schedule still moves on).
+      const capped =
+        (r.kind === "brief" || r.kind === "scan") &&
+        (await checkinCapReached(tx as Database, r.bot_id));
+      if (!capped) runIds.push(await createRoutineRun(tx, r, "routine"));
       if (r.trigger?.type === "once") {
         // A one-time routine runs once and switches itself off.
         await tx.execute(

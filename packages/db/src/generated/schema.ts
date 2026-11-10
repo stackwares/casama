@@ -851,6 +851,7 @@ export const routines = pgTable("routines", {
 	lastRunAt: timestamp("last_run_at", { withTimezone: true, mode: 'string' }),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	projectId: uuid("project_id"),
+	kind: text().default('task').notNull(),
 }, (table) => [
 	index("routines_due_idx").using("btree", table.enabled.asc().nullsLast().op("timestamptz_ops"), table.nextRunAt.asc().nullsLast().op("timestamptz_ops")),
 	index("routines_name_trgm").using("gin", table.name.asc().nullsLast().op("gin_trgm_ops")),
@@ -885,6 +886,7 @@ export const routines = pgTable("routines", {
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("routines_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 120)`),
 	check("routines_instructions_md_check", sql`(char_length(instructions_md) >= 1) AND (char_length(instructions_md) <= 20000)`),
+	check("routines_kind_check", sql`kind = ANY (ARRAY['task'::text, 'brief'::text, 'scan'::text])`),
 ]);
 
 export const creditPacks = pgTable("credit_packs", {
@@ -1758,6 +1760,83 @@ export const projectMilestones = pgTable("project_milestones", {
 	pgPolicy("project_milestones_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("project_milestones_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 120)`),
 	check("project_milestones_status_check", sql`status = ANY (ARRAY['open'::text, 'awaiting_signoff'::text, 'done'::text])`),
+]);
+
+export const botCheckins = pgTable("bot_checkins", {
+	botId: uuid("bot_id").primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	enabled: boolean().default(false).notNull(),
+	briefTime: text("brief_time").default('08:00').notNull(),
+	scanEveryHours: integer("scan_every_hours").default(3).notNull(),
+	dailyCapUsd: numeric("daily_cap_usd", { precision: 8, scale:  2 }).default('1').notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "bot_checkins_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "bot_checkins_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "bot_checkins_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("bot_checkins_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("bot_checkins_brief_time_check", sql`brief_time ~ '^([01]\d|2[0-3]):[0-5]\d$'::text`),
+	check("bot_checkins_scan_every_hours_check", sql`(scan_every_hours >= 1) AND (scan_every_hours <= 24)`),
+	check("bot_checkins_daily_cap_usd_check", sql`daily_cap_usd > (0)::numeric`),
+]);
+
+export const suggestions = pgTable("suggestions", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	runId: uuid("run_id"),
+	title: text().notNull(),
+	bodyMd: text("body_md").default("").notNull(),
+	proposedAction: jsonb("proposed_action"),
+	sources: jsonb().default([]).notNull(),
+	urgency: text().default('normal').notNull(),
+	status: text().default('pending').notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '3 days'::interval)`).notNull(),
+	resolvedAt: timestamp("resolved_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("suggestions_user_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.orgId.asc().nullsLast().op("text_ops"), table.status.asc().nullsLast().op("text_ops"), table.createdAt.desc().nullsFirst().op("text_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "suggestions_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "suggestions_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "suggestions_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "suggestions_run_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("suggestions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("suggestions_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 200)`),
+	check("suggestions_body_md_check", sql`char_length(body_md) <= 5000`),
+	check("suggestions_urgency_check", sql`urgency = ANY (ARRAY['low'::text, 'normal'::text, 'urgent'::text])`),
+	check("suggestions_status_check", sql`status = ANY (ARRAY['pending'::text, 'accepted'::text, 'dismissed'::text, 'expired'::text])`),
 ]);
 
 export const ttsCache = pgTable("tts_cache", {

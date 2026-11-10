@@ -10,6 +10,7 @@ lib/src/api/approvals_api.dart
 lib/src/api/billing_api.dart
 lib/src/api/bots_api.dart
 lib/src/api/chat_api.dart
+lib/src/api/checkins_api.dart
 lib/src/api/computers_api.dart
 lib/src/api/credentials_api.dart
 lib/src/api/integrations_api.dart
@@ -37,6 +38,7 @@ lib/src/deserialize.dart
 lib/src/model/abuse_event.dart
 lib/src/model/abuse_event_list.dart
 lib/src/model/accepted.dart
+lib/src/model/accepted_suggestion.dart
 lib/src/model/account_deletion.dart
 lib/src/model/admin_org.dart
 lib/src/model/admin_org_list.dart
@@ -62,6 +64,7 @@ lib/src/model/billing_usage.dart
 lib/src/model/billing_usage_item.dart
 lib/src/model/bot.dart
 lib/src/model/bot_budget.dart
+lib/src/model/bot_checkins.dart
 lib/src/model/bot_list.dart
 lib/src/model/bot_secret_request.dart
 lib/src/model/bot_secret_request_list.dart
@@ -132,8 +135,12 @@ lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
 lib/src/model/deleted_routine.dart
+lib/src/model/dismiss_suggestion_request.dart
 lib/src/model/edit_message_request.dart
 lib/src/model/file_search_result.dart
+lib/src/model/for_you.dart
+lib/src/model/for_you_approval.dart
+lib/src/model/for_you_brief.dart
 lib/src/model/fulfill_secret_request_body.dart
 lib/src/model/git_hub_skill_preview.dart
 lib/src/model/git_hub_skill_preview_request.dart
@@ -258,6 +265,8 @@ lib/src/model/subrun_completed_event_payload.dart
 lib/src/model/subrun_started_event.dart
 lib/src/model/subrun_started_event_payload.dart
 lib/src/model/subscription.dart
+lib/src/model/suggestion.dart
+lib/src/model/suggestion_proposed_action.dart
 lib/src/model/suspend_org_request.dart
 lib/src/model/switch_branch_request.dart
 lib/src/model/switch_branch_response.dart

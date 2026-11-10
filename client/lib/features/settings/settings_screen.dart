@@ -29,6 +29,7 @@ import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 import '../admin/admin_screen.dart';
 import '../notifications/quiet_hours.dart';
+import '../notifications/checkins_sheet.dart';
 import '../companion/companion.dart';
 import '../../ui/glow_button.dart';
 
@@ -725,6 +726,13 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                   },
                 );
               },
+            ),
+            GroupedTile(
+              key: const Key('botCheckins'),
+              icon: LucideIcons.sun,
+              title: l10n.checkins,
+              subtitle: ref.watch(botCheckinsProvider(bot.id)).value?.enabled == true ? l10n.on : l10n.off,
+              onTap: () => showCheckins(context, ref, bot.id),
             ),
             GroupedTile(
               key: const Key('botQuiet'),

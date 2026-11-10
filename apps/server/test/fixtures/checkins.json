@@ -1,0 +1,147 @@
+{
+  "name": "checkins",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 50,
+            "outputTokens": 5
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "suggested or dismissed:"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "NOTHING_NEW"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Check-in scan"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "g1",
+            "name": "suggestions__add",
+            "args": {
+              "title": "Reply to Ana about the invoice",
+              "body": "She asked twice.",
+              "action": {
+                "tool": "http.request",
+                "args": {
+                  "url": "https://mail.example/reply"
+                }
+              },
+              "sources": [
+                "mail:123"
+              ],
+              "urgency": "urgent"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "suggestions.add"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "One suggestion."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "morning brief"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Today: 10:00 Standup with the team. Reply to Ana about the invoice."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Please do this now"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "On it."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

@@ -158,7 +158,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/inbox',
-            pageBuilder: _page((_, s) => InboxScreen(initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? 0)),
+            pageBuilder: _page((_, s) => InboxScreen(initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? -1)),
           ),
           GoRoute(path: '/tasks', pageBuilder: _page((_, _) => const BoardScreen())),
           GoRoute(

@@ -147,7 +147,13 @@ interface RunInfo {
   /** Subagents: tool allowlist and time limit from the run's budget. */
   allowedTools: string[] | null;
   wallTimeMs: number | null;
-  routine: { id: string; notify: boolean; createdBy: string | null; name: string } | null;
+  routine: {
+    id: string;
+    notify: boolean;
+    createdBy: string | null;
+    name: string;
+    kind?: string;
+  } | null;
   /** A tool call forwarded from a live voice call: run only this call (D-065). */
   voiceCall: { call_id: string; name: string; arguments: Record<string, unknown> } | null;
 }
@@ -803,6 +809,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     routine_notify: boolean | null;
     routine_created_by: string | null;
     routine_name: string | null;
+    routine_kind: string | null;
     voice_call: RunInfo["voiceCall"];
     acting_user_id: string | null;
   }>(sql`
@@ -823,7 +830,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
            b.name, b.persona_md, b.autonomy, b.model_policy, b.budget as bot_budget, b.created_by as bot_owner,
            coalesce(p.timezone, po.timezone) as timezone, c.summary, c.summary_through, c.purpose,
            (select o.llm_tracing from public.organizations o where o.id = r.org_id) as llm_tracing, r.parent_run_id,
-           r.routine_id, rt.notify as routine_notify, rt.created_by as routine_created_by, rt.name as routine_name, r.voice_call
+           r.routine_id, rt.notify as routine_notify, rt.created_by as routine_created_by, rt.name as routine_name, rt.kind as routine_kind, r.voice_call
     from public.runs r
     join public.bots b on b.id = r.bot_id
     left join public.profiles p on p.user_id = r.created_by
@@ -914,7 +921,11 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     persona:
       row.purpose === "setup" ? `${row.persona_md}\n\n${SETUP_GUIDE}`.trim() : row.persona_md,
     autonomy: row.autonomy,
-    policy: row.model_policy ?? {},
+    // Check-ins (D-114) run on the bot's cheaper model when it has one.
+    policy:
+      (row.routine_kind === "brief" || row.routine_kind === "scan") && row.model_policy?.cheap
+        ? { ...row.model_policy, primary: row.model_policy.cheap }
+        : (row.model_policy ?? {}),
     timezone: row.timezone ?? "UTC",
     now: new Date().toISOString(),
     summary: row.summary ?? "",
@@ -934,6 +945,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
           notify: row.routine_notify ?? false,
           createdBy: row.routine_created_by,
           name: row.routine_name ?? "",
+          kind: row.routine_kind ?? "task",
         }
       : null,
     voiceCall: row.voice_call ?? null,

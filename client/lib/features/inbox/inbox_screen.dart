@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'for_you.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
@@ -21,7 +22,8 @@ import '../../ui/glow_button.dart';
 
 /// Approvals waiting for you, notifications, and the shared task board.
 class InboxScreen extends ConsumerWidget {
-  const InboxScreen({super.key, this.initialTab = 0});
+  /// -1: For you (D-114), 0: approvals, 1: notifications.
+  const InboxScreen({super.key, this.initialTab = -1});
   final int initialTab;
 
   @override
@@ -29,8 +31,8 @@ class InboxScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final pending = ref.watch(approvalsProvider).value?.length ?? 0;
     return DefaultTabController(
-      length: 2,
-      initialIndex: initialTab.clamp(0, 1),
+      length: 3,
+      initialIndex: (initialTab + 1).clamp(0, 2),
       child: Scaffold(
         appBar: ShellHeader(
           title: l10n.inbox,
@@ -45,6 +47,7 @@ class InboxScreen extends ConsumerWidget {
                   tabAlignment: TabAlignment.start,
                   padding: EdgeInsets.zero,
                   tabs: [
+                    Tab(key: const Key('tabForYou'), height: 40, text: l10n.forYou),
                     Tab(height: 40, text: pending == 0 ? l10n.approvals : l10n.approvalsCount(pending)),
                     Tab(height: 40, text: l10n.notifications),
                   ],
@@ -53,7 +56,7 @@ class InboxScreen extends ConsumerWidget {
             ),
           ),
         ),
-        body: const TabBarView(children: [ApprovalsList(), NotificationsList()]),
+        body: const TabBarView(children: [ForYouList(), ApprovalsList(), NotificationsList()]),
       ),
     );
   }

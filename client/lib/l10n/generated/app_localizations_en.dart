@@ -3708,4 +3708,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projectCancelled => 'Cancelled';
+
+  @override
+  String get forYou => 'For you';
+
+  @override
+  String get forYouEmpty => 'Nothing for you right now';
+
+  @override
+  String get forYouEmptyHelp =>
+      'Turn on check-ins in a bot\'s settings for a morning brief and suggestions through the day.';
+
+  @override
+  String morningBriefFrom(String name) {
+    return 'Morning brief from $name';
+  }
+
+  @override
+  String get suggestions => 'Suggestions';
+
+  @override
+  String suggestedBy(String name) {
+    return 'Suggested by $name';
+  }
+
+  @override
+  String get dismissSuggestion => 'Dismiss this suggestion?';
+
+  @override
+  String get justThisOnce => 'Just this once';
+
+  @override
+  String get dontSuggestAgain => 'Don\'t suggest it again';
+
+  @override
+  String get doIt => 'Do it';
+
+  @override
+  String get checkins => 'Check-ins';
+
+  @override
+  String get checkinsHelp =>
+      'A morning brief and a look every few hours for things that need you. Off by default.';
+
+  @override
+  String get briefTime => 'Morning brief at';
+
+  @override
+  String get scanEvery => 'Look every';
+
+  @override
+  String hours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dailyCap => 'Daily limit';
+
+  @override
+  String get on => 'On';
 }

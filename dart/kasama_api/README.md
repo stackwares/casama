@@ -100,6 +100,11 @@ Class | Method | HTTP request | Description
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
 [*ChatApi*](doc/ChatApi.md) | [**switchBranch**](doc/ChatApi.md#switchbranch) | **POST** /v1/conversations/{id}/branch | Show another branch of the conversation (its newest message under the given one)
+[*CheckinsApi*](doc/CheckinsApi.md) | [**acceptSuggestion**](doc/CheckinsApi.md#acceptsuggestion) | **POST** /v1/suggestions/{id}/accept | Have the bot do it, through normal approvals
+[*CheckinsApi*](doc/CheckinsApi.md) | [**dismissSuggestion**](doc/CheckinsApi.md#dismisssuggestion) | **POST** /v1/suggestions/{id}/dismiss | 
+[*CheckinsApi*](doc/CheckinsApi.md) | [**getBotCheckins**](doc/CheckinsApi.md#getbotcheckins) | **GET** /v1/bots/{id}/checkins | 
+[*CheckinsApi*](doc/CheckinsApi.md) | [**getForYou**](doc/CheckinsApi.md#getforyou) | **GET** /v1/for-you | Your feed in a workspace: the latest briefs, pending suggestions and approvals
+[*CheckinsApi*](doc/CheckinsApi.md) | [**setBotCheckins**](doc/CheckinsApi.md#setbotcheckins) | **PUT** /v1/bots/{id}/checkins | Turn a bot&#39;s morning brief and scans on or off, and set their times and daily cap
 [*ComputersApi*](doc/ComputersApi.md) | [**computerScreenshot**](doc/ComputersApi.md#computerscreenshot) | **GET** /v1/computers/{id}/screenshot | PNG of the desktop, or of the bot&#39;s browser page on headless computers
 [*ComputersApi*](doc/ComputersApi.md) | [**computerStream**](doc/ComputersApi.md#computerstream) | **GET** /v1/computers/{id}/stream | WebSocket live-view signaling (Neko protocol). Authenticated by the stream-session token; input is accepted only in control mode while you hold the lease.
 [*ComputersApi*](doc/ComputersApi.md) | [**computerTerminal**](doc/ComputersApi.md#computerterminal) | **GET** /v1/computers/{id}/terminal | WebSocket terminal. Binary frames carry terminal bytes both ways. Browsers may pass the access token as ?access_token&#x3D;.
@@ -218,6 +223,7 @@ Class | Method | HTTP request | Description
  - [AbuseEvent](doc/AbuseEvent.md)
  - [AbuseEventList](doc/AbuseEventList.md)
  - [Accepted](doc/Accepted.md)
+ - [AcceptedSuggestion](doc/AcceptedSuggestion.md)
  - [AccountDeletion](doc/AccountDeletion.md)
  - [AdminOrg](doc/AdminOrg.md)
  - [AdminOrgList](doc/AdminOrgList.md)
@@ -243,6 +249,7 @@ Class | Method | HTTP request | Description
  - [BillingUsageItem](doc/BillingUsageItem.md)
  - [Bot](doc/Bot.md)
  - [BotBudget](doc/BotBudget.md)
+ - [BotCheckins](doc/BotCheckins.md)
  - [BotList](doc/BotList.md)
  - [BotSecretRequest](doc/BotSecretRequest.md)
  - [BotSecretRequestList](doc/BotSecretRequestList.md)
@@ -313,8 +320,12 @@ Class | Method | HTTP request | Description
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
+ - [DismissSuggestionRequest](doc/DismissSuggestionRequest.md)
  - [EditMessageRequest](doc/EditMessageRequest.md)
  - [FileSearchResult](doc/FileSearchResult.md)
+ - [ForYou](doc/ForYou.md)
+ - [ForYouApproval](doc/ForYouApproval.md)
+ - [ForYouBrief](doc/ForYouBrief.md)
  - [FulfillSecretRequestBody](doc/FulfillSecretRequestBody.md)
  - [GitHubSkillPreview](doc/GitHubSkillPreview.md)
  - [GitHubSkillPreviewRequest](doc/GitHubSkillPreviewRequest.md)
@@ -439,6 +450,8 @@ Class | Method | HTTP request | Description
  - [SubrunStartedEvent](doc/SubrunStartedEvent.md)
  - [SubrunStartedEventPayload](doc/SubrunStartedEventPayload.md)
  - [Subscription](doc/Subscription.md)
+ - [Suggestion](doc/Suggestion.md)
+ - [SuggestionProposedAction](doc/SuggestionProposedAction.md)
  - [SuspendOrgRequest](doc/SuspendOrgRequest.md)
  - [SwitchBranchRequest](doc/SwitchBranchRequest.md)
  - [SwitchBranchResponse](doc/SwitchBranchResponse.md)

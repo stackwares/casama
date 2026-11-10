@@ -1,5 +1,6 @@
 export * from "./acting.ts";
 export * from "./chatgpt-auth.ts";
+export * from "./checkins.ts";
 export * from "./computers.ts";
 export * from "./context.ts";
 export * from "./credentials.ts";
