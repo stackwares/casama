@@ -7983,6 +7983,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kasama reads your inbox through Composio\'s Google sign-in for now. You can disconnect any time.'**
   String get connectManagedHelp;
+
+  /// No description provided for @sharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing'**
+  String get sharing;
+
+  /// No description provided for @sharingRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can chat with, edit or manage it'**
+  String get sharingRow;
+
+  /// No description provided for @sharingHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone in the workspace can chat with a bot unless you make it private. People you add can chat, edit its settings, or also manage who has access. A bot working for someone only uses their own personal computer and connections.'**
+  String get sharingHelp;
+
+  /// No description provided for @sharingPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get sharingPrivate;
+
+  /// No description provided for @sharingPrivateOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you and the people below can see it'**
+  String get sharingPrivateOn;
+
+  /// No description provided for @sharingPrivateOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone in the workspace can chat with it'**
+  String get sharingPrivateOff;
+
+  /// No description provided for @sharingPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get sharingPeople;
+
+  /// No description provided for @sharingOnlyCreator.
+  ///
+  /// In en, this message translates to:
+  /// **'Only its creator'**
+  String get sharingOnlyCreator;
+
+  /// No description provided for @sharingEveryoneChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone can chat; add people who should edit it'**
+  String get sharingEveryoneChats;
+
+  /// No description provided for @sharingEveryoneRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone who is {role}'**
+  String sharingEveryoneRole(String role);
+
+  /// No description provided for @accessChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Can chat'**
+  String get accessChat;
+
+  /// No description provided for @accessEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Can edit'**
+  String get accessEdit;
+
+  /// No description provided for @accessAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Can manage'**
+  String get accessAdmin;
+
+  /// No description provided for @sharingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing saved'**
+  String get sharingSaved;
 }
 
 class _AppLocalizationsDelegate

@@ -10,6 +10,7 @@ import 'package:kasama_api/src/deserialize.dart';
 import 'package:dio/dio.dart';
 
 import 'package:kasama_api/src/model/bot.dart';
+import 'package:kasama_api/src/model/bot_access.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
 import 'package:kasama_api/src/model/bot_share_link.dart';
 import 'package:kasama_api/src/model/bot_template_file.dart';
@@ -17,6 +18,7 @@ import 'package:kasama_api/src/model/create_bot_request.dart';
 import 'package:kasama_api/src/model/create_bot_share_request.dart';
 import 'package:kasama_api/src/model/import_bot_request.dart';
 import 'package:kasama_api/src/model/import_bot_response.dart';
+import 'package:kasama_api/src/model/set_bot_access_request.dart';
 import 'package:kasama_api/src/model/start_setup_response.dart';
 import 'package:kasama_api/src/model/start_welcome_request.dart';
 import 'package:kasama_api/src/model/template_list.dart';
@@ -299,6 +301,84 @@ _responseData = rawData == null ? null : deserialize<BotTemplateFile, BotTemplat
     }
 
     return Response<BotTemplateFile>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Who can chat with, edit or administer this bot (D-131)
+  /// 
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [BotAccess] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<BotAccess>> getBotAccess({ 
+    required String id,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/bots/{id}/access'.replaceAll('{' r'id' '}', id.toString());
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    BotAccess? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<BotAccess, BotAccess>(rawData, 'BotAccess', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<BotAccess>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -635,6 +715,104 @@ _responseData = rawData == null ? null : deserialize<TemplateList, TemplateList>
     }
 
     return Response<TemplateList>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Replace the bot&#39;s visibility and access list
+  /// 
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [setBotAccessRequest] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [BotAccess] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<BotAccess>> setBotAccess({ 
+    required String id,
+    required SetBotAccessRequest setBotAccessRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/bots/{id}/access'.replaceAll('{' r'id' '}', id.toString());
+    final _options = Options(
+      method: r'PUT',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+_bodyData=jsonEncode(setBotAccessRequest);
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    BotAccess? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<BotAccess, BotAccess>(rawData, 'BotAccess', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<BotAccess>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

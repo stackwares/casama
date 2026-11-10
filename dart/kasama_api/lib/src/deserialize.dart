@@ -33,6 +33,8 @@ import 'package:kasama_api/src/model/billing_summary.dart';
 import 'package:kasama_api/src/model/billing_usage.dart';
 import 'package:kasama_api/src/model/billing_usage_item.dart';
 import 'package:kasama_api/src/model/bot.dart';
+import 'package:kasama_api/src/model/bot_access.dart';
+import 'package:kasama_api/src/model/bot_access_entry.dart';
 import 'package:kasama_api/src/model/bot_budget.dart';
 import 'package:kasama_api/src/model/bot_checkins.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
@@ -270,6 +272,8 @@ import 'package:kasama_api/src/model/secret_resolved_event.dart';
 import 'package:kasama_api/src/model/secret_resolved_event_payload.dart';
 import 'package:kasama_api/src/model/send_message_request.dart';
 import 'package:kasama_api/src/model/send_message_response.dart';
+import 'package:kasama_api/src/model/set_bot_access_request.dart';
+import 'package:kasama_api/src/model/set_bot_access_request_entries_inner.dart';
 import 'package:kasama_api/src/model/set_git_sync_request.dart';
 import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
@@ -371,6 +375,8 @@ import 'package:kasama_api/src/model/workspace_badge_list.dart';
 import 'package:kasama_api/src/model/workspace_files_export.dart';
 import 'package:kasama_api/src/model/workspace_files_export_files_inner.dart';
 import 'package:kasama_api/src/model/workspace_files_result.dart';
+import 'package:kasama_api/src/model/workspace_member.dart';
+import 'package:kasama_api/src/model/workspace_member_list.dart';
 import 'package:kasama_api/src/model/write_agent_import_files_request.dart';
 import 'package:kasama_api/src/model/write_agent_import_files_response.dart';
 
@@ -468,6 +474,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BillingUsageItem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Bot':
           return Bot.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotAccess':
+          return BotAccess.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotAccessEntry':
+          return BotAccessEntry.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotBudget':
           return BotBudget.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotCheckins':
@@ -981,6 +991,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SendMessageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SendMessageResponse':
           return SendMessageResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetBotAccessRequest':
+          return SetBotAccessRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetBotAccessRequestEntriesInner':
+          return SetBotAccessRequestEntriesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetGitSyncRequest':
           return SetGitSyncRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetLocalMcpServersRequest':
@@ -1195,6 +1209,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return WorkspaceFilesExportFilesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WorkspaceFilesResult':
           return WorkspaceFilesResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WorkspaceMember':
+          return WorkspaceMember.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WorkspaceMemberList':
+          return WorkspaceMemberList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WriteAgentImportFilesRequest':
           return WriteAgentImportFilesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WriteAgentImportFilesResponse':

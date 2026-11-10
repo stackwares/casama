@@ -9,6 +9,7 @@ import '../features/bots/action_rules_screen.dart';
 import '../features/bots/knowledge_screen.dart';
 import '../features/bots/plugins_screen.dart';
 import '../features/bots/replays_screen.dart';
+import '../features/bots/sharing_screen.dart';
 import '../features/bots/watchers_screen.dart';
 import '../features/search/search_view.dart';
 import '../features/groups/group_chats.dart';
@@ -140,6 +141,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ':botId/settings',
                 pageBuilder: _page((_, s) => BotSettingsScreen(botId: s.pathParameters['botId']!)),
+              ),
+              GoRoute(
+                path: ':botId/sharing',
+                pageBuilder: _page((_, s) => SharingScreen(botId: s.pathParameters['botId']!)),
               ),
               GoRoute(
                 path: ':botId/replays',

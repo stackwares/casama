@@ -94,10 +94,12 @@ Class | Method | HTTP request | Description
 [*BotsApi*](doc/BotsApi.md) | [**createBot**](doc/BotsApi.md#createbot) | **POST** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**createBotShare**](doc/BotsApi.md#createbotshare) | **POST** /v1/bots/{id}/share | Make a share link for a bot template (a snapshot; anyone signed in with the link can import it)
 [*BotsApi*](doc/BotsApi.md) | [**exportBot**](doc/BotsApi.md#exportbot) | **GET** /v1/bots/{id}/export | A bot as a shareable template file (no secrets; memories only when asked)
+[*BotsApi*](doc/BotsApi.md) | [**getBotAccess**](doc/BotsApi.md#getbotaccess) | **GET** /v1/bots/{id}/access | Who can chat with, edit or administer this bot (D-131)
 [*BotsApi*](doc/BotsApi.md) | [**getBotShare**](doc/BotsApi.md#getbotshare) | **GET** /v1/bot-shares/{token} | Read a shared bot template, to preview before importing
 [*BotsApi*](doc/BotsApi.md) | [**importBot**](doc/BotsApi.md#importbot) | **POST** /v1/bots/import | Create a bot from a template file
 [*BotsApi*](doc/BotsApi.md) | [**listBots**](doc/BotsApi.md#listbots) | **GET** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listTemplates**](doc/BotsApi.md#listtemplates) | **GET** /v1/templates | 
+[*BotsApi*](doc/BotsApi.md) | [**setBotAccess**](doc/BotsApi.md#setbotaccess) | **PUT** /v1/bots/{id}/access | Replace the bot&#39;s visibility and access list
 [*BotsApi*](doc/BotsApi.md) | [**startBotSetup**](doc/BotsApi.md#startbotsetup) | **POST** /v1/bots/{id}/setup | Start (or rerun) the bot&#39;s setup interview in a new conversation
 [*BotsApi*](doc/BotsApi.md) | [**startWelcome**](doc/BotsApi.md#startwelcome) | **POST** /v1/welcome | A new person&#39;s personal workspace, bot and welcome chat (D-129); the same chat again if it exists
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
@@ -273,6 +275,7 @@ Class | Method | HTTP request | Description
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createOrg**](doc/WorkspacesApi.md#createorg) | **POST** /v1/orgs | Create an organization; the caller becomes its owner
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**getMe**](doc/WorkspacesApi.md#getme) | **GET** /v1/me | The signed-in user and their organizations
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**listInviteLinks**](doc/WorkspacesApi.md#listinvitelinks) | **GET** /v1/orgs/{id}/invite-links | 
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**listMembers**](doc/WorkspacesApi.md#listmembers) | **GET** /v1/orgs/{id}/members | The people in a workspace
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**listOrgs**](doc/WorkspacesApi.md#listorgs) | **GET** /v1/orgs | 
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**revokeInviteLink**](doc/WorkspacesApi.md#revokeinvitelink) | **DELETE** /v1/orgs/{id}/invite-links/{link_id} | 
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**updateOrg**](doc/WorkspacesApi.md#updateorg) | **PATCH** /v1/orgs/{id} | Rename a workspace or change its icon and color (admins)
@@ -318,6 +321,8 @@ Class | Method | HTTP request | Description
  - [BillingUsage](doc/BillingUsage.md)
  - [BillingUsageItem](doc/BillingUsageItem.md)
  - [Bot](doc/Bot.md)
+ - [BotAccess](doc/BotAccess.md)
+ - [BotAccessEntry](doc/BotAccessEntry.md)
  - [BotBudget](doc/BotBudget.md)
  - [BotCheckins](doc/BotCheckins.md)
  - [BotList](doc/BotList.md)
@@ -568,6 +573,8 @@ Class | Method | HTTP request | Description
  - [SecretResolvedEventPayload](doc/SecretResolvedEventPayload.md)
  - [SendMessageRequest](doc/SendMessageRequest.md)
  - [SendMessageResponse](doc/SendMessageResponse.md)
+ - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
+ - [SetBotAccessRequestEntriesInner](doc/SetBotAccessRequestEntriesInner.md)
  - [SetGitSyncRequest](doc/SetGitSyncRequest.md)
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
@@ -673,6 +680,8 @@ Class | Method | HTTP request | Description
  - [WorkspaceFilesExport](doc/WorkspaceFilesExport.md)
  - [WorkspaceFilesExportFilesInner](doc/WorkspaceFilesExportFilesInner.md)
  - [WorkspaceFilesResult](doc/WorkspaceFilesResult.md)
+ - [WorkspaceMember](doc/WorkspaceMember.md)
+ - [WorkspaceMemberList](doc/WorkspaceMemberList.md)
  - [WriteAgentImportFilesRequest](doc/WriteAgentImportFilesRequest.md)
  - [WriteAgentImportFilesResponse](doc/WriteAgentImportFilesResponse.md)
 

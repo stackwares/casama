@@ -958,3 +958,22 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - **Self-hosted servers** keep their own Google client for it.
   - The connect sheet shows "Sign in through Composio" with a short explanation. The catch-up only reads email when the inbox is connected.
 - **Tests:** `google-permissions.test.ts` checks the scope list, the Cloud catalog with and without a Composio key, and a managed connect against a fake Composio. The existing apps tests still pass.
+
+## D-131 Bot sharing
+
+- **Access list:** `bot_access` grants a bot to one person or one role, with `chat`, `edit` or `admin` access. A role grant covers people with that role or higher.
+  - The workspace default stays: a `team` bot is chat-for-everyone.
+  - A `private` bot is visible only to its creator and the people or roles listed. The bots select policy and `can_access_bot` both count grants (`bot_grant`, which reads only `bot_access` and memberships, so policies never loop).
+  - `can_manage_bot` now also allows `edit` and `admin` grants.
+  - The new `can_admin_bot` decides who may change sharing: the creator, workspace admins, or an `admin` grant.
+- **API and app:**
+  - `GET` and `PUT /v1/bots/{id}/access` show and replace the visibility and list. Only workspace members can be listed, and every change is audited. Responses include the caller's own access.
+  - `GET /v1/orgs/{id}/members` feeds the picker.
+  - Bot settings → Sharing: a private switch, people with their access, add members, save.
+- **A bot acting for someone uses only what that person can use:**
+  - Local MCP servers on a person's own computer are offered only in runs acting for that person (D-091's acting user).
+  - A bot whose computer is someone's personal computer refuses computer tools in other people's runs ("only they can use it from their own chats").
+  - Personal password managers already worked this way (D-128). Knowledge sources belong to the bot or the workspace, so everyone with the bot shares them.
+- **Tests:**
+  - API (`bot-sharing.test.ts`): a private bot is invisible until a person is listed; chat, edit and admin access, checked with `can_manage_bot` as the user; only admins change sharing; outsiders refused; role grants; back to team.
+  - widget (`sharing_test.dart`).

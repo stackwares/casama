@@ -355,10 +355,10 @@ export const bots = pgTable("bots", {
 			name: "bots_folder_id_fkey"
 		}).onDelete("set null"),
 	pgPolicy("bots_update", { as: "permissive", for: "update", to: ["authenticated"], using: sql`can_manage_bot(id)`, withCheck: sql`is_member(org_id)`  }),
-	pgPolicy("bots_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	pgPolicy("bots_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("bots_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("bots_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("bots_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 80)`),
 	check("bots_persona_md_check", sql`char_length(persona_md) <= 20000`),
 	check("bots_status_check", sql`status = ANY (ARRAY['idle'::text, 'working'::text, 'waiting'::text, 'disabled'::text])`),
@@ -2572,6 +2572,44 @@ export const passwordManagers = pgTable("password_managers", {
 	check("password_managers_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 100)`),
 	check("password_managers_url_check", sql`(char_length(url) >= 1) AND (char_length(url) <= 500)`),
 	check("password_managers_status_check", sql`status = ANY (ARRAY['ok'::text, 'error'::text])`),
+]);
+
+export const botAccess = pgTable("bot_access", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	botId: uuid("bot_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	userId: uuid("user_id"),
+	role: orgRole(),
+	access: text().notNull(),
+	createdBy: uuid("created_by"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	uniqueIndex("bot_access_role_idx").using("btree", table.botId.asc().nullsLast().op("uuid_ops"), table.role.asc().nullsLast().op("enum_ops")).where(sql`(role IS NOT NULL)`),
+	uniqueIndex("bot_access_user_idx").using("btree", table.botId.asc().nullsLast().op("uuid_ops"), table.userId.asc().nullsLast().op("uuid_ops")).where(sql`(user_id IS NOT NULL)`),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "bot_access_created_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "bot_access_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "bot_access_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "bot_access_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("bot_access_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("bot_access_access_check", sql`access = ANY (ARRAY['chat'::text, 'edit'::text, 'admin'::text])`),
+	check("bot_access_check", sql`(user_id IS NULL) <> (role IS NULL)`),
 ]);
 
 export const agentImportFiles = pgTable("agent_import_files", {

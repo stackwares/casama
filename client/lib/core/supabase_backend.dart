@@ -914,6 +914,16 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<BotAccess> botAccess(String botId) async => (await api.bots.getBotAccess(id: botId)).data!;
+
+  @override
+  Future<BotAccess> setBotAccess(String botId, SetBotAccessRequest request) async =>
+      (await api.bots.setBotAccess(id: botId, setBotAccessRequest: request)).data!;
+
+  @override
+  Future<List<WorkspaceMember>> members(String orgId) async => (await api.workspaces.listMembers(id: orgId)).data!.items;
+
+  @override
   Future<WelcomeChat> startWelcome({String? firstName}) async =>
       (await api.bots.startWelcome(startWelcomeRequest: StartWelcomeRequest(firstName: firstName))).data!;
 

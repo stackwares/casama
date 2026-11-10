@@ -1450,6 +1450,17 @@ async function toolStep(
         throw new ToolError("no_computer", "This bot has no computer available.");
       if (!computer) {
         const row = await deps.computers.forBot(info.botId);
+        // Bot sharing (D-131): a personal computer only works for its owner's own runs.
+        if (row.kind === "local") {
+          const [dev] = await deps.db.execute<{ user_id: string }>(
+            sql`select user_id from public.local_devices where computer_id = ${row.id}::uuid limit 1`,
+          );
+          if (dev && dev.user_id !== info.actingUserId)
+            throw new ToolError(
+              "not_your_computer",
+              "This bot works on someone else's personal computer, which only they can use from their own chats.",
+            );
+        }
         const h = await deps.computers.ensureRunning(row.id, emit);
         // Tell a personal computer which bot is acting, so its overlay can show it (D-066).
         const activity = {
@@ -2152,7 +2163,10 @@ async function loadIntegrationTools(
   }>(sql`
     select i.id, i.kind, i.name, i.tools_cache, i.tools_cached_at, i.risk_overrides, bi.tool_allowlist
     from public.bot_integrations bi join public.integrations i on i.id = bi.integration_id
-    where bi.bot_id = ${info.botId}::uuid and (i.status <> 'error' or i.kind = 'local_mcp')`);
+    where bi.bot_id = ${info.botId}::uuid and (i.status <> 'error' or i.kind = 'local_mcp')
+      -- Bot sharing (D-131): a person's own computer's servers only in runs acting for them.
+      and (i.kind <> 'local_mcp' or coalesce(i.config ->> 'owner_user_id', '') = ''
+        or i.config ->> 'owner_user_id' = ${info.actingUserId ?? ""})`);
   const out: IntegrationToolSpec[] = [];
   for (const row of rows) {
     let tools = row.tools_cache ?? [];

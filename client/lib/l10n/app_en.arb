@@ -2217,5 +2217,20 @@
   "tryAgain": "Try again",
   "inviteLinkCopied": "Invite link copied. Send it to the people you work with.",
   "connectManaged": "Sign in through Composio",
-  "connectManagedHelp": "Kasama reads your inbox through Composio's Google sign-in for now. You can disconnect any time."
+  "connectManagedHelp": "Kasama reads your inbox through Composio's Google sign-in for now. You can disconnect any time.",
+  "sharing": "Sharing",
+  "sharingRow": "Who can chat with, edit or manage it",
+  "sharingHelp": "Everyone in the workspace can chat with a bot unless you make it private. People you add can chat, edit its settings, or also manage who has access. A bot working for someone only uses their own personal computer and connections.",
+  "sharingPrivate": "Private",
+  "sharingPrivateOn": "Only you and the people below can see it",
+  "sharingPrivateOff": "Everyone in the workspace can chat with it",
+  "sharingPeople": "People",
+  "sharingOnlyCreator": "Only its creator",
+  "sharingEveryoneChats": "Everyone can chat; add people who should edit it",
+  "sharingEveryoneRole": "Everyone who is {role}",
+  "@sharingEveryoneRole": {"placeholders": {"role": {"type": "String"}}},
+  "accessChat": "Can chat",
+  "accessEdit": "Can edit",
+  "accessAdmin": "Can manage",
+  "sharingSaved": "Sharing saved"
 }

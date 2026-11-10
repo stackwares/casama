@@ -569,6 +569,28 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  // Bot sharing (D-131)
+  SetBotAccessRequest? savedAccess;
+  @override
+  Future<BotAccess> botAccess(String botId) async => BotAccess(
+        visibility: BotAccessVisibilityEnum.private,
+        createdBy: 'me',
+        entries: [BotAccessEntry(userId: 'u-ana', email: 'ana@acme.test', role: null, access: BotAccessEntryAccessEnum.chat)],
+        canAdmin: true,
+        yourAccess: BotAccessYourAccessEnum.admin,
+      );
+  @override
+  Future<BotAccess> setBotAccess(String botId, SetBotAccessRequest request) async {
+    savedAccess = request;
+    return botAccess(botId);
+  }
+  @override
+  Future<List<WorkspaceMember>> members(String orgId) async => [
+        WorkspaceMember(userId: 'me', email: 'me@acme.test', role: WorkspaceMemberRoleEnum.owner),
+        WorkspaceMember(userId: 'u-ana', email: 'ana@acme.test', role: WorkspaceMemberRoleEnum.member),
+        WorkspaceMember(userId: 'u-ben', email: 'ben@acme.test', role: WorkspaceMemberRoleEnum.member),
+      ];
+
   // Welcome chat (D-129)
   var welcomeCalls = 0;
   @override

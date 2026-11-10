@@ -255,6 +255,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/welcome.ts` (scripted cards, `handleWelcomeAction` from the send route, `afterWelcomeRun` in the run loop, `startWelcome`), `conversations.welcome` and purpose `welcome`, `POST /v1/welcome`, the app's `/welcome` screen and `local_actions.dart` (`app:*` card actions); the Google catalog split (`gmail` send, `gmail_inbox` restricted) with `catalogFor` and Composio managed sign-in in `routes/apps.ts`.
 
+## Bot sharing (D-131)
+
+- `bot_access` with `bot_grant`, the updated `can_access_bot`/`can_manage_bot`, `can_admin_bot` and bots select policy; acting-user limits for personal computers and local MCP servers in `run.ts`; `apps/server/src/api/routes/bot-sharing.ts` (access, members), and the bot's Sharing screen.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

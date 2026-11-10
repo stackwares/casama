@@ -83,6 +83,8 @@ lib/src/model/billing_summary.dart
 lib/src/model/billing_usage.dart
 lib/src/model/billing_usage_item.dart
 lib/src/model/bot.dart
+lib/src/model/bot_access.dart
+lib/src/model/bot_access_entry.dart
 lib/src/model/bot_budget.dart
 lib/src/model/bot_checkins.dart
 lib/src/model/bot_list.dart
@@ -333,6 +335,8 @@ lib/src/model/secret_resolved_event.dart
 lib/src/model/secret_resolved_event_payload.dart
 lib/src/model/send_message_request.dart
 lib/src/model/send_message_response.dart
+lib/src/model/set_bot_access_request.dart
+lib/src/model/set_bot_access_request_entries_inner.dart
 lib/src/model/set_git_sync_request.dart
 lib/src/model/set_local_mcp_servers_request.dart
 lib/src/model/set_org_limits_request.dart
@@ -438,6 +442,8 @@ lib/src/model/workspace_badge_list.dart
 lib/src/model/workspace_files_export.dart
 lib/src/model/workspace_files_export_files_inner.dart
 lib/src/model/workspace_files_result.dart
+lib/src/model/workspace_member.dart
+lib/src/model/workspace_member_list.dart
 lib/src/model/write_agent_import_files_request.dart
 lib/src/model/write_agent_import_files_response.dart
 pubspec.yaml

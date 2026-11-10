@@ -4675,4 +4675,50 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get connectManagedHelp =>
       'Kasama reads your inbox through Composio\'s Google sign-in for now. You can disconnect any time.';
+
+  @override
+  String get sharing => 'Sharing';
+
+  @override
+  String get sharingRow => 'Who can chat with, edit or manage it';
+
+  @override
+  String get sharingHelp =>
+      'Everyone in the workspace can chat with a bot unless you make it private. People you add can chat, edit its settings, or also manage who has access. A bot working for someone only uses their own personal computer and connections.';
+
+  @override
+  String get sharingPrivate => 'Private';
+
+  @override
+  String get sharingPrivateOn => 'Only you and the people below can see it';
+
+  @override
+  String get sharingPrivateOff => 'Everyone in the workspace can chat with it';
+
+  @override
+  String get sharingPeople => 'People';
+
+  @override
+  String get sharingOnlyCreator => 'Only its creator';
+
+  @override
+  String get sharingEveryoneChats =>
+      'Everyone can chat; add people who should edit it';
+
+  @override
+  String sharingEveryoneRole(String role) {
+    return 'Everyone who is $role';
+  }
+
+  @override
+  String get accessChat => 'Can chat';
+
+  @override
+  String get accessEdit => 'Can edit';
+
+  @override
+  String get accessAdmin => 'Can manage';
+
+  @override
+  String get sharingSaved => 'Sharing saved';
 }

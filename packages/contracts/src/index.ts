@@ -22,6 +22,7 @@ export { routes } from "./routes/index.ts";
 export * from "./voice.ts";
 export * from "./agent-import.ts";
 export * from "./knowledge.ts";
+export * from "./bot-sharing.ts";
 export * from "./pages.ts";
 export * from "./password-managers.ts";
 export * from "./replays.ts";

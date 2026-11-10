@@ -728,6 +728,13 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
               },
             ),
             GroupedTile(
+              key: const Key('botSharing'),
+              icon: LucideIcons.users,
+              title: l10n.sharing,
+              subtitle: l10n.sharingRow,
+              onTap: () => context.push('/bots/${bot.id}/sharing'),
+            ),
+            GroupedTile(
               key: const Key('botReplays'),
               icon: LucideIcons.listVideo,
               title: l10n.replays,
