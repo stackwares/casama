@@ -885,7 +885,7 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 | Check-ins              | Opt-in morning brief, scans of connected accounts every few hours, and a "For you" feed of suggested actions                                                        | The 08:00 brief lists today's meetings and emails needing replies; accepting a suggestion runs it through approvals; a quiet scan sends no push | 1    |
 | Action rules           | Per-action autonomy: allow, allow within limits, ask, or hand off, by tool, category or target                                                                     | Email to the user's domain sends without approval and external email waits; a bot cannot change its own rules                       | 1    |
 | Watchers               | "Tell me when": wake a bot when a page changes, a reply arrives, a query result changes or a time passes                                                           | A page watcher fires within one check interval of a change, and unchanged checks use no model tokens                                | 1    |
-| MCP server             | Kasama as an MCP server, so other AI apps and coding tools can hand tasks to Kasama bots                                                                           | An MCP client sends a task to a bot and gets the result; a high-risk step waits for approval in the Kasama app                      | 1    |
+| Hosted MCP endpoint    | The existing `@kasama/mcp` tools (D-077) served over HTTP at `/mcp`, so AI apps connect by URL with no install                                                     | A remote MCP client connects by URL with OAuth, sends a task to a bot and gets the result; a high-risk step waits for approval      | 1    |
 | Group chats            | 2 to 10 bots in one chat, woken by `@Name` or `@everyone`                                                                                                          | `@everyone` gets a plan from the lead bot and work from each assigned bot; `@Name` wakes only that bot                              | 2    |
 | Pages                  | Full-screen dashboards and reports with public links, PDF export and refresh by routine                                                                            | A public link shows the page signed out and returns 404 once revoked; a routine refreshes it                                        | 2    |
 | Teach by showing       | Record a task on the bot's computer and turn it into a skill                                                                                                       | After one recorded demo, the bot completes the same form with new values; no typed password is stored                               | 2    |
@@ -1026,10 +1026,10 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - `watchers` (bot\_id, kind page\_change, reply, query or time, target, condition\_md, check\_every, expires\_at, what to run on a match, last\_value\_hash). Page watchers fetch through the egress proxy, or in the bot's browser for signed-in pages, and compare a chosen part of the page. Reply watchers listen to connected email, chat and ticket events; query watchers rerun an MCP or API call and compare the result.
 - Checks run in the worker without a model; only a match wakes the bot, with the change. "Tell me when…" in chat creates one through `watchers.create`, and the bot's screen lists active watchers with pause and delete.
 
-### Kasama as an MCP server
+### Hosted MCP endpoint
 
-- A Streamable HTTP MCP endpoint at `/mcp`, authenticated with workspace API keys or OAuth. Tools: list bots, send a task to a bot (starts a run and returns its id), get a run's status and result, and list pending approvals.
-- Runs started this way keep the bot's approvals, rules and budgets; approvals are still answered in the Kasama apps. The docs give copy-paste client configs.
+- `@kasama/mcp` (D-077) already gives local MCP clients the tools `list_workspaces`, `list_bots`, `ask_bot`, `get_run`, `list_approvals` and `decide_approval` over stdio. The API now also serves the same tools over Streamable HTTP at `/mcp`, sharing one tool implementation, so web and mobile AI apps that only take a URL can connect.
+- Auth is OAuth (the MCP authorization flow, with dynamic client registration) or a workspace API key. Runs keep the bot's approvals, rules and budgets, and `decide_approval` over MCP is off unless the workspace allows it. The docs give copy-paste client configs.
 
 ### Group chats
 
@@ -1309,7 +1309,7 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 
 Build these only after v1 launch unless the product owner reprioritizes. Designs and acceptance criteria are in the Post-v1 roadmap; each wave's gate is that every acceptance criterion in its rows passes.
 
-- [ ] Wave 1: local MCP servers, coding agents, ticket board, spaces, bots that manage bots, ask for a secret, sign-in codes for bots, search, skills library, setup interview and starter bots, lazy tool loading, run tracing, app polish, projects, check-ins, action rules, watchers, MCP server
+- [ ] Wave 1: local MCP servers, coding agents, ticket board, spaces, bots that manage bots, ask for a secret, sign-in codes for bots, search, skills library, setup interview and starter bots, lazy tool loading, run tracing, app polish, projects, check-ins, action rules, watchers, hosted MCP endpoint
 - [ ] Wave 2: group chats, pages, teach by showing, plugins, import an agent, routines and skills as files, knowledge sources, public bots, your own browser, meeting bots, self-improving skills, step replay, password managers, bot sharing
 - [ ] Wave 3: channel adapters in this order: Telegram, email (Resend), SMS (Twilio), Slack, WhatsApp, Messenger, iMessage, Feishu, each with sender allowlists, plus email and chat triggers for routines
 - [ ] Channel gate: a Telegram message and an email each get replies in the same thread; unknown senders are ignored
