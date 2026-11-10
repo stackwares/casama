@@ -216,7 +216,9 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     try {
       await withUserSession(db, claims, (tx) =>
         tx.execute(
-          sql`select public.decide_approval(${id}::uuid, ${decision}, ${always_allow ?? false})`,
+          // Payments always ask (D-142): they can't be "always allowed".
+          sql`select public.decide_approval(${id}::uuid, ${decision}, ${always_allow ?? false} and not exists (
+                select 1 from public.approvals where id = ${id}::uuid and tool_name = any(array['payments.request'])))`,
         ),
       );
       [row] = await db.select().from(approvals).where(eq(approvals.id, id));

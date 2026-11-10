@@ -106,6 +106,7 @@ import {
 import { ticketAfterRun, ticketStarted } from "./tickets.ts";
 import { type ToolDefinition, ToolError, ToolRegistry } from "./tools/registry.ts";
 import { contentKeys } from "@kasama/db";
+import { hasCardPlaceholders, resolveCardPlaceholders } from "./payments.ts";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
 export type StepRunner = <T>(name: string, fn: () => Promise<T>) => Promise<T>;
@@ -120,6 +121,8 @@ export interface RunDeps {
   embedderFor: (orgId: string) => Promise<Embedder | null>;
   /** The workspace's memory store (D-137); defaults to the built-in Postgres store or its configured backend. */
   memoryFor?: (orgId: string) => Promise<import("./memory-store.ts").MemoryStore>;
+  /** Payments (D-142): resolves {{card:...}} placeholders. */
+  payments?: import("./payments.ts").PaymentDeps;
   /** Computers (Phase 2). Without it, computer tools are not offered. */
   computers?: ComputerService;
   step: StepRunner;
@@ -1518,6 +1521,11 @@ async function toolStep(
         throw err;
       }
     }
+    // Single-use payment cards (D-142): filled only into tools that accept secrets; redacted.
+    if (hasCardPlaceholders(args) && !def.keepsPlaceholders && deps.payments) {
+      if (!def.acceptsSecrets) throw new ToolError("secrets_not_accepted", `${def.name} does not accept {{card:...}} placeholders.`);
+      args = await resolveCardPlaceholders(deps.payments, info, args, { onValue: (v, label) => redactor.add(v, label) });
+    }
     // Password-manager logins (D-128): filled only on the item's own sites; the values are redacted.
     if (hasLoginPlaceholders(args) && !def.keepsPlaceholders) {
       if (!def.acceptsSecrets) throw new ToolError("secrets_not_accepted", `${def.name} does not accept {{login:...}} placeholders.`);
@@ -1959,6 +1967,7 @@ async function approvalGate(
           .catch(() => false)
       : false;
   const needed =
+    def.alwaysAsk === true ||
     rule?.rule === "ask" ||
     needsApproval({
       autonomy: info.autonomy,

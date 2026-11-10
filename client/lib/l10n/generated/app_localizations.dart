@@ -8745,6 +8745,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'International format, like +14155550123. Leave empty to use the one saved.'**
   String get outCallYourPhoneHelp;
+
+  /// No description provided for @payments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get payments;
+
+  /// No description provided for @paymentsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Let bots pay merchants with single-use virtual cards you approve each time. Bring your own Stripe Issuing account.'**
+  String get paymentsHelp;
+
+  /// No description provided for @paymentsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'{spent} spent this month of {cap}'**
+  String paymentsOn(String spent, String cap);
+
+  /// No description provided for @paymentsSheetHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Every card is approved by you with the amount shown, works once at that merchant for one hour, and never for securities, crypto, gift cards or transfers.'**
+  String get paymentsSheetHelp;
+
+  /// No description provided for @paymentsStripeKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe secret key (with Issuing)'**
+  String get paymentsStripeKey;
+
+  /// No description provided for @paymentsWebhookSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Webhook signing secret'**
+  String get paymentsWebhookSecret;
+
+  /// No description provided for @paymentsWebhook.
+  ///
+  /// In en, this message translates to:
+  /// **'Point a Stripe webhook here'**
+  String get paymentsWebhook;
+
+  /// No description provided for @paymentsCardholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Name on cards'**
+  String get paymentsCardholder;
+
+  /// No description provided for @paymentsAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Billing address'**
+  String get paymentsAddress;
+
+  /// No description provided for @paymentsCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get paymentsCity;
+
+  /// No description provided for @paymentsState.
+  ///
+  /// In en, this message translates to:
+  /// **'State or region'**
+  String get paymentsState;
+
+  /// No description provided for @paymentsZip.
+  ///
+  /// In en, this message translates to:
+  /// **'Postal code'**
+  String get paymentsZip;
+
+  /// No description provided for @paymentsCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Country (2 letters)'**
+  String get paymentsCountry;
+
+  /// No description provided for @paymentsCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace limit per month (USD)'**
+  String get paymentsCap;
+
+  /// No description provided for @paymentsBotCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Per-bot limit per month (USD)'**
+  String get paymentsBotCap;
 }
 
 class _AppLocalizationsDelegate

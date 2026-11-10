@@ -565,6 +565,7 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
         if (admin) ...[const SizedBox(height: AppSpace.lg), PhoneCallsSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), MemoryBackendSection(orgId: org.id)],
         if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), EncryptionSection(orgId: org.id)],
+        if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), PaymentsSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), WorkspaceFilesSection(orgId: org.id)],
       ],
@@ -956,6 +957,149 @@ class _PhoneCallsSheetState extends ConsumerState<_PhoneCallsSheet> {
           decoration: InputDecoration(labelText: l10n.phoneCallsCap),
         ),
         SwitchListTile(key: const Key('phoneCallsPersonal'), contentPadding: EdgeInsets.zero, title: Text(l10n.phoneCallsPersonal), value: _personal, onChanged: (v) => setState(() => _personal = v)),
+      ],
+    );
+  }
+}
+
+final _paymentsProvider = FutureProvider.autoDispose.family<PaymentSettings, String>((ref, orgId) => ref.watch(backendProvider).paymentSettings(orgId));
+final _paymentRequestsProvider = FutureProvider.autoDispose.family<List<PaymentRequest>, String>((ref, orgId) => ref.watch(backendProvider).paymentRequests(orgId));
+
+String _money(int cents, String currency) => '${currency == 'USD' ? r'$' : '$currency '}${(cents / 100).toStringAsFixed(2)}';
+
+/// Payments (D-142): the workspace's card issuing account, caps and recent single-use cards (owners).
+class PaymentsSection extends ConsumerWidget {
+  const PaymentsSection({super.key, required this.orgId});
+  final String orgId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final p = ref.watch(_paymentsProvider(orgId)).value;
+    if (p == null) return const SizedBox.shrink();
+    final recent = p.connected ? (ref.watch(_paymentRequestsProvider(orgId)).value ?? const <PaymentRequest>[]) : const <PaymentRequest>[];
+    return GroupedCard(
+      children: [
+        GroupedTile(
+          key: const Key('payments'),
+          icon: LucideIcons.creditCard,
+          title: l10n.payments,
+          subtitle: p.connected ? l10n.paymentsOn(r'$' + p.spentThisMonthUsd.toStringAsFixed(2), r'$' + p.monthlyCapUsd.toStringAsFixed(0)) : l10n.paymentsHelp,
+          onTap: () async {
+            final changed = await showAdaptiveSheet<bool>(
+              context: context,
+              builder: (_) => _PaymentsSheet(orgId: orgId, current: p),
+            );
+            if (changed == true) ref.invalidate(_paymentsProvider(orgId));
+          },
+        ),
+        for (final r in recent.take(5))
+          GroupedTile(
+            key: Key('payment-${r.id}'),
+            icon: LucideIcons.receipt,
+            title: '${_money(r.spentCents ?? r.amountCents, r.currency)} · ${r.merchant}',
+            subtitle: '${r.status.value} · ${r.reason}',
+          ),
+      ],
+    );
+  }
+}
+
+class _PaymentsSheet extends ConsumerStatefulWidget {
+  const _PaymentsSheet({required this.orgId, required this.current});
+  final String orgId;
+  final PaymentSettings current;
+
+  @override
+  ConsumerState<_PaymentsSheet> createState() => _PaymentsSheetState();
+}
+
+class _PaymentsSheetState extends ConsumerState<_PaymentsSheet> {
+  final _key = TextEditingController();
+  final _whsec = TextEditingController();
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _line1 = TextEditingController();
+  final _city = TextEditingController();
+  final _state = TextEditingController();
+  final _zip = TextEditingController();
+  final _country = TextEditingController(text: 'US');
+  late final _cap = TextEditingController(text: widget.current.monthlyCapUsd.toStringAsFixed(0));
+  late final _botCap = TextEditingController(text: widget.current.botMonthlyCapUsd.toStringAsFixed(0));
+  var _busy = false;
+
+  List<TextEditingController> get _all => [_key, _whsec, _name, _email, _line1, _city, _state, _zip, _country, _cap, _botCap];
+
+  @override
+  void dispose() {
+    for (final c in _all) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _valid => [_key, _whsec, _name, _email, _line1, _city, _zip].every((c) => c.text.trim().isNotEmpty) && _country.text.trim().length == 2;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    Widget field(String key, TextEditingController c, String label, {bool secret = false}) => TextField(
+      key: Key(key),
+      controller: c,
+      obscureText: secret,
+      onChanged: (_) => setState(() {}),
+      decoration: InputDecoration(labelText: label),
+    );
+    return FormSheet(
+      icon: LucideIcons.creditCard,
+      title: l10n.payments,
+      subtitle: l10n.paymentsSheetHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('savePayments'),
+      onSubmit: !_valid || _busy
+          ? null
+          : () async {
+              setState(() => _busy = true);
+              final r = await runGuarded(
+                context,
+                () => ref
+                    .read(backendProvider)
+                    .setPaymentSettings(
+                      widget.orgId,
+                      SetPaymentSettingsRequest(
+                        secretKey: _key.text.trim(),
+                        webhookSecret: _whsec.text.trim(),
+                        cardholder: SetPaymentSettingsRequestCardholder(
+                          name: _name.text.trim(),
+                          email: _email.text.trim(),
+                          line1: _line1.text.trim(),
+                          city: _city.text.trim(),
+                          state: _state.text.trim().isEmpty ? null : _state.text.trim(),
+                          postalCode: _zip.text.trim(),
+                          country: _country.text.trim().toUpperCase(),
+                        ),
+                        monthlyCapUsd: num.tryParse(_cap.text.trim()),
+                        botMonthlyCapUsd: num.tryParse(_botCap.text.trim()),
+                      ),
+                    ),
+              );
+              if (!mounted) return;
+              setState(() => _busy = false);
+              if (r != null) Navigator.pop(context, true);
+            },
+      children: [
+        if (widget.current.webhookUrl != null) SelectableText('${l10n.paymentsWebhook}: ${widget.current.webhookUrl}'),
+        field('stripeKey', _key, l10n.paymentsStripeKey, secret: true),
+        field('stripeWebhookSecret', _whsec, l10n.paymentsWebhookSecret, secret: true),
+        field('cardholderName', _name, l10n.paymentsCardholder),
+        field('cardholderEmail', _email, l10n.email),
+        field('cardholderLine1', _line1, l10n.paymentsAddress),
+        field('cardholderCity', _city, l10n.paymentsCity),
+        field('cardholderState', _state, l10n.paymentsState),
+        field('cardholderZip', _zip, l10n.paymentsZip),
+        field('cardholderCountry', _country, l10n.paymentsCountry),
+        field('paymentsCap', _cap, l10n.paymentsCap),
+        field('paymentsBotCap', _botCap, l10n.paymentsBotCap),
       ],
     );
   }

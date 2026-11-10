@@ -26,6 +26,7 @@ lib/src/api/mcp_api.dart
 lib/src/api/memory_api.dart
 lib/src/api/pages_api.dart
 lib/src/api/password_managers_api.dart
+lib/src/api/payments_api.dart
 lib/src/api/plugins_api.dart
 lib/src/api/privacy_api.dart
 lib/src/api/projects_api.dart
@@ -280,6 +281,9 @@ lib/src/model/password_manager.dart
 lib/src/model/password_manager_list.dart
 lib/src/model/password_manager_vault.dart
 lib/src/model/password_manager_vault_list.dart
+lib/src/model/payment_request.dart
+lib/src/model/payment_request_list.dart
+lib/src/model/payment_settings.dart
 lib/src/model/phone_call.dart
 lib/src/model/phone_call_list.dart
 lib/src/model/plan.dart
@@ -367,6 +371,8 @@ lib/src/model/set_git_sync_request.dart
 lib/src/model/set_local_mcp_servers_request.dart
 lib/src/model/set_memory_backend_request.dart
 lib/src/model/set_org_limits_request.dart
+lib/src/model/set_payment_settings_request.dart
+lib/src/model/set_payment_settings_request_cardholder.dart
 lib/src/model/set_telephony_request.dart
 lib/src/model/signup_challenge.dart
 lib/src/model/skill_catalog.dart

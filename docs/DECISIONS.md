@@ -1329,3 +1329,41 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - Emergency, short, denied, personal and over-cap numbers are refused.
     - Take-over dials the person's phone; ending hangs up.
   - widget (`outbound_call_test.dart`).
+
+## D-142 Payments
+
+- **The interface:** `PaymentProvider` (`packages/agent/src/payments.ts`) with three methods: issue a card, read its details, cancel it.
+- **The first adapter:** Stripe Issuing, on the workspace's own issuing account, built from Stripe's public API docs and tested against a fake.
+  - Owners connect it in workspace settings → Payments: the secret key and webhook signing secret go into Vault, and a cardholder is created with the billing address.
+  - Owners also set a monthly cap for the workspace (default $500) and a per-bot default (default $200). `bots.payments_monthly_cap_usd` overrides the per-bot default.
+  - Kasama-issued cards on Cloud wait for the legal review the spec requires before a hosted launch.
+- **The tool:** `payments.request(merchant, amount, currency, reason)`, high risk, with a new `alwaysAsk` flag.
+  - It always creates an approval, whatever the autonomy, grants or action rules. "Always allow" is ignored for it when deciding.
+  - The approval card and summary show the amount ("for $89.50") and the merchant.
+- **The card:**
+  - Virtual and single-use: limited to the amount plus 5% (`spending_limits`, `all_time`).
+  - Banned merchant categories are blocked: securities brokers, quasi-cash/money orders, stored-value and gift cards, wires, financial institutions, cash disbursement, gambling.
+  - It expires after an hour; the worker cancels unused cards every minute.
+- **At authorization:** Stripe's real-time webhook (`issuing_authorization.request`, signature-checked, 5-minute window) approves only when all of these hold:
+  - the card's request is still issued and unexpired
+  - the currency matches
+  - the amount is within the 5%
+  - a distinctive word of the approved merchant appears in the merchant descriptor
+  - Once the authorization is created, the request is marked used with the amount spent, and the card is cancelled.
+- **Hard bans no rule can relax:** checked on merchant and reason before any card exists: securities, crypto, gift and prepaid cards, transfers, and payment apps used to pay individuals. The blocked categories back this up at the card level.
+- **The model never sees card details:**
+  - The tool returns placeholders `{{card:<request>:number|exp|exp_month|exp_year|cvc|name}}`.
+  - The executor fills them, like logins (D-128), only into tools that accept secrets (`browser.fill`, `http.request`), only for the card issued to that same run while it's live.
+  - The values are added to the redactor, so they never reach events or the model.
+- **Caps:** approved amounts this calendar month (issued or used cards), per workspace and per bot, are checked before issuing.
+- **Tests:**
+  - API (`payments.test.ts`), with a fake Stripe Issuing:
+    - Bad keys are refused at setup.
+    - An autonomous bot still asks, with the amount on the card.
+    - "Always allow" doesn't create a grant.
+    - Card limits and blocked categories are sent.
+    - Card numbers never appear in run events.
+    - Placeholders fill only for the same run's live card.
+    - Real-time authorization declines a wrong merchant and an over-amount charge, approves the right one, then marks the card used and cancels it; later charges are declined.
+  - Bans, merchant matching, monthly caps and the one-hour expiry.
+  - widget (`payments_test.dart`).

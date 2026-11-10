@@ -385,6 +385,11 @@ abstract class Backend {
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
   // Bot-to-bot switch (D-133)
   Future<bool> allowBotToBot(String orgId);
+  // Payments (D-142)
+  Future<PaymentSettings> paymentSettings(String orgId);
+  Future<PaymentSettings> setPaymentSettings(String orgId, SetPaymentSettingsRequest request);
+  Future<PaymentSettings> removePaymentSettings(String orgId);
+  Future<List<PaymentRequest>> paymentRequests(String orgId);
   // Calls for you (D-141)
   Future<TelephonySettings> telephony(String orgId);
   Future<TelephonySettings> setTelephony(String orgId, SetTelephonyRequest request);

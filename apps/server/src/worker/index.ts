@@ -36,6 +36,8 @@ import {
   registerPhoneCallTools,
   registerDataTools,
   registerCallTools,
+  registerPaymentTools,
+  StripeIssuingProvider,
   TwilioClient,
   TregProvider,
   memoryStoreFor,
@@ -111,6 +113,7 @@ export interface WorkerOptions {
     treg?: string;
     twilio?: string;
     twilioLookups?: string;
+    stripe?: string;
   };
   /** The API's public address, for Twilio's call webhooks and media streams (D-141). */
   publicApiUrl?: string;
@@ -287,6 +290,22 @@ export async function startWorker(opts: WorkerOptions) {
   registerChannelTools(tools, { db, fetch: fetchOut, local: opts.local });
   const voip = opts.voip ?? (opts.apns ? new ApnsVoipSender(opts.apns) : undefined);
   registerPhoneCallTools(tools, { db, notifications, voip });
+  // Payments (D-142): the workspace's own card issuing account.
+  const payments = {
+    db,
+    providerFor: async (orgId: string) => {
+      const [p] = await db.execute<{ key: string | null; cardholder_id: string; monthly_cap_usd: string; bot_monthly_cap_usd: string }>(sql`
+        select v.decrypted_secret as key, p.cardholder_id, p.monthly_cap_usd, p.bot_monthly_cap_usd
+        from public.org_payments p left join vault.decrypted_secrets v on v.id = p.vault_secret_id where p.org_id = ${orgId}::uuid`);
+      if (!p?.key) return null;
+      return {
+        provider: new StripeIssuingProvider({ secretKey: p.key, cardholderId: p.cardholder_id, apiUrl: opts.providerBases?.stripe, fetch: opts.providerBases?.stripe ? fetch : fetchOut }),
+        monthlyCapUsd: Number(p.monthly_cap_usd),
+        botMonthlyCapUsd: Number(p.bot_monthly_cap_usd),
+      };
+    },
+  };
+  registerPaymentTools(tools, payments);
   // Calls for you (D-141): the workspace's own Twilio account.
   registerCallTools(tools, {
     db,
@@ -358,6 +377,7 @@ export async function startWorker(opts: WorkerOptions) {
     },
     voip,
     agent: {
+      payments,
       db,
       gateway,
       credentials,

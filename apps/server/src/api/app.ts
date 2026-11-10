@@ -25,6 +25,7 @@ import { registerChannelRoutes } from "./routes/channels.ts";
 import { registerEncryptionRoutes } from "./routes/encryption.ts";
 import { registerA2aRoutes } from "./routes/a2a.ts";
 import { registerTelephonyRoutes } from "./routes/telephony.ts";
+import { registerPaymentRoutes } from "./routes/payments.ts";
 import { registerBotTemplateRoutes } from "./routes/bot-template.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
 import { registerChatGptRoutes } from "./routes/chatgpt.ts";
@@ -248,6 +249,7 @@ export function createApp(deps: AppDeps) {
   registerEncryptionRoutes(app, deps);
   registerA2aRoutes(app, deps);
   registerTelephonyRoutes(app, deps);
+  registerPaymentRoutes(app, deps);
   registerMcpRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {

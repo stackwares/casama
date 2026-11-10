@@ -89,6 +89,8 @@ export const EnvSchema = z.object({
   /** Calls for you (D-141): overrides for Twilio's API and OpenAI's realtime WebSocket (tests, proxies). */
   TWILIO_API_URL: z.url().optional(),
   OPENAI_REALTIME_URL: z.string().optional(),
+  /** Payments (D-142): override for Stripe's API (tests, proxies). */
+  STRIPE_API_URL: z.url().optional(),
   /** Encryption at rest (D-136): the server key that wraps workspace data keys (32 bytes, base64), and older keys during a rotation (comma-separated). */
   CONTENT_ENCRYPTION_KEY: z.string().optional(),
   CONTENT_ENCRYPTION_KEY_PREVIOUS: z.string().optional(),

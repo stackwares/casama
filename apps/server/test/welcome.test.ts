@@ -9,10 +9,13 @@ let ana: { id: string; token: string };
 let w: { org_id: string; bot_id: string; conversation_id: string };
 
 type Part = { type: string; text?: string; surface_id?: string; messages?: Array<Record<string, unknown>> };
+// Waits until no run is queued or running for three checks in a row (a welcome step can start the
+// next run right after one finishes), for up to a minute under a loaded test machine.
 const settle = async () => {
-  for (let i = 0; i < 200; i++) {
+  let quiet = 0;
+  for (let i = 0; i < 600 && quiet < 3; i++) {
     const [r] = await h.tdb.admin<{ n: number }[]>`select count(*)::int as n from public.runs where status in ('queued', 'running')`;
-    if (!r?.n) return;
+    quiet = r?.n ? 0 : quiet + 1;
     await new Promise((res) => setTimeout(res, 100));
   }
 };

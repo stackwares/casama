@@ -7,6 +7,7 @@ import {
   checkWatchers,
   pollIMessage,
   expireCalls,
+  expireCards,
   sweepEncryption,
   gitSyncTick,
   knowledgeTick,
@@ -126,6 +127,8 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     );
     // Encryption at rest (D-136): seal existing rows, or open them when it's turned off.
     await DBOS.runStep(() => sweepEncryption(rt().db).catch(() => 0), { name: "encryption-sweep" });
+    // Payments (D-142): unused cards are cancelled after their hour.
+    await DBOS.runStep(() => (rt().agent.payments ? expireCards(rt().agent.payments as never).catch(() => 0) : Promise.resolve(0)), { name: "expire-cards" });
     // Phone calls nobody answered (D-135) become a push with the reason.
     await DBOS.runStep(() => expireCalls({ db: rt().db, notifications: rt().agent.notifications }).catch(() => 0), { name: "expire-calls" });
     const runIds = await DBOS.runStep(() => claimDueRoutines(rt().db), { name: "claim-due" });

@@ -623,6 +623,44 @@ class FakeBackend implements Backend {
   @override
   Future<bool> allowBotToBot(String orgId) async => botToBot;
 
+  // Payments (D-142)
+  var pay = PaymentSettings(connected: false, provider: null, monthlyCapUsd: 500, botMonthlyCapUsd: 200, spentThisMonthUsd: 0, webhookUrl: null);
+  SetPaymentSettingsRequest? setPay;
+  @override
+  Future<PaymentSettings> paymentSettings(String orgId) async => pay;
+  @override
+  Future<PaymentSettings> setPaymentSettings(String orgId, SetPaymentSettingsRequest request) async {
+    setPay = request;
+    return pay = PaymentSettings(
+      connected: true,
+      provider: PaymentSettingsProviderEnum.stripe,
+      monthlyCapUsd: request.monthlyCapUsd ?? 500,
+      botMonthlyCapUsd: request.botMonthlyCapUsd ?? 200,
+      spentThisMonthUsd: 0,
+      webhookUrl: 'https://api.example.com/hooks/payments/$orgId',
+    );
+  }
+
+  @override
+  Future<PaymentSettings> removePaymentSettings(String orgId) async =>
+      pay = PaymentSettings(connected: false, provider: null, monthlyCapUsd: 500, botMonthlyCapUsd: 200, spentThisMonthUsd: 0, webhookUrl: null);
+  @override
+  Future<List<PaymentRequest>> paymentRequests(String orgId) async => [
+    PaymentRequest(
+      id: 'pr-1',
+      botId: botId,
+      merchant: 'Amtrak',
+      amountCents: 8950,
+      currency: 'USD',
+      reason: 'Two tickets NYC to Boston',
+      status: PaymentRequestStatusEnum.used,
+      last4: '4242',
+      spentCents: 9200,
+      expiresAt: DateTime.utc(2026, 11, 3, 19),
+      createdAt: DateTime.utc(2026, 11, 3, 18),
+    ),
+  ];
+
   // Calls for you (D-141)
   var tel = TelephonySettings(connected: false, accountSid: null, fromNumber: null, allowPersonalNumbers: false, dailyCap: 10);
   SetTelephonyRequest? setTel;

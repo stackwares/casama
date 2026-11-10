@@ -220,6 +220,9 @@ import 'package:kasama_api/src/model/password_manager.dart';
 import 'package:kasama_api/src/model/password_manager_list.dart';
 import 'package:kasama_api/src/model/password_manager_vault.dart';
 import 'package:kasama_api/src/model/password_manager_vault_list.dart';
+import 'package:kasama_api/src/model/payment_request.dart';
+import 'package:kasama_api/src/model/payment_request_list.dart';
+import 'package:kasama_api/src/model/payment_settings.dart';
 import 'package:kasama_api/src/model/phone_call.dart';
 import 'package:kasama_api/src/model/phone_call_list.dart';
 import 'package:kasama_api/src/model/plan.dart';
@@ -299,6 +302,8 @@ import 'package:kasama_api/src/model/set_git_sync_request.dart';
 import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
 import 'package:kasama_api/src/model/set_memory_backend_request.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
+import 'package:kasama_api/src/model/set_payment_settings_request.dart';
+import 'package:kasama_api/src/model/set_payment_settings_request_cardholder.dart';
 import 'package:kasama_api/src/model/set_telephony_request.dart';
 import 'package:kasama_api/src/model/signup_challenge.dart';
 import 'package:kasama_api/src/model/skill_catalog.dart';
@@ -893,6 +898,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PasswordManagerVault.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PasswordManagerVaultList':
           return PasswordManagerVaultList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PaymentRequest':
+          return PaymentRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PaymentRequestList':
+          return PaymentRequestList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PaymentSettings':
+          return PaymentSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PhoneCall':
           return PhoneCall.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PhoneCallList':
@@ -1075,6 +1086,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetMemoryBackendRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetOrgLimitsRequest':
           return SetOrgLimitsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetPaymentSettingsRequest':
+          return SetPaymentSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetPaymentSettingsRequestCardholder':
+          return SetPaymentSettingsRequestCardholder.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetTelephonyRequest':
           return SetTelephonyRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SignupChallenge':

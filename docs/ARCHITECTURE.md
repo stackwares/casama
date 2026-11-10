@@ -299,6 +299,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/telephony.ts` (`voice.call`, `TwilioClient`, number rules, call instructions); phone mode in `createRealtimeSession` and the worker's `voiceSession`; `apps/server/src/api/routes/telephony.ts` (Twilio settings, call status, end and take over, the signed status webhook, and the Media Streams ⇄ realtime bridge `attachTelephony`); `org_telephony`, `outbound_calls`, `call_deny_list`, `profiles.phone_number`; the app's `/calls/{id}` screen and Phone calls settings.
 
+## Payments (D-142)
+
+- `packages/agent/src/payments.ts` (`PaymentProvider`, `StripeIssuingProvider`, `payments.request` with `alwaysAsk`, `{{card:…}}` placeholders, bans, `expireCards`); `apps/server/src/api/routes/payments.ts` (owner settings, request list, the Stripe real-time authorization webhook); `org_payments`, `payment_requests`, `bots.payments_monthly_cap_usd`; the Payments section in workspace settings.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

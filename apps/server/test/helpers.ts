@@ -77,6 +77,7 @@ export async function startHarness(
         treg?: string;
         twilio?: string;
         twilioLookups?: string;
+        stripe?: string;
       };
       /** "self": this harness's own served address. */
       publicApiUrl?: string;

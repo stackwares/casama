@@ -41,6 +41,8 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   readOnly?: boolean;
   /** Asks for approval under the default autonomy whatever its risk (for example media generation). */
   confirm?: boolean;
+  /** Always asks, whatever the autonomy, grants or action rules (payments, D-142). */
+  alwaysAsk?: boolean;
   /** Risk that depends on the arguments (overrides `risk`). */
   riskFor?: (args: z.infer<S>) => Risk;
   /** The output is untrusted (web pages, outside services): later medium-risk calls need approval. */

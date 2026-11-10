@@ -916,6 +916,18 @@ class SupabaseBackend implements Backend {
   Future<bool> allowBotToBot(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.allowBotToBot;
 
   @override
+  Future<PaymentSettings> paymentSettings(String orgId) async => (await api.payments.getPaymentSettings(id: orgId)).data!;
+
+  @override
+  Future<PaymentSettings> setPaymentSettings(String orgId, SetPaymentSettingsRequest request) async => (await api.payments.setPaymentSettings(id: orgId, setPaymentSettingsRequest: request)).data!;
+
+  @override
+  Future<PaymentSettings> removePaymentSettings(String orgId) async => (await api.payments.deletePaymentSettings(id: orgId)).data!;
+
+  @override
+  Future<List<PaymentRequest>> paymentRequests(String orgId) async => (await api.payments.listPaymentRequests(id: orgId)).data!.items;
+
+  @override
   Future<TelephonySettings> telephony(String orgId) async => (await api.telephony.getTelephony(id: orgId)).data!;
 
   @override

@@ -2862,5 +2862,30 @@
   "outCallTakeOver": "Take over",
   "outCallEnd": "End call",
   "outCallYourPhone": "Your phone number",
-  "outCallYourPhoneHelp": "International format, like +14155550123. Leave empty to use the one saved."
+  "outCallYourPhoneHelp": "International format, like +14155550123. Leave empty to use the one saved.",
+  "payments": "Payments",
+  "paymentsHelp": "Let bots pay merchants with single-use virtual cards you approve each time. Bring your own Stripe Issuing account.",
+  "paymentsOn": "{spent} spent this month of {cap}",
+  "@paymentsOn": {
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "cap": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentsSheetHelp": "Every card is approved by you with the amount shown, works once at that merchant for one hour, and never for securities, crypto, gift cards or transfers.",
+  "paymentsStripeKey": "Stripe secret key (with Issuing)",
+  "paymentsWebhookSecret": "Webhook signing secret",
+  "paymentsWebhook": "Point a Stripe webhook here",
+  "paymentsCardholder": "Name on cards",
+  "paymentsAddress": "Billing address",
+  "paymentsCity": "City",
+  "paymentsState": "State or region",
+  "paymentsZip": "Postal code",
+  "paymentsCountry": "Country (2 letters)",
+  "paymentsCap": "Workspace limit per month (USD)",
+  "paymentsBotCap": "Per-bot limit per month (USD)"
 }

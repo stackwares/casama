@@ -211,6 +211,10 @@ Class | Method | HTTP request | Description
 [*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**listPasswordManagerVaults**](doc/PasswordManagersApi.md#listpasswordmanagervaults) | **GET** /v1/password-managers/{id}/vaults | 
 [*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**listPasswordManagers**](doc/PasswordManagersApi.md#listpasswordmanagers) | **GET** /v1/password-managers | The workspace&#39;s password managers and your own (D-128)
 [*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**updatePasswordManager**](doc/PasswordManagersApi.md#updatepasswordmanager) | **PATCH** /v1/password-managers/{id} | 
+[*PaymentsApi*](doc/PaymentsApi.md) | [**deletePaymentSettings**](doc/PaymentsApi.md#deletepaymentsettings) | **DELETE** /v1/orgs/{id}/payments | 
+[*PaymentsApi*](doc/PaymentsApi.md) | [**getPaymentSettings**](doc/PaymentsApi.md#getpaymentsettings) | **GET** /v1/orgs/{id}/payments | 
+[*PaymentsApi*](doc/PaymentsApi.md) | [**listPaymentRequests**](doc/PaymentsApi.md#listpaymentrequests) | **GET** /v1/orgs/{id}/payments/requests | Cards bots asked for (owners see all; others their own)
+[*PaymentsApi*](doc/PaymentsApi.md) | [**setPaymentSettings**](doc/PaymentsApi.md#setpaymentsettings) | **PUT** /v1/orgs/{id}/payments | Connect the workspace&#39;s card issuing account for single-use cards (owners, D-142)
 [*PluginsApi*](doc/PluginsApi.md) | [**getPluginUpdate**](doc/PluginsApi.md#getpluginupdate) | **GET** /v1/plugins/{id}/update | The latest commit of the plugin&#39;s source and what changes
 [*PluginsApi*](doc/PluginsApi.md) | [**installPlugin**](doc/PluginsApi.md#installplugin) | **POST** /v1/plugins | Install a plugin for a bot, pinned to the previewed commit
 [*PluginsApi*](doc/PluginsApi.md) | [**listPlugins**](doc/PluginsApi.md#listplugins) | **GET** /v1/plugins | 
@@ -540,6 +544,9 @@ Class | Method | HTTP request | Description
  - [PasswordManagerList](doc/PasswordManagerList.md)
  - [PasswordManagerVault](doc/PasswordManagerVault.md)
  - [PasswordManagerVaultList](doc/PasswordManagerVaultList.md)
+ - [PaymentRequest](doc/PaymentRequest.md)
+ - [PaymentRequestList](doc/PaymentRequestList.md)
+ - [PaymentSettings](doc/PaymentSettings.md)
  - [PhoneCall](doc/PhoneCall.md)
  - [PhoneCallList](doc/PhoneCallList.md)
  - [Plan](doc/Plan.md)
@@ -627,6 +634,8 @@ Class | Method | HTTP request | Description
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
  - [SetMemoryBackendRequest](doc/SetMemoryBackendRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
+ - [SetPaymentSettingsRequest](doc/SetPaymentSettingsRequest.md)
+ - [SetPaymentSettingsRequestCardholder](doc/SetPaymentSettingsRequestCardholder.md)
  - [SetTelephonyRequest](doc/SetTelephonyRequest.md)
  - [SignupChallenge](doc/SignupChallenge.md)
  - [SkillCatalog](doc/SkillCatalog.md)

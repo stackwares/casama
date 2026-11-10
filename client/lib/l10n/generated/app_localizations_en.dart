@@ -5116,4 +5116,53 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get outCallYourPhoneHelp =>
       'International format, like +14155550123. Leave empty to use the one saved.';
+
+  @override
+  String get payments => 'Payments';
+
+  @override
+  String get paymentsHelp =>
+      'Let bots pay merchants with single-use virtual cards you approve each time. Bring your own Stripe Issuing account.';
+
+  @override
+  String paymentsOn(String spent, String cap) {
+    return '$spent spent this month of $cap';
+  }
+
+  @override
+  String get paymentsSheetHelp =>
+      'Every card is approved by you with the amount shown, works once at that merchant for one hour, and never for securities, crypto, gift cards or transfers.';
+
+  @override
+  String get paymentsStripeKey => 'Stripe secret key (with Issuing)';
+
+  @override
+  String get paymentsWebhookSecret => 'Webhook signing secret';
+
+  @override
+  String get paymentsWebhook => 'Point a Stripe webhook here';
+
+  @override
+  String get paymentsCardholder => 'Name on cards';
+
+  @override
+  String get paymentsAddress => 'Billing address';
+
+  @override
+  String get paymentsCity => 'City';
+
+  @override
+  String get paymentsState => 'State or region';
+
+  @override
+  String get paymentsZip => 'Postal code';
+
+  @override
+  String get paymentsCountry => 'Country (2 letters)';
+
+  @override
+  String get paymentsCap => 'Workspace limit per month (USD)';
+
+  @override
+  String get paymentsBotCap => 'Per-bot limit per month (USD)';
 }
