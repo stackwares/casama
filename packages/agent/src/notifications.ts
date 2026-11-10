@@ -148,7 +148,8 @@ export class NotificationService {
       values (${userId}::uuid, ${orgId}::uuid, ${kind}, ${JSON.stringify(payload)}::jsonb,
               ${held ? "held" : later ? "deferred" : "sent"}, ${later?.toISOString() ?? null}::timestamptz,
               ${proactive?.urgency ?? null}, ${held}) returning id`);
-    if (!later && !held) await this.pushTo(userId, row?.id ?? "", kind, message);
+    // The inbox row is in; a push provider error mustn't fail the caller.
+    if (!later && !held) await this.pushTo(userId, row?.id ?? "", kind, message).catch(() => {});
     return row?.id;
   }
 

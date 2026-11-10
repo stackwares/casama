@@ -79,7 +79,7 @@ export async function fireDeviceEvent(db: Database, userId: string, e: DeviceEve
       select * from public.routines where enabled and created_by = ${userId}::uuid
         and ((trigger ->> 'type' = 'device' and trigger ->> 'event' = ${e.type})
           or (${e.type} = 'wake' and kind = 'brief'))
-      for update skip locked`);
+      for update`);
     const runIds: string[] = [];
     for (const r of routines) {
       const t = r.trigger ?? {};
@@ -106,6 +106,11 @@ export interface LeaveNowDeps {
 
 type CalEvent = { title?: string; start?: string; location?: string };
 
+/** Travel times worked out recently, per event (so the maps API is asked at most every 10 minutes). */
+const travelCache = new Map<string, { minutes: number; at: number }>();
+/** Leave-now only looks at events starting within this window (the location is asked for then too). */
+const LEAVE_NOW_WINDOW_MIN = 120;
+
 /**
  * Leave-now (run by the worker each minute): for each such routine, the creator's next calendar
  * event with a location in the next 3 hours; where they are now (a one-off read from an online
@@ -114,50 +119,66 @@ type CalEvent = { title?: string; start?: string; location?: string };
 export async function checkLeaveNow(db: Database, deps: LeaveNowDeps): Promise<string[]> {
   const now = deps.now?.() ?? new Date();
   const runIds: string[] = [];
+  // "Where am I now" answers never outlive 10 minutes.
+  await db.execute(sql`delete from public.device_requests where action = 'locate' and created_at < ${new Date(now.getTime() - 10 * 60_000).toISOString()}::timestamptz`);
   const routines = await db.execute<{ id: string; org_id: string; created_by: string; trigger: { minutes_before?: number } }>(sql`
     select id, org_id, created_by, trigger from public.routines
     where enabled and created_by is not null and trigger ->> 'type' = 'device' and trigger ->> 'event' = 'leave_now'`);
   for (const r of routines) {
-    const days = await db.execute<{ summary: { events?: CalEvent[] } }>(sql`
-      select summary from public.device_readings where user_id = ${r.created_by}::uuid and kind = 'calendar'
-        and period_end >= ${now.toISOString()}::timestamptz and period_start <= ${new Date(now.getTime() + 3 * 3600_000).toISOString()}::timestamptz`);
-    const next = days
-      .flatMap((d) => d.summary?.events ?? [])
-      .filter((ev) => ev.location && ev.start && new Date(ev.start) > now && new Date(ev.start).getTime() - now.getTime() <= 3 * 3600_000)
-      .sort((a, b) => String(a.start).localeCompare(String(b.start)))[0];
-    if (!next?.start || !next.location) continue;
-    const eventId = `leave_now:${r.id}:${next.start}:${(next.title ?? "").slice(0, 60)}`;
-    const [seen] = await db.execute(sql`select 1 from public.device_event_log where user_id = ${r.created_by}::uuid and event_id = ${eventId}`);
-    if (seen) continue;
-    // Where the person is now: a live read, never stored as a trail.
-    const [loc] = await db.execute<{ id: string; status: string; result: { lat?: number; lng?: number } | null }>(sql`
-      select id, status, result from public.device_requests where user_id = ${r.created_by}::uuid and action = 'locate'
-        and created_at > ${new Date(now.getTime() - 10 * 60_000).toISOString()}::timestamptz order by created_at desc limit 1`);
-    if (!loc) {
-      const [src] = await db.execute<{ id: string }>(sql`
-        select id from public.device_sources where user_id = ${r.created_by}::uuid and kinds ? 'places'
-          and last_seen_at > ${new Date(now.getTime() - 60 * 60_000).toISOString()}::timestamptz order by last_seen_at desc limit 1`);
-      if (src) await db.execute(sql`insert into public.device_requests (user_id, source_id, kind, action) values (${r.created_by}::uuid, ${src.id}::uuid, 'places', 'locate')`);
-      continue;
+    // One routine's failure (a maps or database error) never drops the others' runs (audit 2026-11).
+    try {
+      await (async () => {
+        const days = await db.execute<{ summary: { events?: CalEvent[] } }>(sql`
+          select summary from public.device_readings where user_id = ${r.created_by}::uuid and kind = 'calendar'
+            and period_end >= ${now.toISOString()}::timestamptz and period_start <= ${new Date(now.getTime() + 3 * 3600_000).toISOString()}::timestamptz`);
+        const next = days
+          .flatMap((d) => d.summary?.events ?? [])
+          .filter((ev) => ev.location && ev.start && new Date(ev.start) > now && new Date(ev.start).getTime() - now.getTime() <= LEAVE_NOW_WINDOW_MIN * 60_000)
+          .sort((a, b) => String(a.start).localeCompare(String(b.start)))[0];
+        if (!next?.start || !next.location) return;
+        const eventId = `leave_now:${r.id}:${next.start}:${(next.title ?? "").slice(0, 60)}`;
+        const [seen] = await db.execute(sql`select 1 from public.device_event_log where user_id = ${r.created_by}::uuid and event_id = ${eventId}`);
+        if (seen) return;
+        // Where the person is now: a live read, never stored as a trail.
+        const [loc] = await db.execute<{ id: string; status: string; result: { lat?: number; lng?: number } | null }>(sql`
+          select id, status, result from public.device_requests where user_id = ${r.created_by}::uuid and action = 'locate'
+            and created_at > ${new Date(now.getTime() - 10 * 60_000).toISOString()}::timestamptz order by created_at desc limit 1`);
+        if (!loc) {
+          const [src] = await db.execute<{ id: string }>(sql`
+            select id from public.device_sources where user_id = ${r.created_by}::uuid and kinds ? 'places'
+              and last_seen_at > ${new Date(now.getTime() - 60 * 60_000).toISOString()}::timestamptz order by last_seen_at desc limit 1`);
+          if (src) await db.execute(sql`insert into public.device_requests (user_id, source_id, kind, action) values (${r.created_by}::uuid, ${src.id}::uuid, 'places', 'locate')`);
+          return;
+        }
+        if (loc.status !== "done" || typeof loc.result?.lat !== "number" || typeof loc.result?.lng !== "number") return;
+        const cached = travelCache.get(eventId);
+        let minutes: number | null = cached && now.getTime() - cached.at < 10 * 60_000 ? cached.minutes : null;
+        if (minutes === null) {
+          const maps = await deps.mapsKey(r.org_id);
+          if (!maps) return;
+          minutes = await travelMinutes(maps.provider, maps.key, { lat: loc.result.lat, lng: loc.result.lng }, next.location, { fetch: deps.fetch, bases: deps.bases }).catch(() => null);
+          if (minutes === null) return;
+          travelCache.set(eventId, { minutes, at: now.getTime() });
+          if (travelCache.size > 5000) travelCache.delete(travelCache.keys().next().value as string);
+        }
+        const buffer = r.trigger.minutes_before ?? 5;
+        const leaveAt = new Date(next.start).getTime() - (minutes + buffer) * 60_000;
+        if (now.getTime() < leaveAt) return;
+        // Used: the location goes.
+        await db.execute(sql`update public.device_requests set result = null where id = ${loc.id}::uuid`);
+        travelCache.delete(eventId);
+        runIds.push(
+          ...(await fireDeviceEvent(db, r.created_by, {
+            id: eventId,
+            type: "leave_now",
+            at: now.toISOString(),
+            detail: `Time to leave for "${next.title ?? "the next event"}" at ${next.location}, which starts at ${time(next.start)} UTC. Travel takes about ${minutes} minutes from where the person is now.`,
+          })),
+        );
+      })();
+    } catch (err) {
+      console.error(JSON.stringify({ msg: "leave-now check failed", routine_id: r.id, error: (err as Error).message }));
     }
-    if (loc.status !== "done" || typeof loc.result?.lat !== "number" || typeof loc.result?.lng !== "number") continue;
-    const maps = await deps.mapsKey(r.org_id);
-    if (!maps) continue;
-    const minutes = await travelMinutes(maps.provider, maps.key, { lat: loc.result.lat, lng: loc.result.lng }, next.location, { fetch: deps.fetch, bases: deps.bases }).catch(() => null);
-    if (minutes === null) continue;
-    const buffer = r.trigger.minutes_before ?? 5;
-    const leaveAt = new Date(next.start).getTime() - (minutes + buffer) * 60_000;
-    if (now.getTime() < leaveAt) continue;
-    // Used: the location goes.
-    await db.execute(sql`update public.device_requests set result = null where id = ${loc.id}::uuid`);
-    runIds.push(
-      ...(await fireDeviceEvent(db, r.created_by, {
-        id: eventId,
-        type: "leave_now",
-        at: now.toISOString(),
-        detail: `Time to leave for "${next.title ?? "the next event"}" at ${next.location}, which starts at ${time(next.start)} UTC. Travel takes about ${minutes} minutes from where the person is now.`,
-      })),
-    );
   }
   return runIds;
 }

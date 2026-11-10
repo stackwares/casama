@@ -15,6 +15,8 @@ let cal: Server;
 let calUrl = "";
 const start = new Date(Date.now() + 60 * 60_000); // in an hour
 const calls: unknown[] = [];
+/** Audit 2026-11: the external meeting can be cancelled after its fire is scheduled. */
+let cancelled = false;
 
 beforeAll(async () => {
   cal = createServer(async (req: IncomingMessage, res) => {
@@ -30,7 +32,7 @@ beforeAll(async () => {
             type: "text",
             text: JSON.stringify({
               items: [
-                { id: "ext", summary: "Call with Globex", start: { dateTime: start.toISOString() }, attendees: [{ email: "ana@example.com", self: true }, { email: "lee@globex.test" }] },
+                ...(cancelled ? [] : [{ id: "ext", summary: "Call with Globex", start: { dateTime: start.toISOString() }, attendees: [{ email: "ana@example.com", self: true }, { email: "lee@globex.test" }] }]),
                 { id: "int", summary: "Standup", start: { dateTime: start.toISOString() }, attendees: [{ email: "ana@example.com", self: true }, { email: "ben@example.com" }] },
               ],
             }),
@@ -92,5 +94,34 @@ describe("calendar triggers", () => {
     expect(m?.content[0]?.text).toContain("Event: Call with Globex");
     expect(m?.content[0]?.text).toContain('<untrusted source="calendar">');
     expect(m?.content[0]?.text).not.toContain("Standup");
+  });
+
+  it("a cancelled meeting's fire is dropped at the next check, and stale fires never run (audit 2026-11)", async () => {
+    const ana = await h.user("ana2@example.com");
+    const orgId = (await j(await h.request("/v1/orgs", { method: "POST", token: ana.token, json: { name: "C2" } }))).id;
+    const botId = (await j(await h.request("/v1/bots", { method: "POST", token: ana.token, json: { org_id: orgId, name: "Prep2" } }))).id;
+    const [i] = await h.tdb.admin<{ id: string }[]>`
+      insert into public.integrations (org_id, kind, name, config, status, tools_cache, tools_cached_at)
+      values (${orgId}, 'mcp', 'google_calendar', ${JSON.stringify({ url: calUrl, app: "google_calendar" })}::text::jsonb, 'ok',
+              ${JSON.stringify([{ name: "list_events", description: "List events", inputSchema: { type: "object", properties: { timeMin: {}, timeMax: {} } } }])}::text::jsonb, now())
+      returning id`;
+    const routine = await j(
+      await h.request("/v1/routines", {
+        method: "POST",
+        token: ana.token,
+        json: { bot_id: botId, name: "Prep 2", instructions: "Prepare.", trigger: "calendar_event", calendar: { integration_id: i!.id, offset_minutes: -15, outside_guests: true } },
+      }),
+    );
+    const now = new Date();
+    cancelled = false;
+    expect(await checkCalendarTriggers({ db: h.handle.db, fetch }, now)).toBe(1);
+    cancelled = true;
+    await checkCalendarTriggers({ db: h.handle.db, fetch }, new Date(now.getTime() + 5 * 60_000));
+    expect(await h.tdb.admin`select 1 from public.calendar_fires where routine_id = ${routine.id} and fired_at is null`).toHaveLength(0);
+    cancelled = false;
+    // A fire left over from long ago (the worker was down) doesn't run now.
+    await h.tdb.admin`insert into public.calendar_fires (routine_id, event_id, org_id, fire_at, event)
+      values (${routine.id}, 'old', ${orgId}, now() - interval '2 hours', '{"id":"old","title":"Old"}'::jsonb)`;
+    expect(await fireDueCalendarRuns(h.handle.db)).toEqual([]);
   });
 });

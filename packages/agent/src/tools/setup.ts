@@ -8,6 +8,7 @@ import { isValidCron, isValidTimezone, nextRunAt } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { ToolError, type ToolRegistry } from "./registry.ts";
+import { personForRun } from "../acting.ts";
 
 export const SETUP_GUIDE = [
   "You are being set up by the person you'll work for. This conversation is your setup interview.",
@@ -46,9 +47,8 @@ export function registerSetupTools(registry: ToolRegistry, deps: { db: Database 
             "invalid_cron",
             `Routine "${r.name}" needs a 5-field cron like '0 8 * * 1-5'.`,
           );
-      const [owner] = await db.execute<{ user_id: string | null; timezone: string | null }>(sql`
-        select coalesce(r.created_by, b.created_by) as user_id, p.timezone from public.runs r join public.bots b on b.id = r.bot_id
-        left join public.profiles p on p.user_id = coalesce(r.created_by, b.created_by) where r.id = ${ctx.runId}::uuid`);
+      const person = await personForRun(db, ctx.runId);
+      const owner = { user_id: person.userId, timezone: person.timezone };
       const tz = owner?.timezone && isValidTimezone(owner.timezone) ? owner.timezone : "UTC";
       await db.transaction(async (tx) => {
         await tx.execute(sql`select set_config('kasama.actor_bot', ${ctx.botId}, true)`);

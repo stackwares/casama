@@ -56,13 +56,3 @@ export function createSafeFetch(
 
 /** The default guarded fetch (no exemptions). */
 export const safeFetch = createSafeFetch();
-
-export function isBlockedError(err: unknown) {
-  let e: unknown = err;
-  for (let i = 0; i < 5 && e; i++) {
-    if (e instanceof BlockedAddressError || (e as { code?: string }).code === "blocked_address")
-      return true;
-    e = (e as { cause?: unknown }).cause;
-  }
-  return false;
-}

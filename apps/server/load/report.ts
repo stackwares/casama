@@ -28,8 +28,11 @@ const rows = await sql<
   from public.runs where org_id = ${data.org_id}::uuid group by trigger order by trigger`;
 console.table(rows);
 await sql.end();
-const worst = Math.max(...rows.map((r) => r.p95));
+// Every run must have finished with a first token; no runs (or unfinished ones) is a failure, not 0 s.
+const incomplete = rows.length === 0 || rows.some((r) => r.completed < r.runs || r.p95 === null);
+const worst = Math.max(...rows.map((r) => r.p95 ?? Number.POSITIVE_INFINITY));
+const pass = !incomplete && worst < 3;
 console.log(
-  `p95 time to first token: ${worst}s (gate: under 3 s) -> ${worst < 3 ? "PASS" : "FAIL"}`,
+  `p95 time to first token: ${worst}s (gate: under 3 s; all runs complete: ${!incomplete}) -> ${pass ? "PASS" : "FAIL"}`,
 );
-process.exit(worst < 3 ? 0 : 1);
+process.exit(pass ? 0 : 1);

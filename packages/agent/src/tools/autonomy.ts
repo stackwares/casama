@@ -16,7 +16,7 @@ import { startTicketWork } from "../tickets.ts";
 import { type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
 import { contentKeys } from "@kasama/db";
 import { sealRunPayload } from "../events.ts";
-import { actingUserOf } from "../acting.ts";
+import { actingUserOf, personForRun } from "../acting.ts";
 
 export interface AutonomyToolDeps {
   db: Database;
@@ -153,8 +153,9 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     async execute(args, ctx) {
       if (!deps.notifications)
         throw new ToolError("notifications_unavailable", "Notifications are not configured.");
-      const [owner] = await db.execute<{ user_id: string | null }>(sql`
-        select coalesce(r.created_by, b.created_by) as user_id from public.runs r join public.bots b on b.id = r.bot_id where r.id = ${ctx.runId}::uuid`);
+      // The person the run acts for (a sub-run's starter), else the bot's creator.
+      const p = await personForRun(db, ctx.runId);
+      const owner = { user_id: p.userId };
       if (!owner?.user_id) throw new ToolError("no_owner", "This bot has no owner to notify.");
       await deps.notifications.notify(owner.user_id, ctx.orgId, "bot_message", {
         title: args.title,
@@ -376,9 +377,8 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       }
       if (args.schedule_cron && !isValidCron(args.schedule_cron))
         throw new ToolError("invalid_cron", "Use a 5-field cron expression like '0 8 * * *'.");
-      const [owner] = await db.execute<{ user_id: string | null; timezone: string | null }>(sql`
-        select coalesce(r.created_by, b.created_by) as user_id, p.timezone from public.runs r join public.bots b on b.id = r.bot_id
-        left join public.profiles p on p.user_id = coalesce(r.created_by, b.created_by) where r.id = ${ctx.runId}::uuid`);
+      const person = await personForRun(db, ctx.runId);
+      const owner = { user_id: person.userId, timezone: person.timezone };
       const tz = args.timezone ?? owner?.timezone ?? "UTC";
       if (!isValidTimezone(tz)) throw new ToolError("invalid_timezone", `Unknown timezone ${tz}.`);
       let next: Date;

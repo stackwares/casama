@@ -63,6 +63,7 @@ export async function startHarness(
     contentKey?: string;
     worker?: {
       deviceWaitMs?: { read?: number; write?: number };
+      apiDatabaseRole?: string;
       /** Recorded model responses; omit only in live checks (real provider calls). */
       fixtures?: string;
       maxOutputTokens?: number;
@@ -137,6 +138,8 @@ export async function startHarness(
     const { startWorker } = await import("../src/worker/index.ts");
     // The worker runs as its least-privilege role (D-095), so tests prove the grants are enough.
     await tdb.admin.unsafe("alter role kasama_worker login password 'kasama-worker-test'");
+    // A non-superuser stand-in for the API's role (production's `postgres` on Supabase isn't one).
+    if (opts.worker.apiDatabaseRole) await tdb.admin.unsafe(`do $$ begin create role "${opts.worker.apiDatabaseRole}" nologin; exception when duplicate_object then null; end $$`);
     const workerUrl = tdb.url.replace("postgres@", "kasama_worker:kasama-worker-test@");
     worker = await startWorker({
       databaseUrl: workerUrl,
@@ -152,6 +155,7 @@ export async function startHarness(
       egressExemptCidrs: opts.worker.egressExemptCidrs,
       providerBases: opts.worker.providerBases,
       deviceWaitMs: opts.worker.deviceWaitMs,
+      apiDatabaseRole: opts.worker.apiDatabaseRole,
       publicApiUrl: opts.worker.publicApiUrl === "self" ? `http://127.0.0.1:${localPort}` : opts.worker.publicApiUrl,
       chatgpt: opts.worker.chatgpt,
       local: localOpts,

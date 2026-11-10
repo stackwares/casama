@@ -1,5 +1,6 @@
 import type { Database } from "@kasama/db";
 import type { ExecOptions, SandboxHandle } from "@kasama/sandbox";
+import { slugify } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 
 /**
@@ -10,18 +11,8 @@ import { sql } from "drizzle-orm";
 export const WORKSPACE = "/home/kasama/workspace";
 export const DESKTOP_LEASE_SECONDS = 120;
 
-/** "Research Bot!" → "research-bot". */
-export function folderSlug(name: string): string {
-  const s = name
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40)
-    .replace(/-+$/g, "");
-  return s || "bot";
-}
+/** "Research Bot!" → "research-bot" (the shared slug rule; "bot" when nothing is left). */
+export const folderSlug = (name: string) => slugify(name, "bot");
 
 /** The bot's folder name on its team computer, picked once from its name (renames keep it). */
 export async function teamFolder(db: Database, botId: string): Promise<string> {

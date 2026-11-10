@@ -175,6 +175,13 @@ export async function checkCalendarTriggers(d: { db: Database; fetch: typeof fet
     const [own] = r.created_by
       ? await db.execute<{ domain: string | null }>(sql`select public.worker_user_email_domain(${r.created_by}::uuid) as domain`)
       : [];
+    // Fires scheduled earlier for events that were cancelled, moved out of the window or no longer
+    // match the filters are dropped (audit 2026-11: they used to fire anyway).
+    const keep = events.filter((e) => eventMatches(e, t, own?.domain ?? null)).map((e) => e.id);
+    await db.execute(sql`
+      delete from public.calendar_fires where routine_id = ${r.id}::uuid and fired_at is null
+        and fire_at >= ${now.toISOString()}::timestamptz and fire_at <= ${to.toISOString()}::timestamptz
+        and event_id not in (select jsonb_array_elements_text(${JSON.stringify(keep)}::jsonb))`);
     for (const e of events) {
       if (!eventMatches(e, t, own?.domain ?? null)) continue;
       const fireAt = new Date(Date.parse(e.start) + offset * 60_000);

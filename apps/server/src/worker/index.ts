@@ -102,6 +102,8 @@ export interface WorkerOptions {
   apns?: { keyP8: string; keyId: string; teamId: string; topic: string; url?: string };
   /** Private address ranges the worker may call (local development and tests only). */
   egressExemptCidrs?: string[];
+  /** The API's database role, granted access to DBOS's tables when it isn't the worker's own. */
+  apiDatabaseRole?: string;
   /** Base URL overrides for provider APIs (tests). */
   /** Device connections (D-149): how long tools wait for a device (tests shorten it). */
   deviceWaitMs?: { read?: number; write?: number };
@@ -438,6 +440,15 @@ export async function startWorker(opts: WorkerOptions) {
     logLevel: opts.logLevel ?? "info",
   });
   await DBOS.launch();
+  // The API enqueues runs through DBOS's tables, which belong to the worker's role (D-095). On
+  // Supabase the API's role isn't a superuser, so the worker (the owner) grants it access
+  // (audit 2026-11: every chat message failed on self-hosted installs).
+  if (opts.apiDatabaseRole) {
+    const role = opts.apiDatabaseRole.replace(/"/g, "");
+    await db
+      .execute(sql.raw(`grant usage on schema dbos to "${role}"; grant all on all tables in schema dbos to "${role}"; grant all on all sequences in schema dbos to "${role}"`))
+      .catch((e: Error) => opts.logger?.warn?.("couldn't grant the API role access to dbos", { error: e.message }));
+  }
   // Dispatch polling: runs and voice are latency-sensitive (a run should start, and a forwarded
   // voice tool call answer, well within a second); background queues poll less often.
   await DBOS.registerQueue(QUEUES.runs, {

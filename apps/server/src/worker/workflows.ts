@@ -6,6 +6,7 @@ import {
   checkCalendarTriggers,
   checkWatchers,
   purgeDeviceData,
+  rewrapAllKeys,
   pollIMessage,
   expireCalls,
   expireCards,
@@ -117,9 +118,12 @@ export const agentRunWorkflow = DBOS.registerWorkflow(
   { name: WORKFLOWS.agentRun },
 );
 
+/** Advisory lock keys for tick steps that must not overlap. */
+const TICK_LOCKS = { projects: 731_001, imessage: 731_002 } as const;
+
 /** Every minute: start runs for routines that are due. */
 export const routinesTickWorkflow = DBOS.registerWorkflow(
-  async (_scheduledAt: Date, _context: unknown) => {
+  async (scheduledAt: Date, _context: unknown) => {
     // Pushes held back by quiet hours go out once the window ends (D-109).
     await DBOS.runStep(
       () =>
@@ -139,7 +143,8 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       await DBOS.runStep(() => import("@kasama/ee").then((m) => m.forwardAuditLogs(rt().db, { fetch: rt().fetch })).catch(() => 0), { name: "audit-forward" });
     // Phone calls nobody answered (D-135) become a push with the reason.
     await DBOS.runStep(() => expireCalls({ db: rt().db, notifications: rt().agent.notifications }).catch(() => 0), { name: "expire-calls" });
-    const runIds = await DBOS.runStep(() => claimDueRoutines(rt().db), { name: "claim-due" });
+    // Every step catches its own errors, so one failing step never blocks the rest (audit 2026-11).
+    const runIds = await DBOS.runStep(() => claimDueRoutines(rt().db).catch(() => [] as string[]), { name: "claim-due" });
     // Device triggers (D-151): leave now for the next event with a place.
     const lnDeps = rt().leaveNow;
     if (lnDeps) runIds.push(...(await DBOS.runStep(() => import("./device-triggers.ts").then((m) => m.checkLeaveNow(rt().db, lnDeps)).catch(() => [] as string[]), { name: "leave-now" })));
@@ -150,9 +155,15 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     );
     runIds.push(...(await DBOS.runStep(() => fireDueCalendarRuns(rt().db).catch(() => [] as string[]), { name: "calendar-fire" })));
     // Projects (D-113): start the next session of each active project that has ready work.
+    // One heartbeat at a time across overlapping ticks and workers (a project never gets two sessions).
     const sessions = await DBOS.runStep(
       (): Promise<string[]> =>
-        projectHeartbeat(rt().db, async () => {}, rt().agent.notifications).catch(() => []),
+        rt()
+          .db.transaction(async (tx) => {
+            const [lock] = await tx.execute<{ ok: boolean }>(sql`select pg_try_advisory_xact_lock(${TICK_LOCKS.projects}) as ok`);
+            return lock?.ok ? projectHeartbeat(tx as Database, async () => {}, rt().agent.notifications) : [];
+          })
+          .catch(() => []),
       { name: "project-heartbeat" },
     );
     runIds.push(...sessions);
@@ -173,13 +184,22 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       const local = rt().agent.local as { apiUrl: string; internalToken: string };
       runIds.push(
         ...(await DBOS.runStep(
-          () => pollIMessage(rt().db, local, fetch, (id, text) => startRoutineForMessage(rt().db, id, text)).catch(() => [] as string[]),
+          () =>
+            rt()
+              .db.transaction(async (tx) => {
+                // Overlapping ticks would reply twice: one poll at a time.
+                const [lock] = await tx.execute<{ ok: boolean }>(sql`select pg_try_advisory_xact_lock(${TICK_LOCKS.imessage}) as ok`);
+                return lock?.ok ? pollIMessage(tx as Database, local, fetch, (id, text) => startRoutineForMessage(tx as Database, id, text)) : [];
+              })
+              .catch(() => [] as string[]),
           { name: "imessage" },
         )),
       );
     }
     // Device connections (D-149): retention per kind, and stale device requests.
-    await DBOS.runStep(() => purgeDeviceData(rt().db).catch(() => 0), { name: "device-retention" });
+    // Hourly is plenty for retention (audit 2026-11: it scanned device_readings every minute).
+    // (The scheduled time decides it, so a recovered workflow replays the same steps.)
+    if (new Date(scheduledAt).getMinutes() === 7) await DBOS.runStep(() => purgeDeviceData(rt().db).catch(() => 0), { name: "device-retention" });
     // Knowledge sources (D-125): new, resynced and daily-due sources.
     await DBOS.runStep(
       () =>
@@ -197,10 +217,25 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
         gitSyncTick({ db: rt().db, fetch: rt().agent.fetch ?? fetch, apiUrl: process.env.GITHUB_API_URL }).catch(() => []),
       { name: "git-sync" },
     );
-    for (const runId of runIds) {
-      await DBOS.startWorkflow(agentRunWorkflow, { workflowID: runId, queueName: QUEUES.runs })(
-        runId,
-      );
+    // Runs made by a step that failed partway, or by the API when starting failed, are still queued:
+    // start any queued for 2 minutes (the workflow id is the run id, so starting twice is harmless).
+    runIds.push(
+      ...(await DBOS.runStep(
+        async () =>
+          (
+            await rt().db.execute<{ id: string }>(sql`
+              select id from public.runs where status = 'queued' and created_at < now() - interval '2 minutes'
+                and created_at > now() - interval '1 day' order by created_at limit 50`)
+          ).map((r) => r.id),
+        { name: "queued-sweep" },
+      ).catch(() => [] as string[])),
+    );
+    for (const runId of new Set(runIds)) {
+      try {
+        await DBOS.startWorkflow(agentRunWorkflow, { workflowID: runId, queueName: QUEUES.runs })(runId);
+      } catch (err) {
+        console.error(JSON.stringify({ msg: "starting a run failed", run_id: runId, error: (err as Error).message }));
+      }
     }
   },
   { name: "routinesTick" },
@@ -502,10 +537,13 @@ export async function cleanupIdempotencyKeys(db: Database) {
 
 export const maintenanceWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
-    await DBOS.runStep(() => cleanupIdempotencyKeys(rt().db), { name: "idempotency-keys" });
-    await DBOS.runStep(() => refreshIdleChatGpt(rt().db, rt().agent.credentials), {
+    await DBOS.runStep(() => cleanupIdempotencyKeys(rt().db).catch(() => 0), { name: "idempotency-keys" });
+    await DBOS.runStep(() => refreshIdleChatGpt(rt().db, rt().agent.credentials).catch(() => 0), {
       name: "chatgpt-refresh",
     });
+    // Encryption at rest (D-136): data keys still wrapped with a previous server key are rewrapped
+    // with the current one, so changing CONTENT_ENCRYPTION_KEY needs no manual step (audit 2026-11).
+    await DBOS.runStep(() => rewrapAllKeys(rt().db).catch(() => 0), { name: "rewrap-keys" });
   },
   { name: "maintenance" },
 );
@@ -534,8 +572,8 @@ export const billingSettleWorkflow = DBOS.registerWorkflow(
 export const privacyWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
     const { purgeDueAccounts, applyRetention } = await import("../services/privacy.ts");
-    await DBOS.runStep(() => purgeDueAccounts(rt().db, rt().computers), { name: "purge-accounts" });
-    await DBOS.runStep(() => applyRetention(rt().db), { name: "retention" });
+    await DBOS.runStep(() => purgeDueAccounts(rt().db, rt().computers).catch(() => 0), { name: "purge-accounts" });
+    await DBOS.runStep(() => applyRetention(rt().db).catch(() => 0), { name: "retention" });
   },
   { name: "privacy" },
 );

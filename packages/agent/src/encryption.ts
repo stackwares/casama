@@ -83,9 +83,13 @@ const keyCols = (key: readonly string[]) => sql.raw(key.map((k) => `"${k}"`).joi
  * column for workspaces that encrypt, and opens sealed rows for workspaces turning it off. A
  * workspace whose pass finds nothing left moves to `on` (or `off`, and its key is deleted).
  */
-export async function sweepEncryption(db: Database, batch = 500) {
+export async function sweepEncryption(db: Database, batch = 500, opts: { recheckOn?: boolean } = {}) {
+  // Fully sealed workspaces are only re-checked when asked (the worker does it every 15 minutes):
+  // a scan per sealed column per workspace every minute costs more than it catches (audit 2026-11).
+  const recheck = opts.recheckOn ?? new Date().getMinutes() % 15 === 0;
   const orgs = await db.execute<{ id: string; mode: EncryptionMode }>(sql`
-    select id, content_encryption as mode from public.organizations where content_encryption in ('encrypting', 'on', 'decrypting')`);
+    select id, content_encryption as mode from public.organizations
+    where content_encryption in ('encrypting', 'decrypting') ${recheck ? sql`or content_encryption = 'on'` : sql``}`);
   let changed = 0;
   for (const o of orgs) {
     if (o.mode !== "decrypting" && !contentKeys.seals(o.id)) await contentKeys.refresh();

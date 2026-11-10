@@ -51,10 +51,11 @@ export async function deviceDataOfRun(db: Database, runId: string): Promise<stri
 }
 
 /** The brief's "while you were busy" list; the held messages are marked as bundled. */
-export async function takeHeldForBrief(db: Database, userId: string): Promise<string> {
+export async function takeHeldForBrief(db: Database, userId: string, orgId: string): Promise<string> {
+  // Only this workspace's messages: a brief never carries another workspace's content (audit 2026-11).
   const rows = await db.execute<{ payload: { title?: string; body?: string; why?: Why }; held_reason: string | null }>(sql`
     update public.notifications set push_status = 'bundled'
-    where id in (select id from public.notifications where user_id = ${userId}::uuid and push_status = 'held'
+    where id in (select id from public.notifications where user_id = ${userId}::uuid and org_id = ${orgId}::uuid and push_status = 'held'
                  and created_at > now() - interval '36 hours' order by created_at limit 30)
     returning payload, held_reason`);
   if (!rows.length) return "";

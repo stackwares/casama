@@ -43,7 +43,7 @@ export async function createRoutineRun(
   }
   // Attention rules (D-153): a brief carries what waited while the person was busy.
   if (r.kind === "brief" && r.created_by) {
-    const held = await takeHeldForBrief(tx as Database, r.created_by);
+    const held = await takeHeldForBrief(tx as Database, r.created_by, r.org_id);
     if (held) eventText = eventText ? `${eventText}\n\n${held}` : held;
   }
   let conversationId = r.conversation_id;
@@ -91,24 +91,53 @@ export async function claimDueRoutines(
       for update skip locked`);
     const runIds: string[] = [];
     for (const r of due) {
-      // Check-ins over today's cap skip this time (the schedule still moves on).
-      const capped =
-        (r.kind === "brief" || r.kind === "scan") &&
-        (await checkinCapReached(tx as Database, r.bot_id));
-      // A brief that already ran this morning on wake-up (D-151) skips its scheduled time.
-      const briefed = r.kind === "brief" && r.last_run_at && now.getTime() - new Date(r.last_run_at as string).getTime() < 14 * 3600_000;
-      if (!capped && !briefed) runIds.push(await createRoutineRun(tx, r, "routine"));
-      if (r.trigger?.type === "once") {
-        // A one-time routine runs once and switches itself off.
+      // One bad routine (an invalid cron or timezone, a failing brief) doesn't stop the others:
+      // each runs in its own savepoint, and a failure still moves its next run on (audit 2026-11).
+      try {
+        // The run id counts only once its savepoint has committed.
+        const made = await tx.transaction(async (tx) => {
+          let made: string | null = null;
+          // Check-ins over today's cap skip this time (the schedule still moves on).
+          const capped =
+            (r.kind === "brief" || r.kind === "scan") &&
+            (await checkinCapReached(tx as Database, r.bot_id));
+          // A brief that already ran this morning on wake-up (D-151) skips its scheduled time.
+          // Only a wake-up brief counts: a brief scheduled twice a day keeps both runs.
+          let briefed = false;
+          if (r.kind === "brief" && r.last_run_at && now.getTime() - new Date(r.last_run_at as string).getTime() < 14 * 3600_000 && r.last_run_id) {
+            const [last] = await tx.execute<{ trigger: string }>(sql`select trigger from public.runs where id = ${r.last_run_id as string}::uuid`);
+            briefed = last?.trigger === "device";
+          }
+          if (!capped && !briefed) made = await createRoutineRun(tx, r, "routine");
+          if (r.trigger?.type === "once") {
+            // A one-time routine runs once and switches itself off.
+            await tx.execute(
+              sql`update public.routines set enabled = false, next_run_at = null where id = ${r.id}::uuid`,
+            );
+            return made;
+          }
+          const next = nextRunAt(r.schedule_cron as string, r.timezone, now);
+          await tx.execute(
+            sql`update public.routines set next_run_at = ${next.toISOString()}::timestamptz where id = ${r.id}::uuid`,
+          );
+          return made;
+        });
+        if (made) runIds.push(made);
+      } catch (err) {
+        console.error(JSON.stringify({ msg: "routine claim failed", routine_id: r.id, error: (err as Error).message }));
+        const next = (() => {
+          try {
+            return r.schedule_cron ? nextRunAt(r.schedule_cron, r.timezone, now) : null;
+          } catch {
+            return null;
+          }
+        })();
         await tx.execute(
-          sql`update public.routines set enabled = false, next_run_at = null where id = ${r.id}::uuid`,
+          next
+            ? sql`update public.routines set next_run_at = ${next.toISOString()}::timestamptz where id = ${r.id}::uuid`
+            : sql`update public.routines set enabled = false, next_run_at = null where id = ${r.id}::uuid`,
         );
-        continue;
       }
-      const next = nextRunAt(r.schedule_cron as string, r.timezone, now);
-      await tx.execute(
-        sql`update public.routines set next_run_at = ${next.toISOString()}::timestamptz where id = ${r.id}::uuid`,
-      );
     }
     return runIds;
   });
@@ -127,6 +156,7 @@ export async function fireDueCalendarRuns(db: Database, now = new Date()): Promi
     const due = await tx.execute<{ routine_id: string; event_id: string; event: import("@kasama/agent").CalEvent }>(sql`
       select f.routine_id, f.event_id, f.event from public.calendar_fires f join public.routines r on r.id = f.routine_id
       where f.fired_at is null and r.enabled and f.fire_at <= ${now.toISOString()}::timestamptz
+        and f.fire_at > ${new Date(now.getTime() - 10 * 60_000).toISOString()}::timestamptz
       order by f.fire_at limit 50 for update of f skip locked`);
     const runIds: string[] = [];
     for (const f of due) {
