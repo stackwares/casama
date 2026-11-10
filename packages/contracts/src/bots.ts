@@ -232,6 +232,7 @@ export const ProviderId = z
     "cartesia",
     "fish_audio",
     "chatgpt",
+    "treg",
   ])
   .openapi("ProviderId");
 

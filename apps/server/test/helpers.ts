@@ -73,6 +73,7 @@ export async function startHarness(
         openai?: string;
         deepgram?: string;
         elevenlabs?: string;
+        treg?: string;
       };
       /** ChatGPT plan sign-in endpoints (a fake OpenAI). */
       chatgpt?: { authUrl?: string; apiUrl?: string };

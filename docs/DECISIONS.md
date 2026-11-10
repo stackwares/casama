@@ -1188,3 +1188,33 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - Honcho's session layout, recall, edits through metadata, hidden deletes and session deletion.
     - Members can't change the backend; switching back to built-in works.
   - widget (`memory_backend_test.dart`).
+
+## D-138 Paid data services
+
+- **The interface:** `DataProvider` (`packages/agent/src/data.ts`) with `search`, `describe` and `call`.
+- **The Treg adapter:** follows Treg's public guides (treg.to `llms.txt`, `skill.md`, `integrate.md`) and is tested against a local fake only.
+  - Every request carries an `X-Treg-Token`.
+  - The catalog: `GET /catalog/search?q=` and `GET /catalog/endpoints/<id>`. Prices are read from each entry's `cost` block (`usd_per_call`, `type`, `unit`).
+  - Calls go through `/call/<id>`: GET with query parameters, or POST with JSON, passed through unchanged.
+  - The amount charged comes from `X-Treg-Cost-Micro`; the call id from `X-Treg-Call-Id`.
+  - Each call sends an `Idempotency-Key`, plus `X-Treg-Route-Max-Cost` set to 1.5× the quote (50× for per-result prices, since those vary with the number of results), so a call never costs much more than the price that was approved.
+  - Treg's own refusals (`X-Treg-Error: 1`) turn into plain explanations: insufficient balance, over the approved cost, own key required, funds required, trial used up.
+- **Tools:**
+  - `data.search` (low risk): matching services as `data.{service}.{operation}`, each with its price.
+  - `data.call` (medium risk, `confirm`): buys one call.
+    - Under the default autonomy it always asks first. `approvalDetails` puts the service and the quoted price on the card, and the approval summary ends "for $0.0040 per call".
+    - Autonomous bots and "always allow" grants follow the usual rules (action rules can cap spend, D-115), as with every other tool.
+    - The provider's answer is untrusted output, cut to 20,000 characters.
+    - Provider errors (4xx/5xx) aren't billed by Treg and fail the step.
+- **Why two tools:** the spec names tools `data.{service}.{operation}`, but Treg's catalog has thousands of endpoints. So bots get one search tool and one call tool, and the name `data.{service}.{operation}` appears in search results, on the approval card and on the timeline.
+- **Billing:**
+  - **The workspace's own key:** saved in Settings → Model keys (provider `treg`). Treg charges the workspace's own account directly, with no Kasama markup. Each call is still recorded in `usage_ledger` (`kind = data_calls`, `billable = false`) with the provider's cost, endpoint and call id, so it shows in usage.
+  - **Kasama Cloud resale:** uses Kasama's key (`TREG_API_KEY`) only when `TREG_RESALE=on`, which stays off until there's a written agreement with Treg (SPEC). Calls are then `billable`, at the provider's cost plus 20% (`DATA_MARKUP`), and settle into credits like other usage. A workspace's own key always wins.
+- **Tests:**
+  - API (`paid-data.test.ts`), with a fake Treg and a scripted model:
+    - A default-autonomy bot asks first, with the price on the card, and nothing is called before approval.
+    - After approval, the call uses the workspace's key with the right ceiling and query, and is recorded unbilled.
+  - Tools:
+    - Resale prices and charges include the 20% and are billable.
+    - Insufficient balance is explained.
+    - With no key, the tool says to add one.

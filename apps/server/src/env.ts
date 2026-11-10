@@ -82,6 +82,10 @@ export const EnvSchema = z.object({
    * Firebase project the apps are built with. Unset: no push; the in-app inbox still works.
    */
   FCM_SERVICE_ACCOUNT: z.string().optional(),
+  /** Paid data resale (D-138, Kasama Cloud only, after a written agreement with Treg): Kasama's Treg key and the switch. */
+  TREG_API_KEY: z.string().optional(),
+  TREG_RESALE: z.enum(["on", "off"]).default("off"),
+  TREG_API_URL: z.url().optional(),
   /** Encryption at rest (D-136): the server key that wraps workspace data keys (32 bytes, base64), and older keys during a rotation (comma-separated). */
   CONTENT_ENCRYPTION_KEY: z.string().optional(),
   CONTENT_ENCRYPTION_KEY_PREVIOUS: z.string().optional(),

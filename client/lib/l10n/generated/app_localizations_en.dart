@@ -5019,4 +5019,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get memoryUseBuiltIn => 'Use built-in memory again';
+
+  @override
+  String get providerHintData => 'paid data (places, emails, SEO)';
 }

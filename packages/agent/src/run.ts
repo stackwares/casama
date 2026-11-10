@@ -1885,7 +1885,7 @@ async function finishCancelled(db: Database, info: RunInfo, busFn: () => Promise
 
 /** One-line, human-readable summary of a tool call for approval cards and push notifications. */
 function describeCall(tool: string, args: Record<string, unknown>) {
-  const key = ["command", "url", "query", "prompt", "title", "task", "path", "content"].find(
+  const key = ["command", "url", "query", "prompt", "title", "task", "path", "content", "endpoint"].find(
     (k) => typeof args[k] === "string",
   );
   const detail = key ? String(args[key]).replace(/\s+/g, " ").slice(0, 160) : "";
@@ -1978,7 +1978,9 @@ async function approvalGate(
         .catch(() => ({}))
     : {};
   const shown = { ...(argsRedacted as Record<string, unknown>), ...redactor.value(details) };
-  const summary = `${info.botName} wants to run ${describeCall(call.name, argsRedacted as Record<string, unknown>)}`;
+  // A price from the tool's details (paid data, D-138) goes in the summary too.
+  const price = typeof (details as { price?: unknown }).price === "string" ? ` for ${(details as { price: string }).price}` : "";
+  const summary = `${info.botName} wants to run ${describeCall(call.name, argsRedacted as Record<string, unknown>)}${price}`;
   const expires = new Date(Date.now() + APPROVAL_TTL_MS).toISOString();
   const inserted = await deps.db.execute<{ id: string; expires_at: Date }>(sql`
     insert into public.approvals (org_id, bot_id, run_id, call_id, tool_name, args_redacted, summary, risk, expires_at)

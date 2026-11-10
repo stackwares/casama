@@ -271,7 +271,7 @@ export async function testCredential(
   }
   if (
     cred &&
-    ["fal", "brave_search", "tavily", "deepgram", "elevenlabs", "cartesia", "fish_audio"].includes(
+    ["fal", "brave_search", "tavily", "deepgram", "elevenlabs", "cartesia", "fish_audio", "treg"].includes(
       cred.provider,
     )
   ) {

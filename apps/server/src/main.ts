@@ -126,6 +126,7 @@ if (env.MODE === "api") {
     cloud,
     databaseUrl: env.WORKER_DATABASE_URL ?? env.DATABASE_URL,
     pagesUrl: env.PAGES_URL,
+    dataResale: env.TREG_RESALE === "on" && env.TREG_API_KEY ? { tregKey: env.TREG_API_KEY, tregUrl: env.TREG_API_URL } : undefined,
     apns:
       env.APNS_KEY_P8 && env.APNS_KEY_ID && env.APNS_TEAM_ID
         ? { keyP8: inlineOrFile(env.APNS_KEY_P8), keyId: env.APNS_KEY_ID, teamId: env.APNS_TEAM_ID, topic: env.APNS_VOIP_TOPIC, url: env.APNS_URL }

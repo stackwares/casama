@@ -162,4 +162,5 @@ const _$ProviderIdEnumMap = {
   ProviderId.cartesia: 'cartesia',
   ProviderId.fishAudio: 'fish_audio',
   ProviderId.chatgpt: 'chatgpt',
+  ProviderId.treg: 'treg',
 };

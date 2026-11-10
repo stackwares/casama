@@ -8565,6 +8565,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use built-in memory again'**
   String get memoryUseBuiltIn;
+
+  /// No description provided for @providerHintData.
+  ///
+  /// In en, this message translates to:
+  /// **'paid data (places, emails, SEO)'**
+  String get providerHintData;
 }
 
 class _AppLocalizationsDelegate

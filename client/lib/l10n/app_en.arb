@@ -2825,5 +2825,6 @@
   "memoryBaseUrl": "Server address (optional)",
   "memoryBaseUrlHelp": "Only for a self-hosted Honcho or Supermemory",
   "memoryCopyExisting": "Copy current memories over",
-  "memoryUseBuiltIn": "Use built-in memory again"
+  "memoryUseBuiltIn": "Use built-in memory again",
+  "providerHintData": "paid data (places, emails, SEO)"
 }

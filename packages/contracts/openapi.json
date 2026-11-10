@@ -2678,7 +2678,8 @@
           "elevenlabs",
           "cartesia",
           "fish_audio",
-          "chatgpt"
+          "chatgpt",
+          "treg"
         ]
       },
       "CredentialStatus": {

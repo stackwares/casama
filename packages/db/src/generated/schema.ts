@@ -1002,6 +1002,50 @@ export const billingEvents = pgTable("billing_events", {
 	check("billing_events_source_check", sql`source = ANY (ARRAY['dodo'::text, 'app_store'::text, 'google_play'::text])`),
 ]);
 
+export const modelCredentials = pgTable("model_credentials", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	provider: text().notNull(),
+	label: text().notNull(),
+	baseUrl: text("base_url"),
+	vaultSecretId: uuid("vault_secret_id"),
+	keyHint: text("key_hint"),
+	createdBy: uuid("created_by"),
+	lastTestedAt: timestamp("last_tested_at", { withTimezone: true, mode: 'string' }),
+	lastTestOk: boolean("last_test_ok"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	ownerUserId: uuid("owner_user_id"),
+	status: text().default('ok').notNull(),
+	settings: jsonb().default({}).notNull(),
+	oauth: jsonb().default({}).notNull(),
+	refreshedAt: timestamp("refreshed_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("model_credentials_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
+	index("model_credentials_owner_idx").using("btree", table.ownerUserId.asc().nullsLast().op("uuid_ops")).where(sql`(owner_user_id IS NOT NULL)`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "model_credentials_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "model_credentials_created_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.ownerUserId],
+			foreignColumns: [users.id],
+			name: "model_credentials_owner_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("model_credentials_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
+	pgPolicy("model_credentials_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("model_credentials_label_check", sql`(char_length(label) >= 1) AND (char_length(label) <= 80)`),
+	check("model_credentials_status_check", sql`status = ANY (ARRAY['ok'::text, 'plan_usage_off'::text, 'needs_reconnect'::text])`),
+	check("model_credentials_chatgpt_owner", sql`(provider <> 'chatgpt'::text) OR (owner_user_id IS NOT NULL)`),
+	check("model_credentials_provider_check", sql`provider = ANY (ARRAY['openai'::text, 'anthropic'::text, 'google'::text, 'xai'::text, 'openrouter'::text, 'openai_compatible'::text, 'fal'::text, 'brave_search'::text, 'tavily'::text, 'deepgram'::text, 'elevenlabs'::text, 'cartesia'::text, 'fish_audio'::text, 'chatgpt'::text, 'treg'::text])`),
+]);
+
 export const devices = pgTable("devices", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	userId: uuid("user_id").notNull(),
@@ -1226,89 +1270,6 @@ export const telemetryPings = pgTable("telemetry_pings", {
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
-export const modelCredentials = pgTable("model_credentials", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	provider: text().notNull(),
-	label: text().notNull(),
-	baseUrl: text("base_url"),
-	vaultSecretId: uuid("vault_secret_id"),
-	keyHint: text("key_hint"),
-	createdBy: uuid("created_by"),
-	lastTestedAt: timestamp("last_tested_at", { withTimezone: true, mode: 'string' }),
-	lastTestOk: boolean("last_test_ok"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	ownerUserId: uuid("owner_user_id"),
-	status: text().default('ok').notNull(),
-	settings: jsonb().default({}).notNull(),
-	oauth: jsonb().default({}).notNull(),
-	refreshedAt: timestamp("refreshed_at", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	index("model_credentials_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
-	index("model_credentials_owner_idx").using("btree", table.ownerUserId.asc().nullsLast().op("uuid_ops")).where(sql`(owner_user_id IS NOT NULL)`),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "model_credentials_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.createdBy],
-			foreignColumns: [users.id],
-			name: "model_credentials_created_by_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.ownerUserId],
-			foreignColumns: [users.id],
-			name: "model_credentials_owner_user_id_fkey"
-		}).onDelete("cascade"),
-	pgPolicy("model_credentials_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("model_credentials_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("model_credentials_label_check", sql`(char_length(label) >= 1) AND (char_length(label) <= 80)`),
-	check("model_credentials_provider_check", sql`provider = ANY (ARRAY['openai'::text, 'anthropic'::text, 'google'::text, 'xai'::text, 'openrouter'::text, 'openai_compatible'::text, 'fal'::text, 'brave_search'::text, 'tavily'::text, 'deepgram'::text, 'elevenlabs'::text, 'cartesia'::text, 'fish_audio'::text, 'chatgpt'::text])`),
-	check("model_credentials_status_check", sql`status = ANY (ARRAY['ok'::text, 'plan_usage_off'::text, 'needs_reconnect'::text])`),
-	check("model_credentials_chatgpt_owner", sql`(provider <> 'chatgpt'::text) OR (owner_user_id IS NOT NULL)`),
-]);
-
-export const usageLedger = pgTable("usage_ledger", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	botId: uuid("bot_id"),
-	runId: uuid("run_id"),
-	kind: text().notNull(),
-	quantity: numeric({ precision: 18, scale:  3 }).notNull(),
-	costUsd: numeric("cost_usd", { precision: 12, scale:  6 }).default('0').notNull(),
-	model: text(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	billable: boolean().notNull(),
-	billedAt: timestamp("billed_at", { withTimezone: true, mode: 'string' }),
-	meta: jsonb().default({}).notNull(),
-	source: text().default('key').notNull(),
-}, (table) => [
-	index("usage_ledger_bot_time_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
-	index("usage_ledger_org_time_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
-	index("usage_ledger_unbilled_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(billable AND (billed_at IS NULL))`),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "usage_ledger_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.botId],
-			foreignColumns: [bots.id],
-			name: "usage_ledger_bot_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.runId],
-			foreignColumns: [runs.id],
-			name: "usage_ledger_run_id_fkey"
-		}).onDelete("set null"),
-	pgPolicy("usage_ledger_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("usage_ledger_kind_check", sql`kind = ANY (ARRAY['tokens_in'::text, 'tokens_out'::text, 'computer_seconds'::text, 'stream_seconds'::text, 'tts_chars'::text, 'stt_seconds'::text, 'voice_seconds'::text, 'media_images'::text, 'media_video_seconds'::text, 'search_queries'::text])`),
-	check("usage_ledger_source_check", sql`source = ANY (ARRAY['key'::text, 'chatgpt_plan'::text])`),
-]);
-
 export const abuseEvents = pgTable("abuse_events", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id"),
@@ -1457,6 +1418,45 @@ export const tasks = pgTable("tasks", {
 	check("tasks_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 300)`),
 	check("tasks_status_check", sql`status = ANY (ARRAY['todo'::text, 'in_progress'::text, 'in_review'::text, 'blocked'::text, 'done'::text])`),
 	check("tasks_priority_check", sql`priority = ANY (ARRAY['urgent'::text, 'high'::text, 'medium'::text, 'low'::text, 'none'::text])`),
+]);
+
+export const usageLedger = pgTable("usage_ledger", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id"),
+	runId: uuid("run_id"),
+	kind: text().notNull(),
+	quantity: numeric({ precision: 18, scale:  3 }).notNull(),
+	costUsd: numeric("cost_usd", { precision: 12, scale:  6 }).default('0').notNull(),
+	model: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	billable: boolean().notNull(),
+	billedAt: timestamp("billed_at", { withTimezone: true, mode: 'string' }),
+	meta: jsonb().default({}).notNull(),
+	source: text().default('key').notNull(),
+}, (table) => [
+	index("usage_ledger_bot_time_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
+	index("usage_ledger_org_time_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
+	index("usage_ledger_unbilled_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(billable AND (billed_at IS NULL))`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "usage_ledger_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "usage_ledger_bot_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "usage_ledger_run_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("usage_ledger_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("usage_ledger_source_check", sql`source = ANY (ARRAY['key'::text, 'chatgpt_plan'::text])`),
+	check("usage_ledger_kind_check", sql`kind = ANY (ARRAY['tokens_in'::text, 'tokens_out'::text, 'computer_seconds'::text, 'stream_seconds'::text, 'tts_chars'::text, 'stt_seconds'::text, 'voice_seconds'::text, 'media_images'::text, 'media_video_seconds'::text, 'search_queries'::text, 'data_calls'::text])`),
 ]);
 
 export const botRevisions = pgTable("bot_revisions", {

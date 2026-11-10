@@ -34,6 +34,8 @@ import {
   registerLoginTools,
   registerChannelTools,
   registerPhoneCallTools,
+  registerDataTools,
+  TregProvider,
   memoryStoreFor,
   ApnsVoipSender,
   type VoipSender,
@@ -104,7 +106,10 @@ export interface WorkerOptions {
     cartesia?: string;
     fish_audio?: string;
     cursor?: string;
+    treg?: string;
   };
+  /** Paid data resale on Kasama Cloud (D-138): Kasama's Treg key, used only when resale is on. */
+  dataResale?: { tregKey: string; tregUrl?: string };
   /** Billing (Kasama Cloud only); settles usage into credits every minute. */
   billing?: import("../billing/service.ts").BillingService;
   /** Opt-in anonymous telemetry (D-074); unset = off. */
@@ -276,6 +281,18 @@ export async function startWorker(opts: WorkerOptions) {
   registerChannelTools(tools, { db, fetch: fetchOut, local: opts.local });
   const voip = opts.voip ?? (opts.apns ? new ApnsVoipSender(opts.apns) : undefined);
   registerPhoneCallTools(tools, { db, notifications, voip });
+  // Paid data (D-138): the workspace's own Treg key, else Kasama's resale key when it's on.
+  registerDataTools(tools, {
+    db,
+    dataFor: async (orgId) => {
+      const tregFetch = opts.providerBases?.treg ? fetch : fetchOut;
+      const own = await providerKey(orgId, ["treg"]);
+      if (own?.key) return { provider: new TregProvider({ key: own.key, base: opts.providerBases?.treg, fetch: tregFetch }), resale: false };
+      if (opts.dataResale)
+        return { provider: new TregProvider({ key: opts.dataResale.tregKey, base: opts.dataResale.tregUrl ?? opts.providerBases?.treg, fetch: tregFetch }), resale: true };
+      return null;
+    },
+  });
   registerPageTools(tools, { db, pagesUrl: opts.pagesUrl ?? "http://localhost:8790" });
   // Projects (D-113): the tools start planning runs; the heartbeat lives in the minute tick.
   registerProjectTools(tools, {
