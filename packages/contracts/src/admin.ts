@@ -36,8 +36,27 @@ export const AdminOrg = z
     members: z.number().int(),
     bots: z.number().int(),
     cost_30d_usd: z.number(),
+    suspended_at: z.string().nullable().optional(),
+    suspended_reason: z.string().nullable().optional(),
   })
   .openapi("AdminOrg");
+
+export const SuspendOrgRequest = z
+  .object({ reason: z.string().trim().min(1).max(500) })
+  .openapi("SuspendOrgRequest");
+
+export const AbuseEvent = z
+  .object({
+    id: Uuid,
+    org_id: Uuid.nullable(),
+    org_name: z.string().nullable(),
+    computer_id: Uuid.nullable(),
+    kind: z.string(),
+    action: z.string(),
+    detail: z.record(z.string(), z.unknown()),
+    created_at: z.string(),
+  })
+  .openapi("AbuseEvent");
 
 export const SetOrgLimitsRequest = z
   .object({

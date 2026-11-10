@@ -23,6 +23,8 @@ abstract class _$OrganizationWithRoleCWProxy {
 
   OrganizationWithRole requireMfa(bool? requireMfa);
 
+  OrganizationWithRole suspended(bool? suspended);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `OrganizationWithRole(...).copyWith.fieldName(value)`.
@@ -40,6 +42,7 @@ abstract class _$OrganizationWithRoleCWProxy {
     DateTime createdAt,
     OrgRole role,
     bool? requireMfa,
+    bool? suspended,
   });
 }
 
@@ -77,6 +80,9 @@ class _$OrganizationWithRoleCWProxyImpl
   OrganizationWithRole requireMfa(bool? requireMfa) =>
       call(requireMfa: requireMfa);
 
+  @override
+  OrganizationWithRole suspended(bool? suspended) => call(suspended: suspended);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `OrganizationWithRole(...).copyWith.fieldName(value)`.
@@ -95,6 +101,7 @@ class _$OrganizationWithRoleCWProxyImpl
     Object? createdAt = const $CopyWithPlaceholder(),
     Object? role = const $CopyWithPlaceholder(),
     Object? requireMfa = const $CopyWithPlaceholder(),
+    Object? suspended = const $CopyWithPlaceholder(),
   }) {
     return OrganizationWithRole(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -129,6 +136,10 @@ class _$OrganizationWithRoleCWProxyImpl
           ? _value.requireMfa
           // ignore: cast_nullable_to_non_nullable
           : requireMfa as bool?,
+      suspended: suspended == const $CopyWithPlaceholder()
+          ? _value.suspended
+          // ignore: cast_nullable_to_non_nullable
+          : suspended as bool?,
     );
   }
 }
@@ -172,6 +183,7 @@ OrganizationWithRole _$OrganizationWithRoleFromJson(
     ),
     role: $checkedConvert('role', (v) => $enumDecode(_$OrgRoleEnumMap, v)),
     requireMfa: $checkedConvert('require_mfa', (v) => v as bool?),
+    suspended: $checkedConvert('suspended', (v) => v as bool?),
   );
   return val;
 }, fieldKeyMap: const {'createdAt': 'created_at', 'requireMfa': 'require_mfa'});
@@ -187,6 +199,7 @@ Map<String, dynamic> _$OrganizationWithRoleToJson(
   'created_at': instance.createdAt.toIso8601String(),
   'role': _$OrgRoleEnumMap[instance.role]!,
   'require_mfa': ?instance.requireMfa,
+  'suspended': ?instance.suspended,
 };
 
 const _$OrgRoleEnumMap = {

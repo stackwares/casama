@@ -30,6 +30,30 @@ void main() {
     expect(find.text('Postgres (Supabase)'), findsOneWidget);
   });
 
+  testWidgets('the owner suspends a workspace, lifts it, and reviews abuse', (tester) async {
+    await setSize(tester, const Size(900, 1000));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const AdminScreen()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(Tab, 'Workspaces'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key('suspend-$orgId')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('suspendReason')), 'Spam reports');
+    await tester.tap(find.byKey(const Key('confirmSuspend')));
+    await tester.pumpAndSettle();
+    expect(backend.suspendedReason, 'Spam reports');
+    expect(find.textContaining('Suspended: Spam reports'), findsOneWidget);
+    await tester.tap(find.byKey(Key('suspend-$orgId')));
+    await tester.pumpAndSettle();
+    expect(backend.suspendedReason, isNull);
+
+    await tester.tap(find.widgetWithText(Tab, 'Abuse'));
+    await tester.pumpAndSettle();
+    expect(find.text('Crypto mining blocked'), findsOneWidget);
+    expect(find.textContaining('xmr.nanopool.org:443'), findsOneWidget);
+  });
+
   testWidgets('everyone else sees that the console is owner-only', (tester) async {
     final backend = FakeBackend()..isOwner = false;
     await tester.pumpWidget(harness(backend, const AdminScreen()));

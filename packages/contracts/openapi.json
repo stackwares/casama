@@ -1701,6 +1701,16 @@
           },
           "chatgpt_sign_in": {
             "type": "boolean"
+          },
+          "signup_proofs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "app_check",
+                "pow"
+              ]
+            }
           }
         },
         "required": [
@@ -1711,6 +1721,26 @@
           "billing_enabled",
           "default_models",
           "default_reasoning_effort"
+        ]
+      },
+      "SignupChallenge": {
+        "type": "object",
+        "properties": {
+          "challenge": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "integer",
+            "description": "Find a nonce so that sha256(`<challenge>:<nonce>`) starts with this many zero bits"
+          },
+          "expires_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge",
+          "difficulty",
+          "expires_at"
         ]
       },
       "Health": {
@@ -1991,6 +2021,10 @@
               "require_mfa": {
                 "type": "boolean",
                 "description": "Owners and admins need two-step sign-in (an aal2 session) to use their powers"
+              },
+              "suspended": {
+                "type": "boolean",
+                "description": "Suspended by the instance owner: bots don't run and computers don't start (D-094)"
               }
             },
             "required": [
@@ -4858,6 +4892,72 @@
           }
         }
       },
+      "AbuseEventList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AbuseEvent"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "AbuseEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "org_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "computer_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "org_id",
+          "org_name",
+          "computer_id",
+          "kind",
+          "action",
+          "detail",
+          "created_at"
+        ]
+      },
       "AdminOrgList": {
         "type": "object",
         "properties": {
@@ -4902,6 +5002,18 @@
           },
           "cost_30d_usd": {
             "type": "number"
+          },
+          "suspended_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "suspended_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -5090,6 +5202,19 @@
         },
         "required": [
           "limits"
+        ]
+      },
+      "SuspendOrgRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "reason"
         ]
       },
       "RedirectUrl": {
@@ -6056,6 +6181,27 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PublicConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/signup/challenge": {
+      "get": {
+        "operationId": "getSignupChallenge",
+        "tags": [
+          "system"
+        ],
+        "summary": "A proof-of-work puzzle for signing up when the server asks for one (no auth)",
+        "responses": {
+          "200": {
+            "description": "Challenge",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupChallenge"
                 }
               }
             }
@@ -11108,6 +11254,52 @@
         }
       }
     },
+    "/v1/admin/abuse": {
+      "get": {
+        "operationId": "adminAbuseEvents",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Recent abuse signals and actions (owner only)",
+        "responses": {
+          "200": {
+            "description": "Recent abuse signals and actions (owner only)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbuseEventList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/orgs": {
       "get": {
         "operationId": "adminOrgs",
@@ -11374,6 +11566,148 @@
         "responses": {
           "200": {
             "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOrg"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/orgs/{id}/suspend": {
+      "post": {
+        "operationId": "suspendOrg",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Suspend a workspace: stops its computers and runs, keeps its data",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendOrgRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOrg"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unsuspendOrg",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Lift a workspace's suspension",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unsuspended",
             "content": {
               "application/json": {
                 "schema": {

@@ -118,6 +118,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - Supabase Auth TOTP; `organizations.require_mfa`; `has_role` requires aal2 for owner and admin powers when it is on; `mfa_required` errors from the API. App: Settings → Two-step sign-in and the `/two-step` code screen. CLI: `kasama login --code`.
 
+## Kasama Cloud abuse controls (D-094)
+
+- `services/abuse.ts` and `routes/abuse.ts`: sign-up hook (App Check or proof of work), `/v1/signup/challenge`, `/internal/abuse` for egress reports, suspension; admin suspend/lift and `/v1/admin/abuse`. Egress proxy: mail and mining ports and pools refused and reported. `ComputerService.checkCanStart` (suspended, unverified free workspaces). App: sign-up proof, banner, owner console Abuse tab.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

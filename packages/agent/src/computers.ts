@@ -38,6 +38,8 @@ export class ComputerService {
   readonly provider: ComputerProvider;
   /** Providers that are not behind the supervisor (the `local` desktop companion, D-066). */
   readonly extra: Record<string, ComputerProvider>;
+  /** Kasama Cloud (D-094): free-plan workspaces start computers only with a verified owner email. */
+  requireVerifiedEmail = false;
   constructor(
     db: Database,
     provider: ComputerProvider,
@@ -163,6 +165,7 @@ export class ComputerService {
           return h;
         }
       }
+      await this.checkCanStart(c.org_id);
       await this.setState(computerId, c.snapshot_ref ? "starting" : "provisioning", emit);
       try {
         const spec = {
@@ -180,6 +183,23 @@ export class ComputerService {
         throw err;
       }
     });
+  }
+
+  /** Throws workspace_suspended or email_unverified when a computer must not start (D-094). */
+  async checkCanStart(orgId: string) {
+    const [o] = await this.db.execute<{
+      suspended: boolean;
+      plan: string | null;
+      verified: boolean;
+    }>(sql`
+      select o.suspended_at is not null as suspended,
+             (select e.plan_code from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as plan,
+             exists (select 1 from public.memberships m join auth.users u on u.id = m.user_id
+                     where m.org_id = o.id and m.role = 'owner' and u.email_confirmed_at is not null) as verified
+      from public.organizations o where o.id = ${orgId}::uuid`);
+    if (o?.suspended) throw new Error("workspace_suspended");
+    if (this.requireVerifiedEmail && (o?.plan ?? "free") === "free" && !o?.verified)
+      throw new Error("email_unverified");
   }
 
   async touch(computerId: string) {

@@ -31,7 +31,7 @@ class AdminScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: SubPage(
         title: l10n.adminConsole,
         bottom: PreferredSize(
@@ -49,12 +49,13 @@ class AdminScreen extends ConsumerWidget {
                   Tab(height: 40, text: l10n.adminUsers),
                   Tab(height: 40, text: l10n.adminWorkspaces),
                   Tab(height: 40, text: l10n.adminServices),
+                  Tab(height: 40, text: l10n.adminAbuse),
                 ],
               ),
             ),
           ),
         ),
-        body: const TabBarView(children: [_Overview(), _Users(), _Orgs(), _Services()]),
+        body: const TabBarView(children: [_Overview(), _Users(), _Orgs(), _Services(), _Abuse()]),
       ),
     );
   }
@@ -230,6 +231,39 @@ class _OrgsState extends ConsumerState<_Orgs> {
     });
   }
 
+  Future<void> _toggleSuspend(AdminOrg o) async {
+    final l10n = context.l10n;
+    final backend = ref.read(backendProvider);
+    if (o.suspendedAt != null) {
+      await runGuarded(context, () => backend.unsuspendOrg(o.id));
+    } else {
+      final reason = TextEditingController();
+      final ok = await showAdaptiveSheet<bool>(
+        context: context,
+        builder: (c) => FormSheet(
+          icon: LucideIcons.ban,
+          title: '${l10n.suspendWorkspace}: ${o.name}',
+          subtitle: l10n.suspendWorkspaceHelp,
+          submitLabel: l10n.suspendWorkspace,
+          submitKey: const Key('confirmSuspend'),
+          destructive: true,
+          onSubmit: () => Navigator.pop(c, true),
+          children: [
+            TextField(key: const Key('suspendReason'), controller: reason, decoration: InputDecoration(labelText: l10n.suspendReason)),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+      final text = reason.text.trim().isEmpty ? 'Suspended by the instance owner' : reason.text.trim();
+      await runGuarded(context, () => backend.suspendOrg(o.id, text));
+    }
+    if (!mounted) return;
+    final next = backend.adminOrgs();
+    setState(() {
+      _orgs = next;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -251,8 +285,20 @@ class _OrgsState extends ConsumerState<_Orgs> {
                       l10n.botsCount(o.bots),
                       l10n.cost30d(formatUsd(o.cost30dUsd)),
                       if (o.limits.isNotEmpty) o.limits.entries.map((e) => '${e.key}: ${e.value}').join(', '),
+                      if (o.suspendedAt != null) l10n.workspaceSuspended(o.suspendedReason ?? ''),
                     ].join(' · '),
-                    trailing: IconButton(tooltip: l10n.editQuotas, icon: const Icon(LucideIcons.slidersHorizontal), onPressed: () => _edit(o)),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(tooltip: l10n.editQuotas, icon: const Icon(LucideIcons.slidersHorizontal), onPressed: () => _edit(o)),
+                        IconButton(
+                          key: Key('suspend-${o.id}'),
+                          tooltip: o.suspendedAt != null ? l10n.unsuspendWorkspace : l10n.suspendWorkspace,
+                          icon: Icon(o.suspendedAt != null ? LucideIcons.circlePlay : LucideIcons.ban),
+                          onPressed: () => _toggleSuspend(o),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),
@@ -343,6 +389,58 @@ class _Services extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+
+/// Recent abuse signals and actions (D-094).
+class _Abuse extends ConsumerWidget {
+  const _Abuse();
+
+  String _label(BuildContext context, String kind) {
+    final l10n = context.l10n;
+    return switch (kind) {
+      'mining_pool' => l10n.abuseKind_mining_pool,
+      'blocked_port' => l10n.abuseKind_blocked_port,
+      'egress_flood' => l10n.abuseKind_egress_flood,
+      'signup_blocked' => l10n.abuseKind_signup_blocked,
+      'suspended' => l10n.abuseKind_suspended,
+      'unsuspended' => l10n.abuseKind_unsuspended,
+      _ => kind,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder<List<AbuseEvent>>(
+      future: ref.read(backendProvider).adminAbuseEvents(),
+      builder: (context, snap) {
+        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+        final items = snap.data!;
+        return PageColumn(
+          children: [
+            if (items.isEmpty)
+              AppCard(child: FormNote(context.l10n.adminNoAbuse, icon: LucideIcons.shieldCheck))
+            else
+              GroupedCard(
+                children: [
+                  for (final e in items)
+                    GroupedTile(
+                      icon: e.kind == 'unsuspended' ? LucideIcons.circlePlay : LucideIcons.shieldAlert,
+                      title: _label(context, e.kind),
+                      subtitle: [
+                        ?e.orgName,
+                        if (e.detail['target'] case final String t) t,
+                        if (e.detail['reason'] case final String r) r,
+                        e.createdAt.replaceFirst('T', ' ').substring(0, 16),
+                      ].join(' · '),
+                    ),
+                ],
+              ),
+          ],
+        );
+      },
     );
   }
 }

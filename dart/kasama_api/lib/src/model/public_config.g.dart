@@ -27,6 +27,8 @@ abstract class _$PublicConfigCWProxy {
 
   PublicConfig chatgptSignIn(bool? chatgptSignIn);
 
+  PublicConfig signupProofs(List<PublicConfigSignupProofsEnum>? signupProofs);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
@@ -45,6 +47,7 @@ abstract class _$PublicConfigCWProxy {
     PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort,
     bool? wallpapersEnabled,
     bool? chatgptSignIn,
+    List<PublicConfigSignupProofsEnum>? signupProofs,
   });
 }
 
@@ -91,6 +94,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
   PublicConfig chatgptSignIn(bool? chatgptSignIn) =>
       call(chatgptSignIn: chatgptSignIn);
 
+  @override
+  PublicConfig signupProofs(List<PublicConfigSignupProofsEnum>? signupProofs) =>
+      call(signupProofs: signupProofs);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
@@ -110,6 +117,7 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? defaultReasoningEffort = const $CopyWithPlaceholder(),
     Object? wallpapersEnabled = const $CopyWithPlaceholder(),
     Object? chatgptSignIn = const $CopyWithPlaceholder(),
+    Object? signupProofs = const $CopyWithPlaceholder(),
   }) {
     return PublicConfig(
       productName:
@@ -158,6 +166,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
           ? _value.chatgptSignIn
           // ignore: cast_nullable_to_non_nullable
           : chatgptSignIn as bool?,
+      signupProofs: signupProofs == const $CopyWithPlaceholder()
+          ? _value.signupProofs
+          // ignore: cast_nullable_to_non_nullable
+          : signupProofs as List<PublicConfigSignupProofsEnum>?,
     );
   }
 }
@@ -173,61 +185,65 @@ extension $PublicConfigCopyWith on PublicConfig {
 // JsonSerializableGenerator
 // **************************************************************************
 
-PublicConfig _$PublicConfigFromJson(Map<String, dynamic> json) =>
-    $checkedCreate(
-      'PublicConfig',
+PublicConfig _$PublicConfigFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate(
+  'PublicConfig',
+  json,
+  ($checkedConvert) {
+    $checkKeys(
       json,
-      ($checkedConvert) {
-        $checkKeys(
-          json,
-          requiredKeys: const [
-            'product_name',
-            'api_version',
-            'supabase_url',
-            'supabase_anon_key',
-            'billing_enabled',
-            'default_models',
-            'default_reasoning_effort',
-          ],
-        );
-        final val = PublicConfig(
-          productName: $checkedConvert('product_name', (v) => v as String),
-          apiVersion: $checkedConvert('api_version', (v) => v as String),
-          supabaseUrl: $checkedConvert('supabase_url', (v) => v as String),
-          supabaseAnonKey: $checkedConvert(
-            'supabase_anon_key',
-            (v) => v as String,
-          ),
-          billingEnabled: $checkedConvert('billing_enabled', (v) => v as bool),
-          defaultModels: $checkedConvert(
-            'default_models',
-            (v) => Map<String, String>.from(v as Map),
-          ),
-          defaultReasoningEffort: $checkedConvert(
-            'default_reasoning_effort',
-            (v) =>
-                $enumDecode(_$PublicConfigDefaultReasoningEffortEnumEnumMap, v),
-          ),
-          wallpapersEnabled: $checkedConvert(
-            'wallpapers_enabled',
-            (v) => v as bool?,
-          ),
-          chatgptSignIn: $checkedConvert('chatgpt_sign_in', (v) => v as bool?),
-        );
-        return val;
-      },
-      fieldKeyMap: const {
-        'productName': 'product_name',
-        'apiVersion': 'api_version',
-        'supabaseUrl': 'supabase_url',
-        'supabaseAnonKey': 'supabase_anon_key',
-        'billingEnabled': 'billing_enabled',
-        'defaultModels': 'default_models',
-        'defaultReasoningEffort': 'default_reasoning_effort',
-        'wallpapersEnabled': 'wallpapers_enabled',
-        'chatgptSignIn': 'chatgpt_sign_in',
-      },
+      requiredKeys: const [
+        'product_name',
+        'api_version',
+        'supabase_url',
+        'supabase_anon_key',
+        'billing_enabled',
+        'default_models',
+        'default_reasoning_effort',
+      ],
     );
+    final val = PublicConfig(
+      productName: $checkedConvert('product_name', (v) => v as String),
+      apiVersion: $checkedConvert('api_version', (v) => v as String),
+      supabaseUrl: $checkedConvert('supabase_url', (v) => v as String),
+      supabaseAnonKey: $checkedConvert('supabase_anon_key', (v) => v as String),
+      billingEnabled: $checkedConvert('billing_enabled', (v) => v as bool),
+      defaultModels: $checkedConvert(
+        'default_models',
+        (v) => Map<String, String>.from(v as Map),
+      ),
+      defaultReasoningEffort: $checkedConvert(
+        'default_reasoning_effort',
+        (v) => $enumDecode(_$PublicConfigDefaultReasoningEffortEnumEnumMap, v),
+      ),
+      wallpapersEnabled: $checkedConvert(
+        'wallpapers_enabled',
+        (v) => v as bool?,
+      ),
+      chatgptSignIn: $checkedConvert('chatgpt_sign_in', (v) => v as bool?),
+      signupProofs: $checkedConvert(
+        'signup_proofs',
+        (v) => (v as List<dynamic>?)
+            ?.map((e) => $enumDecode(_$PublicConfigSignupProofsEnumEnumMap, e))
+            .toList(),
+      ),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'productName': 'product_name',
+    'apiVersion': 'api_version',
+    'supabaseUrl': 'supabase_url',
+    'supabaseAnonKey': 'supabase_anon_key',
+    'billingEnabled': 'billing_enabled',
+    'defaultModels': 'default_models',
+    'defaultReasoningEffort': 'default_reasoning_effort',
+    'wallpapersEnabled': 'wallpapers_enabled',
+    'chatgptSignIn': 'chatgpt_sign_in',
+    'signupProofs': 'signup_proofs',
+  },
+);
 
 Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
     <String, dynamic>{
@@ -242,6 +258,9 @@ Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
               .defaultReasoningEffort]!,
       'wallpapers_enabled': ?instance.wallpapersEnabled,
       'chatgpt_sign_in': ?instance.chatgptSignIn,
+      'signup_proofs': ?instance.signupProofs
+          ?.map((e) => _$PublicConfigSignupProofsEnumEnumMap[e]!)
+          .toList(),
     };
 
 const _$PublicConfigDefaultReasoningEffortEnumEnumMap = {
@@ -251,4 +270,9 @@ const _$PublicConfigDefaultReasoningEffortEnumEnumMap = {
   PublicConfigDefaultReasoningEffortEnum.high: 'high',
   PublicConfigDefaultReasoningEffortEnum.xhigh: 'xhigh',
   PublicConfigDefaultReasoningEffortEnum.max: 'max',
+};
+
+const _$PublicConfigSignupProofsEnumEnumMap = {
+  PublicConfigSignupProofsEnum.appCheck: 'app_check',
+  PublicConfigSignupProofsEnum.pow: 'pow',
 };

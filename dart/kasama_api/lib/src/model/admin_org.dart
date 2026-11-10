@@ -33,6 +33,10 @@ class AdminOrg {
     required  this.bots,
 
     required  this.cost30dUsd,
+
+     this.suspendedAt,
+
+     this.suspendedReason,
   });
 
   @JsonKey(
@@ -119,6 +123,30 @@ class AdminOrg {
 
 
 
+  @JsonKey(
+    
+    name: r'suspended_at',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? suspendedAt;
+
+
+
+  @JsonKey(
+    
+    name: r'suspended_reason',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? suspendedReason;
+
+
+
 
 
     @override
@@ -129,7 +157,9 @@ class AdminOrg {
       other.limits == limits &&
       other.members == members &&
       other.bots == bots &&
-      other.cost30dUsd == cost30dUsd;
+      other.cost30dUsd == cost30dUsd &&
+      other.suspendedAt == suspendedAt &&
+      other.suspendedReason == suspendedReason;
 
     @override
     int get hashCode =>
@@ -139,7 +169,9 @@ class AdminOrg {
         limits.hashCode +
         members.hashCode +
         bots.hashCode +
-        cost30dUsd.hashCode;
+        cost30dUsd.hashCode +
+        (suspendedAt == null ? 0 : suspendedAt.hashCode) +
+        (suspendedReason == null ? 0 : suspendedReason.hashCode);
 
   factory AdminOrg.fromJson(Map<String, dynamic> json) => _$AdminOrgFromJson(json);
 

@@ -173,3 +173,64 @@ describe("proxy", () => {
     ).toBe(401);
   });
 });
+
+describe("abuse controls (D-094)", () => {
+  const reports: Array<{ computer: string; kind: string; target: string }> = [];
+  const proxy = new EgressProxy({
+    controlToken: "control-token-0123456789",
+    exemptCidrs: ["127.0.0.1/32"],
+    resolve: async () => ["127.0.0.1"],
+    abuse: { report: (computer, kind, target) => reports.push({ computer, kind, target }) },
+  });
+  proxy.computers.set("c9", {
+    ref: "c9",
+    token: "computer-token-0123456789",
+    connectionsPerMinute: 3,
+  });
+  let port = 0;
+  let server: Server;
+  const auth = `Basic ${Buffer.from("c9:computer-token-0123456789").toString("base64")}`;
+  const tunnel = (target: string) =>
+    new Promise<string>((resolve, reject) => {
+      const s = connect(port, "127.0.0.1", () =>
+        s.write(
+          `CONNECT ${target} HTTP/1.1\r\nHost: ${target}\r\nProxy-Authorization: ${auth}\r\n\r\n`,
+        ),
+      );
+      let data = "";
+      s.on("data", (d) => {
+        data += d;
+        if (data.includes("\r\n\r\n")) {
+          resolve(data.split("\r\n")[0] ?? "");
+          s.destroy();
+        }
+      });
+      s.on("error", reject);
+      s.on("close", () => resolve(data.split("\r\n")[0] ?? ""));
+    });
+
+  beforeAll(async () => {
+    server = proxy.createProxyServer().listen(0, "127.0.0.1");
+    await once(server, "listening");
+    port = (server.address() as AddressInfo).port;
+  });
+  afterAll(() => server.close());
+
+  it("refuses SMTP, Stratum ports and mining pools, and reports them", async () => {
+    expect(await tunnel("smtp.example.com:25")).toContain("403");
+    expect(await tunnel("example.com:3333")).toContain("403");
+    expect(await tunnel("xmr-eu1.nanopool.org:443")).toContain("403");
+    expect(reports.map((r) => r.kind)).toEqual(["blocked_port", "mining_pool", "mining_pool"]);
+    expect(reports[2]).toEqual({
+      computer: "c9",
+      kind: "mining_pool",
+      target: "xmr-eu1.nanopool.org:443",
+    });
+  });
+
+  it("reports a connection flood once a minute", async () => {
+    reports.length = 0;
+    for (let i = 0; i < 8; i++) await tunnel("public.example:443").catch(() => "");
+    expect(reports.filter((r) => r.kind === "egress_flood")).toHaveLength(1);
+  });
+});

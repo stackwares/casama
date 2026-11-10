@@ -4,6 +4,7 @@ import { routes } from "@kasama/contracts";
 import type { JwtClaims } from "@kasama/db";
 import { verifyLicense } from "@kasama/ee";
 import { sql } from "drizzle-orm";
+import { suspendOrg, unsuspendOrg } from "../../services/abuse.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -99,8 +100,10 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       members: number;
       bots: number;
       cost: string;
+      suspended_at: Date | null;
+      suspended_reason: string | null;
     }>(sql`
-      select o.id, o.name, e.plan_code, e.limits,
+      select o.id, o.name, e.plan_code, e.limits, o.suspended_at, o.suspended_reason,
              (select count(*)::int from public.memberships m where m.org_id = o.id) as members,
              (select count(*)::int from public.bots b where b.org_id = o.id) as bots,
              (select coalesce(sum(cost_usd), 0)::text from public.usage_ledger l where l.org_id = o.id and l.created_at > now() - interval '30 days') as cost
@@ -118,6 +121,52 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     members: o.members,
     bots: o.bots,
     cost_30d_usd: Number(o.cost),
+    suspended_at: o.suspended_at ? iso(o.suspended_at) : null,
+    suspended_reason: o.suspended_reason,
+  });
+
+  app.openapi(routes.suspendOrg, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { id } = c.req.valid("param");
+    const { reason } = c.req.valid("json");
+    const ok = await suspendOrg(
+      { db, stopComputer: deps.computers ? (cid) => deps.computers!.sleep(cid) : undefined },
+      id,
+      reason,
+      { kind: "user", id: claims.sub },
+    );
+    if (!ok) throw new ApiError(404, "org_not_found", "Workspace not found");
+    const [o] = await orgRows(id);
+    return c.json(orgOut(o as NonNullable<typeof o>), 200);
+  });
+
+  app.openapi(routes.unsuspendOrg, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { id } = c.req.valid("param");
+    if (!(await unsuspendOrg(db, id, claims.sub)))
+      throw new ApiError(404, "org_not_found", "Workspace not found");
+    const [o] = await orgRows(id);
+    return c.json(orgOut(o as NonNullable<typeof o>), 200);
+  });
+
+  app.openapi(routes.adminAbuseEvents, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const rows = await db.execute<{
+      id: string;
+      org_id: string | null;
+      org_name: string | null;
+      computer_id: string | null;
+      kind: string;
+      action: string;
+      detail: Record<string, unknown>;
+      created_at: Date;
+    }>(sql`
+      select e.id, e.org_id, o.name as org_name, e.computer_id, e.kind, e.action, e.detail, e.created_at
+      from public.abuse_events e left join public.organizations o on o.id = e.org_id
+      order by e.created_at desc limit 200`);
+    return c.json({ items: rows.map((r) => ({ ...r, created_at: iso(r.created_at) })) }, 200);
   });
 
   app.openapi(routes.adminOrgs, async (c) => {

@@ -836,6 +836,15 @@ async function admit(
       code: "no_model_configured",
       message: "This bot has no model. Add a model key and pick a model in the bot settings.",
     };
+  const [org] = await db.execute<{ suspended: boolean }>(
+    sql`select suspended_at is not null as suspended from public.organizations where id = ${info.orgId}::uuid`,
+  );
+  if (org?.suspended)
+    return {
+      ok: false,
+      code: "workspace_suspended",
+      message: "This workspace is suspended. Contact the instance owner.",
+    };
   const verdict = await spend(db, info);
   if (!verdict.ok) return verdict;
   await db.execute(

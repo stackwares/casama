@@ -224,6 +224,10 @@ abstract class Backend {
   Future<AdminOverview?> adminOverview();
   Future<List<AdminUser>> adminUsers();
   Future<List<AdminOrg>> adminOrgs();
+  /// Suspends a workspace: its computers stop and its bots stop running; data is kept (D-094).
+  Future<AdminOrg> suspendOrg(String orgId, String reason);
+  Future<AdminOrg> unsuspendOrg(String orgId);
+  Future<List<AbuseEvent>> adminAbuseEvents();
   Future<AdminOrg> setOrgLimits(String orgId, Map<String, num> limits);
   Future<List<AdminService>> adminServices();
   Future<UpdateNotice> adminUpdates();

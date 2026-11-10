@@ -82,8 +82,8 @@ class AuthClient {
   }
 
   /// Signs up. Returns a session when email confirmation is off, otherwise null.
-  Future<AuthSession?> signUp({required String email, required String password}) async {
-    final json = await _post('/signup', {'email': email, 'password': password});
+  Future<AuthSession?> signUp({required String email, required String password, Map<String, Object?>? data}) async {
+    final json = await _post('/signup', {'email': email, 'password': password, 'data': ?data});
     return json.containsKey('access_token') ? AuthSession.fromAuthResponse(json) : null;
   }
 
@@ -94,8 +94,8 @@ class AuthClient {
   }
 
   /// Sends a magic link email.
-  Future<void> sendMagicLink({required String email, String? redirectTo}) async {
-    await _post('/otp', {'email': email, 'create_user': true},
+  Future<void> sendMagicLink({required String email, String? redirectTo, Map<String, Object?>? data}) async {
+    await _post('/otp', {'email': email, 'create_user': true, 'data': ?data},
         query: redirectTo == null ? null : {'redirect_to': redirectTo});
   }
 

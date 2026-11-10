@@ -2931,4 +2931,50 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get twoStepNeededForAdmin =>
       'This workspace requires two-step sign-in for owners and admins. Set it up, or sign in again with your code, to use admin settings.';
+
+  @override
+  String get adminAbuse => 'Abuse';
+
+  @override
+  String get adminNoAbuse => 'Nothing suspicious so far.';
+
+  @override
+  String get suspendWorkspace => 'Suspend';
+
+  @override
+  String get unsuspendWorkspace => 'Lift suspension';
+
+  @override
+  String get suspendReason => 'Reason';
+
+  @override
+  String get suspendWorkspaceHelp =>
+      'Its computers stop and its bots stop running. Nothing is deleted, and you can lift it any time.';
+
+  @override
+  String workspaceSuspended(String reason) {
+    return 'Suspended: $reason';
+  }
+
+  @override
+  String get workspaceSuspendedBanner =>
+      'This workspace is suspended, so bots can\'t run and computers can\'t start. Contact whoever runs this server.';
+
+  @override
+  String get abuseKind_mining_pool => 'Crypto mining blocked';
+
+  @override
+  String get abuseKind_blocked_port => 'Mail port blocked';
+
+  @override
+  String get abuseKind_egress_flood => 'Traffic flood';
+
+  @override
+  String get abuseKind_signup_blocked => 'Sign-up refused';
+
+  @override
+  String get abuseKind_suspended => 'Workspace suspended';
+
+  @override
+  String get abuseKind_unsuspended => 'Suspension lifted';
 }

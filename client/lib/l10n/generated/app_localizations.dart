@@ -5103,6 +5103,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This workspace requires two-step sign-in for owners and admins. Set it up, or sign in again with your code, to use admin settings.'**
   String get twoStepNeededForAdmin;
+
+  /// No description provided for @adminAbuse.
+  ///
+  /// In en, this message translates to:
+  /// **'Abuse'**
+  String get adminAbuse;
+
+  /// No description provided for @adminNoAbuse.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing suspicious so far.'**
+  String get adminNoAbuse;
+
+  /// No description provided for @suspendWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend'**
+  String get suspendWorkspace;
+
+  /// No description provided for @unsuspendWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Lift suspension'**
+  String get unsuspendWorkspace;
+
+  /// No description provided for @suspendReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get suspendReason;
+
+  /// No description provided for @suspendWorkspaceHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Its computers stop and its bots stop running. Nothing is deleted, and you can lift it any time.'**
+  String get suspendWorkspaceHelp;
+
+  /// No description provided for @workspaceSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended: {reason}'**
+  String workspaceSuspended(String reason);
+
+  /// No description provided for @workspaceSuspendedBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This workspace is suspended, so bots can\'t run and computers can\'t start. Contact whoever runs this server.'**
+  String get workspaceSuspendedBanner;
+
+  /// No description provided for @abuseKind_mining_pool.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto mining blocked'**
+  String get abuseKind_mining_pool;
+
+  /// No description provided for @abuseKind_blocked_port.
+  ///
+  /// In en, this message translates to:
+  /// **'Mail port blocked'**
+  String get abuseKind_blocked_port;
+
+  /// No description provided for @abuseKind_egress_flood.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic flood'**
+  String get abuseKind_egress_flood;
+
+  /// No description provided for @abuseKind_signup_blocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-up refused'**
+  String get abuseKind_signup_blocked;
+
+  /// No description provided for @abuseKind_suspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace suspended'**
+  String get abuseKind_suspended;
+
+  /// No description provided for @abuseKind_unsuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspension lifted'**
+  String get abuseKind_unsuspended;
 }
 
 class _AppLocalizationsDelegate

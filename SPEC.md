@@ -98,7 +98,7 @@ The full product is 40 features across 9 phases, built backend-first: Phases 0 t
 | Cloud Connect           | Self-hosted instances use cloud computers and credits through an API key                             | A self-hosted bot runs on a cloud computer and the usage shows on the cloud bill                | 7       |
 | Privacy                 | Data export and account deletion                                                                     | Export downloads a ZIP; deletion purges data within 30 days                                     | 8       |
 | Account security        | Two-step sign-in (TOTP), required for owners and admins by workspace setting; passkeys later         | A new device asks for a code; admins without two-step sign-in can't open secrets or billing     | 8       |
-| Cloud abuse controls    | Sign-up CAPTCHA, verified email before free computers, mining and spam detection, suspension         | A scripted sign-up without a CAPTCHA fails; a mining computer is stopped within 5 minutes       | 8       |
+| Cloud abuse controls    | Sign-up check, verified email before free computers, mining and flood detection, suspension          | A scripted sign-up without a proof fails; a mining computer is stopped within 5 minutes          | 8       |
 | Languages               | English at launch; ARB-ready for more locales later                                                  | Every screen uses English ARB strings; no hard-coded UI copy                                    | 8       |
 | Self-host and launch    | One-command installer, one-click deploy templates, docs site, public launch                          | Fresh VPS to working app in under 15 min                                                        | 8       |
 
@@ -699,7 +699,7 @@ The main threats are a bot being hijacked by content it reads, one tenant reachi
 | Sandbox escape or lateral movement                   | gVisor runtime, non-root user, per-computer networks, egress proxy blocking private ranges, resource limits         |
 | Leaked model keys or secrets                         | Supabase Vault only, host allowlists per secret, output redaction, never returned by the API                        |
 | Account takeover                                     | Two-step sign-in (TOTP), required for owners and admins by workspace setting; `aal2` on sensitive routes            |
-| Abuse (spam, scanning, crypto mining)                | Outbound rate limits, CPU quotas, usage alerts, sign-up CAPTCHA, verified email before free computers, mining and spam detection, account suspension tooling |
+| Abuse (spam, scanning, crypto mining)                | Outbound rate limits, CPU quotas, usage alerts, sign-up checks, verified email before free computers, mining and spam detection, account suspension tooling |
 | Stolen stream or control session                     | 5-minute tokens bound to user, computer and mode; signaling only through the API                                    |
 | Unauthorized channel commands                        | Webhook signature checks, sender allowlists per bot                                                                 |
 | Compromised dependencies                             | Lockfiles, Dependabot, image scanning in CI, pinned agent-browser and agent-desktop versions                        |
@@ -1214,11 +1214,11 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 - [ ] Marketing site, demo video, app store listings, signed desktop installers, Shorebird release flow
 - [ ] ChatGPT plan sign-in (see Model gateway): desktop and CLI sign-in, the `chatgpt` gateway adapter, limit and reconnect handling, and the fake OpenAI test server; cloud stays off until OpenAI approves hosted use
 - [ ] Two-step sign-in: TOTP through Supabase Auth on every platform, more than one factor allowed as backup, and a workspace setting that requires it for owners and admins (sensitive routes then need `aal2`); passkeys once Supabase Auth supports them
-- [ ] Kasama Cloud abuse controls: a CAPTCHA on sign-up and magic links (Supabase Auth's Turnstile support), a verified email before a free-tier computer starts, outbound port 25 blocked, per-computer egress and CPU limits, crypto-mining and spam detection that stops the computer, and a suspend action in the owner console (stops computers and runs, keeps data, writes `audit_log`); self-hosted servers get only the optional CAPTCHA
+- [ ] Kasama Cloud abuse controls: a sign-up check on new email accounts (Supabase Auth's before-user-created hook accepts a Firebase App Check token, which needs no visible widget, or a solved proof-of-work puzzle on platforms without App Check), a verified email before a free-tier computer starts, outbound mail ports blocked, per-computer egress and CPU limits, crypto-mining and flood detection in the egress proxy that stops the computer and suspends the workspace, and Suspend in the owner console (stops computers and runs, keeps data, writes `audit_log`); self-hosted servers keep all of this off (D-094)
 - [ ] Least-privilege `kasama_worker` database role for the worker and system jobs (D-016)
 - [ ] Public launch: Show HN, Product Hunt, r/selfhosted, r/LocalLLaMA
 
-**Gate:** load test p95 time to first token under 3 s; evals at or above baseline; security checklist closed; fresh VPS install under 15 minutes; a self-hosted bot replies on a ChatGPT plan; two-step sign-in works on all six platforms; a scripted sign-up without a CAPTCHA token fails on Kasama Cloud; apps approved in both stores; public launch done.
+**Gate:** load test p95 time to first token under 3 s; evals at or above baseline; security checklist closed; fresh VPS install under 15 minutes; a self-hosted bot replies on a ChatGPT plan; two-step sign-in works on all six platforms; a scripted sign-up without a sign-up proof fails on Kasama Cloud; apps approved in both stores; public launch done.
 
 ### Post-v1 (specified, not part of Phases 0–8)
 

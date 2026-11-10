@@ -23,7 +23,22 @@ export const OrganizationWithRole = Organization.extend({
   require_mfa: z.boolean().optional().openapi({
     description: "Owners and admins need two-step sign-in (an aal2 session) to use their powers",
   }),
+  suspended: z.boolean().optional().openapi({
+    description:
+      "Suspended by the instance owner: bots don't run and computers don't start (D-094)",
+  }),
 }).openapi("OrganizationWithRole");
+
+export const SignupChallenge = z
+  .object({
+    challenge: z.string(),
+    difficulty: z.number().int().openapi({
+      description:
+        "Find a nonce so that sha256(`<challenge>:<nonce>`) starts with this many zero bits",
+    }),
+    expires_at: z.string(),
+  })
+  .openapi("SignupChallenge");
 
 export const CreateOrganizationRequest = z
   .object({
@@ -94,5 +109,10 @@ export const PublicConfig = z
     wallpapers_enabled: z.boolean().optional(),
     /** Whether people can connect a ChatGPT plan here (desktop app and CLI sign-in). */
     chatgpt_sign_in: z.boolean().optional(),
+    /**
+     * Proofs a new account must carry in its user metadata (`signup_proof`), D-094. Empty: none.
+     * app_check: a Firebase App Check token; pow: a solved GET /v1/signup/challenge puzzle.
+     */
+    signup_proofs: z.array(z.enum(["app_check", "pow"])).optional(),
   })
   .openapi("PublicConfig");

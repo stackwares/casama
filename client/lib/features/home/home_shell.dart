@@ -115,6 +115,7 @@ class HomeShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final size = layoutFor(MediaQuery.sizeOf(context).width);
     final badge = ref.watch(inboxBadgeProvider);
+    final child = ref.watch(currentOrgProvider)?.suspended == true ? _SuspendedBanner(child: this.child) : this.child;
     final dests = _destinations(context);
     void go(int i) => context.go(dests[i].path);
 
@@ -552,6 +553,40 @@ class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+/// A suspended workspace (D-094) says so above every screen.
+class _SuspendedBanner extends StatelessWidget {
+  const _SuspendedBanner({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return Column(
+      children: [
+        Material(
+          key: const Key('suspendedBanner'),
+          color: colors.negative.withValues(alpha: 0.12),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg, vertical: AppSpace.sm),
+              child: Row(
+                children: [
+                  Icon(LucideIcons.ban, size: 18, color: colors.negative),
+                  const SizedBox(width: AppSpace.sm),
+                  Expanded(child: Text(context.l10n.workspaceSuspendedBanner)),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Expanded(child: child),
+      ],
     );
   }
 }

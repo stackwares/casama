@@ -1633,5 +1633,26 @@
   "twoStepPromptBody": "Open your authenticator app and enter the 6-digit code to finish signing in.",
   "requireTwoStep": "Require two-step sign-in for owners and admins",
   "requireTwoStepHelp": "Owners and admins without it keep member access only until they sign in with it. Turn it on for yourself first.",
-  "twoStepNeededForAdmin": "This workspace requires two-step sign-in for owners and admins. Set it up, or sign in again with your code, to use admin settings."
+  "twoStepNeededForAdmin": "This workspace requires two-step sign-in for owners and admins. Set it up, or sign in again with your code, to use admin settings.",
+  "adminAbuse": "Abuse",
+  "adminNoAbuse": "Nothing suspicious so far.",
+  "suspendWorkspace": "Suspend",
+  "unsuspendWorkspace": "Lift suspension",
+  "suspendReason": "Reason",
+  "suspendWorkspaceHelp": "Its computers stop and its bots stop running. Nothing is deleted, and you can lift it any time.",
+  "workspaceSuspended": "Suspended: {reason}",
+  "@workspaceSuspended": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "workspaceSuspendedBanner": "This workspace is suspended, so bots can't run and computers can't start. Contact whoever runs this server.",
+  "abuseKind_mining_pool": "Crypto mining blocked",
+  "abuseKind_blocked_port": "Mail port blocked",
+  "abuseKind_egress_flood": "Traffic flood",
+  "abuseKind_signup_blocked": "Sign-up refused",
+  "abuseKind_suspended": "Workspace suspended",
+  "abuseKind_unsuspended": "Suspension lifted"
 }

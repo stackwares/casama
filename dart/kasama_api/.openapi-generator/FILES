@@ -31,6 +31,8 @@ lib/src/auth/basic_auth.dart
 lib/src/auth/bearer_auth.dart
 lib/src/auth/oauth.dart
 lib/src/deserialize.dart
+lib/src/model/abuse_event.dart
+lib/src/model/abuse_event_list.dart
 lib/src/model/accepted.dart
 lib/src/model/account_deletion.dart
 lib/src/model/admin_org.dart
@@ -190,6 +192,7 @@ lib/src/model/secret_list.dart
 lib/src/model/send_message_request.dart
 lib/src/model/send_message_response.dart
 lib/src/model/set_org_limits_request.dart
+lib/src/model/signup_challenge.dart
 lib/src/model/skill_loaded_event.dart
 lib/src/model/skill_loaded_event_payload.dart
 lib/src/model/stream_mode.dart
@@ -200,6 +203,7 @@ lib/src/model/subrun_completed_event_payload.dart
 lib/src/model/subrun_started_event.dart
 lib/src/model/subrun_started_event_payload.dart
 lib/src/model/subscription.dart
+lib/src/model/suspend_org_request.dart
 lib/src/model/take_lease_request.dart
 lib/src/model/takeover_request.dart
 lib/src/model/takeover_request_list.dart

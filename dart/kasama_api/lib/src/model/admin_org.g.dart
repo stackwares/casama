@@ -21,6 +21,10 @@ abstract class _$AdminOrgCWProxy {
 
   AdminOrg cost30dUsd(num cost30dUsd);
 
+  AdminOrg suspendedAt(String? suspendedAt);
+
+  AdminOrg suspendedReason(String? suspendedReason);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `AdminOrg(...).copyWith.fieldName(value)`.
@@ -37,6 +41,8 @@ abstract class _$AdminOrgCWProxy {
     int members,
     int bots,
     num cost30dUsd,
+    String? suspendedAt,
+    String? suspendedReason,
   });
 }
 
@@ -68,6 +74,13 @@ class _$AdminOrgCWProxyImpl implements _$AdminOrgCWProxy {
   @override
   AdminOrg cost30dUsd(num cost30dUsd) => call(cost30dUsd: cost30dUsd);
 
+  @override
+  AdminOrg suspendedAt(String? suspendedAt) => call(suspendedAt: suspendedAt);
+
+  @override
+  AdminOrg suspendedReason(String? suspendedReason) =>
+      call(suspendedReason: suspendedReason);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `AdminOrg(...).copyWith.fieldName(value)`.
@@ -85,6 +98,8 @@ class _$AdminOrgCWProxyImpl implements _$AdminOrgCWProxy {
     Object? members = const $CopyWithPlaceholder(),
     Object? bots = const $CopyWithPlaceholder(),
     Object? cost30dUsd = const $CopyWithPlaceholder(),
+    Object? suspendedAt = const $CopyWithPlaceholder(),
+    Object? suspendedReason = const $CopyWithPlaceholder(),
   }) {
     return AdminOrg(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -116,6 +131,14 @@ class _$AdminOrgCWProxyImpl implements _$AdminOrgCWProxy {
           ? _value.cost30dUsd
           // ignore: cast_nullable_to_non_nullable
           : cost30dUsd as num,
+      suspendedAt: suspendedAt == const $CopyWithPlaceholder()
+          ? _value.suspendedAt
+          // ignore: cast_nullable_to_non_nullable
+          : suspendedAt as String?,
+      suspendedReason: suspendedReason == const $CopyWithPlaceholder()
+          ? _value.suspendedReason
+          // ignore: cast_nullable_to_non_nullable
+          : suspendedReason as String?,
     );
   }
 }
@@ -155,10 +178,17 @@ AdminOrg _$AdminOrgFromJson(Map<String, dynamic> json) => $checkedCreate(
       members: $checkedConvert('members', (v) => (v as num).toInt()),
       bots: $checkedConvert('bots', (v) => (v as num).toInt()),
       cost30dUsd: $checkedConvert('cost_30d_usd', (v) => v as num),
+      suspendedAt: $checkedConvert('suspended_at', (v) => v as String?),
+      suspendedReason: $checkedConvert('suspended_reason', (v) => v as String?),
     );
     return val;
   },
-  fieldKeyMap: const {'planCode': 'plan_code', 'cost30dUsd': 'cost_30d_usd'},
+  fieldKeyMap: const {
+    'planCode': 'plan_code',
+    'cost30dUsd': 'cost_30d_usd',
+    'suspendedAt': 'suspended_at',
+    'suspendedReason': 'suspended_reason',
+  },
 );
 
 Map<String, dynamic> _$AdminOrgToJson(AdminOrg instance) => <String, dynamic>{
@@ -169,4 +199,6 @@ Map<String, dynamic> _$AdminOrgToJson(AdminOrg instance) => <String, dynamic>{
   'members': instance.members,
   'bots': instance.bots,
   'cost_30d_usd': instance.cost30dUsd,
+  'suspended_at': ?instance.suspendedAt,
+  'suspended_reason': ?instance.suspendedReason,
 };

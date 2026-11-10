@@ -39,6 +39,7 @@ x-kasama: &kasama
     KASAMA_CLOUD_KEY: ${KASAMA_CLOUD_KEY:-}
     KASAMA_LICENSE_KEY: ${KASAMA_LICENSE_KEY:-}
     CHATGPT_SIGN_IN: ${CHATGPT_SIGN_IN:-auto}
+    ABUSE_CONTROLS: ${ABUSE_CONTROLS:-auto}
     SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
     BILLING_ENABLED: "false"
 
@@ -237,6 +238,10 @@ services:
     networks: [internal, egress]
     environment:
       EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
+      # Abuse controls (D-094; Kasama Cloud): refuse mail and mining traffic and report it to the API.
+      EGRESS_ABUSE: ${EGRESS_ABUSE:-off}
+      EGRESS_ABUSE_URL: http://api:8787/internal/abuse
+      EGRESS_ABUSE_TOKEN: ${INTERNAL_TOKEN}
 
   # TURN relay for live view (D-055). Production also wants TLS on 5349 (turns:).
   turn:

@@ -19,6 +19,21 @@ export const EnvSchema = z.object({
    * billing is on (Kasama Cloud needs OpenAI's approval for hosted use first).
    */
   CHATGPT_SIGN_IN: z.enum(["auto", "on", "off"]).default("auto"),
+  /**
+   * Kasama Cloud abuse controls (D-094): sign-up proofs, a verified email before a free computer
+   * starts, and automatic suspension on egress abuse. auto: on when billing is on.
+   */
+  ABUSE_CONTROLS: z.enum(["auto", "on", "off"]).default("auto"),
+  /** Proofs a new account may carry (comma-separated): app_check, pow. */
+  SIGNUP_PROOFS: z.string().default("app_check,pow"),
+  /** Proof-of-work difficulty in leading zero bits (about 2^n hashes; 18 is a second or two). */
+  SIGNUP_POW_DIFFICULTY: z.coerce.number().int().min(8).max(28).default(18),
+  /** Firebase project number for App Check tokens; JWKS and issuer are overridable for tests. */
+  APP_CHECK_PROJECT_NUMBER: z.string().optional(),
+  APP_CHECK_JWKS_URL: z.url().default("https://firebaseappcheck.googleapis.com/v1/jwks"),
+  APP_CHECK_ISSUER_BASE: z.url().default("https://firebaseappcheck.googleapis.com"),
+  /** Supabase Auth "before user created" hook secret (`v1,whsec_…`, Standard Webhooks). */
+  AUTH_HOOK_SECRET: z.string().optional(),
   /** OpenAI's auth server and Responses API; overridable for tests and proxies. */
   CHATGPT_AUTH_URL: z.url().default("https://auth.openai.com"),
   CHATGPT_API_URL: z.url().default("https://api.openai.com/v1"),

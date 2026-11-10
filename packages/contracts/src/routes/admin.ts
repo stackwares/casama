@@ -1,10 +1,12 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import {
+  AbuseEvent,
   AdminOrg,
   AdminOverview,
   AdminService,
   AdminUser,
   SetOrgLimitsRequest,
+  SuspendOrgRequest,
   UpdateNotice,
 } from "../admin.ts";
 import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
@@ -62,4 +64,33 @@ export const setOrgLimits = createRoute({
   summary: "Set a workspace's quotas",
   request: { params: z.object({ id: Uuid }), body: jsonBody(SetOrgLimitsRequest) },
   responses: { 200: jsonResponse("Updated", AdminOrg), 401: e401, 403: e403, 404: e404 },
+});
+
+export const adminAbuseEvents = get(
+  "adminAbuseEvents",
+  "/v1/admin/abuse",
+  "Recent abuse signals and actions (owner only)",
+  z.object({ items: z.array(AbuseEvent) }).openapi("AbuseEventList"),
+);
+
+export const suspendOrg = createRoute({
+  operationId: "suspendOrg",
+  method: "post",
+  path: "/v1/admin/orgs/{id}/suspend",
+  tags: ["admin"],
+  security,
+  summary: "Suspend a workspace: stops its computers and runs, keeps its data",
+  request: { params: z.object({ id: Uuid }), body: jsonBody(SuspendOrgRequest) },
+  responses: { 200: jsonResponse("Suspended", AdminOrg), 401: e401, 403: e403, 404: e404 },
+});
+
+export const unsuspendOrg = createRoute({
+  operationId: "unsuspendOrg",
+  method: "delete",
+  path: "/v1/admin/orgs/{id}/suspend",
+  tags: ["admin"],
+  security,
+  summary: "Lift a workspace's suspension",
+  request: { params: z.object({ id: Uuid }) },
+  responses: { 200: jsonResponse("Unsuspended", AdminOrg), 401: e401, 403: e403, 404: e404 },
 });

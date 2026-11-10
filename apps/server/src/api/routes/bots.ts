@@ -257,6 +257,15 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       const created = await withUserSession(db, claims, async (tx) => {
         const [conv] = await tx.select().from(conversations).where(eq(conversations.id, id));
         if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
+        const [org] = await tx.execute<{ suspended: boolean }>(
+          sql`select suspended_at is not null as suspended from public.organizations where id = ${conv.orgId}::uuid`,
+        );
+        if (org?.suspended)
+          throw new ApiError(
+            403,
+            "workspace_suspended",
+            "This workspace is suspended. Contact the instance owner.",
+          );
         const [run] = await tx
           .insert(runs)
           .values({

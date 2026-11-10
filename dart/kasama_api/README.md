@@ -51,10 +51,10 @@ import 'package:kasama_api/kasama_api.dart';
 final api = KasamaApi().getAdminApi();
 
 try {
-    final response = await api.adminOrgs();
+    final response = await api.adminAbuseEvents();
     print(response);
 } catch on DioException (e) {
-    print("Exception when calling AdminApi->adminOrgs: $e\n");
+    print("Exception when calling AdminApi->adminAbuseEvents: $e\n");
 }
 
 ```
@@ -65,12 +65,15 @@ All URIs are relative to *http://localhost:8787*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*AdminApi*](doc/AdminApi.md) | [**adminAbuseEvents**](doc/AdminApi.md#adminabuseevents) | **GET** /v1/admin/abuse | Recent abuse signals and actions (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
 [*AdminApi*](doc/AdminApi.md) | [**adminOverview**](doc/AdminApi.md#adminoverview) | **GET** /v1/admin/overview | Instance totals (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminServices**](doc/AdminApi.md#adminservices) | **GET** /v1/admin/services | Configured providers and system health
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdates**](doc/AdminApi.md#adminupdates) | **GET** /v1/admin/updates | Whether a newer Kasama release exists
 [*AdminApi*](doc/AdminApi.md) | [**adminUsers**](doc/AdminApi.md#adminusers) | **GET** /v1/admin/users | Everyone on this instance
 [*AdminApi*](doc/AdminApi.md) | [**setOrgLimits**](doc/AdminApi.md#setorglimits) | **PATCH** /v1/admin/orgs/{id}/limits | Set a workspace&#39;s quotas
+[*AdminApi*](doc/AdminApi.md) | [**suspendOrg**](doc/AdminApi.md#suspendorg) | **POST** /v1/admin/orgs/{id}/suspend | Suspend a workspace: stops its computers and runs, keeps its data
+[*AdminApi*](doc/AdminApi.md) | [**unsuspendOrg**](doc/AdminApi.md#unsuspendorg) | **DELETE** /v1/admin/orgs/{id}/suspend | Lift a workspace&#39;s suspension
 [*AppearanceApi*](doc/AppearanceApi.md) | [**searchWallpapers**](doc/AppearanceApi.md#searchwallpapers) | **GET** /v1/wallpapers | Search wallpaper photos. Only when the server has a photo source configured (config.wallpapers_enabled); 404 otherwise
 [*AppearanceApi*](doc/AppearanceApi.md) | [**trackWallpaperDownload**](doc/AppearanceApi.md#trackwallpaperdownload) | **POST** /v1/wallpapers/download | Tell the photo source a photo was chosen (Unsplash requires this)
 [*ApprovalsApi*](doc/ApprovalsApi.md) | [**decideApproval**](doc/ApprovalsApi.md#decideapproval) | **POST** /v1/approvals/{id}/decision | Approve or deny; denying cancels that step only
@@ -156,6 +159,7 @@ Class | Method | HTTP request | Description
 [*SecretsApi*](doc/SecretsApi.md) | [**deleteSecret**](doc/SecretsApi.md#deletesecret) | **DELETE** /v1/secrets/{id} | 
 [*SecretsApi*](doc/SecretsApi.md) | [**listSecrets**](doc/SecretsApi.md#listsecrets) | **GET** /v1/secrets | 
 [*SystemApi*](doc/SystemApi.md) | [**getConfig**](doc/SystemApi.md#getconfig) | **GET** /v1/config | Public client configuration (no auth)
+[*SystemApi*](doc/SystemApi.md) | [**getSignupChallenge**](doc/SystemApi.md#getsignupchallenge) | **GET** /v1/signup/challenge | A proof-of-work puzzle for signing up when the server asks for one (no auth)
 [*SystemApi*](doc/SystemApi.md) | [**healthz**](doc/SystemApi.md#healthz) | **GET** /healthz | 
 [*SystemApi*](doc/SystemApi.md) | [**readyz**](doc/SystemApi.md#readyz) | **GET** /readyz | 
 [*TasksApi*](doc/TasksApi.md) | [**listTasks**](doc/TasksApi.md#listtasks) | **GET** /v1/tasks | 
@@ -176,6 +180,8 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AbuseEvent](doc/AbuseEvent.md)
+ - [AbuseEventList](doc/AbuseEventList.md)
  - [Accepted](doc/Accepted.md)
  - [AccountDeletion](doc/AccountDeletion.md)
  - [AdminOrg](doc/AdminOrg.md)
@@ -335,6 +341,7 @@ Class | Method | HTTP request | Description
  - [SendMessageRequest](doc/SendMessageRequest.md)
  - [SendMessageResponse](doc/SendMessageResponse.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
+ - [SignupChallenge](doc/SignupChallenge.md)
  - [SkillLoadedEvent](doc/SkillLoadedEvent.md)
  - [SkillLoadedEventPayload](doc/SkillLoadedEventPayload.md)
  - [StreamMode](doc/StreamMode.md)
@@ -345,6 +352,7 @@ Class | Method | HTTP request | Description
  - [SubrunStartedEvent](doc/SubrunStartedEvent.md)
  - [SubrunStartedEventPayload](doc/SubrunStartedEventPayload.md)
  - [Subscription](doc/Subscription.md)
+ - [SuspendOrgRequest](doc/SuspendOrgRequest.md)
  - [TakeLeaseRequest](doc/TakeLeaseRequest.md)
  - [TakeoverRequest](doc/TakeoverRequest.md)
  - [TakeoverRequestList](doc/TakeoverRequestList.md)

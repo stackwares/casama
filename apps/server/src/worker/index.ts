@@ -85,6 +85,8 @@ export interface WorkerOptions {
   realtimeModel?: string;
   /** ChatGPT plan sign-in endpoints; defaults are OpenAI's (tests point them at a fake). */
   chatgpt?: { authUrl?: string; apiUrl?: string };
+  /** Kasama Cloud abuse controls (D-094): free workspaces need a verified owner email for computers. */
+  requireVerifiedEmail?: boolean;
 }
 
 function loadFixtures(paths: string): FixtureFile[] {
@@ -155,6 +157,7 @@ export async function startWorker(opts: WorkerOptions) {
           extra,
         )
       : undefined;
+  if (computers) computers.requireVerifiedEmail = opts.requireVerifiedEmail ?? false;
   const tools = builtinTools({
     db,
     memory: async (orgId) => new MemoryService(db, await embedderFor(orgId)),

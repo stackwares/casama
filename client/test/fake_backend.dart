@@ -75,8 +75,10 @@ class FakeBackend implements Backend {
           region: 'local',
           createdAt: DateTime(2026),
           role: OrgRole.owner,
+          suspended: orgSuspended,
         ),
       ];
+  bool orgSuspended = false;
   @override
   Future<Organization> createOrganization(String name) async {
     createdOrgs++;
@@ -501,10 +503,47 @@ class FakeBackend implements Backend {
       : null;
   @override
   Future<List<AdminUser>> adminUsers() async => [AdminUser(id: 'u1', email: 'owner@example.com', createdAt: DateTime(2026), lastSignInAt: null, orgs: 1)];
-  AdminOrg _org(Map<String, num> limits) =>
-      AdminOrg(id: orgId, name: 'Test Org', planCode: 'selfhost', limits: limits, members: 2, bots: 1, cost30dUsd: 1.5);
+  AdminOrg _org(Map<String, num> limits) => AdminOrg(
+        id: orgId,
+        name: 'Test Org',
+        planCode: 'selfhost',
+        limits: limits,
+        members: 2,
+        bots: 1,
+        cost30dUsd: 1.5,
+        suspendedAt: suspendedReason == null ? null : '2026-11-10T00:00:00Z',
+        suspendedReason: suspendedReason,
+      );
+  String? suspendedReason;
   @override
-  Future<List<AdminOrg>> adminOrgs() async => [_org(setLimits ?? const {})];
+  Future<AdminOrg> suspendOrg(String orgId, String reason) async {
+    suspendedReason = reason;
+    return _org(setLimits ?? const {});
+  }
+  @override
+  Future<AdminOrg> unsuspendOrg(String orgId) async {
+    suspendedReason = null;
+    return _org(setLimits ?? const {});
+  }
+  @override
+  Future<List<AbuseEvent>> adminAbuseEvents() async => [
+        AbuseEvent(
+          id: '99999999-9999-4999-8999-999999999999',
+          orgId: orgId,
+          orgName: 'Test Org',
+          computerId: null,
+          kind: 'mining_pool',
+          action: 'workspace_suspended',
+          detail: const {'target': 'xmr.nanopool.org:443'},
+          createdAt: '2026-11-10T00:00:00Z',
+        ),
+      ];
+  int adminOrgsCalls = 0;
+  @override
+  Future<List<AdminOrg>> adminOrgs() async {
+    adminOrgsCalls++;
+    return [_org(setLimits ?? const {})];
+  }
   @override
   Future<AdminOrg> setOrgLimits(String orgId, Map<String, num> limits) async {
     setLimits = limits;

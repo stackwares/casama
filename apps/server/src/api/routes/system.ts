@@ -2,6 +2,7 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { API_VERSION, PRODUCT_NAME, routes } from "@kasama/contracts";
 import { DEFAULT_MODELS, defaultModelFor } from "@kasama/domain";
 import { modelOverrides } from "../../env.ts";
+import { abuseControlsOn, signupProofKinds } from "../../services/abuse.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { chatGptSignInEnabled } from "./chatgpt.ts";
 
@@ -42,6 +43,7 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         default_reasoning_effort: deps.env.DEFAULT_REASONING_EFFORT,
         wallpapers_enabled: Boolean(deps.env.UNSPLASH_ACCESS_KEY),
         chatgpt_sign_in: chatGptSignInEnabled(deps.env),
+        signup_proofs: abuseControlsOn(deps.env) ? signupProofKinds(deps.env) : [],
       },
       200,
     ),

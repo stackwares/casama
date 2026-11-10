@@ -36,6 +36,8 @@ class OrganizationWithRole {
     required  this.role,
 
      this.requireMfa,
+
+     this.suspended,
   });
 
   @JsonKey(
@@ -135,6 +137,19 @@ class OrganizationWithRole {
 
 
 
+      /// Suspended by the instance owner: bots don't run and computers don't start (D-094)
+  @JsonKey(
+    
+    name: r'suspended',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? suspended;
+
+
+
 
 
     @override
@@ -146,7 +161,8 @@ class OrganizationWithRole {
       other.region == region &&
       other.createdAt == createdAt &&
       other.role == role &&
-      other.requireMfa == requireMfa;
+      other.requireMfa == requireMfa &&
+      other.suspended == suspended;
 
     @override
     int get hashCode =>
@@ -157,7 +173,8 @@ class OrganizationWithRole {
         region.hashCode +
         createdAt.hashCode +
         role.hashCode +
-        requireMfa.hashCode;
+        requireMfa.hashCode +
+        suspended.hashCode;
 
   factory OrganizationWithRole.fromJson(Map<String, dynamic> json) => _$OrganizationWithRoleFromJson(json);
 

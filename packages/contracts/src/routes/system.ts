@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { jsonResponse } from "../common.ts";
-import { PublicConfig } from "../workspaces.ts";
+import { PublicConfig, SignupChallenge } from "../workspaces.ts";
 
 const Health = z
   .object({
@@ -35,4 +35,13 @@ export const getConfig = createRoute({
   tags: ["system"],
   summary: "Public client configuration (no auth)",
   responses: { 200: jsonResponse("Client configuration", PublicConfig) },
+});
+
+export const getSignupChallenge = createRoute({
+  operationId: "getSignupChallenge",
+  method: "get",
+  path: "/v1/signup/challenge",
+  tags: ["system"],
+  summary: "A proof-of-work puzzle for signing up when the server asks for one (no auth)",
+  responses: { 200: jsonResponse("Challenge", SignupChallenge) },
 });

@@ -60,7 +60,37 @@ export interface DomainRules {
   deny?: string[];
 }
 
-const matchesDomain = (host: string, rule: string) => {
+/** Outbound mail ports: bots send mail through APIs, never straight SMTP (D-094). */
+export const SMTP_PORTS = [25, 465, 587, 2525];
+/** Common Stratum (crypto-mining pool) ports. */
+export const STRATUM_PORTS = [3333, 4444, 5555, 7777, 9999, 14433, 14444, 45700];
+/** Well-known crypto-mining pools (and their subdomains). */
+export const MINING_POOL_DOMAINS = [
+  "nanopool.org",
+  "supportxmr.com",
+  "minexmr.com",
+  "moneroocean.stream",
+  "2miners.com",
+  "f2pool.com",
+  "ethermine.org",
+  "hashvault.pro",
+  "herominers.com",
+  "unmineable.com",
+  "nicehash.com",
+  "c3pool.com",
+  "xmrpool.eu",
+  "viabtc.com",
+  "antpool.com",
+  "poolin.com",
+  "kryptex.network",
+  "zpool.ca",
+  "miningpoolhub.com",
+  "slushpool.com",
+  "braiins.com",
+  "p2pool.io",
+];
+
+export const matchesDomain = (host: string, rule: string) => {
   const r = rule.toLowerCase().replace(/^\*\./, "").replace(/\.$/, "");
   return host === r || host.endsWith(`.${r}`);
 };

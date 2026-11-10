@@ -19,6 +19,7 @@ import {
   kasamaCloudProvider,
 } from "./billing/index.ts";
 import { loadEnv } from "./env.ts";
+import { abuseControlsOn } from "./services/abuse.ts";
 import { disabledEmail, resendEmail } from "./services/email.ts";
 
 const env = loadEnv();
@@ -90,6 +91,8 @@ if (env.MODE === "api") {
     email: env.RESEND_API_KEY ? resendEmail(env.RESEND_API_KEY, env.EMAIL_FROM) : disabledEmail,
     readiness: { database: async () => void (await handle.db.execute(sql`select 1`)) },
   };
+  // Kasama Cloud (D-094): free workspaces start computers only with a verified owner email.
+  if (deps.computers) deps.computers.requireVerifiedEmail = abuseControlsOn(env);
   const app = createApp(deps);
   const server = serve({ fetch: app.fetch, port: env.PORT }, (info) =>
     logger.info("api listening", { port: info.port }),
@@ -124,6 +127,7 @@ if (env.MODE === "api") {
         : undefined,
     local: env.LOCAL_COMPUTERS ? localOpts : undefined,
     chatgpt: { authUrl: env.CHATGPT_AUTH_URL, apiUrl: env.CHATGPT_API_URL },
+    requireVerifiedEmail: abuseControlsOn(env),
   });
   stoppers.push(worker.stop);
 }

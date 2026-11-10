@@ -13,6 +13,7 @@ import { ApiError, problem } from "./errors.ts";
 import { httpMetrics, renderMetrics } from "./metrics.ts";
 import { idempotency } from "./middleware/idempotency.ts";
 import { rateLimit } from "./middleware/rate-limit.ts";
+import { registerAbuseRoutes } from "./routes/abuse.ts";
 import { registerAdminRoutes } from "./routes/admin.ts";
 import { registerAppearanceRoutes } from "./routes/appearance.ts";
 import { registerAppRoutes } from "./routes/apps.ts";
@@ -73,6 +74,21 @@ export function createApp(deps: AppDeps) {
       }
       return problem(c, err);
     }
+    // Computers refuse to start for suspended or unverified workspaces (D-094).
+    if (err instanceof Error && err.message === "workspace_suspended")
+      return problem(
+        c,
+        new ApiError(
+          403,
+          "workspace_suspended",
+          "This workspace is suspended. Contact the instance owner.",
+        ),
+      );
+    if (err instanceof Error && err.message === "email_unverified")
+      return problem(
+        c,
+        new ApiError(403, "email_unverified", "Confirm your email address to start a computer."),
+      );
     if (err instanceof HTTPException) {
       return problem(
         c,
@@ -177,6 +193,7 @@ export function createApp(deps: AppDeps) {
   registerLocalRoutes(app, deps);
   registerAdminRoutes(app, deps);
   registerInternalRoutes(app as never, deps);
+  registerAbuseRoutes(app, deps);
   registerAutonomyRoutes(app, deps);
   registerBillingRoutes(app, deps);
   registerPrivacyRoutes(app, deps);

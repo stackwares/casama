@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:kasama_api/kasama_api.dart';
 
 import 'auth.dart';
+import 'signup_proof.dart';
 
 /// Stores and loads a session (file for the CLI, secure storage for the app).
 abstract interface class SessionStore {
@@ -164,8 +165,14 @@ class KasamaClient {
     return session;
   }
 
+  /// Signs up, carrying a sign-up proof when the server asks for one (D-094).
   Future<AuthSession?> signUp(String email, String password) async {
-    final session = await auth.signUp(email: email, password: password);
+    final proof = await signupProof(api, config);
+    final session = await auth.signUp(
+      email: email,
+      password: password,
+      data: proof == null ? null : {'signup_proof': proof},
+    );
     if (session != null) await sessions.save(session);
     return session;
   }

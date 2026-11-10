@@ -9,6 +9,7 @@ resolution: workspace
 environment:
   sdk: ^3.13.0
 dependencies:
+  crypto: ^3.0.8
   dio: ^5.11.1
   http: ^1.6.0
   kasama_api: ^0.8.0

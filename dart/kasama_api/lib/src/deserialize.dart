@@ -1,3 +1,5 @@
+import 'package:kasama_api/src/model/abuse_event.dart';
+import 'package:kasama_api/src/model/abuse_event_list.dart';
 import 'package:kasama_api/src/model/accepted.dart';
 import 'package:kasama_api/src/model/account_deletion.dart';
 import 'package:kasama_api/src/model/admin_org.dart';
@@ -145,6 +147,7 @@ import 'package:kasama_api/src/model/secret_list.dart';
 import 'package:kasama_api/src/model/send_message_request.dart';
 import 'package:kasama_api/src/model/send_message_response.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
+import 'package:kasama_api/src/model/signup_challenge.dart';
 import 'package:kasama_api/src/model/skill_loaded_event.dart';
 import 'package:kasama_api/src/model/skill_loaded_event_payload.dart';
 import 'package:kasama_api/src/model/stream_session.dart';
@@ -154,6 +157,7 @@ import 'package:kasama_api/src/model/subrun_completed_event_payload.dart';
 import 'package:kasama_api/src/model/subrun_started_event.dart';
 import 'package:kasama_api/src/model/subrun_started_event_payload.dart';
 import 'package:kasama_api/src/model/subscription.dart';
+import 'package:kasama_api/src/model/suspend_org_request.dart';
 import 'package:kasama_api/src/model/take_lease_request.dart';
 import 'package:kasama_api/src/model/takeover_request.dart';
 import 'package:kasama_api/src/model/takeover_request_list.dart';
@@ -222,6 +226,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return (valueString == 'true' || valueString == '1') as ReturnType;
         case 'double':
           return (value is double ? value : double.parse('$value')) as ReturnType;
+        case 'AbuseEvent':
+          return AbuseEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AbuseEventList':
+          return AbuseEventList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Accepted':
           return Accepted.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AccountDeletion':
@@ -552,6 +560,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SendMessageResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetOrgLimitsRequest':
           return SetOrgLimitsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SignupChallenge':
+          return SignupChallenge.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillLoadedEvent':
           return SkillLoadedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillLoadedEventPayload':
@@ -573,6 +583,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SubrunStartedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Subscription':
           return Subscription.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SuspendOrgRequest':
+          return SuspendOrgRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TakeLeaseRequest':
           return TakeLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TakeoverRequest':

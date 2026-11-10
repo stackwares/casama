@@ -11,9 +11,15 @@ import {
   type DomainRules,
   domainAllowed,
   isBlocked,
+  MINING_POOL_DOMAINS,
   makeBlockList,
   makeExemptList,
+  matchesDomain,
+  SMTP_PORTS,
+  STRATUM_PORTS,
 } from "./policy.ts";
+
+export type AbuseKind = "mining_pool" | "blocked_port" | "egress_flood";
 
 export interface ComputerRegistration {
   ref: string;
@@ -34,6 +40,11 @@ export interface ProxyOptions {
   controlToken: string;
   resolve?: (host: string) => Promise<string[]>;
   log?: (event: Record<string, unknown>) => void;
+  /**
+   * Abuse controls (Kasama Cloud, D-094): refuse mail and mining ports and mining pools, and
+   * report them (and rate-limit floods) through `report`.
+   */
+  abuse?: { report: (computer: string, kind: AbuseKind, target: string) => void };
 }
 
 interface Usage {
@@ -55,8 +66,11 @@ export class EgressProxy {
   private readonly resolve;
   private readonly log;
   private readonly controlToken;
+  private readonly abuse;
+  private readonly lastFlood = new Map<string, number>();
 
   constructor(opts: ProxyOptions) {
+    this.abuse = opts.abuse;
     this.blockList = makeBlockList(opts.blockedCidrs);
     this.exempt = opts.exemptCidrs?.length ? makeExemptList(opts.exemptCidrs) : null;
     this.controlToken = opts.controlToken;
@@ -113,6 +127,27 @@ export class EgressProxy {
     return { ok: true, address: addresses[0] as string };
   }
 
+  /** Abuse verdict for a destination, or null when it may proceed. */
+  private abuseCheck(c: ComputerRegistration, host: string, port: number): AbuseKind | null {
+    if (!this.abuse) return null;
+    const h = host.replace(/^\[|\]$/g, "").toLowerCase();
+    let kind: AbuseKind | null = null;
+    if (MINING_POOL_DOMAINS.some((d) => matchesDomain(h, d)) || STRATUM_PORTS.includes(port))
+      kind = "mining_pool";
+    else if (SMTP_PORTS.includes(port)) kind = "blocked_port";
+    if (kind) this.abuse.report(c.ref, kind, `${h}:${port}`);
+    return kind;
+  }
+
+  /** A rate-limit hit is reported at most once a minute per computer. */
+  private flood(c: ComputerRegistration, target: string) {
+    if (!this.abuse) return;
+    const now = Date.now();
+    if (now - (this.lastFlood.get(c.ref) ?? 0) < 60_000) return;
+    this.lastFlood.set(c.ref, now);
+    this.abuse.report(c.ref, "egress_flood", target);
+  }
+
   // --- servers --------------------------------------------------------------
 
   /** The proxy server computers use (HTTP_PROXY / HTTPS_PROXY). */
@@ -139,8 +174,14 @@ export class EgressProxy {
     const m = target.match(/^(\[[^\]]+\]|[^:]+):(\d+)$/);
     if (!m) return void socket.end("HTTP/1.1 400 Bad Request\r\n\r\n");
     const [, host = "", port = "443"] = m;
+    const abused = this.abuseCheck(c, host, Number(port));
+    if (abused) {
+      socket.end(`HTTP/1.1 403 Forbidden\r\nX-Kasama-Egress: ${abused}\r\n\r\n`);
+      return this.deny(c, target, abused);
+    }
     if (!this.meter(c, 1, 0)) {
       socket.end("HTTP/1.1 429 Too Many Requests\r\n\r\n");
+      this.flood(c, target);
       return this.deny(c, target, "rate_limited");
     }
     const verdict = await this.vet(c, host);
@@ -180,8 +221,16 @@ export class EgressProxy {
     } catch {
       return void res.writeHead(400).end("absolute http:// URL required");
     }
+    const abused = this.abuseCheck(c, url.hostname, Number(url.port || 80));
+    if (abused) {
+      res
+        .writeHead(403, { "x-kasama-egress": abused })
+        .end(`Blocked by egress policy: ${abused}\n`);
+      return this.deny(c, url.host, abused);
+    }
     if (!this.meter(c, 1, 0)) {
       res.writeHead(429).end();
+      this.flood(c, url.host);
       return this.deny(c, url.host, "rate_limited");
     }
     const verdict = await this.vet(c, url.hostname);

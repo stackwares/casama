@@ -1,6 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:kasama_sdk/kasama_sdk.dart' hide AuthException;
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
@@ -64,14 +64,21 @@ class SupabaseBackend implements Backend {
   @override
   Future<void> signIn(String email, String password) => supabase.auth.signInWithPassword(email: email, password: password);
 
+  /// A sign-up proof when the server asks for one (D-094); the puzzle runs off the UI thread.
+  Future<Map<String, Object?>?> _signupData() async {
+    final proof = await signupProof(api.api, api.config, solve: (c, d) => compute(_solvePuzzle, (c, d)));
+    return proof == null ? null : {'signup_proof': proof};
+  }
+
   @override
   Future<bool> signUp(String email, String password) async {
-    final r = await supabase.auth.signUp(email: email, password: password);
+    final r = await supabase.auth.signUp(email: email, password: password, data: await _signupData());
     return r.session != null;
   }
 
   @override
-  Future<void> sendMagicLink(String email) => supabase.auth.signInWithOtp(email: email);
+  Future<void> sendMagicLink(String email) async =>
+      supabase.auth.signInWithOtp(email: email, data: await _signupData());
 
   @override
   Future<void> signInWithProvider(String provider) async {
@@ -689,6 +696,13 @@ class SupabaseBackend implements Backend {
   Future<AdminOrg> setOrgLimits(String orgId, Map<String, num> limits) async =>
       (await api.admin.setOrgLimits(id: orgId, setOrgLimitsRequest: SetOrgLimitsRequest(limits: limits))).data!;
   @override
+  Future<AdminOrg> suspendOrg(String orgId, String reason) async =>
+      (await api.admin.suspendOrg(id: orgId, suspendOrgRequest: SuspendOrgRequest(reason: reason))).data!;
+  @override
+  Future<AdminOrg> unsuspendOrg(String orgId) async => (await api.admin.unsuspendOrg(id: orgId)).data!;
+  @override
+  Future<List<AbuseEvent>> adminAbuseEvents() async => (await api.admin.adminAbuseEvents()).data!.items;
+  @override
   Future<List<AdminService>> adminServices() async => (await api.admin.adminServices()).data!.items;
   @override
   Future<UpdateNotice> adminUpdates() async => (await api.admin.adminUpdates()).data!;
@@ -1017,3 +1031,6 @@ class SupabaseBackend implements Backend {
     return (uri.replace(queryParameters: {...uri.queryParameters, 'access_token': ?token}), headers);
   }
 }
+
+
+String _solvePuzzle((String, int) p) => solveSignupChallenge(p.$1, p.$2);

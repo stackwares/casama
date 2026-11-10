@@ -6,5 +6,6 @@ export 'package:kasama_api/kasama_api.dart';
 export 'src/auth.dart';
 export 'src/client.dart';
 export 'src/event_buffer.dart';
+export 'src/signup_proof.dart';
 export 'src/generated/run_events.dart';
 export 'src/run_stream.dart';

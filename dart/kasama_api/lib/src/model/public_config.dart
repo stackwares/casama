@@ -37,6 +37,8 @@ class PublicConfig {
      this.wallpapersEnabled,
 
      this.chatgptSignIn,
+
+     this.signupProofs,
   });
 
   @JsonKey(
@@ -148,6 +150,18 @@ class PublicConfig {
 
 
 
+  @JsonKey(
+    
+    name: r'signup_proofs',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<PublicConfigSignupProofsEnum>? signupProofs;
+
+
+
 
 
     @override
@@ -160,7 +174,8 @@ class PublicConfig {
       other.defaultModels == defaultModels &&
       other.defaultReasoningEffort == defaultReasoningEffort &&
       other.wallpapersEnabled == wallpapersEnabled &&
-      other.chatgptSignIn == chatgptSignIn;
+      other.chatgptSignIn == chatgptSignIn &&
+      other.signupProofs == signupProofs;
 
     @override
     int get hashCode =>
@@ -172,7 +187,8 @@ class PublicConfig {
         defaultModels.hashCode +
         defaultReasoningEffort.hashCode +
         wallpapersEnabled.hashCode +
-        chatgptSignIn.hashCode;
+        chatgptSignIn.hashCode +
+        signupProofs.hashCode;
 
   factory PublicConfig.fromJson(Map<String, dynamic> json) => _$PublicConfigFromJson(json);
 
@@ -201,6 +217,22 @@ xhigh(r'xhigh'),
 max(r'max');
 
 const PublicConfigDefaultReasoningEffortEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+
+enum PublicConfigSignupProofsEnum {
+@JsonValue(r'app_check')
+appCheck(r'app_check'),
+@JsonValue(r'pow')
+pow(r'pow');
+
+const PublicConfigSignupProofsEnum(this.value);
 
 final String value;
 

@@ -42,7 +42,12 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
         .where(eq(memberships.userId, claims.sub))
         .orderBy(organizations.createdAt),
     ).then((rows) =>
-      rows.map((r) => ({ ...orgOut(r.org), role: r.role, require_mfa: r.org.requireMfa })),
+      rows.map((r) => ({
+        ...orgOut(r.org),
+        role: r.role,
+        require_mfa: r.org.requireMfa,
+        suspended: r.org.suspendedAt != null,
+      })),
     );
 
   app.openapi(routes.getMe, async (c) => {
