@@ -1,3 +1,4 @@
+import { resolveTxt as dnsResolveTxt } from "node:dns/promises";
 import { randomUUID } from "node:crypto";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { openApiConfig, registerComponents } from "@kasama/contracts";
@@ -271,6 +272,8 @@ export function createApp(deps: AppDeps) {
         }
       : undefined,
     claims: (c) => c.get("claims" as never),
+    verificationSecret: deps.env.SUPABASE_JWT_SECRET,
+    resolveTxt: (d: string) => (deps.resolveTxt ?? dnsResolveTxt)(d),
   });
   const billing = billingFor(deps);
   if (billing.enabled && deps.connect)

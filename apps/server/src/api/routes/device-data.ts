@@ -156,9 +156,12 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     const userId = me(c.get("claims"));
     const { id } = c.req.valid("param");
     const b = c.req.valid("json");
+    const payload = b.ok ? (b.result ?? {}) : { error: b.error ?? "failed" };
+    if (JSON.stringify(payload).length > MAX_SUMMARY_BYTES) throw new ApiError(400, "result_too_large", "Results must be under 64 KB");
+    // Sealed like readings (locations and live reads are personal; audit 2026-11).
     const rows = await db.execute(sql`
       update public.device_requests set status = ${b.ok ? "done" : "failed"}, answered_at = now(),
-        result = ${JSON.stringify(b.ok ? (b.result ?? {}) : { error: b.error ?? "failed" })}::jsonb
+        result = ${contentKeys.sealJson(await keyOrg(userId), payload)}::jsonb
       where id = ${id}::uuid and user_id = ${userId}::uuid and status = 'pending' returning id`);
     if (!rows.length) throw new ApiError(404, "request_not_found", "No pending request with that id");
     return c.json({ ok: true }, 200);

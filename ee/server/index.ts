@@ -3,6 +3,8 @@
  * caller's workspace role; without a valid key they answer 402 license_required.
  */
 import { type Database, type JwtClaims, withUserSession } from "@kasama/db";
+import { createHmac } from "node:crypto";
+import { resolveTxt } from "node:dns/promises";
 import { sql } from "drizzle-orm";
 import type { Context, Hono } from "hono";
 import { type EeFeature, type License, verifyLicense } from "./license.ts";
@@ -18,6 +20,10 @@ export interface EeDeps {
   /** Supabase Auth admin API (for SSO providers): <SUPABASE_URL>/auth/v1 and a service role key. */
   authAdmin?: { url: string; serviceRoleKey: string; fetch?: typeof fetch };
   claims: (c: Context) => JwtClaims | undefined;
+  /** Signs SSO domain verification codes (audit 2026-11). */
+  verificationSecret?: string;
+  /** DNS TXT lookup (tests replace it). */
+  resolveTxt?: (domain: string) => Promise<string[][]>;
 }
 
 const problem = (c: Context, status: number, code: string, detail: string) =>
@@ -176,6 +182,24 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
       )
     )[0]?.value;
 
+  // SSO domains must be proven (audit 2026-11): a TXT record kasama-verification=<code> on each
+  // domain, where the code is tied to this workspace. Otherwise any admin could claim gmail.com.
+  const verificationCode = (orgId: string, domain: string) =>
+    createHmac("sha256", deps.verificationSecret ?? "kasama-sso").update(`sso:${orgId}:${domain}`).digest("hex").slice(0, 32);
+  const domainVerified = async (orgId: string, domain: string) => {
+    const want = `kasama-verification=${verificationCode(orgId, domain)}`;
+    const records = await (deps.resolveTxt ?? resolveTxt)(domain).catch(() => [] as string[][]);
+    return records.some((r) => r.join("") === want);
+  };
+  app.get("/v1/orgs/:id/sso/verification", async (c) => {
+    const orgId = c.req.param("id");
+    const g = await guard(c, "sso", orgId);
+    if (g.error) return g.error;
+    const domain = (c.req.query("domain") ?? "").toLowerCase().trim();
+    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) return problem(c, 400, "validation_failed", "Give a domain like acme.com");
+    return c.json({ domain, record_type: "TXT", record: `kasama-verification=${verificationCode(orgId, domain)}` });
+  });
+
   app.post("/v1/orgs/:id/sso", async (c) => {
     const orgId = c.req.param("id");
     const g = await guard(c, "sso", orgId);
@@ -201,6 +225,20 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
         400,
         "validation_failed",
         "Give metadata_url (or metadata_xml) and at least one email domain",
+      );
+    // Each domain: not already another workspace's, and proven with its TXT record.
+    const taken = await deps.db.execute<{ key: string }>(sql`
+      select key from public.instance_settings where key like 'sso:%' and key <> ${`sso:${orgId}`}
+        and exists (select 1 from jsonb_array_elements_text(value -> 'domains') d where d = any(${`{${domains.join(",")}}`}::text[]))`);
+    if (taken.length) return problem(c, 409, "domain_taken", "Another workspace already uses one of these domains for SSO");
+    const unverified: string[] = [];
+    for (const d of domains) if (!(await domainVerified(orgId, d))) unverified.push(d);
+    if (unverified.length)
+      return problem(
+        c,
+        400,
+        "domain_unverified",
+        `Add a TXT record to prove you own ${unverified.join(", ")}: ${unverified.map((d) => `${d} TXT "kasama-verification=${verificationCode(orgId, d)}"`).join("; ")}`,
       );
     try {
       const existing = await ssoProviderId(orgId);

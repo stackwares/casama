@@ -1,5 +1,5 @@
 import { serve } from "@hono/node-server";
-import { ComputerService } from "@kasama/agent";
+import { ComputerService, createSafeFetch } from "@kasama/agent";
 import { contentKeys, createDb } from "@kasama/db";
 import { configureContentKeys } from "./content-keys.ts";
 import { createLogger, initObservability, shutdownObservability } from "@kasama/observability";
@@ -60,6 +60,12 @@ const shutdown = async (signal: string) => {
 process.once("SIGTERM", () => void shutdown("SIGTERM"));
 process.once("SIGINT", () => void shutdown("SIGINT"));
 
+// Without INTERNAL_TOKEN the internal endpoints use a token derived from DATABASE_URL, which a weak
+// database URL makes guessable (audit 2026-11). install.sh and the Helm chart always set one.
+if (!env.INTERNAL_TOKEN && env.NODE_ENV === "production")
+  logger.warn("INTERNAL_TOKEN is not set: internal endpoints fall back to a token derived from DATABASE_URL. Set a random 32+ character INTERNAL_TOKEN.");
+// Private networks outbound calls may reach (OUTBOUND_ALLOW_CIDRS; SSRF guard otherwise).
+const allowCidrs = env.OUTBOUND_ALLOW_CIDRS?.split(",").map((c) => c.trim()).filter(Boolean);
 if (env.MODE === "api") {
   const handle = createDb(env.DATABASE_URL);
   stoppers.push(handle.close);
@@ -98,6 +104,9 @@ if (env.MODE === "api") {
     email: env.RESEND_API_KEY ? resendEmail(env.RESEND_API_KEY, env.EMAIL_FROM) : disabledEmail,
     pdf: env.PDF_CHROMIUM_PATH ? chromiumPdf(env.PDF_CHROMIUM_PATH) : null,
     readiness: { database: async () => void (await handle.db.execute(sql`select 1`)) },
+    // Outbound calls to addresses people type (password managers, Infisical, invites, memory
+    // backends) can't reach private networks unless allowed (audit 2026-11: SSRF).
+    apps: { fetch: createSafeFetch({ exemptCidrs: allowCidrs }) },
   };
   // Kasama Cloud (D-094): free workspaces start computers only with a verified owner email.
   if (deps.computers) deps.computers.requireVerifiedEmail = abuseControlsOn(env);
@@ -122,11 +131,13 @@ if (env.MODE === "api") {
   const handle = env.BILLING_ENABLED ? createDb(env.DATABASE_URL, { max: 3 }) : undefined;
   if (handle) stoppers.push(handle.close);
   const worker = await startWorker({
+    egressExemptCidrs: allowCidrs,
     billing: handle ? billingFromEnv(env, handle.db, logger) : undefined,
     telemetry:
       env.TELEMETRY === "on" ? { url: env.TELEMETRY_URL, version: KASAMA_VERSION } : undefined,
     cloud,
     databaseUrl: env.WORKER_DATABASE_URL ?? env.DATABASE_URL,
+    apiDatabaseRole: env.WORKER_DATABASE_URL ? decodeURIComponent(new URL(env.DATABASE_URL).username) || undefined : undefined,
     pagesUrl: env.PAGES_URL,
     publicApiUrl: env.PUBLIC_API_URL,
     auditForwarding: await import("@kasama/ee")

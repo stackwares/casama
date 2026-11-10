@@ -31,6 +31,11 @@ export const EnvSchema = z.object({
    * at rest). auto: required when billing is on (Kasama Cloud); self-hosted keeps it on its own machine.
    */
   HEALTH_REQUIRES_ENCRYPTION: z.enum(["auto", "on", "off"]).default("auto"),
+  /**
+   * Private networks the API and worker may call (comma-separated CIDRs), for self-hosted services on
+   * your LAN such as Vaultwarden or Ollama. Everything private is blocked otherwise (SSRF guard).
+   */
+  OUTBOUND_ALLOW_CIDRS: z.string().optional(),
   /** Proofs a new account may carry (comma-separated): app_check, pow. */
   SIGNUP_PROOFS: z.string().default("app_check,pow"),
   /** Proof-of-work difficulty in leading zero bits (about 2^n hashes; 18 is a second or two). */

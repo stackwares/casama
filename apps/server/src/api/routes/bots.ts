@@ -116,10 +116,12 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   /** Loads a run the caller can see, or 404. */
   const visibleRun = async (claims: JwtClaims, id: string) => {
-    const [run] = await withUserSession(db, claims, (tx) =>
-      tx.select().from(runs).where(eq(runs.id, id)),
-    );
-    if (!run) throw new ApiError(404, "run_not_found", "Run not found");
+    const [run, visible] = await withUserSession(db, claims, async (tx) => [
+      (await tx.select().from(runs).where(eq(runs.id, id)))[0],
+      // A private conversation's runs (personal device data) are only for its starter (audit 2026-11).
+      (await tx.execute<{ ok: boolean }>(sql`select public.run_visible(${id}::uuid) as ok`))[0]?.ok,
+    ] as const);
+    if (!run || !visible) throw new ApiError(404, "run_not_found", "Run not found");
     return run;
   };
 

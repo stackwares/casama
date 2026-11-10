@@ -199,6 +199,8 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
         ...rows.map((r) => ({ from: new Date(r.period_start).toISOString(), to: new Date(r.period_end).toISOString(), device: r.source, age: age(r.collected_at), summary: r.summary, ...withTrend(r.summary) })),
         ...(live as Array<{ summary?: unknown }>).map((l) => ({ ...l, ...withTrend(l.summary) })),
       ];
+      // The person's own data is in this conversation now: it becomes private to them (audit 2026-11).
+      await db.execute(sql`update public.conversations set private = true where id = (select conversation_id from public.runs where id = ${ctx.runId}::uuid)`);
       // The timeline shows exactly what device data reached the model.
       await ctx.emit("device.data_used", { kind, count: items.length, from, to, devices: [...new Set(rows.map((r) => r.source))] });
       if (!items.length) return { content: `No ${LABEL[kind]} between ${from} and ${to}.`, preview: `0 ${LABEL[kind]} items` };
@@ -266,15 +268,20 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
 /** Retention and stale requests (the worker's minute tick). */
 export async function purgeDeviceData(db: Database) {
   const defaults = JSON.stringify(DEFAULT_RETENTION_DAYS);
-  const removed = await db.execute(sql`
-    delete from public.device_readings r using public.device_sources s
-    where s.id = r.source_id
-      and r.period_end < now() - make_interval(days => coalesce((s.kinds -> r.kind ->> 'retention_days')::int, (${defaults}::jsonb ->> r.kind)::int, 365))
-    returning r.id`);
+  // Only rows older than the shortest retention (7 days, or 0 for live only) can be due, so the
+  // per-row retention check runs on that slice (indexed on period_end), not the whole table.
+  const [removed] = await db.execute<{ n: number }>(sql`
+    with gone as (
+      delete from public.device_readings r using public.device_sources s
+      where s.id = r.source_id and r.period_end < now()
+        and r.period_end < now() - make_interval(days => coalesce((s.kinds -> r.kind ->> 'retention_days')::int, (${defaults}::jsonb ->> r.kind)::int, 365))
+      returning 1)
+    select count(*)::int as n from gone`);
   await db.execute(sql`update public.device_requests set status = 'expired' where status = 'pending' and created_at < now() - interval '1 hour'`);
-  // "Where am I now" answers (leave-now, D-151) never outlive 10 minutes; the event log 30 days.
-  await db.execute(sql`delete from public.device_requests where action = 'locate' and created_at < now() - interval '10 minutes'`);
+  // The event log is kept 30 days ("where am I now" answers are cleared by checkLeaveNow each minute).
   await db.execute(sql`delete from public.device_event_log where received_at < now() - interval '30 days'`);
   await db.execute(sql`delete from public.device_requests where created_at < now() - interval '7 days'`);
-  return removed.length;
+  // Read notifications go after 180 days (the inbox shows the latest 100).
+  await db.execute(sql`delete from public.notifications where read_at is not null and created_at < now() - interval '180 days'`);
+  return removed?.n ?? 0;
 }

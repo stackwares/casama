@@ -239,6 +239,8 @@ export async function knowledgeTick(d: KnowledgeDeps) {
 export function registerKnowledgeTools(registry: ToolRegistry, deps: { db: Database; embedderFor: (orgId: string) => Promise<Embedder | null> }) {
   registry.register({
     name: "knowledge.search",
+    // Outside content (audit 2026-11): later risky calls ask first.
+    untrustedOutput: true,
     readOnly: true,
     description:
       "Search the documents you and your workspace were given (uploaded files, websites, repositories, connected apps). Returns snippets with their source; cite them as [n] with the document and link when you use them.",

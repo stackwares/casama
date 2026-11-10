@@ -31,6 +31,8 @@ export interface AppDeps {
   wallpapers?: import("../services/wallpapers.ts").WallpaperSource | null;
   /** Built-in app connections: outbound fetch and catalog overrides (tests). */
   apps?: import("./routes/apps.ts").AppsOptions;
+  /** DNS TXT lookups (SSO domain verification; tests replace it). */
+  resolveTxt?: (domain: string) => Promise<string[][]>;
   /** Page PDFs (D-119); unset: PDF export is off. */
   pdf?: import("../services/pdf.ts").PdfRenderer | null;
   /** Readiness checks by name; each throws when unhealthy. */

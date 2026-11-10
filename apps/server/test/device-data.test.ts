@@ -103,6 +103,13 @@ describe("device connections", () => {
     expect(done.evs.find((e) => e.type === "device.data_used")?.payload).toMatchObject({ kind: "calendar", count: 1, devices: ["Ana's iPhone"] });
     const [msg] = await h.tdb.admin<{ content: string }[]>`select content::text as content from public.messages where run_id = ${runId} and role = 'assistant' order by created_at desc limit 1`;
     expect(msg?.content).toContain("dentist");
+    // The conversation is now private to its starter: a teammate using the same bot can't read it
+    // or its run (audit 2026-11).
+    expect((await h.request(`/v1/runs/${runId}/events`, { token: mate.token })).status).toBe(404);
+    const theirs = await j(await h.request(`/v1/bots/${botId}/conversations`, { token: mate.token }));
+    const [conv] = await h.tdb.admin<{ conversation_id: string }[]>`select conversation_id from public.runs where id = ${runId}`;
+    expect(theirs.items.map((c: { id: string }) => c.id)).not.toContain(conv!.conversation_id);
+    expect((await h.request(`/v1/runs/${runId}/events`, { token: owner.token })).status).toBe(200);
   });
 
   it("only the owner's own runs see it: a teammate using the same bot gets nothing", async () => {

@@ -15,6 +15,8 @@ export function builtinTools(deps: {
 
   registry.register({
     name: "memory.search",
+    // Outside content (audit 2026-11): later risky calls ask first.
+    untrustedOutput: true,
     readOnly: true,
     description:
       "Search your long-term memory about the user and past work. Returns the most relevant memories.",

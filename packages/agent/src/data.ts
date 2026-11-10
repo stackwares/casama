@@ -154,6 +154,8 @@ export function registerDataTools(registry: ToolRegistry, deps: { db: Database; 
 
   registry.register({
     name: "data.search",
+    // Outside content (audit 2026-11): later risky calls ask first.
+    untrustedOutput: true,
     description:
       "Find paid data services (places, business and people lookups, emails, SEO, company data and more) and what each call costs. Then buy with data.call; the person approves the price first.",
     risk: "low",

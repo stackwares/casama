@@ -157,12 +157,17 @@ export function createKasamaMcpServer(
       inputSchema: {
         bot: z.string().describe("Bot name or id"),
         message: z.string().min(1).max(20_000),
-        conversation_id: z.string().optional(),
+        conversation_id: z.string().uuid().optional(),
         workspace: z.string().optional(),
       },
     },
     async ({ bot, message, conversation_id, workspace }) => {
       const b = await resolveBot(bot, workspace);
+      // A conversation id must be one of this bot's (so a workspace-scoped token stays in its workspace).
+      if (conversation_id) {
+        const mine = (await api.call<{ items: Array<{ id: string }> }>(`/v1/bots/${encodeURIComponent(b.id)}/conversations?limit=200`)).items;
+        if (!mine.some((c) => c.id === conversation_id)) throw new Error(`No conversation ${conversation_id} with ${b.name}.`);
+      }
       const conv =
         conversation_id ??
         (await api.call<{ id: string }>("/v1/conversations", { json: { bot_id: b.id } })).id;
@@ -211,10 +216,12 @@ export function createKasamaMcpServer(
     {
       title: "Get a run",
       description: "A run's status, cost and its recent events (tool calls, outputs, errors).",
-      inputSchema: { run_id: z.string() },
+      inputSchema: { run_id: z.string().uuid() },
     },
     async ({ run_id }) => {
-      const run = await api.call(`/v1/runs/${run_id}`);
+      const run = await api.call<{ bot_id: string }>(`/v1/runs/${encodeURIComponent(run_id)}`);
+      // Only runs of bots in the token's workspace (hosted /mcp, D-117).
+      if (opts.scopeOrgId && !(await bots()).some((b) => b.id === run.bot_id)) throw new Error("No such run in this workspace.");
       const events = (
         await api.call<{ items: Array<{ type: string; payload: Record<string, unknown> }> }>(
           `/v1/runs/${run_id}/events?limit=200`,
@@ -248,7 +255,7 @@ export function createKasamaMcpServer(
       description:
         "Approve or deny a pending action. The bot continues (or skips the step) right away.",
       inputSchema: {
-        approval_id: z.string(),
+        approval_id: z.string().uuid(),
         decision: z.enum(["approve", "deny"]),
       },
       annotations: { destructiveHint: true },

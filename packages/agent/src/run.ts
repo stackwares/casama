@@ -312,6 +312,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
 
   // In-process caches only (never persisted in step outputs): keys, secrets and the redactor.
   let redactorCache: Redactor | undefined;
+  let previousRedactor: Redactor | undefined;
   let secretsCache: NamedSecret[] | undefined;
   const secrets = async () => {
     secretsCache ??= await loadSecrets(db, info.orgId, info.botId);
@@ -326,6 +327,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       }
       // Every secret this bot could use is scrubbed from events, logs and model input.
       for (const sec of await secrets()) r.add(sec.value, sec.name);
+      r.merge(previousRedactor);
       redactorCache = r;
     }
     return redactorCache;
@@ -674,6 +676,9 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           }
           // The new secret must be usable and scrubbed from here on.
           secretsCache = undefined;
+          // Rebuilt with the new secret, keeping values added along the way (logins, cards, codes;
+          // audit 2026-11: they stopped being scrubbed after a secret request).
+          previousRedactor = redactorCache;
           redactorCache = undefined;
           const content = await step(`secret-done-${i}-${call.callId}`, async () => {
             const text = await finishSecretRequest(db, info.runId, started.id, bus);
@@ -847,7 +852,9 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     return { status: "completed" };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    log?.error("run failed", { run_id: runId, error: message });
+    // Provider errors can echo parts of the request: the log gets the redacted text (audit 2026-11).
+    const red = await redactor().catch(() => null);
+    log?.error("run failed", { run_id: runId, error: red ? red.text(message) : message.slice(0, 200) });
     await step("fail", () =>
       finishFailed(
         db,
@@ -951,17 +958,19 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     conv_kind: string | null;
   }>(sql`
     select (
+             -- Same rule as actingUserOf: linked-bot runs act for nobody (audit 2026-11).
              with recursive up as (
-               select x.id, x.parent_run_id, x.created_by, x.routine_id, 0 as depth
+               select x.id, x.parent_run_id, x.created_by, x.routine_id, x.trigger, 0 as depth
                from public.runs x where x.id = r.id
                union all
-               select p.id, p.parent_run_id, p.created_by, p.routine_id, up.depth + 1
+               select p.id, p.parent_run_id, p.created_by, p.routine_id, p.trigger, up.depth + 1
                from public.runs p join up on p.id = up.parent_run_id where up.depth < 8
              )
-             select coalesce(up.created_by, urt.created_by) from up
-             left join public.routines urt on urt.id = up.routine_id
-             where coalesce(up.created_by, urt.created_by) is not null
-             order by up.depth limit 1
+             select case when exists (select 1 from up u2 where u2.trigger = 'link') then null else (
+               select coalesce(up.created_by, urt.created_by) from up
+               left join public.routines urt on urt.id = up.routine_id
+               where coalesce(up.created_by, urt.created_by) is not null
+               order by up.depth limit 1) end
            ) as acting_user_id,
            r.id, r.org_id, r.bot_id, r.conversation_id, r.created_by, r.trigger, r.status, r.budget as run_budget,
            b.name, b.persona_md, b.autonomy, b.model_policy, b.budget as bot_budget, b.created_by as bot_owner,
@@ -1779,6 +1788,9 @@ async function extractStep(
   busFn: () => Promise<EventBus>,
 ) {
   if (!info.current) return 0;
+  // Personal device data (calendar, health, places…) stays out of the bot's memory, which every
+  // user of the bot can read (audit 2026-11; D-091).
+  if ((await deviceDataOfRun(deps.db, info.runId).catch(() => [])).length) return 0;
   const chain = await chainFor([info.policy.cheap ?? info.policy.primary]);
   const cheap = chain[0];
   if (!cheap) return 0;

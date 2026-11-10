@@ -113,6 +113,17 @@ describe("enterprise features", () => {
       json: { domains: ["acme.com"] },
     });
     expect(bad.status).toBe(400);
+    // The domain has to be proven with a TXT record first (audit 2026-11).
+    const unproven = await licensed.request(`/v1/orgs/${orgId}/sso`, {
+      method: "POST",
+      token: owner.token,
+      json: { metadata_url: "https://idp.acme.com/saml/metadata", domains: ["Acme.com"] },
+    });
+    expect(unproven.status).toBe(400);
+    expect((await j(unproven)).code).toBe("domain_unverified");
+    const v = await j(await licensed.request(`/v1/orgs/${orgId}/sso/verification?domain=acme.com`, { token: owner.token }));
+    expect(v.record).toMatch(/^kasama-verification=[0-9a-f]{32}$/);
+    (licensed.deps as { resolveTxt?: (d: string) => Promise<string[][]> }).resolveTxt = async (d) => (d === "acme.com" ? [[v.record]] : []);
     const res = await licensed.request(`/v1/orgs/${orgId}/sso`, {
       method: "POST",
       token: owner.token,

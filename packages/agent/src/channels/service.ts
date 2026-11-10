@@ -65,10 +65,14 @@ export interface MessageTrigger {
   subject_match?: string;
   text_match?: string;
 }
-export function messageMatches(t: MessageTrigger, c: Pick<ChannelRow, "id" | "kind">, m: InboundMessage) {
+export function messageMatches(t: MessageTrigger, c: Pick<ChannelRow, "id" | "kind"> & { allowed_senders?: string[] }, m: InboundMessage) {
   if (t.channel_id && t.channel_id !== c.id) return false;
   if (t.channel_kind && t.channel_kind !== c.kind) return false;
-  if (t.sender && !senderAllowed([t.sender], m.sender)) return false;
+  // A routine without its own sender filter only hears the channel's allowed senders (audit 2026-11:
+  // a subject-only filter let any stranger start tool-using runs). sender "*" accepts anyone.
+  if (t.sender) {
+    if (t.sender !== "*" && !senderAllowed([t.sender], m.sender)) return false;
+  } else if (!senderAllowed(c.allowed_senders ?? [], m.sender)) return false;
   if (t.subject_match && !(m.subject ?? "").toLowerCase().includes(t.subject_match.toLowerCase())) return false;
   if (t.text_match && !m.text.toLowerCase().includes(t.text_match.toLowerCase())) return false;
   return true;

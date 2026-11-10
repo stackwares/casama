@@ -110,6 +110,6 @@ describe("attention rules", () => {
     expect((await h.request(`/v1/notifications/${id}/less-like-this`, { method: "POST", token: other.token })).status).toBe(404);
     expect(await j(await h.request(`/v1/notifications/${id}/less-like-this`, { method: "POST", token: owner.token }))).toEqual({ ok: true });
     const mems = await h.tdb.admin<{ kind: string; pinned: boolean }[]>`select kind, pinned from public.memories where bot_id = ${botId}`;
-    expect(mems).toMatchObject([{ kind: "preference", pinned: true }]);
+    expect(mems).toMatchObject([{ kind: "preference", pinned: false }]);
   });
 });

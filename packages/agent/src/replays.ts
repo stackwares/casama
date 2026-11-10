@@ -183,6 +183,8 @@ export function registerReplayTools(registry: ToolRegistry, deps: { db: Database
   const tools = () => registry;
   registry.register({
     name: "replay.run",
+    // Outside content (audit 2026-11): later risky calls ask first.
+    untrustedOutput: true,
     description:
       "Run one of your saved replays (recorded browser or desktop steps) with its parameters, without thinking through each step. If it stops, finish from that step yourself.",
     risk: "medium",

@@ -10,6 +10,12 @@ export class Redactor {
     return this;
   }
 
+  /** Copies another redactor's values in (a rebuilt redactor keeps what was added during the run). */
+  merge(other: Redactor | undefined) {
+    if (other) for (const [v, l] of other.secrets) this.secrets.set(v, l);
+    return this;
+  }
+
   text(s: string): string {
     let out = s;
     for (const [value, label] of this.secrets) out = out.split(value).join(`[secret:${label}]`);

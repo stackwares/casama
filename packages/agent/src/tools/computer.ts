@@ -100,6 +100,8 @@ export function registerComputerTools(registry: ToolRegistry) {
 
   registry.register({
     name: "files.read",
+    // Outside content (audit 2026-11): later risky calls ask first.
+    untrustedOutput: true,
     readOnly: true,
     description: "Read a text file from your computer. Relative paths are inside ~/workspace.",
     risk: "low",
