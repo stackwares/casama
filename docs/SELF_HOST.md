@@ -95,6 +95,7 @@ All settings live in `infra/compose/.env`. Common ones:
 | `FCM_SERVICE_ACCOUNT`                                                                | Push: Firebase service account JSON (one line) for the apps' project |
 | `RESEND_API_KEY`                                                                     | Invite emails (otherwise invites return a code to share)             |
 | `COMPUTER_MEMORY_MB`, `RUN_CONCURRENCY`                                              | Computer size and worker parallelism                                 |
+| `WARM_POOL_SIZE`                                                                     | Started computers kept waiting, so a new one starts at once (0 = off) |
 | `SENTRY_DSN` or `POSTHOG_API_KEY`                                                    | Error reporting (off by default)                                     |
 | `TELEMETRY=on`                                                                       | Opt-in anonymous counts (see below; off by default)                  |
 | `KASAMA_CLOUD_URL`, `KASAMA_CLOUD_KEY`                                               | Cloud Connect: cloud computers and model credits                     |

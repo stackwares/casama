@@ -148,8 +148,9 @@ export function registerDesktopTools(registry: ToolRegistry) {
     schema: z.object({ path: z.string().max(500).optional() }),
     async execute(args, ctx) {
       const h = await need(ctx);
-      const path =
+      const asked =
         args.path ?? `screenshots/desktop-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+      const path = h.resolvePath?.(asked) ?? asked;
       const png = await h.screenshot();
       await h.writeFile(path.startsWith("/") ? path : `/home/kasama/workspace/${path}`, png);
       return {

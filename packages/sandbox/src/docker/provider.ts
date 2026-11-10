@@ -62,14 +62,24 @@ export interface DockerProviderOptions {
    * alias "turn", so the streamer reaches it without the computer reaching anything else.
    */
   turn?: { containerName: string; secret: string; port?: number };
+  /**
+   * Warm pool (D-148): this many headless computers kept started and unassigned. A new computer
+   * with the default size claims one (renamed to its ref) instead of waiting for a cold start.
+   */
+  warmPool?: number;
 }
 
 const LABEL = "dev.kasama.computer";
+/** On a pooled container: the pool ref its network, volume, tokens and egress identity use. */
+const POOL_LABEL = "dev.kasama.pool";
 
 export class DockerProvider implements SandboxProvider {
   readonly id = "docker" as const;
   readonly capabilities: SandboxProvider["capabilities"];
   readonly opts: DockerProviderOptions;
+  /** ref → pool ref, for computers that started as warm-pool members (read back from POOL_LABEL). */
+  private readonly aliases = new Map<string, string>();
+  private filling: Promise<void> | null = null;
 
   constructor(opts: DockerProviderOptions) {
     this.opts = opts;
@@ -80,11 +90,21 @@ export class DockerProvider implements SandboxProvider {
     if (!/^[a-zA-Z0-9-]{1,64}$/.test(ref))
       throw new SandboxError("bad_ref", "computer ref must be alphanumeric");
     const p = this.opts.namePrefix ?? "kasama";
-    return { container: `${p}-c-${ref}`, network: `${p}-n-${ref}`, volume: `${p}-h-${ref}` };
+    // A claimed pool member keeps the network and volume it was created with.
+    const k = this.aliases.get(ref) ?? ref;
+    return { container: `${p}-c-${ref}`, network: `${p}-n-${k}`, volume: `${p}-h-${k}` };
   }
 
   private token(kind: string, ref: string) {
-    return createHmac("sha256", this.opts.tokenSecret).update(`${kind}:${ref}`).digest("base64url");
+    const k = this.aliases.get(ref) ?? ref;
+    return createHmac("sha256", this.opts.tokenSecret).update(`${kind}:${k}`).digest("base64url");
+  }
+
+  /** Records the pool alias a container carries (after a supervisor restart the map is empty). */
+  private learn(ref: string, c: ContainerInspect | null) {
+    const pool = c?.Config?.Labels?.[POOL_LABEL];
+    if (pool && pool !== ref) this.aliases.set(ref, pool);
+    return c;
   }
 
   private client(ref: string) {
@@ -114,11 +134,85 @@ export class DockerProvider implements SandboxProvider {
   }
 
   async create(spec: ComputerSpec): Promise<SandboxHandle> {
+    const d = this.opts.docker;
+    const p = this.opts.namePrefix ?? "kasama";
+    const existing = this.learn(
+      spec.ref,
+      await d.inspectOrNull<ContainerInspect>(`/containers/${p}-c-${spec.ref}/json`),
+    );
+    if (existing?.State.Running) return this.handle(spec.ref);
+    if (existing) await this.destroy(spec.ref);
+    if (this.poolable(spec)) {
+      const claimed = await this.claim(spec.ref).catch(() => false);
+      void this.fillPool().catch(() => {});
+      if (claimed) return this.handle(spec.ref);
+    }
+    return this.start(spec);
+  }
+
+  /** Only computers a pool member can stand in for: headless, default size, no extra env. */
+  private poolable(spec: ComputerSpec) {
+    if (!this.opts.warmPool || spec.profile !== "headless" || spec.ref.startsWith("pool-")) return false;
+    if (spec.env && Object.keys(spec.env).length) return false;
+    const d = this.opts.defaults ?? {};
+    const same = (a: number | undefined, b: number | undefined, def: number) => a == null || a === (b ?? def);
+    return same(spec.size?.cpus, d.cpus, 1) && same(spec.size?.memoryMb, d.memoryMb, 1024);
+  }
+
+  /** Unclaimed pool members (still named <prefix>-c-pool-…), with their state. */
+  private async poolMembers() {
+    const filters = encodeURIComponent(JSON.stringify({ label: [POOL_LABEL] }));
+    const items = await this.opts.docker.call<
+      Array<{ Names: string[]; State: string; Labels: Record<string, string> }>
+    >("GET", `/containers/json?all=true&filters=${filters}`);
+    const prefix = `/${this.opts.namePrefix ?? "kasama"}-c-pool-`;
+    return items
+      .filter((c) => c.Names.some((x) => x.startsWith(prefix)))
+      .map((c) => ({ pool: c.Labels[POOL_LABEL] as string, running: c.State === "running" }));
+  }
+
+  /** Takes a started pool member for [ref]: renames its container and remembers the alias. */
+  private async claim(ref: string): Promise<boolean> {
+    const p = this.opts.namePrefix ?? "kasama";
+    for (const m of (await this.poolMembers()).filter((x) => x.running)) {
+      const renamed = await this.opts.docker
+        .call("POST", `/containers/${p}-c-${m.pool}/rename?name=${p}-c-${ref}`, undefined, [204])
+        .then(() => true)
+        .catch(() => false); // another claim took it first
+      if (!renamed) continue;
+      this.aliases.set(ref, m.pool);
+      try {
+        await this.client(ref).waitReady();
+        return true;
+      } catch {
+        await this.destroy(ref).catch(() => {});
+      }
+    }
+    return false;
+  }
+
+  /** Tops the pool up to its size (one fill at a time); stopped members are replaced. */
+  fillPool(): Promise<void> {
+    if (!this.opts.warmPool) return Promise.resolve();
+    this.filling ??= (async () => {
+      try {
+        const members = await this.poolMembers();
+        for (const m of members.filter((x) => !x.running)) await this.destroy(m.pool).catch(() => {});
+        for (let i = members.filter((x) => x.running).length; i < (this.opts.warmPool ?? 0); i++) {
+          const pool = `pool-${randomUUID().replace(/-/g, "").slice(0, 20)}`;
+          await this.start({ ref: pool, profile: "headless" }, { [POOL_LABEL]: pool });
+        }
+      } finally {
+        this.filling = null;
+      }
+    })();
+    return this.filling;
+  }
+
+  /** Cold start: network, volume, egress registration, container, then wait for computerd. */
+  private async start(spec: ComputerSpec, extraLabels: Record<string, string> = {}): Promise<SandboxHandle> {
     const n = this.names(spec.ref);
     const d = this.opts.docker;
-    const existing = await d.inspectOrNull<ContainerInspect>(`/containers/${n.container}/json`);
-    if (existing?.State.Running) return this.handle(spec.ref);
-    if (existing) await d.call("DELETE", `/containers/${n.container}?force=true`);
 
     // A private network with no route out; the egress proxy is the only way to the internet.
     if (!(await d.inspectOrNull(`/networks/${n.network}`))) {
@@ -166,7 +260,7 @@ export class DockerProvider implements SandboxProvider {
       Hostname: "computer",
       User: "1000:1000",
       Env: Object.entries(env).map(([k, v]) => `${k}=${v}`),
-      Labels: { [LABEL]: spec.ref, "dev.kasama.profile": spec.profile, ...spec.labels },
+      Labels: { [LABEL]: spec.ref, "dev.kasama.profile": spec.profile, ...spec.labels, ...extraLabels },
       HostConfig: {
         NetworkMode: n.network,
         Runtime: this.opts.runtime,
@@ -194,8 +288,11 @@ export class DockerProvider implements SandboxProvider {
   }
 
   async get(ref: string) {
-    const c = await this.opts.docker.inspectOrNull<ContainerInspect>(
-      `/containers/${this.names(ref).container}/json`,
+    const c = this.learn(
+      ref,
+      await this.opts.docker.inspectOrNull<ContainerInspect>(
+        `/containers/${this.names(ref).container}/json`,
+      ),
     );
     return c?.State.Running ? this.handle(ref) : null;
   }
@@ -217,8 +314,11 @@ export class DockerProvider implements SandboxProvider {
   }
 
   async destroy(ref: string) {
-    const n = this.names(ref);
     const d = this.opts.docker;
+    if (!this.aliases.has(ref))
+      this.learn(ref, await d.inspectOrNull<ContainerInspect>(`/containers/${this.names(ref).container}/json`).catch(() => null));
+    const n = this.names(ref);
+    const key = this.aliases.get(ref) ?? ref;
     await d
       .call("DELETE", `/containers/${n.container}?force=true&v=true`)
       .catch((e: SandboxError) => {
@@ -230,7 +330,8 @@ export class DockerProvider implements SandboxProvider {
     if (this.opts.turn) await this.disconnect(n.network, this.opts.turn.containerName);
     await d.call("DELETE", `/networks/${n.network}`).catch(() => {});
     await d.call("DELETE", `/volumes/${n.volume}?force=true`).catch(() => {});
-    await this.opts.egress.control.unregister(ref).catch(() => {});
+    await this.opts.egress.control.unregister(key).catch(() => {});
+    this.aliases.delete(ref);
   }
 
   /** Refs of computers that are running now. */
@@ -239,10 +340,12 @@ export class DockerProvider implements SandboxProvider {
     const items = await this.opts.docker.call<
       Array<{ Labels: Record<string, string>; State: string; Names: string[] }>
     >("GET", `/containers/json?filters=${filters}`);
+    // The ref comes from the name: a claimed pool member's label still says its pool ref.
     const prefix = `/${this.opts.namePrefix ?? "kasama"}-c-`;
     return items
-      .filter((c) => c.Names.some((x) => x.startsWith(prefix)))
-      .map((c) => c.Labels[LABEL] as string);
+      .flatMap((c) => c.Names.filter((x) => x.startsWith(prefix)).slice(0, 1))
+      .map((x) => x.slice(prefix.length))
+      .filter((ref) => !ref.startsWith("pool-"));
   }
 
   handle(ref: string): SandboxHandle {

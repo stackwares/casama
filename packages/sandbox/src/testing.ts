@@ -40,7 +40,7 @@ export async function dockerAvailable() {
 }
 
 export async function startSandboxStack(
-  opts: { egressExemptCidrs?: string; streamIdleStopMs?: number } = {},
+  opts: { egressExemptCidrs?: string; streamIdleStopMs?: number; warmPool?: number } = {},
 ): Promise<SandboxStack> {
   const prefix = `kt${randomBytes(3).toString("hex")}`;
   const token = randomBytes(24).toString("hex");
@@ -113,6 +113,7 @@ export async function startSandboxStack(
     `SUPERVISOR_CONTAINER=${sup}`,
     "-e",
     `NAME_PREFIX=${prefix}`,
+    ...(opts.warmPool ? ["-e", `WARM_POOL_SIZE=${opts.warmPool}`] : []),
     "-e",
     `COMPUTER_IMAGE_HEADLESS=${TEST_IMAGES.headless}`,
     "-e",

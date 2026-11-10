@@ -1642,9 +1642,9 @@ class SupabaseBackend implements Backend {
   )).data!;
 
   @override
-  Future<Computer> updateComputer(String computerId, {String? name, String? profile}) async => (await api.computers.updateComputer(
+  Future<Computer> updateComputer(String computerId, {String? name, String? profile, int? maxDesktops}) async => (await api.computers.updateComputer(
     id: computerId,
-    updateComputerRequest: UpdateComputerRequest(name: name, profile: profile == null ? null : UpdateComputerRequestProfileEnum.values.firstWhere((p) => p.value == profile)),
+    updateComputerRequest: UpdateComputerRequest(name: name, maxDesktops: maxDesktops, profile: profile == null ? null : UpdateComputerRequestProfileEnum.values.firstWhere((p) => p.value == profile)),
   )).data!;
 
   @override

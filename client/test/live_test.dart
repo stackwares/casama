@@ -183,5 +183,14 @@ void main() {
     await tester.tap(find.text('Switch to desktop'));
     await tester.pumpAndSettle();
     expect(backend.computerUpdates, ['desktop']);
+
+    // Team computers: how many bots use the desktop at once (D-148).
+    await tester.tap(find.byKey(const Key('computerMenu-$computerId')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Desktop users at once'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('desktops-3')));
+    await tester.pumpAndSettle();
+    expect(backend.computerUpdates, ['desktop', 'desktops:3']);
   });
 }

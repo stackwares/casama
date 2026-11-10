@@ -74,6 +74,28 @@ class _ComputerCard extends ConsumerWidget {
           return;
         case 'profile':
           await runGuarded(context, () => backend.updateComputer(c.id, profile: desktop ? 'headless' : 'desktop'));
+        case 'desktops':
+          // Team computers (D-148): how many bots may use the desktop at the same time.
+          final n = await showDialog<int>(
+            context: context,
+            builder: (ctx) => SimpleDialog(
+              title: Text(l10n.desktopUsers),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                  child: Text(l10n.desktopUsersHelp, style: context.textTheme.bodySmall),
+                ),
+                for (final v in const [1, 2, 3, 4, 5])
+                  SimpleDialogOption(
+                    key: Key('desktops-$v'),
+                    onPressed: () => Navigator.pop(ctx, v),
+                    child: Row(children: [Expanded(child: Text(l10n.desktopUsersCount(v))), if (v == c.maxDesktops) const Icon(LucideIcons.check, size: 18)]),
+                  ),
+              ],
+            ),
+          );
+          if (n == null || n == c.maxDesktops || !context.mounted) return;
+          await runGuarded(context, () => backend.updateComputer(c.id, maxDesktops: n));
         case 'rename':
           final name = await showTextPrompt(
             context,
@@ -172,6 +194,11 @@ class _ComputerCard extends ConsumerWidget {
                   title: Text(desktop ? l10n.switchToHeadless : l10n.switchToDesktop),
                 ),
               ),
+              if (c.kind == ComputerKindEnum.team)
+                PopupMenuItem(
+                  value: 'desktops',
+                  child: ListTile(dense: true, leading: const Icon(LucideIcons.users), title: Text(l10n.desktopUsers), subtitle: Text(l10n.desktopUsersCount(c.maxDesktops))),
+                ),
               PopupMenuItem(
                 value: 'rename',
                 child: ListTile(dense: true, leading: const Icon(LucideIcons.pencil), title: Text(l10n.rename)),

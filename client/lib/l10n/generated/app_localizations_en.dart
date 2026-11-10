@@ -5326,4 +5326,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get localServerStart => 'Start the server';
+
+  @override
+  String get desktopUsers => 'Desktop users at once';
+
+  @override
+  String get desktopUsersHelp =>
+      'Bots on this team computer share one screen. Others wait (and keep working with the shell, files and browser) while it\'s in use.';
+
+  @override
+  String desktopUsersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bots',
+      one: '1 bot',
+    );
+    return '$_temp0';
+  }
 }

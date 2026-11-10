@@ -132,11 +132,12 @@ export function registerComputerTools(registry: ToolRegistry) {
     requires,
     schema: z.object({ path: z.string().min(1).max(1000), content: z.string().max(5_000_000) }),
     async execute(args, ctx) {
-      await (await needComputer(ctx)).writeFile(args.path, new TextEncoder().encode(args.content));
+      const h = await needComputer(ctx);
+      await h.writeFile(args.path, new TextEncoder().encode(args.content));
       return {
         content: `Wrote ${args.content.length} characters to ${args.path}.`,
         preview: `wrote ${args.path}`,
-        artifactPath: args.path,
+        artifactPath: h.resolvePath?.(args.path) ?? args.path,
       };
     },
   });
@@ -344,7 +345,9 @@ export function registerComputerTools(registry: ToolRegistry) {
     requires,
     schema: z.object({ path: z.string().max(500).optional() }),
     async execute(args, ctx) {
-      const path = args.path ?? `screenshots/${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+      const asked = args.path ?? `screenshots/${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+      // On a team computer relative paths are in the bot's folder (D-148).
+      const path = (await needComputer(ctx)).resolvePath?.(asked) ?? asked;
       await browser(
         ctx,
         `screenshot ${shq(path.startsWith("/") ? path : `/home/kasama/workspace/${path}`)}`,

@@ -597,7 +597,7 @@ abstract class Backend {
 
   // Computers: management (Phase 5)
   Future<Computer> createComputer(String orgId, {required String name, required bool private, String? ownerBotId, String profile});
-  Future<Computer> updateComputer(String computerId, {String? name, String? profile});
+  Future<Computer> updateComputer(String computerId, {String? name, String? profile, int? maxDesktops});
   Future<void> deleteComputer(String computerId);
   Future<void> setBotComputer(String botId, String? computerId);
 

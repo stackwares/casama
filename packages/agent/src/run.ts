@@ -107,6 +107,7 @@ import { ticketAfterRun, ticketStarted } from "./tickets.ts";
 import { type ToolDefinition, ToolError, ToolRegistry } from "./tools/registry.ts";
 import { contentKeys } from "@kasama/db";
 import { hasCardPlaceholders, resolveCardPlaceholders } from "./payments.ts";
+import { claimDesktop, inTeamFolder, releaseDesktop, teamFolder } from "./team-computer.ts";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
 export type StepRunner = <T>(name: string, fn: () => Promise<T>) => Promise<T>;
@@ -399,6 +400,13 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           return row?.profile === "desktop";
         })
       : false;
+    // Team computers (D-148): the bot's own folder, for the system prompt.
+    const folder = deps.computers
+      ? await step("computer-layout", async () => {
+          const row = await deps.computers?.forBot(info.botId).catch(() => null);
+          return row?.kind === "team" ? await teamFolder(db, info.botId).catch(() => null) : null;
+        })
+      : null;
     const available = registry.available(
       { computer: !!deps.computers, desktop, vision: caps.vision },
       allowed ? (name) => allowed.some((a) => name === a || name.startsWith(`${a}.`)) : undefined,
@@ -533,6 +541,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           : undefined,
         contextWindow: caps.contextWindow,
         computer: !!deps.computers,
+        teamFolder: folder ?? undefined,
         routine: info.routine ? { id: info.routine.id, name: info.routine.name } : undefined,
       });
 
@@ -832,6 +841,9 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     // A run that used a skill and failed may lead to an edit proposal (D-126).
     await step("learn-failed", () => learnStep(deps, info, "failed", message, chainFor, bus).catch(() => null)).catch(() => null);
     return { status: "failed" };
+  } finally {
+    // The team computer's desktop is free for other bots once the run ends (D-148).
+    await releaseDesktop(db, runId).catch(() => {});
   }
 }
 
@@ -1457,7 +1469,7 @@ async function toolStep(
     const emit = (type: string, payload: Record<string, unknown>) =>
       bus.append(info.runId, type, payload).then(() => undefined);
     // The computer is started or restored on first use and touched on every call.
-    let computer: { id: string; handle: SandboxHandle } | undefined;
+    let computer: { id: string; org_id: string; kind: string; handle: SandboxHandle } | undefined;
     const getComputer = async () => {
       if (!deps.computers)
         throw new ToolError("no_computer", "This bot has no computer available.");
@@ -1485,7 +1497,10 @@ async function toolStep(
             redactor.value(call.args) as Record<string, unknown>,
           ).slice(0, 200),
         };
-        computer = { id: row.id, handle: h.withActivity?.(activity) ?? h };
+        const acting = h.withActivity?.(activity) ?? h;
+        // Team computers (D-148): each bot starts in its own folder next to shared/.
+        const scoped = row.kind === "team" ? inTeamFolder(acting, await teamFolder(deps.db, info.botId)) : acting;
+        computer = { id: row.id, org_id: row.org_id, kind: row.kind, handle: scoped };
       } else {
         await deps.computers.touch(computer.id);
       }
@@ -1534,6 +1549,18 @@ async function toolStep(
         fetch: deps.fetch ?? safeFetch,
         onValue: (v, label) => redactor.add(v, label),
       });
+    }
+    // Desktop cap on team computers (D-148): only so many bots use the screen at once.
+    if (def.requires?.desktop && deps.computers) {
+      const c = await getComputer();
+      if (c.kind === "team") {
+        const holders = await claimDesktop(deps.db, c, info.botId, info.runId);
+        if (holders)
+          throw new ToolError(
+            "desktop_busy",
+            `The team computer's desktop is in use by ${holders.join(", ")}. Work without the desktop for now (shell, files, browser tools) or try again in a few minutes.`,
+          );
+      }
     }
     const res = await def.execute(args as never, {
       runId: info.runId,

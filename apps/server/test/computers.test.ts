@@ -122,13 +122,14 @@ describe.skipIf(!enabled)("computers (Phase 2 gate)", () => {
       "shell.exec",
     ]);
     expect(types).toContain("tool.output");
-    const report = await download("report.md");
+    // The bot runs on the team computer, so its files are in its own folder (D-148).
+    const report = await download("bots/researcher/report.md");
     expect(report).toContain("# Research report: example.com");
     expect(report).toContain("Example Domain");
   }, 240_000);
 
   it("checkpoints automatically before destructive commands, and restoring reverts files", async () => {
-    await h.request(`/v1/computers/${computerId}/files?path=old/keep.txt`, {
+    await h.request(`/v1/computers/${computerId}/files?path=bots/researcher/old/keep.txt`, {
       method: "PUT",
       token: owner.token,
       body: "important",
@@ -139,7 +140,7 @@ describe.skipIf(!enabled)("computers (Phase 2 gate)", () => {
     expect(cp?.payload.label).toMatch(/^Before: rm -rf old/);
     expect(
       (
-        await h.request(`/v1/computers/${computerId}/files?path=old/keep.txt`, {
+        await h.request(`/v1/computers/${computerId}/files?path=bots/researcher/old/keep.txt`, {
           token: owner.token,
         })
       ).status,
@@ -157,7 +158,7 @@ describe.skipIf(!enabled)("computers (Phase 2 gate)", () => {
       },
     );
     expect(restored.status).toBe(200);
-    expect(await download("old/keep.txt")).toBe("important");
+    expect(await download("bots/researcher/old/keep.txt")).toBe("important");
   }, 240_000);
 
   it("uploads, lists and deletes files", async () => {
@@ -246,7 +247,7 @@ describe.skipIf(!enabled)("computers (Phase 2 gate)", () => {
     );
     expect(started.state).toBe("running");
     expect(await download("persist.txt")).toBe("survives sleep");
-    expect(await download("report.md")).toContain("Example Domain");
+    expect(await download("bots/researcher/report.md")).toContain("Example Domain");
 
     // The list reports what the sandbox really is, even if the stored state drifted.
     await h.tdb.admin`update public.computers set state = 'sleeping' where id = ${computerId}`;

@@ -11,6 +11,8 @@ abstract class _$UpdateComputerRequestCWProxy {
 
   UpdateComputerRequest profile(UpdateComputerRequestProfileEnum? profile);
 
+  UpdateComputerRequest maxDesktops(int? maxDesktops);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateComputerRequest(...).copyWith.fieldName(value)`.
@@ -22,6 +24,7 @@ abstract class _$UpdateComputerRequestCWProxy {
   UpdateComputerRequest call({
     String? name,
     UpdateComputerRequestProfileEnum? profile,
+    int? maxDesktops,
   });
 }
 
@@ -40,6 +43,10 @@ class _$UpdateComputerRequestCWProxyImpl
   UpdateComputerRequest profile(UpdateComputerRequestProfileEnum? profile) =>
       call(profile: profile);
 
+  @override
+  UpdateComputerRequest maxDesktops(int? maxDesktops) =>
+      call(maxDesktops: maxDesktops);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateComputerRequest(...).copyWith.fieldName(value)`.
@@ -52,6 +59,7 @@ class _$UpdateComputerRequestCWProxyImpl
   UpdateComputerRequest call({
     Object? name = const $CopyWithPlaceholder(),
     Object? profile = const $CopyWithPlaceholder(),
+    Object? maxDesktops = const $CopyWithPlaceholder(),
   }) {
     return UpdateComputerRequest(
       name: name == const $CopyWithPlaceholder()
@@ -62,6 +70,10 @@ class _$UpdateComputerRequestCWProxyImpl
           ? _value.profile
           // ignore: cast_nullable_to_non_nullable
           : profile as UpdateComputerRequestProfileEnum?,
+      maxDesktops: maxDesktops == const $CopyWithPlaceholder()
+          ? _value.maxDesktops
+          // ignore: cast_nullable_to_non_nullable
+          : maxDesktops as int?,
     );
   }
 }
@@ -87,15 +99,17 @@ UpdateComputerRequest _$UpdateComputerRequestFromJson(
       'profile',
       (v) => $enumDecodeNullable(_$UpdateComputerRequestProfileEnumEnumMap, v),
     ),
+    maxDesktops: $checkedConvert('max_desktops', (v) => (v as num?)?.toInt()),
   );
   return val;
-});
+}, fieldKeyMap: const {'maxDesktops': 'max_desktops'});
 
 Map<String, dynamic> _$UpdateComputerRequestToJson(
   UpdateComputerRequest instance,
 ) => <String, dynamic>{
   'name': ?instance.name,
   'profile': ?_$UpdateComputerRequestProfileEnumEnumMap[instance.profile],
+  'max_desktops': ?instance.maxDesktops,
 };
 
 const _$UpdateComputerRequestProfileEnumEnumMap = {

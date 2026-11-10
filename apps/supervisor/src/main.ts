@@ -73,6 +73,8 @@ const provider: SandboxProvider | undefined = defaultName !== "docker" ? undefin
     cpus: env.COMPUTER_CPUS ? Number(env.COMPUTER_CPUS) : undefined,
     memoryMb: env.COMPUTER_MEMORY_MB ? Number(env.COMPUTER_MEMORY_MB) : undefined,
   },
+  // Warm pool (D-148): started headless computers waiting to be claimed; 0 turns it off.
+  warmPool: Number(env.WARM_POOL_SIZE ?? 0) || undefined,
 });
 
 // Hosted providers (D-056, D-057): same image and computerd, reached over the provider's port URLs.
@@ -191,4 +193,10 @@ console.log(
     hosted: Object.keys(hosted),
   }),
 );
+if (provider instanceof DockerProvider && provider.opts.warmPool) {
+  const fill = () =>
+    provider.fillPool().catch((e: Error) => console.error(JSON.stringify({ msg: "warm pool fill failed", error: e.message })));
+  void fill();
+  setInterval(fill, 60_000).unref();
+}
 for (const s of ["SIGTERM", "SIGINT"] as const) process.once(s, () => process.exit(0));

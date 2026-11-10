@@ -127,6 +127,8 @@ export interface SandboxHandle {
   setMcpServers?(servers: Record<string, McpServerSpec>): Promise<void>;
   /** One MCP Streamable HTTP request to a server computerd runs (plugins, D-121). */
   mcpFetch?(key: string, init: RequestInit): Promise<Response>;
+  /** Where a relative path really points, relative to ~/workspace (team computer folders, D-148). */
+  resolvePath?(path: string): string;
   /** Personal computers only: a handle whose calls tell the user which bot is acting (D-066). */
   withActivity?(activity: {
     run_id: string;

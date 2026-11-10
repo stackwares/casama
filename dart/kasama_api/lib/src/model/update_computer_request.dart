@@ -23,6 +23,8 @@ class UpdateComputerRequest {
      this.name,
 
      this.profile,
+
+     this.maxDesktops,
   });
 
   @JsonKey(
@@ -50,17 +52,34 @@ class UpdateComputerRequest {
 
 
 
+      /// Team computers only (D-148)
+          // minimum: 1
+          // maximum: 10
+  @JsonKey(
+    
+    name: r'max_desktops',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? maxDesktops;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is UpdateComputerRequest &&
       other.name == name &&
-      other.profile == profile;
+      other.profile == profile &&
+      other.maxDesktops == maxDesktops;
 
     @override
     int get hashCode =>
         name.hashCode +
-        profile.hashCode;
+        profile.hashCode +
+        maxDesktops.hashCode;
 
   factory UpdateComputerRequest.fromJson(Map<String, dynamic> json) => _$UpdateComputerRequestFromJson(json);
 

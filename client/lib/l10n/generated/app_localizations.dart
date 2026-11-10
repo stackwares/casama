@@ -9135,6 +9135,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start the server'**
   String get localServerStart;
+
+  /// No description provided for @desktopUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop users at once'**
+  String get desktopUsers;
+
+  /// No description provided for @desktopUsersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots on this team computer share one screen. Others wait (and keep working with the shell, files and browser) while it\'s in use.'**
+  String get desktopUsersHelp;
+
+  /// No description provided for @desktopUsersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 bot} other{{count} bots}}'**
+  String desktopUsersCount(int count);
 }
 
 class _AppLocalizationsDelegate

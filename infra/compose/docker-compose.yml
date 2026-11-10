@@ -241,6 +241,7 @@ services:
       COMPUTER_IMAGE_HEADLESS: kasama/computer-headless:${KASAMA_VERSION:-local}
       COMPUTER_IMAGE_DESKTOP: kasama/computer-desktop:${KASAMA_VERSION:-local}
       COMPUTER_MEMORY_MB: ${COMPUTER_MEMORY_MB:-2048}
+      WARM_POOL_SIZE: ${WARM_POOL_SIZE:-0}
       OBJECT_STORE_DIR: /data/objects
       TURN_CONTAINER: kasama-turn
       TURN_SECRET: ${TURN_SECRET}

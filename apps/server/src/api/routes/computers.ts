@@ -32,6 +32,7 @@ const out = (c: Row) => ({
   state: c.state as "running",
   size: c.size as { cpus?: number; memory_mb?: number; disk_gb?: number },
   has_snapshot: c.snapshotRef != null,
+  max_desktops: c.maxDesktops,
   last_active_at: c.lastActiveAt ? iso(c.lastActiveAt) : null,
   error: c.error,
   created_at: iso(c.createdAt),
@@ -328,11 +329,14 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const body = c.req.valid("json");
     const current = await visible(claims, id);
     await canManage(claims, current.orgId, current.ownerBotId);
+    if (body.max_desktops != null && current.kind !== "team")
+      throw new ApiError(400, "team_computer_only", "Only team computers are shared, so only they have a desktop cap");
     await db
       .update(computers)
       .set({
         ...(body.name ? { name: body.name } : {}),
         ...(body.profile ? { profile: body.profile } : {}),
+        ...(body.max_desktops != null ? { maxDesktops: body.max_desktops } : {}),
       })
       .where(eq(computers.id, id));
     // A new profile needs a new container: restart it if it is running (files are kept).

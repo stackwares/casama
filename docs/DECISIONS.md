@@ -147,7 +147,7 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 
 - **Decision**: each computer's home is a Docker named volume (seeded from the image), the root filesystem is read-only, and `/tmp` is a 1 GB tmpfs. Docker cannot cap named volume size on overlay2 without XFS project quotas, so the 10 GB disk limit is not enforced yet; `computerd` reports free disk in `/health`. Enforce with XFS quotas on the production sandbox host (Phase 8).
 
-## D-033 Warm pool deferred
+## D-033 Warm pool deferred (built in D-148)
 
 - **Context**: the spec lists a warm pool of pre-started containers.
 - **Decision**: deferred. Cold start (create network, volume and container, start, `computerd` ready) measured about 1 to 2 seconds on this machine. Per-computer credentials are baked into the container at creation, so a pool needs a claim-time configuration step; build it if first-command latency matters in practice.
@@ -1494,3 +1494,33 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - Supervisor: the provider tests pass with the new main-provider shape.
   - Helm: lint plus a full render.
   - App (`local_server_test.dart`): the whole flow with a fake process runner and HTTP (Docker check, bundle unpacked, installer flags, ready); Docker missing; a server already running; a failed installer; the sheet saving the address and reconnecting.
+
+## D-148 Team computer folders and the warm pool
+
+- **Team computer folders:**
+  - On a team computer each bot works in `~/workspace/bots/<folder>`, and `~/workspace/shared` holds what the bots share. Both are created on the bot's first file or command.
+  - The folder name comes from the bot's name the first time it's needed ("Research Bot" → `research-bot`, then `-2`, `-3` on clashes). It's kept on the bot (`bots.team_folder`, unique per workspace), so a rename doesn't move its files.
+  - The worker wraps the computer handle for team computers. Commands start in the bot's folder, and relative paths for files and searches resolve inside it. Paths starting with `shared/` or `bots/` stay relative to the workspace, so every bot reaches the shared folder the same way. Absolute and `~` paths are left alone.
+  - The handle reports where a path really points (`resolvePath`), so saved files and screenshots link to the right place in the app.
+  - The system prompt tells the bot its folder, the shared folder, and to leave other bots' folders alone. It's a convention, not a wall: the bots share one Linux user, and isolation between workspaces is unchanged (one team computer per workspace).
+- **Desktop cap:**
+  - A team computer has one screen, so `computers.max_desktops` (1 to 10, default 1, team computers only) limits how many bots use desktop tools at the same time.
+  - The first desktop tool call in a run takes a lease, and later calls renew it (2 minutes). The lease is released when the run ends.
+  - When the cap is reached, the tool fails with `desktop_busy`, naming the bots using it, and the bot carries on with the shell, files and browser. Claims lock the computer row, so two bots can't take the last place together.
+  - Admins set the cap from the team computer's menu ("Desktop users at once") or with `PATCH /v1/computers/{id}`.
+- **Warm pool (supersedes D-033's deferral):**
+  - `WARM_POOL_SIZE` on the supervisor keeps that many headless computers started and unassigned (Docker provider; off by default).
+  - A new computer with the default size and no extra environment claims one: its container is renamed to the computer's name and the provider remembers the alias. Desktop and custom-size computers always start cold.
+  - The member keeps the network, volume, computerd token and egress identity it was created with. They're derived from its pool ref, which is stored in a container label, so the alias survives a supervisor restart (the first lookup reads it back).
+  - Saved files are restored after the claim, as with a cold start. A stopped member is replaced, and the pool refills after each claim and every minute.
+  - Pool members carry no workspace label; nothing reads it.
+- **Tests:**
+  - Agent (`team-computer.test.ts`): folder names; path and working-directory scoping, including `shared/`, other bots' folders and absolute paths.
+  - API (`team-computer.test.ts`, through a real supervisor app over a fake computer):
+    - The prompt names the folder, a saved file lands in and links to the bot's folder, and `shared/` resolves from the workspace.
+    - The folder name is kept across a rename, and a clashing name gets `-2`.
+    - A second bot is refused the desktop while another holds it. Raising the cap to 2 lets it in, and its lease goes when its run ends.
+    - The cap is refused on a private computer.
+  - pgTAP: the default and limits, folder name format, and members versus outsiders on leases.
+  - Docker (`warm-pool.test.ts`, real containers): a new computer claims the started member in well under 5 seconds and runs normally (shell, egress, files). It sleeps and restores through the member's own credentials, `list` shows the computer and not the pool ref, and the pool refills. A custom-size computer leaves the pool alone.
+  - App: setting the cap from the team computer's menu.

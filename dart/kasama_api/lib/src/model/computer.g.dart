@@ -27,6 +27,8 @@ abstract class _$ComputerCWProxy {
 
   Computer hasSnapshot(bool hasSnapshot);
 
+  Computer maxDesktops(int maxDesktops);
+
   Computer lastActiveAt(DateTime? lastActiveAt);
 
   Computer error(String? error);
@@ -52,6 +54,7 @@ abstract class _$ComputerCWProxy {
     ComputerState state,
     ComputerSize size,
     bool hasSnapshot,
+    int maxDesktops,
     DateTime? lastActiveAt,
     String? error,
     DateTime createdAt,
@@ -96,6 +99,9 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
   Computer hasSnapshot(bool hasSnapshot) => call(hasSnapshot: hasSnapshot);
 
   @override
+  Computer maxDesktops(int maxDesktops) => call(maxDesktops: maxDesktops);
+
+  @override
   Computer lastActiveAt(DateTime? lastActiveAt) =>
       call(lastActiveAt: lastActiveAt);
 
@@ -125,6 +131,7 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
     Object? state = const $CopyWithPlaceholder(),
     Object? size = const $CopyWithPlaceholder(),
     Object? hasSnapshot = const $CopyWithPlaceholder(),
+    Object? maxDesktops = const $CopyWithPlaceholder(),
     Object? lastActiveAt = const $CopyWithPlaceholder(),
     Object? error = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
@@ -171,6 +178,11 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
           ? _value.hasSnapshot
           // ignore: cast_nullable_to_non_nullable
           : hasSnapshot as bool,
+      maxDesktops:
+          maxDesktops == const $CopyWithPlaceholder() || maxDesktops == null
+          ? _value.maxDesktops
+          // ignore: cast_nullable_to_non_nullable
+          : maxDesktops as int,
       lastActiveAt: lastActiveAt == const $CopyWithPlaceholder()
           ? _value.lastActiveAt
           // ignore: cast_nullable_to_non_nullable
@@ -215,6 +227,7 @@ Computer _$ComputerFromJson(Map<String, dynamic> json) => $checkedCreate(
         'state',
         'size',
         'has_snapshot',
+        'max_desktops',
         'last_active_at',
         'error',
         'created_at',
@@ -243,6 +256,7 @@ Computer _$ComputerFromJson(Map<String, dynamic> json) => $checkedCreate(
         (v) => ComputerSize.fromJson(v as Map<String, dynamic>),
       ),
       hasSnapshot: $checkedConvert('has_snapshot', (v) => v as bool),
+      maxDesktops: $checkedConvert('max_desktops', (v) => (v as num).toInt()),
       lastActiveAt: $checkedConvert(
         'last_active_at',
         (v) => v == null ? null : DateTime.parse(v as String),
@@ -259,6 +273,7 @@ Computer _$ComputerFromJson(Map<String, dynamic> json) => $checkedCreate(
     'orgId': 'org_id',
     'ownerBotId': 'owner_bot_id',
     'hasSnapshot': 'has_snapshot',
+    'maxDesktops': 'max_desktops',
     'lastActiveAt': 'last_active_at',
     'createdAt': 'created_at',
   },
@@ -275,6 +290,7 @@ Map<String, dynamic> _$ComputerToJson(Computer instance) => <String, dynamic>{
   'state': _$ComputerStateEnumMap[instance.state]!,
   'size': instance.size.toJson(),
   'has_snapshot': instance.hasSnapshot,
+  'max_desktops': instance.maxDesktops,
   'last_active_at': instance.lastActiveAt?.toIso8601String(),
   'error': instance.error,
   'created_at': instance.createdAt.toIso8601String(),

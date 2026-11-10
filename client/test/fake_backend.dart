@@ -2148,8 +2148,8 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<Computer> updateComputer(String computerId, {String? name, String? profile}) async {
-    computerUpdates.add('${name ?? ''}${profile ?? ''}');
+  Future<Computer> updateComputer(String computerId, {String? name, String? profile, int? maxDesktops}) async {
+    computerUpdates.add('${name ?? ''}${profile ?? ''}${maxDesktops == null ? '' : 'desktops:$maxDesktops'}');
     return (await computers(orgId)).first;
   }
 
@@ -2209,6 +2209,7 @@ class FakeBackend implements Backend {
       state: ComputerState.sleeping,
       size: ComputerSize(cpus: 1),
       hasSnapshot: true,
+      maxDesktops: 1,
       createdAt: DateTime(2026),
     ),
   ];

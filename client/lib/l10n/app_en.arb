@@ -2951,5 +2951,15 @@
   "localServerStarting": "Waiting for the server to answer…",
   "localServerReady": "Ready. Connecting…",
   "localServerFailed": "Something went wrong.",
-  "localServerStart": "Start the server"
+  "localServerStart": "Start the server",
+  "desktopUsers": "Desktop users at once",
+  "desktopUsersHelp": "Bots on this team computer share one screen. Others wait (and keep working with the shell, files and browser) while it's in use.",
+  "desktopUsersCount": "{count, plural, =1{1 bot} other{{count} bots}}",
+  "@desktopUsersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

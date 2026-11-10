@@ -3943,6 +3943,10 @@
           "has_snapshot": {
             "type": "boolean"
           },
+          "max_desktops": {
+            "type": "integer",
+            "description": "Team computers: bots that may use the desktop at the same time (D-148)"
+          },
           "last_active_at": {
             "type": [
               "string",
@@ -3972,6 +3976,7 @@
           "state",
           "size",
           "has_snapshot",
+          "max_desktops",
           "last_active_at",
           "error",
           "created_at"
@@ -4380,6 +4385,12 @@
               "desktop"
             ],
             "description": "Takes effect on the next start (a running computer restarts)"
+          },
+          "max_desktops": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "Team computers only (D-148)"
           }
         }
       },

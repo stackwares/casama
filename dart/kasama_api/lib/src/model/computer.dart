@@ -42,6 +42,8 @@ class Computer {
 
     required  this.hasSnapshot,
 
+    required  this.maxDesktops,
+
     required  this.lastActiveAt,
 
     required  this.error,
@@ -169,6 +171,19 @@ class Computer {
 
 
 
+      /// Team computers: bots that may use the desktop at the same time (D-148)
+  @JsonKey(
+    
+    name: r'max_desktops',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final int maxDesktops;
+
+
+
   @JsonKey(
     
     name: r'last_active_at',
@@ -219,6 +234,7 @@ class Computer {
       other.state == state &&
       other.size == size &&
       other.hasSnapshot == hasSnapshot &&
+      other.maxDesktops == maxDesktops &&
       other.lastActiveAt == lastActiveAt &&
       other.error == error &&
       other.createdAt == createdAt;
@@ -235,6 +251,7 @@ class Computer {
         state.hashCode +
         size.hashCode +
         hasSnapshot.hashCode +
+        maxDesktops.hashCode +
         (lastActiveAt == null ? 0 : lastActiveAt.hashCode) +
         (error == null ? 0 : error.hashCode) +
         createdAt.hashCode;
