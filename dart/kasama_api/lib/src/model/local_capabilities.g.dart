@@ -15,6 +15,8 @@ abstract class _$LocalCapabilitiesCWProxy {
 
   LocalCapabilities desktop(bool? desktop);
 
+  LocalCapabilities mcp(bool? mcp);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `LocalCapabilities(...).copyWith.fieldName(value)`.
@@ -28,6 +30,7 @@ abstract class _$LocalCapabilitiesCWProxy {
     bool? files,
     bool? browser,
     bool? desktop,
+    bool? mcp,
   });
 }
 
@@ -50,6 +53,9 @@ class _$LocalCapabilitiesCWProxyImpl implements _$LocalCapabilitiesCWProxy {
   @override
   LocalCapabilities desktop(bool? desktop) => call(desktop: desktop);
 
+  @override
+  LocalCapabilities mcp(bool? mcp) => call(mcp: mcp);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `LocalCapabilities(...).copyWith.fieldName(value)`.
@@ -64,6 +70,7 @@ class _$LocalCapabilitiesCWProxyImpl implements _$LocalCapabilitiesCWProxy {
     Object? files = const $CopyWithPlaceholder(),
     Object? browser = const $CopyWithPlaceholder(),
     Object? desktop = const $CopyWithPlaceholder(),
+    Object? mcp = const $CopyWithPlaceholder(),
   }) {
     return LocalCapabilities(
       shell: shell == const $CopyWithPlaceholder()
@@ -82,6 +89,10 @@ class _$LocalCapabilitiesCWProxyImpl implements _$LocalCapabilitiesCWProxy {
           ? _value.desktop
           // ignore: cast_nullable_to_non_nullable
           : desktop as bool?,
+      mcp: mcp == const $CopyWithPlaceholder()
+          ? _value.mcp
+          // ignore: cast_nullable_to_non_nullable
+          : mcp as bool?,
     );
   }
 }
@@ -105,6 +116,7 @@ LocalCapabilities _$LocalCapabilitiesFromJson(Map<String, dynamic> json) =>
         files: $checkedConvert('files', (v) => v as bool?),
         browser: $checkedConvert('browser', (v) => v as bool?),
         desktop: $checkedConvert('desktop', (v) => v as bool?),
+        mcp: $checkedConvert('mcp', (v) => v as bool?),
       );
       return val;
     });
@@ -115,4 +127,5 @@ Map<String, dynamic> _$LocalCapabilitiesToJson(LocalCapabilities instance) =>
       'files': ?instance.files,
       'browser': ?instance.browser,
       'desktop': ?instance.desktop,
+      'mcp': ?instance.mcp,
     };

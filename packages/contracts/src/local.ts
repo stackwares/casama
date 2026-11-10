@@ -9,8 +9,29 @@ export const LocalCapabilities = z
     files: z.boolean().optional(),
     browser: z.boolean().optional(),
     desktop: z.boolean().optional(),
+    /** Local MCP servers on this computer (D-096). */
+    mcp: z.boolean().optional(),
   })
   .openapi("LocalCapabilities");
+
+export const LocalMcpServerInfo = z
+  .object({
+    key: z.string().regex(/^[a-z][a-z0-9_]{0,30}$/),
+    label: z.string().trim().min(1).max(80),
+    kind: z.enum(["stdio", "loopback"]),
+    summary: z
+      .string()
+      .max(300)
+      .openapi({ description: "Shown to the workspace, e.g. the command without its environment" }),
+    timeout_s: z.number().int().min(10).max(7200).optional().openapi({
+      description: "Longest a call may take (default 1800 s); progress keeps it alive",
+    }),
+  })
+  .openapi("LocalMcpServerInfo");
+
+export const SetLocalMcpServersRequest = z
+  .object({ servers: z.array(LocalMcpServerInfo).max(50) })
+  .openapi("SetLocalMcpServersRequest");
 
 export const LocalDevice = z
   .object({

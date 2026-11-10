@@ -2977,4 +2977,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get abuseKind_unsuspended => 'Suspension lifted';
+
+  @override
+  String get kindLocalMcp => 'On a computer';
+
+  @override
+  String get capMcp => 'Local tools (MCP)';
+
+  @override
+  String get localMcpServers => 'Local tools (MCP)';
+
+  @override
+  String get localMcpHelp =>
+      'MCP servers on this computer that your bots can use, such as Claude Code, Codex or design apps. Their tokens stay on this computer.';
+
+  @override
+  String get localMcpAdd => 'Add a local MCP server';
+
+  @override
+  String get localMcpEmpty => 'No local MCP servers yet.';
+
+  @override
+  String get localMcpName => 'Name';
+
+  @override
+  String get localMcpKind => 'How it runs';
+
+  @override
+  String get localMcpStdio => 'A command';
+
+  @override
+  String get localMcpLoopback => 'An address on this computer';
+
+  @override
+  String get localMcpCommand => 'Command';
+
+  @override
+  String get localMcpCommandHint => 'npx -y @example/mcp-server';
+
+  @override
+  String get localMcpUrl => 'Address';
+
+  @override
+  String get localMcpFolder => 'Working folder (optional)';
+
+  @override
+  String get localMcpEnv =>
+      'Environment (one KEY=value per line, kept on this computer)';
+
+  @override
+  String get localMcpNeedsCapability =>
+      'Turn on Local tools (MCP) above so bots can use these.';
+
+  @override
+  String get localMcpBadUrl =>
+      'Use an address on this computer, like http://127.0.0.1:3845/mcp.';
+
+  @override
+  String get localMcpBadFolder =>
+      'Pick a folder inside one of the shared folders.';
+
+  @override
+  String localMcpOnDevice(String device) {
+    return 'On $device';
+  }
 }

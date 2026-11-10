@@ -115,6 +115,7 @@ lib/src/model/deleted_routine.dart
 lib/src/model/health.dart
 lib/src/model/ice_server.dart
 lib/src/model/integration.dart
+lib/src/model/integration_device.dart
 lib/src/model/integration_kind.dart
 lib/src/model/integration_list.dart
 lib/src/model/integration_test_result.dart
@@ -127,6 +128,8 @@ lib/src/model/lease_changed_event_payload.dart
 lib/src/model/local_capabilities.dart
 lib/src/model/local_device.dart
 lib/src/model/local_device_list.dart
+lib/src/model/local_mcp_integration_list.dart
+lib/src/model/local_mcp_server_info.dart
 lib/src/model/me.dart
 lib/src/model/membership.dart
 lib/src/model/memory.dart
@@ -191,6 +194,7 @@ lib/src/model/secret.dart
 lib/src/model/secret_list.dart
 lib/src/model/send_message_request.dart
 lib/src/model/send_message_response.dart
+lib/src/model/set_local_mcp_servers_request.dart
 lib/src/model/set_org_limits_request.dart
 lib/src/model/signup_challenge.dart
 lib/src/model/skill_loaded_event.dart

@@ -126,6 +126,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - The worker connects as `kasama_worker` (`WORKER_DATABASE_URL`): explicit per-table policies, Vault read and update, a few `auth.users` columns, its own `dbos` schema; no superuser or RLS bypass. New tables call `public.allow_worker`.
 
+## Local MCP servers (D-096)
+
+- computerd `POST /mcp/<key>` bridges MCP Streamable HTTP to a stdio or loopback server on the user's computer; servers are `local_mcp` integrations registered by the app (`PUT /v1/local-devices/{id}/mcp-servers`); the worker's `LocalMcpAdapter` reaches them through the device tunnel. App: companion screen → Local tools (MCP), env kept in secure storage.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

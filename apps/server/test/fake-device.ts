@@ -34,6 +34,8 @@ export async function startFakeDevice(opts: {
   token: string;
   roots: string[];
   capabilities: string[];
+  /** Local MCP servers (D-096), as the desktop app passes them to computerd. */
+  mcpServers?: Record<string, unknown>;
 }): Promise<FakeDevice> {
   const port = 17000 + Math.floor(Math.random() * 2000);
   const cdToken = "fake-device-computerd-token-0123";
@@ -46,6 +48,7 @@ export async function startFakeDevice(opts: {
       COMPUTERD_HOME: opts.roots[0],
       COMPUTERD_ALLOWED_ROOTS: opts.roots.join(":"),
       COMPUTERD_CAPABILITIES: opts.capabilities.join(","),
+      ...(opts.mcpServers ? { COMPUTERD_MCP_SERVERS: JSON.stringify(opts.mcpServers) } : {}),
     },
     stdio: "ignore",
   });

@@ -59,7 +59,7 @@ export const CreateSecretRequest = z
   .openapi("CreateSecretRequest");
 
 export const IntegrationKind = z
-  .enum(["mcp", "openapi", "composio", "pipedream"])
+  .enum(["mcp", "openapi", "composio", "pipedream", "local_mcp"])
   .openapi("IntegrationKind");
 
 export const Integration = z
@@ -81,6 +81,11 @@ export const Integration = z
     bot_ids: z.array(Uuid).optional(),
     /** Admin overrides of a tool's risk (low runs freely, high always asks). */
     risk_overrides: z.record(z.string(), Risk).optional(),
+    /** local_mcp: the computer it runs on and the person who owns it (D-096). */
+    device: z
+      .object({ id: Uuid, computer_id: Uuid.nullable(), owner_user_id: Uuid, label: z.string() })
+      .nullable()
+      .optional(),
   })
   .openapi("Integration");
 

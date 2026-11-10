@@ -25,6 +25,7 @@ String integrationKindLabel(BuildContext context, IntegrationKind kind) => switc
   IntegrationKind.openapi => context.l10n.kindOpenapi,
   IntegrationKind.composio => 'Composio',
   IntegrationKind.pipedream => 'Pipedream Connect',
+  IntegrationKind.localMcp => context.l10n.kindLocalMcp,
 };
 
 IconData integrationKindIcon(IntegrationKind kind) => switch (kind) {
@@ -32,6 +33,7 @@ IconData integrationKindIcon(IntegrationKind kind) => switch (kind) {
   IntegrationKind.openapi => LucideIcons.braces,
   IntegrationKind.composio => LucideIcons.blocks,
   IntegrationKind.pipedream => LucideIcons.cable,
+  IntegrationKind.localMcp => LucideIcons.laptop,
 };
 
 String appCategoryLabel(BuildContext context, CatalogAppCategoryEnum c) {
@@ -529,6 +531,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
   List<String> _list(String s) => s.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
 
   Map<String, Object?> _config() => switch (_kind) {
+    IntegrationKind.localMcp => const {},
     IntegrationKind.mcp => {'url': _primary.text.trim()},
     IntegrationKind.openapi => {
       'spec': _primary.text.trim(),
@@ -567,7 +570,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final (primaryLabel, secondaryLabel, secretLabel) = switch (_kind) {
-      IntegrationKind.mcp => (l10n.serverUrl, null, l10n.authHeaderOptional),
+      IntegrationKind.mcp || IntegrationKind.localMcp => (l10n.serverUrl, null, l10n.authHeaderOptional),
       IntegrationKind.openapi => (l10n.specUrl, l10n.baseUrlOptional, l10n.authSecretName),
       IntegrationKind.composio => (l10n.composioToolkits, null, l10n.apiKey),
       IntegrationKind.pipedream => (l10n.pipedreamProject, l10n.pipedreamClientId, l10n.pipedreamClientSecret),
@@ -594,7 +597,11 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
           key: const Key('integrationKind'),
           initialValue: _kind,
           decoration: InputDecoration(labelText: l10n.integrationType, prefixIcon: Icon(integrationKindIcon(_kind), size: 20)),
-          items: [for (final k in IntegrationKind.values) DropdownMenuItem(value: k, child: Text(integrationKindLabel(context, k)))],
+          // Local MCP servers are added from the desktop app's companion settings (D-096).
+          items: [
+            for (final k in IntegrationKind.values)
+              if (k != IntegrationKind.localMcp) DropdownMenuItem(value: k, child: Text(integrationKindLabel(context, k))),
+          ],
           onChanged: (v) => setState(() => _kind = v ?? _kind),
         ),
         TextField(

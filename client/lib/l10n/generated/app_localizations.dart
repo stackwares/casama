@@ -5187,6 +5187,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Suspension lifted'**
   String get abuseKind_unsuspended;
+
+  /// No description provided for @kindLocalMcp.
+  ///
+  /// In en, this message translates to:
+  /// **'On a computer'**
+  String get kindLocalMcp;
+
+  /// No description provided for @capMcp.
+  ///
+  /// In en, this message translates to:
+  /// **'Local tools (MCP)'**
+  String get capMcp;
+
+  /// No description provided for @localMcpServers.
+  ///
+  /// In en, this message translates to:
+  /// **'Local tools (MCP)'**
+  String get localMcpServers;
+
+  /// No description provided for @localMcpHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP servers on this computer that your bots can use, such as Claude Code, Codex or design apps. Their tokens stay on this computer.'**
+  String get localMcpHelp;
+
+  /// No description provided for @localMcpAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a local MCP server'**
+  String get localMcpAdd;
+
+  /// No description provided for @localMcpEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No local MCP servers yet.'**
+  String get localMcpEmpty;
+
+  /// No description provided for @localMcpName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get localMcpName;
+
+  /// No description provided for @localMcpKind.
+  ///
+  /// In en, this message translates to:
+  /// **'How it runs'**
+  String get localMcpKind;
+
+  /// No description provided for @localMcpStdio.
+  ///
+  /// In en, this message translates to:
+  /// **'A command'**
+  String get localMcpStdio;
+
+  /// No description provided for @localMcpLoopback.
+  ///
+  /// In en, this message translates to:
+  /// **'An address on this computer'**
+  String get localMcpLoopback;
+
+  /// No description provided for @localMcpCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Command'**
+  String get localMcpCommand;
+
+  /// No description provided for @localMcpCommandHint.
+  ///
+  /// In en, this message translates to:
+  /// **'npx -y @example/mcp-server'**
+  String get localMcpCommandHint;
+
+  /// No description provided for @localMcpUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get localMcpUrl;
+
+  /// No description provided for @localMcpFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Working folder (optional)'**
+  String get localMcpFolder;
+
+  /// No description provided for @localMcpEnv.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment (one KEY=value per line, kept on this computer)'**
+  String get localMcpEnv;
+
+  /// No description provided for @localMcpNeedsCapability.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Local tools (MCP) above so bots can use these.'**
+  String get localMcpNeedsCapability;
+
+  /// No description provided for @localMcpBadUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Use an address on this computer, like http://127.0.0.1:3845/mcp.'**
+  String get localMcpBadUrl;
+
+  /// No description provided for @localMcpBadFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a folder inside one of the shared folders.'**
+  String get localMcpBadFolder;
+
+  /// No description provided for @localMcpOnDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'On {device}'**
+  String localMcpOnDevice(String device);
 }
 
 class _AppLocalizationsDelegate

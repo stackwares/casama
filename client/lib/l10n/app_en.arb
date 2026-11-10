@@ -1654,5 +1654,31 @@
   "abuseKind_egress_flood": "Traffic flood",
   "abuseKind_signup_blocked": "Sign-up refused",
   "abuseKind_suspended": "Workspace suspended",
-  "abuseKind_unsuspended": "Suspension lifted"
+  "abuseKind_unsuspended": "Suspension lifted",
+  "kindLocalMcp": "On a computer",
+  "capMcp": "Local tools (MCP)",
+  "localMcpServers": "Local tools (MCP)",
+  "localMcpHelp": "MCP servers on this computer that your bots can use, such as Claude Code, Codex or design apps. Their tokens stay on this computer.",
+  "localMcpAdd": "Add a local MCP server",
+  "localMcpEmpty": "No local MCP servers yet.",
+  "localMcpName": "Name",
+  "localMcpKind": "How it runs",
+  "localMcpStdio": "A command",
+  "localMcpLoopback": "An address on this computer",
+  "localMcpCommand": "Command",
+  "localMcpCommandHint": "npx -y @example/mcp-server",
+  "localMcpUrl": "Address",
+  "localMcpFolder": "Working folder (optional)",
+  "localMcpEnv": "Environment (one KEY=value per line, kept on this computer)",
+  "localMcpNeedsCapability": "Turn on Local tools (MCP) above so bots can use these.",
+  "localMcpBadUrl": "Use an address on this computer, like http://127.0.0.1:3845/mcp.",
+  "localMcpBadFolder": "Pick a folder inside one of the shared folders.",
+  "localMcpOnDevice": "On {device}",
+  "@localMcpOnDevice": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  }
 }

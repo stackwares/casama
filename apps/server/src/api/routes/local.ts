@@ -21,9 +21,14 @@ import { type WebSocket, WebSocketServer } from "ws";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
+import { integrationOut } from "./autonomy.ts";
 
 const { localDevices, computers } = schema;
 const REQUEST_TIMEOUT_MS = 15 * 60 * 1000;
+/** Local MCP calls may run up to two hours (their own timeout, D-096, is usually shorter). */
+const MCP_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+/** JSON-RPC methods that may reach a local MCP server without a run (listing its tools). */
+const MCP_LIST_METHODS = new Set(["initialize", "notifications/initialized", "tools/list"]);
 
 export const hashDeviceToken = (t: string) => createHash("sha256").update(t).digest("hex");
 
@@ -114,10 +119,13 @@ export class DeviceRegistry {
     const entry = this.sockets.get(computerId);
     if (!entry) throw new ApiError(409, "device_offline", "The computer is offline");
     const id = `r${++this.seq}`;
-    const timer = setTimeout(() => {
-      entry.pending.delete(id);
-      handlers.onError("The computer did not answer in time");
-    }, REQUEST_TIMEOUT_MS);
+    const timer = setTimeout(
+      () => {
+        entry.pending.delete(id);
+        handlers.onError("The computer did not answer in time");
+      },
+      req.path.startsWith("/mcp/") ? MCP_TIMEOUT_MS : REQUEST_TIMEOUT_MS,
+    );
     const done =
       <A extends unknown[]>(f: (...a: A) => void) =>
       (...a: A) => {
@@ -260,6 +268,63 @@ export function registerLocalRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json(out(updated as DeviceRow), 200);
   });
 
+  // Local MCP servers (D-096): the app registers what it runs; each is a local_mcp integration.
+  app.openapi(routes.setLocalMcpServers, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { servers } = c.req.valid("json");
+    const d = await own(claims, id);
+    const suffix = d.id.replace(/-/g, "").slice(0, 6);
+    const nameOf = (key: string) => `${key.slice(0, 32)}_${suffix}`;
+    const keys = new Set(servers.map((s) => s.key));
+    if (keys.size !== servers.length)
+      throw new ApiError(400, "duplicate_server", "Each local MCP server needs its own key");
+    await db.transaction(async (tx) => {
+      const existing = await tx.execute<{ id: string; server: string }>(sql`
+        select id, config->>'server' as server from public.integrations
+        where kind = 'local_mcp' and config->>'device_id' = ${d.id}`);
+      for (const row of existing)
+        if (!keys.has(row.server))
+          await tx.execute(sql`delete from public.integrations where id = ${row.id}::uuid`);
+      for (const s of servers) {
+        const config = {
+          device_id: d.id,
+          computer_id: d.computerId,
+          owner_user_id: d.userId,
+          server: s.key,
+          label: s.label,
+          summary: s.summary,
+          timeout_s: s.timeout_s ?? 1800,
+        };
+        const [row] = await tx.execute<{ id: string; inserted: boolean }>(sql`
+          insert into public.integrations (org_id, kind, name, config, status, created_by)
+          values (${d.orgId}::uuid, 'local_mcp', ${nameOf(s.key)}, ${JSON.stringify(config)}::jsonb, 'pending', ${claims.sub}::uuid)
+          on conflict (org_id, name) do update set config = excluded.config,
+            tools_cached_at = null
+          returning id, (xmax = 0) as inserted`);
+        // New servers start with the bots this computer already allows.
+        if (row?.inserted && d.allowedBotIds?.length)
+          await tx.execute(sql`
+            insert into public.bot_integrations (org_id, bot_id, integration_id)
+            select ${d.orgId}::uuid, b.id, ${row.id}::uuid from public.bots b
+            where b.id = any(${`{${d.allowedBotIds.join(",")}}`}::uuid[]) and b.org_id = ${d.orgId}::uuid
+            on conflict do nothing`);
+      }
+    });
+    const rows = await db.execute<{ id: string }>(sql`
+      select id from public.integrations where kind = 'local_mcp' and config->>'device_id' = ${d.id}
+      order by name`);
+    const items = [];
+    for (const r of rows) {
+      const [i] = await db
+        .select()
+        .from(schema.integrations)
+        .where(eq(schema.integrations.id, r.id));
+      if (i) items.push(integrationOut(i));
+    }
+    return c.json({ items }, 200);
+  });
+
   app.openapi(routes.deleteLocalDevice, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
@@ -322,8 +387,20 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
         : undefined;
     } catch {}
 
+    // Listing a local MCP server's tools needs no run; calling them does (D-096).
+    const listingOnly = (() => {
+      if (!path.startsWith("/mcp/") || (activity as { run_id?: string } | undefined)?.run_id)
+        return false;
+      try {
+        const parsed = JSON.parse(body?.toString() ?? "null") as unknown;
+        const msgs = (Array.isArray(parsed) ? parsed : [parsed]) as Array<{ method?: unknown }>;
+        return msgs.length > 0 && msgs.every((m) => MCP_LIST_METHODS.has(String(m?.method)));
+      } catch {
+        return false;
+      }
+    })();
     // Only bots the user allowed may act on their machine (health checks carry no run).
-    if (path !== "/health") {
+    if (path !== "/health" && !listingOnly) {
       const runId = (activity as { run_id?: string } | undefined)?.run_id;
       const [allowed] = runId
         ? await deps.db.execute<{ ok: boolean }>(sql`

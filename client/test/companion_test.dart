@@ -47,11 +47,20 @@ class MemoryTokens implements DeviceTokenStore {
   Future<void> delete(String orgId) async => m.remove(orgId);
 }
 
-Widget companionHarness(FakeBackend backend, FakeCompanion companion, MemoryTokens tokens, Widget child) => ProviderScope(
+class MemoryMcp implements LocalMcpStore {
+  final m = <String, List<LocalMcpConfig>>{};
+  @override
+  Future<List<LocalMcpConfig>> read(String orgId) async => m[orgId] ?? const [];
+  @override
+  Future<void> write(String orgId, List<LocalMcpConfig> servers) async => m[orgId] = servers;
+}
+
+Widget companionHarness(FakeBackend backend, FakeCompanion companion, MemoryTokens tokens, Widget child, {LocalMcpStore? mcp}) => ProviderScope(
       overrides: [
         backendProvider.overrideWithValue(backend),
         companionProvider.overrideWithValue(companion),
         deviceTokenStoreProvider.overrideWithValue(tokens),
+        localMcpStoreProvider.overrideWithValue(mcp ?? MemoryMcp()),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,

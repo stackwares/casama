@@ -27,6 +27,8 @@ class LocalCapabilities {
      this.browser,
 
      this.desktop,
+
+     this.mcp,
   });
 
   @JsonKey(
@@ -77,6 +79,18 @@ class LocalCapabilities {
 
 
 
+  @JsonKey(
+    
+    name: r'mcp',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? mcp;
+
+
+
 
 
     @override
@@ -84,14 +98,16 @@ class LocalCapabilities {
       other.shell == shell &&
       other.files == files &&
       other.browser == browser &&
-      other.desktop == desktop;
+      other.desktop == desktop &&
+      other.mcp == mcp;
 
     @override
     int get hashCode =>
         shell.hashCode +
         files.hashCode +
         browser.hashCode +
-        desktop.hashCode;
+        desktop.hashCode +
+        mcp.hashCode;
 
   factory LocalCapabilities.fromJson(Map<String, dynamic> json) => _$LocalCapabilitiesFromJson(json);
 

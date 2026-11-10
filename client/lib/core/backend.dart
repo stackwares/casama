@@ -273,6 +273,8 @@ abstract class Backend {
   Future<List<LocalDevice>> localDevices(String orgId);
   Future<CreatedLocalDevice> createLocalDevice(String orgId, String name, String platform);
   Future<LocalDevice> updateLocalDevice(String id, {Set<String>? capabilities, List<String>? roots, List<String>? botIds, bool? enabled});
+  /// Registers this computer's local MCP servers (no secrets) as local_mcp integrations (D-096).
+  Future<List<Integration>> setLocalMcpServers(String deviceId, List<LocalMcpServerInfo> servers);
   Future<void> deleteLocalDevice(String id);
 
   // Voice (Phase 6)

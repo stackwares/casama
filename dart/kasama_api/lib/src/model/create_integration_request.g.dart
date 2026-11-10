@@ -143,4 +143,5 @@ const _$IntegrationKindEnumMap = {
   IntegrationKind.openapi: 'openapi',
   IntegrationKind.composio: 'composio',
   IntegrationKind.pipedream: 'pipedream',
+  IntegrationKind.localMcp: 'local_mcp',
 };

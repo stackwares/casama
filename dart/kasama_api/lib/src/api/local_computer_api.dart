@@ -14,6 +14,8 @@ import 'package:kasama_api/src/model/created_local_device.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/local_device.dart';
 import 'package:kasama_api/src/model/local_device_list.dart';
+import 'package:kasama_api/src/model/local_mcp_integration_list.dart';
+import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
 import 'package:kasama_api/src/model/update_local_device_request.dart';
 
 class LocalComputerApi {
@@ -329,6 +331,104 @@ _responseData = rawData == null ? null : deserialize<LocalDeviceList, LocalDevic
     );
 
     return _response;
+  }
+
+  /// Register the local MCP servers on this computer (no secrets); each becomes a local_mcp integration
+  /// 
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [setLocalMcpServersRequest] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [LocalMcpIntegrationList] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<LocalMcpIntegrationList>> setLocalMcpServers({ 
+    required String id,
+    required SetLocalMcpServersRequest setLocalMcpServersRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/local-devices/{id}/mcp-servers'.replaceAll('{' r'id' '}', id.toString());
+    final _options = Options(
+      method: r'PUT',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+_bodyData=jsonEncode(setLocalMcpServersRequest);
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    LocalMcpIntegrationList? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<LocalMcpIntegrationList, LocalMcpIntegrationList>(rawData, 'LocalMcpIntegrationList', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<LocalMcpIntegrationList>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
   }
 
   /// Change capabilities, shared folders, allowed bots or turn the device off

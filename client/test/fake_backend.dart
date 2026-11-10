@@ -747,12 +747,20 @@ class FakeBackend implements Backend {
               files: capabilities.contains('files'),
               browser: capabilities.contains('browser'),
               desktop: capabilities.contains('desktop'),
+              mcp: capabilities.contains('mcp'),
             ),
       roots: roots,
       bots: botIds,
       enabled: enabled,
     );
     return device!;
+  }
+
+  final localMcpSyncs = <List<LocalMcpServerInfo>>[];
+  @override
+  Future<List<Integration>> setLocalMcpServers(String deviceId, List<LocalMcpServerInfo> servers) async {
+    localMcpSyncs.add(servers);
+    return const [];
   }
 
   @override

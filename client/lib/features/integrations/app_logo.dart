@@ -52,6 +52,7 @@ class AppLogo extends StatelessWidget {
                 IntegrationKind.openapi => LucideIcons.braces,
                 IntegrationKind.composio => LucideIcons.blocks,
                 IntegrationKind.pipedream => LucideIcons.cable,
+                IntegrationKind.localMcp => LucideIcons.laptop,
               },
         size: size,
       );

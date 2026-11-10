@@ -865,6 +865,15 @@ class SupabaseBackend implements Backend {
           .data!;
 
   @override
+  Future<List<Integration>> setLocalMcpServers(String deviceId, List<LocalMcpServerInfo> servers) async =>
+      (await api.localComputer.setLocalMcpServers(
+        id: deviceId,
+        setLocalMcpServersRequest: SetLocalMcpServersRequest(servers: servers),
+      ))
+          .data!
+          .items;
+
+  @override
   Future<LocalDevice> updateLocalDevice(String id, {Set<String>? capabilities, List<String>? roots, List<String>? botIds, bool? enabled}) async =>
       (await api.localComputer.updateLocalDevice(
         id: id,
@@ -876,6 +885,7 @@ class SupabaseBackend implements Backend {
                   files: capabilities.contains('files'),
                   browser: capabilities.contains('browser'),
                   desktop: capabilities.contains('desktop'),
+                  mcp: capabilities.contains('mcp'),
                 ),
           allowedRoots: roots,
           allowedBotIds: botIds,

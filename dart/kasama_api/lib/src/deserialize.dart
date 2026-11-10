@@ -78,6 +78,7 @@ import 'package:kasama_api/src/model/deleted_routine.dart';
 import 'package:kasama_api/src/model/health.dart';
 import 'package:kasama_api/src/model/ice_server.dart';
 import 'package:kasama_api/src/model/integration.dart';
+import 'package:kasama_api/src/model/integration_device.dart';
 import 'package:kasama_api/src/model/integration_list.dart';
 import 'package:kasama_api/src/model/integration_test_result.dart';
 import 'package:kasama_api/src/model/integration_tools_inner.dart';
@@ -88,6 +89,8 @@ import 'package:kasama_api/src/model/lease_changed_event_payload.dart';
 import 'package:kasama_api/src/model/local_capabilities.dart';
 import 'package:kasama_api/src/model/local_device.dart';
 import 'package:kasama_api/src/model/local_device_list.dart';
+import 'package:kasama_api/src/model/local_mcp_integration_list.dart';
+import 'package:kasama_api/src/model/local_mcp_server_info.dart';
 import 'package:kasama_api/src/model/me.dart';
 import 'package:kasama_api/src/model/membership.dart';
 import 'package:kasama_api/src/model/memory.dart';
@@ -146,6 +149,7 @@ import 'package:kasama_api/src/model/secret.dart';
 import 'package:kasama_api/src/model/secret_list.dart';
 import 'package:kasama_api/src/model/send_message_request.dart';
 import 'package:kasama_api/src/model/send_message_response.dart';
+import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
 import 'package:kasama_api/src/model/signup_challenge.dart';
 import 'package:kasama_api/src/model/skill_loaded_event.dart';
@@ -398,6 +402,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return IceServer.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Integration':
           return Integration.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'IntegrationDevice':
+          return IntegrationDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'IntegrationKind':
           
           
@@ -424,6 +430,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return LocalDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LocalDeviceList':
           return LocalDeviceList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LocalMcpIntegrationList':
+          return LocalMcpIntegrationList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LocalMcpServerInfo':
+          return LocalMcpServerInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Me':
           return Me.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Membership':
@@ -558,6 +568,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SendMessageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SendMessageResponse':
           return SendMessageResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetLocalMcpServersRequest':
+          return SetLocalMcpServersRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetOrgLimitsRequest':
           return SetOrgLimitsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SignupChallenge':

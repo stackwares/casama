@@ -143,6 +143,7 @@ export const testIntegrationWorkflow = DBOS.registerWorkflow(
         const r = await refreshIntegration(rt().db, integrationId, {
           fetch: rt().fetch ?? safeFetch,
           secrets: [],
+          local: rt().agent.local,
         });
         return { ok: r.ok, tools: r.tools.map((t) => t.name), error: r.ok ? undefined : r.error };
       },

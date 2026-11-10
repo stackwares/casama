@@ -4,6 +4,14 @@ import 'companion.dart';
 
 Companion createCompanion() => _Unsupported();
 DeviceTokenStore createTokenStore() => _NoStore();
+LocalMcpStore createMcpStore() => _NoMcpStore();
+
+class _NoMcpStore implements LocalMcpStore {
+  @override
+  Future<List<LocalMcpConfig>> read(String orgId) async => const [];
+  @override
+  Future<void> write(String orgId, List<LocalMcpConfig> servers) async {}
+}
 
 class _NoStore implements DeviceTokenStore {
   @override

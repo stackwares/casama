@@ -11,6 +11,44 @@ import 'companion.dart';
 
 Companion createCompanion() => IoCompanion();
 DeviceTokenStore createTokenStore() => _TokenStore();
+LocalMcpStore createMcpStore() => _McpStore();
+
+class _McpStore implements LocalMcpStore {
+  static const _secure = FlutterSecureStorage();
+  String _key(String orgId) => 'kasama.mcp.$orgId';
+
+  File _file(String orgId) {
+    final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
+    return File('$home/.config/kasama/devices/$orgId.mcp.json');
+  }
+
+  @override
+  Future<List<LocalMcpConfig>> read(String orgId) async {
+    String? v;
+    try {
+      v = await _secure.read(key: _key(orgId));
+    } catch (_) {}
+    if (v == null && _file(orgId).existsSync()) v = _file(orgId).readAsStringSync();
+    if (v == null || v.isEmpty) return const [];
+    try {
+      return [for (final s in jsonDecode(v) as List) LocalMcpConfig.fromJson((s as Map).cast<String, dynamic>())];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> write(String orgId, List<LocalMcpConfig> servers) async {
+    final v = jsonEncode([for (final s in servers) s.toJson()]);
+    try {
+      await _secure.write(key: _key(orgId), value: v);
+      return;
+    } catch (_) {}
+    final f = _file(orgId)..parent.createSync(recursive: true);
+    f.writeAsStringSync(v);
+    if (!Platform.isWindows) await Process.run('chmod', ['600', f.path]);
+  }
+}
 
 class _TokenStore implements DeviceTokenStore {
   static const _secure = FlutterSecureStorage();
@@ -100,6 +138,11 @@ class IoCompanion implements Companion {
       extraPath: const ['/opt/homebrew/bin', '/usr/local/bin'],
       // Its own agent-browser namespace: never touch the user's other browser sessions.
       extraEnv: const {'AGENT_BROWSER_NAMESPACE': 'kasama', 'AGENT_BROWSER_SESSION': 'kasama-companion'},
+      // Local MCP servers (D-096): their environment never leaves this computer.
+      mcpServers: {
+        for (final s in settings.mcpServers)
+          s.key: LocalMcpServer(key: s.key, kind: s.kind, command: s.command, args: s.args, cwd: s.cwd, env: s.env, url: s.url),
+      },
     ));
     await _computerd!.start();
     unawaited(_connectLoop(apiUrl, deviceToken, generation));

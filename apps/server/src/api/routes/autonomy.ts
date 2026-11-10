@@ -85,6 +85,18 @@ export const integrationOut = (i: IntegrationRow, botIds?: string[]) => ({
     (i.vaultSecretId ? "api_key" : "none")) as "oauth" | "api_key" | "none",
   risk_overrides: (i.riskOverrides as Record<string, "low" | "medium" | "high">) ?? {},
   ...(botIds ? { bot_ids: botIds } : {}),
+  device:
+    i.kind === "local_mcp"
+      ? (() => {
+          const c = i.config as Record<string, string | null>;
+          return {
+            id: String(c.device_id ?? ""),
+            computer_id: c.computer_id ?? null,
+            owner_user_id: String(c.owner_user_id ?? ""),
+            label: String(c.label ?? i.name),
+          };
+        })()
+      : null,
 });
 
 type RoutineRow = typeof routines.$inferSelect;
@@ -350,6 +362,16 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     await withUserSession(db, claims, async (tx) => {
       const [bot] = await tx.select({ orgId: bots.orgId }).from(bots).where(eq(bots.id, id));
       if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
+      // A local MCP server runs on someone's own computer: only they choose which bots use it.
+      const [local] = await tx.execute<{ owner: string | null }>(sql`
+        select config->>'owner_user_id' as owner from public.integrations
+        where id = ${body.integration_id}::uuid and kind = 'local_mcp'`);
+      if (local && local.owner !== claims.sub)
+        throw new ApiError(
+          403,
+          "forbidden",
+          "Only the person whose computer runs this server can attach it",
+        );
       try {
         await tx.execute(sql`
           insert into public.bot_integrations (org_id, bot_id, integration_id, tool_allowlist)

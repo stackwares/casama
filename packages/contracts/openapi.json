@@ -3768,6 +3768,38 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/Risk"
             }
+          },
+          "device": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "computer_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "owner_user_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "computer_id",
+              "owner_user_id",
+              "label"
+            ]
           }
         },
         "required": [
@@ -3788,7 +3820,8 @@
           "mcp",
           "openapi",
           "composio",
-          "pipedream"
+          "pipedream",
+          "local_mcp"
         ]
       },
       "Risk": {
@@ -4720,6 +4753,9 @@
           },
           "desktop": {
             "type": "boolean"
+          },
+          "mcp": {
+            "type": "boolean"
           }
         }
       },
@@ -4857,6 +4893,73 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "LocalMcpIntegrationList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Integration"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "SetLocalMcpServersRequest": {
+        "type": "object",
+        "properties": {
+          "servers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocalMcpServerInfo"
+            },
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "servers"
+        ]
+      },
+      "LocalMcpServerInfo": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,30}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "stdio",
+              "loopback"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 300,
+            "description": "Shown to the workspace, e.g. the command without its environment"
+          },
+          "timeout_s": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 7200,
+            "description": "Longest a call may take (default 1800 s); progress keeps it alive"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "kind",
+          "summary"
         ]
       },
       "UpdateLocalDeviceRequest": {
@@ -11243,6 +11346,93 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/local-devices/{id}/mcp-servers": {
+      "put": {
+        "operationId": "setLocalMcpServers",
+        "tags": [
+          "local computer"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Register the local MCP servers on this computer (no secrets); each becomes a local_mcp integration",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLocalMcpServersRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The device's local MCP integrations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalMcpIntegrationList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/problem+json": {
                 "schema": {

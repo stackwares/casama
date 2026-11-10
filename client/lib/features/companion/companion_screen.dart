@@ -8,6 +8,7 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
@@ -20,7 +21,7 @@ import '../../ui/glow_button.dart';
 class CompanionScreen extends ConsumerWidget {
   const CompanionScreen({super.key});
 
-  static const capabilityKeys = ['shell', 'files', 'browser', 'desktop'];
+  static const capabilityKeys = ['shell', 'files', 'browser', 'desktop', 'mcp'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,6 +34,7 @@ class CompanionScreen extends ConsumerWidget {
       'shell' => l10n.capShell,
       'files' => l10n.capFiles,
       'browser' => l10n.capBrowser,
+      'mcp' => l10n.capMcp,
       _ => l10n.capDesktop,
     };
     return SubPage(
@@ -109,6 +111,7 @@ class CompanionScreen extends ConsumerWidget {
                                   'shell' => LucideIcons.squareTerminal,
                                   'files' => LucideIcons.folder,
                                   'browser' => LucideIcons.globe,
+                                  'mcp' => LucideIcons.plug,
                                   _ => LucideIcons.mousePointer2,
                                 },
                                 title: capLabel(c),
@@ -152,6 +155,7 @@ class CompanionScreen extends ConsumerWidget {
                                 ),
                             ],
                           ),
+                        _LocalMcpSection(device: device, enabled: caps.contains('mcp')),
                         SectionHeader(title: l10n.botsAllowed),
                         GroupedCard(
                           children: [
@@ -191,6 +195,213 @@ class CompanionScreen extends ConsumerWidget {
                 );
               },
             ),
+    );
+  }
+}
+
+
+/// Splits a command line into words, keeping "quoted parts" together.
+List<String> splitCommand(String line) {
+  final out = <String>[];
+  final buf = StringBuffer();
+  String? quote;
+  var any = false;
+  for (final ch in line.trim().split('')) {
+    if (quote != null) {
+      if (ch == quote) {
+        quote = null;
+      } else {
+        buf.write(ch);
+      }
+    } else if (ch == '"' || ch == "'") {
+      quote = ch;
+      any = true;
+    } else if (ch == ' ' || ch == '\t') {
+      if (buf.isNotEmpty || any) out.add(buf.toString());
+      buf.clear();
+      any = false;
+    } else {
+      buf.write(ch);
+    }
+  }
+  if (buf.isNotEmpty || any) out.add(buf.toString());
+  return out;
+}
+
+/// Local MCP servers on this computer (D-096).
+class _LocalMcpSection extends ConsumerWidget {
+  const _LocalMcpSection({required this.device, required this.enabled});
+  final LocalDevice device;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final servers = ref.watch(localMcpServersProvider).value ?? const <LocalMcpConfig>[];
+    final controller = ref.read(companionControllerProvider.notifier);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          title: l10n.localMcpServers,
+          trailing: TextButton.icon(
+            key: const Key('addLocalMcp'),
+            onPressed: () async {
+              final added = await showAdaptiveSheet<LocalMcpConfig>(
+                context: context,
+                builder: (_) => _LocalMcpForm(device: device, taken: {for (final s in servers) s.key}),
+              );
+              if (added == null || !context.mounted) return;
+              await runGuarded(context, () => controller.saveMcpServers([...servers, added]));
+            },
+            icon: const Icon(LucideIcons.plus, size: 18),
+            label: Text(l10n.localMcpAdd),
+          ),
+        ),
+        if (servers.isEmpty)
+          AppCard(child: FormNote(l10n.localMcpEmpty, icon: LucideIcons.plug))
+        else
+          GroupedCard(
+            children: [
+              for (final s in servers)
+                GroupedTile(
+                  key: Key('localMcp-${s.key}'),
+                  icon: s.kind == 'loopback' ? LucideIcons.network : LucideIcons.squareTerminal,
+                  title: s.label,
+                  subtitle: s.summary,
+                  trailing: IconButton(
+                    tooltip: l10n.delete,
+                    icon: const Icon(LucideIcons.x),
+                    onPressed: () => runGuarded(context, () => controller.saveMcpServers(servers.where((x) => x.key != s.key).toList())),
+                  ),
+                ),
+            ],
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+          child: FormNote(enabled ? l10n.localMcpHelp : l10n.localMcpNeedsCapability),
+        ),
+      ],
+    );
+  }
+}
+
+class _LocalMcpForm extends StatefulWidget {
+  const _LocalMcpForm({required this.device, required this.taken});
+  final LocalDevice device;
+  final Set<String> taken;
+
+  @override
+  State<_LocalMcpForm> createState() => _LocalMcpFormState();
+}
+
+class _LocalMcpFormState extends State<_LocalMcpForm> {
+  final _label = TextEditingController();
+  final _command = TextEditingController();
+  final _url = TextEditingController();
+  final _env = TextEditingController();
+  var _kind = 'stdio';
+  String? _cwd;
+  String? _error;
+
+  @override
+  void dispose() {
+    for (final c in [_label, _command, _url, _env]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _submit() {
+    final l10n = context.l10n;
+    final label = _label.text.trim();
+    if (label.isEmpty) return;
+    LocalMcpConfig? out;
+    if (_kind == 'loopback') {
+      final uri = Uri.tryParse(_url.text.trim());
+      if (uri == null || uri.scheme != 'http' || !(uri.host == '127.0.0.1' || uri.host == '::1')) {
+        setState(() => _error = l10n.localMcpBadUrl);
+        return;
+      }
+      out = LocalMcpConfig(key: LocalMcpConfig.keyFor(label, widget.taken), label: label, kind: 'loopback', url: uri.toString());
+    } else {
+      final words = splitCommand(_command.text);
+      if (words.isEmpty) return;
+      final env = <String, String>{
+        for (final line in _env.text.split('\n'))
+          if (line.contains('=')) line.substring(0, line.indexOf('=')).trim(): line.substring(line.indexOf('=') + 1).trim(),
+      }..removeWhere((k, _) => k.isEmpty);
+      out = LocalMcpConfig(
+        key: LocalMcpConfig.keyFor(label, widget.taken),
+        label: label,
+        kind: 'stdio',
+        command: words.first,
+        args: words.skip(1).toList(),
+        cwd: _cwd,
+        env: env,
+      );
+    }
+    Navigator.pop(context, out);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return FormSheet(
+      icon: LucideIcons.plug,
+      title: l10n.localMcpAdd,
+      submitLabel: l10n.localMcpAdd,
+      submitKey: const Key('saveLocalMcp'),
+      onSubmit: _submit,
+      children: [
+        TextField(key: const Key('localMcpLabel'), controller: _label, decoration: InputDecoration(labelText: l10n.localMcpName)),
+        SegmentedButton<String>(
+          segments: [
+            ButtonSegment(value: 'stdio', label: Text(l10n.localMcpStdio)),
+            ButtonSegment(value: 'loopback', label: Text(l10n.localMcpLoopback)),
+          ],
+          selected: {_kind},
+          onSelectionChanged: (v) => setState(() => _kind = v.first),
+        ),
+        if (_kind == 'loopback')
+          TextField(
+            key: const Key('localMcpUrl'),
+            controller: _url,
+            keyboardType: TextInputType.url,
+            decoration: InputDecoration(labelText: l10n.localMcpUrl, hintText: 'http://127.0.0.1:3845/mcp'),
+          )
+        else ...[
+          TextField(
+            key: const Key('localMcpCommand'),
+            controller: _command,
+            autocorrect: false,
+            decoration: InputDecoration(labelText: l10n.localMcpCommand, hintText: l10n.localMcpCommandHint),
+          ),
+          OutlinedButton.icon(
+            icon: const Icon(LucideIcons.folder, size: 18),
+            label: Text(_cwd ?? l10n.localMcpFolder),
+            onPressed: () async {
+              final dir = await FilePicker.getDirectoryPath();
+              if (dir == null) return;
+              final inside = widget.device.allowedRoots.any((r) => dir == r || dir.startsWith('$r/'));
+              setState(() {
+                _cwd = inside ? dir : null;
+                _error = inside ? null : l10n.localMcpBadFolder;
+              });
+            },
+          ),
+          TextField(
+            key: const Key('localMcpEnv'),
+            controller: _env,
+            minLines: 2,
+            maxLines: 5,
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: InputDecoration(labelText: l10n.localMcpEnv),
+          ),
+        ],
+        if (_error != null) FormNote(_error!, icon: LucideIcons.circleAlert, color: context.appColors.negative),
+      ],
     );
   }
 }

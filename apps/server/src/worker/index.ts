@@ -242,6 +242,7 @@ export async function startWorker(opts: WorkerOptions) {
       notifications,
       fetch: fetchOut,
       logger: opts.logger,
+      local: opts.local,
     },
   });
 

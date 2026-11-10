@@ -5,6 +5,8 @@ import 'dart:math';
 
 import 'package:path/path.dart' as p;
 
+import 'mcp_bridge.dart';
+
 /// computerd configuration. Inside a computer: HOME=/home/kasama, workspace under it.
 class ComputerdConfig {
   ComputerdConfig({
@@ -18,7 +20,11 @@ class ComputerdConfig {
     this.capabilities,
     this.extraPath = const [],
     this.extraEnv = const {},
+    this.mcpServers = const {},
   });
+
+  /// Companion mode: local MCP servers the user added (D-096), reached at `/mcp/<key>`.
+  final Map<String, LocalMcpServer> mcpServers;
 
   final String home;
   /// Companion mode (D-066): file paths and working directories must stay inside these folders.
@@ -58,6 +64,7 @@ class ComputerdConfig {
       // Companion mode: colon-separated folders and comma-separated capabilities.
       allowedRoots: env['COMPUTERD_ALLOWED_ROOTS']?.split(':').where((r) => r.isNotEmpty).toList(),
       capabilities: env['COMPUTERD_CAPABILITIES']?.split(',').map((c) => c.trim()).where((c) => c.isNotEmpty).toSet(),
+      mcpServers: LocalMcpServer.parseAll(env['COMPUTERD_MCP_SERVERS']),
     );
   }
 }
@@ -91,6 +98,9 @@ class Computerd {
 
   int get port => _server!.port;
 
+  /// Local MCP servers (companion mode, D-096).
+  late final McpBridge mcp = McpBridge(config.mcpServers, checkCwd: (cwd) => _allowed(cwd));
+
   Future<void> start() async {
     if (!config.companion) Directory(config.workspace).createSync(recursive: true);
     _server = await HttpServer.bind(config.address, config.port);
@@ -105,6 +115,7 @@ class Computerd {
     for (final t in _terminals) {
       _killTree(t);
     }
+    await mcp.stopAll();
     await _server?.close(force: true);
   }
 
@@ -119,6 +130,9 @@ class Computerd {
       _lastActivity = DateTime.now();
       final segments = req.uri.pathSegments;
       switch ((req.method, segments)) {
+        case ('POST' || 'GET', ['mcp', final key]):
+          if (config.companion) _need('mcp');
+          return await mcp.handle(req, key);
         case ('POST', ['exec']):
           return await _exec(req);
         case ('POST', ['exec', final id, 'kill']):
@@ -159,6 +173,8 @@ class Computerd {
         default:
           throw _ApiError(404, 'not_found', 'No such endpoint');
       }
+    } on McpBridgeError catch (e) {
+      await _json(res, e.status, {'code': e.code, 'message': e.message});
     } on _ApiError catch (e) {
       await _json(res, e.status, {'code': e.code, 'message': e.message});
     } on FileSystemException catch (e) {

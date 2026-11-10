@@ -7,7 +7,7 @@ import { sql } from "drizzle-orm";
 import { wrapUntrusted } from "./context.ts";
 import { type NamedSecret, resolvePlaceholders } from "./secrets.ts";
 
-export type IntegrationKind = "mcp" | "openapi" | "composio" | "pipedream";
+export type IntegrationKind = "mcp" | "openapi" | "composio" | "pipedream" | "local_mcp";
 
 import type { Risk } from "./tools/registry.ts";
 
@@ -28,10 +28,16 @@ export interface IntegrationRecord {
   secret: string | null;
 }
 
+/** Options for a tool call (long local calls report progress and can be cancelled). */
+export interface CallToolOptions {
+  signal?: AbortSignal;
+  onProgress?: (text: string) => void;
+}
+
 /** One integration source: lists its tools and calls them. */
 export interface IntegrationAdapter {
   listTools(): Promise<IntegrationToolInfo[]>;
-  callTool(name: string, args: Record<string, unknown>): Promise<string>;
+  callTool(name: string, args: Record<string, unknown>, opts?: CallToolOptions): Promise<string>;
   close?(): Promise<void>;
 }
 
@@ -39,6 +45,10 @@ export interface AdapterContext {
   fetch: typeof fetch;
   /** Named secrets the bot may use (OpenAPI auth through {{secret:NAME}}). */
   secrets: NamedSecret[];
+  /** The API's device tunnel, for local MCP servers on a user's computer (D-096). */
+  local?: { apiUrl: string; internalToken: string };
+  /** The run a call belongs to (shown on the companion's overlay, checked against allowed bots). */
+  activity?: { run_id: string; bot: string; tool: string; summary: string };
 }
 
 const str = (v: unknown) => (typeof v === "string" ? v : undefined);
@@ -127,6 +137,112 @@ export class McpAdapter implements IntegrationAdapter {
   async close() {
     await this.client?.close().catch(() => {});
   }
+}
+
+// ---------------------------------------------------------------------------
+// Local MCP servers on a user's computer (D-096): MCP over the API's device tunnel to the
+// companion's computerd, which bridges to the server (stdio or loopback).
+// ---------------------------------------------------------------------------
+
+export class LocalMcpAdapter implements IntegrationAdapter {
+  private client?: Client;
+  private readonly url: string;
+  private readonly headers: Record<string, string>;
+  private readonly timeoutMs: number;
+
+  constructor(rec: IntegrationRecord, ctx: AdapterContext) {
+    const computer = str(rec.config.computer_id);
+    const server = str(rec.config.server);
+    if (!computer || !server) throw new Error("This local MCP server has no computer");
+    if (!ctx.local) throw new Error("Personal computers are not set up on this server");
+    this.url = `${ctx.local.apiUrl.replace(/\/$/, "")}/internal/local/${computer}/http/mcp/${server}`;
+    this.headers = {
+      "x-kasama-internal": ctx.local.internalToken,
+      ...(ctx.activity
+        ? { "x-kasama-activity": Buffer.from(JSON.stringify(ctx.activity)).toString("base64") }
+        : {}),
+    };
+    const t = Number(rec.config.timeout_s);
+    this.timeoutMs = (Number.isFinite(t) && t > 0 ? t : 1800) * 1000;
+  }
+
+  private async connect() {
+    if (this.client) return this.client;
+    const client = new Client({ name: "kasama", version: "0.1.0" });
+    const transport = new StreamableHTTPClientTransport(new URL(this.url), {
+      requestInit: { headers: this.headers },
+    });
+    try {
+      await client.connect(transport);
+    } catch (err) {
+      throw localError(err);
+    }
+    this.client = client;
+    return client;
+  }
+
+  async listTools() {
+    const client = await this.connect();
+    const r = await client.listTools().catch((err: unknown) => {
+      throw localError(err);
+    });
+    return r.tools.map((t) => ({
+      name: t.name,
+      description: t.description ?? t.name,
+      inputSchema: (t.inputSchema as Record<string, unknown>) ?? { type: "object" },
+      risk: (t.annotations?.readOnlyHint
+        ? "low"
+        : t.annotations?.destructiveHint
+          ? "high"
+          : "medium") as Risk,
+    }));
+  }
+
+  async callTool(name: string, args: Record<string, unknown>, opts: CallToolOptions = {}) {
+    const client = await this.connect();
+    const r = (await client
+      .callTool({ name, arguments: args }, undefined, {
+        signal: opts.signal,
+        timeout: this.timeoutMs,
+        resetTimeoutOnProgress: true,
+        maxTotalTimeout: this.timeoutMs * 4,
+        onprogress: (p) =>
+          opts.onProgress?.(
+            p.message ?? (p.total ? `Progress ${p.progress}/${p.total}` : `Progress ${p.progress}`),
+          ),
+      })
+      .catch((err: unknown) => {
+        throw localError(err);
+      })) as {
+      content?: Array<{ type: string; text?: string }>;
+      isError?: boolean;
+      structuredContent?: unknown;
+    };
+    const text =
+      (r.content ?? [])
+        .map((c) => (c.type === "text" ? (c.text ?? "") : `[${c.type} content]`))
+        .join("\n") || textOf(r.structuredContent ?? "");
+    if (r.isError) throw new Error(text || "The local MCP tool returned an error");
+    return text;
+  }
+
+  async close() {
+    await this.client?.close().catch(() => {});
+  }
+}
+
+/** Turns tunnel failures into plain messages (offline computer, bot not allowed). */
+function localError(err: unknown): Error {
+  const msg = (err as Error)?.message ?? String(err);
+  if (/device_offline|409/.test(msg))
+    return new Error(
+      'The computer running this MCP server is offline. Open the Kasama desktop app there and turn on "Use this computer for bots".',
+    );
+  if (/bot_not_allowed|403/.test(msg))
+    return new Error(
+      "This bot is not allowed to use that computer, or local tools are turned off there.",
+    );
+  return err instanceof Error ? err : new Error(msg);
 }
 
 // ---------------------------------------------------------------------------
@@ -467,6 +583,8 @@ export function createAdapter(rec: IntegrationRecord, ctx: AdapterContext): Inte
       return new ComposioAdapter(rec, ctx);
     case "pipedream":
       return new PipedreamAdapter(rec, ctx);
+    case "local_mcp":
+      return new LocalMcpAdapter(rec, ctx);
   }
 }
 

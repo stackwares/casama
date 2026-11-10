@@ -6,6 +6,7 @@
 import 'package:kasama_api/src/model/risk.dart';
 import 'package:kasama_api/src/model/integration_kind.dart';
 import 'package:kasama_api/src/model/integration_tools_inner.dart';
+import 'package:kasama_api/src/model/integration_device.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -48,6 +49,8 @@ class Integration {
      this.botIds,
 
      this.riskOverrides,
+
+     this.device,
   });
 
   @JsonKey(
@@ -206,6 +209,18 @@ class Integration {
 
 
 
+  @JsonKey(
+    
+    name: r'device',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final IntegrationDevice? device;
+
+
+
 
 
     @override
@@ -222,7 +237,8 @@ class Integration {
       other.appId == appId &&
       other.auth == auth &&
       other.botIds == botIds &&
-      other.riskOverrides == riskOverrides;
+      other.riskOverrides == riskOverrides &&
+      other.device == device;
 
     @override
     int get hashCode =>
@@ -238,7 +254,8 @@ class Integration {
         (appId == null ? 0 : appId.hashCode) +
         (auth == null ? 0 : auth.hashCode) +
         botIds.hashCode +
-        riskOverrides.hashCode;
+        riskOverrides.hashCode +
+        (device == null ? 0 : device.hashCode);
 
   factory Integration.fromJson(Map<String, dynamic> json) => _$IntegrationFromJson(json);
 

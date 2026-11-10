@@ -79,6 +79,8 @@ export interface RunDeps {
   waitForApproval?: (approvalId: string, runId: string, timeoutMs: number) => Promise<void>;
   /** Guarded fetch for integration calls (private ranges blocked). */
   fetch?: typeof fetch;
+  /** The API's device tunnel, for local MCP servers on users' computers (D-096). */
+  local?: { apiUrl: string; internalToken: string };
   /**
    * Durable wait until `done` returns true or the timeout passes (user control, takeover).
    * The worker checks in a step and sleeps on DBOS.recv; the default polls.
@@ -289,7 +291,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
 
     // Integration tools (MCP, OpenAPI, Composio, Pipedream) allowed for this bot.
     const integrationSpecs = await step("integrations", () =>
-      loadIntegrationTools(db, info, deps.fetch ?? safeFetch, secrets).catch((err) => {
+      loadIntegrationTools(db, info, deps.fetch ?? safeFetch, secrets, deps.local).catch((err) => {
         log?.warn("integration tools unavailable", {
           run_id: runId,
           error: (err as Error).message,
@@ -298,7 +300,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       }),
     );
     const registry = deps.tools.with(
-      integrationDefs(db, integrationSpecs, deps.fetch ?? safeFetch, secrets),
+      integrationDefs(db, integrationSpecs, deps.fetch ?? safeFetch, secrets, info, deps.local),
     );
 
     const primaryModel = info.policy.primary?.model ?? "unknown";
@@ -1610,6 +1612,7 @@ async function loadIntegrationTools(
   info: RunInfo,
   fetchImpl: typeof fetch,
   secretsFn: () => Promise<NamedSecret[]>,
+  local?: RunDeps["local"],
 ): Promise<IntegrationToolSpec[]> {
   const rows = await db.execute<{
     id: string;
@@ -1622,7 +1625,7 @@ async function loadIntegrationTools(
   }>(sql`
     select i.id, i.kind, i.name, i.tools_cache, i.tools_cached_at, i.risk_overrides, bi.tool_allowlist
     from public.bot_integrations bi join public.integrations i on i.id = bi.integration_id
-    where bi.bot_id = ${info.botId}::uuid and i.status <> 'error'`);
+    where bi.bot_id = ${info.botId}::uuid and (i.status <> 'error' or i.kind = 'local_mcp')`);
   const out: IntegrationToolSpec[] = [];
   for (const row of rows) {
     let tools = row.tools_cache ?? [];
@@ -1633,6 +1636,7 @@ async function loadIntegrationTools(
       const r = await refreshIntegration(db, row.id, {
         fetch: fetchImpl,
         secrets: await secretsFn(),
+        local,
       });
       if (r.ok) tools = r.tools;
     }
@@ -1659,6 +1663,8 @@ function integrationDefs(
   specs: IntegrationToolSpec[],
   fetchImpl: typeof fetch,
   secretsFn: () => Promise<NamedSecret[]>,
+  info?: RunInfo,
+  local?: RunDeps["local"],
 ): ToolDefinition[] {
   return specs.map((spec) => ({
     name: spec.fullName,
@@ -1667,17 +1673,44 @@ function integrationDefs(
     untrustedOutput: true,
     jsonSchema: { type: "object", ...spec.inputSchema },
     schema: z.record(z.string(), z.unknown()),
-    async execute(args: Record<string, unknown>) {
+    async execute(args: Record<string, unknown>, ctx) {
       const rec = await loadIntegration(db, spec.integrationId);
       if (!rec) throw new ToolError("integration_not_found", "This integration was removed.");
-      const adapter = createAdapter(rec, { fetch: fetchImpl, secrets: await secretsFn() });
+      const adapter = createAdapter(rec, {
+        fetch: fetchImpl,
+        secrets: await secretsFn(),
+        local,
+        activity: {
+          run_id: ctx.runId,
+          bot: info?.botName ?? "",
+          tool: spec.fullName,
+          summary: `${spec.integration}: ${spec.tool}`,
+        },
+      });
+      // Long local calls: progress shows on the timeline; cancelling the run cancels the call.
+      const ctrl = new AbortController();
+      const poll =
+        rec.kind === "local_mcp"
+          ? setInterval(async () => {
+              const [r] = await db
+                .execute<{ c: Date | null }>(
+                  sql`select cancel_requested_at as c from public.runs where id = ${ctx.runId}::uuid`,
+                )
+                .catch(() => [] as Array<{ c: Date | null }>);
+              if (r?.c) ctrl.abort(new Error("cancelled"));
+            }, 1000)
+          : undefined;
       try {
-        const text = await adapter.callTool(spec.tool, args);
+        const text = await adapter.callTool(spec.tool, args, {
+          signal: ctrl.signal,
+          onProgress: (t) => void ctx.output(`${t}\n`).catch(() => {}),
+        });
         return {
           content: wrapIntegrationOutput(rec, text),
           preview: text.replace(/\s+/g, " ").slice(0, 200),
         };
       } finally {
+        if (poll) clearInterval(poll);
         await adapter.close?.();
       }
     },

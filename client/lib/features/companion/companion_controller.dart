@@ -12,7 +12,15 @@ Set<String> capsOf(LocalDevice d) => {
       if (d.capabilities.files == true) 'files',
       if (d.capabilities.browser == true) 'browser',
       if (d.capabilities.desktop == true) 'desktop',
+      if (d.capabilities.mcp == true) 'mcp',
     };
+
+/// This computer's local MCP servers in the current workspace (D-096).
+final localMcpServersProvider = FutureProvider<List<LocalMcpConfig>>((ref) async {
+  final org = ref.watch(currentOrgProvider);
+  if (org == null) return const [];
+  return ref.read(localMcpStoreProvider).read(org.id);
+});
 
 String platformName() => switch (defaultTargetPlatform) {
       TargetPlatform.macOS => 'macos',
@@ -40,11 +48,36 @@ class CompanionController extends AsyncNotifier<LocalDevice?> {
     return device;
   }
 
-  Future<void> _start(LocalDevice d, String token) => ref.read(companionProvider).start(
+  Future<void> _start(LocalDevice d, String token) async => ref.read(companionProvider).start(
         apiUrl: ref.read(backendProvider).apiUrl,
         deviceToken: token,
-        settings: CompanionSettings(capabilities: capsOf(d), roots: d.allowedRoots),
+        settings: CompanionSettings(
+          capabilities: capsOf(d),
+          roots: d.allowedRoots,
+          mcpServers: await ref.read(localMcpStoreProvider).read(d.orgId),
+        ),
       );
+
+  /// Saves this computer's local MCP servers: everything on the device, the non-secret parts to
+  /// the workspace, then restarts the companion so computerd picks them up (D-096).
+  Future<void> saveMcpServers(List<LocalMcpConfig> servers) async {
+    final d = state.value;
+    if (d == null) return;
+    await ref.read(localMcpStoreProvider).write(d.orgId, servers);
+    await ref.read(backendProvider).setLocalMcpServers(d.id, [
+      for (final s in servers)
+        LocalMcpServerInfo(
+          key: s.key,
+          label: s.label,
+          kind: s.kind == 'loopback' ? LocalMcpServerInfoKindEnum.loopback : LocalMcpServerInfoKindEnum.stdio,
+          summary: s.summary.length > 300 ? s.summary.substring(0, 300) : s.summary,
+          timeoutS: s.timeoutS,
+        ),
+    ]);
+    ref.invalidate(localMcpServersProvider);
+    final stored = await ref.read(deviceTokenStoreProvider).read(d.orgId);
+    if (d.enabled && stored != null) await _start(d, stored.$2);
+  }
 
   /// Pairs this machine (off until the user approves capabilities and folders).
   Future<void> pair(String name) async {

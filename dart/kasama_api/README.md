@@ -141,6 +141,7 @@ Class | Method | HTTP request | Description
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**deleteLocalDevice**](doc/LocalComputerApi.md#deletelocaldevice) | **DELETE** /v1/local-devices/{id} | 
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**listLocalDevices**](doc/LocalComputerApi.md#listlocaldevices) | **GET** /v1/local-devices | 
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**localComputerConnect**](doc/LocalComputerApi.md#localcomputerconnect) | **GET** /v1/local-computer/connect | WebSocket for the desktop companion (authorization: Device &lt;token&gt;, or ?token&#x3D;). The API sends tool requests; the app answers from its embedded computerd.
+[*LocalComputerApi*](doc/LocalComputerApi.md) | [**setLocalMcpServers**](doc/LocalComputerApi.md#setlocalmcpservers) | **PUT** /v1/local-devices/{id}/mcp-servers | Register the local MCP servers on this computer (no secrets); each becomes a local_mcp integration
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**updateLocalDevice**](doc/LocalComputerApi.md#updatelocaldevice) | **PATCH** /v1/local-devices/{id} | Change capabilities, shared folders, allowed bots or turn the device off
 [*MemoryApi*](doc/MemoryApi.md) | [**listMemories**](doc/MemoryApi.md#listmemories) | **GET** /v1/bots/{id}/memories | 
 [*PrivacyApi*](doc/PrivacyApi.md) | [**deleteMyAccount**](doc/PrivacyApi.md#deletemyaccount) | **DELETE** /v1/me | Delete your account: you are signed out now, and your data, workspaces you solely own and their computer snapshots are purged after the grace period
@@ -264,6 +265,7 @@ Class | Method | HTTP request | Description
  - [Health](doc/Health.md)
  - [IceServer](doc/IceServer.md)
  - [Integration](doc/Integration.md)
+ - [IntegrationDevice](doc/IntegrationDevice.md)
  - [IntegrationKind](doc/IntegrationKind.md)
  - [IntegrationList](doc/IntegrationList.md)
  - [IntegrationTestResult](doc/IntegrationTestResult.md)
@@ -276,6 +278,8 @@ Class | Method | HTTP request | Description
  - [LocalCapabilities](doc/LocalCapabilities.md)
  - [LocalDevice](doc/LocalDevice.md)
  - [LocalDeviceList](doc/LocalDeviceList.md)
+ - [LocalMcpIntegrationList](doc/LocalMcpIntegrationList.md)
+ - [LocalMcpServerInfo](doc/LocalMcpServerInfo.md)
  - [Me](doc/Me.md)
  - [Membership](doc/Membership.md)
  - [Memory](doc/Memory.md)
@@ -340,6 +344,7 @@ Class | Method | HTTP request | Description
  - [SecretList](doc/SecretList.md)
  - [SendMessageRequest](doc/SendMessageRequest.md)
  - [SendMessageResponse](doc/SendMessageResponse.md)
+ - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
  - [SignupChallenge](doc/SignupChallenge.md)
  - [SkillLoadedEvent](doc/SkillLoadedEvent.md)

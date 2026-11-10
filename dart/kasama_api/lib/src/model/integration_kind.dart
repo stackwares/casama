@@ -14,7 +14,9 @@ enum IntegrationKind {
       @JsonValue(r'composio')
       composio(r'composio'),
       @JsonValue(r'pipedream')
-      pipedream(r'pipedream');
+      pipedream(r'pipedream'),
+      @JsonValue(r'local_mcp')
+      localMcp(r'local_mcp');
 
   const IntegrationKind(this.value);
 

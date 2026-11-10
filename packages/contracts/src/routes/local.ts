@@ -1,9 +1,11 @@
 import { createRoute, z } from "@hono/zod-openapi";
+import { Integration } from "../autonomy.ts";
 import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 import {
   CreatedLocalDevice,
   CreateLocalDeviceRequest,
   LocalDevice,
+  SetLocalMcpServersRequest,
   UpdateLocalDeviceRequest,
 } from "../local.ts";
 
@@ -72,4 +74,25 @@ export const localComputerConnect = createRoute({
     "WebSocket for the desktop companion (authorization: Device <token>, or ?token=). The API sends tool requests; the app answers from its embedded computerd.",
   request: { query: z.object({ token: z.string().optional() }) },
   responses: { 101: { description: "Switching to WebSocket" }, 401: e401 },
+});
+
+export const setLocalMcpServers = createRoute({
+  operationId: "setLocalMcpServers",
+  method: "put",
+  path: "/v1/local-devices/{id}/mcp-servers",
+  tags: ["local computer"],
+  security,
+  summary:
+    "Register the local MCP servers on this computer (no secrets); each becomes a local_mcp integration",
+  request: { params: idParam, body: jsonBody(SetLocalMcpServersRequest) },
+  responses: {
+    200: jsonResponse(
+      "The device's local MCP integrations",
+      z.object({ items: z.array(Integration) }).openapi("LocalMcpIntegrationList"),
+    ),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+  },
 });

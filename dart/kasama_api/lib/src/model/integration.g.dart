@@ -33,6 +33,8 @@ abstract class _$IntegrationCWProxy {
 
   Integration riskOverrides(Map<String, Risk>? riskOverrides);
 
+  Integration device(IntegrationDevice? device);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Integration(...).copyWith.fieldName(value)`.
@@ -55,6 +57,7 @@ abstract class _$IntegrationCWProxy {
     IntegrationAuthEnum? auth,
     List<String>? botIds,
     Map<String, Risk>? riskOverrides,
+    IntegrationDevice? device,
   });
 }
 
@@ -106,6 +109,9 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
   Integration riskOverrides(Map<String, Risk>? riskOverrides) =>
       call(riskOverrides: riskOverrides);
 
+  @override
+  Integration device(IntegrationDevice? device) => call(device: device);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Integration(...).copyWith.fieldName(value)`.
@@ -129,6 +135,7 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
     Object? auth = const $CopyWithPlaceholder(),
     Object? botIds = const $CopyWithPlaceholder(),
     Object? riskOverrides = const $CopyWithPlaceholder(),
+    Object? device = const $CopyWithPlaceholder(),
   }) {
     return Integration(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -183,6 +190,10 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
           ? _value.riskOverrides
           // ignore: cast_nullable_to_non_nullable
           : riskOverrides as Map<String, Risk>?,
+      device: device == const $CopyWithPlaceholder()
+          ? _value.device
+          // ignore: cast_nullable_to_non_nullable
+          : device as IntegrationDevice?,
     );
   }
 }
@@ -260,6 +271,12 @@ Integration _$IntegrationFromJson(Map<String, dynamic> json) => $checkedCreate(
           (k, e) => MapEntry(k, $enumDecode(_$RiskEnumMap, e)),
         ),
       ),
+      device: $checkedConvert(
+        'device',
+        (v) => v == null
+            ? null
+            : IntegrationDevice.fromJson(v as Map<String, dynamic>),
+      ),
     );
     return val;
   },
@@ -290,6 +307,7 @@ Map<String, dynamic> _$IntegrationToJson(Integration instance) =>
       'risk_overrides': ?instance.riskOverrides?.map(
         (k, e) => MapEntry(k, _$RiskEnumMap[e]!),
       ),
+      'device': ?instance.device?.toJson(),
     };
 
 const _$IntegrationKindEnumMap = {
@@ -297,6 +315,7 @@ const _$IntegrationKindEnumMap = {
   IntegrationKind.openapi: 'openapi',
   IntegrationKind.composio: 'composio',
   IntegrationKind.pipedream: 'pipedream',
+  IntegrationKind.localMcp: 'local_mcp',
 };
 
 const _$IntegrationStatusEnumEnumMap = {
