@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:kasama_api/src/model/message_attachment.dart';
+import 'package:kasama_api/src/model/ui_action_part.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -24,6 +25,8 @@ class SendMessageRequest {
      this.text = '',
 
      this.attachments,
+
+     this.uiAction,
   });
 
   @JsonKey(
@@ -50,17 +53,31 @@ class SendMessageRequest {
 
 
 
+  @JsonKey(
+    
+    name: r'ui_action',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final UiActionPart? uiAction;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is SendMessageRequest &&
       other.text == text &&
-      other.attachments == attachments;
+      other.attachments == attachments &&
+      other.uiAction == uiAction;
 
     @override
     int get hashCode =>
         text.hashCode +
-        attachments.hashCode;
+        attachments.hashCode +
+        uiAction.hashCode;
 
   factory SendMessageRequest.fromJson(Map<String, dynamic> json) => _$SendMessageRequestFromJson(json);
 

@@ -2215,4 +2215,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messageCopied => 'Copied';
+
+  @override
+  String get botUiBroken => 'This part of the reply couldn\'t be shown.';
+
+  @override
+  String get botUiSent => 'Sent';
 }

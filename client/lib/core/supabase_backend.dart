@@ -177,6 +177,22 @@ class SupabaseBackend implements Backend {
           ),
     ];
   }
+  static List<UiPart> _ui(Object? content) => content is! List
+      ? const []
+      : [
+          for (final p in content.whereType<Map>())
+            if (p['type'] == 'ui' && p['surface_id'] is String && p['messages'] is List)
+              UiPart(surfaceId: p['surface_id'] as String, messages: List<Object?>.from(p['messages'] as List)),
+        ];
+
+  static String? _uiAction(Object? content) {
+    if (content is! List) return null;
+    for (final p in content.whereType<Map>()) {
+      if (p['type'] == 'ui_action' && p['surface_id'] is String) return p['surface_id'] as String;
+    }
+    return null;
+  }
+
 
   @override
   Future<List<ChatMessageView>> messages(String conversationId) async {
@@ -196,6 +212,8 @@ class SupabaseBackend implements Backend {
           createdAt: DateTime.parse(r['created_at'] as String),
           runId: r['run_id'] as String?,
           attachments: _files(r['content']),
+          ui: _ui(r['content']),
+          uiActionSurface: _uiAction(r['content']),
         ),
     ];
   }
@@ -213,7 +231,7 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const []}) async =>
+  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction}) async =>
       (await api.chat.sendMessage(
         id: conversationId,
         sendMessageRequest: SendMessageRequest(
@@ -221,6 +239,13 @@ class SupabaseBackend implements Backend {
           attachments: attachments.isEmpty
               ? null
               : [for (final a in attachments) MessageAttachment(path: a.path, name: a.name, mimeType: a.mimeType, size: a.size)],
+          uiAction: uiAction == null
+              ? null
+              : UiActionPart(
+                  surfaceId: '${uiAction['surface_id']}',
+                  name: '${uiAction['name']}',
+                  context: Map<String, Object?>.from(uiAction['context'] as Map? ?? const {}),
+                ),
         ),
       ))
           .data!;

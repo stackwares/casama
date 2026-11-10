@@ -1251,5 +1251,7 @@
   "copyMessage": "Copy",
   "selectText": "Select text",
   "shareMessage": "Share",
-  "messageCopied": "Copied"
+  "messageCopied": "Copied",
+  "botUiBroken": "This part of the reply couldn't be shown.",
+  "botUiSent": "Sent"
 }

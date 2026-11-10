@@ -15,14 +15,36 @@ class AttachmentRef {
   bool get isImage => mimeType.startsWith('image/');
 }
 
+/// An interactive UI a bot showed (D-086): one A2UI surface and the messages that build it.
+class UiPart {
+  const UiPart({required this.surfaceId, required this.messages});
+  final String surfaceId;
+  final List<Object?> messages;
+}
+
 class ChatMessageView {
-  const ChatMessageView({required this.id, required this.role, required this.text, required this.createdAt, this.runId, this.attachments = const []});
+  const ChatMessageView({
+    required this.id,
+    required this.role,
+    required this.text,
+    required this.createdAt,
+    this.runId,
+    this.attachments = const [],
+    this.ui = const [],
+    this.uiActionSurface,
+  });
   final String id;
   final String role;
   final String text;
   final DateTime createdAt;
   final String? runId;
   final List<AttachmentRef> attachments;
+
+  /// Interactive UIs in a bot's reply.
+  final List<UiPart> ui;
+
+  /// The bot UI this message answers, when it was sent from one.
+  final String? uiActionSurface;
 }
 
 class SkillView {
@@ -103,7 +125,7 @@ abstract class Backend {
   Future<Conversation> createConversation(String botId);
   Future<List<ChatMessageView>> messages(String conversationId);
   Future<String?> activeRun(String conversationId);
-  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const []});
+  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction});
   Future<void> cancelRun(String runId);
   Stream<RunEventItem> watchRun(String runId, {int afterSeq = 0});
   Future<List<RunEventItem>> runEvents(String runId);

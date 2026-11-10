@@ -90,6 +90,9 @@
           },
           {
             "$ref": "#/components/schemas/RunCancelledEvent"
+          },
+          {
+            "$ref": "#/components/schemas/UiShownEvent"
           }
         ],
         "discriminator": {
@@ -116,7 +119,8 @@
             "usage": "#/components/schemas/UsageEvent",
             "run.completed": "#/components/schemas/RunCompletedEvent",
             "run.failed": "#/components/schemas/RunFailedEvent",
-            "run.cancelled": "#/components/schemas/RunCancelledEvent"
+            "run.cancelled": "#/components/schemas/RunCancelledEvent",
+            "ui.shown": "#/components/schemas/UiShownEvent"
           }
         }
       },
@@ -1490,6 +1494,66 @@
           "payload"
         ]
       },
+      "UiShownEvent": {
+        "type": "object",
+        "properties": {
+          "v": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Protocol version, currently 1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seq": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "ui.shown"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "surface_id": {
+                "type": "string"
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              }
+            },
+            "required": [
+              "surface_id",
+              "messages"
+            ]
+          }
+        },
+        "required": [
+          "v",
+          "run_id",
+          "seq",
+          "ts",
+          "bot_id",
+          "type",
+          "payload"
+        ]
+      },
       "RunEventEnvelope": {
         "type": "object",
         "properties": {
@@ -2612,6 +2676,9 @@
               "$ref": "#/components/schemas/MessageAttachment"
             },
             "maxItems": 10
+          },
+          "ui_action": {
+            "$ref": "#/components/schemas/UiActionPart"
           }
         }
       },
@@ -2644,6 +2711,29 @@
           "name",
           "mime_type",
           "size"
+        ]
+      },
+      "UiActionPart": {
+        "type": "object",
+        "properties": {
+          "surface_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "context": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "surface_id",
+          "name"
         ]
       },
       "CredentialTestResult": {

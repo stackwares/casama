@@ -3849,6 +3849,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied'**
   String get messageCopied;
+
+  /// No description provided for @botUiBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'This part of the reply couldn\'t be shown.'**
+  String get botUiBroken;
+
+  /// No description provided for @botUiSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get botUiSent;
 }
 
 class _AppLocalizationsDelegate

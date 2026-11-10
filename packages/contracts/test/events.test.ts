@@ -40,6 +40,7 @@ describe("run events", () => {
       "run.completed",
       "run.failed",
       "run.cancelled",
+      "ui.shown",
     ]);
   });
 

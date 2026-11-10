@@ -158,6 +158,9 @@ import 'package:kasama_api/src/model/tool_output_event_payload.dart';
 import 'package:kasama_api/src/model/tool_started_event.dart';
 import 'package:kasama_api/src/model/tool_started_event_payload.dart';
 import 'package:kasama_api/src/model/transcription.dart';
+import 'package:kasama_api/src/model/ui_action_part.dart';
+import 'package:kasama_api/src/model/ui_shown_event.dart';
+import 'package:kasama_api/src/model/ui_shown_event_payload.dart';
 import 'package:kasama_api/src/model/update_computer_request.dart';
 import 'package:kasama_api/src/model/update_local_device_request.dart';
 import 'package:kasama_api/src/model/update_notice.dart';
@@ -549,6 +552,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ToolStartedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Transcription':
           return Transcription.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UiActionPart':
+          return UiActionPart.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UiShownEvent':
+          return UiShownEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UiShownEventPayload':
+          return UiShownEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateComputerRequest':
           return UpdateComputerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateLocalDeviceRequest':

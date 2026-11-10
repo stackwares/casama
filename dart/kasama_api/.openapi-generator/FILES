@@ -202,6 +202,9 @@ lib/src/model/tool_output_event_payload.dart
 lib/src/model/tool_started_event.dart
 lib/src/model/tool_started_event_payload.dart
 lib/src/model/transcription.dart
+lib/src/model/ui_action_part.dart
+lib/src/model/ui_shown_event.dart
+lib/src/model/ui_shown_event_payload.dart
 lib/src/model/update_computer_request.dart
 lib/src/model/update_local_device_request.dart
 lib/src/model/update_notice.dart

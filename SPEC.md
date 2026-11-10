@@ -298,6 +298,7 @@ Every step of every run is an append-only event in `run_events`; that one log dr
 | run.completed      | final\_message\_id                                                 |
 | run.failed         | error\_code, message                                               |
 | run.cancelled      | cancelled\_by                                                      |
+| ui.shown           | surface\_id, messages (A2UI v1.0, D-086)                          |
 
 **Delivery**
 

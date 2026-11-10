@@ -180,9 +180,10 @@ class FakeBackend implements Backend {
   Future<String?> activeRun(String conversationId) async => null;
   final sentAttachments = <List<AttachmentRef>>[];
   @override
-  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const []}) async {
+  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction}) async {
     sent.add(text);
     sentAttachments.add(attachments);
+    if (uiAction != null) sentUiActions.add(uiAction);
     return SendMessageResponse(messageId: 'm1', runId: runId, conversationId: conversationId);
   }
 
@@ -398,6 +399,7 @@ class FakeBackend implements Backend {
   String? deletedWith;
   var retention = 180;
   String? ssoEmail;
+  final sentUiActions = <Map<String, Object?>>[];
 
   @override
   Future<Uint8List> exportMyData() async {

@@ -4,7 +4,7 @@
 import 'package:kasama_api/kasama_api.dart';
 
 /// All run event types known to this client version.
-const knownRunEventTypes = <String>{'run.started', 'message.delta', 'message.completed', 'tool.started', 'tool.output', 'tool.completed', 'tool.failed', 'approval.requested', 'approval.resolved', 'takeover.requested', 'takeover.resolved', 'lease.changed', 'computer.state', 'checkpoint.created', 'subrun.started', 'subrun.completed', 'memory.written', 'skill.loaded', 'usage', 'run.completed', 'run.failed', 'run.cancelled'};
+const knownRunEventTypes = <String>{'run.started', 'message.delta', 'message.completed', 'tool.started', 'tool.output', 'tool.completed', 'tool.failed', 'approval.requested', 'approval.resolved', 'takeover.requested', 'takeover.resolved', 'lease.changed', 'computer.state', 'checkpoint.created', 'subrun.started', 'subrun.completed', 'memory.written', 'skill.loaded', 'usage', 'run.completed', 'run.failed', 'run.cancelled', 'ui.shown'};
 
 /// A run event: the envelope plus, for known types, the typed event.
 /// Unknown types parse to [UnknownRunEventItem] so newer servers never break older clients.
@@ -62,6 +62,8 @@ sealed class RunEventItem {
         return RunFailedItem(envelope, RunFailedEvent.fromJson(json));
       case 'run.cancelled':
         return RunCancelledItem(envelope, RunCancelledEvent.fromJson(json));
+      case 'ui.shown':
+        return UiShownItem(envelope, UiShownEvent.fromJson(json));
       default:
         return UnknownRunEventItem(envelope);
     }
@@ -176,6 +178,11 @@ final class RunFailedItem extends RunEventItem {
 final class RunCancelledItem extends RunEventItem {
   const RunCancelledItem(super.envelope, this.event);
   final RunCancelledEvent event;
+}
+
+final class UiShownItem extends RunEventItem {
+  const UiShownItem(super.envelope, this.event);
+  final UiShownEvent event;
 }
 
 final class UnknownRunEventItem extends RunEventItem {

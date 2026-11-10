@@ -21,6 +21,7 @@ import '../../ui/shell_header.dart';
 import '../files/file_preview.dart';
 import '../home/home_shell.dart';
 import 'chat_controller.dart';
+import 'widgets/bot_ui.dart';
 import 'widgets/chat_widgets.dart';
 import 'widgets/composer.dart';
 
@@ -69,6 +70,9 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _input = TextEditingController();
+
+  /// Interactive UIs bots show in this chat (D-086); what the person does goes back as a message.
+  late final _botUi = BotUiHost(onAction: _onUiAction);
   final _scroll = ScrollController();
   final _focus = FocusNode();
   final _showJump = ValueNotifier(false);
@@ -155,8 +159,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  void _onUiAction(BotUiAction action) {
+    final chat = ref.read(chatControllerProvider(widget.botId));
+    if (chat.running || chat.answeredUi.contains(action.surfaceId)) return;
+    runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).send(uiActionSummary(action), uiAction: action.toJson()));
+  }
+
   @override
   void dispose() {
+    _botUi.dispose();
     _input.dispose();
     _scroll.dispose();
     _focus.dispose();
@@ -587,6 +598,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               fresh: fresh,
             ),
           );
+        case final UiEntry u:
+          botSide(u.surfaceId);
+          rows.add(
+            _Row(
+              ValueKey('ui-${u.surfaceId}'),
+              AppSpace.sm,
+              () => BotUiCard(host: _botUi, surfaceId: u.surfaceId, messages: u.messages, answered: chat.answeredUi.contains(u.surfaceId)),
+              fresh: fresh,
+            ),
+          );
         case final NoticeEntry n:
           final last = i == entries.length - 1;
           rows.add(
@@ -612,7 +633,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Thinking between steps, or before the first word of the reply.
     final last = entries.lastOrNull;
     // Waiting on a person (an approval or a takeover): no "thinking" shimmer.
-    final waitingOnPerson = (last is ApprovalEntry && last.decision == null) || (last is TakeoverEntry && last.outcome == null);
+    final waitingOnPerson = (last is ApprovalEntry && last.decision == null) ||
+        (last is TakeoverEntry && last.outcome == null) ||
+        (last is UiEntry && !chat.answeredUi.contains(last.surfaceId));
     final replying = last is MessageEntry && last.role == 'assistant' && last.streaming;
     final toolRunning = last is ToolEntry && last.status == ToolStatus.running;
     if (chat.running && !waitingOnPerson && !replying && !toolRunning) {

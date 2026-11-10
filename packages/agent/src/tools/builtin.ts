@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import type { MemoryService } from "../memory.ts";
 import { ToolError, ToolRegistry } from "./registry.ts";
+import { registerUiTools } from "./ui.ts";
 
 /** Phase 1 tools: memory and skills. Computer, browser and integration tools register in later phases. */
 export function builtinTools(deps: {
@@ -80,6 +81,8 @@ export function builtinTools(deps: {
       return { content: skill.body_md, preview: `loaded ${skill.name}` };
     },
   });
+
+  registerUiTools(registry);
 
   return registry;
 }

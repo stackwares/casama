@@ -107,12 +107,22 @@ export const MessageAttachment = z
   })
   .openapi("MessageAttachment");
 
+/** What the person did on a bot's interactive UI (D-086): the action and its resolved values. */
+export const UiActionPart = z
+  .object({
+    surface_id: z.string().min(1).max(120),
+    name: z.string().min(1).max(120),
+    context: z.record(z.string(), z.unknown()).optional(),
+  })
+  .openapi("UiActionPart");
+
 export const SendMessageRequest = z
   .object({
     text: z.string().trim().max(100_000).default(""),
     attachments: z.array(MessageAttachment).max(10).optional(),
+    ui_action: UiActionPart.optional(),
   })
-  .refine((b) => b.text.length > 0 || (b.attachments?.length ?? 0) > 0, {
+  .refine((b) => b.text.length > 0 || (b.attachments?.length ?? 0) > 0 || !!b.ui_action, {
     message: "Send some text or an attachment",
     path: ["text"],
   })

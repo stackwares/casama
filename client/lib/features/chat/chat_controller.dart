@@ -48,16 +48,16 @@ class ToolEntry extends ChatEntry {
   final String? artifactPath;
 
   ToolEntry copyWith({String? output, ToolStatus? status, String? preview, int? durationMs, String? error, String? artifactPath}) => ToolEntry(
-        callId: callId,
-        tool: tool,
-        args: args,
-        output: output ?? this.output,
-        status: status ?? this.status,
-        preview: preview ?? this.preview,
-        durationMs: durationMs ?? this.durationMs,
-        error: error ?? this.error,
-        artifactPath: artifactPath ?? this.artifactPath,
-      );
+    callId: callId,
+    tool: tool,
+    args: args,
+    output: output ?? this.output,
+    status: status ?? this.status,
+    preview: preview ?? this.preview,
+    durationMs: durationMs ?? this.durationMs,
+    error: error ?? this.error,
+    artifactPath: artifactPath ?? this.artifactPath,
+  );
 }
 
 /// A tool call waiting for someone's decision; [decision] is set once resolved.
@@ -79,6 +79,13 @@ class TakeoverEntry extends ChatEntry {
   final String? note;
 }
 
+/// An interactive UI the bot showed (D-086), rendered from A2UI messages.
+class UiEntry extends ChatEntry {
+  const UiEntry({required this.surfaceId, required this.messages});
+  final String surfaceId;
+  final List<Object?> messages;
+}
+
 enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled, userControl, botControl }
 
 class NoticeEntry extends ChatEntry {
@@ -98,6 +105,7 @@ class ChatState {
     this.costUsd = 0,
     this.tokens = 0,
     this.lastUserText,
+    this.answeredUi = const {},
   });
   final String? conversationId;
   final List<ChatEntry> entries;
@@ -107,6 +115,9 @@ class ChatState {
   final double costUsd;
   final int tokens;
   final String? lastUserText;
+
+  /// Bot UIs the person has already answered; they stay visible but can't be used again.
+  final Set<String> answeredUi;
 
   bool get running => activeRunId != null;
 
@@ -120,17 +131,18 @@ class ChatState {
     double? costUsd,
     int? tokens,
     String? lastUserText,
-  }) =>
-      ChatState(
-        conversationId: conversationId ?? this.conversationId,
-        entries: entries ?? this.entries,
-        loading: loading ?? this.loading,
-        activeRunId: clearActiveRun ? null : (activeRunId ?? this.activeRunId),
-        lastRunId: lastRunId ?? this.lastRunId,
-        costUsd: costUsd ?? this.costUsd,
-        tokens: tokens ?? this.tokens,
-        lastUserText: lastUserText ?? this.lastUserText,
-      );
+    Set<String>? answeredUi,
+  }) => ChatState(
+    conversationId: conversationId ?? this.conversationId,
+    entries: entries ?? this.entries,
+    loading: loading ?? this.loading,
+    activeRunId: clearActiveRun ? null : (activeRunId ?? this.activeRunId),
+    lastRunId: lastRunId ?? this.lastRunId,
+    costUsd: costUsd ?? this.costUsd,
+    tokens: tokens ?? this.tokens,
+    lastUserText: lastUserText ?? this.lastUserText,
+    answeredUi: answeredUi ?? this.answeredUi,
+  );
 }
 
 /// Chat with one bot: loads a conversation, sends messages and applies live run events.
@@ -163,7 +175,13 @@ class ChatController extends Notifier<ChatState> {
     final messages = await _backend.messages(id);
     state = ChatState(
       conversationId: id,
-      entries: [for (final m in messages) MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments)],
+      entries: [
+        for (final m in messages) ...[
+          if (m.text.isNotEmpty || m.attachments.isNotEmpty || m.ui.isEmpty) MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments),
+          for (final u in m.ui) UiEntry(surfaceId: u.surfaceId, messages: u.messages),
+        ],
+      ],
+      answeredUi: {for (final m in messages) ?m.uiActionSurface},
     );
     final active = await _backend.activeRun(id);
     if (active != null) _attach(active);
@@ -174,19 +192,22 @@ class ChatController extends Notifier<ChatState> {
     state = const ChatState();
   }
 
-  Future<void> send(String text, {List<AttachmentRef> attachments = const []}) async {
+  Future<void> send(String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction}) async {
     final trimmed = text.trim();
-    if ((trimmed.isEmpty && attachments.isEmpty) || state.running) return;
+    if ((trimmed.isEmpty && attachments.isEmpty && uiAction == null) || state.running) return;
     var conversationId = state.conversationId;
     if (conversationId == null) {
       conversationId = (await _backend.createConversation(botId)).id;
       state = state.copyWith(conversationId: conversationId);
       ref.invalidate(conversationsProvider(botId));
     }
-    final optimistic =
-        MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed, attachments: attachments);
-    state = state.copyWith(entries: [...state.entries, optimistic], lastUserText: trimmed);
-    final sent = await _backend.send(conversationId, trimmed, attachments: attachments);
+    final optimistic = MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed, attachments: attachments);
+    state = state.copyWith(
+      entries: [...state.entries, optimistic],
+      lastUserText: trimmed,
+      answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
+    );
+    final sent = await _backend.send(conversationId, trimmed, attachments: attachments, uiAction: uiAction);
     unawaited(ref.read(runActivitiesProvider).started(sent.runId, ref.read(botProvider(botId))?.name ?? ''));
     _attach(sent.runId);
   }
@@ -204,11 +225,16 @@ class ChatController extends Notifier<ChatState> {
   void _attach(String runId) {
     _sub?.cancel();
     state = state.copyWith(activeRunId: runId, lastRunId: runId, costUsd: 0, tokens: 0);
-    _sub = _backend.watchRun(runId).listen(apply, onDone: () {
-      if (state.activeRunId == runId) state = state.copyWith(clearActiveRun: true);
-      ref.invalidate(botsProvider);
-      ref.invalidate(usageTodayProvider);
-    });
+    _sub = _backend
+        .watchRun(runId)
+        .listen(
+          apply,
+          onDone: () {
+            if (state.activeRunId == runId) state = state.copyWith(clearActiveRun: true);
+            ref.invalidate(botsProvider);
+            ref.invalidate(usageTodayProvider);
+          },
+        );
   }
 
   /// Applies one run event to the chat (public for tests).
@@ -231,9 +257,16 @@ class ChatController extends Notifier<ChatState> {
         final text = event.payload.content.where((p) => p['type'] == 'text').map((p) => '${p['text'] ?? ''}').join();
         final i = indexWhere((x) => x is MessageEntry && x.id == id);
         if (i < 0) {
-          entries.add(MessageEntry(id: id, role: 'assistant', text: text));
+          // A reply that is only an interactive UI has no text bubble.
+          if (text.isNotEmpty) entries.add(MessageEntry(id: id, role: 'assistant', text: text));
+        } else if (text.isEmpty) {
+          entries.removeAt(i);
         } else {
           entries[i] = (entries[i] as MessageEntry).copyWith(text: text, streaming: false);
+        }
+      case UiShownItem(:final event):
+        if (indexWhere((x) => x is UiEntry && x.surfaceId == event.payload.surfaceId) < 0) {
+          entries.add(UiEntry(surfaceId: event.payload.surfaceId, messages: event.payload.messages));
         }
       case ToolStartedItem(:final event) when state.activeRunId != null && event.payload.tool.isNotEmpty:
         unawaited(ref.read(runActivitiesProvider).step(state.activeRunId!, event.payload.tool));
@@ -263,12 +296,9 @@ class ChatController extends Notifier<ChatState> {
           entries[i] = (entries[i] as ToolEntry).copyWith(status: ToolStatus.failed, error: event.payload.message);
         }
       case ApprovalRequestedItem(:final event):
-        entries.add(ApprovalEntry(
-          approvalId: event.payload.approvalId,
-          tool: event.payload.tool,
-          args: event.payload.argsRedacted,
-          risk: event.payload.risk.value,
-        ));
+        entries.add(
+          ApprovalEntry(approvalId: event.payload.approvalId, tool: event.payload.tool, args: event.payload.argsRedacted, risk: event.payload.risk.value),
+        );
       case ApprovalResolvedItem(:final event):
         final i = indexWhere((x) => x is ApprovalEntry && x.approvalId == event.payload.approvalId);
         if (i >= 0) {
@@ -287,11 +317,13 @@ class ChatController extends Notifier<ChatState> {
         }
         ref.invalidate(takeoversProvider);
       case LeaseChangedItem(:final event):
-        entries.add(NoticeEntry(
-          kind: event.payload.holderType.value == 'user' ? NoticeKind.userControl : NoticeKind.botControl,
-          text: '',
-          refId: event.payload.computerId,
-        ));
+        entries.add(
+          NoticeEntry(
+            kind: event.payload.holderType.value == 'user' ? NoticeKind.userControl : NoticeKind.botControl,
+            text: '',
+            refId: event.payload.computerId,
+          ),
+        );
       case MemoryWrittenItem():
         entries.add(const NoticeEntry(kind: NoticeKind.memory, text: ''));
       case SkillLoadedItem(:final event):
@@ -307,10 +339,7 @@ class ChatController extends Notifier<ChatState> {
           entries.add(NoticeEntry(kind: NoticeKind.computer, text: text));
         }
       case UsageItem(:final event):
-        state = state.copyWith(
-          costUsd: event.payload.costUsd.toDouble(),
-          tokens: (event.payload.tokensIn + event.payload.tokensOut).toInt(),
-        );
+        state = state.copyWith(costUsd: event.payload.costUsd.toDouble(), tokens: (event.payload.tokensIn + event.payload.tokensOut).toInt());
         return;
       case RunFailedItem(:final event) when state.activeRunId != null:
         unawaited(ref.read(runActivitiesProvider).ended(state.activeRunId!));

@@ -78,6 +78,11 @@ export const runEventPayloads = {
   "run.completed": z.object({ final_message_id: id.nullable() }),
   "run.failed": z.object({ error_code: z.string(), message: z.string() }),
   "run.cancelled": z.object({ cancelled_by: id.nullable() }),
+  /** An interactive UI the bot shows in the chat (D-086): A2UI v1.0 messages for one surface. */
+  "ui.shown": z.object({
+    surface_id: z.string(),
+    messages: z.array(z.record(z.string(), z.unknown())),
+  }),
 } as const;
 
 export type RunEventType = keyof typeof runEventPayloads;

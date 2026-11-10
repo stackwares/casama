@@ -178,10 +178,24 @@ export function partsText(content: unknown): string {
         : "",
     )
     .join("");
+  const notes: string[] = [];
+  for (const p of content) {
+    if (!p || typeof p !== "object") continue;
+    const part = p as { type?: string; surface_id?: unknown; name?: unknown; context?: unknown };
+    // D-086: interactive UI the bot showed, and what the person did on it.
+    if (part.type === "ui")
+      notes.push(`(You showed an interactive UI, ${String(part.surface_id)}.)`);
+    if (part.type === "ui_action") {
+      notes.push(
+        `On your UI ${String(part.surface_id)} I chose "${String(part.name)}" with: ${JSON.stringify(part.context ?? {})}`,
+      );
+    }
+  }
+  const withNotes = [text, ...notes].filter(Boolean).join("\n\n");
   const files = partsFiles(content);
-  if (!files.length) return text;
+  if (!files.length) return withNotes;
   const list = files.map((f) => `- ${f.path} (${f.mime_type || "file"}, ${kb(f.size)})`).join("\n");
-  return `${text}${text ? "\n\n" : ""}Attached files (on your computer, under the home folder):\n${list}`;
+  return `${withNotes}${withNotes ? "\n\n" : ""}Attached files (on your computer, under the home folder):\n${list}`;
 }
 
 /**
@@ -1093,7 +1107,16 @@ async function saveFinalMessage(
   busFn: () => Promise<EventBus>,
 ) {
   const bus = await busFn();
-  const content = [{ type: "text", text: final.text }];
+  // Interactive UIs shown during the run stay with the reply, so they are there after a reload.
+  const shown = await db.execute<{ payload: { surface_id: string; messages: unknown[] } }>(sql`
+    select payload from public.run_events
+    where run_id = ${info.runId}::uuid and type = 'ui.shown' order by seq`);
+  const ui = [...shown].map((r) => ({
+    type: "ui",
+    surface_id: r.payload.surface_id,
+    messages: r.payload.messages,
+  }));
+  const content: Array<Record<string, unknown>> = [{ type: "text", text: final.text }, ...ui];
   if (info.conversationId) {
     await db.execute(sql`
       insert into public.messages (id, org_id, conversation_id, role, content, run_id)
