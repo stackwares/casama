@@ -6153,6 +6153,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next version'**
   String get nextVersion;
+
+  /// No description provided for @quietHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
+  String get quietHours;
+
+  /// No description provided for @quietHoursHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications wait until quiet hours end; your inbox still fills. Approvals for a chat you\'re in still come through.'**
+  String get quietHoursHelp;
+
+  /// No description provided for @quietHoursRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} to {end}'**
+  String quietHoursRange(String start, String end);
+
+  /// No description provided for @off.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get off;
+
+  /// No description provided for @botNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications from this bot'**
+  String get botNotifications;
+
+  /// No description provided for @botNotificationsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Whether this bot follows your quiet hours'**
+  String get botNotificationsHelp;
+
+  /// No description provided for @quietDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow my quiet hours'**
+  String get quietDefault;
+
+  /// No description provided for @quietAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'Always notify me'**
+  String get quietAlways;
+
+  /// No description provided for @quietCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Its own quiet hours'**
+  String get quietCustom;
+
+  /// No description provided for @from.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get from;
+
+  /// No description provided for @until.
+  ///
+  /// In en, this message translates to:
+  /// **'Until'**
+  String get until;
 }
 
 class _AppLocalizationsDelegate

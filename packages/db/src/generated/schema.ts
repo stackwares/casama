@@ -42,28 +42,6 @@ export const memberships = pgTable("memberships", {
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 ]);
 
-export const profiles = pgTable("profiles", {
-	userId: uuid("user_id").primaryKey().notNull(),
-	displayName: text("display_name"),
-	avatarUrl: text("avatar_url"),
-	locale: text().default('en').notNull(),
-	timezone: text().default('UTC').notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "profiles_user_id_fkey"
-		}).onDelete("cascade"),
-	pgPolicy("profiles_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM memberships theirs
-  WHERE ((theirs.user_id = profiles.user_id) AND is_member(theirs.org_id)))))` }),
-	pgPolicy("profiles_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
-	pgPolicy("profiles_update", { as: "permissive", for: "update", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("profiles_display_name_check", sql`char_length(display_name) <= 120`),
-]);
-
 export const invites = pgTable("invites", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -132,6 +110,29 @@ export const organizations = pgTable("organizations", {
 	check("organizations_suspended_reason_check", sql`(suspended_reason IS NULL) OR (char_length(suspended_reason) <= 500)`),
 	check("organizations_icon_check", sql`(icon IS NULL) OR (char_length(icon) <= 40)`),
 	check("organizations_color_check", sql`(color IS NULL) OR (color ~ '^#[0-9a-fA-F]{6}$'::text)`),
+]);
+
+export const profiles = pgTable("profiles", {
+	userId: uuid("user_id").primaryKey().notNull(),
+	displayName: text("display_name"),
+	avatarUrl: text("avatar_url"),
+	locale: text().default('en').notNull(),
+	timezone: text().default('UTC').notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	quietHours: jsonb("quiet_hours"),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "profiles_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("profiles_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+   FROM memberships theirs
+  WHERE ((theirs.user_id = profiles.user_id) AND is_member(theirs.org_id)))))` }),
+	pgPolicy("profiles_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
+	pgPolicy("profiles_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("profiles_display_name_check", sql`char_length(display_name) <= 120`),
 ]);
 
 export const plans = pgTable("plans", {
@@ -972,32 +973,6 @@ export const devices = pgTable("devices", {
 	check("devices_platform_check", sql`platform = ANY (ARRAY['ios'::text, 'android'::text, 'web'::text, 'macos'::text, 'windows'::text, 'linux'::text])`),
 ]);
 
-export const notifications = pgTable("notifications", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	userId: uuid("user_id").notNull(),
-	orgId: uuid("org_id"),
-	kind: text().notNull(),
-	payload: jsonb().default({}).notNull(),
-	readAt: timestamp("read_at", { withTimezone: true, mode: 'string' }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("notifications_user_idx").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
-	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "notifications_user_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "notifications_org_id_fkey"
-		}).onDelete("cascade"),
-	pgPolicy("notifications_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
-	pgPolicy("notifications_update", { as: "permissive", for: "update", to: ["authenticated"] }),
-	pgPolicy("notifications_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-]);
-
 export const takeoverRequests = pgTable("takeover_requests", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -1317,6 +1292,36 @@ export const usedSignupChallenges = pgTable("used_signup_challenges", {
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
+export const notifications = pgTable("notifications", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	orgId: uuid("org_id"),
+	kind: text().notNull(),
+	payload: jsonb().default({}).notNull(),
+	readAt: timestamp("read_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	pushStatus: text("push_status").default('sent').notNull(),
+	pushAfter: timestamp("push_after", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("notifications_deferred_idx").using("btree", table.pushAfter.asc().nullsLast().op("timestamptz_ops")).where(sql`(push_status = 'deferred'::text)`),
+	index("notifications_user_idx").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "notifications_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "notifications_org_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("notifications_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("notifications_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("notifications_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("notifications_push_status_check", sql`push_status = ANY (ARRAY['sent'::text, 'deferred'::text, 'none'::text])`),
+]);
+
 export const tasks = pgTable("tasks", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -1618,6 +1623,29 @@ export const ttsCache = pgTable("tts_cache", {
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.messageId, table.voiceKey], name: "tts_cache_pkey"}),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+]);
+
+export const userBotSettings = pgTable("user_bot_settings", {
+	userId: uuid("user_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	quiet: text().default('default').notNull(),
+	quietHours: jsonb("quiet_hours"),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "user_bot_settings_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "user_bot_settings_bot_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.userId, table.botId], name: "user_bot_settings_pkey"}),
+	pgPolicy("user_bot_settings_own", { as: "permissive", for: "all", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))`, withCheck: sql`((user_id = ( SELECT auth.uid() AS uid)) AND can_access_bot(bot_id))`  }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("user_bot_settings_quiet_check", sql`quiet = ANY (ARRAY['default'::text, 'always'::text, 'custom'::text])`),
 ]);
 
 export const idempotencyKeys = pgTable("idempotency_keys", {

@@ -175,6 +175,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `messages.parent_message_id`, `conversations.head_message_id`, triggers `messages_branch`/`messages_set_head`, `conversation_thread`/`branch_leaf`, `POST …/messages/{id}/edit` and `POST …/branch`, branch-aware history in `runAgent`, and the chat's Edit action and version arrows.
 
+## Quiet hours (D-109)
+
+- `profiles.quiet_hours`, `user_bot_settings`, `notifications.push_status`/`push_after`, `NotificationService.quietUntil`/`sendDeferred` (worker minute tick), `@kasama/domain` `quiet-hours.ts`, and the app's `features/notifications/quiet_hours.dart`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

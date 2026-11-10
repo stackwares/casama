@@ -1741,6 +1741,8 @@ async function approvalGate(
         approval_id: approval.id,
         bot_id: info.botId,
         run_id: info.runId,
+        // Someone is in the chat waiting for this: it pushes even in quiet hours (D-109).
+        urgent: info.trigger === "chat" || info.trigger === "voice",
       })
       .catch((err) =>
         deps.logger?.warn("approval notification failed", { error: (err as Error).message }),

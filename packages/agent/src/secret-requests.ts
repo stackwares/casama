@@ -129,6 +129,7 @@ export async function createSecretRequest(
             body: args.reason || `Save ${args.name} so ${info.botName} can continue.`,
             link,
             secret_request_id: id,
+            bot_id: info.botId,
           })
           .catch(() => {}),
       ),

@@ -205,6 +205,16 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  QuietHoursView quiet = const QuietHoursView(enabled: false, start: '22:00', end: '07:00');
+  final botQuiets = <String, BotQuietView>{};
+  @override
+  Future<QuietHoursView> quietHours() async => quiet;
+  @override
+  Future<void> setQuietHours(QuietHoursView hours) async => quiet = hours;
+  @override
+  Future<BotQuietView> botQuiet(String botId) async => botQuiets[botId] ?? const BotQuietView(mode: 'default');
+  @override
+  Future<void> setBotQuiet(String botId, BotQuietView value) async => botQuiets[botId] = value;
   final edits = <(String, String)>[];
   final branchSwitches = <String>[];
   List<String> siblings = const [];

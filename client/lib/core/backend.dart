@@ -114,6 +114,25 @@ class TwoStepEnrollment {
 
 /// Everything the app reads and writes. Reads and simple edits go to Supabase under RLS;
 /// commands go to the Kasama API. Widget tests use a fake.
+/// Quiet hours (D-109): "HH:MM" local times; the window may cross midnight.
+class QuietHoursView {
+  const QuietHoursView({required this.enabled, required this.start, required this.end});
+  final bool enabled;
+  final String start;
+  final String end;
+  Map<String, Object?> toJson() => {'enabled': enabled, 'start': start, 'end': end};
+  static QuietHoursView? fromJson(Object? j) => j is Map
+      ? QuietHoursView(enabled: j['enabled'] == true, start: '${j['start'] ?? '22:00'}', end: '${j['end'] ?? '07:00'}')
+      : null;
+}
+
+/// One person's quiet-hours choice for one bot: default, always or custom.
+class BotQuietView {
+  const BotQuietView({required this.mode, this.hours});
+  final String mode;
+  final QuietHoursView? hours;
+}
+
 /// A sidebar folder of bots (D-100).
 class BotFolder {
   const BotFolder({required this.id, required this.name, this.sortKey = 0});
@@ -199,6 +218,11 @@ abstract class Backend {
   /// Starts (or reruns) the setup interview; returns its conversation (D-105).
   Future<String> startBotSetup(String botId);
   Future<void> skipBotSetup(String botId);
+  // Quiet hours (D-109)
+  Future<QuietHoursView> quietHours();
+  Future<void> setQuietHours(QuietHoursView hours);
+  Future<BotQuietView> botQuiet(String botId);
+  Future<void> setBotQuiet(String botId, BotQuietView value);
   Future<List<BotRevision>> botRevisions(String botId);
   /// Puts back the settings from before [revision]; the current ones become a new revision.
   Future<void> restoreBotRevision(String botId, BotRevision revision);

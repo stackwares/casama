@@ -3522,4 +3522,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nextVersion => 'Next version';
+
+  @override
+  String get quietHours => 'Quiet hours';
+
+  @override
+  String get quietHoursHelp =>
+      'Notifications wait until quiet hours end; your inbox still fills. Approvals for a chat you\'re in still come through.';
+
+  @override
+  String quietHoursRange(String start, String end) {
+    return '$start to $end';
+  }
+
+  @override
+  String get off => 'Off';
+
+  @override
+  String get botNotifications => 'Notifications from this bot';
+
+  @override
+  String get botNotificationsHelp =>
+      'Whether this bot follows your quiet hours';
+
+  @override
+  String get quietDefault => 'Follow my quiet hours';
+
+  @override
+  String get quietAlways => 'Always notify me';
+
+  @override
+  String get quietCustom => 'Its own quiet hours';
+
+  @override
+  String get from => 'From';
+
+  @override
+  String get until => 'Until';
 }

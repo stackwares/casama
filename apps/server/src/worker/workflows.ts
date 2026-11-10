@@ -104,6 +104,16 @@ export const agentRunWorkflow = DBOS.registerWorkflow(
 /** Every minute: start runs for routines that are due. */
 export const routinesTickWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
+    // Pushes held back by quiet hours go out once the window ends (D-109).
+    await DBOS.runStep(
+      () =>
+        rt()
+          .agent.notifications?.sendDeferred()
+          .catch(() => 0) ?? Promise.resolve(0),
+      {
+        name: "deferred-pushes",
+      },
+    );
     const runIds = await DBOS.runStep(() => claimDueRoutines(rt().db), { name: "claim-due" });
     for (const runId of runIds) {
       await DBOS.startWorkflow(agentRunWorkflow, { workflowID: runId, queueName: QUEUES.runs })(

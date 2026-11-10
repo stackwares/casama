@@ -1856,5 +1856,17 @@
   "editMessage": "Edit",
   "editMessageHelp": "Sending reruns the conversation from here. The original version stays; switch with the arrows.",
   "previousVersion": "Previous version",
-  "nextVersion": "Next version"
+  "nextVersion": "Next version",
+  "quietHours": "Quiet hours",
+  "quietHoursHelp": "Notifications wait until quiet hours end; your inbox still fills. Approvals for a chat you're in still come through.",
+  "quietHoursRange": "{start} to {end}",
+  "@quietHoursRange": {"placeholders": {"start": {"type": "String"}, "end": {"type": "String"}}},
+  "off": "Off",
+  "botNotifications": "Notifications from this bot",
+  "botNotificationsHelp": "Whether this bot follows your quiet hours",
+  "quietDefault": "Follow my quiet hours",
+  "quietAlways": "Always notify me",
+  "quietCustom": "Its own quiet hours",
+  "from": "From",
+  "until": "Until"
 }

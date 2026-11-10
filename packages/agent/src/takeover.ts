@@ -93,6 +93,7 @@ export async function createTakeover(
             title: `${info.botName} needs your help`,
             body: reason,
             link: `/computer/live?c=${computerId}&takeover=${id}`,
+            bot_id: info.botId,
           })
           .catch(() => {}),
       ),

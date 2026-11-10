@@ -27,6 +27,7 @@ import '../../ui/app_card.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 import '../admin/admin_screen.dart';
+import '../notifications/quiet_hours.dart';
 import '../companion/companion.dart';
 import '../../ui/glow_button.dart';
 
@@ -206,6 +207,13 @@ class SettingsScreen extends ConsumerWidget {
               SectionHeader(title: l10n.settingsMoreSection),
               GroupedCard(
                 children: [
+                  GroupedTile(
+                    key: const Key('settingsQuietHours'),
+                    icon: LucideIcons.moon,
+                    title: l10n.quietHours,
+                    subtitle: ref.watch(quietHoursProvider).whenOrNull(data: (q) => quietSummary(context, q)) ?? l10n.quietHoursHelp,
+                    onTap: () => showQuietHours(context, ref),
+                  ),
                   GroupedTile(
                     key: const Key('settingsTwoStep'),
                     icon: LucideIcons.smartphone,
@@ -716,6 +724,17 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                   },
                 );
               },
+            ),
+            GroupedTile(
+              key: const Key('botQuiet'),
+              icon: LucideIcons.bellRing,
+              title: l10n.botNotifications,
+              subtitle: switch (ref.watch(botQuietProvider(bot.id)).value?.mode) {
+                'always' => l10n.quietAlways,
+                'custom' => l10n.quietCustom,
+                _ => l10n.quietDefault,
+              },
+              onTap: () => showBotQuiet(context, ref, bot.id),
             ),
             GroupedTile(
               key: const Key('rerunSetup'),

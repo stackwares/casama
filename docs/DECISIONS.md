@@ -596,3 +596,11 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Drizzle:** the pull script drops the `conversations_head_message_id_fkey` metadata from the generated schema, which would otherwise make a type cycle; the database keeps the key.
 - **Tests:** API with a scripted model (`branches.test.ts`: straight thread, edit forks and reruns, versions and switching back, only user messages), widget tests (`branches_test.dart`).
 
+## D-109 Quiet hours
+
+- **Settings:** `profiles.quiet_hours` (`{enabled, start, end}`, local "HH:MM", may cross midnight) in the person's profile timezone; `user_bot_settings` per person and bot: `default` (my quiet hours), `always` (this bot may always push) or `custom` (its own window). People manage only their own rows (RLS).
+- **Delivery:** `NotificationService.notify` always writes the inbox row; during quiet hours it records `push_status = deferred` and `push_after` (the window's end) instead of pushing. The worker's minute tick (`sendDeferred`) sends due pushes and skips ones already read in the app. `@kasama/domain` `quietUntil` does the timezone math (DST shifts inside a window move the end by at most an hour).
+- **Urgent:** approvals from a chat or voice run are urgent (someone is waiting in the conversation) and push anyway; approvals from routines, tickets and other background runs wait. Bot phone calls (Wave 3) will use the same check.
+- **App:** Settings → Quiet hours (switch, start and end); bot settings → Notifications from this bot (follow my quiet hours, always notify me, its own quiet hours).
+- **Tests:** domain (`quiet-hours.test.ts`), service against Postgres (`quiet-hours.test.ts`: deferral, urgent, per-bot always, delayed send skipping read ones), pgTAP (`quiet_hours_rls.test.sql`), widget tests (`quiet_hours_test.dart`).
+

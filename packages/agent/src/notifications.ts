@@ -1,5 +1,6 @@
 import { createSign } from "node:crypto";
 import type { Database } from "@kasama/db";
+import { type QuietHours, quietUntil } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 
 export interface PushMessage {
@@ -101,27 +102,71 @@ export class NotificationService {
     userId: string,
     orgId: string | null,
     kind: string,
-    message: PushMessage & Record<string, unknown>,
+    message: PushMessage & Record<string, unknown> & { bot_id?: string; urgent?: boolean },
   ) {
+    // Quiet hours (D-109): the inbox row now, the push when the window ends (unless urgent).
+    const later = message.urgent ? null : await this.quietUntil(userId, message.bot_id ?? null);
     const [row] = await this.db.execute<{ id: string }>(sql`
-      insert into public.notifications (user_id, org_id, kind, payload)
-      values (${userId}::uuid, ${orgId}::uuid, ${kind}, ${JSON.stringify(message)}::jsonb) returning id`);
+      insert into public.notifications (user_id, org_id, kind, payload, push_status, push_after)
+      values (${userId}::uuid, ${orgId}::uuid, ${kind}, ${JSON.stringify(message)}::jsonb,
+              ${later ? "deferred" : "sent"}, ${later?.toISOString() ?? null}::timestamptz) returning id`);
+    if (!later) await this.pushTo(userId, row?.id ?? "", kind, message);
+    return row?.id;
+  }
+
+  /** When this person's quiet hours (or their override for this bot) end, if they're on now. */
+  async quietUntil(userId: string, botId: string | null, now = new Date()): Promise<Date | null> {
+    const [p] = await this.db.execute<{
+      timezone: string | null;
+      quiet_hours: QuietHours | null;
+      bot_quiet: string | null;
+      bot_hours: QuietHours | null;
+    }>(sql`
+      select p.timezone, p.quiet_hours, s.quiet as bot_quiet, s.quiet_hours as bot_hours
+      from public.profiles p
+      left join public.user_bot_settings s on s.user_id = p.user_id and s.bot_id = ${botId}::uuid
+      where p.user_id = ${userId}::uuid`);
+    if (!p || p.bot_quiet === "always") return null;
+    const hours = p.bot_quiet === "custom" ? p.bot_hours : p.quiet_hours;
+    return quietUntil(now, p.timezone ?? "UTC", hours);
+  }
+
+  private async pushTo(userId: string, notificationId: string, kind: string, message: PushMessage) {
     const devices = await this.db.execute<{ fcm_token: string }>(
       sql`select fcm_token from public.devices where user_id = ${userId}::uuid`,
     );
-    if (devices.length) {
-      const { invalidTokens } = await this.push.send(
-        devices.map((d) => d.fcm_token),
-        {
-          title: message.title,
-          body: message.body,
-          link: message.link,
-          data: { notification_id: row?.id ?? "", kind },
-        },
-      );
-      for (const t of invalidTokens)
-        await this.db.execute(sql`delete from public.devices where fcm_token = ${t}`);
+    if (!devices.length) return;
+    const { invalidTokens } = await this.push.send(
+      devices.map((d) => d.fcm_token),
+      {
+        title: message.title,
+        body: message.body,
+        link: message.link,
+        data: { notification_id: notificationId, kind },
+      },
+    );
+    for (const t of invalidTokens)
+      await this.db.execute(sql`delete from public.devices where fcm_token = ${t}`);
+  }
+
+  /** Sends pushes whose quiet hours have ended (every minute, from the worker). */
+  async sendDeferred(limit = 200) {
+    const due = await this.db.execute<{
+      id: string;
+      user_id: string;
+      kind: string;
+      payload: PushMessage;
+      read: boolean;
+    }>(sql`
+      update public.notifications set push_status = 'sent'
+      where id in (select id from public.notifications where push_status = 'deferred' and push_after <= now()
+                   order by push_after limit ${limit} for update skip locked)
+      returning id, user_id, kind, payload, read_at is not null as read`);
+    for (const n of due) {
+      // Already seen in the app: no need to buzz the phone now.
+      if (n.read) continue;
+      await this.pushTo(n.user_id, n.id, n.kind, n.payload).catch(() => {});
     }
-    return row?.id;
+    return due.length;
   }
 }

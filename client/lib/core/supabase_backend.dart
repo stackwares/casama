@@ -269,6 +269,36 @@ class SupabaseBackend implements Backend {
     await supabase.from('bots').update({'setup_status': 'skipped'}).eq('id', botId);
   }
 
+  String get _uid => supabase.auth.currentUser!.id;
+
+  @override
+  Future<QuietHoursView> quietHours() async {
+    final r = await supabase.from('profiles').select('quiet_hours').eq('user_id', _uid).maybeSingle();
+    return QuietHoursView.fromJson(r?['quiet_hours']) ?? const QuietHoursView(enabled: false, start: '22:00', end: '07:00');
+  }
+
+  @override
+  Future<void> setQuietHours(QuietHoursView hours) async {
+    await supabase.from('profiles').update({'quiet_hours': hours.toJson()}).eq('user_id', _uid);
+  }
+
+  @override
+  Future<BotQuietView> botQuiet(String botId) async {
+    final r = await supabase.from('user_bot_settings').select('quiet, quiet_hours').eq('user_id', _uid).eq('bot_id', botId).maybeSingle();
+    return BotQuietView(mode: (r?['quiet'] as String?) ?? 'default', hours: QuietHoursView.fromJson(r?['quiet_hours']));
+  }
+
+  @override
+  Future<void> setBotQuiet(String botId, BotQuietView value) async {
+    await supabase.from('user_bot_settings').upsert({
+      'user_id': _uid,
+      'bot_id': botId,
+      'quiet': value.mode,
+      'quiet_hours': value.hours?.toJson(),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
   @override
   Future<List<BotRevision>> botRevisions(String botId) async {
     final rows = await supabase
