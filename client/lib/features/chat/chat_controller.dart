@@ -15,14 +15,33 @@ sealed class ChatEntry {
 }
 
 class MessageEntry extends ChatEntry {
-  const MessageEntry({required this.id, required this.role, required this.text, this.streaming = false, this.attachments = const []});
+  const MessageEntry({
+    required this.id,
+    required this.role,
+    required this.text,
+    this.streaming = false,
+    this.attachments = const [],
+    this.siblingIndex = 1,
+    this.siblingCount = 1,
+  });
   final String id;
   final String role;
   final String text;
   final bool streaming;
   final List<AttachmentRef> attachments;
-  MessageEntry copyWith({String? text, bool? streaming}) =>
-      MessageEntry(id: id, role: role, text: text ?? this.text, streaming: streaming ?? this.streaming, attachments: attachments);
+
+  /// Edited versions of a message are siblings; arrows switch between them (D-108).
+  final int siblingIndex;
+  final int siblingCount;
+  MessageEntry copyWith({String? text, bool? streaming}) => MessageEntry(
+        id: id,
+        role: role,
+        text: text ?? this.text,
+        streaming: streaming ?? this.streaming,
+        attachments: attachments,
+        siblingIndex: siblingIndex,
+        siblingCount: siblingCount,
+      );
 }
 
 class ToolEntry extends ChatEntry {
@@ -193,7 +212,8 @@ class ChatController extends Notifier<ChatState> {
       conversationId: id,
       entries: [
         for (final m in messages) ...[
-          if (m.text.isNotEmpty || m.attachments.isNotEmpty || m.ui.isEmpty) MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments),
+          if (m.text.isNotEmpty || m.attachments.isNotEmpty || m.ui.isEmpty)
+            MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments, siblingIndex: m.siblingIndex, siblingCount: m.siblingCount),
           for (final u in m.ui) UiEntry(surfaceId: u.surfaceId, messages: u.messages),
         ],
       ],
@@ -201,6 +221,26 @@ class ChatController extends Notifier<ChatState> {
     );
     final active = await _backend.activeRun(id);
     if (active != null) _attach(active);
+  }
+
+  /// Edits a sent message and reruns from there; the old branch stays (D-108).
+  Future<void> edit(String messageId, String text) async {
+    final id = state.conversationId;
+    if (id == null || state.running || text.trim().isEmpty) return;
+    await _backend.editMessage(id, messageId, text.trim());
+    await open(id);
+  }
+
+  /// Shows the previous or next edited version of a message, with its own replies.
+  Future<void> switchBranch(String messageId, int delta) async {
+    final id = state.conversationId;
+    if (id == null || state.running) return;
+    final siblings = await _backend.messageSiblings(id, messageId);
+    final i = siblings.indexOf(messageId);
+    final next = i + delta;
+    if (i < 0 || next < 0 || next >= siblings.length) return;
+    await _backend.switchBranch(id, siblings[next]);
+    await open(id);
   }
 
   Future<void> newChat() async {

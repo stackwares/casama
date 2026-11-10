@@ -145,6 +145,18 @@ export const SendMessageRequest = z
   })
   .openapi("SendMessageRequest");
 
+export const EditMessageRequest = z
+  .object({ text: z.string().trim().min(1).max(100_000) })
+  .openapi("EditMessageRequest");
+
+export const SwitchBranchRequest = z
+  .object({ message_id: Uuid.openapi({ description: "A message on the branch to show" }) })
+  .openapi("SwitchBranchRequest");
+
+export const SwitchBranchResponse = z
+  .object({ head_message_id: Uuid })
+  .openapi("SwitchBranchResponse");
+
 export const SendMessageResponse = z
   .object({ message_id: Uuid, run_id: Uuid, conversation_id: Uuid })
   .openapi("SendMessageResponse");

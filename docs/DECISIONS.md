@@ -586,3 +586,13 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Timeline:** run timelines show the trace id with Copy, and Open trace when the server sets `TRACE_URL_TEMPLATE` (any viewer URL with `{trace_id}`), opened in the default browser.
 - **Tests:** in-memory exporter (`run.test.ts`): run span id and status, chat spans parented to it with tokens and cost, tool span outcome and risk, no prompt text, `trace_id` stored; Langfuse generations share the trace id, contain no secret, and stop when the workspace opts out; widget tests (`trace_test.dart`).
 
+## D-108 Edit and resend
+
+- **Tree:** `messages.parent_message_id` (the message before it in its branch) and `conversations.head_message_id` (the newest message of the branch on screen). Existing conversations were backfilled as one straight branch. A trigger fills in the parent from the head when an insert doesn't give one (so every existing insert path keeps working), and moves the head only when the new message continues the shown branch (a reply that lands after the person switched branches doesn't pull them back). `kasama.branch_root` starts a new first message.
+- **Edit:** `POST /v1/conversations/{id}/messages/{message_id}/edit` (your own messages, not while a run is going) adds a sibling with the same parent, keeping the original's attachments and picked skills, makes it the head and starts a run. The run's history is its own branch: `runAgent` walks from the run's message up through parents, so the old branch never reaches the model. The reply is attached to the run's message explicitly.
+- **Switching:** `public.conversation_thread` returns the shown branch with each message's place among its versions (`sibling_index`/`sibling_count`); `POST /v1/conversations/{id}/branch` shows another version by moving the head to the newest message under it (`public.branch_leaf`). Both run as the caller, under RLS.
+- **App:** Edit in the message menu (long-press, or the text's context menu with a mouse) opens a sheet with the text; sending reruns from there. Edited messages show `< 2/3 >` arrows.
+- **Known limit:** a conversation summary made before an edit (long chats are compacted) may still mention the other branch.
+- **Drizzle:** the pull script drops the `conversations_head_message_id_fkey` metadata from the generated schema, which would otherwise make a type cycle; the database keeps the key.
+- **Tests:** API with a scripted model (`branches.test.ts`: straight thread, edit forks and reruns, versions and switching back, only user messages), widget tests (`branches_test.dart`).
+

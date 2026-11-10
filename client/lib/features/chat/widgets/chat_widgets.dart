@@ -27,23 +27,56 @@ import '../../../ui/glow_button.dart';
 /// What you wrote: a bubble on the right in the accent tint, the tail corner tucked in, with any
 /// attached files above it.
 class UserBubble extends StatelessWidget {
-  const UserBubble({super.key, required this.text, this.attachments = const []});
+  const UserBubble({super.key, required this.text, this.attachments = const [], this.onEdit, this.siblingIndex = 1, this.siblingCount = 1, this.onBranch});
   final String text;
   final List<AttachmentRef> attachments;
 
+  /// Edit and resend, and the arrows between edited versions (D-108).
+  final VoidCallback? onEdit;
+  final int siblingIndex;
+  final int siblingCount;
+  final ValueChanged<int>? onBranch;
+
   @override
   Widget build(BuildContext context) {
-    if (attachments.isEmpty) return _bubble(context);
+    final branches = siblingCount > 1 && onBranch != null
+        ? Row(
+            key: const Key('branchArrows'),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                key: const Key('branchPrev'),
+                visualDensity: VisualDensity.compact,
+                iconSize: 16,
+                tooltip: context.l10n.previousVersion,
+                onPressed: siblingIndex > 1 ? () => onBranch!(-1) : null,
+                icon: const Icon(LucideIcons.chevronLeft),
+              ),
+              Text('$siblingIndex/$siblingCount', style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+              IconButton(
+                key: const Key('branchNext'),
+                visualDensity: VisualDensity.compact,
+                iconSize: 16,
+                tooltip: context.l10n.nextVersion,
+                onPressed: siblingIndex < siblingCount ? () => onBranch!(1) : null,
+                icon: const Icon(LucideIcons.chevronRight),
+              ),
+            ],
+          )
+        : null;
+    if (attachments.isEmpty && branches == null) return _bubble(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Wrap(
-          alignment: WrapAlignment.end,
-          spacing: AppSpace.xs,
-          runSpacing: AppSpace.xs,
-          children: [for (final a in attachments) AttachmentTile(attachment: a)],
-        ),
-        if (text.isNotEmpty) ...[const SizedBox(height: 6), _bubble(context)],
+        if (attachments.isNotEmpty)
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: AppSpace.xs,
+            runSpacing: AppSpace.xs,
+            children: [for (final a in attachments) AttachmentTile(attachment: a)],
+          ),
+        if (text.isNotEmpty) ...[if (attachments.isNotEmpty) const SizedBox(height: 6), _bubble(context)],
+        ?branches,
       ],
     );
   }
@@ -59,6 +92,7 @@ class UserBubble extends StatelessWidget {
           constraints: BoxConstraints(maxWidth: (constraints.maxWidth * 0.85).clamp(0, 560)),
           child: MessageActions(
             text: text,
+            onEdit: onEdit,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: Color.alphaBlend(scheme.primary.withValues(alpha: context.isDark ? 0.3 : 0.16), base),

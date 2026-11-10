@@ -15,6 +15,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/glow_button.dart';
+import '../../ui/form_sheet.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
@@ -253,6 +254,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (_touchFirst) FocusManager.instance.primaryFocus?.unfocus();
     await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).send(message, attachments: attachments, skills: skills));
     if (!_touchFirst && mounted) _focus.requestFocus();
+  }
+
+  /// Edit and resend (D-108): the conversation forks at this message and reruns from it.
+  Future<void> _editMessage(MessageEntry e) async {
+    final text = await showAdaptiveSheet<String>(context: context, builder: (_) => _EditSheet(initial: e.text));
+    if (text == null || text.trim().isEmpty || text.trim() == e.text.trim() || !mounted) return;
+    _stickToBottom = true;
+    await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).edit(e.id, text));
   }
 
   /// Dictation: tap to record, tap again to transcribe into the message box.
@@ -620,7 +629,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             _Row(
               ValueKey(e.id),
               lastSide.isEmpty ? 0 : AppSpace.xl,
-              () => UserBubble(text: e.text, attachments: e.attachments),
+              () => UserBubble(
+                text: e.text,
+                attachments: e.attachments,
+                siblingIndex: e.siblingIndex,
+                siblingCount: e.siblingCount,
+                onEdit: chat.running || e.id.startsWith('local-') ? null : () => _editMessage(e),
+                onBranch: chat.running ? null : (d) => runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).switchBranch(e.id, d)),
+              ),
               fresh: fresh,
             ),
           );
@@ -1212,6 +1228,38 @@ class _SetupCard extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _EditSheet extends StatefulWidget {
+  const _EditSheet({required this.initial});
+  final String initial;
+
+  @override
+  State<_EditSheet> createState() => _EditSheetState();
+}
+
+class _EditSheetState extends State<_EditSheet> {
+  late final _text = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return FormSheet(
+      icon: LucideIcons.pencil,
+      title: l10n.editMessage,
+      subtitle: l10n.editMessageHelp,
+      submitLabel: l10n.send,
+      submitKey: const Key('sendEdit'),
+      onSubmit: () => Navigator.pop(context, _text.text),
+      children: [TextField(key: const Key('editField'), controller: _text, autofocus: true, minLines: 2, maxLines: 10)],
     );
   }
 }

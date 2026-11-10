@@ -843,10 +843,23 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
       run_id: string | null;
       created_at: Date;
     }>(sql`
-      select id, role, content, run_id, created_at from public.messages
-      where conversation_id = ${row.conversation_id}::uuid and role in ('user', 'assistant')
+      with recursive start as (
+        -- The branch this run belongs to (D-108): from its own message (or the conversation's
+        -- head) back to the first message.
+        select coalesce(
+          (select id from public.messages where run_id = ${runId}::uuid and role = 'user' order by created_at limit 1),
+          (select head_message_id from public.conversations where id = ${row.conversation_id}::uuid)) as id
+      ), path as (
+        select m.id, m.role, m.content, m.run_id, m.created_at, m.parent_message_id, 0 as depth
+        from public.messages m join start on m.id = start.id
+        union all
+        select m.id, m.role, m.content, m.run_id, m.created_at, m.parent_message_id, path.depth + 1
+        from public.messages m join path on m.id = path.parent_message_id where path.depth < 2000
+      )
+      select id, role, content, run_id, created_at from path
+      where role in ('user', 'assistant')
         and (${row.summary_through}::timestamptz is null or created_at > ${row.summary_through}::timestamptz)
-      order by created_at, id`);
+      order by depth desc`);
     const idx = msgs.findIndex((m) => m.role === "user" && m.run_id === runId);
     const currentRow = idx >= 0 ? msgs[idx] : undefined;
     if (currentRow)
@@ -1486,8 +1499,9 @@ async function saveFinalMessage(
   const content: Array<Record<string, unknown>> = [{ type: "text", text: final.text }, ...ui];
   if (info.conversationId) {
     await db.execute(sql`
-      insert into public.messages (id, org_id, conversation_id, role, content, run_id)
-      values (${final.messageId}::uuid, ${info.orgId}::uuid, ${info.conversationId}::uuid, 'assistant', ${JSON.stringify(content)}::jsonb, ${info.runId}::uuid)
+      insert into public.messages (id, org_id, conversation_id, role, content, run_id, parent_message_id)
+      values (${final.messageId}::uuid, ${info.orgId}::uuid, ${info.conversationId}::uuid, 'assistant', ${JSON.stringify(content)}::jsonb, ${info.runId}::uuid,
+              ${info.current && /^[0-9a-f-]{36}$/.test(info.current.id) ? info.current.id : null}::uuid)
       on conflict (id) do nothing`);
     const title = info.current?.text.replace(/\s+/g, " ").trim().slice(0, 60) || null;
     await db.execute(sql`

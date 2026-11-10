@@ -202,6 +202,25 @@ class SupabaseBackend implements Backend {
   Future<List<Template>> templates() async => (await api.bots.listTemplates()).data!.items;
 
   @override
+  Future<SendMessageResponse> editMessage(String conversationId, String messageId, String text) async =>
+      (await api.chat.editMessage(id: conversationId, messageId: messageId, editMessageRequest: EditMessageRequest(text: text))).data!;
+
+  @override
+  Future<void> switchBranch(String conversationId, String messageId) async {
+    await api.chat.switchBranch(id: conversationId, switchBranchRequest: SwitchBranchRequest(messageId: messageId));
+  }
+
+  @override
+  Future<List<String>> messageSiblings(String conversationId, String messageId) async {
+    final m = await supabase.from('messages').select('role, parent_message_id').eq('id', messageId).single();
+    var q = supabase.from('messages').select('id').eq('conversation_id', conversationId).eq('role', m['role'] as String);
+    final parent = m['parent_message_id'] as String?;
+    q = parent == null ? q.isFilter('parent_message_id', null) : q.eq('parent_message_id', parent);
+    final rows = await q.order('created_at', ascending: true).order('id', ascending: true);
+    return [for (final r in rows) r['id'] as String];
+  }
+
+  @override
   Future<SearchResponse> search(String orgId, String query) async => (await api.search.search(orgId: orgId, q: query)).data!;
 
   @override
@@ -355,16 +374,14 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<List<ChatMessageView>> messages(String conversationId) async {
-    final rows = await supabase
-        .from('messages')
-        .select('id, role, content, run_id, created_at')
-        .eq('conversation_id', conversationId)
-        .inFilter('role', ['user', 'assistant'])
-        .order('created_at', ascending: true)
-        .limit(500);
+    // The branch being shown (D-108), oldest first.
+    final List<dynamic> all = await supabase.rpc('conversation_thread', params: {'p_conversation': conversationId});
+    final rows = all.cast<Map<String, dynamic>>().where((r) => r['role'] == 'user' || r['role'] == 'assistant').toList();
     return [
-      for (final r in rows)
+      for (final r in rows.length > 500 ? rows.sublist(rows.length - 500) : rows)
         ChatMessageView(
+          siblingIndex: (r['sibling_index'] as num?)?.toInt() ?? 1,
+          siblingCount: (r['sibling_count'] as num?)?.toInt() ?? 1,
           id: r['id'] as String,
           role: r['role'] as String,
           text: _text(r['content']),

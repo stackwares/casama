@@ -122,6 +122,7 @@ lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
 lib/src/model/deleted_routine.dart
+lib/src/model/edit_message_request.dart
 lib/src/model/file_search_result.dart
 lib/src/model/fulfill_secret_request_body.dart
 lib/src/model/git_hub_skill_preview.dart
@@ -239,6 +240,8 @@ lib/src/model/subrun_started_event.dart
 lib/src/model/subrun_started_event_payload.dart
 lib/src/model/subscription.dart
 lib/src/model/suspend_org_request.dart
+lib/src/model/switch_branch_request.dart
+lib/src/model/switch_branch_response.dart
 lib/src/model/take_lease_request.dart
 lib/src/model/takeover_request.dart
 lib/src/model/takeover_request_list.dart

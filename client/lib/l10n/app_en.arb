@@ -1852,5 +1852,9 @@
   "rerunSetup": "Run setup again",
   "rerunSetupHelp": "Answer the setup questions again and review a new proposal",
   "trace": "Trace",
-  "openTrace": "Open trace"
+  "openTrace": "Open trace",
+  "editMessage": "Edit",
+  "editMessageHelp": "Sending reruns the conversation from here. The original version stays; switch with the arrows.",
+  "previousVersion": "Previous version",
+  "nextVersion": "Next version"
 }

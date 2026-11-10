@@ -3509,4 +3509,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openTrace => 'Open trace';
+
+  @override
+  String get editMessage => 'Edit';
+
+  @override
+  String get editMessageHelp =>
+      'Sending reruns the conversation from here. The original version stays; switch with the arrows.';
+
+  @override
+  String get previousVersion => 'Previous version';
+
+  @override
+  String get nextVersion => 'Next version';
 }

@@ -171,6 +171,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/observability/src/run-trace.ts` (deterministic ids, `ForcedIdGenerator`, run and child spans), spans in `run.ts`, `packages/agent/src/langfuse.ts` (`LANGFUSE_*`, `organizations.llm_tracing`), `runs.trace_id`, `TRACE_URL_TEMPLATE` and the timeline's trace link.
 
+## Edit and resend (D-108)
+
+- `messages.parent_message_id`, `conversations.head_message_id`, triggers `messages_branch`/`messages_set_head`, `conversation_thread`/`branch_leaf`, `POST …/messages/{id}/edit` and `POST …/branch`, branch-aware history in `runAgent`, and the chat's Edit action and version arrows.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

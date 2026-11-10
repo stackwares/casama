@@ -298,6 +298,80 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json({ items: rows.map(convOut) }, 200);
   });
 
+  app.openapi(routes.editMessage, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id, message_id } = c.req.valid("param");
+    const { text } = c.req.valid("json");
+    const created = await withUserSession(db, claims, async (tx) => {
+      const [m] = await tx.execute<{
+        org_id: string;
+        bot_id: string;
+        parent: string | null;
+        role: string;
+        content: unknown;
+      }>(sql`
+        select m.org_id, c.bot_id, m.parent_message_id as parent, m.role, m.content
+        from public.messages m join public.conversations c on c.id = m.conversation_id
+        where m.id = ${message_id}::uuid and m.conversation_id = ${id}::uuid`);
+      if (!m) throw new ApiError(404, "message_not_found", "Message not found");
+      if (m.role !== "user")
+        throw new ApiError(400, "not_editable", "Only your own messages can be edited");
+      const [busy] = await tx.execute<{ id: string }>(sql`
+        select id from public.runs where conversation_id = ${id}::uuid
+          and status in ('queued', 'running', 'waiting_approval', 'waiting_takeover') limit 1`);
+      if (busy)
+        throw new ApiError(
+          409,
+          "run_in_progress",
+          "Wait for the bot to finish, or stop it, before editing",
+        );
+      const [run] = await tx.execute<{ id: string }>(sql`
+        insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
+        values (${m.org_id}::uuid, ${m.bot_id}::uuid, ${id}::uuid, ${claims.sub}::uuid, 'chat') returning id`);
+      // The new text keeps the original's attachments and picked skills.
+      const kept = Array.isArray(m.content)
+        ? (m.content as Array<{ type?: string }>).filter((p) => p.type !== "text")
+        : [];
+      if (!m.parent) await tx.execute(sql`select set_config('kasama.branch_root', 'on', true)`);
+      const [msg] = await tx.execute<{ id: string }>(sql`
+        insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id, parent_message_id)
+        values (${m.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid,
+                ${JSON.stringify([{ type: "text", text }, ...kept])}::jsonb, ${run?.id}::uuid, ${m.parent}::uuid)
+        returning id`);
+      await tx.execute(sql`
+        update public.conversations set head_message_id = ${msg?.id}::uuid, last_message_at = now() where id = ${id}::uuid`);
+      return { runId: run?.id as string, messageId: msg?.id as string };
+    });
+    try {
+      await deps.workflows.startRun(created.runId);
+    } catch {
+      await db.execute(sql`update public.runs set status = 'failed', ended_at = now(),
+        error = ${JSON.stringify({ code: "enqueue_failed", message: "The run could not be started." })}::jsonb
+        where id = ${created.runId}::uuid`);
+    }
+    return c.json(
+      { message_id: created.messageId, run_id: created.runId, conversation_id: id },
+      202,
+    );
+  });
+
+  app.openapi(routes.switchBranch, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { message_id } = c.req.valid("json");
+    const head = await withUserSession(db, claims, async (tx) => {
+      const [m] = await tx.execute<{ leaf: string | null }>(sql`
+        select public.branch_leaf(m.id) as leaf from public.messages m
+        where m.id = ${message_id}::uuid and m.conversation_id = ${id}::uuid`);
+      if (!m?.leaf) throw new ApiError(404, "message_not_found", "Message not found");
+      await tx.execute(
+        sql`update public.conversations set head_message_id = ${m.leaf}::uuid where id = ${id}::uuid`,
+      );
+      return m.leaf;
+    });
+    return c.json({ head_message_id: head }, 200);
+  });
+
   app.openapi(routes.sendMessage, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");

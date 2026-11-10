@@ -205,6 +205,18 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  final edits = <(String, String)>[];
+  final branchSwitches = <String>[];
+  List<String> siblings = const [];
+  @override
+  Future<SendMessageResponse> editMessage(String conversationId, String messageId, String text) async {
+    edits.add((messageId, text));
+    return SendMessageResponse(messageId: 'm-edit', runId: 'run-edit', conversationId: conversationId);
+  }
+  @override
+  Future<void> switchBranch(String conversationId, String messageId) async => branchSwitches.add(messageId);
+  @override
+  Future<List<String>> messageSiblings(String conversationId, String messageId) async => siblings;
   @override
   String? traceUrlTemplate;
   String? runTraceId;

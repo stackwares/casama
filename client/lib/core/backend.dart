@@ -32,11 +32,16 @@ class ChatMessageView {
     this.attachments = const [],
     this.ui = const [],
     this.uiActionSurface,
+    this.siblingIndex = 1,
+    this.siblingCount = 1,
   });
   final String id;
   final String role;
   final String text;
   final DateTime createdAt;
+  /// Its place among edited versions of the same message (D-108).
+  final int siblingIndex;
+  final int siblingCount;
   final String? runId;
   final List<AttachmentRef> attachments;
 
@@ -217,6 +222,12 @@ abstract class Backend {
   /// [skills]: skills picked with / in the composer (D-104).
   Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const []});
   Future<void> cancelRun(String runId);
+  /// Edits a sent message: forks there and reruns (D-108).
+  Future<SendMessageResponse> editMessage(String conversationId, String messageId, String text);
+  /// Shows the branch containing [messageId].
+  Future<void> switchBranch(String conversationId, String messageId);
+  /// A message and its edited versions, oldest first.
+  Future<List<String>> messageSiblings(String conversationId, String messageId);
   Stream<RunEventItem> watchRun(String runId, {int afterSeq = 0});
   Future<List<RunEventItem>> runEvents(String runId);
   Future<List<RunSummary>> runs(String botId);

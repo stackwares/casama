@@ -16,6 +16,9 @@ import {
   RunEventsPage,
   SendMessageRequest,
   SendMessageResponse,
+  EditMessageRequest,
+  SwitchBranchRequest,
+  SwitchBranchResponse,
   StartSetupResponse,
   TestCredentialRequest,
   UpdateCredentialRequest,
@@ -312,4 +315,35 @@ export const startBotSetup = createRoute({
   summary: "Start (or rerun) the bot's setup interview in a new conversation",
   request: { params: idParam },
   responses: { 201: jsonResponse("Started", StartSetupResponse), 401: e401, 403: e403, 404: e404 },
+});
+
+export const editMessage = createRoute({
+  operationId: "editMessage",
+  method: "post",
+  path: "/v1/conversations/{id}/messages/{message_id}/edit",
+  tags: ["chat"],
+  security,
+  summary: "Edit a sent message: forks the conversation there and reruns it (the old branch stays)",
+  request: {
+    params: z.object({ id: Uuid, message_id: Uuid }),
+    body: jsonBody(EditMessageRequest),
+  },
+  responses: {
+    202: jsonResponse("Run started", SendMessageResponse),
+    400: e400,
+    401: e401,
+    404: e404,
+    409: e409,
+  },
+});
+
+export const switchBranch = createRoute({
+  operationId: "switchBranch",
+  method: "post",
+  path: "/v1/conversations/{id}/branch",
+  tags: ["chat"],
+  security,
+  summary: "Show another branch of the conversation (its newest message under the given one)",
+  request: { params: idParam, body: jsonBody(SwitchBranchRequest) },
+  responses: { 200: jsonResponse("Head", SwitchBranchResponse), 401: e401, 404: e404 },
 });

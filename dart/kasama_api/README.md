@@ -92,8 +92,10 @@ Class | Method | HTTP request | Description
 [*BotsApi*](doc/BotsApi.md) | [**listTemplates**](doc/BotsApi.md#listtemplates) | **GET** /v1/templates | 
 [*BotsApi*](doc/BotsApi.md) | [**startBotSetup**](doc/BotsApi.md#startbotsetup) | **POST** /v1/bots/{id}/setup | Start (or rerun) the bot&#39;s setup interview in a new conversation
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
+[*ChatApi*](doc/ChatApi.md) | [**editMessage**](doc/ChatApi.md#editmessage) | **POST** /v1/conversations/{id}/messages/{message_id}/edit | Edit a sent message: forks the conversation there and reruns it (the old branch stays)
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
+[*ChatApi*](doc/ChatApi.md) | [**switchBranch**](doc/ChatApi.md#switchbranch) | **POST** /v1/conversations/{id}/branch | Show another branch of the conversation (its newest message under the given one)
 [*ComputersApi*](doc/ComputersApi.md) | [**computerScreenshot**](doc/ComputersApi.md#computerscreenshot) | **GET** /v1/computers/{id}/screenshot | PNG of the desktop, or of the bot&#39;s browser page on headless computers
 [*ComputersApi*](doc/ComputersApi.md) | [**computerStream**](doc/ComputersApi.md#computerstream) | **GET** /v1/computers/{id}/stream | WebSocket live-view signaling (Neko protocol). Authenticated by the stream-session token; input is accepted only in control mode while you hold the lease.
 [*ComputersApi*](doc/ComputersApi.md) | [**computerTerminal**](doc/ComputersApi.md#computerterminal) | **GET** /v1/computers/{id}/terminal | WebSocket terminal. Binary frames carry terminal bytes both ways. Browsers may pass the access token as ?access_token&#x3D;.
@@ -292,6 +294,7 @@ Class | Method | HTTP request | Description
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
+ - [EditMessageRequest](doc/EditMessageRequest.md)
  - [FileSearchResult](doc/FileSearchResult.md)
  - [FulfillSecretRequestBody](doc/FulfillSecretRequestBody.md)
  - [GitHubSkillPreview](doc/GitHubSkillPreview.md)
@@ -409,6 +412,8 @@ Class | Method | HTTP request | Description
  - [SubrunStartedEventPayload](doc/SubrunStartedEventPayload.md)
  - [Subscription](doc/Subscription.md)
  - [SuspendOrgRequest](doc/SuspendOrgRequest.md)
+ - [SwitchBranchRequest](doc/SwitchBranchRequest.md)
+ - [SwitchBranchResponse](doc/SwitchBranchResponse.md)
  - [TakeLeaseRequest](doc/TakeLeaseRequest.md)
  - [TakeoverRequest](doc/TakeoverRequest.md)
  - [TakeoverRequestList](doc/TakeoverRequestList.md)

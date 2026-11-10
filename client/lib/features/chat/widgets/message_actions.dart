@@ -17,9 +17,12 @@ bool get _pointerFirst =>
 /// Touch: long-press opens a menu. Mouse: text selects by dragging and right-click adds these to
 /// the text menu.
 class MessageActions extends StatelessWidget {
-  const MessageActions({super.key, required this.text, required this.child, this.markdown = false, this.onSpeak, this.speakKey});
+  const MessageActions({super.key, required this.text, required this.child, this.markdown = false, this.onSpeak, this.speakKey, this.onEdit});
   final String text;
   final Widget child;
+
+  /// Edit and resend (your own messages; D-108).
+  final VoidCallback? onEdit;
 
   /// Show the text as Markdown in "Select text".
   final bool markdown;
@@ -66,6 +69,7 @@ class MessageActions extends StatelessWidget {
       position: RelativeRect.fromRect(at & const Size(1, 1), Offset.zero & overlay.size),
       items: [
         item('copy', LucideIcons.copy, l10n.copyMessage, key: const Key('msgCopy')),
+        if (onEdit != null) item('edit', LucideIcons.pencil, l10n.editMessage, key: const Key('msgEdit')),
         if (onSpeak != null) item('speak', LucideIcons.volume2, l10n.readAloud, key: speakKey),
         item('select', LucideIcons.textCursorInput, l10n.selectText, key: const Key('msgSelect')),
         item('share', LucideIcons.share, l10n.shareMessage, key: const Key('msgShare')),
@@ -77,6 +81,8 @@ class MessageActions extends StatelessWidget {
         await _copy(context);
       case 'speak':
         onSpeak?.call();
+      case 'edit':
+        onEdit?.call();
       case 'select':
         _select(context);
       case 'share':
@@ -100,6 +106,14 @@ class MessageActions extends StatelessWidget {
                 _copy(context);
               },
             ),
+            if (onEdit != null)
+              ContextMenuButtonItem(
+                label: l10n.editMessage,
+                onPressed: () {
+                  ContextMenuController.removeAny();
+                  onEdit!();
+                },
+              ),
             if (onSpeak != null)
               ContextMenuButtonItem(
                 label: l10n.readAloud,

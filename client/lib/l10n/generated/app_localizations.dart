@@ -6129,6 +6129,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open trace'**
   String get openTrace;
+
+  /// No description provided for @editMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editMessage;
+
+  /// No description provided for @editMessageHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending reruns the conversation from here. The original version stays; switch with the arrows.'**
+  String get editMessageHelp;
+
+  /// No description provided for @previousVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous version'**
+  String get previousVersion;
+
+  /// No description provided for @nextVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Next version'**
+  String get nextVersion;
 }
 
 class _AppLocalizationsDelegate
