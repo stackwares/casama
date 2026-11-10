@@ -9,6 +9,8 @@ part of 'org_settings.dart';
 abstract class _$OrgSettingsCWProxy {
   OrgSettings runEventRetentionDays(int runEventRetentionDays);
 
+  OrgSettings requireMfa(bool requireMfa);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `OrgSettings(...).copyWith.fieldName(value)`.
@@ -17,7 +19,7 @@ abstract class _$OrgSettingsCWProxy {
   /// ```dart
   /// OrgSettings(...).copyWith(id: 12, name: "My name")
   /// ```
-  OrgSettings call({int runEventRetentionDays});
+  OrgSettings call({int runEventRetentionDays, bool requireMfa});
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -31,6 +33,9 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
   OrgSettings runEventRetentionDays(int runEventRetentionDays) =>
       call(runEventRetentionDays: runEventRetentionDays);
 
+  @override
+  OrgSettings requireMfa(bool requireMfa) => call(requireMfa: requireMfa);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `OrgSettings(...).copyWith.fieldName(value)`.
@@ -42,6 +47,7 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
   @override
   OrgSettings call({
     Object? runEventRetentionDays = const $CopyWithPlaceholder(),
+    Object? requireMfa = const $CopyWithPlaceholder(),
   }) {
     return OrgSettings(
       runEventRetentionDays:
@@ -50,6 +56,11 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
           ? _value.runEventRetentionDays
           // ignore: cast_nullable_to_non_nullable
           : runEventRetentionDays as int,
+      requireMfa:
+          requireMfa == const $CopyWithPlaceholder() || requireMfa == null
+          ? _value.requireMfa
+          // ignore: cast_nullable_to_non_nullable
+          : requireMfa as bool,
     );
   }
 }
@@ -69,19 +80,27 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
   'OrgSettings',
   json,
   ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['run_event_retention_days']);
+    $checkKeys(
+      json,
+      requiredKeys: const ['run_event_retention_days', 'require_mfa'],
+    );
     final val = OrgSettings(
       runEventRetentionDays: $checkedConvert(
         'run_event_retention_days',
         (v) => (v as num).toInt(),
       ),
+      requireMfa: $checkedConvert('require_mfa', (v) => v as bool),
     );
     return val;
   },
-  fieldKeyMap: const {'runEventRetentionDays': 'run_event_retention_days'},
+  fieldKeyMap: const {
+    'runEventRetentionDays': 'run_event_retention_days',
+    'requireMfa': 'require_mfa',
+  },
 );
 
 Map<String, dynamic> _$OrgSettingsToJson(OrgSettings instance) =>
     <String, dynamic>{
       'run_event_retention_days': instance.runEventRetentionDays,
+      'require_mfa': instance.requireMfa,
     };

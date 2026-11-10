@@ -105,6 +105,35 @@ class AuthClient {
     return AuthSession.fromAuthResponse(json);
   }
 
+  /// The account's verified authenticator apps (two-step sign-in), as factor ids.
+  Future<List<String>> verifiedTotpFactors(String accessToken) async {
+    final res = await _http.get(_uri('/user'), headers: {..._headers, 'authorization': 'Bearer $accessToken'});
+    if (res.statusCode >= 400) throw AuthException('Could not read the account', statusCode: res.statusCode);
+    final user = jsonDecode(res.body) as Map<String, dynamic>;
+    final factors = (user['factors'] as List?) ?? const [];
+    return [
+      for (final f in factors.cast<Map<String, dynamic>>())
+        if (f['factor_type'] == 'totp' && f['status'] == 'verified') f['id'] as String,
+    ];
+  }
+
+  /// Passes the second step with a code from an authenticator app; returns the upgraded (aal2) session.
+  Future<AuthSession> verifyTotp({required String accessToken, required String factorId, required String code}) async {
+    final auth = {..._headers, 'authorization': 'Bearer $accessToken'};
+    Future<Map<String, dynamic>> post(String path, Map<String, dynamic> body) async {
+      final res = await _http.post(_uri(path), headers: auth, body: jsonEncode(body));
+      final decoded = res.body.isEmpty ? <String, dynamic>{} : jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode >= 400) {
+        throw AuthException((decoded['msg'] ?? decoded['message'] ?? 'Invalid code').toString(), statusCode: res.statusCode);
+      }
+      return decoded;
+    }
+
+    final challenge = await post('/factors/$factorId/challenge', {});
+    final json = await post('/factors/$factorId/verify', {'challenge_id': challenge['id'], 'code': code});
+    return AuthSession.fromAuthResponse(json);
+  }
+
   Future<AuthSession> refresh(String refreshToken) async {
     final json = await _post('/token', {'refresh_token': refreshToken},
         query: {'grant_type': 'refresh_token'});

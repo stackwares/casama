@@ -84,6 +84,23 @@ class RunSummary {
   final double costUsd;
 }
 
+/// An authenticator app registered for two-step sign-in (D-092).
+class TwoStepFactor {
+  const TwoStepFactor({required this.id, required this.name, required this.createdAt});
+  final String id;
+  final String name;
+  final DateTime createdAt;
+}
+
+/// A new authenticator being set up: scan the QR code (SVG) or type the key, then verify a code.
+class TwoStepEnrollment {
+  const TwoStepEnrollment({required this.factorId, required this.secret, required this.uri, required this.qrSvg});
+  final String factorId;
+  final String secret;
+  final String uri;
+  final String qrSvg;
+}
+
 /// Everything the app reads and writes. Reads and simple edits go to Supabase under RLS;
 /// commands go to the Kasama API. Widget tests use a fake.
 abstract class Backend {
@@ -214,6 +231,21 @@ abstract class Backend {
   // Privacy and SSO (Phase 8)
   Future<Uint8List> exportMyData();
   Future<AccountDeletion> deleteAccount(String confirmEmail);
+  // Two-step sign-in (D-092)
+  Future<List<TwoStepFactor>> twoStepFactors();
+  /// The account has two-step sign-in but this session hasn't passed the second step yet.
+  bool get twoStepCodeNeeded;
+  /// This session passed the second step (aal2).
+  bool get twoStepVerified;
+  Future<TwoStepEnrollment> startTwoStep();
+  /// Finishes setting up [factorId] with a code from the app.
+  Future<void> verifyTwoStep(String factorId, String code);
+  /// Signing in: passes the second step with a code.
+  Future<void> passTwoStep(String code);
+  Future<void> removeTwoStep(String factorId);
+  Future<bool> requireTwoStep(String orgId);
+  Future<bool> setRequireTwoStep(String orgId, bool value);
+
   Future<int> retentionDays(String orgId);
   Future<int> setRetentionDays(String orgId, int days);
   /// Enterprise SSO: opens the identity provider for the email's domain.

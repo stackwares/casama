@@ -29,7 +29,13 @@ export interface Harness {
   handle: DbHandle;
   app: ReturnType<typeof createApp>;
   outbox: EmailMessage[];
-  user(email: string): Promise<{ id: string; email: string; token: string }>;
+  /** A user and their token; `claims` adds JWT claims such as `aal: "aal2"` (two-step sign-in). */
+  user(
+    email: string,
+    claims?: Record<string, unknown>,
+  ): Promise<{ id: string; email: string; token: string }>;
+  /** Another token for an existing user, with extra claims. */
+  tokenFor(user: { id: string; email: string }, claims?: Record<string, unknown>): Promise<string>;
   request(path: string, init?: RequestInit & { token?: string; json?: unknown }): Promise<Response>;
   stop(): Promise<void>;
 }
@@ -176,6 +182,14 @@ export async function startHarness(
     await new Promise((r) => server?.once("listening", r));
     if (opts.local) attachLocalConnect(server, deps);
   }
+  const tokenFor = (u: { id: string; email: string }, claims: Record<string, unknown> = {}) =>
+    new SignJWT({ email: u.email, role: "authenticated", ...claims })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject(u.id)
+      .setAudience("authenticated")
+      .setIssuedAt()
+      .setExpirationTime("1h")
+      .sign(new TextEncoder().encode(JWT_SECRET));
   return {
     serverUrl: localPort ? `http://127.0.0.1:${localPort}` : undefined,
     deps,
@@ -184,17 +198,11 @@ export async function startHarness(
     handle,
     app,
     outbox,
-    async user(address) {
+    async user(address, claims = {}) {
       const u = await createAuthUser(tdb.admin, address);
-      const token = await new SignJWT({ email: address, role: "authenticated" })
-        .setProtectedHeader({ alg: "HS256" })
-        .setSubject(u.id)
-        .setAudience("authenticated")
-        .setIssuedAt()
-        .setExpirationTime("1h")
-        .sign(new TextEncoder().encode(JWT_SECRET));
-      return { ...u, token };
+      return { ...u, token: await tokenFor({ id: u.id, email: address }, claims) };
     },
+    tokenFor,
     request(path, init = {}) {
       const headers = new Headers(init.headers);
       if (init.token) headers.set("authorization", `Bearer ${init.token}`);

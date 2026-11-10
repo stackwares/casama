@@ -18,6 +18,10 @@ export const AccountDeletion = z
 export const OrgSettings = z
   .object({
     run_event_retention_days: z.number().int().min(7).max(3650),
+    require_mfa: z.boolean().openapi({
+      description:
+        "Owners and admins must use two-step sign-in (turning it on needs an aal2 session)",
+    }),
   })
   .openapi("OrgSettings");
 

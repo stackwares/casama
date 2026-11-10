@@ -34,6 +34,8 @@ class OrganizationWithRole {
     required  this.createdAt,
 
     required  this.role,
+
+     this.requireMfa,
   });
 
   @JsonKey(
@@ -120,6 +122,19 @@ class OrganizationWithRole {
 
 
 
+      /// Owners and admins need two-step sign-in (an aal2 session) to use their powers
+  @JsonKey(
+    
+    name: r'require_mfa',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? requireMfa;
+
+
+
 
 
     @override
@@ -130,7 +145,8 @@ class OrganizationWithRole {
       other.plan == plan &&
       other.region == region &&
       other.createdAt == createdAt &&
-      other.role == role;
+      other.role == role &&
+      other.requireMfa == requireMfa;
 
     @override
     int get hashCode =>
@@ -140,7 +156,8 @@ class OrganizationWithRole {
         plan.hashCode +
         region.hashCode +
         createdAt.hashCode +
-        role.hashCode;
+        role.hashCode +
+        requireMfa.hashCode;
 
   factory OrganizationWithRole.fromJson(Map<String, dynamic> json) => _$OrganizationWithRoleFromJson(json);
 

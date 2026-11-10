@@ -704,6 +704,82 @@ class SupabaseBackend implements Backend {
     return r;
   }
 
+  // --- two-step sign-in (D-092) ---------------------------------------------
+
+  @override
+  Future<List<TwoStepFactor>> twoStepFactors() async => [
+        for (final f in (await supabase.auth.mfa.listFactors()).totp)
+          TwoStepFactor(id: f.id, name: f.friendlyName ?? 'Authenticator', createdAt: f.createdAt),
+      ];
+
+  @override
+  bool get twoStepCodeNeeded {
+    if (supabase.auth.currentSession == null) return false;
+    final l = supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    return l.currentLevel == sb.AuthenticatorAssuranceLevels.aal1 && l.nextLevel == sb.AuthenticatorAssuranceLevels.aal2;
+  }
+
+  @override
+  bool get twoStepVerified =>
+      supabase.auth.currentSession != null &&
+      supabase.auth.mfa.getAuthenticatorAssuranceLevel().currentLevel == sb.AuthenticatorAssuranceLevels.aal2;
+
+  @override
+  Future<TwoStepEnrollment> startTwoStep() async {
+    // Friendly names must be unique per account; unfinished setups are cleared first.
+    final all = (await supabase.auth.mfa.listFactors()).all;
+    for (final f in all.where((f) => f.status == sb.FactorStatus.unverified)) {
+      await supabase.auth.mfa.unenroll(f.id);
+    }
+    final n = all.where((f) => f.status == sb.FactorStatus.verified).length + 1;
+    final r = await supabase.auth.mfa.enroll(
+      factorType: sb.FactorType.totp,
+      issuer: config?.productName ?? 'Kasama',
+      friendlyName: 'Authenticator $n · ${DateTime.now().millisecondsSinceEpoch}',
+    );
+    final totp = r.totp!;
+    return TwoStepEnrollment(factorId: r.id, secret: totp.secret, uri: totp.uri, qrSvg: totp.qrCode);
+  }
+
+  @override
+  Future<void> verifyTwoStep(String factorId, String code) async {
+    await supabase.auth.mfa.challengeAndVerify(factorId: factorId, code: code.trim());
+  }
+
+  @override
+  Future<void> passTwoStep(String code) async {
+    final factors = (await supabase.auth.mfa.listFactors()).totp;
+    if (factors.isEmpty) return;
+    Object? lastError;
+    // Any of the person's authenticators may have produced the code.
+    for (final f in factors) {
+      try {
+        await supabase.auth.mfa.challengeAndVerify(factorId: f.id, code: code.trim());
+        return;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    throw lastError!;
+  }
+
+  @override
+  Future<void> removeTwoStep(String factorId) async {
+    await supabase.auth.mfa.unenroll(factorId);
+    await supabase.auth.refreshSession();
+  }
+
+  @override
+  Future<bool> requireTwoStep(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.requireMfa;
+
+  @override
+  Future<bool> setRequireTwoStep(String orgId, bool value) async => (await api.privacy.updateOrgSettings(
+        id: orgId,
+        updateOrgSettingsRequest: UpdateOrgSettingsRequest(requireMfa: value),
+      ))
+          .data!
+          .requireMfa;
+
   @override
   Future<int> retentionDays(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.runEventRetentionDays;
   @override

@@ -187,7 +187,9 @@ class SignupCommand extends _CredentialsCommand {
 
 class LoginCommand extends _CredentialsCommand {
   LoginCommand(super.ctx) {
-    argParser.addFlag('magic-link', negatable: false, help: 'Email a one-time code instead.');
+    argParser
+      ..addFlag('magic-link', negatable: false, help: 'Email a one-time code instead.')
+      ..addOption('code', help: 'Two-step sign-in code (or KASAMA_2FA_CODE; prompted when needed).');
   }
   @override
   String get name => 'login';
@@ -205,6 +207,31 @@ class LoginCommand extends _CredentialsCommand {
       await c.sessions.save(session);
     } else {
       session = await c.signIn(email, password);
+    }
+    // Two-step sign-in (D-092): pass the second step when the account has an authenticator app.
+    final factors = await c.auth.verifiedTotpFactors(session.accessToken);
+    if (factors.isNotEmpty) {
+      final code = (argResults!['code'] as String?) ??
+          Platform.environment['KASAMA_2FA_CODE'] ??
+          (() {
+            stderr.write('Two-step sign-in code: ');
+            return stdin.readLineSync()?.trim() ?? '';
+          })();
+      AuthSession? upgraded;
+      Object? lastError;
+      for (final f in factors) {
+        try {
+          upgraded = await c.auth.verifyTotp(accessToken: session.accessToken, factorId: f, code: code);
+          break;
+        } catch (e) {
+          lastError = e;
+        }
+      }
+      if (upgraded == null) {
+        await c.sessions.clear();
+        throw CliError('two_step_failed', 'That code did not work. ${lastError ?? ''}'.trim());
+      }
+      await c.sessions.save(upgraded);
     }
     return ctx.emit({'user_id': session.userId, 'email': session.email},
         'Logged in as ${session.email}.');

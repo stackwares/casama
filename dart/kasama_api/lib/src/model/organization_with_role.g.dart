@@ -21,6 +21,8 @@ abstract class _$OrganizationWithRoleCWProxy {
 
   OrganizationWithRole role(OrgRole role);
 
+  OrganizationWithRole requireMfa(bool? requireMfa);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `OrganizationWithRole(...).copyWith.fieldName(value)`.
@@ -37,6 +39,7 @@ abstract class _$OrganizationWithRoleCWProxy {
     String region,
     DateTime createdAt,
     OrgRole role,
+    bool? requireMfa,
   });
 }
 
@@ -70,6 +73,10 @@ class _$OrganizationWithRoleCWProxyImpl
   @override
   OrganizationWithRole role(OrgRole role) => call(role: role);
 
+  @override
+  OrganizationWithRole requireMfa(bool? requireMfa) =>
+      call(requireMfa: requireMfa);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `OrganizationWithRole(...).copyWith.fieldName(value)`.
@@ -87,6 +94,7 @@ class _$OrganizationWithRoleCWProxyImpl
     Object? region = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
     Object? role = const $CopyWithPlaceholder(),
+    Object? requireMfa = const $CopyWithPlaceholder(),
   }) {
     return OrganizationWithRole(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -117,6 +125,10 @@ class _$OrganizationWithRoleCWProxyImpl
           ? _value.role
           // ignore: cast_nullable_to_non_nullable
           : role as OrgRole,
+      requireMfa: requireMfa == const $CopyWithPlaceholder()
+          ? _value.requireMfa
+          // ignore: cast_nullable_to_non_nullable
+          : requireMfa as bool?,
     );
   }
 }
@@ -159,9 +171,10 @@ OrganizationWithRole _$OrganizationWithRoleFromJson(
       (v) => DateTime.parse(v as String),
     ),
     role: $checkedConvert('role', (v) => $enumDecode(_$OrgRoleEnumMap, v)),
+    requireMfa: $checkedConvert('require_mfa', (v) => v as bool?),
   );
   return val;
-}, fieldKeyMap: const {'createdAt': 'created_at'});
+}, fieldKeyMap: const {'createdAt': 'created_at', 'requireMfa': 'require_mfa'});
 
 Map<String, dynamic> _$OrganizationWithRoleToJson(
   OrganizationWithRole instance,
@@ -173,6 +186,7 @@ Map<String, dynamic> _$OrganizationWithRoleToJson(
   'region': instance.region,
   'created_at': instance.createdAt.toIso8601String(),
   'role': _$OrgRoleEnumMap[instance.role]!,
+  'require_mfa': ?instance.requireMfa,
 };
 
 const _$OrgRoleEnumMap = {

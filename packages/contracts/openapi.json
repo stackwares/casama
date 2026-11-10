@@ -1987,6 +1987,10 @@
             "properties": {
               "role": {
                 "$ref": "#/components/schemas/OrgRole"
+              },
+              "require_mfa": {
+                "type": "boolean",
+                "description": "Owners and admins need two-step sign-in (an aal2 session) to use their powers"
               }
             },
             "required": [
@@ -5605,10 +5609,15 @@
             "type": "integer",
             "minimum": 7,
             "maximum": 3650
+          },
+          "require_mfa": {
+            "type": "boolean",
+            "description": "Owners and admins must use two-step sign-in (turning it on needs an aal2 session)"
           }
         },
         "required": [
-          "run_event_retention_days"
+          "run_event_retention_days",
+          "require_mfa"
         ]
       },
       "UpdateOrgSettingsRequest": {
@@ -5618,6 +5627,10 @@
             "type": "integer",
             "minimum": 7,
             "maximum": 3650
+          },
+          "require_mfa": {
+            "type": "boolean",
+            "description": "Owners and admins must use two-step sign-in (turning it on needs an aal2 session)"
           }
         }
       },

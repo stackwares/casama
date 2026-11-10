@@ -2864,4 +2864,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String modelFallbackNotice(String message) {
     return 'Switched to the next model: $message';
   }
+
+  @override
+  String get twoStepSignIn => 'Two-step sign-in';
+
+  @override
+  String get twoStepHelp =>
+      'Ask for a code from an authenticator app whenever you sign in.';
+
+  @override
+  String get twoStepIsOn => 'On';
+
+  @override
+  String get twoStepIsOff => 'Off';
+
+  @override
+  String get twoStepRequiredHere =>
+      'Required for owners and admins in this workspace';
+
+  @override
+  String get twoStepSetUp => 'Set up an authenticator app';
+
+  @override
+  String get twoStepAddAnother => 'Add another authenticator';
+
+  @override
+  String get twoStepScan =>
+      'Scan this code with an authenticator app (such as 1Password, Google Authenticator or Authy), or type in the setup key, then enter the 6-digit code it shows.';
+
+  @override
+  String get twoStepKey => 'Setup key';
+
+  @override
+  String get twoStepCode => '6-digit code';
+
+  @override
+  String get twoStepVerify => 'Verify';
+
+  @override
+  String get twoStepNowOn => 'Two-step sign-in is on.';
+
+  @override
+  String get twoStepAuthenticators => 'Authenticator apps';
+
+  @override
+  String get twoStepRemove => 'Remove';
+
+  @override
+  String get twoStepRemoveConfirm =>
+      'Remove this authenticator app? If it\'s your only one, you\'ll sign in with just your password.';
+
+  @override
+  String get twoStepPromptTitle => 'Enter your code';
+
+  @override
+  String get twoStepPromptBody =>
+      'Open your authenticator app and enter the 6-digit code to finish signing in.';
+
+  @override
+  String get requireTwoStep => 'Require two-step sign-in for owners and admins';
+
+  @override
+  String get requireTwoStepHelp =>
+      'Owners and admins without it keep member access only until they sign in with it. Turn it on for yourself first.';
+
+  @override
+  String get twoStepNeededForAdmin =>
+      'This workspace requires two-step sign-in for owners and admins. Set it up, or sign in again with your code, to use admin settings.';
 }

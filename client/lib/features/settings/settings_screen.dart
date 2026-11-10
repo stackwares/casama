@@ -198,6 +198,15 @@ class SettingsScreen extends ConsumerWidget {
               GroupedCard(
                 children: [
                   GroupedTile(
+                    key: const Key('settingsTwoStep'),
+                    icon: LucideIcons.smartphone,
+                    title: l10n.twoStepSignIn,
+                    subtitle: org?.requireMfa == true && org?.role != OrgRole.member && !backend.twoStepVerified
+                        ? l10n.twoStepNeededForAdmin
+                        : l10n.twoStepHelp,
+                    onTap: () => context.push('/settings/two-step'),
+                  ),
+                  GroupedTile(
                     key: const Key('settingsPrivacy'),
                     icon: LucideIcons.shieldCheck,
                     title: l10n.privacy,

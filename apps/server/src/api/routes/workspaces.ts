@@ -41,7 +41,9 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
         .innerJoin(organizations, eq(organizations.id, memberships.orgId))
         .where(eq(memberships.userId, claims.sub))
         .orderBy(organizations.createdAt),
-    ).then((rows) => rows.map((r) => ({ ...orgOut(r.org), role: r.role })));
+    ).then((rows) =>
+      rows.map((r) => ({ ...orgOut(r.org), role: r.role, require_mfa: r.org.requireMfa })),
+    );
 
   app.openapi(routes.getMe, async (c) => {
     const claims = requireClaims(c.get("claims"));

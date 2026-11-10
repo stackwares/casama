@@ -539,6 +539,41 @@ class FakeBackend implements Backend {
 
   @override
   Future<int> retentionDays(String orgId) async => retention;
+
+  // Two-step sign-in
+  final twoStep = <TwoStepFactor>[];
+  @override
+  bool twoStepCodeNeeded = false;
+  @override
+  bool twoStepVerified = false;
+  bool requireTwoStepValue = false;
+  @override
+  Future<List<TwoStepFactor>> twoStepFactors() async => List.of(twoStep);
+  @override
+  Future<TwoStepEnrollment> startTwoStep() async => const TwoStepEnrollment(
+        factorId: 'f-new',
+        secret: 'JBSWY3DPEHPK3PXP',
+        uri: 'otpauth://totp/Kasama:tester@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Kasama',
+        qrSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>',
+      );
+  @override
+  Future<void> verifyTwoStep(String factorId, String code) async {
+    if (code != '123456') throw Exception('Invalid code');
+    twoStep.add(TwoStepFactor(id: factorId, name: 'Authenticator 1', createdAt: DateTime(2026)));
+    twoStepVerified = true;
+  }
+  @override
+  Future<void> passTwoStep(String code) async {
+    if (code != '123456') throw Exception('Invalid code');
+    twoStepCodeNeeded = false;
+    twoStepVerified = true;
+  }
+  @override
+  Future<void> removeTwoStep(String factorId) async => twoStep.removeWhere((f) => f.id == factorId);
+  @override
+  Future<bool> requireTwoStep(String orgId) async => requireTwoStepValue;
+  @override
+  Future<bool> setRequireTwoStep(String orgId, bool value) async => requireTwoStepValue = value;
   @override
   Future<int> setRetentionDays(String orgId, int days) async => retention = days;
   @override

@@ -18,9 +18,12 @@ export const Organization = z
   .openapi("Organization");
 export type Organization = z.infer<typeof Organization>;
 
-export const OrganizationWithRole = Organization.extend({ role: OrgRole }).openapi(
-  "OrganizationWithRole",
-);
+export const OrganizationWithRole = Organization.extend({
+  role: OrgRole,
+  require_mfa: z.boolean().optional().openapi({
+    description: "Owners and admins need two-step sign-in (an aal2 session) to use their powers",
+  }),
+}).openapi("OrganizationWithRole");
 
 export const CreateOrganizationRequest = z
   .object({

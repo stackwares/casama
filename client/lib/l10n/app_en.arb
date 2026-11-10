@@ -1613,5 +1613,25 @@
         "type": "String"
       }
     }
-  }
+  },
+  "twoStepSignIn": "Two-step sign-in",
+  "twoStepHelp": "Ask for a code from an authenticator app whenever you sign in.",
+  "twoStepIsOn": "On",
+  "twoStepIsOff": "Off",
+  "twoStepRequiredHere": "Required for owners and admins in this workspace",
+  "twoStepSetUp": "Set up an authenticator app",
+  "twoStepAddAnother": "Add another authenticator",
+  "twoStepScan": "Scan this code with an authenticator app (such as 1Password, Google Authenticator or Authy), or type in the setup key, then enter the 6-digit code it shows.",
+  "twoStepKey": "Setup key",
+  "twoStepCode": "6-digit code",
+  "twoStepVerify": "Verify",
+  "twoStepNowOn": "Two-step sign-in is on.",
+  "twoStepAuthenticators": "Authenticator apps",
+  "twoStepRemove": "Remove",
+  "twoStepRemoveConfirm": "Remove this authenticator app? If it's your only one, you'll sign in with just your password.",
+  "twoStepPromptTitle": "Enter your code",
+  "twoStepPromptBody": "Open your authenticator app and enter the 6-digit code to finish signing in.",
+  "requireTwoStep": "Require two-step sign-in for owners and admins",
+  "requireTwoStepHelp": "Owners and admins without it keep member access only until they sign in with it. Turn it on for yourself first.",
+  "twoStepNeededForAdmin": "This workspace requires two-step sign-in for owners and admins. Set it up, or sign in again with your code, to use admin settings."
 }

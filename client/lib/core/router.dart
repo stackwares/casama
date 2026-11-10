@@ -31,6 +31,7 @@ import '../features/companion/companion_screen.dart';
 import '../features/quick_ask/quick_ask_screen.dart';
 import '../features/voice/call_screen.dart';
 import '../features/workspaces/onboarding_screen.dart';
+import '../features/auth/two_step_screen.dart';
 import 'providers.dart';
 import 'telemetry.dart';
 
@@ -61,6 +62,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (signedIn.isLoading) return null;
       final loc = state.matchedLocation;
       if (signedIn.value != true) return loc == '/sign-in' ? null : '/sign-in';
+      // Two-step sign-in (D-092): the code comes before anything else.
+      final codeNeeded = ref.read(backendProvider).twoStepCodeNeeded;
+      if (codeNeeded) return loc == '/two-step' ? null : '/two-step';
+      if (loc == '/two-step') return '/bots';
       final orgs = ref.read(organizationsProvider);
       if (orgs.isLoading) return loc == '/sign-in' ? '/bots' : null;
       final hasOrg = (orgs.value ?? const []).isNotEmpty;
@@ -73,6 +78,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/sign-in', pageBuilder: _page((_, _) => const SignInScreen())),
       GoRoute(path: '/onboarding', pageBuilder: _page((_, _) => const OnboardingScreen())),
+      GoRoute(path: '/two-step', pageBuilder: _page((_, _) => const TwoStepPromptScreen())),
       ShellRoute(
         pageBuilder: (context, state, child) => MaterialPage(
           key: state.pageKey,
@@ -166,6 +172,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'admin', pageBuilder: _page((_, _) => const AdminScreen())),
               GoRoute(path: 'billing', pageBuilder: _page((_, _) => const BillingScreen())),
               GoRoute(path: 'privacy', pageBuilder: _page((_, _) => const PrivacyScreen())),
+              GoRoute(path: 'two-step', pageBuilder: _page((_, _) => const TwoStepSettingsScreen())),
             ],
           ),
         ],

@@ -4983,6 +4983,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Switched to the next model: {message}'**
   String modelFallbackNotice(String message);
+
+  /// No description provided for @twoStepSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step sign-in'**
+  String get twoStepSignIn;
+
+  /// No description provided for @twoStepHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for a code from an authenticator app whenever you sign in.'**
+  String get twoStepHelp;
+
+  /// No description provided for @twoStepIsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get twoStepIsOn;
+
+  /// No description provided for @twoStepIsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get twoStepIsOff;
+
+  /// No description provided for @twoStepRequiredHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Required for owners and admins in this workspace'**
+  String get twoStepRequiredHere;
+
+  /// No description provided for @twoStepSetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up an authenticator app'**
+  String get twoStepSetUp;
+
+  /// No description provided for @twoStepAddAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another authenticator'**
+  String get twoStepAddAnother;
+
+  /// No description provided for @twoStepScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this code with an authenticator app (such as 1Password, Google Authenticator or Authy), or type in the setup key, then enter the 6-digit code it shows.'**
+  String get twoStepScan;
+
+  /// No description provided for @twoStepKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup key'**
+  String get twoStepKey;
+
+  /// No description provided for @twoStepCode.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get twoStepCode;
+
+  /// No description provided for @twoStepVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get twoStepVerify;
+
+  /// No description provided for @twoStepNowOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step sign-in is on.'**
+  String get twoStepNowOn;
+
+  /// No description provided for @twoStepAuthenticators.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticator apps'**
+  String get twoStepAuthenticators;
+
+  /// No description provided for @twoStepRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get twoStepRemove;
+
+  /// No description provided for @twoStepRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this authenticator app? If it\'s your only one, you\'ll sign in with just your password.'**
+  String get twoStepRemoveConfirm;
+
+  /// No description provided for @twoStepPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your code'**
+  String get twoStepPromptTitle;
+
+  /// No description provided for @twoStepPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your authenticator app and enter the 6-digit code to finish signing in.'**
+  String get twoStepPromptBody;
+
+  /// No description provided for @requireTwoStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Require two-step sign-in for owners and admins'**
+  String get requireTwoStep;
+
+  /// No description provided for @requireTwoStepHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Owners and admins without it keep member access only until they sign in with it. Turn it on for yourself first.'**
+  String get requireTwoStepHelp;
+
+  /// No description provided for @twoStepNeededForAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'This workspace requires two-step sign-in for owners and admins. Set it up, or sign in again with your code, to use admin settings.'**
+  String get twoStepNeededForAdmin;
 }
 
 class _AppLocalizationsDelegate

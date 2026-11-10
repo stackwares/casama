@@ -56,10 +56,13 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }
   };
   const settings = async (orgId: string) => {
-    const [o] = await db.execute<{ run_event_retention_days: number }>(
-      sql`select run_event_retention_days from public.organizations where id = ${orgId}::uuid`,
+    const [o] = await db.execute<{ run_event_retention_days: number; require_mfa: boolean }>(
+      sql`select run_event_retention_days, require_mfa from public.organizations where id = ${orgId}::uuid`,
     );
-    return { run_event_retention_days: o?.run_event_retention_days ?? 180 };
+    return {
+      run_event_retention_days: o?.run_event_retention_days ?? 180,
+      require_mfa: o?.require_mfa ?? false,
+    };
   };
 
   app.openapi(routes.getOrgSettings, async (c) => {
@@ -74,9 +77,21 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const { id } = c.req.valid("param");
     const body = c.req.valid("json");
     await role(claims, id, "admin");
-    if (body.run_event_retention_days != null) {
-      await db.execute(sql`
-        update public.organizations set run_event_retention_days = ${body.run_event_retention_days} where id = ${id}::uuid`);
+    if (body.require_mfa === true && claims.aal !== "aal2") {
+      // Turning it on without a second step would lock the person out of their own admin powers.
+      throw new ApiError(
+        403,
+        "mfa_required",
+        "Set up two-step sign-in and sign in with it before requiring it for the workspace",
+      );
+    }
+    if (body.run_event_retention_days != null || body.require_mfa != null) {
+      if (body.run_event_retention_days != null)
+        await db.execute(sql`
+          update public.organizations set run_event_retention_days = ${body.run_event_retention_days} where id = ${id}::uuid`);
+      if (body.require_mfa != null)
+        await db.execute(sql`
+          update public.organizations set require_mfa = ${body.require_mfa} where id = ${id}::uuid`);
       await db.execute(sql`
         insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
         values (${id}::uuid, 'user', ${claims.sub}::uuid, 'org.settings', 'organization', ${id}::uuid, ${JSON.stringify(body)}::jsonb)`);

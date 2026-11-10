@@ -9,6 +9,8 @@ part of 'update_org_settings_request.dart';
 abstract class _$UpdateOrgSettingsRequestCWProxy {
   UpdateOrgSettingsRequest runEventRetentionDays(int? runEventRetentionDays);
 
+  UpdateOrgSettingsRequest requireMfa(bool? requireMfa);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateOrgSettingsRequest(...).copyWith.fieldName(value)`.
@@ -17,7 +19,7 @@ abstract class _$UpdateOrgSettingsRequestCWProxy {
   /// ```dart
   /// UpdateOrgSettingsRequest(...).copyWith(id: 12, name: "My name")
   /// ```
-  UpdateOrgSettingsRequest call({int? runEventRetentionDays});
+  UpdateOrgSettingsRequest call({int? runEventRetentionDays, bool? requireMfa});
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -32,6 +34,10 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
   UpdateOrgSettingsRequest runEventRetentionDays(int? runEventRetentionDays) =>
       call(runEventRetentionDays: runEventRetentionDays);
 
+  @override
+  UpdateOrgSettingsRequest requireMfa(bool? requireMfa) =>
+      call(requireMfa: requireMfa);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateOrgSettingsRequest(...).copyWith.fieldName(value)`.
@@ -43,6 +49,7 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
   @override
   UpdateOrgSettingsRequest call({
     Object? runEventRetentionDays = const $CopyWithPlaceholder(),
+    Object? requireMfa = const $CopyWithPlaceholder(),
   }) {
     return UpdateOrgSettingsRequest(
       runEventRetentionDays:
@@ -50,6 +57,10 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
           ? _value.runEventRetentionDays
           // ignore: cast_nullable_to_non_nullable
           : runEventRetentionDays as int?,
+      requireMfa: requireMfa == const $CopyWithPlaceholder()
+          ? _value.requireMfa
+          // ignore: cast_nullable_to_non_nullable
+          : requireMfa as bool?,
     );
   }
 }
@@ -68,18 +79,28 @@ extension $UpdateOrgSettingsRequestCopyWith on UpdateOrgSettingsRequest {
 
 UpdateOrgSettingsRequest _$UpdateOrgSettingsRequestFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate('UpdateOrgSettingsRequest', json, ($checkedConvert) {
-  final val = UpdateOrgSettingsRequest(
-    runEventRetentionDays: $checkedConvert(
-      'run_event_retention_days',
-      (v) => (v as num?)?.toInt(),
-    ),
-  );
-  return val;
-}, fieldKeyMap: const {'runEventRetentionDays': 'run_event_retention_days'});
+) => $checkedCreate(
+  'UpdateOrgSettingsRequest',
+  json,
+  ($checkedConvert) {
+    final val = UpdateOrgSettingsRequest(
+      runEventRetentionDays: $checkedConvert(
+        'run_event_retention_days',
+        (v) => (v as num?)?.toInt(),
+      ),
+      requireMfa: $checkedConvert('require_mfa', (v) => v as bool?),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'runEventRetentionDays': 'run_event_retention_days',
+    'requireMfa': 'require_mfa',
+  },
+);
 
 Map<String, dynamic> _$UpdateOrgSettingsRequestToJson(
   UpdateOrgSettingsRequest instance,
 ) => <String, dynamic>{
   'run_event_retention_days': ?instance.runEventRetentionDays,
+  'require_mfa': ?instance.requireMfa,
 };

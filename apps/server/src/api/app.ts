@@ -5,6 +5,7 @@ import { pgErrorCode, pgErrorMessage } from "@kasama/db";
 import { registerEnterpriseRoutes } from "@kasama/ee";
 import { captureError } from "@kasama/observability";
 import { Scalar } from "@scalar/hono-api-reference";
+import { sql } from "drizzle-orm";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { registerConnectRoutes } from "../billing/connect.ts";
@@ -42,8 +43,36 @@ export function createApp(deps: AppDeps) {
   });
   registerComponents(app);
 
-  app.onError((err, c) => {
-    if (err instanceof ApiError) return problem(c, err);
+  app.onError(async (err, c) => {
+    if (err instanceof ApiError) {
+      // An owner or admin held back only by a missing second step gets a clear answer (D-092).
+      const claims = c.get("claims");
+      if (
+        err.status === 403 &&
+        err.code === "forbidden" &&
+        err.message.startsWith("Only owners and admins") &&
+        claims &&
+        claims.aal !== "aal2"
+      ) {
+        const [row] = await deps.db
+          .execute<{ blocked: boolean }>(sql`
+            select exists (
+              select 1 from public.memberships m join public.organizations o on o.id = m.org_id
+              where m.user_id = ${claims.sub}::uuid and m.role in ('owner', 'admin') and o.require_mfa
+            ) as blocked`)
+          .catch(() => [] as Array<{ blocked: boolean }>);
+        if (row?.blocked)
+          return problem(
+            c,
+            new ApiError(
+              403,
+              "mfa_required",
+              "This workspace requires two-step sign-in for owners and admins. Sign in with your second step and try again.",
+            ),
+          );
+      }
+      return problem(c, err);
+    }
     if (err instanceof HTTPException) {
       return problem(
         c,

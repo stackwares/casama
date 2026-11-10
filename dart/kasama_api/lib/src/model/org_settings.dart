@@ -21,6 +21,8 @@ class OrgSettings {
   OrgSettings({
 
     required  this.runEventRetentionDays,
+
+    required  this.requireMfa,
   });
 
           // minimum: 7
@@ -37,15 +39,30 @@ class OrgSettings {
 
 
 
+      /// Owners and admins must use two-step sign-in (turning it on needs an aal2 session)
+  @JsonKey(
+    
+    name: r'require_mfa',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final bool requireMfa;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is OrgSettings &&
-      other.runEventRetentionDays == runEventRetentionDays;
+      other.runEventRetentionDays == runEventRetentionDays &&
+      other.requireMfa == requireMfa;
 
     @override
     int get hashCode =>
-        runEventRetentionDays.hashCode;
+        runEventRetentionDays.hashCode +
+        requireMfa.hashCode;
 
   factory OrgSettings.fromJson(Map<String, dynamic> json) => _$OrgSettingsFromJson(json);
 
