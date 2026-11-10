@@ -1570,3 +1570,36 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - Grants only for usable bots; revoking; retention.
   - pgTAP: owner-only rows; grants and readings can't be written directly.
   - App: day grouping and contact chunks; the permission-first switch; answering reads and writes and refusing unshared kinds; the settings screen (on, keep for, revoke); the chat card.
+
+## D-150 Health data
+
+- **Summaries only, by schema:**
+  - Health uploads are a day summary or a workout summary:
+    - Day: sleep start, end, minutes and stage minutes, steps, active energy, workout count, resting heart rate, heart-rate variability and weight.
+    - Workout: activity, start, end, minutes, energy, distance and average heart rate.
+  - Both are strict zod schemas in contracts, and the API refuses anything else (`bad_health_summary`). Raw samples, such as heart-rate series or sleep segments, can't reach the server, so they can't reach a model either.
+  - The app reduces Apple Health and Health Connect data to these summaries on the device (`healthSummaries`). Sleep counts for the morning it ends, and it uses stage minutes when the source has them, else asleep time, else the session minus awake time. HRV is SDNN on iOS and RMSSD on Android.
+- **Sensitive extras:**
+  - Cycle tracking, blood glucose and blood pressure are separate switches on the Health kind (`extras`), off by default.
+  - Their system permissions are asked only when switched on. The server drops any extra the person didn't turn on, whatever the device sends.
+- **Trends without a model:** `device.read health` adds `vs_usual` to each day: sleep, steps, active energy, resting heart rate and HRV against the person's own previous 30 days (at least 5 earlier days). It uses neutral words only: "lower than your usual", "about your usual", "higher than your usual". Health results carry the "not medical advice" rule (D-149).
+- **Encryption at rest:**
+  - Every device reading is sealed with the content key (D-136) of the oldest workspace the person owns that has encryption on, when there is one. Live-only results waiting on a run are sealed too.
+  - Reads decrypt transparently.
+  - `HEALTH_REQUIRES_ENCRYPTION` defaults to `auto`, which means required when billing is on (Kasama Cloud). There, health uploads without such a workspace are refused with `health_needs_encryption` instead of stored in the clear. Self-hosted servers keep the data on their own machine either way.
+- **App:**
+  - Health appears in Device connections on iOS and Android, with the extras switches and the "not medical advice" note.
+  - Uploads cover the last 7 days on launch and resume, so a missed morning catches up and the baseline fills in. Background delivery comes with device triggers (D-151).
+  - Platform setup:
+    - iOS: HealthKit entitlement and purpose strings, read-only.
+    - Android: Health Connect read permissions, the permissions-rationale intent, the Android 14 permission-usage alias, the Health Connect package query, and `MainActivity` as a `FlutterFragmentActivity` (the permission screen needs it).
+- **Welcome chat:** the "Health and habits" pick: an intro that says it isn't a doctor, a first task ("What habit would you like to build?") and the personal-assistant starter. For health and errands picks, a phone-connections card ("Choose what to share") opens Device connections.
+- **Tests:**
+  - API (`health-data.test.ts`, with encryption required):
+    - Refused until encryption is on, then stored sealed and read back.
+    - Raw samples and unknown summary types refused.
+    - An extra dropped until it's turned on.
+    - A bot reading last night's sleep gets "lower than your usual" from summaries alone.
+  - Agent: trend rules (thresholds, the 30-day window, enough history, later days never counting) and private model URLs.
+  - App: day and workout summaries (sleep attribution, stages, sums and averages, extras only when on).
+  - The wake-up brief that cites last night's sleep is tested with the wake-up trigger (D-151).

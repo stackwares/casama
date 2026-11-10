@@ -4,8 +4,8 @@
  * which bots may read which kinds. Everything here is the signed-in person's own data.
  */
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
+import { HealthSummary, routes } from "@kasama/contracts";
+import { contentKeys, type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -35,6 +35,14 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
       update public.device_sources set last_seen_at = now() where user_id = ${userId}::uuid and device_key = ${key} returning *`);
     if (!s) throw new ApiError(404, "device_not_found", "This device isn't registered; save it first");
     return s;
+  };
+  // Health (D-150): sealed with the content key of a workspace the person owns; on Kasama Cloud
+  // it isn't stored at all without one.
+  const healthNeedsKey = deps.env.HEALTH_REQUIRES_ENCRYPTION === "on" || (deps.env.HEALTH_REQUIRES_ENCRYPTION === "auto" && deps.env.BILLING_ENABLED);
+  const keyOrg = async (userId: string) => {
+    const owned = await db.execute<{ org_id: string }>(sql`
+      select m.org_id from public.memberships m where m.user_id = ${userId}::uuid and m.role = 'owner' order by m.created_at`);
+    return owned.map((o) => o.org_id).find((id) => contentKeys.seals(id)) ?? null;
   };
   const grants = async (userId: string, botId?: string) => {
     const rows = await db.execute<{ bot_id: string; bot_name: string; kind: string; created_at: Date }>(sql`
@@ -83,8 +91,22 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     const { key } = c.req.valid("param");
     const b = c.req.valid("json");
     const s = await source(userId, key);
+    const health = b.readings.some((r) => r.kind === "health");
+    const sealWith = health || b.readings.length ? await keyOrg(userId) : null;
+    if (health && healthNeedsKey && !sealWith)
+      throw new ApiError(409, "health_needs_encryption", "Health data is stored only with encryption at rest on. Turn it on for a workspace you own (Settings → Workspace → Encryption).");
+    const extras = new Set((s.kinds.health as { extras?: string[] } | undefined)?.extras ?? []);
     for (const r of b.readings) {
       if (!(r.kind in s.kinds)) throw new ApiError(400, "kind_off", `${r.kind} is turned off on this device`);
+      if (r.kind === "health") {
+        // Summaries only: anything else (raw samples, unknown fields) is refused.
+        const parsed = HealthSummary.safeParse(r.summary);
+        if (!parsed.success) throw new ApiError(400, "bad_health_summary", `Health uploads are daily or workout summaries: ${parsed.error.issues[0]?.message ?? "invalid"}`);
+        // Sensitive extras the person didn't turn on are dropped.
+        const v = { ...parsed.data } as Record<string, unknown>;
+        for (const k of ["cycle", "glucose", "blood_pressure"]) if (!extras.has(k)) delete v[k];
+        r.summary = v;
+      }
       if (new Date(r.period_end) < new Date(r.period_start)) throw new ApiError(400, "bad_period", "period_end is before period_start");
       if (JSON.stringify(r.summary).length > MAX_SUMMARY_BYTES) throw new ApiError(400, "summary_too_large", "Each summary must be under 64 KB");
     }
@@ -93,13 +115,13 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     for (const r of keep)
       await db.execute(sql`
         insert into public.device_readings (user_id, source_id, kind, period_start, period_end, external_id, summary)
-        values (${userId}::uuid, ${s.id}::uuid, ${r.kind}, ${r.period_start}::timestamptz, ${r.period_end}::timestamptz, ${r.external_id}, ${JSON.stringify(r.summary)}::jsonb)
+        values (${userId}::uuid, ${s.id}::uuid, ${r.kind}, ${r.period_start}::timestamptz, ${r.period_end}::timestamptz, ${r.external_id}, ${contentKeys.sealJson(sealWith, r.summary)}::jsonb)
         on conflict (source_id, kind, external_id) do update set period_start = excluded.period_start, period_end = excluded.period_end, summary = excluded.summary, collected_at = now()`);
     if (b.request_id) {
       const live = b.readings.filter((r) => !keep.includes(r));
       await db.execute(sql`
         update public.device_requests set status = 'done', answered_at = now(),
-          result = ${JSON.stringify({ stored: keep.length, ...(live.length ? { live } : {}) })}::jsonb
+          result = ${contentKeys.sealJson(sealWith, { stored: keep.length, ...(live.length ? { live } : {}) })}::jsonb
         where id = ${b.request_id}::uuid and user_id = ${userId}::uuid and source_id = ${s.id}::uuid and status = 'pending'`);
     }
     return c.json({ stored: keep.length }, 200);

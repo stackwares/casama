@@ -11036,6 +11036,18 @@
           "private_model": {
             "type": "boolean",
             "description": "Only bots on a private (local) model may read this kind"
+          },
+          "extras": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "cycle",
+                "glucose",
+                "blood_pressure"
+              ]
+            },
+            "description": "Health only: sensitive extras the person turned on (off by default)"
           }
         }
       },

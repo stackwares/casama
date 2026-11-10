@@ -10,6 +10,10 @@ export const DeviceKindSettings = z
   .object({
     retention_days: z.number().int().min(0).max(365).optional().openapi({ description: "0 keeps nothing (live only); the default is 365 for daily summaries, 90 for places and notifications" }),
     private_model: z.boolean().optional().openapi({ description: "Only bots on a private (local) model may read this kind" }),
+    extras: z
+      .array(z.enum(["cycle", "glucose", "blood_pressure"]))
+      .optional()
+      .openapi({ description: "Health only: sensitive extras the person turned on (off by default)" }),
   })
   .openapi("DeviceKindSettings");
 
@@ -83,3 +87,50 @@ export const DeviceGrant = z
   .openapi("DeviceGrant");
 
 export const SetDeviceGrantRequest = z.object({ bot_id: Uuid, kind: DeviceKind, allowed: z.boolean() }).openapi("SetDeviceGrantRequest");
+
+/**
+ * Health summaries (D-150). Strict shapes: devices send daily and per-workout summaries only, so raw
+ * samples (heart-rate series, sleep segments) never reach the server or a model.
+ */
+const n = z.number().finite();
+export const HealthDaySummary = z
+  .object({
+    type: z.literal("day"),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    sleep: z
+      .object({
+        start: z.string().max(40).optional(),
+        end: z.string().max(40).optional(),
+        minutes: n.min(0).max(1440),
+        stages: z.object({ deep: n.min(0).optional(), rem: n.min(0).optional(), light: n.min(0).optional(), awake: n.min(0).optional() }).strict().optional(),
+      })
+      .strict()
+      .optional(),
+    steps: n.min(0).optional(),
+    active_energy_kcal: n.min(0).optional(),
+    workouts: n.int().min(0).optional(),
+    resting_hr: n.min(0).max(300).optional(),
+    hrv_ms: n.min(0).max(500).optional(),
+    weight_kg: n.min(0).max(700).optional(),
+    cycle: z.object({ flow: z.string().max(20).optional(), day: n.int().min(1).max(100).optional() }).strict().optional(),
+    glucose: z.object({ avg_mg_dl: n.min(0), min_mg_dl: n.min(0).optional(), max_mg_dl: n.min(0).optional() }).strict().optional(),
+    blood_pressure: z.object({ systolic: n.min(0), diastolic: n.min(0) }).strict().optional(),
+  })
+  .strict()
+  .openapi("HealthDaySummary");
+
+export const HealthWorkoutSummary = z
+  .object({
+    type: z.literal("workout"),
+    activity: z.string().max(60),
+    start: z.string().max(40),
+    end: z.string().max(40),
+    minutes: n.min(0).max(2880),
+    energy_kcal: n.min(0).optional(),
+    distance_m: n.min(0).optional(),
+    avg_hr: n.min(0).max(300).optional(),
+  })
+  .strict()
+  .openapi("HealthWorkoutSummary");
+
+export const HealthSummary = z.discriminatedUnion("type", [HealthDaySummary, HealthWorkoutSummary]);

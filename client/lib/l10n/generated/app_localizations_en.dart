@@ -5439,4 +5439,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deviceConnectionsRowHelp =>
       'Calendar, contacts and more from this device';
+
+  @override
+  String get healthExtraCycle => 'Cycle tracking';
+
+  @override
+  String get healthExtraGlucose => 'Blood glucose';
+
+  @override
+  String get healthExtraBloodPressure => 'Blood pressure';
+
+  @override
+  String get healthNotMedical =>
+      'Daily summaries only (sleep, activity, workouts, heart). Bots describe how you compare with your usual and never give medical advice.';
+
+  @override
+  String get healthNeedsEncryption =>
+      'Health data needs encryption at rest. Turn it on for a workspace you own, then try again.';
 }

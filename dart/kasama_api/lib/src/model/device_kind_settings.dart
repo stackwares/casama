@@ -23,6 +23,8 @@ class DeviceKindSettings {
      this.retentionDays,
 
      this.privateModel,
+
+     this.extras,
   });
 
       /// 0 keeps nothing (live only); the default is 365 for daily summaries, 90 for places and notifications
@@ -53,17 +55,32 @@ class DeviceKindSettings {
 
 
 
+      /// Health only: sensitive extras the person turned on (off by default)
+  @JsonKey(
+    
+    name: r'extras',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<DeviceKindSettingsExtrasEnum>? extras;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is DeviceKindSettings &&
       other.retentionDays == retentionDays &&
-      other.privateModel == privateModel;
+      other.privateModel == privateModel &&
+      other.extras == extras;
 
     @override
     int get hashCode =>
         retentionDays.hashCode +
-        privateModel.hashCode;
+        privateModel.hashCode +
+        extras.hashCode;
 
   factory DeviceKindSettings.fromJson(Map<String, dynamic> json) => _$DeviceKindSettingsFromJson(json);
 
@@ -75,4 +92,22 @@ class DeviceKindSettings {
   }
 
 }
+
+
+enum DeviceKindSettingsExtrasEnum {
+@JsonValue(r'cycle')
+cycle(r'cycle'),
+@JsonValue(r'glucose')
+glucose(r'glucose'),
+@JsonValue(r'blood_pressure')
+bloodPressure(r'blood_pressure');
+
+const DeviceKindSettingsExtrasEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
 

@@ -1,18 +1,21 @@
 import 'package:device_calendar/device_calendar.dart' as dc;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:health/health.dart' as hc;
 import 'package:kasama_sdk/kasama_sdk.dart';
+
+import 'health_summary.dart';
 
 /// Reads (and for calendar, writes) the data a person shares from this device (D-149).
 abstract class DeviceCollector {
   /// Kinds this platform can share.
   Set<DeviceKind> get supported;
 
-  /// Shows the system permission prompt (only when the person turns a kind on).
-  Future<bool> requestPermission(DeviceKind kind);
+  /// Shows the system permission prompt (only when the person turns a kind on, or an extra).
+  Future<bool> requestPermission(DeviceKind kind, {DeviceKindSettings? settings});
 
   /// Summaries for [from]..[to] (or the whole set, for contacts).
-  Future<List<DeviceReadingInput>> collect(DeviceKind kind, DateTime from, DateTime to);
+  Future<List<DeviceReadingInput>> collect(DeviceKind kind, DateTime from, DateTime to, {DeviceKindSettings? settings});
 
   /// Does a write a run asked for (`calendar.create`, `reminders.create`); returns the result.
   Future<Map<String, Object?>> write(String action, Map<String, Object?> params);
@@ -80,12 +83,68 @@ class PluginDeviceCollector implements DeviceCollector {
 
   bool get _mobile => !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
 
-  @override
-  Set<DeviceKind> get supported => {if (_mobile) DeviceKind.calendar, if (_mobile || (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS)) DeviceKind.contacts};
+  final _health = hc.Health();
+  var _healthReady = false;
+
+  // Read-only types for the daily summary; the extras only when turned on (D-150).
+  static List<hc.HealthDataType> _healthTypes(DeviceKindSettings? s) => [
+    hc.HealthDataType.SLEEP_SESSION,
+    hc.HealthDataType.SLEEP_ASLEEP,
+    hc.HealthDataType.SLEEP_DEEP,
+    hc.HealthDataType.SLEEP_REM,
+    hc.HealthDataType.SLEEP_LIGHT,
+    hc.HealthDataType.SLEEP_AWAKE,
+    hc.HealthDataType.STEPS,
+    hc.HealthDataType.ACTIVE_ENERGY_BURNED,
+    hc.HealthDataType.WORKOUT,
+    hc.HealthDataType.RESTING_HEART_RATE,
+    if (defaultTargetPlatform == TargetPlatform.iOS) hc.HealthDataType.HEART_RATE_VARIABILITY_SDNN else hc.HealthDataType.HEART_RATE_VARIABILITY_RMSSD,
+    hc.HealthDataType.WEIGHT,
+    if (s?.extras?.any((e) => e.value == 'glucose') ?? false) hc.HealthDataType.BLOOD_GLUCOSE,
+    if (s?.extras?.any((e) => e.value == 'blood_pressure') ?? false) ...[hc.HealthDataType.BLOOD_PRESSURE_SYSTOLIC, hc.HealthDataType.BLOOD_PRESSURE_DIASTOLIC],
+    if (s?.extras?.any((e) => e.value == 'cycle') ?? false) hc.HealthDataType.MENSTRUATION_FLOW,
+  ];
+
+  Future<void> _healthInit() async {
+    if (_healthReady) return;
+    await _health.configure();
+    _healthReady = true;
+  }
+
+  static String? _pointType(hc.HealthDataType t) => switch (t) {
+    hc.HealthDataType.SLEEP_SESSION => 'sleep_session',
+    hc.HealthDataType.SLEEP_ASLEEP => 'sleep_asleep',
+    hc.HealthDataType.SLEEP_DEEP => 'sleep_deep',
+    hc.HealthDataType.SLEEP_REM => 'sleep_rem',
+    hc.HealthDataType.SLEEP_LIGHT => 'sleep_light',
+    hc.HealthDataType.SLEEP_AWAKE => 'sleep_awake',
+    hc.HealthDataType.STEPS => 'steps',
+    hc.HealthDataType.ACTIVE_ENERGY_BURNED => 'active_energy',
+    hc.HealthDataType.WORKOUT => 'workout',
+    hc.HealthDataType.RESTING_HEART_RATE => 'resting_hr',
+    hc.HealthDataType.HEART_RATE_VARIABILITY_SDNN || hc.HealthDataType.HEART_RATE_VARIABILITY_RMSSD => 'hrv',
+    hc.HealthDataType.WEIGHT => 'weight',
+    hc.HealthDataType.BLOOD_GLUCOSE => 'glucose',
+    hc.HealthDataType.BLOOD_PRESSURE_SYSTOLIC => 'bp_sys',
+    hc.HealthDataType.BLOOD_PRESSURE_DIASTOLIC => 'bp_dia',
+    hc.HealthDataType.MENSTRUATION_FLOW => 'menstruation',
+    _ => null,
+  };
 
   @override
-  Future<bool> requestPermission(DeviceKind kind) async {
+  Set<DeviceKind> get supported => {
+    if (_mobile) DeviceKind.calendar,
+    if (_mobile) DeviceKind.health,
+    if (_mobile || (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS)) DeviceKind.contacts,
+  };
+
+  @override
+  Future<bool> requestPermission(DeviceKind kind, {DeviceKindSettings? settings}) async {
     switch (kind) {
+      case DeviceKind.health:
+        await _healthInit();
+        final types = _healthTypes(settings);
+        return _health.requestAuthorization(types, permissions: [for (final _ in types) hc.HealthDataAccess.READ]);
       case DeviceKind.calendar:
         final has = await _calendar.hasPermissions();
         if (has.data == true) return true;
@@ -99,8 +158,25 @@ class PluginDeviceCollector implements DeviceCollector {
   }
 
   @override
-  Future<List<DeviceReadingInput>> collect(DeviceKind kind, DateTime from, DateTime to) async {
+  Future<List<DeviceReadingInput>> collect(DeviceKind kind, DateTime from, DateTime to, {DeviceKindSettings? settings}) async {
     switch (kind) {
+      case DeviceKind.health:
+        await _healthInit();
+        final raw = await _health.getHealthDataFromTypes(types: _healthTypes(settings), startTime: from.subtract(const Duration(hours: 18)), endTime: to);
+        final points = <HealthPoint>[];
+        for (final p in raw) {
+          final t = _pointType(p.type);
+          if (t == null) continue;
+          final v = p.value;
+          if (v is hc.WorkoutHealthValue) {
+            points.add((type: t, from: p.dateFrom, to: p.dateTo, value: 0, activity: v.workoutActivityType.name, energy: v.totalEnergyBurned, distance: v.totalDistance));
+          } else if (v is hc.NumericHealthValue) {
+            points.add((type: t, from: p.dateFrom, to: p.dateTo, value: v.numericValue, activity: null, energy: null, distance: null));
+          } else if (t.startsWith('sleep') || t == 'menstruation') {
+            points.add((type: t, from: p.dateFrom, to: p.dateTo, value: 0, activity: null, energy: null, distance: null));
+          }
+        }
+        return healthSummaries(points, from, to, extras: {for (final e in settings?.extras ?? const <DeviceKindSettingsExtrasEnum>[]) e.value});
       case DeviceKind.calendar:
         final cals = (await _calendar.retrieveCalendars()).data ?? const <dc.Calendar>[];
         final events = <({String title, DateTime start, DateTime end, bool allDay, String? location, String calendar})>[];

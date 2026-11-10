@@ -321,6 +321,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 ## Devices (Wave 4, D-149 onward)
 
 - D-149: `device_sources`, `device_readings`, `device_grants`, `device_requests` (realtime broadcast trigger); `apps/server/src/api/routes/device-data.ts`; `packages/agent/src/device-data.ts` (`device.read`, `device.request_access`, `device.calendar.create`, `device.reminders.create`, `purgeDeviceData`); `client/lib/features/devices/` (collectors, `DeviceSync`, Settings → Device connections) and `DeviceAccessPrompt` in chat.
+- D-150: `HealthSummary` schemas in `packages/contracts/src/device-data.ts`; health validation, extras and sealing in `routes/device-data.ts`; `healthTrends` in `packages/agent/src/device-data.ts`; `client/lib/features/devices/health_summary.dart` and the `health` plugin collector; the "Health and habits" welcome pick.
 
 ## Production and launch (Phase 8)
 

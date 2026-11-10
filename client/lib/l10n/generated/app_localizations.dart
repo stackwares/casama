@@ -9309,6 +9309,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Calendar, contacts and more from this device'**
   String get deviceConnectionsRowHelp;
+
+  /// No description provided for @healthExtraCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle tracking'**
+  String get healthExtraCycle;
+
+  /// No description provided for @healthExtraGlucose.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood glucose'**
+  String get healthExtraGlucose;
+
+  /// No description provided for @healthExtraBloodPressure.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood pressure'**
+  String get healthExtraBloodPressure;
+
+  /// No description provided for @healthNotMedical.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily summaries only (sleep, activity, workouts, heart). Bots describe how you compare with your usual and never give medical advice.'**
+  String get healthNotMedical;
+
+  /// No description provided for @healthNeedsEncryption.
+  ///
+  /// In en, this message translates to:
+  /// **'Health data needs encryption at rest. Turn it on for a workspace you own, then try again.'**
+  String get healthNeedsEncryption;
 }
 
 class _AppLocalizationsDelegate

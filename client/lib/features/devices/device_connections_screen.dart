@@ -161,7 +161,7 @@ class _KindCard extends StatelessWidget {
                     for (final d in const [0, 7, 30, 90, 365])
                       if (d <= defaultRetentionDays(kind)) DropdownMenuItem(value: d, child: Text(d == 0 ? l10n.deviceKeepLiveOnly : l10n.deviceKeepDays(d))),
                   ],
-                  onChanged: (d) => d == null ? null : onSettings(DeviceKindSettings(retentionDays: d, privateModel: settings?.privateModel)),
+                  onChanged: (d) => d == null ? null : onSettings(DeviceKindSettings(retentionDays: d, privateModel: settings?.privateModel, extras: settings?.extras)),
                 ),
               ],
             ),
@@ -172,8 +172,30 @@ class _KindCard extends StatelessWidget {
               title: Text(l10n.devicePrivateModel),
               subtitle: Text(l10n.devicePrivateModelHelp),
               value: settings?.privateModel ?? false,
-              onChanged: (v) => onSettings(DeviceKindSettings(retentionDays: settings?.retentionDays, privateModel: v)),
+              onChanged: (v) => onSettings(DeviceKindSettings(retentionDays: settings?.retentionDays, privateModel: v, extras: settings?.extras)),
             ),
+            // Health (D-150): sensitive extras are separate switches, off by default.
+            if (kind == DeviceKind.health)
+              for (final x in DeviceKindSettingsExtrasEnum.values)
+                SwitchListTile(
+                  key: Key('healthExtra-${x.value}'),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  title: Text(switch (x) {
+                    DeviceKindSettingsExtrasEnum.cycle => l10n.healthExtraCycle,
+                    DeviceKindSettingsExtrasEnum.glucose => l10n.healthExtraGlucose,
+                    DeviceKindSettingsExtrasEnum.bloodPressure => l10n.healthExtraBloodPressure,
+                  }),
+                  value: settings?.extras?.contains(x) ?? false,
+                  onChanged: (v) => onSettings(
+                    DeviceKindSettings(
+                      retentionDays: settings?.retentionDays,
+                      privateModel: settings?.privateModel,
+                      extras: [...?settings?.extras?.where((e) => e != x), if (v) x],
+                    ),
+                  ),
+                ),
+            if (kind == DeviceKind.health) Text(l10n.healthNotMedical, style: context.textTheme.bodySmall),
             Padding(
               padding: const EdgeInsets.only(top: AppSpace.xs, bottom: AppSpace.sm),
               child: grants.isEmpty

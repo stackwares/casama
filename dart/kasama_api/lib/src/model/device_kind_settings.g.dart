@@ -11,6 +11,8 @@ abstract class _$DeviceKindSettingsCWProxy {
 
   DeviceKindSettings privateModel(bool? privateModel);
 
+  DeviceKindSettings extras(List<DeviceKindSettingsExtrasEnum>? extras);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `DeviceKindSettings(...).copyWith.fieldName(value)`.
@@ -19,7 +21,11 @@ abstract class _$DeviceKindSettingsCWProxy {
   /// ```dart
   /// DeviceKindSettings(...).copyWith(id: 12, name: "My name")
   /// ```
-  DeviceKindSettings call({int? retentionDays, bool? privateModel});
+  DeviceKindSettings call({
+    int? retentionDays,
+    bool? privateModel,
+    List<DeviceKindSettingsExtrasEnum>? extras,
+  });
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -37,6 +43,10 @@ class _$DeviceKindSettingsCWProxyImpl implements _$DeviceKindSettingsCWProxy {
   DeviceKindSettings privateModel(bool? privateModel) =>
       call(privateModel: privateModel);
 
+  @override
+  DeviceKindSettings extras(List<DeviceKindSettingsExtrasEnum>? extras) =>
+      call(extras: extras);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `DeviceKindSettings(...).copyWith.fieldName(value)`.
@@ -49,6 +59,7 @@ class _$DeviceKindSettingsCWProxyImpl implements _$DeviceKindSettingsCWProxy {
   DeviceKindSettings call({
     Object? retentionDays = const $CopyWithPlaceholder(),
     Object? privateModel = const $CopyWithPlaceholder(),
+    Object? extras = const $CopyWithPlaceholder(),
   }) {
     return DeviceKindSettings(
       retentionDays: retentionDays == const $CopyWithPlaceholder()
@@ -59,6 +70,10 @@ class _$DeviceKindSettingsCWProxyImpl implements _$DeviceKindSettingsCWProxy {
           ? _value.privateModel
           // ignore: cast_nullable_to_non_nullable
           : privateModel as bool?,
+      extras: extras == const $CopyWithPlaceholder()
+          ? _value.extras
+          // ignore: cast_nullable_to_non_nullable
+          : extras as List<DeviceKindSettingsExtrasEnum>?,
     );
   }
 }
@@ -86,6 +101,14 @@ DeviceKindSettings _$DeviceKindSettingsFromJson(Map<String, dynamic> json) =>
             (v) => (v as num?)?.toInt(),
           ),
           privateModel: $checkedConvert('private_model', (v) => v as bool?),
+          extras: $checkedConvert(
+            'extras',
+            (v) => (v as List<dynamic>?)
+                ?.map(
+                  (e) => $enumDecode(_$DeviceKindSettingsExtrasEnumEnumMap, e),
+                )
+                .toList(),
+          ),
         );
         return val;
       },
@@ -99,4 +122,13 @@ Map<String, dynamic> _$DeviceKindSettingsToJson(DeviceKindSettings instance) =>
     <String, dynamic>{
       'retention_days': ?instance.retentionDays,
       'private_model': ?instance.privateModel,
+      'extras': ?instance.extras
+          ?.map((e) => _$DeviceKindSettingsExtrasEnumEnumMap[e]!)
+          .toList(),
     };
+
+const _$DeviceKindSettingsExtrasEnumEnumMap = {
+  DeviceKindSettingsExtrasEnum.cycle: 'cycle',
+  DeviceKindSettingsExtrasEnum.glucose: 'glucose',
+  DeviceKindSettingsExtrasEnum.bloodPressure: 'blood_pressure',
+};

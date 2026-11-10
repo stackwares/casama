@@ -59,6 +59,39 @@ export function isPrivateBaseUrl(url: string | null | undefined): boolean {
   return a === 127 || a === 10 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31) || (a === 100 && b >= 64 && b <= 127);
 }
 
+type HealthDay = { type?: string; date?: string; sleep?: { minutes?: number }; steps?: number; active_energy_kcal?: number; resting_hr?: number; hrv_ms?: number };
+const HEALTH_METRICS: Array<[string, (d: HealthDay) => number | undefined]> = [
+  ["sleep_minutes", (d) => d.sleep?.minutes],
+  ["steps", (d) => d.steps],
+  ["active_energy_kcal", (d) => d.active_energy_kcal],
+  ["resting_hr", (d) => d.resting_hr],
+  ["hrv_ms", (d) => d.hrv_ms],
+];
+
+/**
+ * How a day compares with the person's own previous 30 days (D-150), computed without a model.
+ * Neutral words only; a metric needs at least 5 earlier days to have a "usual".
+ */
+export function healthTrends(history: HealthDay[], day: HealthDay) {
+  if (!day.date) return {};
+  const start = new Date(new Date(`${day.date}T00:00:00Z`).getTime() - 30 * 86_400_000).toISOString().slice(0, 10);
+  const prior = history.filter((h) => h.type === "day" && h.date && h.date < day.date! && h.date >= start);
+  const out: Record<string, { value: number; usual: number; compared: string }> = {};
+  for (const [name, get] of HEALTH_METRICS) {
+    const value = get(day);
+    const values = prior.map(get).filter((v): v is number => typeof v === "number");
+    if (typeof value !== "number" || values.length < 5) continue;
+    const usual = values.reduce((a, b) => a + b, 0) / values.length;
+    const ratio = usual === 0 ? 1 : value / usual;
+    out[name] = {
+      value,
+      usual: Math.round(usual * 10) / 10,
+      compared: ratio > 1.1 ? "higher than your usual" : ratio < 0.9 ? "lower than your usual" : "about your usual",
+    };
+  }
+  return out;
+}
+
 export interface DeviceDataDeps {
   db: Database;
   /** How long a tool waits for an online device (fresh reads 10 s; tests shorten it). */
@@ -148,9 +181,23 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
         join public.device_sources s on s.id = r.source_id
         where r.user_id = ${user}::uuid and r.kind = ${kind} and r.period_end >= ${from}::timestamptz and r.period_start <= ${to}::timestamptz
         order by r.period_start limit 200`);
+      // Health days carry how they compare with the person's own last 30 days.
+      let history: HealthDay[] = [];
+      if (kind === "health")
+        history = (
+          await db.execute<{ summary: HealthDay }>(sql`
+            select summary from public.device_readings where user_id = ${user}::uuid and kind = 'health'
+              and period_start >= ${from}::timestamptz - interval '31 days' and period_start <= ${to}::timestamptz`)
+        ).map((r) => r.summary);
+      const withTrend = (summary: unknown) => {
+        const d = summary as HealthDay;
+        if (kind !== "health" || d?.type !== "day") return {};
+        const t = healthTrends([...history, ...(live as Array<{ summary?: HealthDay }>).map((l) => l.summary ?? {})], d);
+        return Object.keys(t).length ? { vs_usual: t } : {};
+      };
       const items = [
-        ...rows.map((r) => ({ from: new Date(r.period_start).toISOString(), to: new Date(r.period_end).toISOString(), device: r.source, age: age(r.collected_at), summary: r.summary })),
-        ...live,
+        ...rows.map((r) => ({ from: new Date(r.period_start).toISOString(), to: new Date(r.period_end).toISOString(), device: r.source, age: age(r.collected_at), summary: r.summary, ...withTrend(r.summary) })),
+        ...(live as Array<{ summary?: unknown }>).map((l) => ({ ...l, ...withTrend(l.summary) })),
       ];
       // The timeline shows exactly what device data reached the model.
       await ctx.emit("device.data_used", { kind, count: items.length, from, to, devices: [...new Set(rows.map((r) => r.source))] });

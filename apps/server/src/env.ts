@@ -26,6 +26,11 @@ export const EnvSchema = z.object({
    * starts, and automatic suspension on egress abuse. auto: on when billing is on.
    */
   ABUSE_CONTROLS: z.enum(["auto", "on", "off"]).default("auto"),
+  /**
+   * Health data (D-150) is stored only sealed with a workspace content key the person owns (encryption
+   * at rest). auto: required when billing is on (Kasama Cloud); self-hosted keeps it on its own machine.
+   */
+  HEALTH_REQUIRES_ENCRYPTION: z.enum(["auto", "on", "off"]).default("auto"),
   /** Proofs a new account may carry (comma-separated): app_check, pow. */
   SIGNUP_PROOFS: z.string().default("app_check,pow"),
   /** Proof-of-work difficulty in leading zero bits (about 2^n hashes; 18 is a second or two). */

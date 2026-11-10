@@ -1,5 +1,6 @@
 package com.kasama.app
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// FlutterFragmentActivity: Health Connect's permission screen needs a FragmentActivity (D-150).
+class MainActivity : FlutterFragmentActivity()

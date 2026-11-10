@@ -4,6 +4,7 @@ import 'package:kasama_app/features/chat/chat_screen.dart';
 import 'package:kasama_app/features/devices/device_collector.dart';
 import 'package:kasama_app/features/devices/device_connections_screen.dart';
 import 'package:kasama_app/features/devices/device_sync.dart';
+import 'package:kasama_app/features/devices/health_summary.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,13 +22,13 @@ class FakeCollector implements DeviceCollector {
   Set<DeviceKind> get supported => {DeviceKind.calendar, DeviceKind.contacts};
 
   @override
-  Future<bool> requestPermission(DeviceKind kind) async {
+  Future<bool> requestPermission(DeviceKind kind, {DeviceKindSettings? settings}) async {
     asked.add(kind);
     return allow;
   }
 
   @override
-  Future<List<DeviceReadingInput>> collect(DeviceKind kind, DateTime from, DateTime to) async {
+  Future<List<DeviceReadingInput>> collect(DeviceKind kind, DateTime from, DateTime to, {DeviceKindSettings? settings}) async {
     ranges.add((kind, from, to));
     return [
       DeviceReadingInput(kind: kind, periodStart: from, periodEnd: to, externalId: '${kind.value}-1', summary: {'n': 1}),
@@ -72,6 +73,37 @@ void main() {
     final chunks = contactChunks(people, DateTime(2027));
     expect(chunks.map((c) => c.externalId), ['contacts-0', 'contacts-1', 'contacts-2']);
     expect((chunks.last.summary['contacts'] as List).length, 50);
+  });
+
+  test('health: one summary per day (sleep counts for the morning it ends) and one per workout, no raw samples', () {
+    HealthPoint p(String type, DateTime from, DateTime to, [num value = 0]) => (type: type, from: from, to: to, value: value, activity: null, energy: null, distance: null);
+    final night = DateTime(2027, 1, 9, 23, 30);
+    final points = <HealthPoint>[
+      p('sleep_deep', night, night.add(const Duration(minutes: 90))),
+      p('sleep_rem', night.add(const Duration(minutes: 90)), night.add(const Duration(minutes: 180))),
+      p('sleep_light', night.add(const Duration(minutes: 180)), night.add(const Duration(minutes: 420))),
+      p('sleep_awake', night.add(const Duration(minutes: 420)), night.add(const Duration(minutes: 430))),
+      p('steps', DateTime(2027, 1, 10, 9), DateTime(2027, 1, 10, 10), 3000),
+      p('steps', DateTime(2027, 1, 10, 17), DateTime(2027, 1, 10, 18), 4200),
+      p('resting_hr', DateTime(2027, 1, 10, 8), DateTime(2027, 1, 10, 8), 58),
+      p('resting_hr', DateTime(2027, 1, 10, 20), DateTime(2027, 1, 10, 20), 62),
+      p('glucose', DateTime(2027, 1, 10, 8), DateTime(2027, 1, 10, 8), 99),
+      (type: 'workout', from: DateTime(2027, 1, 10, 7), to: DateTime(2027, 1, 10, 7, 45), value: 0, activity: 'RUNNING', energy: 420.4, distance: 7012.6),
+    ];
+    final out = healthSummaries(points, DateTime(2027, 1, 10), DateTime(2027, 1, 10, 23, 59));
+    final day = out.firstWhere((r) => r.externalId == 'health-2027-01-10').summary;
+    expect(day['sleep'], {'start': '23:30', 'end': '06:40', 'minutes': 420, 'stages': {'deep': 90, 'rem': 90, 'light': 240, 'awake': 10}});
+    expect(day['steps'], 7200);
+    expect(day['resting_hr'], 60);
+    expect(day['workouts'], 1);
+    expect(day.containsKey('glucose'), isFalse);
+    final w = out.firstWhere((r) => r.externalId.startsWith('workout-')).summary;
+    expect(w, containsPair('activity', 'running'));
+    expect(w['minutes'], 45);
+    expect(w['distance_m'], 7013);
+    // Extras only when turned on.
+    final withExtras = healthSummaries(points, DateTime(2027, 1, 10), DateTime(2027, 1, 10, 23, 59), extras: {'glucose'});
+    expect(withExtras.firstWhere((r) => r.externalId == 'health-2027-01-10').summary['glucose'], {'avg_mg_dl': 99, 'min_mg_dl': 99, 'max_mg_dl': 99});
   });
 
   test('turning a kind on asks the system first, then registers and uploads; off removes it', () async {

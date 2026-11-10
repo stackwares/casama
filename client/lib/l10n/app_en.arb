@@ -3011,5 +3011,10 @@
   "devicePermissionDenied": "Kasama doesn't have permission. Allow it in the system settings, then try again.",
   "deviceOtherDevices": "Your other devices",
   "deviceForget": "Forget this device",
-  "deviceConnectionsRowHelp": "Calendar, contacts and more from this device"
+  "deviceConnectionsRowHelp": "Calendar, contacts and more from this device",
+  "healthExtraCycle": "Cycle tracking",
+  "healthExtraGlucose": "Blood glucose",
+  "healthExtraBloodPressure": "Blood pressure",
+  "healthNotMedical": "Daily summaries only (sleep, activity, workouts, heart). Bots describe how you compare with your usual and never give medical advice.",
+  "healthNeedsEncryption": "Health data needs encryption at rest. Turn it on for a workspace you own, then try again."
 }

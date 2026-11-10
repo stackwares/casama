@@ -65,7 +65,7 @@ class DeviceSync {
   /// Turns a kind on (after the system prompt) or off (the server deletes its data).
   /// Returns false when the person declined the permission.
   Future<bool> setKind(DeviceKind kind, bool on, {DeviceKindSettings? settings}) async {
-    if (on && !await collector.requestPermission(kind)) return false;
+    if (on && !await collector.requestPermission(kind, settings: settings)) return false;
     final key = await deviceKey();
     final s = await current();
     final kinds = Map<String, DeviceKindSettings>.of(s?.kinds ?? const {});
@@ -75,7 +75,7 @@ class DeviceSync {
       kinds.remove(kind.value);
     }
     await backend.saveDeviceSource(key, name: s?.name ?? defaultName, platform: platform, kinds: kinds);
-    if (on) await _upload(key, kind);
+    if (on) await _upload(key, kind, settings: kinds[kind.value]);
     return true;
   }
 
@@ -83,13 +83,15 @@ class DeviceSync {
     final t = now();
     return switch (kind) {
       DeviceKind.calendar => (t.subtract(const Duration(days: 1)), t.add(const Duration(days: 30))),
+      // Health: the last week of days, so a missed morning catches up.
+      DeviceKind.health => (DateTime(t.year, t.month, t.day - 7), t),
       _ => (t.subtract(const Duration(days: 1)), t),
     };
   }
 
-  Future<List<DeviceReadingInput>> _upload(String key, DeviceKind kind, {DateTime? from, DateTime? to, String? requestId}) async {
+  Future<List<DeviceReadingInput>> _upload(String key, DeviceKind kind, {DateTime? from, DateTime? to, String? requestId, DeviceKindSettings? settings}) async {
     final w = _window(kind);
-    final readings = await collector.collect(kind, from ?? w.$1, to ?? w.$2);
+    final readings = await collector.collect(kind, from ?? w.$1, to ?? w.$2, settings: settings);
     if (readings.isEmpty && requestId != null) {
       await backend.uploadDeviceReadings(key, const [], requestId: requestId);
     }
@@ -108,7 +110,7 @@ class DeviceSync {
       final kind = DeviceKind.values.where((v) => v.value == k).firstOrNull;
       if (kind == null || !collector.supported.contains(kind)) continue;
       try {
-        await _upload(s.deviceKey, kind);
+        await _upload(s.deviceKey, kind, settings: s.kinds[k]);
       } catch (e) {
         debugPrint('device sync $k failed: $e');
       }
@@ -130,7 +132,7 @@ class DeviceSync {
           } else if (r.action == DeviceRequestActionEnum.read) {
             final from = DateTime.tryParse('${r.params['from']}');
             final to = DateTime.tryParse('${r.params['to']}');
-            await _upload(s.deviceKey, kind, from: from, to: to, requestId: r.id);
+            await _upload(s.deviceKey, kind, from: from, to: to, requestId: r.id, settings: s.kinds[r.kind]);
           } else {
             final result = await collector.write(r.action.value, r.params);
             await backend.answerDeviceRequest(r.id, ok: true, result: result);

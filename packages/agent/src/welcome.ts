@@ -22,6 +22,8 @@ export const WELCOME_FOCUS = [
   { id: "research", label: "Research" },
   { id: "sales", label: "Sales and customers" },
   { id: "errands", label: "Personal errands" },
+  // Wave 4 (D-150): health and habits, from the phone's own data.
+  { id: "health", label: "Health and habits" },
   { id: "other", label: "Something else" },
 ] as const;
 export type Focus = (typeof WELCOME_FOCUS)[number]["id"];
@@ -43,6 +45,7 @@ export const MAIN_CONNECTION: Record<Focus, string[]> = {
   research: [],
   sales: ["hubspot", "google_calendar"],
   errands: ["google_calendar"],
+  health: [],
   other: [],
 };
 const APP_NAMES: Record<string, string> = {
@@ -62,6 +65,7 @@ export const STARTER_FOR: Record<Focus, string[]> = {
   research: ["researcher"],
   sales: ["sales-assistant"],
   errands: ["personal-assistant"],
+  health: ["personal-assistant"],
   other: [],
 };
 
@@ -72,6 +76,7 @@ const INTRO: Record<Focus, string> = {
   research: "I can dig into a topic, compare sources, and write it up as a report or a page you can share.",
   sales: "I can research the people and companies you talk to, prepare for meetings, and keep your CRM tidy.",
   errands: "I can take small things off your plate: bookings, reminders, comparisons and forms.",
+  health: "I can keep track of your sleep, activity and workouts from your phone, notice how they compare with your usual, and help you build habits. I'm not a doctor and won't give medical advice.",
   other: "Tell me a bit more about what you need and I'll suggest how to start.",
 };
 
@@ -83,6 +88,7 @@ const FIRST_TASK: Record<Focus, { label: string; placeholder: string; prefix: st
   research: { label: "Give me a topic to research.", placeholder: "The best CRM for a 5-person team", prefix: "Please research this and write it up as a short report: " },
   sales: { label: "Who should I research first?", placeholder: "A company or a person", prefix: "Please research this for an upcoming conversation: " },
   errands: { label: "What's one errand I can take off your plate?", placeholder: "Find a dentist near me who takes my insurance", prefix: "Please help me with this errand: " },
+  health: { label: "What habit would you like to build?", placeholder: "Sleep before 11 on weeknights", prefix: "Please help me build this habit, and check in on it: " },
   other: { label: "What would you like me to do first?", placeholder: "Describe the task", prefix: "" },
 };
 
@@ -183,6 +189,23 @@ export function introMessage(s: WelcomeState, o: { hasModel: boolean }) {
       ),
     );
   } else parts.push(...firstTaskMessage(s));
+  // Phone connections (Wave 4, D-149/D-150): health, places and the phone's calendar live on the phone.
+  const phone = focus.filter((f) => f === "health" || f === "errands");
+  if (phone.length)
+    parts.push(
+      card(
+        column(["t", "row"], [
+          text(
+            "t",
+            focus.includes("health")
+              ? "Share your sleep, activity and workouts from your phone (Apple Health or Health Connect). You choose each kind, and only I can read it, only in your chats."
+              : "Share your phone's calendar and places with me, so I can plan around your day. You choose each kind.",
+          ),
+          { id: "row", component: "Row", children: ["phone"] },
+          ...button("phone", "Choose what to share", "app:route", { path: "/settings/devices" }, apps.length ? "default" : "primary"),
+        ]),
+      ),
+    );
   if (s.scope === "team" || s.scope === "business")
     parts.push(
       card(
