@@ -122,6 +122,13 @@ abstract class Backend {
   Future<List<OrganizationWithRole>> organizations();
   Future<Organization> createOrganization(String name);
   Future<void> acceptInvite(String token);
+  // Spaces (D-099)
+  Future<Organization> updateOrg(String orgId, {String? name, String? icon, String? color});
+  Future<List<InviteLink>> inviteLinks(String orgId);
+  Future<CreatedInviteLink> createInviteLink(String orgId, {String role = 'member', int? expiresInDays, int? maxUses});
+  Future<void> revokeInviteLink(String orgId, String linkId);
+  Future<OrganizationWithRole> acceptInviteLink(String token);
+  Future<List<WorkspaceBadge>> workspaceBadges();
   Future<Invite> invite(String orgId, String email, {bool admin = false});
 
   // Model keys

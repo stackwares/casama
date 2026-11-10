@@ -16,6 +16,7 @@ import '../../ui/kasama_mark.dart';
 import '../bots/bots_screen.dart';
 import '../computer/computer_screen.dart';
 import '../../ui/glow_button.dart';
+import '../workspaces/spaces.dart';
 
 /// Phone: floating tab bar. Tablet: navigation rail. Desktop: a sidebar with the bot list, the
 /// chat, and the bot's computer beside it.
@@ -248,7 +249,7 @@ class _Rail extends StatelessWidget {
       unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
       selectedLabelTextStyle: tt.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
       unselectedLabelTextStyle: tt.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w500),
-      leading: const Padding(padding: EdgeInsets.only(top: 12, bottom: 20), child: KasamaMark(size: 36)),
+      leading: const Padding(padding: EdgeInsets.only(top: 12, bottom: 20), child: WorkspaceSwitcher(compact: true)),
       destinations: [
         for (final d in dests)
           NavigationRailDestination(
@@ -290,22 +291,9 @@ class _Sidebar extends ConsumerWidget {
               child: Row(
                 children: [
                   const KasamaMark(size: 34),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(l10n.appTitle, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, height: 1.1)),
-                        if (org != null)
-                          Text(
-                            org.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(width: 8),
+                  // The current workspace; tap to switch, create or join one (D-099).
+                  const Expanded(child: WorkspaceSwitcher()),
                 ],
               ),
             ),

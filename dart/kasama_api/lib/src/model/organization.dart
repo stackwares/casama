@@ -30,6 +30,10 @@ class Organization {
 
     required  this.region,
 
+     this.icon,
+
+     this.color,
+
     required  this.createdAt,
   });
 
@@ -95,6 +99,30 @@ class Organization {
 
   @JsonKey(
     
+    name: r'icon',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? icon;
+
+
+
+  @JsonKey(
+    
+    name: r'color',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? color;
+
+
+
+  @JsonKey(
+    
     name: r'created_at',
     required: true,
     includeIfNull: false,
@@ -114,6 +142,8 @@ class Organization {
       other.slug == slug &&
       other.plan == plan &&
       other.region == region &&
+      other.icon == icon &&
+      other.color == color &&
       other.createdAt == createdAt;
 
     @override
@@ -123,6 +153,8 @@ class Organization {
         slug.hashCode +
         plan.hashCode +
         region.hashCode +
+        (icon == null ? 0 : icon.hashCode) +
+        (color == null ? 0 : color.hashCode) +
         createdAt.hashCode;
 
   factory Organization.fromJson(Map<String, dynamic> json) => _$OrganizationFromJson(json);

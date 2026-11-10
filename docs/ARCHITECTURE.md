@@ -138,6 +138,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `tasks` with five statuses, priorities, owners, order and a bot thread; `task_comments`; `packages/agent/src/tickets.ts` starts and settles bot work; app Board tab (`features/board`).
 
+## Spaces (D-099)
+
+- Workspaces get an icon and color, invite links (`invite_links`, `accept_invite_link`) and per-workspace badges; the app has a workspace switcher, workspace settings and `/join/<token>`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

@@ -5499,6 +5499,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Status'**
   String get ticketStatus;
+
+  /// No description provided for @spaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspaces'**
+  String get spaces;
+
+  /// No description provided for @newWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'New workspace'**
+  String get newWorkspace;
+
+  /// No description provided for @joinWorkspaceHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the invite link someone sent you.'**
+  String get joinWorkspaceHelp;
+
+  /// No description provided for @inviteLinkField.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link'**
+  String get inviteLinkField;
+
+  /// No description provided for @workspaceIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get workspaceIcon;
+
+  /// No description provided for @workspaceColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get workspaceColor;
+
+  /// No description provided for @workspaceSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace settings'**
+  String get workspaceSettings;
+
+  /// No description provided for @workspaceSettingsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, icon, color and invite links'**
+  String get workspaceSettingsHelp;
+
+  /// No description provided for @inviteLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite links'**
+  String get inviteLinks;
+
+  /// No description provided for @inviteLinksHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with a link can join after signing in, until it expires, runs out of uses or you revoke it.'**
+  String get inviteLinksHelp;
+
+  /// No description provided for @createInviteLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a link'**
+  String get createInviteLink;
+
+  /// No description provided for @inviteRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Joins as'**
+  String get inviteRole;
+
+  /// No description provided for @linkExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires'**
+  String get linkExpires;
+
+  /// No description provided for @linkNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get linkNever;
+
+  /// No description provided for @linkDays.
+  ///
+  /// In en, this message translates to:
+  /// **'In {days} days'**
+  String linkDays(String days);
+
+  /// No description provided for @linkMaxUses.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses'**
+  String get linkMaxUses;
+
+  /// No description provided for @linkUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get linkUnlimited;
+
+  /// No description provided for @linkUses.
+  ///
+  /// In en, this message translates to:
+  /// **'{uses} used'**
+  String linkUses(String uses);
+
+  /// No description provided for @linkRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked'**
+  String get linkRevoked;
+
+  /// No description provided for @revokeLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get revokeLink;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link copied.'**
+  String get linkCopied;
+
+  /// No description provided for @joiningWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Joining the workspace…'**
+  String get joiningWorkspace;
+
+  /// No description provided for @joinedWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined {name}.'**
+  String joinedWorkspace(String name);
+
+  /// No description provided for @joinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This invite link doesn\'t work anymore. Ask for a new one.'**
+  String get joinFailed;
+
+  /// No description provided for @joinWithLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with a link'**
+  String get joinWithLink;
 }
 
 class _AppLocalizationsDelegate

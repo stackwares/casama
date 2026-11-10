@@ -1713,5 +1713,51 @@
   "deleteTicket": "Delete ticket",
   "noTickets": "No tickets yet",
   "noTicketsHelp": "Add a ticket and assign it to a bot to get it started, or ask a bot to plan work here.",
-  "ticketStatus": "Status"
+  "ticketStatus": "Status",
+  "spaces": "Workspaces",
+  "newWorkspace": "New workspace",
+  "joinWorkspaceHelp": "Paste the invite link someone sent you.",
+  "inviteLinkField": "Invite link",
+  "workspaceIcon": "Icon",
+  "workspaceColor": "Color",
+  "workspaceSettings": "Workspace settings",
+  "workspaceSettingsHelp": "Name, icon, color and invite links",
+  "inviteLinks": "Invite links",
+  "inviteLinksHelp": "Anyone with a link can join after signing in, until it expires, runs out of uses or you revoke it.",
+  "createInviteLink": "Create a link",
+  "inviteRole": "Joins as",
+  "linkExpires": "Expires",
+  "linkNever": "Never",
+  "linkDays": "In {days} days",
+  "@linkDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "linkMaxUses": "Uses",
+  "linkUnlimited": "Unlimited",
+  "linkUses": "{uses} used",
+  "@linkUses": {
+    "placeholders": {
+      "uses": {
+        "type": "String"
+      }
+    }
+  },
+  "linkRevoked": "Revoked",
+  "revokeLink": "Revoke",
+  "linkCopied": "Invite link copied.",
+  "joiningWorkspace": "Joining the workspace…",
+  "joinedWorkspace": "You joined {name}.",
+  "@joinedWorkspace": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "joinFailed": "This invite link doesn't work anymore. Ask for a new one.",
+  "joinWithLink": "Join with a link"
 }

@@ -101,6 +101,29 @@ class SupabaseBackend implements Backend {
   Future<void> acceptInvite(String token) async => api.workspaces.acceptInvite(token: token);
 
   @override
+  Future<Organization> updateOrg(String orgId, {String? name, String? icon, String? color}) async =>
+      (await api.workspaces.updateOrg(id: orgId, updateOrganizationRequest: UpdateOrganizationRequest(name: name, icon: icon, color: color))).data!;
+  @override
+  Future<List<InviteLink>> inviteLinks(String orgId) async => (await api.workspaces.listInviteLinks(id: orgId)).data!.items;
+  @override
+  Future<CreatedInviteLink> createInviteLink(String orgId, {String role = 'member', int? expiresInDays, int? maxUses}) async =>
+      (await api.workspaces.createInviteLink(
+        id: orgId,
+        createInviteLinkRequest: CreateInviteLinkRequest(
+          role: CreateInviteLinkRequestRoleEnum.values.firstWhere((r) => r.value == role),
+          expiresInDays: expiresInDays,
+          maxUses: maxUses,
+        ),
+      ))
+          .data!;
+  @override
+  Future<void> revokeInviteLink(String orgId, String linkId) async => api.workspaces.revokeInviteLink(id: orgId, linkId: linkId);
+  @override
+  Future<OrganizationWithRole> acceptInviteLink(String token) async => (await api.workspaces.acceptInviteLink(token: token)).data!;
+  @override
+  Future<List<WorkspaceBadge>> workspaceBadges() async => (await api.workspaces.workspaceBadges()).data!.items;
+
+  @override
   Future<Invite> invite(String orgId, String email, {bool admin = false}) async => (await api.workspaces.createInvite(
         id: orgId,
         createInviteRequest: CreateInviteRequest(email: email, role: admin ? InviteRole.admin : InviteRole.member),

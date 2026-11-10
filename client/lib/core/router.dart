@@ -33,6 +33,7 @@ import '../features/voice/call_screen.dart';
 import '../features/workspaces/onboarding_screen.dart';
 import '../features/auth/two_step_screen.dart';
 import '../features/board/board_screen.dart';
+import '../features/workspaces/spaces.dart';
 import 'providers.dart';
 import 'telemetry.dart';
 
@@ -62,7 +63,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       final signedIn = ref.read(signedInProvider);
       if (signedIn.isLoading) return null;
       final loc = state.matchedLocation;
+      // An invite link opened before signing in is joined right after (D-099).
+      if (signedIn.value != true && loc.startsWith('/join/')) {
+        ref.read(pendingJoinTokenProvider.notifier).set(state.pathParameters['token']);
+        return '/sign-in';
+      }
       if (signedIn.value != true) return loc == '/sign-in' ? null : '/sign-in';
+      final pendingJoin = ref.read(pendingJoinTokenProvider);
+      if (pendingJoin != null && !loc.startsWith('/join/')) return '/join/$pendingJoin';
       // Two-step sign-in (D-093): the code comes before anything else.
       final codeNeeded = ref.read(backendProvider).twoStepCodeNeeded;
       if (codeNeeded) return loc == '/two-step' ? null : '/two-step';
@@ -80,6 +88,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/sign-in', pageBuilder: _page((_, _) => const SignInScreen())),
       GoRoute(path: '/onboarding', pageBuilder: _page((_, _) => const OnboardingScreen())),
       GoRoute(path: '/two-step', pageBuilder: _page((_, _) => const TwoStepPromptScreen())),
+      GoRoute(path: '/join/:token', pageBuilder: _page((_, s) => JoinScreen(token: s.pathParameters['token']!))),
       ShellRoute(
         pageBuilder: (context, state, child) => MaterialPage(
           key: state.pageKey,
@@ -174,6 +183,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'billing', pageBuilder: _page((_, _) => const BillingScreen())),
               GoRoute(path: 'privacy', pageBuilder: _page((_, _) => const PrivacyScreen())),
               GoRoute(path: 'two-step', pageBuilder: _page((_, _) => const TwoStepSettingsScreen())),
+              GoRoute(path: 'workspace', pageBuilder: _page((_, _) => const WorkspaceSettingsScreen())),
             ],
           ),
         ],

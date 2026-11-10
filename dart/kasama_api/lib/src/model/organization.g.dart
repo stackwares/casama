@@ -17,6 +17,10 @@ abstract class _$OrganizationCWProxy {
 
   Organization region(String region);
 
+  Organization icon(String? icon);
+
+  Organization color(String? color);
+
   Organization createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -33,6 +37,8 @@ abstract class _$OrganizationCWProxy {
     String slug,
     String plan,
     String region,
+    String? icon,
+    String? color,
     DateTime createdAt,
   });
 }
@@ -60,6 +66,12 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
   Organization region(String region) => call(region: region);
 
   @override
+  Organization icon(String? icon) => call(icon: icon);
+
+  @override
+  Organization color(String? color) => call(color: color);
+
+  @override
   Organization createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -77,6 +89,8 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
     Object? slug = const $CopyWithPlaceholder(),
     Object? plan = const $CopyWithPlaceholder(),
     Object? region = const $CopyWithPlaceholder(),
+    Object? icon = const $CopyWithPlaceholder(),
+    Object? color = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Organization(
@@ -100,6 +114,14 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
           ? _value.region
           // ignore: cast_nullable_to_non_nullable
           : region as String,
+      icon: icon == const $CopyWithPlaceholder()
+          ? _value.icon
+          // ignore: cast_nullable_to_non_nullable
+          : icon as String?,
+      color: color == const $CopyWithPlaceholder()
+          ? _value.color
+          // ignore: cast_nullable_to_non_nullable
+          : color as String?,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -138,6 +160,8 @@ Organization _$OrganizationFromJson(Map<String, dynamic> json) =>
         slug: $checkedConvert('slug', (v) => v as String),
         plan: $checkedConvert('plan', (v) => v as String),
         region: $checkedConvert('region', (v) => v as String),
+        icon: $checkedConvert('icon', (v) => v as String?),
+        color: $checkedConvert('color', (v) => v as String?),
         createdAt: $checkedConvert(
           'created_at',
           (v) => DateTime.parse(v as String),
@@ -153,5 +177,7 @@ Map<String, dynamic> _$OrganizationToJson(Organization instance) =>
       'slug': instance.slug,
       'plan': instance.plan,
       'region': instance.region,
+      'icon': ?instance.icon,
+      'color': ?instance.color,
       'created_at': instance.createdAt.toIso8601String(),
     };

@@ -13,9 +13,56 @@ export const Organization = z
     slug: z.string(),
     plan: z.string(),
     region: z.string(),
+    /** A Lucide icon name or an emoji (D-099). */
+    icon: z.string().nullable().optional(),
+    /** #rrggbb */
+    color: z.string().nullable().optional(),
     created_at: z.iso.datetime({ offset: true }),
   })
   .openapi("Organization");
+
+export const UpdateOrganizationRequest = z
+  .object({
+    name: z.string().trim().min(1).max(120).optional(),
+    icon: z.string().max(40).nullable().optional(),
+    color: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/)
+      .nullable()
+      .optional(),
+  })
+  .openapi("UpdateOrganizationRequest");
+
+export const InviteLink = z
+  .object({
+    id: Uuid,
+    org_id: Uuid,
+    role: z.enum(["admin", "member"]),
+    token_hint: z.string(),
+    expires_at: z.iso.datetime({ offset: true }).nullable(),
+    max_uses: z.number().int().nullable(),
+    uses: z.number().int(),
+    revoked_at: z.iso.datetime({ offset: true }).nullable(),
+    created_at: z.iso.datetime({ offset: true }),
+  })
+  .openapi("InviteLink");
+
+export const CreatedInviteLink = InviteLink.extend({
+  token: z.string().openapi({ description: "Shown once" }),
+  url: z.string().openapi({ description: "The link to share (the app's /join/<token>)" }),
+}).openapi("CreatedInviteLink");
+
+export const CreateInviteLinkRequest = z
+  .object({
+    role: z.enum(["admin", "member"]).optional(),
+    expires_in_days: z.number().int().min(1).max(365).optional(),
+    max_uses: z.number().int().min(1).max(10000).optional(),
+  })
+  .openapi("CreateInviteLinkRequest");
+
+export const WorkspaceBadge = z
+  .object({ org_id: Uuid, approvals: z.number().int(), unread: z.number().int() })
+  .openapi("WorkspaceBadge");
 export type Organization = z.infer<typeof Organization>;
 
 export const OrganizationWithRole = Organization.extend({

@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,12 +22,33 @@ final organizationsProvider = FutureProvider<List<OrganizationWithRole>>((ref) a
   return ref.watch(backendProvider).organizations();
 });
 
-/// The selected workspace id (defaults to the first one).
+/// The selected workspace id (defaults to the first one), remembered on this device (D-099).
 class SelectedOrg extends Notifier<String?> {
+  static const _key = 'kasama.selected_org';
+
+  @override
+  String? build() {
+    SharedPreferences.getInstance().then((p) {
+      final saved = p.getString(_key);
+      if (saved != null && state == null) state = saved;
+    }).catchError((_) {});
+    return null;
+  }
+
+  void select(String? id) {
+    state = id;
+    SharedPreferences.getInstance().then((p) => id == null ? p.remove(_key) : p.setString(_key, id)).catchError((_) => false);
+  }
+}
+
+/// An invite link opened before signing in; joined right after (D-099).
+class PendingJoinToken extends Notifier<String?> {
   @override
   String? build() => null;
-  void select(String? id) => state = id;
+  void set(String? token) => state = token;
 }
+
+final pendingJoinTokenProvider = NotifierProvider<PendingJoinToken, String?>(PendingJoinToken.new);
 
 final selectedOrgIdProvider = NotifierProvider<SelectedOrg, String?>(SelectedOrg.new);
 

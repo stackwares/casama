@@ -31,6 +31,10 @@ class OrganizationWithRole {
 
     required  this.region,
 
+     this.icon,
+
+     this.color,
+
     required  this.createdAt,
 
     required  this.role,
@@ -102,6 +106,30 @@ class OrganizationWithRole {
 
   @JsonKey(
     
+    name: r'icon',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? icon;
+
+
+
+  @JsonKey(
+    
+    name: r'color',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? color;
+
+
+
+  @JsonKey(
+    
     name: r'created_at',
     required: true,
     includeIfNull: false,
@@ -159,6 +187,8 @@ class OrganizationWithRole {
       other.slug == slug &&
       other.plan == plan &&
       other.region == region &&
+      other.icon == icon &&
+      other.color == color &&
       other.createdAt == createdAt &&
       other.role == role &&
       other.requireMfa == requireMfa &&
@@ -171,6 +201,8 @@ class OrganizationWithRole {
         slug.hashCode +
         plan.hashCode +
         region.hashCode +
+        (icon == null ? 0 : icon.hashCode) +
+        (color == null ? 0 : color.hashCode) +
         createdAt.hashCode +
         role.hashCode +
         requireMfa.hashCode +

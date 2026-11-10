@@ -55,6 +55,7 @@ import 'package:kasama_api/src/model/create_connect_key_request.dart';
 import 'package:kasama_api/src/model/create_conversation_request.dart';
 import 'package:kasama_api/src/model/create_credential_request.dart';
 import 'package:kasama_api/src/model/create_integration_request.dart';
+import 'package:kasama_api/src/model/create_invite_link_request.dart';
 import 'package:kasama_api/src/model/create_invite_request.dart';
 import 'package:kasama_api/src/model/create_local_device_request.dart';
 import 'package:kasama_api/src/model/create_organization_request.dart';
@@ -63,6 +64,7 @@ import 'package:kasama_api/src/model/create_secret_request.dart';
 import 'package:kasama_api/src/model/create_task_comment_request.dart';
 import 'package:kasama_api/src/model/create_task_request.dart';
 import 'package:kasama_api/src/model/created_connect_key.dart';
+import 'package:kasama_api/src/model/created_invite_link.dart';
 import 'package:kasama_api/src/model/created_local_device.dart';
 import 'package:kasama_api/src/model/created_routine.dart';
 import 'package:kasama_api/src/model/credential.dart';
@@ -85,6 +87,8 @@ import 'package:kasama_api/src/model/integration_list.dart';
 import 'package:kasama_api/src/model/integration_test_result.dart';
 import 'package:kasama_api/src/model/integration_tools_inner.dart';
 import 'package:kasama_api/src/model/invite.dart';
+import 'package:kasama_api/src/model/invite_link.dart';
+import 'package:kasama_api/src/model/invite_link_list.dart';
 import 'package:kasama_api/src/model/lease.dart';
 import 'package:kasama_api/src/model/lease_changed_event.dart';
 import 'package:kasama_api/src/model/lease_changed_event_payload.dart';
@@ -197,6 +201,7 @@ import 'package:kasama_api/src/model/update_integration_request.dart';
 import 'package:kasama_api/src/model/update_local_device_request.dart';
 import 'package:kasama_api/src/model/update_notice.dart';
 import 'package:kasama_api/src/model/update_org_settings_request.dart';
+import 'package:kasama_api/src/model/update_organization_request.dart';
 import 'package:kasama_api/src/model/update_routine_request.dart';
 import 'package:kasama_api/src/model/update_task_request.dart';
 import 'package:kasama_api/src/model/upload_result.dart';
@@ -216,6 +221,8 @@ import 'package:kasama_api/src/model/voice_transcript_request_turns_inner.dart';
 import 'package:kasama_api/src/model/wallpaper_download_request.dart';
 import 'package:kasama_api/src/model/wallpaper_photo.dart';
 import 'package:kasama_api/src/model/wallpaper_photo_list.dart';
+import 'package:kasama_api/src/model/workspace_badge.dart';
+import 'package:kasama_api/src/model/workspace_badge_list.dart';
 
 final _regList = RegExp(r'^List<(.*)>$');
 final _regSet = RegExp(r'^Set<(.*)>$');
@@ -358,6 +365,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateCredentialRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateIntegrationRequest':
           return CreateIntegrationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateInviteLinkRequest':
+          return CreateInviteLinkRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateInviteRequest':
           return CreateInviteRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateLocalDeviceRequest':
@@ -374,6 +383,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateTaskRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedConnectKey':
           return CreatedConnectKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreatedInviteLink':
+          return CreatedInviteLink.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedLocalDevice':
           return CreatedLocalDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedRoutine':
@@ -424,6 +435,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return IntegrationToolsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Invite':
           return Invite.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InviteLink':
+          return InviteLink.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InviteLinkList':
+          return InviteLinkList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InviteRole':
           
           
@@ -678,6 +693,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateNotice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateOrgSettingsRequest':
           return UpdateOrgSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateOrganizationRequest':
+          return UpdateOrganizationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateRoutineRequest':
           return UpdateRoutineRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateTaskRequest':
@@ -719,6 +736,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return WallpaperPhoto.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WallpaperPhotoList':
           return WallpaperPhotoList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WorkspaceBadge':
+          return WorkspaceBadge.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WorkspaceBadgeList':
+          return WorkspaceBadgeList.fromJson(value as Map<String, dynamic>) as ReturnType;
         default:
           RegExpMatch? match;
 

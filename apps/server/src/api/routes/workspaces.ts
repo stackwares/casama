@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { PRODUCT_NAME, routes } from "@kasama/contracts";
 import { type JwtClaims, pgErrorCode, pgErrorMessage, schema, withUserSession } from "@kasama/db";
@@ -20,6 +21,8 @@ const orgOut = (o: {
   slug: string;
   plan: string;
   region: string;
+  icon?: string | null;
+  color?: string | null;
   createdAt: string | Date;
 }) => ({
   id: o.id,
@@ -27,6 +30,8 @@ const orgOut = (o: {
   slug: o.slug,
   plan: o.plan,
   region: o.region,
+  icon: o.icon ?? null,
+  color: o.color ?? null,
   created_at: iso(o.createdAt),
 });
 
@@ -161,6 +166,140 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
       },
       201,
     );
+  });
+
+  // --- spaces (D-099): look, invite links, badges ---------------------------------
+
+  type LinkRow = {
+    id: string;
+    org_id: string;
+    role: "admin" | "member";
+    token_hint: string;
+    expires_at: Date | null;
+    max_uses: number | null;
+    uses: number;
+    revoked_at: Date | null;
+    created_at: Date;
+  };
+  const linkOut = (l: LinkRow) => ({
+    ...l,
+    expires_at: l.expires_at ? iso(l.expires_at) : null,
+    revoked_at: l.revoked_at ? iso(l.revoked_at) : null,
+    created_at: iso(l.created_at),
+  });
+  const requireAdmin = async (claims: JwtClaims, orgId: string) => {
+    const [r] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ ok: boolean }>(sql`select public.has_role(${orgId}::uuid, 'admin') as ok`),
+    );
+    if (!r?.ok)
+      throw new ApiError(403, "forbidden", "Only owners and admins can change this workspace");
+  };
+
+  app.openapi(routes.updateOrg, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const b = c.req.valid("json");
+    await requireAdmin(claims, id);
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx
+        .update(organizations)
+        .set({
+          ...(b.name !== undefined ? { name: b.name } : {}),
+          ...(b.icon !== undefined ? { icon: b.icon } : {}),
+          ...(b.color !== undefined ? { color: b.color } : {}),
+        })
+        .where(eq(organizations.id, id))
+        .returning(),
+    );
+    if (!row) throw new ApiError(404, "org_not_found", "Workspace not found");
+    return c.json(orgOut(row), 200);
+  });
+
+  app.openapi(routes.listInviteLinks, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    await requireAdmin(claims, id);
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.execute<LinkRow>(sql`
+        select id, org_id, role, token_hint, expires_at, max_uses, uses, revoked_at, created_at
+        from public.invite_links where org_id = ${id}::uuid order by created_at desc`),
+    );
+    return c.json({ items: rows.map(linkOut) }, 200);
+  });
+
+  app.openapi(routes.createInviteLink, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const b = c.req.valid("json");
+    await requireAdmin(claims, id);
+    const token = `kjoin_${randomBytes(24).toString("base64url")}`;
+    const expires = b.expires_in_days
+      ? new Date(Date.now() + b.expires_in_days * 86_400_000)
+      : null;
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx.execute<LinkRow>(sql`
+        insert into public.invite_links (org_id, role, token_hash, token_hint, expires_at, max_uses, created_by)
+        values (${id}::uuid, ${b.role ?? "member"}, ${sha256Hex(token)}, ${token.slice(0, 10)}, ${expires?.toISOString() ?? null}::timestamptz,
+                ${b.max_uses ?? null}, ${claims.sub}::uuid)
+        returning id, org_id, role, token_hint, expires_at, max_uses, uses, revoked_at, created_at`),
+    );
+    if (!row) throw new Error("invite link insert returned nothing");
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${id}::uuid, 'user', ${claims.sub}::uuid, 'invite_link.created', 'invite_link', ${row.id}::uuid, ${JSON.stringify({ role: row.role })}::jsonb)`);
+    const url = `${deps.env.PUBLIC_APP_URL.replace(/\/$/, "")}/join/${token}`;
+    return c.json({ ...linkOut(row), token, url }, 201);
+  });
+
+  app.openapi(routes.revokeInviteLink, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id, link_id } = c.req.valid("param");
+    await requireAdmin(claims, id);
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ id: string }>(sql`
+        update public.invite_links set revoked_at = coalesce(revoked_at, now())
+        where id = ${link_id}::uuid and org_id = ${id}::uuid returning id`),
+    );
+    if (!rows.length) throw new ApiError(404, "link_not_found", "Invite link not found");
+    return c.body(null, 204);
+  });
+
+  app.openapi(routes.acceptInviteLink, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { token } = c.req.valid("param");
+    let orgId: string;
+    try {
+      const [m] = await withUserSession(db, claims, (tx) =>
+        tx.execute<{ org_id: string }>(
+          sql`select org_id from public.accept_invite_link(${sha256Hex(token)})`,
+        ),
+      );
+      if (!m) throw new Error("accept_invite_link returned nothing");
+      orgId = m.org_id;
+    } catch (err) {
+      if (pgErrorCode(err) === "P0002")
+        throw new ApiError(
+          404,
+          "invite_invalid",
+          "This invite link is invalid, used up, revoked or expired",
+        );
+      throw err;
+    }
+    const org = (await listMyOrgs(claims)).find((o) => o.id === orgId);
+    if (!org) throw new ApiError(404, "org_not_found", "Workspace not found");
+    return c.json(org, 200);
+  });
+
+  app.openapi(routes.workspaceBadges, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ org_id: string; approvals: number; unread: number }>(sql`
+        select m.org_id,
+          (select count(*)::int from public.approvals a where a.org_id = m.org_id and a.status = 'pending') as approvals,
+          (select count(*)::int from public.notifications n
+             where n.org_id = m.org_id and n.user_id = ${claims.sub}::uuid and n.read_at is null) as unread
+        from public.memberships m where m.user_id = ${claims.sub}::uuid`),
+    );
+    return c.json({ items: rows }, 200);
   });
 
   app.openapi(routes.acceptInvite, async (c) => {

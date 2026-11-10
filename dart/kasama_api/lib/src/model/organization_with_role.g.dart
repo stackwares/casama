@@ -17,6 +17,10 @@ abstract class _$OrganizationWithRoleCWProxy {
 
   OrganizationWithRole region(String region);
 
+  OrganizationWithRole icon(String? icon);
+
+  OrganizationWithRole color(String? color);
+
   OrganizationWithRole createdAt(DateTime createdAt);
 
   OrganizationWithRole role(OrgRole role);
@@ -39,6 +43,8 @@ abstract class _$OrganizationWithRoleCWProxy {
     String slug,
     String plan,
     String region,
+    String? icon,
+    String? color,
     DateTime createdAt,
     OrgRole role,
     bool? requireMfa,
@@ -70,6 +76,12 @@ class _$OrganizationWithRoleCWProxyImpl
   OrganizationWithRole region(String region) => call(region: region);
 
   @override
+  OrganizationWithRole icon(String? icon) => call(icon: icon);
+
+  @override
+  OrganizationWithRole color(String? color) => call(color: color);
+
+  @override
   OrganizationWithRole createdAt(DateTime createdAt) =>
       call(createdAt: createdAt);
 
@@ -98,6 +110,8 @@ class _$OrganizationWithRoleCWProxyImpl
     Object? slug = const $CopyWithPlaceholder(),
     Object? plan = const $CopyWithPlaceholder(),
     Object? region = const $CopyWithPlaceholder(),
+    Object? icon = const $CopyWithPlaceholder(),
+    Object? color = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
     Object? role = const $CopyWithPlaceholder(),
     Object? requireMfa = const $CopyWithPlaceholder(),
@@ -124,6 +138,14 @@ class _$OrganizationWithRoleCWProxyImpl
           ? _value.region
           // ignore: cast_nullable_to_non_nullable
           : region as String,
+      icon: icon == const $CopyWithPlaceholder()
+          ? _value.icon
+          // ignore: cast_nullable_to_non_nullable
+          : icon as String?,
+      color: color == const $CopyWithPlaceholder()
+          ? _value.color
+          // ignore: cast_nullable_to_non_nullable
+          : color as String?,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -177,6 +199,8 @@ OrganizationWithRole _$OrganizationWithRoleFromJson(
     slug: $checkedConvert('slug', (v) => v as String),
     plan: $checkedConvert('plan', (v) => v as String),
     region: $checkedConvert('region', (v) => v as String),
+    icon: $checkedConvert('icon', (v) => v as String?),
+    color: $checkedConvert('color', (v) => v as String?),
     createdAt: $checkedConvert(
       'created_at',
       (v) => DateTime.parse(v as String),
@@ -196,6 +220,8 @@ Map<String, dynamic> _$OrganizationWithRoleToJson(
   'slug': instance.slug,
   'plan': instance.plan,
   'region': instance.region,
+  'icon': ?instance.icon,
+  'color': ?instance.color,
   'created_at': instance.createdAt.toIso8601String(),
   'role': _$OrgRoleEnumMap[instance.role]!,
   'require_mfa': ?instance.requireMfa,

@@ -3145,4 +3145,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ticketStatus => 'Status';
+
+  @override
+  String get spaces => 'Workspaces';
+
+  @override
+  String get newWorkspace => 'New workspace';
+
+  @override
+  String get joinWorkspaceHelp => 'Paste the invite link someone sent you.';
+
+  @override
+  String get inviteLinkField => 'Invite link';
+
+  @override
+  String get workspaceIcon => 'Icon';
+
+  @override
+  String get workspaceColor => 'Color';
+
+  @override
+  String get workspaceSettings => 'Workspace settings';
+
+  @override
+  String get workspaceSettingsHelp => 'Name, icon, color and invite links';
+
+  @override
+  String get inviteLinks => 'Invite links';
+
+  @override
+  String get inviteLinksHelp =>
+      'Anyone with a link can join after signing in, until it expires, runs out of uses or you revoke it.';
+
+  @override
+  String get createInviteLink => 'Create a link';
+
+  @override
+  String get inviteRole => 'Joins as';
+
+  @override
+  String get linkExpires => 'Expires';
+
+  @override
+  String get linkNever => 'Never';
+
+  @override
+  String linkDays(String days) {
+    return 'In $days days';
+  }
+
+  @override
+  String get linkMaxUses => 'Uses';
+
+  @override
+  String get linkUnlimited => 'Unlimited';
+
+  @override
+  String linkUses(String uses) {
+    return '$uses used';
+  }
+
+  @override
+  String get linkRevoked => 'Revoked';
+
+  @override
+  String get revokeLink => 'Revoke';
+
+  @override
+  String get linkCopied => 'Invite link copied.';
+
+  @override
+  String get joiningWorkspace => 'Joining the workspace…';
+
+  @override
+  String joinedWorkspace(String name) {
+    return 'You joined $name.';
+  }
+
+  @override
+  String get joinFailed =>
+      'This invite link doesn\'t work anymore. Ask for a new one.';
+
+  @override
+  String get joinWithLink => 'Join with a link';
 }

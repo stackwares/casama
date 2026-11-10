@@ -133,6 +133,14 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   if (isAdmin) GroupedTile(icon: LucideIcons.userPlus, title: l10n.inviteMember, onTap: () => _invite(context, ref)),
                   GroupedTile(
+                    key: const Key('settingsWorkspace'),
+                    icon: LucideIcons.palette,
+                    title: l10n.workspaceSettings,
+                    subtitle: l10n.workspaceSettingsHelp,
+                    showChevron: true,
+                    onTap: () => context.push('/settings/workspace'),
+                  ),
+                  GroupedTile(
                     key: const Key('settingsUsage'),
                     icon: LucideIcons.banknote,
                     iconColor: colors.positive,

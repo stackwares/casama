@@ -178,10 +178,16 @@ Class | Method | HTTP request | Description
 [*WebhooksApi*](doc/WebhooksApi.md) | [**customWebhook**](doc/WebhooksApi.md#customwebhook) | **POST** /hooks/custom/{routine_id} | Custom webhook for a routine (X-Kasama-Signature: sha256&#x3D;HMAC-SHA256 of the body)
 [*WebhooksApi*](doc/WebhooksApi.md) | [**githubWebhook**](doc/WebhooksApi.md#githubwebhook) | **POST** /hooks/github/{routine_id} | GitHub webhook for a routine (X-Hub-Signature-256)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**acceptInvite**](doc/WorkspacesApi.md#acceptinvite) | **POST** /v1/invites/{token}/accept | Join an organization with an invite token
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**acceptInviteLink**](doc/WorkspacesApi.md#acceptinvitelink) | **POST** /v1/invite-links/{token}/accept | Join a workspace with an invite link
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createInvite**](doc/WorkspacesApi.md#createinvite) | **POST** /v1/orgs/{id}/invites | Invite someone by email (owners and admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**createInviteLink**](doc/WorkspacesApi.md#createinvitelink) | **POST** /v1/orgs/{id}/invite-links | Create a shareable invite link (admins); the token is shown once
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createOrg**](doc/WorkspacesApi.md#createorg) | **POST** /v1/orgs | Create an organization; the caller becomes its owner
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**getMe**](doc/WorkspacesApi.md#getme) | **GET** /v1/me | The signed-in user and their organizations
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**listInviteLinks**](doc/WorkspacesApi.md#listinvitelinks) | **GET** /v1/orgs/{id}/invite-links | 
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**listOrgs**](doc/WorkspacesApi.md#listorgs) | **GET** /v1/orgs | 
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**revokeInviteLink**](doc/WorkspacesApi.md#revokeinvitelink) | **DELETE** /v1/orgs/{id}/invite-links/{link_id} | 
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**updateOrg**](doc/WorkspacesApi.md#updateorg) | **PATCH** /v1/orgs/{id} | Rename a workspace or change its icon and color (admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**workspaceBadges**](doc/WorkspacesApi.md#workspacebadges) | **GET** /v1/me/badges | Pending approvals and unread notifications per workspace
 
 
 ## Documentation For Models
@@ -246,6 +252,7 @@ Class | Method | HTTP request | Description
  - [CreateConversationRequest](doc/CreateConversationRequest.md)
  - [CreateCredentialRequest](doc/CreateCredentialRequest.md)
  - [CreateIntegrationRequest](doc/CreateIntegrationRequest.md)
+ - [CreateInviteLinkRequest](doc/CreateInviteLinkRequest.md)
  - [CreateInviteRequest](doc/CreateInviteRequest.md)
  - [CreateLocalDeviceRequest](doc/CreateLocalDeviceRequest.md)
  - [CreateOrganizationRequest](doc/CreateOrganizationRequest.md)
@@ -254,6 +261,7 @@ Class | Method | HTTP request | Description
  - [CreateTaskCommentRequest](doc/CreateTaskCommentRequest.md)
  - [CreateTaskRequest](doc/CreateTaskRequest.md)
  - [CreatedConnectKey](doc/CreatedConnectKey.md)
+ - [CreatedInviteLink](doc/CreatedInviteLink.md)
  - [CreatedLocalDevice](doc/CreatedLocalDevice.md)
  - [CreatedRoutine](doc/CreatedRoutine.md)
  - [Credential](doc/Credential.md)
@@ -278,6 +286,8 @@ Class | Method | HTTP request | Description
  - [IntegrationTestResult](doc/IntegrationTestResult.md)
  - [IntegrationToolsInner](doc/IntegrationToolsInner.md)
  - [Invite](doc/Invite.md)
+ - [InviteLink](doc/InviteLink.md)
+ - [InviteLinkList](doc/InviteLinkList.md)
  - [InviteRole](doc/InviteRole.md)
  - [Lease](doc/Lease.md)
  - [LeaseChangedEvent](doc/LeaseChangedEvent.md)
@@ -400,6 +410,7 @@ Class | Method | HTTP request | Description
  - [UpdateLocalDeviceRequest](doc/UpdateLocalDeviceRequest.md)
  - [UpdateNotice](doc/UpdateNotice.md)
  - [UpdateOrgSettingsRequest](doc/UpdateOrgSettingsRequest.md)
+ - [UpdateOrganizationRequest](doc/UpdateOrganizationRequest.md)
  - [UpdateRoutineRequest](doc/UpdateRoutineRequest.md)
  - [UpdateTaskRequest](doc/UpdateTaskRequest.md)
  - [UploadResult](doc/UploadResult.md)
@@ -420,6 +431,8 @@ Class | Method | HTTP request | Description
  - [WallpaperDownloadRequest](doc/WallpaperDownloadRequest.md)
  - [WallpaperPhoto](doc/WallpaperPhoto.md)
  - [WallpaperPhotoList](doc/WallpaperPhotoList.md)
+ - [WorkspaceBadge](doc/WorkspaceBadge.md)
+ - [WorkspaceBadgeList](doc/WorkspaceBadgeList.md)
 
 
 ## Documentation For Authorization

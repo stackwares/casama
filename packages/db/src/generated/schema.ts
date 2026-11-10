@@ -112,6 +112,8 @@ export const organizations = pgTable("organizations", {
 	requireMfa: boolean("require_mfa").default(false).notNull(),
 	suspendedAt: timestamp("suspended_at", { withTimezone: true, mode: 'string' }),
 	suspendedReason: text("suspended_reason"),
+	icon: text(),
+	color: text(),
 }, (table) => [
 	foreignKey({
 			columns: [table.createdBy],
@@ -127,6 +129,8 @@ export const organizations = pgTable("organizations", {
 	check("organizations_slug_check", sql`slug ~ '^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$'::text`),
 	check("organizations_run_event_retention_days_check", sql`(run_event_retention_days >= 7) AND (run_event_retention_days <= 3650)`),
 	check("organizations_suspended_reason_check", sql`(suspended_reason IS NULL) OR (char_length(suspended_reason) <= 500)`),
+	check("organizations_icon_check", sql`(icon IS NULL) OR (char_length(icon) <= 40)`),
+	check("organizations_color_check", sql`(color IS NULL) OR (color ~ '^#[0-9a-fA-F]{6}$'::text)`),
 ]);
 
 export const plans = pgTable("plans", {
@@ -1376,6 +1380,39 @@ export const taskComments = pgTable("task_comments", {
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("task_comments_author_type_check", sql`author_type = ANY (ARRAY['user'::text, 'bot'::text])`),
 	check("task_comments_body_md_check", sql`(char_length(body_md) >= 1) AND (char_length(body_md) <= 20000)`),
+]);
+
+export const inviteLinks = pgTable("invite_links", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	role: orgRole().default('member').notNull(),
+	tokenHash: text("token_hash").notNull(),
+	tokenHint: text("token_hint").notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }),
+	maxUses: integer("max_uses"),
+	uses: integer().default(0).notNull(),
+	createdBy: uuid("created_by"),
+	revokedAt: timestamp("revoked_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("invite_links_org_idx").using("btree", table.orgId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "invite_links_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "invite_links_created_by_fkey"
+		}).onDelete("set null"),
+	unique("invite_links_token_hash_key").on(table.tokenHash),
+	pgPolicy("invite_links_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
+	pgPolicy("invite_links_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
+	pgPolicy("invite_links_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("invite_links_role_check", sql`role = ANY (ARRAY['admin'::org_role, 'member'::org_role])`),
+	check("invite_links_max_uses_check", sql`(max_uses IS NULL) OR ((max_uses >= 1) AND (max_uses <= 10000))`),
 ]);
 
 export const ttsCache = pgTable("tts_cache", {

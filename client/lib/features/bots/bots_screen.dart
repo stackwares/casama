@@ -18,6 +18,7 @@ import '../settings/model_keys_screen.dart';
 import 'model_picker.dart';
 import 'template_picker.dart';
 import '../../ui/glow_button.dart';
+import '../workspaces/spaces.dart';
 
 String botStatusLabel(BuildContext context, BotStatusEnum s) => switch (s) {
   BotStatusEnum.working => context.l10n.botStatusWorking,
@@ -144,7 +145,11 @@ class BotsScreen extends ConsumerWidget {
       appBar: ShellHeader(
         title: context.l10n.bots,
         subtitle: org?.name,
-        actions: [HeaderIconButton(icon: LucideIcons.plus, tooltip: context.l10n.newBot, onPressed: () => showCreateBot(context, ref))],
+        onTitleTap: () => showSpacesSheet(context, ref),
+        actions: [
+          const WorkspaceSwitcher(compact: true),
+          HeaderIconButton(icon: LucideIcons.plus, tooltip: context.l10n.newBot, onPressed: () => showCreateBot(context, ref)),
+        ],
       ),
       body: const BotsList(),
     );

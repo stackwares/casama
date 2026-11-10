@@ -1854,6 +1854,77 @@
           "code"
         ]
       },
+      "OrganizationWithRole": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Organization"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "role": {
+                "$ref": "#/components/schemas/OrgRole"
+              },
+              "require_mfa": {
+                "type": "boolean",
+                "description": "Owners and admins need two-step sign-in (an aal2 session) to use their powers"
+              },
+              "suspended": {
+                "type": "boolean",
+                "description": "Suspended by the instance owner: bots don't run and computers don't start (D-094)"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        ]
+      },
+      "Organization": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "plan",
+          "region",
+          "created_at"
+        ]
+      },
       "Invite": {
         "type": "object",
         "properties": {
@@ -1915,24 +1986,73 @@
         ],
         "description": "Defaults to member"
       },
-      "Organization": {
+      "CreatedInviteLink": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InviteLink"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "Shown once"
+              },
+              "url": {
+                "type": "string",
+                "description": "The link to share (the app's /join/<token>)"
+              }
+            },
+            "required": [
+              "token",
+              "url"
+            ]
+          }
+        ]
+      },
+      "InviteLink": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
           },
-          "name": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "member"
+            ]
+          },
+          "token_hint": {
             "type": "string"
           },
-          "slug": {
-            "type": "string"
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
-          "plan": {
-            "type": "string"
+          "max_uses": {
+            "type": [
+              "integer",
+              "null"
+            ]
           },
-          "region": {
-            "type": "string"
+          "uses": {
+            "type": "integer"
+          },
+          "revoked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           },
           "created_at": {
             "type": "string",
@@ -1941,12 +2061,37 @@
         },
         "required": [
           "id",
-          "name",
-          "slug",
-          "plan",
-          "region",
+          "org_id",
+          "role",
+          "token_hint",
+          "expires_at",
+          "max_uses",
+          "uses",
+          "revoked_at",
           "created_at"
         ]
+      },
+      "CreateInviteLinkRequest": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "member"
+            ]
+          },
+          "expires_in_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 365
+          },
+          "max_uses": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          }
+        }
       },
       "CreateOrganizationRequest": {
         "type": "object",
@@ -2007,30 +2152,18 @@
           "organizations"
         ]
       },
-      "OrganizationWithRole": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Organization"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "role": {
-                "$ref": "#/components/schemas/OrgRole"
-              },
-              "require_mfa": {
-                "type": "boolean",
-                "description": "Owners and admins need two-step sign-in (an aal2 session) to use their powers"
-              },
-              "suspended": {
-                "type": "boolean",
-                "description": "Suspended by the instance owner: bots don't run and computers don't start (D-094)"
-              }
-            },
-            "required": [
-              "role"
-            ]
+      "InviteLinkList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InviteLink"
+            }
           }
+        },
+        "required": [
+          "items"
         ]
       },
       "OrganizationList": {
@@ -2045,6 +2178,64 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "UpdateOrganizationRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          }
+        }
+      },
+      "WorkspaceBadgeList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceBadge"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "WorkspaceBadge": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvals": {
+            "type": "integer"
+          },
+          "unread": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "org_id",
+          "approvals",
+          "unread"
         ]
       },
       "Run": {
@@ -6701,6 +6892,64 @@
         }
       }
     },
+    "/v1/invite-links/{token}/accept": {
+      "post": {
+        "operationId": "acceptInviteLink",
+        "tags": [
+          "workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Join a workspace with an invite link",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 256
+            },
+            "required": true,
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Joined",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationWithRole"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/orgs/{id}/invites": {
       "post": {
         "operationId": "createInvite",
@@ -6788,6 +7037,137 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{id}/invite-links": {
+      "post": {
+        "operationId": "createInviteLink",
+        "tags": [
+          "workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create a shareable invite link (admins); the token is shown once",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInviteLinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedInviteLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listInviteLinks",
+        "tags": [
+          "workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invite links (admins)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteLinkList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6984,6 +7364,197 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{id}/invite-links/{link_id}": {
+      "delete": {
+        "operationId": "revokeInviteLink",
+        "tags": [
+          "workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "link_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revoked"
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{id}": {
+      "patch": {
+        "operationId": "updateOrg",
+        "tags": [
+          "workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Rename a workspace or change its icon and color (admins)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Organization"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/badges": {
+      "get": {
+        "operationId": "workspaceBadges",
+        "tags": [
+          "workspaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Pending approvals and unread notifications per workspace",
+        "responses": {
+          "200": {
+            "description": "Badges",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceBadgeList"
                 }
               }
             }

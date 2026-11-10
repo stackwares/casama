@@ -69,15 +69,55 @@ class FakeBackend implements Backend {
   Future<List<OrganizationWithRole>> organizations() async => !hasOrg ? const [] : [
         OrganizationWithRole(
           id: orgId,
-          name: 'Test Org',
+          name: orgName,
           slug: 'test-org',
           plan: 'selfhost',
           region: 'local',
+          icon: orgIcon,
+          color: orgColor,
           createdAt: DateTime(2026),
           role: OrgRole.owner,
           suspended: orgSuspended,
         ),
+        ...extraOrgs,
       ];
+  var orgName = 'Test Org';
+  String? orgIcon;
+  String? orgColor;
+  final extraOrgs = <OrganizationWithRole>[];
+  final links = <InviteLink>[];
+  final joined = <String>[];
+  @override
+  Future<Organization> updateOrg(String orgId, {String? name, String? icon, String? color}) async {
+    orgName = name ?? orgName;
+    orgIcon = icon ?? orgIcon;
+    orgColor = color ?? orgColor;
+    return Organization(id: orgId, name: orgName, slug: 'test-org', plan: 'selfhost', region: 'local', icon: orgIcon, color: orgColor, createdAt: DateTime(2026));
+  }
+  @override
+  Future<List<InviteLink>> inviteLinks(String orgId) async => List.of(links);
+  @override
+  Future<CreatedInviteLink> createInviteLink(String orgId, {String role = 'member', int? expiresInDays, int? maxUses}) async {
+    final id = 'l${links.length + 1}';
+    final r = role == 'admin' ? InviteLinkRoleEnum.admin : InviteLinkRoleEnum.member;
+    links.add(InviteLink(id: id, orgId: orgId, role: r, tokenHint: 'kjoin_abcd', expiresAt: null, maxUses: maxUses, uses: 0, revokedAt: null, createdAt: DateTime(2026)));
+    return CreatedInviteLink(
+      id: id, orgId: orgId, role: role == 'admin' ? CreatedInviteLinkRoleEnum.admin : CreatedInviteLinkRoleEnum.member, tokenHint: 'kjoin_abcd',
+      expiresAt: null, maxUses: maxUses, uses: 0, revokedAt: null, createdAt: DateTime(2026),
+      token: 'kjoin_abcdefghijklmnop', url: 'https://app.example.com/join/kjoin_abcdefghijklmnop',
+    );
+  }
+  @override
+  Future<void> revokeInviteLink(String orgId, String linkId) async => links.removeWhere((l) => l.id == linkId);
+  @override
+  Future<OrganizationWithRole> acceptInviteLink(String token) async {
+    joined.add(token);
+    final o = OrganizationWithRole(id: '99999999-0000-4000-8000-000000000001', name: 'Friends', slug: 'friends', plan: 'selfhost', region: 'local', createdAt: DateTime(2026), role: OrgRole.member);
+    extraOrgs.add(o);
+    return o;
+  }
+  @override
+  Future<List<WorkspaceBadge>> workspaceBadges() async => [WorkspaceBadge(orgId: orgId, approvals: 1, unread: 2)];
   bool orgSuspended = false;
   @override
   Future<Organization> createOrganization(String name) async {
