@@ -66,14 +66,68 @@ class ComputerScreen extends ConsumerWidget {
   }
 }
 
-class ComputerPanel extends ConsumerWidget {
+/// Whether a computer is on its way up (the screen shows progress and polls faster).
+bool computerWaking(ComputerState s) => s == ComputerState.provisioning || s == ComputerState.starting;
+
+class ComputerPanel extends ConsumerStatefulWidget {
   const ComputerPanel({super.key, required this.computer});
   final Computer computer;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ComputerPanel> createState() => _ComputerPanelState();
+}
+
+class _ComputerPanelState extends ConsumerState<ComputerPanel> {
+  // The computer's state changes without this screen: the live view and bots wake it, the idle
+  // timer puts it to sleep. Refresh while visible: quickly while it wakes, gently otherwise.
+  Timer? _poll;
+  late final AppLifecycleListener _lifecycle;
+  String? _action; // 'start' | 'sleep' while a button's request runs
+
+  @override
+  void initState() {
+    super.initState();
+    _schedule();
+    _lifecycle = AppLifecycleListener(onResume: _refresh);
+  }
+
+  @override
+  void didUpdateWidget(ComputerPanel old) {
+    super.didUpdateWidget(old);
+    if (old.computer.state != widget.computer.state) _schedule();
+  }
+
+  void _schedule() {
+    _poll?.cancel();
+    _poll = Timer.periodic(Duration(seconds: computerWaking(widget.computer.state) ? 3 : 10), (_) => _refresh());
+  }
+
+  void _refresh() {
+    if (mounted) ref.invalidate(computersProvider);
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  Future<void> _run(String action, Future<void> Function() call) async {
+    setState(() => _action = action);
+    await runGuarded(context, call);
+    if (!mounted) return;
+    setState(() => _action = null);
+    _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final computer = widget.computer;
     final running = computer.state == ComputerState.running || computer.state == ComputerState.idle;
+    final waking = computerWaking(computer.state) || _action == 'start';
+    final failed = computer.state == ComputerState.error;
     return DefaultTabController(
       length: 4,
       child: Align(
@@ -113,34 +167,60 @@ class ComputerPanel extends ConsumerWidget {
                             style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 2),
-                          StatusLabel(
-                            text: computerStateLabel(context, computer.state),
-                            color: running ? context.appColors.working : context.colorScheme.onSurfaceVariant,
-                            pill: true,
+                          Row(
+                            children: [
+                              Flexible(
+                                child: StatusLabel(
+                                  key: const Key('computerState'),
+                                  text: _action == 'start'
+                                      ? l10n.stateStarting
+                                      : _action == 'sleep'
+                                      ? l10n.computerGoingToSleep
+                                      : computerStateLabel(context, computer.state),
+                                  color: failed
+                                      ? context.appColors.negative
+                                      : (running || waking ? context.appColors.working : context.colorScheme.onSurfaceVariant),
+                                  pill: true,
+                                ),
+                              ),
+                              if (waking || _action == 'sleep') ...[
+                                const SizedBox(width: 6),
+                                SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 1.6, color: context.appColors.working)),
+                              ],
+                            ],
                           ),
+                          if (failed && computer.error != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                computer.error!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.textTheme.bodySmall?.copyWith(color: context.appColors.negative),
+                              ),
+                            ),
                         ],
                       ),
                     ),
                     Wrap(
                       spacing: 8,
                       children: [
-                        if (!running)
-                          FilledButton.tonalIcon(
-                            onPressed: () async {
-                              await runGuarded(context, () => ref.read(backendProvider).startComputer(computer.id));
-                              ref.invalidate(computersProvider);
-                            },
-                            icon: const Icon(LucideIcons.power, size: 18),
-                            label: Text(l10n.computerStart),
-                          )
-                        else
+                        if (running)
                           OutlinedButton.icon(
-                            onPressed: () async {
-                              await runGuarded(context, () => ref.read(backendProvider).stopComputer(computer.id));
-                              ref.invalidate(computersProvider);
-                            },
+                            key: const Key('computerSleep'),
+                            onPressed: _action != null ? null : () => _run('sleep', () => ref.read(backendProvider).stopComputer(computer.id)),
                             icon: const Icon(LucideIcons.moon, size: 18),
                             label: Text(l10n.computerSleep),
+                          )
+                        else
+                          FilledButton.tonalIcon(
+                            key: const Key('computerStart'),
+                            // Already waking: the button shows progress instead of starting it twice.
+                            onPressed: waking || _action != null ? null : () => _run('start', () => ref.read(backendProvider).startComputer(computer.id)),
+                            icon: waking
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                : Icon(failed ? LucideIcons.rotateCw : LucideIcons.power, size: 18),
+                            label: Text(waking ? l10n.stateStarting : (failed ? l10n.retry : l10n.computerWake)),
                           ),
                       ],
                     ),
@@ -215,22 +295,27 @@ class _IconTab extends StatelessWidget {
   }
 }
 
-/// Desktop computers open the live view (it starts the computer if it is asleep).
-class _LiveEntry extends StatelessWidget {
+/// Desktop computers open the live view (it starts the computer if it is asleep, and says so).
+class _LiveEntry extends ConsumerWidget {
   const _LiveEntry({required this.computer});
   final Computer computer;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final awake = computer.state == ComputerState.running || computer.state == ComputerState.idle;
     return EmptyState(
-      icon: LucideIcons.monitorPlay,
-      message: l10n.liveViewHelp,
+      icon: awake ? LucideIcons.monitorPlay : LucideIcons.moon,
+      message: awake ? l10n.liveViewHelp : l10n.liveViewWakesHelp,
       action: GlowButton.icon(
         key: const Key('openLiveView'),
-        onPressed: () => GoRouter.of(context).push('/computer/live?c=${computer.id}'),
-        icon: const Icon(LucideIcons.play),
-        label: Text(l10n.openLiveView),
+        onPressed: () async {
+          await GoRouter.of(context).push('/computer/live?c=${computer.id}');
+          // The live view may have woken it up.
+          ref.invalidate(computersProvider);
+        },
+        icon: Icon(awake ? LucideIcons.play : LucideIcons.sunrise),
+        label: Text(awake ? l10n.openLiveView : l10n.wakeAndWatch),
       ),
     );
   }

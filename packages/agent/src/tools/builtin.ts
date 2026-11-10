@@ -36,6 +36,55 @@ export function builtinTools(deps: {
   });
 
   registry.register({
+    name: "usage.report",
+    readOnly: true,
+    description:
+      "The workspace's usage and estimated cost: totals, by bot, by model, by day, and everything metered (tokens, computer time, live view, read aloud). Use it to answer questions about spending or usage.",
+    risk: "low",
+    schema: z.object({
+      period: z.enum(["day", "week", "month", "year"]).optional().describe("Defaults to month"),
+    }),
+    async execute(args, ctx) {
+      const period = args.period ?? "month";
+      const since = sql`date_trunc(${period}, now() at time zone 'utc') at time zone 'utc'`;
+      const scope = sql`u.org_id = ${ctx.orgId}::uuid and u.created_at >= ${since}`;
+      const usd = (n: unknown) => `$${Number(n ?? 0).toFixed(4)}`;
+      const [total] = await deps.db.execute<{ cost: string; runs: string }>(sql`
+        select coalesce(sum(u.cost_usd), 0) as cost, count(distinct u.run_id) as runs
+        from public.usage_ledger u where ${scope}`);
+      const bots = await deps.db.execute<{ name: string | null; cost: string; tin: string; tout: string }>(sql`
+        select b.name, sum(u.cost_usd) as cost,
+          sum(case when u.kind = 'tokens_in' then u.quantity else 0 end) as tin,
+          sum(case when u.kind = 'tokens_out' then u.quantity else 0 end) as tout
+        from public.usage_ledger u left join public.bots b on b.id = u.bot_id
+        where ${scope} group by b.name order by cost desc limit 20`);
+      const models = await deps.db.execute<{ model: string | null; cost: string }>(sql`
+        select u.model, sum(u.cost_usd) as cost from public.usage_ledger u where ${scope}
+        group by u.model order by cost desc limit 10`);
+      const kinds = await deps.db.execute<{ kind: string; quantity: string; cost: string }>(sql`
+        select u.kind, sum(u.quantity) as quantity, sum(u.cost_usd) as cost from public.usage_ledger u
+        where ${scope} group by u.kind order by cost desc`);
+      const days = await deps.db.execute<{ day: string; cost: string }>(sql`
+        select to_char(date_trunc('day', u.created_at at time zone 'utc'), 'YYYY-MM-DD') as day, sum(u.cost_usd) as cost
+        from public.usage_ledger u where ${scope} group by 1 order by 1 desc limit 31`);
+      const lines = [
+        `Usage this ${period} (UTC): ${usd(total?.cost)} across ${total?.runs ?? 0} runs. Costs are estimates from published prices.`,
+        "By bot:",
+        ...bots.map(
+          (b) => `- ${b.name ?? "not tied to a bot (computers, etc.)"}: ${usd(b.cost)}, ${b.tin} tokens in, ${b.tout} out`,
+        ),
+        "By model:",
+        ...models.map((m) => `- ${m.model ?? "no model (computers, voice)"}: ${usd(m.cost)}`),
+        "Everything metered:",
+        ...kinds.map((k) => `- ${k.kind}: ${Number(k.quantity)} (${usd(k.cost)})`),
+        "By day (newest first):",
+        ...days.map((d) => `- ${d.day}: ${usd(d.cost)}`),
+      ];
+      return { content: lines.join("\n"), preview: `${usd(total?.cost)} this ${period}` };
+    },
+  });
+
+  registry.register({
     name: "memory.write",
     description:
       "Save a lasting fact or preference to long-term memory. Near-duplicates are updated instead of added. Use one standalone sentence.",

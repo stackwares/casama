@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kasama_app/core/providers.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
@@ -186,5 +187,31 @@ void main() {
     expect(csv, contains('bot,"Ada, the bot",1.5,10,2'));
     expect(csv, contains('day,2026-11-02,1.5,10,2'));
     expect(csv, contains('total,month,1.5'));
+  });
+
+  testWidgets('asking a bot about usage sends the numbers into a new chat', (tester) async {
+    tester.view.physicalSize = const Size(700, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final backend = FakeBackend();
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, _) => const UsageScreen()),
+      GoRoute(path: '/bots/:id/chat', builder: (_, s) => Text('chat ${s.uri.queryParameters['c']}')),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [backendProvider.overrideWithValue(backend)],
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('askAboutUsage')));
+    await tester.tap(find.byKey(const Key('askAboutUsage')));
+    await tester.pumpAndSettle();
+    expect(backend.sent.single, contains('Here is my Kasama usage for This month'));
+    expect(backend.sent.single, contains('Ada: \$0.0123'));
+    expect(find.text('chat $convId'), findsOneWidget);
   });
 }

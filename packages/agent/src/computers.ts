@@ -104,6 +104,33 @@ export class ComputerService {
     await emit?.("computer.state", { computer_id: id, state });
   }
 
+  /**
+   * Makes the stored state match the sandbox: a row says running but the container is gone (host
+   * restart, crash), or says asleep but the container is still up (a sleep that didn't finish).
+   * Returns the state it settled on. Starting, provisioning and local computers are left alone.
+   */
+  async reconcile(computerId: string): Promise<string | null> {
+    const c = await this.byId(computerId);
+    if (!c || c.kind === "local") return c?.state ?? null;
+    if (c.state === "starting" || c.state === "provisioning") return c.state;
+    const h = await this.providerFor(c)
+      .get(computerId)
+      .catch(() => undefined);
+    if (h === undefined) return c.state; // provider unreachable: don't guess
+    const up = !!h && !!(await h.health().catch(() => null));
+    const saysUp = c.state === "running" || c.state === "idle";
+    if (saysUp && !up) {
+      await this.recordUsage(c);
+      await this.setState(computerId, c.snapshot_ref ? "sleeping" : "stopped");
+      return c.snapshot_ref ? "sleeping" : "stopped";
+    }
+    if (!saysUp && up) {
+      await this.setState(computerId, "running");
+      return "running";
+    }
+    return c.state;
+  }
+
   /** Records computer-seconds for the interval that is ending. */
   private async recordUsage(c: ComputerRow) {
     if (!c.running_since) return;

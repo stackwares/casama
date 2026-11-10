@@ -1341,7 +1341,7 @@
   "otherModel": "Computers and other",
   "deletedBot": "Not tied to a bot",
   "usageHelp": "Costs are estimates from token counts and published prices. Your model provider's bill is the final word.",
-  "usageAskPrompt": "Here is my Kasama usage for {period}. Help me understand where the money goes and how I could spend less.\n\n{summary}",
+  "usageAskPrompt": "Here is my Kasama usage for {period}. Help me understand where the money goes and how I could spend less. You can also check live numbers with your usage tool.\n\n{summary}",
   "@usageAskPrompt": {
     "placeholders": {
       "period": {
@@ -1564,5 +1564,10 @@
   "projectId": "Project ID",
   "toolRiskLow": "Read-only",
   "toolRiskMedium": "Makes changes",
-  "toolRiskHigh": "Always asks"
+  "toolRiskHigh": "Always asks",
+  "askWhichBot": "Which bot should look at this?",
+  "computerWake": "Wake up",
+  "computerGoingToSleep": "Going to sleep",
+  "liveViewWakesHelp": "This computer is asleep. Opening the live view wakes it up; it goes back to sleep after a while without use.",
+  "wakeAndWatch": "Wake up and watch live"
 }

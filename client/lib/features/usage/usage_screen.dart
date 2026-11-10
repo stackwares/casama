@@ -13,7 +13,9 @@ import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
+import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
@@ -150,7 +152,7 @@ class _Report extends StatelessWidget {
               key: const Key('askAboutUsage'),
               onPressed: empty
                   ? null
-                  : () => context.push(Uri(path: '/quick-ask', queryParameters: {'text': l10n.usageAskPrompt(periodLabel, usageSummary(context, report))}).toString()),
+                  : () => askBotAbout(context, l10n.usageAskPrompt(periodLabel, usageSummary(context, report))),
               icon: const Icon(LucideIcons.messageCircleQuestion, size: 18),
               label: Text(l10n.askBotAboutUsage),
             ),
@@ -487,4 +489,44 @@ String usageCsv(UsageReport r) {
     ['total', r.period.name, r.totalCostUsd, '', ''],
   ];
   return '${rows.map((row) => row.map(esc).join(',')).join('\n')}\n';
+}
+
+/// Picks a bot, starts a new chat with it and sends [text], then opens the chat.
+Future<void> askBotAbout(BuildContext context, String text) async {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final bots = await container.read(botsProvider.future);
+  if (!context.mounted || bots.isEmpty) return;
+  final bot = bots.length == 1
+      ? bots.single
+      : await showAdaptiveSheet<Bot>(
+          context: context,
+          builder: (sheet) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, AppSpace.sm),
+                  child: Text(sheet.l10n.askWhichBot, style: sheet.textTheme.titleLarge),
+                ),
+                for (final b in bots)
+                  ListTile(
+                    key: Key('askBot-${b.id}'),
+                    leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 36, animate: false),
+                    title: Text(b.name),
+                    onTap: () => Navigator.of(sheet).pop(b),
+                  ),
+                const SizedBox(height: AppSpace.md),
+              ],
+            ),
+          ),
+        );
+  if (bot == null || !context.mounted) return;
+  final backend = container.read(backendProvider);
+  final conv = await runGuarded(context, () async {
+    final c = await backend.createConversation(bot.id);
+    await backend.send(c.id, text);
+    return c;
+  });
+  if (conv != null && context.mounted) context.go('/bots/${bot.id}/chat?c=${conv.id}');
 }

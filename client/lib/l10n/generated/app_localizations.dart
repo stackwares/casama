@@ -4225,7 +4225,7 @@ abstract class AppLocalizations {
   /// No description provided for @usageAskPrompt.
   ///
   /// In en, this message translates to:
-  /// **'Here is my Kasama usage for {period}. Help me understand where the money goes and how I could spend less.\n\n{summary}'**
+  /// **'Here is my Kasama usage for {period}. Help me understand where the money goes and how I could spend less. You can also check live numbers with your usage tool.\n\n{summary}'**
   String usageAskPrompt(String period, String summary);
 
   /// No description provided for @kindTokensIn.
@@ -4833,6 +4833,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Always asks'**
   String get toolRiskHigh;
+
+  /// No description provided for @askWhichBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Which bot should look at this?'**
+  String get askWhichBot;
+
+  /// No description provided for @computerWake.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake up'**
+  String get computerWake;
+
+  /// No description provided for @computerGoingToSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Going to sleep'**
+  String get computerGoingToSleep;
+
+  /// No description provided for @liveViewWakesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'This computer is asleep. Opening the live view wakes it up; it goes back to sleep after a while without use.'**
+  String get liveViewWakesHelp;
+
+  /// No description provided for @wakeAndWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake up and watch live'**
+  String get wakeAndWatch;
 }
 
 class _AppLocalizationsDelegate

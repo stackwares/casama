@@ -122,7 +122,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/quick-ask',
             pageBuilder: _page(
-              (_, s) => QuickAskScreen(initialText: s.uri.queryParameters['text'] ?? '', fromShareExtension: s.uri.queryParameters['shared'] == '1'),
+              (_, s) => QuickAskScreen(key: ValueKey(s.uri.toString()), initialText: s.uri.queryParameters['text'] ?? '', fromShareExtension: s.uri.queryParameters['shared'] == '1'),
             ),
           ),
           GoRoute(

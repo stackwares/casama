@@ -247,6 +247,13 @@ describe.skipIf(!enabled)("computers (Phase 2 gate)", () => {
     expect(started.state).toBe("running");
     expect(await download("persist.txt")).toBe("survives sleep");
     expect(await download("report.md")).toContain("Example Domain");
+
+    // The list reports what the sandbox really is, even if the stored state drifted.
+    await h.tdb.admin`update public.computers set state = 'sleeping' where id = ${computerId}`;
+    const listed = await j(
+      await h.request(`/v1/computers?org_id=${orgId}`, { token: owner.token }),
+    );
+    expect(listed.items.find((x: { id: string }) => x.id === computerId)?.state).toBe("running");
   }, 240_000);
 
   it("hides computers from other organizations", async () => {

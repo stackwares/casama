@@ -2417,7 +2417,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String usageAskPrompt(String period, String summary) {
-    return 'Here is my Kasama usage for $period. Help me understand where the money goes and how I could spend less.\n\n$summary';
+    return 'Here is my Kasama usage for $period. Help me understand where the money goes and how I could spend less. You can also check live numbers with your usage tool.\n\n$summary';
   }
 
   @override
@@ -2776,4 +2776,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolRiskHigh => 'Always asks';
+
+  @override
+  String get askWhichBot => 'Which bot should look at this?';
+
+  @override
+  String get computerWake => 'Wake up';
+
+  @override
+  String get computerGoingToSleep => 'Going to sleep';
+
+  @override
+  String get liveViewWakesHelp =>
+      'This computer is asleep. Opening the live view wakes it up; it goes back to sleep after a while without use.';
+
+  @override
+  String get wakeAndWatch => 'Wake up and watch live';
 }

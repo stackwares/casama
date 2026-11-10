@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kasama_app/features/computer/computer_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:kasama_app/app.dart';
 import 'package:kasama_app/core/backend.dart';
@@ -166,6 +167,19 @@ void main() {
     expect(find.byType(ChatScreen), findsOneWidget);
     expect(find.text('Team computer'), findsOneWidget);
     expect(find.text('Asleep'), findsOneWidget);
+    // Asleep: the button wakes it.
+    expect(find.text('Wake up'), findsOneWidget);
+
+    // The computer panel is resized by dragging its left edge.
+    double panelWidth() => tester.getSize(find.byType(ComputerScreen)).width;
+    expect(panelWidth(), 420);
+    await tester.drag(find.byKey(const Key('computerPanelResize')), const Offset(-120, 0));
+    await tester.pumpAndSettle();
+    expect(panelWidth(), inInclusiveRange(500, 540)); // minus the drag start threshold
+    // Never narrower than 360.
+    await tester.drag(find.byKey(const Key('computerPanelResize')), const Offset(600, 0));
+    await tester.pumpAndSettle();
+    expect(panelWidth(), 360);
   });
 
   testWidgets('onboarding advances after creating a workspace', (tester) async {

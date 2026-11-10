@@ -88,9 +88,21 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
   app.openapi(routes.listComputers, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { org_id } = c.req.valid("query");
-    const rows = await withUserSession(db, claims, (tx) =>
-      tx.select().from(computers).where(eq(computers.orgId, org_id)).orderBy(computers.createdAt),
-    );
+    const list = () =>
+      withUserSession(db, claims, (tx) =>
+        tx.select().from(computers).where(eq(computers.orgId, org_id)).orderBy(computers.createdAt),
+      );
+    let rows = await list();
+    // The screen shows what the sandbox really is, not just the last recorded state.
+    const svc = deps.computers;
+    if (svc && rows.length) {
+      const checks = rows.map((r) => svc.reconcile(r.id).catch(() => r.state));
+      const settled = await Promise.race([
+        Promise.all(checks),
+        new Promise<null>((r) => setTimeout(() => r(null), 1500)),
+      ]);
+      if (settled && settled.some((s, i) => s !== rows[i]?.state)) rows = await list();
+    }
     return c.json({ items: rows.map(out) }, 200);
   });
 

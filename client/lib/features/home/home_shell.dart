@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -34,6 +35,41 @@ class ComputerPanelOpen extends Notifier<bool> {
 }
 
 final computerPanelProvider = NotifierProvider<ComputerPanelOpen, bool>(ComputerPanelOpen.new);
+
+/// The computer panel's width on wide screens: dragged by its edge, kept on this device.
+class ComputerPanelWidth extends Notifier<double> {
+  static const defaultWidth = 420.0;
+  static const min = 360.0;
+  static const _key = 'layout.computerPanelWidth';
+
+  @override
+  double build() {
+    SharedPreferences.getInstance().then((p) {
+      final v = p.getDouble(_key);
+      if (v != null) state = v;
+    }).catchError((_) {});
+    return defaultWidth;
+  }
+
+  void set(double width) => state = width;
+
+  Future<void> save() async {
+    try {
+      await (await SharedPreferences.getInstance()).setDouble(_key, state);
+    } catch (_) {}
+  }
+}
+
+final computerPanelWidthProvider = NotifierProvider<ComputerPanelWidth, double>(ComputerPanelWidth.new);
+
+/// True while the panel's edge is being dragged, so the open/close animation doesn't lag the drag.
+class _PanelDragging extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void set(bool v) => state = v;
+}
+
+final _panelDraggingProvider = NotifierProvider<_PanelDragging, bool>(_PanelDragging.new);
 
 class _Dest {
   const _Dest(this.path, this.icon, this.selectedIcon, this.label);
@@ -161,15 +197,12 @@ class HomeShell extends ConsumerWidget {
           ),
           if (inChat)
             AnimatedSize(
-              duration: AppMotion.of(context, const Duration(milliseconds: 260)),
+              duration: ref.watch(_panelDraggingProvider) ? Duration.zero : AppMotion.of(context, const Duration(milliseconds: 260)),
               curve: AppMotion.curve,
               alignment: Alignment.centerLeft,
               child: panelOpen
                   // Frosted, so the computer reads as its own pane over the chat's wallpaper.
-                  ? Glass(
-                      border: Border(left: BorderSide(color: context.appColors.hairline)),
-                      child: SizedBox(width: 420, child: ComputerScreen(botId: _botId, embedded: true)),
-                    )
+                  ? _ResizablePanel(child: ComputerScreen(botId: _botId, embedded: true))
                   : const SizedBox(width: 0, height: double.infinity),
             ),
         ],
@@ -439,6 +472,86 @@ class _SelectBotPlaceholder extends ConsumerWidget {
       title: hasBots ? l10n.selectBot : l10n.noBots,
       message: l10n.selectBotHelp,
       action: GlowButton.icon(onPressed: onCreate, icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
+    );
+  }
+}
+
+/// The computer panel with a drag handle on its left edge. Double-click the handle to reset.
+/// The chat keeps at least 420 px, and the panel stays between 360 px and 60% of the window.
+class _ResizablePanel extends ConsumerStatefulWidget {
+  const _ResizablePanel({required this.child});
+  final Widget child;
+
+  @override
+  ConsumerState<_ResizablePanel> createState() => _ResizablePanelState();
+}
+
+class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
+  var _hover = false;
+  var _dragging = false;
+
+  double _max(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return (w * 0.6).clamp(ComputerPanelWidth.min, (w - 280 - 420).clamp(ComputerPanelWidth.min, double.infinity));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final max = _max(context);
+    final width = ref.watch(computerPanelWidthProvider).clamp(ComputerPanelWidth.min, max);
+    final notifier = ref.read(computerPanelWidthProvider.notifier);
+    final active = _hover || _dragging;
+    return Glass(
+      border: Border(left: BorderSide(color: active ? scheme.primary.withValues(alpha: 0.6) : context.appColors.hairline, width: active ? 2 : 1)),
+      child: SizedBox(
+        width: width,
+        child: Stack(
+          children: [
+            Positioned.fill(child: widget.child),
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 10,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.resizeColumn,
+                onEnter: (_) => setState(() => _hover = true),
+                onExit: (_) => setState(() => _hover = false),
+                child: GestureDetector(
+                  key: const Key('computerPanelResize'),
+                  behavior: HitTestBehavior.opaque,
+                  onHorizontalDragStart: (_) {
+                    setState(() => _dragging = true);
+                    ref.read(_panelDraggingProvider.notifier).set(true);
+                  },
+                  onHorizontalDragUpdate: (d) => notifier.set((width - d.delta.dx).clamp(ComputerPanelWidth.min, max)),
+                  onHorizontalDragEnd: (_) {
+                    setState(() => _dragging = false);
+                    ref.read(_panelDraggingProvider.notifier).set(false);
+                    notifier.save();
+                  },
+                  onDoubleTap: () {
+                    notifier.set(ComputerPanelWidth.defaultWidth);
+                    notifier.save();
+                  },
+                  child: Center(
+                    child: AnimatedOpacity(
+                      opacity: active ? 1 : 0,
+                      duration: AppMotion.fast,
+                      child: Container(
+                        width: 4,
+                        height: 44,
+                        decoration: BoxDecoration(color: scheme.primary, borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
