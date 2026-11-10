@@ -54,6 +54,9 @@ export const Bot = z
     default_computer_id: Uuid.nullable().openapi({
       description: "Its computer; null = its private computer, else the team computer",
     }),
+    folder_id: Uuid.nullable().openapi({ description: "Its sidebar folder (bot_folders)" }),
+    sort_key: z.number().openapi({ description: "Order within its folder" }),
+    archived_at: ts.nullable(),
     created_at: ts,
   })
   .openapi("Bot");

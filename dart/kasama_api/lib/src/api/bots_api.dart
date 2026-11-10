@@ -124,6 +124,7 @@ _responseData = rawData == null ? null : deserialize<Bot, Bot>(rawData, 'Bot', g
   ///
   /// Parameters:
   /// * [orgId] 
+  /// * [archived] - true lists only archived bots (default: active bots)
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -135,6 +136,7 @@ _responseData = rawData == null ? null : deserialize<Bot, Bot>(rawData, 'Bot', g
   /// Throws [DioException] if API call or serialization fails
   Future<Response<BotList>> listBots({ 
     required String orgId,
+    String? archived,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -163,6 +165,7 @@ _responseData = rawData == null ? null : deserialize<Bot, Bot>(rawData, 'Bot', g
 
     final _queryParameters = <String, dynamic>{
       r'org_id': orgId,
+      if (archived != null) r'archived': archived,
     };
 
     final _response = await _dio.request<Object>(

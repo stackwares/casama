@@ -46,6 +46,12 @@ class Bot {
 
     required  this.defaultComputerId,
 
+    required  this.folderId,
+
+    required  this.sortKey,
+
+    required  this.archivedAt,
+
     required  this.createdAt,
   });
 
@@ -182,6 +188,44 @@ class Bot {
 
 
 
+      /// Its sidebar folder (bot_folders)
+  @JsonKey(
+    
+    name: r'folder_id',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? folderId;
+
+
+
+      /// Order within its folder
+  @JsonKey(
+    
+    name: r'sort_key',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final num sortKey;
+
+
+
+  @JsonKey(
+    
+    name: r'archived_at',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final DateTime? archivedAt;
+
+
+
   @JsonKey(
     
     name: r'created_at',
@@ -209,6 +253,9 @@ class Bot {
       other.budget == budget &&
       other.status == status &&
       other.defaultComputerId == defaultComputerId &&
+      other.folderId == folderId &&
+      other.sortKey == sortKey &&
+      other.archivedAt == archivedAt &&
       other.createdAt == createdAt;
 
     @override
@@ -224,6 +271,9 @@ class Bot {
         budget.hashCode +
         status.hashCode +
         (defaultComputerId == null ? 0 : defaultComputerId.hashCode) +
+        (folderId == null ? 0 : folderId.hashCode) +
+        sortKey.hashCode +
+        (archivedAt == null ? 0 : archivedAt.hashCode) +
         createdAt.hashCode;
 
   factory Bot.fromJson(Map<String, dynamic> json) => _$BotFromJson(json);

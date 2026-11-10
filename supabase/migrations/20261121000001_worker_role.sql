@@ -1,13 +1,17 @@
 -- Least-privilege database role for the worker and system jobs (D-016, D-095).
 -- The worker acts for every workspace, so it reads and writes public tables through an explicit
 -- policy for this role (it is not a superuser and does not bypass RLS). It cannot change the
--- schema, read other Supabase schemas, or see auth.users beyond a few columns. Deployments give it
+-- schema, read other Supabase schemas, or see auth.users at all. Deployments give it
 -- a password and point WORKER_DATABASE_URL at it; without that the worker keeps DATABASE_URL.
 
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'kasama_worker') then
     create role kasama_worker nologin noinherit;
+  end if;
+  -- Postgres 16+: handing objects to the role (below) needs SET ROLE on it when not a superuser.
+  if not (select rolsuper from pg_roles where rolname = current_user) then
+    execute format('grant kasama_worker to %I with inherit false, set true', current_user);
   end if;
 end $$;
 
@@ -57,12 +61,17 @@ grant usage on schema extensions to kasama_worker;
 -- Vault: read model keys and secrets, write refreshed tokens (never delete).
 grant usage on schema vault to kasama_worker;
 grant select on vault.decrypted_secrets to kasama_worker;
-grant execute on function vault.create_secret(text, text, text) to kasama_worker;
-grant execute on function vault.update_secret(uuid, text, text, text) to kasama_worker;
+-- By name: the argument lists differ between Vault versions (newer ones add a key id).
+do $$
+declare f regprocedure;
+begin
+  for f in select p.oid::regprocedure from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'vault' and p.proname in ('create_secret', 'update_secret') loop
+    execute format('grant execute on function %s to kasama_worker', f);
+  end loop;
+end $$;
 
--- auth.users: only the columns system jobs need.
-grant usage on schema auth to kasama_worker;
-grant select (id, email, email_confirmed_at, created_at) on auth.users to kasama_worker;
+-- auth.users: never directly; see public.worker_* functions (20261125000002).
 
 -- DBOS keeps its system tables in its own schema, owned by the worker.
 create schema if not exists dbos;

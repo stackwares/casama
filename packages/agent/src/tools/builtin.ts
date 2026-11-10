@@ -52,7 +52,12 @@ export function builtinTools(deps: {
       const [total] = await deps.db.execute<{ cost: string; runs: string }>(sql`
         select coalesce(sum(u.cost_usd), 0) as cost, count(distinct u.run_id) as runs
         from public.usage_ledger u where ${scope}`);
-      const bots = await deps.db.execute<{ name: string | null; cost: string; tin: string; tout: string }>(sql`
+      const bots = await deps.db.execute<{
+        name: string | null;
+        cost: string;
+        tin: string;
+        tout: string;
+      }>(sql`
         select b.name, sum(u.cost_usd) as cost,
           sum(case when u.kind = 'tokens_in' then u.quantity else 0 end) as tin,
           sum(case when u.kind = 'tokens_out' then u.quantity else 0 end) as tout
@@ -71,7 +76,8 @@ export function builtinTools(deps: {
         `Usage this ${period} (UTC): ${usd(total?.cost)} across ${total?.runs ?? 0} runs. Costs are estimates from published prices.`,
         "By bot:",
         ...bots.map(
-          (b) => `- ${b.name ?? "not tied to a bot (computers, etc.)"}: ${usd(b.cost)}, ${b.tin} tokens in, ${b.tout} out`,
+          (b) =>
+            `- ${b.name ?? "not tied to a bot (computers, etc.)"}: ${usd(b.cost)}, ${b.tin} tokens in, ${b.tout} out`,
         ),
         "By model:",
         ...models.map((m) => `- ${m.model ?? "no model (computers, voice)"}: ${usd(m.cost)}`),

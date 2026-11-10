@@ -12,7 +12,7 @@ export async function orgLimits(db: Database, orgId: string) {
 
 const COUNTS = {
   max_bots: (orgId: string) =>
-    sql`select count(*)::int as n from public.bots where org_id = ${orgId}::uuid`,
+    sql`select count(*)::int as n from public.bots where org_id = ${orgId}::uuid and archived_at is null`,
   max_computers: (orgId: string) =>
     sql`select count(*)::int as n from public.computers where org_id = ${orgId}::uuid and provider <> 'local'`,
 } as const;

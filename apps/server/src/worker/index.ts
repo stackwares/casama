@@ -22,6 +22,7 @@ import {
   ReplayGateway,
   recordingGateway,
   registerAutonomyTools,
+  registerBotTools,
   registerCodingTools,
   registerComputerTools,
   registerDesktopTools,
@@ -168,6 +169,8 @@ export async function startWorker(opts: WorkerOptions) {
     registerComputerTools(tools);
     registerDesktopTools(tools);
   }
+  // Bots that manage bots (D-100).
+  registerBotTools(tools, { db });
   // Coding agents (D-097): on the bot's computer, the user's own computer, or Cursor's cloud.
   registerCodingTools(tools, {
     db,

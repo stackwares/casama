@@ -124,7 +124,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Worker database role (D-095)
 
-- The worker connects as `kasama_worker` (`WORKER_DATABASE_URL`): explicit per-table policies, Vault read and update, a few `auth.users` columns, its own `dbos` schema; no superuser or RLS bypass. New tables call `public.allow_worker`.
+- The worker connects as `kasama_worker` (`WORKER_DATABASE_URL`): explicit per-table policies, Vault read and update, two narrow `public.worker_*` functions instead of `auth.users`, its own `dbos` schema; no superuser or RLS bypass. New tables call `public.allow_worker`.
 
 ## Local MCP servers (D-096)
 
@@ -141,6 +141,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 ## Spaces (D-099)
 
 - Workspaces get an icon and color, invite links (`invite_links`, `accept_invite_link`) and per-workspace badges; the app has a workspace switcher, workspace settings and `/join/<token>`.
+
+## Bots that manage bots (D-100)
+
+- `packages/agent/src/tools/bots.ts`: `bots.list|create|update|archive` and `sidebar.organize`, capped at the acting bot's autonomy and budget; routine tools take `bot`. `bot_folders`, `bots.folder_id|sort_key|archived_at`, and `bot_revisions` (trigger `bots_record_revision`; the acting bot comes from `kasama.actor_bot`). App: sidebar folders, bot settings → Folder, Settings history (restore), Archive; Archived bots on the bot list.
 
 ## Production and launch (Phase 8)
 

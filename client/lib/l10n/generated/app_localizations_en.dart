@@ -3228,4 +3228,92 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get joinWithLink => 'Join with a link';
+
+  @override
+  String get botFolder => 'Folder';
+
+  @override
+  String get noFolder => 'No folder';
+
+  @override
+  String get newFolder => 'New folder…';
+
+  @override
+  String get folderName => 'Folder name';
+
+  @override
+  String get archiveBot => 'Archive bot';
+
+  @override
+  String archiveBotTitle(String name) {
+    return 'Archive $name?';
+  }
+
+  @override
+  String get archiveBotBody =>
+      'It leaves the sidebar and stops running. Its chats and history are kept, and you can bring it back from Archived bots.';
+
+  @override
+  String get archive => 'Archive';
+
+  @override
+  String get archivedBots => 'Archived bots';
+
+  @override
+  String get unarchive => 'Bring back';
+
+  @override
+  String botArchived(String name) {
+    return '$name archived.';
+  }
+
+  @override
+  String get settingsHistory => 'Settings history';
+
+  @override
+  String get settingsHistoryHelp =>
+      'Every change to this bot\'s settings, and who made it';
+
+  @override
+  String get noHistory => 'No changes yet.';
+
+  @override
+  String get restoreSettings => 'Restore these settings';
+
+  @override
+  String restoreSettingsBody(String fields) {
+    return 'Put back $fields as they were before this change? The current settings stay in the history.';
+  }
+
+  @override
+  String changedByBot(String name) {
+    return 'Changed by $name';
+  }
+
+  @override
+  String get changedByPerson => 'Changed by a person';
+
+  @override
+  String get changedBySystem => 'Changed by Kasama';
+
+  @override
+  String get fieldName => 'name';
+
+  @override
+  String get fieldInstructions => 'instructions';
+
+  @override
+  String get fieldModel => 'model';
+
+  @override
+  String get fieldAutonomy => 'autonomy';
+
+  @override
+  String get fieldBudget => 'budget';
+
+  @override
+  String get fieldComputer => 'computer';
+
+  @override
+  String get fieldArchived => 'archived';
 }

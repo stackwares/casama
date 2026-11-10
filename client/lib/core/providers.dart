@@ -65,6 +65,19 @@ final botsProvider = FutureProvider<List<Bot>>((ref) async {
   return ref.watch(backendProvider).bots(org.id);
 });
 
+/// Sidebar folders (D-100).
+final botFoldersProvider = FutureProvider<List<BotFolder>>((ref) async {
+  final org = ref.watch(currentOrgProvider);
+  if (org == null) return const [];
+  return ref.watch(backendProvider).botFolders(org.id);
+});
+
+final archivedBotsProvider = FutureProvider<List<Bot>>((ref) async {
+  final org = ref.watch(currentOrgProvider);
+  if (org == null) return const [];
+  return ref.watch(backendProvider).archivedBots(org.id);
+});
+
 final botProvider = Provider.family<Bot?, String>((ref, id) {
   final bots = ref.watch(botsProvider).value ?? const [];
   for (final b in bots) {

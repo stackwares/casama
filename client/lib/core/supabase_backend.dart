@@ -202,6 +202,74 @@ class SupabaseBackend implements Backend {
   Future<List<Template>> templates() async => (await api.bots.listTemplates()).data!.items;
 
   @override
+  Future<List<BotFolder>> botFolders(String orgId) async {
+    final rows = await supabase.from('bot_folders').select('id, name, sort_key').eq('org_id', orgId).order('sort_key').order('name');
+    return [
+      for (final r in rows) BotFolder(id: r['id'] as String, name: r['name'] as String, sortKey: (r['sort_key'] as num?)?.toDouble() ?? 0),
+    ];
+  }
+
+  @override
+  Future<void> setBotFolder(String orgId, String botId, String? folderName) async {
+    String? folderId;
+    if (folderName != null) {
+      final row = await supabase
+          .from('bot_folders')
+          .upsert({'org_id': orgId, 'name': folderName}, onConflict: 'org_id,name')
+          .select('id')
+          .single();
+      folderId = row['id'] as String;
+    }
+    await supabase.from('bots').update({'folder_id': folderId}).eq('id', botId);
+    // Folders with no bots left go away.
+    final used = await supabase.from('bots').select('folder_id').eq('org_id', orgId).not('folder_id', 'is', null);
+    final keep = {for (final r in used) r['folder_id'] as String};
+    final all = await botFolders(orgId);
+    for (final f in all.where((f) => !keep.contains(f.id))) {
+      await supabase.from('bot_folders').delete().eq('id', f.id);
+    }
+  }
+
+  @override
+  Future<List<Bot>> archivedBots(String orgId) async =>
+      (await api.bots.listBots(orgId: orgId, archived: 'true')).data!.items;
+
+  @override
+  Future<void> setBotArchived(String botId, bool archived) async {
+    await supabase.from('bots').update({'archived_at': archived ? DateTime.now().toUtc().toIso8601String() : null}).eq('id', botId);
+  }
+
+  @override
+  Future<List<BotRevision>> botRevisions(String botId) async {
+    final rows = await supabase
+        .from('bot_revisions')
+        .select('id, snapshot, changed_fields, changed_by_user, changed_by_bot, created_at')
+        .eq('bot_id', botId)
+        .order('created_at', ascending: false)
+        .limit(100);
+    return [
+      for (final r in rows)
+        BotRevision(
+          id: r['id'] as String,
+          snapshot: Map<String, Object?>.from(r['snapshot'] as Map),
+          changedFields: [for (final f in (r['changed_fields'] as List? ?? const [])) f as String],
+          changedByUser: r['changed_by_user'] as String?,
+          changedByBot: r['changed_by_bot'] as String?,
+          createdAt: DateTime.parse(r['created_at'] as String),
+        ),
+    ];
+  }
+
+  @override
+  Future<void> restoreBotRevision(String botId, BotRevision revision) async {
+    final s = revision.snapshot;
+    await supabase.from('bots').update({
+      for (final f in revision.changedFields)
+        if (const {'name', 'persona_md', 'model_policy', 'autonomy', 'budget', 'default_computer_id', 'archived_at'}.contains(f)) f: s[f],
+    }).eq('id', botId);
+  }
+
+  @override
   Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy, String? avatarUrl}) async {
     await supabase.from('bots').update({
       if (avatarUrl != null) 'avatar_url': avatarUrl.isEmpty ? null : avatarUrl,

@@ -15,8 +15,8 @@ select ok(not (select rolsuper or rolbypassrls from pg_roles where rolname = 'ka
 
 set local role kasama_worker;
 select lives_ok($$ select count(*) from public.runs $$, 'the worker reads public tables');
-select lives_ok($$ select id, email, email_confirmed_at from auth.users limit 1 $$, 'the worker reads the auth.users columns it needs');
-select throws_ok($$ select encrypted_password from auth.users limit 1 $$, '42501', null, 'but not passwords');
+select lives_ok($$ select public.worker_owner_email_verified(gen_random_uuid()) $$, 'the worker checks owner email verification');
+select throws_ok($$ select email from auth.users limit 1 $$, '42501', null, 'but never reads auth.users');
 select throws_ok($$ create table public.worker_should_not_create (id int) $$, '42501', null, 'and cannot change the schema');
 reset role;
 

@@ -3,7 +3,7 @@ import { routes } from "@kasama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@kasama/db";
 import { templateById } from "@kasama/domain";
 import { withSpan } from "@kasama/observability";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { streamSSE } from "hono/streaming";
 import { enforceLimit } from "../../billing/limits.ts";
 import { ApiError } from "../errors.ts";
@@ -34,6 +34,9 @@ const botOut = (b: BotRow) => ({
   budget: b.budget as { per_run_usd?: number; daily_usd?: number },
   status: b.status as "idle",
   default_computer_id: b.defaultComputerId ?? null,
+  folder_id: b.folderId ?? null,
+  sort_key: Number(b.sortKey ?? 0),
+  archived_at: b.archivedAt ? iso(b.archivedAt) : null,
   created_at: iso(b.createdAt),
 });
 
@@ -207,9 +210,18 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.listBots, async (c) => {
     const claims = requireClaims(c.get("claims"));
-    const { org_id } = c.req.valid("query");
+    const { org_id, archived } = c.req.valid("query");
     const rows = await withUserSession(db, claims, (tx) =>
-      tx.select().from(bots).where(eq(bots.orgId, org_id)).orderBy(bots.createdAt),
+      tx
+        .select()
+        .from(bots)
+        .where(
+          and(
+            eq(bots.orgId, org_id),
+            archived === "true" ? isNotNull(bots.archivedAt) : isNull(bots.archivedAt),
+          ),
+        )
+        .orderBy(bots.sortKey, bots.createdAt),
     );
     return c.json({ items: rows.map(botOut) }, 200);
   });

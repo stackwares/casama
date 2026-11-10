@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/backend.dart';
 import '../../core/billing.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -672,6 +673,84 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
             GroupedTile(icon: LucideIcons.clock, title: l10n.routines, onTap: () => context.push('/bots/${bot.id}/routines')),
             GroupedTile(icon: LucideIcons.puzzle, title: l10n.botIntegrations, onTap: () => context.push('/bots/${bot.id}/integrations')),
             GroupedTile(icon: LucideIcons.brain, title: l10n.memory, onTap: () => context.push('/bots/${bot.id}/memory')),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        GroupedCard(
+          children: [
+            Builder(
+              builder: (context) {
+                final folders = ref.watch(botFoldersProvider).value ?? const <BotFolder>[];
+                final current = folders.where((f) => f.id == bot.folderId).firstOrNull;
+                return GroupedTile(
+                  key: const Key('botFolder'),
+                  icon: LucideIcons.folder,
+                  title: l10n.botFolder,
+                  subtitle: current?.name ?? l10n.noFolder,
+                  trailing: Icon(LucideIcons.chevronsUpDown, color: scheme.onSurfaceVariant),
+                  onTap: () async {
+                    const fresh = '\u0000new';
+                    final picked = await showChoiceSheet<String?>(
+                      context,
+                      title: l10n.botFolder,
+                      icon: LucideIcons.folder,
+                      selected: current?.name,
+                      choices: [
+                        Choice(value: null, label: l10n.noFolder, icon: LucideIcons.folderMinus),
+                        for (final f in folders) Choice(value: f.name, label: f.name, icon: LucideIcons.folder),
+                        Choice(value: fresh, label: l10n.newFolder, icon: LucideIcons.folderPlus),
+                      ],
+                    );
+                    if (picked == null || !context.mounted) return;
+                    var name = picked.value;
+                    if (name == fresh) {
+                      name = (await showTextPrompt(context, title: l10n.newFolder, label: l10n.folderName, submitLabel: l10n.save, fieldKey: const Key('folderName')))?.trim();
+                      if (name == null || name.isEmpty || !context.mounted) return;
+                    }
+                    final org = ref.read(currentOrgProvider);
+                    if (org == null) return;
+                    await runGuarded(context, () => ref.read(backendProvider).setBotFolder(org.id, bot.id, name));
+                    ref
+                      ..invalidate(botsProvider)
+                      ..invalidate(botFoldersProvider);
+                  },
+                );
+              },
+            ),
+            GroupedTile(
+              key: const Key('botHistory'),
+              icon: LucideIcons.history,
+              title: l10n.settingsHistory,
+              subtitle: l10n.settingsHistoryHelp,
+              onTap: () => context.push('/bots/${bot.id}/history'),
+            ),
+            GroupedTile(
+              key: const Key('archiveBot'),
+              icon: LucideIcons.archive,
+              title: l10n.archiveBot,
+              onTap: () async {
+                final ok = await showConfirm(
+                  context: context,
+                  title: l10n.archiveBotTitle(bot.name),
+                  message: l10n.archiveBotBody,
+                  confirmLabel: l10n.archive,
+                  destructive: true,
+                  icon: LucideIcons.archive,
+                  confirmKey: const Key('confirmArchive'),
+                );
+                if (!ok || !context.mounted) return;
+                final done = await runGuarded(context, () async {
+                  await ref.read(backendProvider).setBotArchived(bot.id, true);
+                  return true;
+                });
+                if (done != true || !context.mounted) return;
+                ref
+                  ..invalidate(botsProvider)
+                  ..invalidate(archivedBotsProvider);
+                showMessage(context, l10n.botArchived(bot.name));
+                GoRouter.maybeOf(context)?.go('/bots');
+              },
+            ),
           ],
         ),
         const SizedBox(height: AppSpace.lg),

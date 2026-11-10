@@ -5649,6 +5649,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join with a link'**
   String get joinWithLink;
+
+  /// No description provided for @botFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get botFolder;
+
+  /// No description provided for @noFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'No folder'**
+  String get noFolder;
+
+  /// No description provided for @newFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New folder…'**
+  String get newFolder;
+
+  /// No description provided for @folderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name'**
+  String get folderName;
+
+  /// No description provided for @archiveBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive bot'**
+  String get archiveBot;
+
+  /// No description provided for @archiveBotTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive {name}?'**
+  String archiveBotTitle(String name);
+
+  /// No description provided for @archiveBotBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It leaves the sidebar and stops running. Its chats and history are kept, and you can bring it back from Archived bots.'**
+  String get archiveBotBody;
+
+  /// No description provided for @archive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archive;
+
+  /// No description provided for @archivedBots.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived bots'**
+  String get archivedBots;
+
+  /// No description provided for @unarchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring back'**
+  String get unarchive;
+
+  /// No description provided for @botArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} archived.'**
+  String botArchived(String name);
+
+  /// No description provided for @settingsHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings history'**
+  String get settingsHistory;
+
+  /// No description provided for @settingsHistoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Every change to this bot\'s settings, and who made it'**
+  String get settingsHistoryHelp;
+
+  /// No description provided for @noHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No changes yet.'**
+  String get noHistory;
+
+  /// No description provided for @restoreSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore these settings'**
+  String get restoreSettings;
+
+  /// No description provided for @restoreSettingsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Put back {fields} as they were before this change? The current settings stay in the history.'**
+  String restoreSettingsBody(String fields);
+
+  /// No description provided for @changedByBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed by {name}'**
+  String changedByBot(String name);
+
+  /// No description provided for @changedByPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed by a person'**
+  String get changedByPerson;
+
+  /// No description provided for @changedBySystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed by Kasama'**
+  String get changedBySystem;
+
+  /// No description provided for @fieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'name'**
+  String get fieldName;
+
+  /// No description provided for @fieldInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'instructions'**
+  String get fieldInstructions;
+
+  /// No description provided for @fieldModel.
+  ///
+  /// In en, this message translates to:
+  /// **'model'**
+  String get fieldModel;
+
+  /// No description provided for @fieldAutonomy.
+  ///
+  /// In en, this message translates to:
+  /// **'autonomy'**
+  String get fieldAutonomy;
+
+  /// No description provided for @fieldBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'budget'**
+  String get fieldBudget;
+
+  /// No description provided for @fieldComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'computer'**
+  String get fieldComputer;
+
+  /// No description provided for @fieldArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'archived'**
+  String get fieldArchived;
 }
 
 class _AppLocalizationsDelegate

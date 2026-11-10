@@ -1,3 +1,4 @@
+import 'bot_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +37,7 @@ class BotsList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final bots = ref.watch(botsProvider);
+    final archived = ref.watch(archivedBotsProvider).value ?? const <Bot>[];
     final usage = ref.watch(usageTodayProvider).value;
     double costFor(String botId) => (usage?.byBot.where((b) => b.botId == botId).fold<num>(0, (n, b) => n + b.costUsd) ?? 0).toDouble();
 
@@ -47,7 +49,20 @@ class BotsList extends ConsumerWidget {
               icon: LucideIcons.bot,
               title: l10n.noBots,
               message: l10n.noBotsHelp,
-              action: GlowButton.icon(onPressed: () => showCreateBot(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
+              action: Column(
+                mainAxisSize: MainAxisSize.min,
+                spacing: AppSpace.sm,
+                children: [
+                  GlowButton.icon(onPressed: () => showCreateBot(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
+                  if (archived.isNotEmpty)
+                    TextButton.icon(
+                      key: const Key('archivedBots'),
+                      icon: const Icon(LucideIcons.archive, size: 18),
+                      label: Text('${l10n.archivedBots} (${archived.length})'),
+                      onPressed: () => showArchivedBots(context),
+                    ),
+                ],
+              ),
             )
           : RefreshIndicator(
               onRefresh: () async {
@@ -59,9 +74,18 @@ class BotsList extends ConsumerWidget {
                   final side = pageSide(constraints.maxWidth);
                   return ListView.separated(
                     padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
-                    itemCount: items.length,
+                    itemCount: items.length + (archived.isEmpty ? 0 : 1),
                     separatorBuilder: (_, _) => const SizedBox(height: AppSpace.xs),
-                    itemBuilder: (context, i) => _BotCard(
+                    itemBuilder: (context, i) => i == items.length
+                        ? Align(
+                            child: TextButton.icon(
+                              key: const Key('archivedBots'),
+                              icon: const Icon(LucideIcons.archive, size: 18),
+                              label: Text('${l10n.archivedBots} (${archived.length})'),
+                              onPressed: () => showArchivedBots(context),
+                            ),
+                          )
+                        : _BotCard(
                       key: Key('bot-${items[i].id}'),
                       bot: items[i],
                       cost: costFor(items[i].id),

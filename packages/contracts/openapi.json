@@ -2545,6 +2545,25 @@
             "format": "uuid",
             "description": "Its computer; null = its private computer, else the team computer"
           },
+          "folder_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Its sidebar folder (bot_folders)"
+          },
+          "sort_key": {
+            "type": "number",
+            "description": "Order within its folder"
+          },
+          "archived_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -2562,6 +2581,9 @@
           "budget",
           "status",
           "default_computer_id",
+          "folder_id",
+          "sort_key",
+          "archived_at",
           "created_at"
         ]
       },
@@ -7820,6 +7842,20 @@
             },
             "required": true,
             "name": "org_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "true lists only archived bots (default: active bots)"
+            },
+            "required": false,
+            "description": "true lists only archived bots (default: active bots)",
+            "name": "archived",
             "in": "query"
           }
         ],

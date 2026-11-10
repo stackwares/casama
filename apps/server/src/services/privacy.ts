@@ -133,7 +133,7 @@ export async function purgeDueAccounts(db: Database, computers?: ComputerService
       for (const c of comps) await computers?.remove(c.id).catch(() => {});
       await db.execute(sql`delete from public.organizations where id = ${org.id}::uuid`);
     }
-    await db.execute(sql`delete from auth.users where id = ${user_id}::uuid`);
+    await db.execute(sql`select public.worker_purge_user(${user_id}::uuid)`);
     await db.execute(sql`
       update public.account_deletions set completed_at = now(), orgs_deleted = ${orgs.length} where user_id = ${user_id}::uuid`);
   }

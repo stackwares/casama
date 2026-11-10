@@ -103,6 +103,25 @@ class TwoStepEnrollment {
 
 /// Everything the app reads and writes. Reads and simple edits go to Supabase under RLS;
 /// commands go to the Kasama API. Widget tests use a fake.
+/// A sidebar folder of bots (D-100).
+class BotFolder {
+  const BotFolder({required this.id, required this.name, this.sortKey = 0});
+  final String id;
+  final String name;
+  final double sortKey;
+}
+
+/// A bot's settings before one change (D-100): what changed, who changed it, and the old values.
+class BotRevision {
+  const BotRevision({required this.id, required this.snapshot, required this.changedFields, this.changedByUser, this.changedByBot, required this.createdAt});
+  final String id;
+  final Map<String, Object?> snapshot;
+  final List<String> changedFields;
+  final String? changedByUser;
+  final String? changedByBot;
+  final DateTime createdAt;
+}
+
 abstract class Backend {
   // Auth
   Stream<bool> get signedInChanges;
@@ -157,6 +176,16 @@ abstract class Backend {
   /// [avatarUrl]: `mascot:<name>` for a cloud bot, '' to go back to initials, null to leave it.
   Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy, String? avatarUrl});
   Future<UsageReport> usage(String orgId, {String period});
+
+  // Bot folders, archive and settings history (D-100)
+  Future<List<BotFolder>> botFolders(String orgId);
+  /// Moves a bot into the named folder (created when new); null takes it out of folders.
+  Future<void> setBotFolder(String orgId, String botId, String? folderName);
+  Future<List<Bot>> archivedBots(String orgId);
+  Future<void> setBotArchived(String botId, bool archived);
+  Future<List<BotRevision>> botRevisions(String botId);
+  /// Puts back the settings from before [revision]; the current ones become a new revision.
+  Future<void> restoreBotRevision(String botId, BotRevision revision);
 
   // Appearance
   /// Whether the server can search wallpaper photos (Unsplash; D-087).

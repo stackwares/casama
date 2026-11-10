@@ -1,3 +1,4 @@
+export * from "./acting.ts";
 export * from "./chatgpt-auth.ts";
 export * from "./computers.ts";
 export * from "./context.ts";
@@ -23,6 +24,7 @@ export * from "./secrets.ts";
 export * from "./takeover.ts";
 export * from "./tickets.ts";
 export * from "./tools/autonomy.ts";
+export * from "./tools/bots.ts";
 export * from "./tools/builtin.ts";
 export * from "./tools/coding.ts";
 export * from "./tools/computer.ts";

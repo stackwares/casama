@@ -5,6 +5,7 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -276,8 +277,8 @@ class _Sidebar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final org = ref.watch(currentOrgProvider);
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    final folders = ref.watch(botFoldersProvider).value ?? const <BotFolder>[];
     final scheme = context.colorScheme;
     return SafeArea(
       right: false,
@@ -322,16 +323,37 @@ class _Sidebar extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 12),
                 children: [
-                  for (final b in bots)
-                    _SidebarItem(
-                      key: Key('sidebar-bot-${b.id}'),
-                      height: 48,
-                      leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 30, status: b.status, ringColor: scheme.surfaceContainerLow),
-                      label: b.name,
-                      subtitle: b.status == BotStatusEnum.idle ? null : botStatusLabel(context, b.status),
-                      selected: b.id == selectedBotId,
-                      onTap: () => context.go('/bots/${b.id}/chat'),
-                    ),
+                  // Bots outside folders first, then each folder in order (D-100).
+                  for (final (folder, group) in groupBotsByFolder(bots, folders)) ...[
+                    if (folder != null)
+                      Padding(
+                        key: Key('sidebar-folder-${folder.id}'),
+                        padding: const EdgeInsets.fromLTRB(24, 10, 12, 2),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.folder, size: 14, color: scheme.onSurfaceVariant),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                folder.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    for (final b in group)
+                      _SidebarItem(
+                        key: Key('sidebar-bot-${b.id}'),
+                        height: 48,
+                        leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 30, status: b.status, ringColor: scheme.surfaceContainerLow),
+                        label: b.name,
+                        subtitle: b.status == BotStatusEnum.idle ? null : botStatusLabel(context, b.status),
+                        selected: b.id == selectedBotId,
+                        onTap: () => context.go('/bots/${b.id}/chat'),
+                      ),
+                  ],
                 ],
               ),
             ),
@@ -579,4 +601,18 @@ class _SuspendedBanner extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Bots without a folder first (folder null), then each folder in order with its bots in order.
+List<(BotFolder?, List<Bot>)> groupBotsByFolder(List<Bot> bots, List<BotFolder> folders) {
+  int byKey(Bot a, Bot b) => a.sortKey.compareTo(b.sortKey);
+  final known = {for (final f in folders) f.id};
+  final out = <(BotFolder?, List<Bot>)>[];
+  final loose = bots.where((b) => b.folderId == null || !known.contains(b.folderId)).toList()..sort(byKey);
+  if (loose.isNotEmpty) out.add((null, loose));
+  for (final f in [...folders]..sort((a, b) => a.sortKey.compareTo(b.sortKey))) {
+    final group = bots.where((b) => b.folderId == f.id).toList()..sort(byKey);
+    if (group.isNotEmpty) out.add((f, group));
+  }
+  return out;
 }

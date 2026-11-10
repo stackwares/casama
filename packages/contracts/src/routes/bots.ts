@@ -44,7 +44,15 @@ export const listBots = createRoute({
   path: "/v1/bots",
   tags: ["bots"],
   security,
-  request: { query: z.object({ org_id: Uuid }) },
+  request: {
+    query: z.object({
+      org_id: Uuid,
+      archived: z
+        .enum(["true", "false"])
+        .optional()
+        .openapi({ description: "true lists only archived bots (default: active bots)" }),
+    }),
+  },
   responses: { 200: jsonResponse("Bots you can access", list("BotList", Bot)), 401: e401 },
 });
 

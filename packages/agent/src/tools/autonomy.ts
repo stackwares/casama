@@ -292,6 +292,19 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     },
   });
 
+  // A bot may manage another bot's routines in its workspace (D-100).
+  const BOT_ARG = z
+    .string()
+    .max(100)
+    .optional()
+    .describe("Another bot's name, to manage its routines instead of yours");
+  const routineBot = async (ref: string | undefined, ctx: { orgId: string; botId: string }) => {
+    if (!ref) return ctx.botId;
+    const b = await botByRef(ctx.orgId, ref);
+    if (!b) throw new ToolError("bot_not_found", `No bot named ${ref}.`);
+    return b.id;
+  };
+
   // --- routines -----------------------------------------------------------------
 
   registry.register({
@@ -300,6 +313,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       "Schedule work for yourself later. For something that should happen once (a reminder, a follow-up), pass in_minutes or run_at; it runs a single time and switches itself off. Use schedule_cron (5-field cron in the user's timezone) only for work that repeats. Results arrive in a dedicated conversation.",
     risk: "medium",
     schema: z.object({
+      bot: BOT_ARG,
       name: z.string().min(1).max(120),
       instructions: z
         .string()
@@ -323,6 +337,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       notify: z.boolean().optional(),
     }),
     async execute(args, ctx) {
+      const target = await routineBot(args.bot, ctx);
       const kinds = [args.in_minutes != null, !!args.run_at, !!args.schedule_cron].filter(
         Boolean,
       ).length;
@@ -354,7 +369,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       const trigger = JSON.stringify({ type: once ? "once" : "schedule" });
       const [r] = await db.execute<{ id: string }>(sql`
         insert into public.routines (org_id, bot_id, created_by, name, instructions_md, schedule_cron, timezone, trigger, notify, next_run_at)
-        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${owner?.user_id ?? null}::uuid, ${args.name}, ${args.instructions},
+        values (${ctx.orgId}::uuid, ${target}::uuid, ${owner?.user_id ?? null}::uuid, ${args.name}, ${args.instructions},
                 ${args.schedule_cron ?? null}, ${tz}, ${trigger}::jsonb, ${args.notify ?? true}, ${next.toISOString()}::timestamptz) returning id`);
       return {
         content: once
@@ -373,8 +388,9 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       "List your routines (id, name, schedule, whether it is on, next run). Use it before changing or deleting one.",
     risk: "low",
     readOnly: true,
-    schema: z.object({}),
-    async execute(_args, ctx) {
+    schema: z.object({ bot: BOT_ARG }),
+    async execute(args, ctx) {
+      const target = await routineBot(args.bot, ctx);
       const rows = await db.execute<{
         id: string;
         name: string;
@@ -386,7 +402,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         last_run_at: string | null;
       }>(sql`
         select id, name, schedule_cron, trigger, timezone, enabled, next_run_at, last_run_at from public.routines
-        where bot_id = ${ctx.botId}::uuid order by created_at`);
+        where bot_id = ${target}::uuid order by created_at`);
       if (!rows.length) return { content: "You have no routines.", preview: "none" };
       const lines = rows.map((r) => {
         const when =
@@ -411,6 +427,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       "Change, pause (enabled: false) or resume one of your routines. Find its id with routines.list.",
     risk: "medium",
     schema: z.object({
+      bot: BOT_ARG,
       routine_id: z.uuid(),
       enabled: z.boolean().optional(),
       schedule_cron: z.string().max(100).optional(),
@@ -418,13 +435,14 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       instructions: z.string().max(10_000).optional(),
     }),
     async execute(args, ctx) {
+      const target = await routineBot(args.bot, ctx);
       const [r] = await db.execute<{
         schedule_cron: string | null;
         timezone: string;
         trigger: { type?: string };
         next_run_at: string | null;
       }>(sql`
-        select schedule_cron, timezone, trigger, next_run_at from public.routines where id = ${args.routine_id}::uuid and bot_id = ${ctx.botId}::uuid`);
+        select schedule_cron, timezone, trigger, next_run_at from public.routines where id = ${args.routine_id}::uuid and bot_id = ${target}::uuid`);
       if (!r)
         throw new ToolError(
           "routine_not_found",
@@ -464,10 +482,11 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Delete one of your routines for good (its past results stay). Find its id with routines.list.",
     risk: "medium",
-    schema: z.object({ routine_id: z.uuid() }),
+    schema: z.object({ routine_id: z.uuid(), bot: BOT_ARG }),
     async execute(args, ctx) {
+      const target = await routineBot(args.bot, ctx);
       const rows = await db.execute<{ name: string }>(sql`
-        delete from public.routines where id = ${args.routine_id}::uuid and bot_id = ${ctx.botId}::uuid returning name`);
+        delete from public.routines where id = ${args.routine_id}::uuid and bot_id = ${target}::uuid returning name`);
       if (!rows.length)
         throw new ToolError(
           "routine_not_found",

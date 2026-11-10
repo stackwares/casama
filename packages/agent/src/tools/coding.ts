@@ -12,6 +12,7 @@ import type { Database } from "@kasama/db";
 import type { SandboxHandle } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
+import { actingUserOf } from "../acting.ts";
 import type { ComputerService } from "../computers.ts";
 import { loadSecrets } from "../secrets.ts";
 import { runStreaming, shq } from "./computer.ts";
@@ -68,21 +69,6 @@ export function summarizeAgentOutput(out: string) {
   }
   const tail = out.trim();
   return { text: tail.length > 3000 ? `…${tail.slice(-3000)}` : tail, error: false };
-}
-
-/** The person a run acts for (sender, routine creator, or a parent run's). */
-async function actingUser(db: Database, runId: string) {
-  const [r] = await db.execute<{ u: string | null }>(sql`
-    with recursive up as (
-      select x.id, x.parent_run_id, x.created_by, x.routine_id, 0 as depth from public.runs x where x.id = ${runId}::uuid
-      union all
-      select p.id, p.parent_run_id, p.created_by, p.routine_id, up.depth + 1
-      from public.runs p join up on p.id = up.parent_run_id where up.depth < 8
-    )
-    select coalesce(up.created_by, rt.created_by) as u from up
-    left join public.routines rt on rt.id = up.routine_id
-    where coalesce(up.created_by, rt.created_by) is not null order by up.depth limit 1`);
-  return r?.u ?? null;
 }
 
 async function cancelled(db: Database, runId: string) {
@@ -219,7 +205,7 @@ async function localHandle(
 ): Promise<SandboxHandle> {
   if (!deps.computers)
     throw new ToolError("no_computer", "Personal computers are not set up on this server.");
-  const user = await actingUser(deps.db, ctx.runId);
+  const user = await actingUserOf(deps.db, ctx.runId);
   const [d] = await deps.db.execute<{ computer_id: string | null }>(sql`
     select computer_id from public.local_devices
     where org_id = ${ctx.orgId}::uuid and user_id = ${user}::uuid and enabled and ${ctx.botId}::uuid = any(allowed_bot_ids)

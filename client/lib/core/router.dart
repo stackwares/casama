@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/bots/bot_history_screen.dart';
 import '../features/auth/sign_in_screen.dart';
 import '../features/bots/bots_screen.dart';
 import '../features/chat/chat_screen.dart';
@@ -120,6 +121,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ':botId/settings',
                 pageBuilder: _page((_, s) => BotSettingsScreen(botId: s.pathParameters['botId']!)),
+              ),
+              GoRoute(
+                path: ':botId/history',
+                pageBuilder: _page((_, s) => BotHistoryScreen(botId: s.pathParameters['botId']!)),
               ),
               GoRoute(
                 path: ':botId/call',

@@ -29,6 +29,12 @@ abstract class _$BotCWProxy {
 
   Bot defaultComputerId(String? defaultComputerId);
 
+  Bot folderId(String? folderId);
+
+  Bot sortKey(num sortKey);
+
+  Bot archivedAt(DateTime? archivedAt);
+
   Bot createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -51,6 +57,9 @@ abstract class _$BotCWProxy {
     BotBudget budget,
     BotStatusEnum status,
     String? defaultComputerId,
+    String? folderId,
+    num sortKey,
+    DateTime? archivedAt,
     DateTime createdAt,
   });
 }
@@ -97,6 +106,15 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
       call(defaultComputerId: defaultComputerId);
 
   @override
+  Bot folderId(String? folderId) => call(folderId: folderId);
+
+  @override
+  Bot sortKey(num sortKey) => call(sortKey: sortKey);
+
+  @override
+  Bot archivedAt(DateTime? archivedAt) => call(archivedAt: archivedAt);
+
+  @override
   Bot createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -120,6 +138,9 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
     Object? budget = const $CopyWithPlaceholder(),
     Object? status = const $CopyWithPlaceholder(),
     Object? defaultComputerId = const $CopyWithPlaceholder(),
+    Object? folderId = const $CopyWithPlaceholder(),
+    Object? sortKey = const $CopyWithPlaceholder(),
+    Object? archivedAt = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Bot(
@@ -169,6 +190,18 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
           ? _value.defaultComputerId
           // ignore: cast_nullable_to_non_nullable
           : defaultComputerId as String?,
+      folderId: folderId == const $CopyWithPlaceholder()
+          ? _value.folderId
+          // ignore: cast_nullable_to_non_nullable
+          : folderId as String?,
+      sortKey: sortKey == const $CopyWithPlaceholder() || sortKey == null
+          ? _value.sortKey
+          // ignore: cast_nullable_to_non_nullable
+          : sortKey as num,
+      archivedAt: archivedAt == const $CopyWithPlaceholder()
+          ? _value.archivedAt
+          // ignore: cast_nullable_to_non_nullable
+          : archivedAt as DateTime?,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -206,6 +239,9 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
         'budget',
         'status',
         'default_computer_id',
+        'folder_id',
+        'sort_key',
+        'archived_at',
         'created_at',
       ],
     );
@@ -239,6 +275,12 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
         'default_computer_id',
         (v) => v as String?,
       ),
+      folderId: $checkedConvert('folder_id', (v) => v as String?),
+      sortKey: $checkedConvert('sort_key', (v) => v as num),
+      archivedAt: $checkedConvert(
+        'archived_at',
+        (v) => v == null ? null : DateTime.parse(v as String),
+      ),
       createdAt: $checkedConvert(
         'created_at',
         (v) => DateTime.parse(v as String),
@@ -252,6 +294,9 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
     'personaMd': 'persona_md',
     'modelPolicy': 'model_policy',
     'defaultComputerId': 'default_computer_id',
+    'folderId': 'folder_id',
+    'sortKey': 'sort_key',
+    'archivedAt': 'archived_at',
     'createdAt': 'created_at',
   },
 );
@@ -268,6 +313,9 @@ Map<String, dynamic> _$BotToJson(Bot instance) => <String, dynamic>{
   'budget': instance.budget.toJson(),
   'status': _$BotStatusEnumEnumMap[instance.status]!,
   'default_computer_id': instance.defaultComputerId,
+  'folder_id': instance.folderId,
+  'sort_key': instance.sortKey,
+  'archived_at': instance.archivedAt?.toIso8601String(),
   'created_at': instance.createdAt.toIso8601String(),
 };
 

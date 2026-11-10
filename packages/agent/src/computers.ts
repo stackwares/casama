@@ -194,8 +194,7 @@ export class ComputerService {
     }>(sql`
       select o.suspended_at is not null as suspended,
              (select e.plan_code from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as plan,
-             exists (select 1 from public.memberships m join auth.users u on u.id = m.user_id
-                     where m.org_id = o.id and m.role = 'owner' and u.email_confirmed_at is not null) as verified
+             public.worker_owner_email_verified(o.id) as verified
       from public.organizations o where o.id = ${orgId}::uuid`);
     if (o?.suspended) throw new Error("workspace_suspended");
     if (this.requireVerifiedEmail && (o?.plan ?? "free") === "free" && !o?.verified)

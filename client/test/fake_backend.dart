@@ -186,13 +186,42 @@ class FakeBackend implements Backend {
         budget: BotBudget(perRunUsd: 1, dailyUsd: 10),
         status: status,
         defaultComputerId: defaultComputer,
+        folderId: botFolder,
+        archivedAt: null,
+        sortKey: 0,
         createdAt: DateTime(2026),
       );
+
+  String? botFolder;
+  final archived = <String>{};
+  final revisions = <BotRevision>[
+    BotRevision(
+      id: 'rev-1',
+      snapshot: const {'name': 'Ada', 'persona_md': 'Be brief.', 'autonomy': 'ask_always'},
+      changedFields: const ['persona_md', 'autonomy'],
+      changedByBot: 'bot-2',
+      createdAt: DateTime(2026, 11, 9, 10),
+    ),
+  ];
+  BotRevision? restored;
+
+  @override
+  Future<List<BotFolder>> botFolders(String orgId) async => [if (botFolder != null) BotFolder(id: botFolder!, name: botFolder!)];
+  @override
+  Future<void> setBotFolder(String orgId, String botId, String? folderName) async => botFolder = folderName;
+  @override
+  Future<List<Bot>> archivedBots(String orgId) async => [if (archived.contains(botId)) bot()];
+  @override
+  Future<void> setBotArchived(String botId, bool value) async => value ? archived.add(botId) : archived.remove(botId);
+  @override
+  Future<List<BotRevision>> botRevisions(String botId) async => revisions;
+  @override
+  Future<void> restoreBotRevision(String botId, BotRevision revision) async => restored = revision;
 
   String? defaultComputer;
 
   @override
-  Future<List<Bot>> bots(String orgId) async => [bot()];
+  Future<List<Bot>> bots(String orgId) async => [if (!archived.contains(botId)) bot()];
   @override
   Future<Bot> createBot(String orgId,
       {required String name, required String credentialId, required String model, String persona = '', String? templateId, String? avatarUrl}) async {

@@ -841,9 +841,17 @@ async function admit(
       code: "no_model_configured",
       message: "This bot has no model. Add a model key and pick a model in the bot settings.",
     };
-  const [org] = await db.execute<{ suspended: boolean }>(
-    sql`select suspended_at is not null as suspended from public.organizations where id = ${info.orgId}::uuid`,
+  const [org] = await db.execute<{ suspended: boolean; archived: boolean }>(
+    sql`select o.suspended_at is not null as suspended,
+               exists (select 1 from public.bots b where b.id = ${info.botId}::uuid and b.archived_at is not null) as archived
+        from public.organizations o where o.id = ${info.orgId}::uuid`,
   );
+  if (org?.archived)
+    return {
+      ok: false,
+      code: "bot_archived",
+      message: "This bot is archived. Restore it to use it again.",
+    };
   if (org?.suspended)
     return {
       ok: false,
