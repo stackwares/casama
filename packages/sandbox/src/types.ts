@@ -112,6 +112,10 @@ export interface SandboxHandle {
   checkpoint(label: string): Promise<CheckpointRef>;
   restore(id: CheckpointRef): Promise<void>;
   health(): Promise<HealthStatus>;
+  /** Replaces the MCP servers computerd runs inside the computer (plugins, D-121). */
+  setMcpServers?(servers: Record<string, McpServerSpec>): Promise<void>;
+  /** One MCP Streamable HTTP request to a server computerd runs (plugins, D-121). */
+  mcpFetch?(key: string, init: RequestInit): Promise<Response>;
   /** Personal computers only: a handle whose calls tell the user which bot is acting (D-066). */
   withActivity?(activity: {
     run_id: string;
@@ -119,6 +123,15 @@ export interface SandboxHandle {
     tool: string;
     summary: string;
   }): SandboxHandle;
+}
+
+/** An MCP server computerd starts and bridges (`POST /mcp/<key>`). */
+export interface McpServerSpec {
+  kind: "stdio";
+  command: string;
+  args?: string[];
+  cwd?: string;
+  env?: Record<string, string>;
 }
 
 export class SandboxError extends Error {

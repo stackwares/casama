@@ -6,6 +6,7 @@ import '../features/bots/bot_history_screen.dart';
 import '../features/bots/bot_template.dart';
 import '../features/mcp/mcp_screens.dart';
 import '../features/bots/action_rules_screen.dart';
+import '../features/bots/plugins_screen.dart';
 import '../features/bots/watchers_screen.dart';
 import '../features/search/search_view.dart';
 import '../features/groups/group_chats.dart';
@@ -133,6 +134,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ':botId/settings',
                 pageBuilder: _page((_, s) => BotSettingsScreen(botId: s.pathParameters['botId']!)),
+              ),
+              GoRoute(
+                path: ':botId/plugins',
+                pageBuilder: _page((_, s) => PluginsScreen(botId: s.pathParameters['botId']!)),
               ),
               GoRoute(
                 path: ':botId/watchers',

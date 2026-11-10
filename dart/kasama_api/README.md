@@ -172,6 +172,12 @@ Class | Method | HTTP request | Description
 [*PagesApi*](doc/PagesApi.md) | [**listPages**](doc/PagesApi.md#listpages) | **GET** /v1/pages | Pages you can open in a workspace (D-119)
 [*PagesApi*](doc/PagesApi.md) | [**revertPage**](doc/PagesApi.md#revertpage) | **POST** /v1/pages/{id}/revert | Bring back an earlier version (as a new version)
 [*PagesApi*](doc/PagesApi.md) | [**updatePage**](doc/PagesApi.md#updatepage) | **PATCH** /v1/pages/{id} | Change who can open a page; making it public returns a new link
+[*PluginsApi*](doc/PluginsApi.md) | [**getPluginUpdate**](doc/PluginsApi.md#getpluginupdate) | **GET** /v1/plugins/{id}/update | The latest commit of the plugin&#39;s source and what changes
+[*PluginsApi*](doc/PluginsApi.md) | [**installPlugin**](doc/PluginsApi.md#installplugin) | **POST** /v1/plugins | Install a plugin for a bot, pinned to the previewed commit
+[*PluginsApi*](doc/PluginsApi.md) | [**listPlugins**](doc/PluginsApi.md#listplugins) | **GET** /v1/plugins | 
+[*PluginsApi*](doc/PluginsApi.md) | [**previewPlugin**](doc/PluginsApi.md#previewplugin) | **POST** /v1/plugins/preview | What an Agent Plugins 1.0 package from GitHub would add (D-121)
+[*PluginsApi*](doc/PluginsApi.md) | [**uninstallPlugin**](doc/PluginsApi.md#uninstallplugin) | **DELETE** /v1/plugins/{id} | Remove the plugin and everything it added
+[*PluginsApi*](doc/PluginsApi.md) | [**updatePlugin**](doc/PluginsApi.md#updateplugin) | **POST** /v1/plugins/{id}/update | 
 [*PrivacyApi*](doc/PrivacyApi.md) | [**deleteMyAccount**](doc/PrivacyApi.md#deletemyaccount) | **DELETE** /v1/me | Delete your account: you are signed out now, and your data, workspaces you solely own and their computer snapshots are purged after the grace period
 [*PrivacyApi*](doc/PrivacyApi.md) | [**exportMyData**](doc/PrivacyApi.md#exportmydata) | **GET** /v1/me/export | Download everything you can see as a ZIP of JSON files
 [*PrivacyApi*](doc/PrivacyApi.md) | [**getOrgSettings**](doc/PrivacyApi.md#getorgsettings) | **GET** /v1/orgs/{id}/settings | 
@@ -355,6 +361,7 @@ Class | Method | HTTP request | Description
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
  - [DeletedPage](doc/DeletedPage.md)
+ - [DeletedPlugin](doc/DeletedPlugin.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
  - [DeletedRule](doc/DeletedRule.md)
  - [DeletedTeach](doc/DeletedTeach.md)
@@ -376,6 +383,9 @@ Class | Method | HTTP request | Description
  - [ImportBotResponseConnectionsToAddInner](doc/ImportBotResponseConnectionsToAddInner.md)
  - [InstallCatalogSkillRequest](doc/InstallCatalogSkillRequest.md)
  - [InstallGitHubSkillRequest](doc/InstallGitHubSkillRequest.md)
+ - [InstallPluginRequest](doc/InstallPluginRequest.md)
+ - [InstalledPluginServer](doc/InstalledPluginServer.md)
+ - [InstalledPluginServerAllOfTools](doc/InstalledPluginServerAllOfTools.md)
  - [InstalledSkill](doc/InstalledSkill.md)
  - [Integration](doc/Integration.md)
  - [IntegrationDevice](doc/IntegrationDevice.md)
@@ -430,7 +440,16 @@ Class | Method | HTTP request | Description
  - [PageViewLinkRequest](doc/PageViewLinkRequest.md)
  - [Plan](doc/Plan.md)
  - [PlanCatalog](doc/PlanCatalog.md)
+ - [Plugin](doc/Plugin.md)
+ - [PluginList](doc/PluginList.md)
+ - [PluginPreview](doc/PluginPreview.md)
+ - [PluginPreviewSkillsInner](doc/PluginPreviewSkillsInner.md)
+ - [PluginSecretInfo](doc/PluginSecretInfo.md)
+ - [PluginServerInfo](doc/PluginServerInfo.md)
+ - [PluginSkillsInner](doc/PluginSkillsInner.md)
+ - [PluginUpdatePreview](doc/PluginUpdatePreview.md)
  - [PortalRequest](doc/PortalRequest.md)
+ - [PreviewPluginRequest](doc/PreviewPluginRequest.md)
  - [Problem](doc/Problem.md)
  - [ProblemErrorsInner](doc/ProblemErrorsInner.md)
  - [Project](doc/Project.md)
@@ -552,6 +571,7 @@ Class | Method | HTTP request | Description
  - [UpdateOrganizationRequest](doc/UpdateOrganizationRequest.md)
  - [UpdatePageRequest](doc/UpdatePageRequest.md)
  - [UpdatePageResponse](doc/UpdatePageResponse.md)
+ - [UpdatePluginRequest](doc/UpdatePluginRequest.md)
  - [UpdateProjectRequest](doc/UpdateProjectRequest.md)
  - [UpdateRoutineRequest](doc/UpdateRoutineRequest.md)
  - [UpdateTaskRequest](doc/UpdateTaskRequest.md)

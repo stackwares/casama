@@ -7149,6 +7149,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scroll'**
   String get teachStepScroll;
+
+  /// No description provided for @plugins.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
+  String get plugins;
+
+  /// No description provided for @pluginsRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills and tools from plugin packages'**
+  String get pluginsRow;
+
+  /// No description provided for @noPlugins.
+  ///
+  /// In en, this message translates to:
+  /// **'No plugins yet'**
+  String get noPlugins;
+
+  /// No description provided for @pluginsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins are Agent Plugins 1.0 packages on GitHub. They can bring skills and MCP tools; their servers run on this bot\'s computer, never on Kasama\'s servers.'**
+  String get pluginsHelp;
+
+  /// No description provided for @addPlugin.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a plugin'**
+  String get addPlugin;
+
+  /// No description provided for @addPluginHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a GitHub link to the plugin\'s folder. You\'ll see what it adds before anything is installed.'**
+  String get addPluginHelp;
+
+  /// No description provided for @pluginAdds.
+  ///
+  /// In en, this message translates to:
+  /// **'It adds'**
+  String get pluginAdds;
+
+  /// No description provided for @pluginStdio.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs on the bot\'s computer: {command}'**
+  String pluginStdio(String command);
+
+  /// No description provided for @pluginRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Connects to {url}'**
+  String pluginRemote(String url);
+
+  /// No description provided for @pluginTalksTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Talks to: {hosts}'**
+  String pluginTalksTo(String hosts);
+
+  /// No description provided for @pluginSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill'**
+  String get pluginSkill;
+
+  /// No description provided for @pluginHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get pluginHosts;
+
+  /// No description provided for @pluginServerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start'**
+  String get pluginServerError;
+
+  /// No description provided for @pluginRunsOnComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs on the bot\'s computer'**
+  String get pluginRunsOnComputer;
+
+  /// No description provided for @pluginUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Already up to date'**
+  String get pluginUpToDate;
+
+  /// No description provided for @checkForUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for update'**
+  String get checkForUpdate;
+
+  /// No description provided for @uninstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall'**
+  String get uninstall;
+
+  /// No description provided for @uninstallPluginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall {name}?'**
+  String uninstallPluginTitle(String name);
+
+  /// No description provided for @uninstallPluginBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its skills, tools, files and saved secrets are removed from this bot.'**
+  String get uninstallPluginBody;
+
+  /// No description provided for @updatePluginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update {name}'**
+  String updatePluginTitle(String name);
+
+  /// No description provided for @pluginDiffSkillsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'New skills: {names}'**
+  String pluginDiffSkillsAdded(String names);
+
+  /// No description provided for @pluginDiffSkillsChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed skills: {names}'**
+  String pluginDiffSkillsChanged(String names);
+
+  /// No description provided for @pluginDiffSkillsRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed skills: {names}'**
+  String pluginDiffSkillsRemoved(String names);
+
+  /// No description provided for @pluginDiffServersAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'New tool servers: {names}'**
+  String pluginDiffServersAdded(String names);
+
+  /// No description provided for @pluginDiffServersChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed tool servers: {names}'**
+  String pluginDiffServersChanged(String names);
+
+  /// No description provided for @pluginDiffServersRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed tool servers: {names}'**
+  String pluginDiffServersRemoved(String names);
+
+  /// No description provided for @pluginDiffHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Talks to new hosts: {hosts}'**
+  String pluginDiffHosts(String hosts);
+
+  /// No description provided for @pluginDiffNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No changes to what it adds.'**
+  String get pluginDiffNone;
 }
 
 class _AppLocalizationsDelegate

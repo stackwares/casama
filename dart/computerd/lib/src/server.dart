@@ -130,6 +130,11 @@ class Computerd {
       _lastActivity = DateTime.now();
       final segments = req.uri.pathSegments;
       switch ((req.method, segments)) {
+        // Plugin MCP servers in a bot's computer (D-121); the companion's come from the app.
+        case ('PUT', ['mcp-servers']) when !config.companion:
+          final body = await utf8.decoder.bind(req).join();
+          await mcp.update(LocalMcpServer.parseAll(body));
+          return await _json(res, 200, {'ok': true, 'servers': mcp.servers.keys.toList()});
         case ('POST' || 'GET', ['mcp', final key]):
           if (config.companion) _need('mcp');
           return await mcp.handle(req, key);

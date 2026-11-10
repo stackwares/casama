@@ -163,6 +163,12 @@ export class SupervisorProvider implements SandboxProvider {
       screenshot: async () =>
         new Uint8Array(await (await self.call(`${base}/screenshot`)).arrayBuffer()),
       input: async (e: InputEvent) => void (await self.json(`${base}/input`, "POST", e)),
+      setMcpServers: async (servers) => void (await self.json(`${base}/mcp-servers`, "PUT", servers)),
+      mcpFetch: (key, init) =>
+        fetch(`${self.baseUrl}${base}/mcp/${encodeURIComponent(key)}`, {
+          ...init,
+          headers: { ...(init.headers as Record<string, string>), ...self.authHeaders },
+        }),
       streamEndpoint: async (opts = {}) => ({
         url: `${self.baseUrl.replace(/^http/, "ws")}${base}/stream?mode=${opts.mode ?? "view"}`,
         headers: self.authHeaders,

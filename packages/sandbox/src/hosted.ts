@@ -164,6 +164,8 @@ export class HostedProvider implements SandboxProvider {
           throw new SandboxError("desktop_unavailable", "This computer has no desktop", 409);
       },
       screenshot: async () => (await c()).screenshot(),
+      setMcpServers: async (s) => (await c()).setMcpServers(s),
+      mcpFetch: async (k, init) => (await c()).mcpFetch(k, init),
       input: async (e: InputEvent) => (await c()).input(e),
       streamEndpoint: async (opts = {}) => {
         if (!turn)

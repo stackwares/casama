@@ -17,6 +17,7 @@ import * as skills from "./skills.ts";
 import * as system from "./system.ts";
 import * as voice from "./voice.ts";
 import * as pages from "./pages.ts";
+import * as plugins from "./plugins.ts";
 import * as teach from "./teach.ts";
 import * as watchers from "./watchers.ts";
 import * as workspaces from "./workspaces.ts";
@@ -41,6 +42,7 @@ export const routes = {
   ...checkins,
   ...actionRules,
   ...pages,
+  ...plugins,
   ...teach,
   ...watchers,
   ...mcp,
@@ -64,6 +66,7 @@ export {
   system,
   voice,
   pages,
+  plugins,
   teach,
   watchers,
   workspaces,

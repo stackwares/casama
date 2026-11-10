@@ -188,6 +188,33 @@ export class GitHubReader {
     ).sha;
   }
 
+  /** All files under r.path at a commit, paths relative to it. */
+  async fetchFolder(r: GitHubRef, commit: string, limits: { maxFiles: number; maxBytes: number }) {
+    if (!/^[0-9a-f]{40}$/.test(commit))
+      throw new ApiError(400, "github_commit_invalid", "Not a commit id.");
+    const tree = await this.get<{
+      tree: Array<{ path: string; type: string; sha: string; size?: number; mode: string }>;
+    }>(`/repos/${r.owner}/${r.repo}/git/trees/${commit}?recursive=1`);
+    const prefix = r.path ? `${r.path}/` : "";
+    const blobs = tree.tree.filter((e) => e.type === "blob" && e.path.startsWith(prefix) && e.mode !== "120000");
+    if (blobs.length > limits.maxFiles)
+      throw new ApiError(400, "plugin_too_large", `A plugin can have up to ${limits.maxFiles} files.`);
+    if (blobs.reduce((n, e) => n + (e.size ?? 0), 0) > limits.maxBytes)
+      throw new ApiError(400, "plugin_too_large", `A plugin's files can total up to ${limits.maxBytes / 1024 / 1024} MB.`);
+    return Promise.all(
+      blobs.map(async (e) => {
+        const b = await this.get<{ content: string; encoding: string }>(
+          `/repos/${r.owner}/${r.repo}/git/blobs/${e.sha}`,
+        );
+        return {
+          path: e.path.slice(prefix.length),
+          content: Buffer.from(b.content, b.encoding === "base64" ? "base64" : "utf8"),
+          executable: e.mode === "100755",
+        };
+      }),
+    );
+  }
+
   /** The skill folder at a commit: SKILL.md plus its files, within the limits. */
   async fetchSkill(r: GitHubRef, commit: string): Promise<SkillBundle> {
     if (!/^[0-9a-f]{40}$/.test(commit))
@@ -226,6 +253,16 @@ export class GitHubReader {
     );
     return bundleFrom((await blob(md.sha)).toString("utf8"), files);
   }
+}
+
+/** Every file under a folder at a commit (plugins, D-121), within the limits. */
+export async function fetchGitHubFolder(
+  reader: GitHubReader,
+  r: GitHubRef,
+  commit: string,
+  limits: { maxFiles: number; maxBytes: number },
+) {
+  return reader.fetchFolder(r, commit, limits);
 }
 
 /** Text files are shown in previews; binaries just by size. */

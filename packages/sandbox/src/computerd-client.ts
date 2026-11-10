@@ -143,6 +143,26 @@ export class ComputerdClient {
     };
   }
 
+  async setMcpServers(servers: Record<string, import("./types.ts").McpServerSpec>) {
+    await this.call("/mcp-servers", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(servers),
+    });
+  }
+
+  /** Raw MCP request to a bridged server; the caller reads the status and body. */
+  async mcpFetch(key: string, init: RequestInit) {
+    try {
+      return await fetch(`${this.baseUrl}/mcp/${encodeURIComponent(key)}`, {
+        ...init,
+        headers: { ...(init.headers as Record<string, string>), ...this.authHeaders },
+      });
+    } catch (err) {
+      throw new SandboxError("computer_unreachable", `computerd unreachable: ${(err as Error).message}`);
+    }
+  }
+
   async screenshot() {
     const res = await this.call("/screenshot");
     return new Uint8Array(await res.arrayBuffer());

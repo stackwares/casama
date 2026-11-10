@@ -4112,4 +4112,115 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get teachStepScroll => 'Scroll';
+
+  @override
+  String get plugins => 'Plugins';
+
+  @override
+  String get pluginsRow => 'Skills and tools from plugin packages';
+
+  @override
+  String get noPlugins => 'No plugins yet';
+
+  @override
+  String get pluginsHelp =>
+      'Plugins are Agent Plugins 1.0 packages on GitHub. They can bring skills and MCP tools; their servers run on this bot\'s computer, never on Kasama\'s servers.';
+
+  @override
+  String get addPlugin => 'Add a plugin';
+
+  @override
+  String get addPluginHelp =>
+      'Paste a GitHub link to the plugin\'s folder. You\'ll see what it adds before anything is installed.';
+
+  @override
+  String get pluginAdds => 'It adds';
+
+  @override
+  String pluginStdio(String command) {
+    return 'Runs on the bot\'s computer: $command';
+  }
+
+  @override
+  String pluginRemote(String url) {
+    return 'Connects to $url';
+  }
+
+  @override
+  String pluginTalksTo(String hosts) {
+    return 'Talks to: $hosts';
+  }
+
+  @override
+  String get pluginSkill => 'Skill';
+
+  @override
+  String get pluginHosts => 'Network';
+
+  @override
+  String get pluginServerError => 'Couldn\'t start';
+
+  @override
+  String get pluginRunsOnComputer => 'Runs on the bot\'s computer';
+
+  @override
+  String get pluginUpToDate => 'Already up to date';
+
+  @override
+  String get checkForUpdate => 'Check for update';
+
+  @override
+  String get uninstall => 'Uninstall';
+
+  @override
+  String uninstallPluginTitle(String name) {
+    return 'Uninstall $name?';
+  }
+
+  @override
+  String get uninstallPluginBody =>
+      'Its skills, tools, files and saved secrets are removed from this bot.';
+
+  @override
+  String updatePluginTitle(String name) {
+    return 'Update $name';
+  }
+
+  @override
+  String pluginDiffSkillsAdded(String names) {
+    return 'New skills: $names';
+  }
+
+  @override
+  String pluginDiffSkillsChanged(String names) {
+    return 'Changed skills: $names';
+  }
+
+  @override
+  String pluginDiffSkillsRemoved(String names) {
+    return 'Removed skills: $names';
+  }
+
+  @override
+  String pluginDiffServersAdded(String names) {
+    return 'New tool servers: $names';
+  }
+
+  @override
+  String pluginDiffServersChanged(String names) {
+    return 'Changed tool servers: $names';
+  }
+
+  @override
+  String pluginDiffServersRemoved(String names) {
+    return 'Removed tool servers: $names';
+  }
+
+  @override
+  String pluginDiffHosts(String hosts) {
+    return 'Talks to new hosts: $hosts';
+  }
+
+  @override
+  String get pluginDiffNone => 'No changes to what it adds.';
 }

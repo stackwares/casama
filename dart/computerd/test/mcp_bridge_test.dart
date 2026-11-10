@@ -91,4 +91,23 @@ void main() {
     final res = await http.post(base.replace(path: '/mcp/nope'), headers: headers, body: '{"jsonrpc":"2.0","id":1,"method":"tools/list"}');
     expect(res.statusCode, 404);
   });
+
+  test('a bot computer takes its plugin servers over PUT /mcp-servers', () async {
+    server = Computerd(ComputerdConfig(home: home.path, token: token, port: 0, address: '127.0.0.1'));
+    await server.start();
+    base = Uri.parse('http://127.0.0.1:${server.port}');
+    final none = await http.post(base.replace(path: '/mcp/plug'), headers: headers, body: '{}');
+    expect(none.statusCode, 404);
+    final put = await http.put(base.replace(path: '/mcp-servers'), headers: headers, body: jsonEncode({
+      'plug': {'kind': 'stdio', 'command': Platform.resolvedExecutable, 'args': ['run', '${Directory.current.path}/test/fixtures/fake_mcp_server.dart']},
+    }));
+    expect(put.statusCode, 200, reason: put.body);
+    final init = {'jsonrpc': '2.0', 'id': 0, 'method': 'initialize', 'params': {'protocolVersion': '2025-06-18', 'capabilities': {}, 'clientInfo': {'name': 'a', 'version': '1'}}};
+    final res = await http.post(base.replace(path: '/mcp/plug'), headers: headers, body: jsonEncode(init));
+    expect(res.statusCode, 200, reason: res.body);
+    expect(res.body, contains('"fake"'));
+    // Removing it stops it.
+    await http.put(base.replace(path: '/mcp-servers'), headers: headers, body: '{}');
+    expect((await http.post(base.replace(path: '/mcp/plug'), headers: headers, body: jsonEncode(init))).statusCode, 404);
+  });
 }

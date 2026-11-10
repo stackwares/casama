@@ -362,6 +362,13 @@ abstract class Backend {
   Future<void> revokeMcpKey(String orgId, String keyId);
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
+  // Plugins (D-121)
+  Future<List<Plugin>> plugins(String botId);
+  Future<PluginPreview> previewPlugin(String orgId, String url);
+  Future<Plugin> installPlugin(String orgId, String botId, String url, String commit, Map<String, String> secrets);
+  Future<PluginUpdatePreview> pluginUpdate(String id);
+  Future<Plugin> updatePlugin(String id, String commit, {Map<String, String> secrets = const {}});
+  Future<void> uninstallPlugin(String id);
   // Teach a task by showing it (D-120)
   Future<TeachSession> startTeach(String computerId, String botId);
   Future<TeachSession> teach(String id);

@@ -103,6 +103,7 @@ import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_page.dart';
+import 'package:kasama_api/src/model/deleted_plugin.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
 import 'package:kasama_api/src/model/deleted_rule.dart';
 import 'package:kasama_api/src/model/deleted_teach.dart';
@@ -124,6 +125,9 @@ import 'package:kasama_api/src/model/import_bot_response.dart';
 import 'package:kasama_api/src/model/import_bot_response_connections_to_add_inner.dart';
 import 'package:kasama_api/src/model/install_catalog_skill_request.dart';
 import 'package:kasama_api/src/model/install_git_hub_skill_request.dart';
+import 'package:kasama_api/src/model/install_plugin_request.dart';
+import 'package:kasama_api/src/model/installed_plugin_server.dart';
+import 'package:kasama_api/src/model/installed_plugin_server_all_of_tools.dart';
 import 'package:kasama_api/src/model/installed_skill.dart';
 import 'package:kasama_api/src/model/integration.dart';
 import 'package:kasama_api/src/model/integration_device.dart';
@@ -175,7 +179,16 @@ import 'package:kasama_api/src/model/page_view_link.dart';
 import 'package:kasama_api/src/model/page_view_link_request.dart';
 import 'package:kasama_api/src/model/plan.dart';
 import 'package:kasama_api/src/model/plan_catalog.dart';
+import 'package:kasama_api/src/model/plugin.dart';
+import 'package:kasama_api/src/model/plugin_list.dart';
+import 'package:kasama_api/src/model/plugin_preview.dart';
+import 'package:kasama_api/src/model/plugin_preview_skills_inner.dart';
+import 'package:kasama_api/src/model/plugin_secret_info.dart';
+import 'package:kasama_api/src/model/plugin_server_info.dart';
+import 'package:kasama_api/src/model/plugin_skills_inner.dart';
+import 'package:kasama_api/src/model/plugin_update_preview.dart';
 import 'package:kasama_api/src/model/portal_request.dart';
+import 'package:kasama_api/src/model/preview_plugin_request.dart';
 import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/problem_errors_inner.dart';
 import 'package:kasama_api/src/model/project.dart';
@@ -286,6 +299,7 @@ import 'package:kasama_api/src/model/update_org_settings_request.dart';
 import 'package:kasama_api/src/model/update_organization_request.dart';
 import 'package:kasama_api/src/model/update_page_request.dart';
 import 'package:kasama_api/src/model/update_page_response.dart';
+import 'package:kasama_api/src/model/update_plugin_request.dart';
 import 'package:kasama_api/src/model/update_project_request.dart';
 import 'package:kasama_api/src/model/update_routine_request.dart';
 import 'package:kasama_api/src/model/update_task_request.dart';
@@ -552,6 +566,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedId.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedPage':
           return DeletedPage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedPlugin':
+          return DeletedPlugin.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRoutine':
           return DeletedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRule':
@@ -594,6 +610,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return InstallCatalogSkillRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InstallGitHubSkillRequest':
           return InstallGitHubSkillRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InstallPluginRequest':
+          return InstallPluginRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InstalledPluginServer':
+          return InstalledPluginServer.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InstalledPluginServerAllOfTools':
+          return InstalledPluginServerAllOfTools.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InstalledSkill':
           return InstalledSkill.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Integration':
@@ -705,8 +727,26 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Plan.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PlanCatalog':
           return PlanCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Plugin':
+          return Plugin.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PluginList':
+          return PluginList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PluginPreview':
+          return PluginPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PluginPreviewSkillsInner':
+          return PluginPreviewSkillsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PluginSecretInfo':
+          return PluginSecretInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PluginServerInfo':
+          return PluginServerInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PluginSkillsInner':
+          return PluginSkillsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PluginUpdatePreview':
+          return PluginUpdatePreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PortalRequest':
           return PortalRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PreviewPluginRequest':
+          return PreviewPluginRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Problem':
           return Problem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ProblemErrorsInner':
@@ -960,6 +1000,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdatePageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdatePageResponse':
           return UpdatePageResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdatePluginRequest':
+          return UpdatePluginRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateProjectRequest':
           return UpdateProjectRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateRoutineRequest':

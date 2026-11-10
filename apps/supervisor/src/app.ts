@@ -192,6 +192,34 @@ export function createSupervisorApp(
     await (await running(c.req.param("ref"), c)).stopStream();
     return c.json({ ok: true });
   });
+  // Plugin MCP servers inside the computer (D-121): the list, and raw MCP requests to one.
+  app.put("/computers/:ref/mcp-servers", async (c) => {
+    const h = await running(c.req.param("ref"), c);
+    if (!h.setMcpServers) throw new SandboxError("not_supported", "This computer can't run MCP servers", 501);
+    await h.setMcpServers(await c.req.json());
+    return c.json({ ok: true });
+  });
+  app.on(["GET", "POST", "DELETE"], "/computers/:ref/mcp/:key", async (c) => {
+    const h = await running(c.req.param("ref"), c);
+    if (!h.mcpFetch) throw new SandboxError("not_supported", "This computer can't run MCP servers", 501);
+    const headers: Record<string, string> = {};
+    for (const k of ["content-type", "accept", "mcp-session-id", "mcp-protocol-version", "last-event-id"]) {
+      const v = c.req.header(k);
+      if (v) headers[k] = v;
+    }
+    const res = await h.mcpFetch(c.req.param("key"), {
+      method: c.req.method,
+      headers,
+      body: c.req.method === "POST" ? await c.req.arrayBuffer() : undefined,
+      signal: c.req.raw.signal,
+    });
+    const out = new Headers();
+    for (const k of ["content-type", "mcp-session-id", "cache-control"]) {
+      const v = res.headers.get(k);
+      if (v) out.set(k, v);
+    }
+    return new Response(res.body, { status: res.status, headers: out });
+  });
   app.post("/computers/:ref/input", async (c) => {
     await (await running(c.req.param("ref"), c)).input(await c.req.json());
     return c.json({ ok: true });

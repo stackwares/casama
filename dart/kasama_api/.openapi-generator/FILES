@@ -19,6 +19,7 @@ lib/src/api/local_computer_api.dart
 lib/src/api/mcp_api.dart
 lib/src/api/memory_api.dart
 lib/src/api/pages_api.dart
+lib/src/api/plugins_api.dart
 lib/src/api/privacy_api.dart
 lib/src/api/projects_api.dart
 lib/src/api/routines_api.dart
@@ -149,6 +150,7 @@ lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
 lib/src/model/deleted_page.dart
+lib/src/model/deleted_plugin.dart
 lib/src/model/deleted_routine.dart
 lib/src/model/deleted_rule.dart
 lib/src/model/deleted_teach.dart
@@ -170,6 +172,9 @@ lib/src/model/import_bot_response.dart
 lib/src/model/import_bot_response_connections_to_add_inner.dart
 lib/src/model/install_catalog_skill_request.dart
 lib/src/model/install_git_hub_skill_request.dart
+lib/src/model/install_plugin_request.dart
+lib/src/model/installed_plugin_server.dart
+lib/src/model/installed_plugin_server_all_of_tools.dart
 lib/src/model/installed_skill.dart
 lib/src/model/integration.dart
 lib/src/model/integration_device.dart
@@ -224,7 +229,16 @@ lib/src/model/page_view_link.dart
 lib/src/model/page_view_link_request.dart
 lib/src/model/plan.dart
 lib/src/model/plan_catalog.dart
+lib/src/model/plugin.dart
+lib/src/model/plugin_list.dart
+lib/src/model/plugin_preview.dart
+lib/src/model/plugin_preview_skills_inner.dart
+lib/src/model/plugin_secret_info.dart
+lib/src/model/plugin_server_info.dart
+lib/src/model/plugin_skills_inner.dart
+lib/src/model/plugin_update_preview.dart
 lib/src/model/portal_request.dart
+lib/src/model/preview_plugin_request.dart
 lib/src/model/problem.dart
 lib/src/model/problem_errors_inner.dart
 lib/src/model/project.dart
@@ -346,6 +360,7 @@ lib/src/model/update_org_settings_request.dart
 lib/src/model/update_organization_request.dart
 lib/src/model/update_page_request.dart
 lib/src/model/update_page_response.dart
+lib/src/model/update_plugin_request.dart
 lib/src/model/update_project_request.dart
 lib/src/model/update_routine_request.dart
 lib/src/model/update_task_request.dart

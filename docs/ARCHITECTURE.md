@@ -223,6 +223,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/domain/src/teach.ts` (password detection, transcript), `packages/agent/src/teach.ts` (`captureTeachContext`, `teach.save_draft`), `teach_sessions`/`teach_steps`, `apps/server/src/api/routes/teach.ts`, and in the app `features/teach/` (`TeachRecorder`, the draft screen) plus the recording banner in the live view.
 
+## Plugins (D-121)
+
+- `packages/domain/src/agent-plugins.ts` (Agent Plugins 1.0 checks), `packages/agent/src/plugins.ts` (`syncPluginComputer`, `computerMcpFor`) and `ComputerMcpAdapter` in `integrations.ts`, `plugins`/`plugin_files` plus `skills.plugin_id`/`integrations.plugin_id`, `apps/server/src/api/routes/plugins.ts`, computerd `PUT /mcp-servers`, the supervisor's `/computers/:ref/mcp*` passthrough, `SandboxHandle.setMcpServers|mcpFetch`, and the bot's Plugins screen.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

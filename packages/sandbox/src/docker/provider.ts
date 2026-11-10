@@ -262,6 +262,8 @@ export class DockerProvider implements SandboxProvider {
           throw new SandboxError("desktop_unavailable", "This computer has no desktop", 409);
       },
       screenshot: () => c.screenshot(),
+      setMcpServers: (s) => c.setMcpServers(s),
+      mcpFetch: (k, init) => c.mcpFetch(k, init),
       input: (e: InputEvent) => c.input(e),
       streamEndpoint: async (opts = {}) => {
         const turn = this.opts.turn;

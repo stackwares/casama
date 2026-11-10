@@ -709,3 +709,42 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - domain: `teach.test.ts`, covering password detection, secret names and the transcript.
   - API, with a fake computer and a scripted model (`teach.test.ts`): recording only under control, capture after each step, password text never stored, mark as secret, control ending, a transcript without secret values, the draft, save and try, discard.
   - widget (`teach_test.dart`): the recorder, the live-view banner with mark-secret and stop, and the draft screen.
+
+## D-121 Plugins
+
+- **Format:** Agent Plugins 1.0, checked by `@kasama/domain` `checkPlugin`. The checker is written from the published specification, including the rules its JSON Schemas can't express:
+  - `$schema` must be 1.0.0.
+  - Name pattern; unknown manifest fields are warnings.
+  - Skills are the immediate `skills/<name>/SKILL.md` folders.
+  - `mcp.json` is checked per server:
+    - stdio `command` is one program or a `./` path inside the plugin.
+    - `cwd` stays inside the plugin or its data folder.
+    - `env` can't set `PLUGIN_ROOT` or `PLUGIN_DATA`.
+    - URLs are https except on loopback, with no credentials or fragments.
+    - Headers are valid and not duplicated.
+  - A bad server or skill is skipped with a warning; a bad `mcp.json` disables only MCP. `${PLUGIN_ROOT}` and `${PLUGIN_DATA}` are expanded once, in args, env values and cwd only.
+- **Secrets:** the specification has no way to declare them and forbids secrets in `env` and `headers`. A plugin declares the secrets it needs under Kasama's own extension namespace (`extensions["com.kasama"].secrets`): a name, a description, the server, and the environment variable or header it fills, with an optional `"Bearer {{value}}"` format. Values are stored in Vault, never in the connection's config. Updates keep them unless replaced.
+- **From GitHub, pinned:** preview resolves the link's ref to a commit and fetches that folder (up to 400 files and 10 MB). Install must name the previewed commit, so what was reviewed is what gets installed. Plugins are installed per bot.
+- **What install creates** (each row points at `plugins.id`, so uninstall cascades):
+  - the skills (`source = plugin`, with their files);
+  - the package's other files (`plugin_files`);
+  - one connection per server: kind `mcp` for remote servers, the new kind `computer_mcp` for stdio servers. Both are attached to the bot.
+  - Install, update and uninstall are audited.
+- **Stdio servers run in the bot's computer**, so plugin code never runs on Kasama's servers:
+  - computerd takes the computer's plugin servers over the new `PUT /mcp-servers`, outside companion mode, and bridges them on the existing `/mcp/<key>` (D-096).
+  - The supervisor passes `/computers/:ref/mcp-servers` and `/computers/:ref/mcp/:key` through, and `SandboxHandle` gains `setMcpServers` and `mcpFetch`.
+  - Before the first call on a computer, the worker writes the package to `~/.kasama/plugins/<name>/` (`PLUGIN_ROOT`). A `.kasama-commit` marker skips unchanged packages. Data lives in `~/.kasama/plugin-data/<name>/` (`PLUGIN_DATA`), which survives updates.
+  - The worker then sends the server list for every bot that uses that computer, with secret env values (`syncPluginComputer`, skipped when nothing changed). It speaks MCP through `mcpFetch` (`ComputerMcpAdapter`).
+- **Tools and risk:** risk comes from the server's tool annotations (read-only is low, destructive is high, otherwise medium) and can be overridden like any connection's.
+  - Remote servers' tools are listed through the worker at install.
+  - Stdio servers' tools are listed at install by starting the bot's computer. They are refreshed on update, not at every run start, so a run doesn't wake the computer just to list tools.
+  - **Deviation from SPEC:** the preview before install shows skills, each server's command or URL, network hosts, secrets and warnings, but not tool names. Listing tools means running the plugin's code, which happens only once it's installed. The plugin page then shows every tool with its risk.
+- **Updates and uninstall:**
+  - "Check for update" fetches the source's latest commit. It shows a diff: skills and servers added, changed and removed; new hosts; new secrets. Update reinstalls at that commit.
+  - Uninstall deletes the plugin row (cascading to its skills, files and connections) and its Vault secrets. When the computer is awake, it also stops the servers and removes the files.
+- **Not yet:** installing a plugin's stdio servers on the user's own computer through the desktop companion; for now only remote servers and the bot's computer are supported. The default computer image needs this computerd build to run plugin servers.
+- **Tests:**
+  - domain (`agent-plugins.test.ts`): the manifest rules, per-server checks and secret declarations.
+  - computerd: `PUT /mcp-servers` starts and stops a real stdio server.
+  - API (`plugins.test.ts`), with a fake GitHub, a fake computer and real MCP servers: preview, pinned install needing its secrets, tools listed for both kinds, the package and env on the computer with no secret in the config, a call through `computerMcpFor`, an update diff carrying secrets over, and an uninstall that removes everything.
+  - widget (`plugins_test.dart`).

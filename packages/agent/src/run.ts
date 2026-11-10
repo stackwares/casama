@@ -42,6 +42,7 @@ import {
   SecretRequestArgs,
   secretRequestState,
 } from "./secret-requests.ts";
+import { computerMcpFor } from "./plugins.ts";
 import { SETUP_GUIDE } from "./tools/setup.ts";
 import {
   type ActionRule,
@@ -2044,9 +2045,11 @@ async function loadIntegrationTools(
   const out: IntegrationToolSpec[] = [];
   for (const row of rows) {
     let tools = row.tools_cache ?? [];
+    // Plugin servers on the computer are listed at install and update, not at every run start.
     if (
-      !row.tools_cached_at ||
-      Date.now() - new Date(row.tools_cached_at).getTime() > INTEGRATION_CACHE_MS
+      row.kind !== "computer_mcp" &&
+      (!row.tools_cached_at ||
+        Date.now() - new Date(row.tools_cached_at).getTime() > INTEGRATION_CACHE_MS)
     ) {
       const r = await refreshIntegration(db, row.id, {
         fetch: fetchImpl,
@@ -2095,6 +2098,10 @@ function integrationDefs(
         fetch: fetchImpl,
         secrets: await secretsFn(),
         local,
+        computerMcp:
+          rec.kind === "computer_mcp" && ctx.computer
+            ? computerMcpFor(db, ctx.botId, ctx.computer)
+            : undefined,
         activity: {
           run_id: ctx.runId,
           bot: info?.botName ?? "",
@@ -2105,7 +2112,7 @@ function integrationDefs(
       // Long local calls: progress shows on the timeline; cancelling the run cancels the call.
       const ctrl = new AbortController();
       const poll =
-        rec.kind === "local_mcp"
+        rec.kind === "local_mcp" || rec.kind === "computer_mcp"
           ? setInterval(async () => {
               const [r] = await db
                 .execute<{ c: Date | null }>(

@@ -568,6 +568,92 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  // Plugins (D-121)
+  final pluginList = <Plugin>[];
+  final pluginActions = <String>[];
+  PluginPreview pluginPreview() => PluginPreview(
+        name: 'weather',
+        version: '1.0.0',
+        description: 'Forecasts',
+        repo: 'acme/agent-plugins',
+        path: 'plugins/weather',
+        commit: '1' * 40,
+        skills: [PluginPreviewSkillsInner(name: 'plan-trip', description: 'Plan around the weather')],
+        servers: [PluginServerInfo(key: 'forecast', type: PluginServerInfoTypeEnum.stdio, command: './bin/forecast', args: const [], url: null)],
+        secrets: [PluginSecretInfo(name: 'WEATHER_KEY', description: 'API key', server: 'forecast')],
+        hosts: const [],
+        warnings: const [],
+      );
+  Plugin installed(String commit) => Plugin(
+        id: 'plugin-1',
+        botId: botId,
+        name: 'weather',
+        version: commit.startsWith('2') ? '2.0.0' : '1.0.0',
+        description: 'Forecasts',
+        repo: 'acme/agent-plugins',
+        path: 'plugins/weather',
+        commit: commit,
+        skills: [PluginSkillsInner(id: 'sk-1', name: 'plan-trip')],
+        servers: [
+          InstalledPluginServer(
+            key: 'forecast',
+            type: InstalledPluginServerTypeEnum.stdio,
+            command: './bin/forecast',
+            args: const [],
+            url: null,
+            integrationId: 'int-1',
+            status: InstalledPluginServerStatusEnum.ok,
+            error: null,
+            tools: [InstalledPluginServerAllOfTools(name: 'forecast', risk: InstalledPluginServerAllOfToolsRiskEnum.low)],
+          ),
+        ],
+        hosts: const [],
+        secrets: const [],
+        installedAt: DateTime(2026, 11, 10),
+        updatedAt: DateTime(2026, 11, 10),
+      );
+  @override
+  Future<List<Plugin>> plugins(String botId) async => List.of(pluginList);
+  @override
+  Future<PluginPreview> previewPlugin(String orgId, String url) async {
+    pluginActions.add('preview:$url');
+    return pluginPreview();
+  }
+  @override
+  Future<Plugin> installPlugin(String orgId, String botId, String url, String commit, Map<String, String> secrets) async {
+    pluginActions.add('install:$commit:${secrets['WEATHER_KEY']}');
+    pluginList.add(installed(commit));
+    return pluginList.last;
+  }
+  @override
+  Future<PluginUpdatePreview> pluginUpdate(String id) async => PluginUpdatePreview(
+        upToDate: false,
+        fromCommit: '1' * 40,
+        toCommit: '2' * 40,
+        fromVersion: '1.0.0',
+        toVersion: '2.0.0',
+        skillsAdded: const [],
+        skillsRemoved: const [],
+        skillsChanged: const ['plan-trip'],
+        serversAdded: const ['tides'],
+        serversRemoved: const [],
+        serversChanged: const [],
+        hostsAdded: const [],
+        secretsAdded: const [],
+        preview: pluginPreview(),
+      );
+  @override
+  Future<Plugin> updatePlugin(String id, String commit, {Map<String, String> secrets = const {}}) async {
+    pluginActions.add('update:$commit');
+    pluginList[0] = installed(commit);
+    return pluginList[0];
+  }
+  @override
+  Future<void> uninstallPlugin(String id) async {
+    pluginActions.add('uninstall:$id');
+    pluginList.clear();
+  }
+
   // Teach a task (D-120)
   final teachSteps = <AddTeachStepRequest>[];
   final teachActions = <String>[];

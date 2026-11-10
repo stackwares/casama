@@ -913,6 +913,29 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<List<Plugin>> plugins(String botId) async => (await api.plugins.listPlugins(botId: botId)).data!.items;
+
+  @override
+  Future<PluginPreview> previewPlugin(String orgId, String url) async =>
+      (await api.plugins.previewPlugin(previewPluginRequest: PreviewPluginRequest(orgId: orgId, url: url))).data!;
+
+  @override
+  Future<Plugin> installPlugin(String orgId, String botId, String url, String commit, Map<String, String> secrets) async =>
+      (await api.plugins.installPlugin(installPluginRequest: InstallPluginRequest(orgId: orgId, botId: botId, url: url, commit: commit, secrets: secrets))).data!;
+
+  @override
+  Future<PluginUpdatePreview> pluginUpdate(String id) async => (await api.plugins.getPluginUpdate(id: id)).data!;
+
+  @override
+  Future<Plugin> updatePlugin(String id, String commit, {Map<String, String> secrets = const {}}) async =>
+      (await api.plugins.updatePlugin(id: id, updatePluginRequest: UpdatePluginRequest(commit: commit, secrets: secrets))).data!;
+
+  @override
+  Future<void> uninstallPlugin(String id) async {
+    await api.plugins.uninstallPlugin(id: id);
+  }
+
+  @override
   Future<TeachSession> startTeach(String computerId, String botId) async =>
       (await api.teach.startTeach(startTeachRequest: StartTeachRequest(computerId: computerId, botId: botId))).data!;
 
