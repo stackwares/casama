@@ -14,7 +14,7 @@ let h: Harness;
 let owner: { id: string; token: string };
 let orgId: string;
 let teamId: string;
-const bots: Record<string, string> = {};
+const bots = {} as Record<"Researcher" | "Designer" | "researcher!", string>;
 const calls: string[] = [];
 
 const handle = {
@@ -41,7 +41,7 @@ const waitFor = async <T>(fn: () => Promise<T | undefined | null | false>, what:
     await new Promise((r) => setTimeout(r, 100));
   }
 };
-async function say(bot: string, text: string) {
+async function say(bot: keyof typeof bots, text: string) {
   const conv = await j(await h.request("/v1/conversations", { method: "POST", token: owner.token, json: { bot_id: bots[bot] } }));
   const runId = (await j(await h.request(`/v1/conversations/${conv.id}/messages`, { method: "POST", token: owner.token, json: { text } }))).run_id as string;
   await waitFor(async () => ["completed", "failed"].includes((await j(await h.request(`/v1/runs/${runId}`, { token: owner.token }))).status), "run");
@@ -76,7 +76,7 @@ beforeAll(async () => {
   const cred = await j(
     await h.request("/v1/credentials", { method: "POST", token: owner.token, json: { org_id: orgId, provider: "openrouter", label: "k", api_key: "sk-or-v1-teamcomputer" } }),
   );
-  for (const name of ["Researcher", "Designer", "researcher!"]) {
+  for (const name of ["Researcher", "Designer", "researcher!"] as const) {
     bots[name] = (
       await j(await h.request("/v1/bots", { method: "POST", token: owner.token, json: { org_id: orgId, name, model_policy: { primary: { credential_id: cred.id, model: "fixture-main" } } } }))
     ).id;
@@ -99,7 +99,7 @@ describe("team computer layout", () => {
     expect(rows.find((r) => r.name === "Researcher")?.team_folder).toBe("researcher");
     await h.tdb.admin`update public.bots set name = 'Scout' where id = ${bots.Researcher}`;
     expect((await h.tdb.admin<{ team_folder: string }[]>`select team_folder from public.bots where id = ${bots.Researcher}`)[0]?.team_folder).toBe("researcher");
-    expect(await teamFolder(h.deps.db, bots["researcher!"]!)).toBe("researcher-2");
+    expect(await teamFolder(h.deps.db, bots["researcher!"])).toBe("researcher-2");
   });
 
   it("only max_desktops bots use the desktop at once; the lease ends with the run", async () => {
