@@ -155,6 +155,14 @@ export const EnvSchema = z.object({
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
   /** Public base URL of this API (signaling URLs); defaults to the request's origin. */
   PUBLIC_API_URL: z.url().optional(),
+  /**
+   * Pages (D-119) are served from their own origin: PAGES_URL is its public address, PAGES_PORT
+   * the port the API process serves it on (unset: not served by this process).
+   */
+  PAGES_URL: z.url().default("http://localhost:8790"),
+  PAGES_PORT: z.coerce.number().int().optional(),
+  /** Headless Chromium for page PDFs (unset: PDF export is off). */
+  PDF_CHROMIUM_PATH: z.string().optional(),
 });
 export type Env = z.infer<typeof EnvSchema>;
 

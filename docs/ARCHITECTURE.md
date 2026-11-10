@@ -215,6 +215,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `conversation_bots`, `conversations.kind`, `messages.bot_id`, `runs.trigger_message_id|hop`; `packages/domain/src/mentions.ts`; group handling in `run.ts` (other bots' messages as labelled chat, `wakeMentioned` with a 6-hop cap, `RunDeps.startRun`); `sendGroup` and `/v1/group-chats` in `apps/server/src/api/routes/bots.ts`; `client/lib/features/groups/`.
 
+## Pages (D-119)
+
+- `packages/domain/src/pages.ts` (CSP, document assembly), `packages/agent/src/pages.ts` (`pages.publish|update_data|share|list`, versions, refresh routines), `pages`/`page_versions`/`page_view_tokens`, `apps/server/src/api/routes/pages.ts` (list, view links, share, revert, delete), `apps/server/src/pages/app.ts` (the pages origin on `PAGES_PORT`), `apps/server/src/services/pdf.ts`, and `client/lib/features/pages/`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

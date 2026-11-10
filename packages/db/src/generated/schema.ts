@@ -2028,6 +2028,90 @@ export const mcpTokens = pgTable("mcp_tokens", {
 	check("mcp_tokens_kind_check", sql`kind = ANY (ARRAY['access'::text, 'refresh'::text, 'api_key'::text])`),
 ]);
 
+export const pages = pgTable("pages", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	createdBy: uuid("created_by"),
+	conversationId: uuid("conversation_id"),
+	title: text().notNull(),
+	html: text().notNull(),
+	data: jsonb().default({}).notNull(),
+	visibility: text().default('private').notNull(),
+	publicTokenHash: text("public_token_hash"),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }),
+	refreshRoutineId: uuid("refresh_routine_id"),
+	version: integer().default(1).notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("pages_org_idx").using("btree", table.orgId.asc().nullsLast().op("timestamptz_ops"), table.updatedAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "pages_created_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "pages_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "pages_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.conversationId],
+			foreignColumns: [conversations.id],
+			name: "pages_conversation_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.refreshRoutineId],
+			foreignColumns: [routines.id],
+			name: "pages_refresh_routine_id_fkey"
+		}).onDelete("set null"),
+	unique("pages_public_token_hash_key").on(table.publicTokenHash),
+	pgPolicy("pages_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`
+CASE
+    WHEN (visibility = 'private'::text) THEN ((created_by = ( SELECT auth.uid() AS uid)) OR can_manage_bot(bot_id))
+    ELSE can_access_bot(bot_id)
+END` }),
+	pgPolicy("pages_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("pages_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("pages_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 200)`),
+	check("pages_html_check", sql`octet_length(html) <= 2000000`),
+	check("pages_data_check", sql`octet_length((data)::text) <= 1000000`),
+	check("pages_visibility_check", sql`visibility = ANY (ARRAY['private'::text, 'workspace'::text, 'public'::text])`),
+]);
+
+export const pageViewTokens = pgTable("page_view_tokens", {
+	tokenHash: text("token_hash").primaryKey().notNull(),
+	pageId: uuid("page_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	kind: text().notNull(),
+	format: text().default('html').notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).notNull(),
+	usedAt: timestamp("used_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("page_view_tokens_expiry_idx").using("btree", table.expiresAt.asc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.pageId],
+			foreignColumns: [pages.id],
+			name: "page_view_tokens_page_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "page_view_tokens_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("page_view_tokens_kind_check", sql`kind = ANY (ARRAY['link'::text, 'session'::text])`),
+	check("page_view_tokens_format_check", sql`format = ANY (ARRAY['html'::text, 'pdf'::text])`),
+]);
+
 export const ttsCache = pgTable("tts_cache", {
 	messageId: uuid("message_id").notNull(),
 	voiceKey: text("voice_key").notNull(),
@@ -2096,6 +2180,29 @@ export const conversationBots = pgTable("conversation_bots", {
 	pgPolicy("conversation_bots_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("conversation_bots_role_check", sql`role = ANY (ARRAY['lead'::text, 'member'::text])`),
+]);
+
+export const pageVersions = pgTable("page_versions", {
+	pageId: uuid("page_id").notNull(),
+	version: integer().notNull(),
+	orgId: uuid("org_id").notNull(),
+	html: text().notNull(),
+	data: jsonb().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.pageId],
+			foreignColumns: [pages.id],
+			name: "page_versions_page_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "page_versions_org_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.pageId, table.version], name: "page_versions_pkey"}),
+	pgPolicy("page_versions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_view_page(page_id)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 ]);
 
 export const idempotencyKeys = pgTable("idempotency_keys", {

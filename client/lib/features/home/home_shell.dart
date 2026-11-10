@@ -369,6 +369,14 @@ class _Sidebar extends ConsumerWidget {
                     selected: false,
                     onTap: () => showNewGroupChat(context, ref),
                   ),
+                  _SidebarItem(
+                    key: const Key('sidebarPages'),
+                    height: 40,
+                    leading: Icon(LucideIcons.fileText, size: 18, color: scheme.onSurfaceVariant),
+                    label: l10n.pages,
+                    selected: location == '/pages',
+                    onTap: () => context.go('/pages'),
+                  ),
                   // Bots outside folders first, then each folder in order (D-100).
                   for (final (folder, group) in groupBotsByFolder(bots, folders)) ...[
                     if (folder != null)

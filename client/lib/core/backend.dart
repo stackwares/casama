@@ -362,6 +362,12 @@ abstract class Backend {
   Future<void> revokeMcpKey(String orgId, String keyId);
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
+  // Pages (D-119): opened in the system browser, never embedded.
+  Future<List<BotPage>> pages(String orgId, {String? botId});
+  Future<String> pageViewLink(String id, {bool pdf = false});
+  /// Returns the new public link when made public.
+  Future<String?> setPageVisibility(String id, BotPageVisibilityEnum visibility, {int? expiresInDays});
+  Future<void> deletePage(String id);
   // Watchers (D-116)
   Future<List<Watcher>> watchers(String botId);
   Future<void> setWatcherPaused(String id, bool paused);

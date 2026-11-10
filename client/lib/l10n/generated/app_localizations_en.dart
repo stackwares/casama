@@ -3945,4 +3945,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mentionEveryone => 'everyone';
+
+  @override
+  String get pages => 'Pages';
+
+  @override
+  String get pagesRow => 'Reports and dashboards it published';
+
+  @override
+  String get noPages => 'No pages yet';
+
+  @override
+  String get pagesHelp =>
+      'Ask a bot for a report, dashboard or tracker and it can publish it as a page. Pages open in your browser and stay private until you share them.';
+
+  @override
+  String get pagePrivate => 'Only me';
+
+  @override
+  String get pageWorkspace => 'Workspace';
+
+  @override
+  String get pagePublic => 'Anyone with the link';
+
+  @override
+  String get pageRefreshes => 'Refreshes on schedule';
+
+  @override
+  String pageUpdated(String date) {
+    return 'Updated $date';
+  }
+
+  @override
+  String get exportPdf => 'Export PDF';
+
+  @override
+  String get pageMakePublicTitle => 'Make this page public?';
+
+  @override
+  String get pageMakePublicBody =>
+      'Anyone with the link can open it, including the data on it. You can take it back any time; the link stops working.';
+
+  @override
+  String get pageMakePublic => 'Make public';
+
+  @override
+  String get pagePublicLinkTitle => 'Public link';
+
+  @override
+  String get pagePublicLinkBody =>
+      'Copied. It isn\'t listed in search engines.';
+
+  @override
+  String deletePageTitle(String title) {
+    return 'Delete \"$title\"?';
+  }
+
+  @override
+  String get openPages => 'Open in Pages';
 }

@@ -702,6 +702,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           }
           botSide(e.callId);
           rows.add(_Row(ValueKey('tools-${e.callId}'), rows.last.header ? 0 : AppSpace.sm, () => ToolGroupCard(steps: group)));
+          // A published page opens from Pages, in the browser (D-119).
+          if (group.any((t) => t.tool == 'pages.publish' && t.status == ToolStatus.done)) {
+            rows.add(
+              _Row(
+                ValueKey('pages-${e.callId}'),
+                AppSpace.xs,
+                () => Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton.icon(
+                    key: Key('openPages-${e.callId}'),
+                    icon: const Icon(LucideIcons.fileText, size: 16),
+                    label: Text(context.l10n.openPages),
+                    onPressed: () => context.push('/pages?bot=${widget.botId}'),
+                  ),
+                ),
+              ),
+            );
+          }
         case final ApprovalEntry a:
           botSide(a.approvalId);
           rows.add(

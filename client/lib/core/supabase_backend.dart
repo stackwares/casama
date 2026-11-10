@@ -913,6 +913,28 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<List<BotPage>> pages(String orgId, {String? botId}) async => (await api.pages.listPages(orgId: orgId, botId: botId)).data!.items;
+
+  @override
+  Future<String> pageViewLink(String id, {bool pdf = false}) async =>
+      (await api.pages.createPageViewLink(id: id, pageViewLinkRequest: PageViewLinkRequest(format: pdf ? PageViewLinkRequestFormatEnum.pdf : PageViewLinkRequestFormatEnum.html)))
+          .data!
+          .url;
+
+  @override
+  Future<String?> setPageVisibility(String id, BotPageVisibilityEnum visibility, {int? expiresInDays}) async => (await api.pages.updatePage(
+        id: id,
+        updatePageRequest: UpdatePageRequest(visibility: UpdatePageRequestVisibilityEnum.values.byName(visibility.name), expiresInDays: expiresInDays),
+      ))
+          .data!
+          .publicUrl;
+
+  @override
+  Future<void> deletePage(String id) async {
+    await api.pages.deletePage(id: id);
+  }
+
+  @override
   Future<List<Watcher>> watchers(String botId) async => (await api.watchers.listWatchers(botId: botId)).data!.items;
 
   @override

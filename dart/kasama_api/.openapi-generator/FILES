@@ -18,6 +18,7 @@ lib/src/api/integrations_api.dart
 lib/src/api/local_computer_api.dart
 lib/src/api/mcp_api.dart
 lib/src/api/memory_api.dart
+lib/src/api/pages_api.dart
 lib/src/api/privacy_api.dart
 lib/src/api/projects_api.dart
 lib/src/api/routines_api.dart
@@ -72,6 +73,8 @@ lib/src/model/bot.dart
 lib/src/model/bot_budget.dart
 lib/src/model/bot_checkins.dart
 lib/src/model/bot_list.dart
+lib/src/model/bot_page.dart
+lib/src/model/bot_page_detail.dart
 lib/src/model/bot_secret_request.dart
 lib/src/model/bot_secret_request_list.dart
 lib/src/model/bot_share_link.dart
@@ -143,6 +146,7 @@ lib/src/model/delete_result.dart
 lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
+lib/src/model/deleted_page.dart
 lib/src/model/deleted_routine.dart
 lib/src/model/deleted_rule.dart
 lib/src/model/deleted_watcher.dart
@@ -210,6 +214,10 @@ lib/src/model/org_settings.dart
 lib/src/model/organization.dart
 lib/src/model/organization_list.dart
 lib/src/model/organization_with_role.dart
+lib/src/model/page_list.dart
+lib/src/model/page_version.dart
+lib/src/model/page_view_link.dart
+lib/src/model/page_view_link_request.dart
 lib/src/model/plan.dart
 lib/src/model/plan_catalog.dart
 lib/src/model/portal_request.dart
@@ -233,6 +241,7 @@ lib/src/model/purchase_request.dart
 lib/src/model/reasoning_effort.dart
 lib/src/model/redirect_url.dart
 lib/src/model/release_lease_request.dart
+lib/src/model/revert_page_request.dart
 lib/src/model/revoked_connect_key.dart
 lib/src/model/revoked_key.dart
 lib/src/model/risk.dart
@@ -324,6 +333,8 @@ lib/src/model/update_local_device_request.dart
 lib/src/model/update_notice.dart
 lib/src/model/update_org_settings_request.dart
 lib/src/model/update_organization_request.dart
+lib/src/model/update_page_request.dart
+lib/src/model/update_page_response.dart
 lib/src/model/update_project_request.dart
 lib/src/model/update_routine_request.dart
 lib/src/model/update_task_request.dart

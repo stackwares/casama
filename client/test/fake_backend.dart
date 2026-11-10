@@ -568,6 +568,40 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  final pageList = <BotPage>[
+    BotPage(
+      id: 'page-1',
+      botId: botId,
+      title: 'Weekly sales',
+      visibility: BotPageVisibilityEnum.private,
+      version: 3,
+      expiresAt: null,
+      refreshRoutineId: 'rt-1',
+      conversationId: null,
+      canManage: true,
+      updatedAt: DateTime(2026, 11, 10, 9),
+      createdAt: DateTime(2026, 11, 1),
+    ),
+  ];
+  final pageActions = <String>[];
+  @override
+  Future<List<BotPage>> pages(String orgId, {String? botId}) async => List.of(pageList);
+  @override
+  Future<String> pageViewLink(String id, {bool pdf = false}) async {
+    pageActions.add('${pdf ? 'pdf' : 'view'}:$id');
+    return 'https://pages.example.com/v/tok-$id';
+  }
+  @override
+  Future<String?> setPageVisibility(String id, BotPageVisibilityEnum visibility, {int? expiresInDays}) async {
+    pageActions.add('${visibility.name}:$id');
+    return visibility == BotPageVisibilityEnum.public ? 'https://pages.example.com/s/public-$id' : null;
+  }
+  @override
+  Future<void> deletePage(String id) async {
+    pageActions.add('delete:$id');
+    pageList.removeWhere((p) => p.id == id);
+  }
+
   final groups = <Conversation>[];
   @override
   Future<List<Conversation>> groupChats(String orgId) async => groups;

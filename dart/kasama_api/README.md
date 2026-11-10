@@ -166,6 +166,12 @@ Class | Method | HTTP request | Description
 [*McpApi*](doc/McpApi.md) | [**listMcpKeys**](doc/McpApi.md#listmcpkeys) | **GET** /v1/orgs/{id}/mcp-keys | 
 [*McpApi*](doc/McpApi.md) | [**revokeMcpKey**](doc/McpApi.md#revokemcpkey) | **DELETE** /v1/orgs/{id}/mcp-keys/{key_id} | 
 [*MemoryApi*](doc/MemoryApi.md) | [**listMemories**](doc/MemoryApi.md#listmemories) | **GET** /v1/bots/{id}/memories | 
+[*PagesApi*](doc/PagesApi.md) | [**createPageViewLink**](doc/PagesApi.md#createpageviewlink) | **POST** /v1/pages/{id}/view-link | A single-use link (60 s) that opens the page in a browser
+[*PagesApi*](doc/PagesApi.md) | [**deletePage**](doc/PagesApi.md#deletepage) | **DELETE** /v1/pages/{id} | 
+[*PagesApi*](doc/PagesApi.md) | [**getPage**](doc/PagesApi.md#getpage) | **GET** /v1/pages/{id} | 
+[*PagesApi*](doc/PagesApi.md) | [**listPages**](doc/PagesApi.md#listpages) | **GET** /v1/pages | Pages you can open in a workspace (D-119)
+[*PagesApi*](doc/PagesApi.md) | [**revertPage**](doc/PagesApi.md#revertpage) | **POST** /v1/pages/{id}/revert | Bring back an earlier version (as a new version)
+[*PagesApi*](doc/PagesApi.md) | [**updatePage**](doc/PagesApi.md#updatepage) | **PATCH** /v1/pages/{id} | Change who can open a page; making it public returns a new link
 [*PrivacyApi*](doc/PrivacyApi.md) | [**deleteMyAccount**](doc/PrivacyApi.md#deletemyaccount) | **DELETE** /v1/me | Delete your account: you are signed out now, and your data, workspaces you solely own and their computer snapshots are purged after the grace period
 [*PrivacyApi*](doc/PrivacyApi.md) | [**exportMyData**](doc/PrivacyApi.md#exportmydata) | **GET** /v1/me/export | Download everything you can see as a ZIP of JSON files
 [*PrivacyApi*](doc/PrivacyApi.md) | [**getOrgSettings**](doc/PrivacyApi.md#getorgsettings) | **GET** /v1/orgs/{id}/settings | 
@@ -267,6 +273,8 @@ Class | Method | HTTP request | Description
  - [BotBudget](doc/BotBudget.md)
  - [BotCheckins](doc/BotCheckins.md)
  - [BotList](doc/BotList.md)
+ - [BotPage](doc/BotPage.md)
+ - [BotPageDetail](doc/BotPageDetail.md)
  - [BotSecretRequest](doc/BotSecretRequest.md)
  - [BotSecretRequestList](doc/BotSecretRequestList.md)
  - [BotShareLink](doc/BotShareLink.md)
@@ -338,6 +346,7 @@ Class | Method | HTTP request | Description
  - [DeletedComputer](doc/DeletedComputer.md)
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
+ - [DeletedPage](doc/DeletedPage.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
  - [DeletedRule](doc/DeletedRule.md)
  - [DeletedWatcher](doc/DeletedWatcher.md)
@@ -405,6 +414,10 @@ Class | Method | HTTP request | Description
  - [Organization](doc/Organization.md)
  - [OrganizationList](doc/OrganizationList.md)
  - [OrganizationWithRole](doc/OrganizationWithRole.md)
+ - [PageList](doc/PageList.md)
+ - [PageVersion](doc/PageVersion.md)
+ - [PageViewLink](doc/PageViewLink.md)
+ - [PageViewLinkRequest](doc/PageViewLinkRequest.md)
  - [Plan](doc/Plan.md)
  - [PlanCatalog](doc/PlanCatalog.md)
  - [PortalRequest](doc/PortalRequest.md)
@@ -428,6 +441,7 @@ Class | Method | HTTP request | Description
  - [ReasoningEffort](doc/ReasoningEffort.md)
  - [RedirectUrl](doc/RedirectUrl.md)
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
+ - [RevertPageRequest](doc/RevertPageRequest.md)
  - [RevokedConnectKey](doc/RevokedConnectKey.md)
  - [RevokedKey](doc/RevokedKey.md)
  - [Risk](doc/Risk.md)
@@ -519,6 +533,8 @@ Class | Method | HTTP request | Description
  - [UpdateNotice](doc/UpdateNotice.md)
  - [UpdateOrgSettingsRequest](doc/UpdateOrgSettingsRequest.md)
  - [UpdateOrganizationRequest](doc/UpdateOrganizationRequest.md)
+ - [UpdatePageRequest](doc/UpdatePageRequest.md)
+ - [UpdatePageResponse](doc/UpdatePageResponse.md)
  - [UpdateProjectRequest](doc/UpdateProjectRequest.md)
  - [UpdateRoutineRequest](doc/UpdateRoutineRequest.md)
  - [UpdateTaskRequest](doc/UpdateTaskRequest.md)

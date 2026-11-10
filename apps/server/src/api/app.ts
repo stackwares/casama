@@ -28,6 +28,7 @@ import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
 import { type InProcessEnv, registerMcpRoutes } from "./routes/mcp.ts";
+import { registerPageRoutes } from "./routes/pages.ts";
 import { registerPrivacyRoutes } from "./routes/privacy.ts";
 import { registerProjectRoutes } from "./routes/projects.ts";
 import { registerSearchRoutes } from "./routes/search.ts";
@@ -220,6 +221,7 @@ export function createApp(deps: AppDeps) {
   registerCheckinRoutes(app, deps);
   registerActionRuleRoutes(app, deps);
   registerWatcherRoutes(app, deps);
+  registerPageRoutes(app, deps);
   registerMcpRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {

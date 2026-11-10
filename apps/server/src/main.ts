@@ -19,8 +19,10 @@ import {
   kasamaCloudProvider,
 } from "./billing/index.ts";
 import { loadEnv } from "./env.ts";
+import { createPagesApp } from "./pages/app.ts";
 import { abuseControlsOn } from "./services/abuse.ts";
 import { disabledEmail, resendEmail } from "./services/email.ts";
+import { chromiumPdf } from "./services/pdf.ts";
 
 const env = loadEnv();
 // The worker reaches personal computers through the API's internal tunnel (D-066).
@@ -89,6 +91,7 @@ if (env.MODE === "api") {
       jwtSecret: env.SUPABASE_JWT_SECRET,
     }),
     email: env.RESEND_API_KEY ? resendEmail(env.RESEND_API_KEY, env.EMAIL_FROM) : disabledEmail,
+    pdf: env.PDF_CHROMIUM_PATH ? chromiumPdf(env.PDF_CHROMIUM_PATH) : null,
     readiness: { database: async () => void (await handle.db.execute(sql`select 1`)) },
   };
   // Kasama Cloud (D-094): free workspaces start computers only with a verified owner email.
@@ -97,6 +100,13 @@ if (env.MODE === "api") {
   const server = serve({ fetch: app.fetch, port: env.PORT }, (info) =>
     logger.info("api listening", { port: info.port }),
   );
+  // The pages origin (D-119) on its own port; put it behind its own host name in production.
+  if (env.PAGES_PORT) {
+    const pages = serve({ fetch: createPagesApp(deps).fetch, port: env.PAGES_PORT }, (info) =>
+      logger.info("pages listening", { port: info.port }),
+    );
+    stoppers.push(() => new Promise((r) => pages.close(r)));
+  }
   attachTerminal(server as unknown as import("node:http").Server, deps);
   attachStream(server as unknown as import("node:http").Server, deps);
   attachLocalConnect(server as unknown as import("node:http").Server, deps);
@@ -111,6 +121,7 @@ if (env.MODE === "api") {
       env.TELEMETRY === "on" ? { url: env.TELEMETRY_URL, version: KASAMA_VERSION } : undefined,
     cloud,
     databaseUrl: env.WORKER_DATABASE_URL ?? env.DATABASE_URL,
+    pagesUrl: env.PAGES_URL,
     fcmServiceAccountJson: env.FCM_SERVICE_ACCOUNT
       ? inlineOrFile(env.FCM_SERVICE_ACCOUNT)
       : undefined,

@@ -21,6 +21,8 @@ x-kasama: &kasama
     SUPABASE_JWT_SECRET: ${JWT_SECRET}
     PUBLIC_APP_URL: ${KASAMA_PUBLIC_URL}
     PUBLIC_API_URL: ${KASAMA_PUBLIC_URL}
+    # Pages (D-119) live on their own origin: a separate domain, or another port for trials.
+    PAGES_URL: ${KASAMA_PAGES_URL:-http://localhost:8790}
     SUPERVISOR_URL: http://kasama-supervisor:8788
     SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
     INTERNAL_TOKEN: ${INTERNAL_TOKEN}
@@ -188,6 +190,7 @@ services:
     environment:
       <<: *kasama-env
       MODE: api
+      PAGES_PORT: "8790"
     depends_on: { migrate: { condition: service_completed_successfully } }
 
   worker:
@@ -268,9 +271,11 @@ services:
     depends_on: [api, kong]
     environment:
       KASAMA_SITE: ${KASAMA_SITE}
+      KASAMA_PAGES_SITE: ${KASAMA_PAGES_SITE:-:8790}
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"
+      - "${PAGES_PORT:-8790}:8790"
     volumes:
       - ./selfhost/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data

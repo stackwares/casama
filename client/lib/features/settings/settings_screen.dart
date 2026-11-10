@@ -728,6 +728,13 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
               },
             ),
             GroupedTile(
+              key: const Key('botPages'),
+              icon: LucideIcons.fileText,
+              title: l10n.pages,
+              subtitle: l10n.pagesRow,
+              onTap: () => context.push('/pages?bot=${bot.id}'),
+            ),
+            GroupedTile(
               key: const Key('botWatchers'),
               icon: LucideIcons.eye,
               title: l10n.watchers,

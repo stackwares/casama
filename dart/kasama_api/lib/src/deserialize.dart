@@ -30,6 +30,8 @@ import 'package:kasama_api/src/model/bot.dart';
 import 'package:kasama_api/src/model/bot_budget.dart';
 import 'package:kasama_api/src/model/bot_checkins.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
+import 'package:kasama_api/src/model/bot_page.dart';
+import 'package:kasama_api/src/model/bot_page_detail.dart';
 import 'package:kasama_api/src/model/bot_secret_request.dart';
 import 'package:kasama_api/src/model/bot_secret_request_list.dart';
 import 'package:kasama_api/src/model/bot_share_link.dart';
@@ -99,6 +101,7 @@ import 'package:kasama_api/src/model/delete_result.dart';
 import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
+import 'package:kasama_api/src/model/deleted_page.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
 import 'package:kasama_api/src/model/deleted_rule.dart';
 import 'package:kasama_api/src/model/deleted_watcher.dart';
@@ -163,6 +166,10 @@ import 'package:kasama_api/src/model/org_settings.dart';
 import 'package:kasama_api/src/model/organization.dart';
 import 'package:kasama_api/src/model/organization_list.dart';
 import 'package:kasama_api/src/model/organization_with_role.dart';
+import 'package:kasama_api/src/model/page_list.dart';
+import 'package:kasama_api/src/model/page_version.dart';
+import 'package:kasama_api/src/model/page_view_link.dart';
+import 'package:kasama_api/src/model/page_view_link_request.dart';
 import 'package:kasama_api/src/model/plan.dart';
 import 'package:kasama_api/src/model/plan_catalog.dart';
 import 'package:kasama_api/src/model/portal_request.dart';
@@ -183,6 +190,7 @@ import 'package:kasama_api/src/model/public_config.dart';
 import 'package:kasama_api/src/model/purchase_request.dart';
 import 'package:kasama_api/src/model/redirect_url.dart';
 import 'package:kasama_api/src/model/release_lease_request.dart';
+import 'package:kasama_api/src/model/revert_page_request.dart';
 import 'package:kasama_api/src/model/revoked_connect_key.dart';
 import 'package:kasama_api/src/model/revoked_key.dart';
 import 'package:kasama_api/src/model/routine.dart';
@@ -266,6 +274,8 @@ import 'package:kasama_api/src/model/update_local_device_request.dart';
 import 'package:kasama_api/src/model/update_notice.dart';
 import 'package:kasama_api/src/model/update_org_settings_request.dart';
 import 'package:kasama_api/src/model/update_organization_request.dart';
+import 'package:kasama_api/src/model/update_page_request.dart';
+import 'package:kasama_api/src/model/update_page_response.dart';
 import 'package:kasama_api/src/model/update_project_request.dart';
 import 'package:kasama_api/src/model/update_routine_request.dart';
 import 'package:kasama_api/src/model/update_task_request.dart';
@@ -380,6 +390,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BotCheckins.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotList':
           return BotList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotPage':
+          return BotPage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotPageDetail':
+          return BotPageDetail.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotSecretRequest':
           return BotSecretRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotSecretRequestList':
@@ -524,6 +538,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedId':
           return DeletedId.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedPage':
+          return DeletedPage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRoutine':
           return DeletedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRule':
@@ -661,6 +677,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return OrganizationList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'OrganizationWithRole':
           return OrganizationWithRole.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PageList':
+          return PageList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PageVersion':
+          return PageVersion.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PageViewLink':
+          return PageViewLink.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PageViewLinkRequest':
+          return PageViewLinkRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Plan':
           return Plan.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PlanCatalog':
@@ -710,6 +734,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RedirectUrl.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReleaseLeaseRequest':
           return ReleaseLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RevertPageRequest':
+          return RevertPageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevokedConnectKey':
           return RevokedConnectKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevokedKey':
@@ -900,6 +926,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateOrgSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateOrganizationRequest':
           return UpdateOrganizationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdatePageRequest':
+          return UpdatePageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdatePageResponse':
+          return UpdatePageResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateProjectRequest':
           return UpdateProjectRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateRoutineRequest':

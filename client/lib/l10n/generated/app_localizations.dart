@@ -6891,6 +6891,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'everyone'**
   String get mentionEveryone;
+
+  /// No description provided for @pages.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages'**
+  String get pages;
+
+  /// No description provided for @pagesRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports and dashboards it published'**
+  String get pagesRow;
+
+  /// No description provided for @noPages.
+  ///
+  /// In en, this message translates to:
+  /// **'No pages yet'**
+  String get noPages;
+
+  /// No description provided for @pagesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a bot for a report, dashboard or tracker and it can publish it as a page. Pages open in your browser and stay private until you share them.'**
+  String get pagesHelp;
+
+  /// No description provided for @pagePrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Only me'**
+  String get pagePrivate;
+
+  /// No description provided for @pageWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
+  String get pageWorkspace;
+
+  /// No description provided for @pagePublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with the link'**
+  String get pagePublic;
+
+  /// No description provided for @pageRefreshes.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshes on schedule'**
+  String get pageRefreshes;
+
+  /// No description provided for @pageUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {date}'**
+  String pageUpdated(String date);
+
+  /// No description provided for @exportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PDF'**
+  String get exportPdf;
+
+  /// No description provided for @pageMakePublicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make this page public?'**
+  String get pageMakePublicTitle;
+
+  /// No description provided for @pageMakePublicBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with the link can open it, including the data on it. You can take it back any time; the link stops working.'**
+  String get pageMakePublicBody;
+
+  /// No description provided for @pageMakePublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Make public'**
+  String get pageMakePublic;
+
+  /// No description provided for @pagePublicLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public link'**
+  String get pagePublicLinkTitle;
+
+  /// No description provided for @pagePublicLinkBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied. It isn\'t listed in search engines.'**
+  String get pagePublicLinkBody;
+
+  /// No description provided for @deletePageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{title}\"?'**
+  String deletePageTitle(String title);
+
+  /// No description provided for @openPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Pages'**
+  String get openPages;
 }
 
 class _AppLocalizationsDelegate

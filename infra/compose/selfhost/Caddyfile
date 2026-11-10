@@ -24,3 +24,11 @@
 		Referrer-Policy no-referrer
 	}
 }
+
+# Pages (D-119): bots' web pages on their own origin, so a page's scripts never share an origin
+# with Kasama. KASAMA_PAGES_SITE is a domain of its own (pages.example.com, automatic HTTPS) or a
+# port (":8790", the default) for local trials; set KASAMA_PAGES_URL to match.
+{$KASAMA_PAGES_SITE} {
+	encode zstd gzip
+	reverse_proxy api:8790
+}
