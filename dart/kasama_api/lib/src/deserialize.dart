@@ -99,6 +99,7 @@ import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
 import 'package:kasama_api/src/model/deleted_rule.dart';
+import 'package:kasama_api/src/model/deleted_watcher.dart';
 import 'package:kasama_api/src/model/dismiss_suggestion_request.dart';
 import 'package:kasama_api/src/model/edit_message_request.dart';
 import 'package:kasama_api/src/model/file_search_result.dart';
@@ -259,6 +260,7 @@ import 'package:kasama_api/src/model/update_organization_request.dart';
 import 'package:kasama_api/src/model/update_project_request.dart';
 import 'package:kasama_api/src/model/update_routine_request.dart';
 import 'package:kasama_api/src/model/update_task_request.dart';
+import 'package:kasama_api/src/model/update_watcher_request.dart';
 import 'package:kasama_api/src/model/upload_result.dart';
 import 'package:kasama_api/src/model/usage_event.dart';
 import 'package:kasama_api/src/model/usage_event_payload.dart';
@@ -276,6 +278,8 @@ import 'package:kasama_api/src/model/voice_transcript_request_turns_inner.dart';
 import 'package:kasama_api/src/model/wallpaper_download_request.dart';
 import 'package:kasama_api/src/model/wallpaper_photo.dart';
 import 'package:kasama_api/src/model/wallpaper_photo_list.dart';
+import 'package:kasama_api/src/model/watcher.dart';
+import 'package:kasama_api/src/model/watcher_list.dart';
 import 'package:kasama_api/src/model/workspace_badge.dart';
 import 'package:kasama_api/src/model/workspace_badge_list.dart';
 
@@ -511,6 +515,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRule':
           return DeletedRule.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedWatcher':
+          return DeletedWatcher.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DismissSuggestionRequest':
           return DismissSuggestionRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'EditMessageRequest':
@@ -873,6 +879,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateRoutineRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateTaskRequest':
           return UpdateTaskRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateWatcherRequest':
+          return UpdateWatcherRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UploadResult':
           return UploadResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UsageEvent':
@@ -910,6 +918,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return WallpaperPhoto.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WallpaperPhotoList':
           return WallpaperPhotoList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Watcher':
+          return Watcher.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatcherList':
+          return WatcherList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WorkspaceBadge':
           return WorkspaceBadge.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WorkspaceBadgeList':

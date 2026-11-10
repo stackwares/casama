@@ -205,6 +205,31 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  final watcherList = <Watcher>[
+    Watcher(
+      id: 'w1',
+      botId: botId,
+      name: 'Price drop',
+      kind: WatcherKindEnum.pageChange,
+      target: const {'url': 'https://shop.example/item'},
+      conditionMd: 'the price changes',
+      status: WatcherStatusEnum.active,
+      checkEverySeconds: 900,
+      firedCount: 2,
+      lastCheckedAt: null,
+      lastError: null,
+      expiresAt: null,
+      conversationId: null,
+      createdAt: DateTime(2026),
+    ),
+  ];
+  final watcherActions = <String>[];
+  @override
+  Future<List<Watcher>> watchers(String botId) async => List.of(watcherList);
+  @override
+  Future<void> setWatcherPaused(String id, bool paused) async => watcherActions.add('${paused ? 'pause' : 'resume'}:$id');
+  @override
+  Future<void> deleteWatcher(String id) async => watcherActions.add('delete:$id');
   final rules = <ActionRule>[];
   @override
   Future<List<ActionRule>> actionRules(String orgId, {String? botId}) async => List.of(rules);

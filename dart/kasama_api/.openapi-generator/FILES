@@ -28,6 +28,7 @@ lib/src/api/system_api.dart
 lib/src/api/tasks_api.dart
 lib/src/api/usage_api.dart
 lib/src/api/voice_api.dart
+lib/src/api/watchers_api.dart
 lib/src/api/webhooks_api.dart
 lib/src/api/workspaces_api.dart
 lib/src/auth/api_key_auth.dart
@@ -141,6 +142,7 @@ lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
 lib/src/model/deleted_routine.dart
 lib/src/model/deleted_rule.dart
+lib/src/model/deleted_watcher.dart
 lib/src/model/dismiss_suggestion_request.dart
 lib/src/model/edit_message_request.dart
 lib/src/model/file_search_result.dart
@@ -315,6 +317,7 @@ lib/src/model/update_organization_request.dart
 lib/src/model/update_project_request.dart
 lib/src/model/update_routine_request.dart
 lib/src/model/update_task_request.dart
+lib/src/model/update_watcher_request.dart
 lib/src/model/upload_result.dart
 lib/src/model/usage_event.dart
 lib/src/model/usage_event_payload.dart
@@ -333,6 +336,8 @@ lib/src/model/voice_transcript_request_turns_inner.dart
 lib/src/model/wallpaper_download_request.dart
 lib/src/model/wallpaper_photo.dart
 lib/src/model/wallpaper_photo_list.dart
+lib/src/model/watcher.dart
+lib/src/model/watcher_list.dart
 lib/src/model/workspace_badge.dart
 lib/src/model/workspace_badge_list.dart
 pubspec.yaml

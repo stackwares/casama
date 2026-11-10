@@ -728,6 +728,13 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
               },
             ),
             GroupedTile(
+              key: const Key('botWatchers'),
+              icon: LucideIcons.eye,
+              title: l10n.watchers,
+              subtitle: l10n.watchersRow,
+              onTap: () => context.push('/bots/${bot.id}/watchers'),
+            ),
+            GroupedTile(
               key: const Key('botRules'),
               icon: LucideIcons.shieldCheck,
               title: l10n.actionRules,

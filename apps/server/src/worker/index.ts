@@ -33,6 +33,7 @@ import {
   registerSkillTools,
   registerSuggestionTools,
   registerToolsLoad,
+  registerWatcherTools,
   TavilySearchProvider,
 } from "@kasama/agent";
 import { createDb, type Database } from "@kasama/db";
@@ -250,6 +251,7 @@ export async function startWorker(opts: WorkerOptions) {
   });
   // Check-in scans leave suggestions (D-114).
   registerSuggestionTools(tools, { db, notifications });
+  registerWatcherTools(tools, { db });
   // Projects (D-113): the tools start planning runs; the heartbeat lives in the minute tick.
   registerProjectTools(tools, {
     db,

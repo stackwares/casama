@@ -207,6 +207,9 @@ Class | Method | HTTP request | Description
 [*VoiceApi*](doc/VoiceApi.md) | [**saveVoiceTranscript**](doc/VoiceApi.md#savevoicetranscript) | **POST** /v1/voice/transcript | Save a call&#39;s transcript to the conversation and record its duration
 [*VoiceApi*](doc/VoiceApi.md) | [**transcribeAudio**](doc/VoiceApi.md#transcribeaudio) | **POST** /v1/voice/transcribe | Dictation: send recorded audio (raw body, audio/_* content type, up to 10 MB)
 [*VoiceApi*](doc/VoiceApi.md) | [**voiceTool**](doc/VoiceApi.md#voicetool) | **POST** /v1/voice/tool | Run a tool call from a live call as an agent run (same approvals); waits up to 25 s
+[*WatchersApi*](doc/WatchersApi.md) | [**deleteWatcher**](doc/WatchersApi.md#deletewatcher) | **DELETE** /v1/watchers/{id} | 
+[*WatchersApi*](doc/WatchersApi.md) | [**listWatchers**](doc/WatchersApi.md#listwatchers) | **GET** /v1/watchers | 
+[*WatchersApi*](doc/WatchersApi.md) | [**updateWatcher**](doc/WatchersApi.md#updatewatcher) | **PATCH** /v1/watchers/{id} | Pause or resume a watcher
 [*WebhooksApi*](doc/WebhooksApi.md) | [**customWebhook**](doc/WebhooksApi.md#customwebhook) | **POST** /hooks/custom/{routine_id} | Custom webhook for a routine (X-Kasama-Signature: sha256&#x3D;HMAC-SHA256 of the body)
 [*WebhooksApi*](doc/WebhooksApi.md) | [**githubWebhook**](doc/WebhooksApi.md#githubwebhook) | **POST** /hooks/github/{routine_id} | GitHub webhook for a routine (X-Hub-Signature-256)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**acceptInvite**](doc/WorkspacesApi.md#acceptinvite) | **POST** /v1/invites/{token}/accept | Join an organization with an invite token
@@ -329,6 +332,7 @@ Class | Method | HTTP request | Description
  - [DeletedId](doc/DeletedId.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
  - [DeletedRule](doc/DeletedRule.md)
+ - [DeletedWatcher](doc/DeletedWatcher.md)
  - [DismissSuggestionRequest](doc/DismissSuggestionRequest.md)
  - [EditMessageRequest](doc/EditMessageRequest.md)
  - [FileSearchResult](doc/FileSearchResult.md)
@@ -503,6 +507,7 @@ Class | Method | HTTP request | Description
  - [UpdateProjectRequest](doc/UpdateProjectRequest.md)
  - [UpdateRoutineRequest](doc/UpdateRoutineRequest.md)
  - [UpdateTaskRequest](doc/UpdateTaskRequest.md)
+ - [UpdateWatcherRequest](doc/UpdateWatcherRequest.md)
  - [UploadResult](doc/UploadResult.md)
  - [UsageEvent](doc/UsageEvent.md)
  - [UsageEventPayload](doc/UsageEventPayload.md)
@@ -521,6 +526,8 @@ Class | Method | HTTP request | Description
  - [WallpaperDownloadRequest](doc/WallpaperDownloadRequest.md)
  - [WallpaperPhoto](doc/WallpaperPhoto.md)
  - [WallpaperPhotoList](doc/WallpaperPhotoList.md)
+ - [Watcher](doc/Watcher.md)
+ - [WatcherList](doc/WatcherList.md)
  - [WorkspaceBadge](doc/WorkspaceBadge.md)
  - [WorkspaceBadgeList](doc/WorkspaceBadgeList.md)
 

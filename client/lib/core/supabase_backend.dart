@@ -878,6 +878,22 @@ class SupabaseBackend implements Backend {
   Future<List<Task>> tasks(String orgId, {String? projectId}) async => (await api.tasks.listTasks(orgId: orgId, projectId: projectId)).data!.items;
 
   @override
+  Future<List<Watcher>> watchers(String botId) async => (await api.watchers.listWatchers(botId: botId)).data!.items;
+
+  @override
+  Future<void> setWatcherPaused(String id, bool paused) async {
+    await api.watchers.updateWatcher(
+      id: id,
+      updateWatcherRequest: UpdateWatcherRequest(status: paused ? UpdateWatcherRequestStatusEnum.paused : UpdateWatcherRequestStatusEnum.active),
+    );
+  }
+
+  @override
+  Future<void> deleteWatcher(String id) async {
+    await api.watchers.deleteWatcher(id: id);
+  }
+
+  @override
   Future<List<ActionRule>> actionRules(String orgId, {String? botId}) async =>
       (await api.actionRules.listActionRules(orgId: orgId, botId: botId)).data!.items;
 

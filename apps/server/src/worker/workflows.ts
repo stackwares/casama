@@ -3,6 +3,7 @@ import {
   type ChatGptConfig,
   type ComputerService,
   CredentialResolver,
+  checkWatchers,
   collect,
   listModels,
   type ModelGateway,
@@ -123,6 +124,18 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       { name: "project-heartbeat" },
     );
     runIds.push(...sessions);
+    // Watchers (D-116): checks without a model; matches start their runs right away.
+    const fired = await DBOS.runStep(
+      (): Promise<string[]> =>
+        checkWatchers({
+          db: rt().db,
+          fetch: rt().agent.fetch ?? fetch,
+          startRun: async () => {},
+          local: rt().agent.local,
+        }).catch(() => []),
+      { name: "watchers" },
+    );
+    runIds.push(...fired);
     for (const runId of runIds) {
       await DBOS.startWorkflow(agentRunWorkflow, { workflowID: runId, queueName: QUEUES.runs })(
         runId,

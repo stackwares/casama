@@ -345,6 +345,10 @@ abstract class Backend {
 
   // Task board
   Future<List<Task>> tasks(String orgId, {String? projectId});
+  // Watchers (D-116)
+  Future<List<Watcher>> watchers(String botId);
+  Future<void> setWatcherPaused(String id, bool paused);
+  Future<void> deleteWatcher(String id);
   // Action rules (D-115)
   Future<List<ActionRule>> actionRules(String orgId, {String? botId});
   Future<void> createActionRule(String orgId, {String? botId, required String category, required String rule, List<String> domains = const [], double? maxAmount});

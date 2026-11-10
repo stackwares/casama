@@ -6723,6 +6723,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'For every bot in the workspace'**
   String get ruleForWorkspace;
+
+  /// No description provided for @watchers.
+  ///
+  /// In en, this message translates to:
+  /// **'Watchers'**
+  String get watchers;
+
+  /// No description provided for @watchersRow.
+  ///
+  /// In en, this message translates to:
+  /// **'What it\'s keeping an eye on'**
+  String get watchersRow;
+
+  /// No description provided for @noWatchers.
+  ///
+  /// In en, this message translates to:
+  /// **'Not watching anything'**
+  String get noWatchers;
+
+  /// No description provided for @watchersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the bot \"tell me when…\" and it watches a page, a reply, a result or a time. Checks cost nothing until something changes.'**
+  String get watchersHelp;
+
+  /// No description provided for @watcherActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching'**
+  String get watcherActive;
+
+  /// No description provided for @watcherPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get watcherPaused;
+
+  /// No description provided for @watcherDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get watcherDone;
+
+  /// No description provided for @watcherExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get watcherExpired;
+
+  /// No description provided for @firedTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{not fired yet} =1{fired once} other{fired {count} times}}'**
+  String firedTimes(int count);
 }
 
 class _AppLocalizationsDelegate

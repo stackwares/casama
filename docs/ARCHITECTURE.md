@@ -203,6 +203,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/domain/src/action-rules.ts` (categories, targets, resolution, previews), `action_rules`, the approval gate in `run.ts` (allow, ask, hand off; credential changes always handed off), `apps/server/src/api/routes/action-rules.ts`, and the bot's Action rules screen.
 
+## Watchers (D-116)
+
+- `packages/agent/src/watchers.ts` (`checkWatchers` in the worker's minute tick, `watchers.create|list|delete`), `watchers`, `apps/server/src/api/routes/watchers.ts`, and the bot's Watchers screen.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

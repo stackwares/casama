@@ -1876,6 +1876,67 @@ export const actionRules = pgTable("action_rules", {
 	check("action_rules_check1", sql`(rule <> 'allow_within_limits'::text) OR (target IS NOT NULL)`),
 ]);
 
+export const watchers = pgTable("watchers", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	createdBy: uuid("created_by"),
+	name: text().notNull(),
+	kind: text().notNull(),
+	target: jsonb().notNull(),
+	conditionMd: text("condition_md").default("").notNull(),
+	onMatchMd: text("on_match_md").default("").notNull(),
+	checkEverySeconds: integer("check_every_seconds").default(900).notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }),
+	status: text().default('active').notNull(),
+	lastValueHash: text("last_value_hash"),
+	lastValue: text("last_value"),
+	lastCheckedAt: timestamp("last_checked_at", { withTimezone: true, mode: 'string' }),
+	nextCheckAt: timestamp("next_check_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	firedCount: integer("fired_count").default(0).notNull(),
+	lastError: text("last_error"),
+	conversationId: uuid("conversation_id"),
+	projectId: uuid("project_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("watchers_due_idx").using("btree", table.nextCheckAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(status = 'active'::text)`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "watchers_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "watchers_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "watchers_created_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.conversationId],
+			foreignColumns: [conversations.id],
+			name: "watchers_conversation_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.projectId],
+			foreignColumns: [projects.id],
+			name: "watchers_project_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("watchers_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
+	pgPolicy("watchers_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("watchers_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("watchers_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 120)`),
+	check("watchers_kind_check", sql`kind = ANY (ARRAY['page_change'::text, 'reply'::text, 'query'::text, 'time'::text])`),
+	check("watchers_condition_md_check", sql`char_length(condition_md) <= 2000`),
+	check("watchers_on_match_md_check", sql`char_length(on_match_md) <= 4000`),
+	check("watchers_check_every_seconds_check", sql`(check_every_seconds >= 60) AND (check_every_seconds <= 604800)`),
+	check("watchers_status_check", sql`status = ANY (ARRAY['active'::text, 'paused'::text, 'done'::text, 'expired'::text])`),
+]);
+
 export const ttsCache = pgTable("tts_cache", {
 	messageId: uuid("message_id").notNull(),
 	voiceKey: text("voice_key").notNull(),

@@ -3844,4 +3844,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ruleForWorkspace => 'For every bot in the workspace';
+
+  @override
+  String get watchers => 'Watchers';
+
+  @override
+  String get watchersRow => 'What it\'s keeping an eye on';
+
+  @override
+  String get noWatchers => 'Not watching anything';
+
+  @override
+  String get watchersHelp =>
+      'Ask the bot \"tell me when…\" and it watches a page, a reply, a result or a time. Checks cost nothing until something changes.';
+
+  @override
+  String get watcherActive => 'Watching';
+
+  @override
+  String get watcherPaused => 'Paused';
+
+  @override
+  String get watcherDone => 'Done';
+
+  @override
+  String get watcherExpired => 'Expired';
+
+  @override
+  String firedTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'fired $count times',
+      one: 'fired once',
+      zero: 'not fired yet',
+    );
+    return '$_temp0';
+  }
 }

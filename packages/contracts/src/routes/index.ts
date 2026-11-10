@@ -15,6 +15,7 @@ import * as search from "./search.ts";
 import * as skills from "./skills.ts";
 import * as system from "./system.ts";
 import * as voice from "./voice.ts";
+import * as watchers from "./watchers.ts";
 import * as workspaces from "./workspaces.ts";
 
 export const routes = {
@@ -36,6 +37,7 @@ export const routes = {
   ...projects,
   ...checkins,
   ...actionRules,
+  ...watchers,
 };
 export {
   actionRules,
@@ -54,5 +56,6 @@ export {
   skills,
   system,
   voice,
+  watchers,
   workspaces,
 };

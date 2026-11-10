@@ -33,6 +33,7 @@ import { registerSearchRoutes } from "./routes/search.ts";
 import { registerSkillRoutes } from "./routes/skills.ts";
 import { registerSystemRoutes } from "./routes/system.ts";
 import { registerVoiceRoutes } from "./routes/voice.ts";
+import { registerWatcherRoutes } from "./routes/watchers.ts";
 import { registerWorkspaceRoutes } from "./routes/workspaces.ts";
 import type { AppDeps, AppEnv } from "./types.ts";
 
@@ -211,6 +212,7 @@ export function createApp(deps: AppDeps) {
   registerProjectRoutes(app, deps);
   registerCheckinRoutes(app, deps);
   registerActionRuleRoutes(app, deps);
+  registerWatcherRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {
     db: deps.db,

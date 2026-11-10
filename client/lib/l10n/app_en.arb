@@ -1958,5 +1958,15 @@
   "ruleHandOff": "Hand it to me to finish",
   "ruleDomains": "Only to these domains (comma separated)",
   "ruleMaxAmount": "Up to this amount",
-  "ruleForWorkspace": "For every bot in the workspace"
+  "ruleForWorkspace": "For every bot in the workspace",
+  "watchers": "Watchers",
+  "watchersRow": "What it's keeping an eye on",
+  "noWatchers": "Not watching anything",
+  "watchersHelp": "Ask the bot \"tell me when…\" and it watches a page, a reply, a result or a time. Checks cost nothing until something changes.",
+  "watcherActive": "Watching",
+  "watcherPaused": "Paused",
+  "watcherDone": "Done",
+  "watcherExpired": "Expired",
+  "firedTimes": "{count, plural, =0{not fired yet} =1{fired once} other{fired {count} times}}",
+  "@firedTimes": {"placeholders": {"count": {"type": "int"}}}
 }

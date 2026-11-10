@@ -31,6 +31,7 @@ import 'package:kasama_api/src/api/system_api.dart';
 import 'package:kasama_api/src/api/tasks_api.dart';
 import 'package:kasama_api/src/api/usage_api.dart';
 import 'package:kasama_api/src/api/voice_api.dart';
+import 'package:kasama_api/src/api/watchers_api.dart';
 import 'package:kasama_api/src/api/webhooks_api.dart';
 import 'package:kasama_api/src/api/workspaces_api.dart';
 
@@ -227,6 +228,12 @@ class KasamaApi {
   /// by doing that all interceptors will not be executed
   VoiceApi getVoiceApi() {
     return VoiceApi(dio);
+  }
+
+  /// Get WatchersApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  WatchersApi getWatchersApi() {
+    return WatchersApi(dio);
   }
 
   /// Get WebhooksApi instance, base route and serializer can be overridden by a given but be careful,
