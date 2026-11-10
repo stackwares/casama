@@ -9,7 +9,7 @@ import {
   directSteps,
   type FixtureFile,
   hashEmbedder,
-  MemoryService,
+  MemoryService, PostgresMemoryStore,
   ReplayGateway,
   runAgent,
 } from "../src/index.ts";
@@ -70,7 +70,7 @@ const fixtures: FixtureFile[] = [
 ];
 
 function tools() {
-  const t = builtinTools({ db: h.db, memory: async () => new MemoryService(h.db, hashEmbedder()) });
+  const t = builtinTools({ db: h.db, memory: async () => new PostgresMemoryStore(h.db, hashEmbedder()) });
   t.register({
     name: "mail.send",
     description: "Send an email",

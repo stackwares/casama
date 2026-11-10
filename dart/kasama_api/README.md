@@ -192,8 +192,12 @@ Class | Method | HTTP request | Description
 [*McpApi*](doc/McpApi.md) | [**getMcpAuthRequest**](doc/McpApi.md#getmcpauthrequest) | **GET** /v1/oauth/requests/{id} | An AI app asking to connect, for the consent screen
 [*McpApi*](doc/McpApi.md) | [**listMcpKeys**](doc/McpApi.md#listmcpkeys) | **GET** /v1/orgs/{id}/mcp-keys | 
 [*McpApi*](doc/McpApi.md) | [**revokeMcpKey**](doc/McpApi.md#revokemcpkey) | **DELETE** /v1/orgs/{id}/mcp-keys/{key_id} | 
+[*MemoryApi*](doc/MemoryApi.md) | [**deleteMemory**](doc/MemoryApi.md#deletememory) | **DELETE** /v1/bots/{id}/memories/{memoryId} | 
+[*MemoryApi*](doc/MemoryApi.md) | [**deleteMemoryBackend**](doc/MemoryApi.md#deletememorybackend) | **DELETE** /v1/orgs/{id}/memory-backend | Go back to the built-in memory (memories in the provider stay there)
+[*MemoryApi*](doc/MemoryApi.md) | [**getMemoryBackend**](doc/MemoryApi.md#getmemorybackend) | **GET** /v1/orgs/{id}/memory-backend | 
 [*MemoryApi*](doc/MemoryApi.md) | [**listMemories**](doc/MemoryApi.md#listmemories) | **GET** /v1/bots/{id}/memories | 
-[*MemoryApi*](doc/MemoryApi.md) | [**updateMemory**](doc/MemoryApi.md#updatememory) | **PATCH** /v1/memories/{id} | 
+[*MemoryApi*](doc/MemoryApi.md) | [**setMemoryBackend**](doc/MemoryApi.md#setmemorybackend) | **PUT** /v1/orgs/{id}/memory-backend | Keep bot memory in Honcho or Supermemory with the workspace&#39;s own key (admins)
+[*MemoryApi*](doc/MemoryApi.md) | [**updateMemory**](doc/MemoryApi.md#updatememory) | **PATCH** /v1/bots/{id}/memories/{memoryId} | 
 [*PagesApi*](doc/PagesApi.md) | [**createPageViewLink**](doc/PagesApi.md#createpageviewlink) | **POST** /v1/pages/{id}/view-link | A single-use link (60 s) that opens the page in a browser
 [*PagesApi*](doc/PagesApi.md) | [**deletePage**](doc/PagesApi.md#deletepage) | **DELETE** /v1/pages/{id} | 
 [*PagesApi*](doc/PagesApi.md) | [**getPage**](doc/PagesApi.md#getpage) | **GET** /v1/pages/{id} | 
@@ -427,6 +431,7 @@ Class | Method | HTTP request | Description
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
  - [DeletedKnowledgeSource](doc/DeletedKnowledgeSource.md)
+ - [DeletedMemory](doc/DeletedMemory.md)
  - [DeletedPage](doc/DeletedPage.md)
  - [DeletedPasswordManager](doc/DeletedPasswordManager.md)
  - [DeletedPlugin](doc/DeletedPlugin.md)
@@ -489,6 +494,7 @@ Class | Method | HTTP request | Description
  - [Me](doc/Me.md)
  - [Membership](doc/Membership.md)
  - [Memory](doc/Memory.md)
+ - [MemoryBackend](doc/MemoryBackend.md)
  - [MemoryImportPrompt](doc/MemoryImportPrompt.md)
  - [MemoryList](doc/MemoryList.md)
  - [MemoryWrittenEvent](doc/MemoryWrittenEvent.md)
@@ -607,6 +613,7 @@ Class | Method | HTTP request | Description
  - [SetEncryptionRequest](doc/SetEncryptionRequest.md)
  - [SetGitSyncRequest](doc/SetGitSyncRequest.md)
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
+ - [SetMemoryBackendRequest](doc/SetMemoryBackendRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
  - [SignupChallenge](doc/SignupChallenge.md)
  - [SkillCatalog](doc/SkillCatalog.md)

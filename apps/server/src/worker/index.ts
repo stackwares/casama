@@ -34,6 +34,7 @@ import {
   registerLoginTools,
   registerChannelTools,
   registerPhoneCallTools,
+  memoryStoreFor,
   ApnsVoipSender,
   type VoipSender,
   registerProjectTools,
@@ -191,7 +192,7 @@ export async function startWorker(opts: WorkerOptions) {
   if (computers) computers.requireVerifiedEmail = opts.requireVerifiedEmail ?? false;
   const tools = builtinTools({
     db,
-    memory: async (orgId) => new MemoryService(db, await embedderFor(orgId)),
+    memory: async (orgId) => memoryStoreFor(db, orgId, await embedderFor(orgId), opts.providerBases ? fetch : fetchOut),
   });
   if (computers) {
     registerComputerTools(tools);

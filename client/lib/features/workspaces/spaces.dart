@@ -561,6 +561,7 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
           ],
         ),
         if (admin) ...[const SizedBox(height: AppSpace.lg), BotToBotSwitch(orgId: org.id)],
+        if (admin) ...[const SizedBox(height: AppSpace.lg), MemoryBackendSection(orgId: org.id)],
         if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), EncryptionSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), WorkspaceFilesSection(orgId: org.id)],
@@ -655,6 +656,151 @@ class EncryptionSection extends ConsumerWidget {
               await runGuarded(context, () => ref.read(backendProvider).rotateEncryptionKey(orgId));
               ref.invalidate(_encryptionProvider(orgId));
             },
+          ),
+      ],
+    );
+  }
+}
+
+final _memoryBackendProvider = FutureProvider.autoDispose.family<MemoryBackend, String>((ref, orgId) => ref.watch(backendProvider).memoryBackend(orgId));
+
+/// Memory backends (D-137): built-in memory, Honcho or Supermemory with the workspace's own key.
+class MemoryBackendSection extends ConsumerWidget {
+  const MemoryBackendSection({super.key, required this.orgId});
+  final String orgId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final b = ref.watch(_memoryBackendProvider(orgId)).value;
+    if (b == null) return const SizedBox.shrink();
+    final name = switch (b.provider) {
+      MemoryBackendProviderEnum.honcho => 'Honcho',
+      MemoryBackendProviderEnum.supermemory => 'Supermemory',
+      _ => l10n.memoryBuiltIn,
+    };
+    return GroupedCard(
+      children: [
+        GroupedTile(
+          key: const Key('memoryBackend'),
+          icon: LucideIcons.brain,
+          title: l10n.memoryBackend,
+          subtitle: '$name · ${l10n.memoryBackendHelp}',
+          onTap: () async {
+            final changed = await showAdaptiveSheet<bool>(
+              context: context,
+              builder: (_) => _MemoryBackendSheet(orgId: orgId, current: b),
+            );
+            if (changed == true) ref.invalidate(_memoryBackendProvider(orgId));
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _MemoryBackendSheet extends ConsumerStatefulWidget {
+  const _MemoryBackendSheet({required this.orgId, required this.current});
+  final String orgId;
+  final MemoryBackend current;
+
+  @override
+  ConsumerState<_MemoryBackendSheet> createState() => _MemoryBackendSheetState();
+}
+
+class _MemoryBackendSheetState extends ConsumerState<_MemoryBackendSheet> {
+  var _provider = SetMemoryBackendRequestProviderEnum.supermemory;
+  final _key = TextEditingController();
+  final _workspace = TextEditingController();
+  final _url = TextEditingController();
+  var _copy = true;
+  var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.current.provider == MemoryBackendProviderEnum.honcho) _provider = SetMemoryBackendRequestProviderEnum.honcho;
+    _workspace.text = widget.current.workspace ?? '';
+    _url.text = widget.current.baseUrl ?? '';
+  }
+
+  @override
+  void dispose() {
+    _key.dispose();
+    _workspace.dispose();
+    _url.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _busy = true);
+    final r = await runGuarded(
+      context,
+      () => ref
+          .read(backendProvider)
+          .setMemoryBackend(
+            widget.orgId,
+            SetMemoryBackendRequest(
+              provider: _provider,
+              apiKey: _key.text.trim(),
+              workspace: _provider == SetMemoryBackendRequestProviderEnum.honcho && _workspace.text.trim().isNotEmpty ? _workspace.text.trim() : null,
+              baseUrl: _url.text.trim().isEmpty ? null : _url.text.trim(),
+              copyExisting: _copy,
+            ),
+          ),
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (r != null) Navigator.pop(context, true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final external = widget.current.provider != MemoryBackendProviderEnum.postgres;
+    return FormSheet(
+      icon: LucideIcons.brain,
+      title: l10n.memoryBackend,
+      subtitle: l10n.memoryBackendSheetHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveMemoryBackend'),
+      onSubmit: _busy || _key.text.trim().length < 8 ? null : _save,
+      children: [
+        SegmentedButton<SetMemoryBackendRequestProviderEnum>(
+          segments: const [
+            ButtonSegment(value: SetMemoryBackendRequestProviderEnum.supermemory, label: Text('Supermemory')),
+            ButtonSegment(value: SetMemoryBackendRequestProviderEnum.honcho, label: Text('Honcho')),
+          ],
+          selected: {_provider},
+          onSelectionChanged: (v) => setState(() => _provider = v.first),
+        ),
+        TextField(
+          key: const Key('memoryApiKey'),
+          controller: _key,
+          obscureText: true,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(labelText: l10n.chApiKey),
+        ),
+        if (_provider == SetMemoryBackendRequestProviderEnum.honcho)
+          TextField(
+            key: const Key('memoryWorkspace'),
+            controller: _workspace,
+            decoration: InputDecoration(labelText: l10n.memoryHonchoWorkspace, helperText: l10n.memoryHonchoWorkspaceHelp),
+          ),
+        TextField(
+          key: const Key('memoryUrl'),
+          controller: _url,
+          decoration: InputDecoration(labelText: l10n.memoryBaseUrl, helperText: l10n.memoryBaseUrlHelp),
+        ),
+        SwitchListTile(key: const Key('memoryCopy'), contentPadding: EdgeInsets.zero, title: Text(l10n.memoryCopyExisting), value: _copy, onChanged: (v) => setState(() => _copy = v)),
+        if (external)
+          TextButton(
+            key: const Key('memoryBuiltIn'),
+            onPressed: () async {
+              final r = await runGuarded(context, () => ref.read(backendProvider).removeMemoryBackend(widget.orgId));
+              if (r != null && context.mounted) Navigator.pop(context, true);
+            },
+            child: Text(l10n.memoryUseBuiltIn),
           ),
       ],
     );

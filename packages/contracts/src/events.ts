@@ -79,7 +79,8 @@ export const runEventPayloads = {
     summary: z.string(),
   }),
   "memory.written": z.object({
-    memory_id: id,
+    /** A uuid in the built-in store; a provider's id with a memory backend (D-137). */
+    memory_id: z.string().min(1),
     kind: z.enum(["fact", "episode", "summary", "preference"]),
   }),
   "skill.loaded": z.object({ skill_id: id, name: z.string() }),

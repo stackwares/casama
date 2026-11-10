@@ -4986,4 +4986,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String encryptionRotated(String date) {
     return 'Last rotated $date';
   }
+
+  @override
+  String get memoryBackend => 'Where memory is kept';
+
+  @override
+  String get memoryBuiltIn => 'Built in';
+
+  @override
+  String get memoryBackendHelp => 'Bots\' long-term memory';
+
+  @override
+  String get memoryBackendSheetHelp =>
+      'Keep your bots\' memory in Honcho or Supermemory with your own account. The memory screen, exports and deletion work the same.';
+
+  @override
+  String get memoryHonchoWorkspace => 'Honcho workspace';
+
+  @override
+  String get memoryHonchoWorkspaceHelp =>
+      'Leave empty to use one made for this Kasama workspace';
+
+  @override
+  String get memoryBaseUrl => 'Server address (optional)';
+
+  @override
+  String get memoryBaseUrlHelp =>
+      'Only for a self-hosted Honcho or Supermemory';
+
+  @override
+  String get memoryCopyExisting => 'Copy current memories over';
+
+  @override
+  String get memoryUseBuiltIn => 'Use built-in memory again';
 }

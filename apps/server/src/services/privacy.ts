@@ -6,6 +6,7 @@ import type { ComputerService } from "@kasama/agent";
 import { type Database, type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
+import { memoryBackendConfig, storeFromConfig } from "@kasama/agent";
 
 /** Per-workspace tables in the export, in a readable order. */
 const ORG_TABLES = [
@@ -83,6 +84,15 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
           `${dir}/${t}.json`,
           await q(sql`select * from ${sql.identifier(t)} where org_id = ${org.id as string}::uuid`),
         );
+      // Memory kept in Honcho or Supermemory (D-137) is exported from there.
+      const backend = await memoryBackendConfig(db, org.id as string);
+      if (backend) {
+        const store = storeFromConfig(backend, org.id as string);
+        const bots = await q(sql`select id from public.bots where org_id = ${org.id as string}::uuid`);
+        const all = [];
+        for (const b of bots) all.push(...(await store.list(b.id as string).catch(() => [])));
+        put(`${dir}/memories.json`, all);
+      }
     }
     files["README.txt"] = strToU8(
       "Your Kasama data export. Each workspace you belong to has a folder of JSON files, limited to what your role can see.\nSecrets, model keys and device tokens are never exported (only their names).\n",
@@ -131,6 +141,12 @@ export async function purgeDueAccounts(db: Database, computers?: ComputerService
         sql`select id from public.computers where org_id = ${org.id}::uuid`,
       );
       for (const c of comps) await computers?.remove(c.id).catch(() => {});
+      // So is memory kept in Honcho or Supermemory (D-137).
+      const backend = await memoryBackendConfig(db, org.id);
+      if (backend) {
+        const bots = await db.execute<{ id: string }>(sql`select id from public.bots where org_id = ${org.id}::uuid`);
+        await storeFromConfig(backend, org.id).deleteAll(bots.map((b) => b.id)).catch(() => {});
+      }
       await db.execute(sql`delete from public.organizations where id = ${org.id}::uuid`);
     }
     await db.execute(sql`select public.worker_purge_user(${user_id}::uuid)`);

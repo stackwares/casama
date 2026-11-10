@@ -24,21 +24,15 @@ class MemoryScreen extends ConsumerWidget {
       builder: (_) => _EditMemoryForm(initial: m.content),
     );
     if (text == null || text.isEmpty || !context.mounted) return;
-    await runGuarded(context, () => ref.read(backendProvider).updateMemory(m.id, content: text));
+    await runGuarded(context, () => ref.read(backendProvider).updateMemory(botId, m.id, content: text));
     ref.invalidate(memoriesProvider(botId));
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref, Memory m) async {
     final l10n = context.l10n;
-    final ok = await showConfirm(
-      context: context,
-      title: l10n.deleteMemoryTitle,
-      message: l10n.deleteMemoryConfirm,
-      confirmLabel: l10n.delete,
-      destructive: true,
-    );
+    final ok = await showConfirm(context: context, title: l10n.deleteMemoryTitle, message: l10n.deleteMemoryConfirm, confirmLabel: l10n.delete, destructive: true);
     if (!ok || !context.mounted) return;
-    await runGuarded(context, () => ref.read(backendProvider).deleteMemory(m.id));
+    await runGuarded(context, () => ref.read(backendProvider).deleteMemory(botId, m.id));
     ref.invalidate(memoriesProvider(botId));
   }
 
@@ -48,7 +42,10 @@ class MemoryScreen extends ConsumerWidget {
     final bot = ref.watch(botProvider(botId));
     final memories = ref.watch(memoriesProvider(botId));
     Future<void> importMemories() async {
-      final n = await showAdaptiveSheet<int>(context: context, builder: (_) => MemoryImportSheet(botId: botId));
+      final n = await showAdaptiveSheet<int>(
+        context: context,
+        builder: (_) => MemoryImportSheet(botId: botId),
+      );
       ref.invalidate(memoriesProvider(botId));
       if (n != null && context.mounted) showMessage(context, l10n.memoriesImported(n));
     }
@@ -70,7 +67,7 @@ class MemoryScreen extends ConsumerWidget {
                   onEdit: () => _edit(context, ref, items[i]),
                   onDelete: () => _delete(context, ref, items[i]),
                   onPin: () async {
-                    await runGuarded(context, () => ref.read(backendProvider).updateMemory(items[i].id, pinned: !items[i].pinned));
+                    await runGuarded(context, () => ref.read(backendProvider).updateMemory(botId, items[i].id, pinned: !items[i].pinned));
                     ref.invalidate(memoriesProvider(botId));
                   },
                 ).appListItemEntrance(i),

@@ -8505,6 +8505,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last rotated {date}'**
   String encryptionRotated(String date);
+
+  /// No description provided for @memoryBackend.
+  ///
+  /// In en, this message translates to:
+  /// **'Where memory is kept'**
+  String get memoryBackend;
+
+  /// No description provided for @memoryBuiltIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Built in'**
+  String get memoryBuiltIn;
+
+  /// No description provided for @memoryBackendHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots\' long-term memory'**
+  String get memoryBackendHelp;
+
+  /// No description provided for @memoryBackendSheetHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your bots\' memory in Honcho or Supermemory with your own account. The memory screen, exports and deletion work the same.'**
+  String get memoryBackendSheetHelp;
+
+  /// No description provided for @memoryHonchoWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Honcho workspace'**
+  String get memoryHonchoWorkspace;
+
+  /// No description provided for @memoryHonchoWorkspaceHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to use one made for this Kasama workspace'**
+  String get memoryHonchoWorkspaceHelp;
+
+  /// No description provided for @memoryBaseUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server address (optional)'**
+  String get memoryBaseUrl;
+
+  /// No description provided for @memoryBaseUrlHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only for a self-hosted Honcho or Supermemory'**
+  String get memoryBaseUrlHelp;
+
+  /// No description provided for @memoryCopyExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy current memories over'**
+  String get memoryCopyExisting;
+
+  /// No description provided for @memoryUseBuiltIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Use built-in memory again'**
+  String get memoryUseBuiltIn;
 }
 
 class _AppLocalizationsDelegate

@@ -279,6 +279,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/db/src/content-crypto.ts` (`KeyRing`/`contentKeys`, `LocalKeyWrapper`, `AwsKmsKeyWrapper`, and the value transform in `createDb`); `packages/agent/src/encryption.ts` (on/off, rotation, `sweepEncryption` in the minute tick); `org_keys` and `organizations.content_encryption`; `apps/server/src/content-keys.ts` (server key configuration); `/v1/orgs/{id}/encryption*`, `/v1/conversations/{id}/thread`, `PATCH /v1/memories/{id}`; the workspace settings section in the app.
 
+## Memory backends (D-137)
+
+- `packages/agent/src/memory-store.ts` (`MemoryStore`, `PostgresMemoryStore`, `SupermemoryStore`, `HonchoMemoryStore`, `memoryStoreFor`); `org_memory_backends`; `RunDeps.memoryFor` and the `memory` dep of the built-in tools; `/v1/bots/{id}/memories/{memoryId}` and `/v1/orgs/{id}/memory-backend` in `routes/bots.ts`; the privacy export and purge in `services/privacy.ts`; "Where memory is kept" in workspace settings.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

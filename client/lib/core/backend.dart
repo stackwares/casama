@@ -304,8 +304,12 @@ abstract class Backend {
 
   // Memory and skills
   Future<List<Memory>> memories(String botId);
-  Future<void> updateMemory(String id, {String? content, bool? pinned});
-  Future<void> deleteMemory(String id);
+  Future<void> updateMemory(String botId, String id, {String? content, bool? pinned});
+  Future<void> deleteMemory(String botId, String id);
+  // Memory backends (D-137)
+  Future<MemoryBackend> memoryBackend(String orgId);
+  Future<MemoryBackend> setMemoryBackend(String orgId, SetMemoryBackendRequest request);
+  Future<MemoryBackend> removeMemoryBackend(String orgId);
   Future<List<SkillView>> skills(String orgId);
   Future<void> saveSkill(String orgId, {String? id, String? botId, required String name, required String description, required String bodyMd, bool enabled = true});
   Future<void> deleteSkill(String id);

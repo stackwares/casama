@@ -362,7 +362,8 @@ export const ModelOptionList = z
 
 export const Memory = z
   .object({
-    id: Uuid,
+    /** A uuid in the built-in store; the provider's id with a memory backend (D-137). */
+    id: z.string(),
     kind: z.enum(["fact", "episode", "summary", "preference"]),
     content: z.string(),
     importance: z.number(),
@@ -421,3 +422,23 @@ export const StartWelcomeRequest = z
 export const WelcomeChat = z
   .object({ org_id: Uuid, bot_id: Uuid, conversation_id: Uuid, created: z.boolean() })
   .openapi("WelcomeChat");
+
+export const MemoryBackend = z
+  .object({
+    provider: z.enum(["postgres", "honcho", "supermemory"]),
+    base_url: z.string().nullable(),
+    workspace: z.string().nullable(),
+    updated_at: z.iso.datetime({ offset: true }).nullable(),
+  })
+  .openapi("MemoryBackend");
+
+export const SetMemoryBackendRequest = z
+  .object({
+    provider: z.enum(["honcho", "supermemory"]),
+    api_key: z.string().min(8).max(500),
+    base_url: z.url().optional(),
+    workspace: z.string().min(1).max(100).optional(),
+    /** Copy the bots' current memories into the new backend. */
+    copy_existing: z.boolean().optional(),
+  })
+  .openapi("SetMemoryBackendRequest");

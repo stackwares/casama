@@ -2815,5 +2815,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "memoryBackend": "Where memory is kept",
+  "memoryBuiltIn": "Built in",
+  "memoryBackendHelp": "Bots' long-term memory",
+  "memoryBackendSheetHelp": "Keep your bots' memory in Honcho or Supermemory with your own account. The memory screen, exports and deletion work the same.",
+  "memoryHonchoWorkspace": "Honcho workspace",
+  "memoryHonchoWorkspaceHelp": "Leave empty to use one made for this Kasama workspace",
+  "memoryBaseUrl": "Server address (optional)",
+  "memoryBaseUrlHelp": "Only for a self-hosted Honcho or Supermemory",
+  "memoryCopyExisting": "Copy current memories over",
+  "memoryUseBuiltIn": "Use built-in memory again"
 }

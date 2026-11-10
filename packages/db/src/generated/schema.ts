@@ -2798,6 +2798,32 @@ export const voiceCalls = pgTable("voice_calls", {
 	check("voice_calls_status_check", sql`status = ANY (ARRAY['ringing'::text, 'answered'::text, 'declined'::text, 'missed'::text, 'cancelled'::text])`),
 ]);
 
+export const orgMemoryBackends = pgTable("org_memory_backends", {
+	orgId: uuid("org_id").primaryKey().notNull(),
+	provider: text().notNull(),
+	vaultSecretId: uuid("vault_secret_id").notNull(),
+	baseUrl: text("base_url"),
+	workspace: text(),
+	createdBy: uuid("created_by"),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "org_memory_backends_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "org_memory_backends_created_by_fkey"
+		}).onDelete("set null"),
+	pgPolicy("org_memory_backends_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'member'::org_role)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("org_memory_backends_provider_check", sql`provider = ANY (ARRAY['honcho'::text, 'supermemory'::text])`),
+	check("org_memory_backends_base_url_check", sql`(base_url IS NULL) OR (base_url ~ '^https?://'::text)`),
+	check("org_memory_backends_workspace_check", sql`(workspace IS NULL) OR ((char_length(workspace) >= 1) AND (char_length(workspace) <= 100))`),
+]);
+
 export const agentImportFiles = pgTable("agent_import_files", {
 	importId: uuid("import_id").notNull(),
 	path: text().notNull(),

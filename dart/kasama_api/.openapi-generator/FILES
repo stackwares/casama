@@ -177,6 +177,7 @@ lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
 lib/src/model/deleted_knowledge_source.dart
+lib/src/model/deleted_memory.dart
 lib/src/model/deleted_page.dart
 lib/src/model/deleted_password_manager.dart
 lib/src/model/deleted_plugin.dart
@@ -239,6 +240,7 @@ lib/src/model/mcp_key_list.dart
 lib/src/model/me.dart
 lib/src/model/membership.dart
 lib/src/model/memory.dart
+lib/src/model/memory_backend.dart
 lib/src/model/memory_import_prompt.dart
 lib/src/model/memory_list.dart
 lib/src/model/memory_written_event.dart
@@ -357,6 +359,7 @@ lib/src/model/set_bot_access_request_entries_inner.dart
 lib/src/model/set_encryption_request.dart
 lib/src/model/set_git_sync_request.dart
 lib/src/model/set_local_mcp_servers_request.dart
+lib/src/model/set_memory_backend_request.dart
 lib/src/model/set_org_limits_request.dart
 lib/src/model/signup_challenge.dart
 lib/src/model/skill_catalog.dart

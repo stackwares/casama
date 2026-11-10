@@ -574,16 +574,28 @@ class SupabaseBackend implements Backend {
   Future<List<Memory>> memories(String botId) async => (await api.memory.listMemories(id: botId)).data!.items;
 
   @override
-  Future<void> updateMemory(String id, {String? content, bool? pinned}) async {
-    // Through the API, which seals the content when the workspace encrypts (D-136).
+  Future<void> updateMemory(String botId, String id, {String? content, bool? pinned}) async {
+    // Through the API: it seals content when the workspace encrypts (D-136) and reaches the memory backend (D-137).
     await api.memory.updateMemory(
-      id: id,
+      id: botId,
+      memoryId: id,
       updateMemoryRequest: UpdateMemoryRequest(content: content, pinned: pinned),
     );
   }
 
   @override
-  Future<void> deleteMemory(String id) async => supabase.from('memories').delete().eq('id', id);
+  Future<void> deleteMemory(String botId, String id) async {
+    await api.memory.deleteMemory(id: botId, memoryId: id);
+  }
+
+  @override
+  Future<MemoryBackend> memoryBackend(String orgId) async => (await api.memory.getMemoryBackend(id: orgId)).data!;
+
+  @override
+  Future<MemoryBackend> setMemoryBackend(String orgId, SetMemoryBackendRequest request) async => (await api.memory.setMemoryBackend(id: orgId, setMemoryBackendRequest: request)).data!;
+
+  @override
+  Future<MemoryBackend> removeMemoryBackend(String orgId) async => (await api.memory.deleteMemoryBackend(id: orgId)).data!;
 
   @override
   Future<List<SkillView>> skills(String orgId) async {

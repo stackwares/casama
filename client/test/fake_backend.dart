@@ -1254,9 +1254,28 @@ class FakeBackend implements Backend {
     Memory(id: 'mem1', kind: MemoryKindEnum.preference, content: 'Likes teal', importance: 0.8, pinned: true, createdAt: DateTime.now(), updatedAt: DateTime.now()),
   ];
   @override
-  Future<void> updateMemory(String id, {String? content, bool? pinned}) async {}
+  Future<void> updateMemory(String botId, String id, {String? content, bool? pinned}) async {}
   @override
-  Future<void> deleteMemory(String id) async {}
+  Future<void> deleteMemory(String botId, String id) async {}
+
+  // Memory backends (D-137)
+  MemoryBackend backend = MemoryBackend(provider: MemoryBackendProviderEnum.postgres, baseUrl: null, workspace: null, updatedAt: null);
+  SetMemoryBackendRequest? setBackend;
+  @override
+  Future<MemoryBackend> memoryBackend(String orgId) async => backend;
+  @override
+  Future<MemoryBackend> setMemoryBackend(String orgId, SetMemoryBackendRequest request) async {
+    setBackend = request;
+    return backend = MemoryBackend(
+      provider: request.provider == SetMemoryBackendRequestProviderEnum.honcho ? MemoryBackendProviderEnum.honcho : MemoryBackendProviderEnum.supermemory,
+      baseUrl: request.baseUrl,
+      workspace: request.workspace,
+      updatedAt: DateTime.utc(2026, 11, 3),
+    );
+  }
+
+  @override
+  Future<MemoryBackend> removeMemoryBackend(String orgId) async => backend = MemoryBackend(provider: MemoryBackendProviderEnum.postgres, baseUrl: null, workspace: null, updatedAt: null);
   @override
   Future<List<SkillView>> skills(String orgId) async => skillViews;
   List<SkillView> skillViews = const [];

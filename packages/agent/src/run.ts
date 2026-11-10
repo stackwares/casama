@@ -118,6 +118,8 @@ export interface RunDeps {
   tools: ToolRegistry;
   credentials: CredentialResolver;
   embedderFor: (orgId: string) => Promise<Embedder | null>;
+  /** The workspace's memory store (D-137); defaults to the built-in Postgres store or its configured backend. */
+  memoryFor?: (orgId: string) => Promise<import("./memory-store.ts").MemoryStore>;
   /** Computers (Phase 2). Without it, computer tools are not offered. */
   computers?: ComputerService;
   step: StepRunner;
@@ -366,7 +368,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
 
     const recalled = await step("recall", async () => {
       if (!info.current) return [];
-      const memory = new MemoryService(db, await deps.embedderFor(info.orgId));
+      const memory = await memoryOf(deps, db, info.orgId);
       return memory.recall(info.botId, info.current.text);
     });
 
@@ -1626,7 +1628,7 @@ async function compact(
                          where conversation_id = ${info.conversationId}::uuid and (${info.current?.id ?? null}::uuid is null or id <> ${info.current?.id ?? null}::uuid)
                            and created_at <= coalesce((select created_at from public.messages where id = ${info.current?.id ?? null}::uuid), now()))
     where id = ${info.conversationId}::uuid`);
-  const memory = new MemoryService(db, await deps.embedderFor(info.orgId));
+  const memory = await memoryOf(deps, db, info.orgId);
   const bus = await busFn();
   const { id } = await memory.write({
     orgId: info.orgId,
@@ -1734,7 +1736,7 @@ async function extractStep(
     known,
   );
   const bus = await busFn();
-  const memory = new MemoryService(deps.db, await deps.embedderFor(info.orgId));
+  const memory = await memoryOf(deps, deps.db, info.orgId);
   for (const m of r.memories) {
     const { id } = await memory.write({
       orgId: info.orgId,
@@ -2283,4 +2285,11 @@ function integrationDefs(
       }
     },
   }));
+}
+
+/** The workspace's memory store (D-137): a configured backend, else the built-in one. */
+async function memoryOf(deps: RunDeps, db: Database, orgId: string) {
+  if (deps.memoryFor) return deps.memoryFor(orgId);
+  const { memoryStoreFor } = await import("./memory-store.ts");
+  return memoryStoreFor(db, orgId, await deps.embedderFor(orgId), deps.fetch);
 }

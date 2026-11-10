@@ -122,6 +122,7 @@ import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_knowledge_source.dart';
+import 'package:kasama_api/src/model/deleted_memory.dart';
 import 'package:kasama_api/src/model/deleted_page.dart';
 import 'package:kasama_api/src/model/deleted_password_manager.dart';
 import 'package:kasama_api/src/model/deleted_plugin.dart';
@@ -182,6 +183,7 @@ import 'package:kasama_api/src/model/mcp_key_list.dart';
 import 'package:kasama_api/src/model/me.dart';
 import 'package:kasama_api/src/model/membership.dart';
 import 'package:kasama_api/src/model/memory.dart';
+import 'package:kasama_api/src/model/memory_backend.dart';
 import 'package:kasama_api/src/model/memory_import_prompt.dart';
 import 'package:kasama_api/src/model/memory_list.dart';
 import 'package:kasama_api/src/model/memory_written_event.dart';
@@ -291,6 +293,7 @@ import 'package:kasama_api/src/model/set_bot_access_request_entries_inner.dart';
 import 'package:kasama_api/src/model/set_encryption_request.dart';
 import 'package:kasama_api/src/model/set_git_sync_request.dart';
 import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
+import 'package:kasama_api/src/model/set_memory_backend_request.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
 import 'package:kasama_api/src/model/signup_challenge.dart';
 import 'package:kasama_api/src/model/skill_catalog.dart';
@@ -678,6 +681,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedId.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedKnowledgeSource':
           return DeletedKnowledgeSource.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedMemory':
+          return DeletedMemory.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedPage':
           return DeletedPage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedPasswordManager':
@@ -804,6 +809,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Membership.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Memory':
           return Memory.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MemoryBackend':
+          return MemoryBackend.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'MemoryImportPrompt':
           return MemoryImportPrompt.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'MemoryList':
@@ -1049,6 +1056,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetGitSyncRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetLocalMcpServersRequest':
           return SetLocalMcpServersRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetMemoryBackendRequest':
+          return SetMemoryBackendRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetOrgLimitsRequest':
           return SetOrgLimitsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SignupChallenge':

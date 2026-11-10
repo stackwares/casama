@@ -1,5 +1,5 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { existingWelcome, handleWelcomeAction, startWelcome } from "@kasama/agent";
+import { existingWelcome, handleWelcomeAction, memoryStoreFor, type StoredMemory, startWelcome, storeFromConfig } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
 import { type JwtClaims, schema, withUserSession, contentKeys } from "@kasama/db";
 import { parseMentions, templateById } from "@kasama/domain";
@@ -839,6 +839,27 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json({ items: value.models, source: value.source, error: value.error }, 200);
   });
 
+  // Memory goes through the workspace's store (D-137): built in, Honcho or Supermemory.
+  const memFetch = () => deps.apps?.fetch ?? fetch;
+  const storeOf = async (orgId: string) => memoryStoreFor(db, orgId, null, memFetch());
+  const memoryBot = async (claims: JwtClaims, botId: string, manage = false) => {
+    const [b] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ org_id: string; manage: boolean }>(sql`select org_id, public.can_manage_bot(id) as manage from public.bots where id = ${botId}::uuid`),
+    );
+    if (!b) throw new ApiError(404, "bot_not_found", "Bot not found");
+    if (manage && !b.manage) throw new ApiError(404, "memory_not_found", "Memory not found");
+    return b;
+  };
+  const memoryOut = (m: StoredMemory) => ({
+    id: m.id,
+    kind: m.kind,
+    content: m.content,
+    importance: Number(m.importance),
+    pinned: m.pinned,
+    created_at: iso(m.created_at),
+    updated_at: iso(m.updated_at),
+  });
+
   // Encryption at rest (D-136): the thread with content opened, for apps whose rows are sealed.
   app.openapi(routes.getConversationThread, async (c) => {
     const claims = requireClaims(c.get("claims"));
@@ -853,53 +874,95 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.updateMemory, async (c) => {
     const claims = requireClaims(c.get("claims"));
+    const { id, memoryId } = c.req.valid("param");
+    const b = c.req.valid("json");
+    const bot = await memoryBot(claims, id, true);
+    const row = await (await storeOf(bot.org_id)).update(id, memoryId, b);
+    if (!row) throw new ApiError(404, "memory_not_found", "Memory not found");
+    return c.json(memoryOut(row), 200);
+  });
+
+  app.openapi(routes.deleteMemory, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id, memoryId } = c.req.valid("param");
+    const bot = await memoryBot(claims, id, true);
+    await (await storeOf(bot.org_id)).delete(id, memoryId);
+    return c.json({ deleted: memoryId }, 200);
+  });
+
+  // Memory backends (D-137) -----------------------------------------------------
+  const backendOut = async (orgId: string) => {
+    const [b] = await db.execute<{ provider: "honcho"; base_url: string | null; workspace: string | null; updated_at: string }>(sql`
+      select provider, base_url, workspace, updated_at from public.org_memory_backends where org_id = ${orgId}::uuid`);
+    return b
+      ? { provider: b.provider, base_url: b.base_url, workspace: b.workspace, updated_at: iso(b.updated_at) }
+      : { provider: "postgres" as const, base_url: null, workspace: null, updated_at: null };
+  };
+  const orgRole = async (claims: JwtClaims, orgId: string) => {
+    const [r] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ member: boolean; admin: boolean }>(sql`
+        select public.has_role(${orgId}::uuid, 'member') as member, public.has_role(${orgId}::uuid, 'admin') as admin`),
+    );
+    if (!r?.member) throw new ApiError(404, "org_not_found", "Workspace not found");
+    return r;
+  };
+
+  app.openapi(routes.getMemoryBackend, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    await orgRole(claims, id);
+    return c.json(await backendOut(id), 200);
+  });
+
+  app.openapi(routes.setMemoryBackend, async (c) => {
+    const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const b = c.req.valid("json");
-    const [m] = await withUserSession(db, claims, (tx) =>
-      tx.execute<{ id: string; org_id: string }>(sql`select id, org_id from public.memories where id = ${id}::uuid`),
-    );
-    if (!m) throw new ApiError(404, "memory_not_found", "Memory not found");
-    const [row] = await withUserSession(db, claims, (tx) =>
-      tx.execute<{ id: string; kind: "fact"; content: string; importance: number; pinned: boolean; created_at: string; updated_at: string }>(sql`
-        update public.memories set content = coalesce(${contentKeys.seal(m.org_id, b.content ?? null)}, content),
-          pinned = coalesce(${b.pinned ?? null}::boolean, pinned), updated_at = now()
-        where id = ${id}::uuid returning id, kind, content, importance, pinned, created_at, updated_at`),
-    );
-    if (!row) throw new ApiError(404, "memory_not_found", "Memory not found");
-    return c.json({ ...row, importance: Number(row.importance), created_at: iso(row.created_at), updated_at: iso(row.updated_at) }, 200);
+    if (!(await orgRole(claims, id)).admin) throw new ApiError(403, "forbidden", "Only admins can change where memory is kept");
+    const store = storeFromConfig({ provider: b.provider, key: b.api_key, base_url: b.base_url, workspace: b.workspace }, id, memFetch());
+    try {
+      await store.list("00000000-0000-0000-0000-000000000000");
+    } catch (e) {
+      throw new ApiError(400, "memory_backend_failed", `Couldn't reach ${b.provider === "honcho" ? "Honcho" : "Supermemory"}: ${(e as Error).message}`);
+    }
+    if (b.copy_existing) {
+      // Copy the built-in memories first, so nothing is lost when the switch happens.
+      const old = await storeOf(id);
+      const bots = await db.execute<{ id: string }>(sql`select id from public.bots where org_id = ${id}::uuid`);
+      for (const bot of bots)
+        for (const m of await old.list(bot.id))
+          await store.write({ orgId: id, botId: bot.id, kind: m.kind, content: m.content, importance: m.importance, pinned: m.pinned });
+    }
+    await db.execute(sql`
+      with old as (select vault_secret_id from public.org_memory_backends where org_id = ${id}::uuid)
+      delete from vault.secrets where id in (select vault_secret_id from old)`);
+    await db.execute(sql`
+      insert into public.org_memory_backends (org_id, provider, vault_secret_id, base_url, workspace, created_by, updated_at)
+      values (${id}::uuid, ${b.provider}, (select vault.create_secret(${b.api_key}, null, 'memory backend')), ${b.base_url ?? null}, ${b.workspace ?? null}, ${claims.sub}::uuid, now())
+      on conflict (org_id) do update set provider = excluded.provider, vault_secret_id = excluded.vault_secret_id, base_url = excluded.base_url,
+        workspace = excluded.workspace, created_by = excluded.created_by, updated_at = now()`);
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${id}::uuid, 'user', ${claims.sub}::uuid, 'memory_backend.set', 'organization', ${id}::uuid, ${JSON.stringify({ provider: b.provider, copied: !!b.copy_existing })}::jsonb)`);
+    return c.json(await backendOut(id), 200);
+  });
+
+  app.openapi(routes.deleteMemoryBackend, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    if (!(await orgRole(claims, id)).admin) throw new ApiError(403, "forbidden", "Only admins can change where memory is kept");
+    await db.execute(sql`
+      with gone as (delete from public.org_memory_backends where org_id = ${id}::uuid returning vault_secret_id)
+      delete from vault.secrets where id in (select vault_secret_id from gone)`);
+    return c.json(await backendOut(id), 200);
   });
 
   app.openapi(routes.listMemories, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const { q } = c.req.valid("query");
-    const rows = await withUserSession(db, claims, async (tx) => {
-      const [bot] = await tx.select({ id: bots.id }).from(bots).where(eq(bots.id, id));
-      if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
-      const where = q
-        ? and(eq(memories.botId, id), sql`${memories.tsv} @@ websearch_to_tsquery('simple', ${q})`)
-        : eq(memories.botId, id);
-      return tx
-        .select()
-        .from(memories)
-        .where(where)
-        .orderBy(desc(memories.pinned), desc(memories.updatedAt))
-        .limit(500);
-    });
-    return c.json(
-      {
-        items: rows.map((m) => ({
-          id: m.id,
-          kind: m.kind as "fact",
-          content: m.content,
-          importance: m.importance,
-          pinned: m.pinned,
-          created_at: iso(m.createdAt),
-          updated_at: iso(m.updatedAt),
-        })),
-      },
-      200,
-    );
+    const bot = await memoryBot(claims, id);
+    const rows = await (await storeOf(bot.org_id)).list(id, q);
+    return c.json({ items: rows.map(memoryOut) }, 200);
   });
 
   app.openapi(routes.getUsage, async (c) => {

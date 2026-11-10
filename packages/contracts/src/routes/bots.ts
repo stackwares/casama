@@ -25,6 +25,8 @@ import {
   TestCredentialRequest,
   UpdateCredentialRequest,
   UsageReport,
+  MemoryBackend,
+  SetMemoryBackendRequest,
 } from "../bots.ts";
 import { IdempotencyKeyHeader, jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 
@@ -392,15 +394,57 @@ export const getConversationThread = createRoute({
   },
 });
 
+const memoryParams = z.object({ id: Uuid, memoryId: z.string().min(1).max(200) });
 export const updateMemory = createRoute({
   operationId: "updateMemory",
   method: "patch",
-  path: "/v1/memories/{id}",
+  path: "/v1/bots/{id}/memories/{memoryId}",
   tags: ["memory"],
   security,
   request: {
-    params: idParam,
+    params: memoryParams,
     body: jsonBody(z.object({ content: z.string().min(1).max(8000).optional(), pinned: z.boolean().optional() }).openapi("UpdateMemoryRequest")),
   },
   responses: { 200: jsonResponse("Memory", Memory), 401: e401, 404: e404 },
+});
+
+export const deleteMemory = createRoute({
+  operationId: "deleteMemory",
+  method: "delete",
+  path: "/v1/bots/{id}/memories/{memoryId}",
+  tags: ["memory"],
+  security,
+  request: { params: memoryParams },
+  responses: { 200: jsonResponse("Deleted", z.object({ deleted: z.string() }).openapi("DeletedMemory")), 401: e401, 404: e404 },
+});
+
+// Memory backends (D-137)
+export const getMemoryBackend = createRoute({
+  operationId: "getMemoryBackend",
+  method: "get",
+  path: "/v1/orgs/{id}/memory-backend",
+  tags: ["memory"],
+  security,
+  request: { params: idParam },
+  responses: { 200: jsonResponse("Backend", MemoryBackend), 401: e401, 404: e404 },
+});
+export const setMemoryBackend = createRoute({
+  operationId: "setMemoryBackend",
+  method: "put",
+  path: "/v1/orgs/{id}/memory-backend",
+  tags: ["memory"],
+  security,
+  summary: "Keep bot memory in Honcho or Supermemory with the workspace's own key (admins)",
+  request: { params: idParam, body: jsonBody(SetMemoryBackendRequest) },
+  responses: { 200: jsonResponse("Backend", MemoryBackend), 400: e400, 401: e401, 403: e403, 404: e404 },
+});
+export const deleteMemoryBackend = createRoute({
+  operationId: "deleteMemoryBackend",
+  method: "delete",
+  path: "/v1/orgs/{id}/memory-backend",
+  tags: ["memory"],
+  security,
+  summary: "Go back to the built-in memory (memories in the provider stay there)",
+  request: { params: idParam },
+  responses: { 200: jsonResponse("Backend", MemoryBackend), 401: e401, 403: e403, 404: e404 },
 });

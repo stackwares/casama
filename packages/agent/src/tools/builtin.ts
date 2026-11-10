@@ -2,14 +2,14 @@ import type { Database } from "@kasama/db";
 import { collectExec } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
-import type { MemoryService } from "../memory.ts";
+import type { MemoryStore } from "../memory-store.ts";
 import { ToolError, ToolRegistry } from "./registry.ts";
 import { registerUiTools } from "./ui.ts";
 
 /** Phase 1 tools: memory and skills. Computer, browser and integration tools register in later phases. */
 export function builtinTools(deps: {
   db: Database;
-  memory: (orgId: string) => Promise<MemoryService>;
+  memory: (orgId: string) => Promise<MemoryStore>;
 }) {
   const registry = new ToolRegistry();
 

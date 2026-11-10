@@ -17,7 +17,7 @@ import {
   directSteps,
   type FixtureFile,
   hashEmbedder,
-  MemoryService,
+  MemoryService, PostgresMemoryStore,
   ReplayGateway,
   runAgent,
 } from "../src/index.ts";
@@ -205,7 +205,7 @@ function deps(gateway: ReplayGateway, extra: Partial<Parameters<typeof runAgent>
   return {
     db: h.db,
     gateway,
-    tools: builtinTools({ db: h.db, memory: async () => new MemoryService(h.db, embedder) }),
+    tools: builtinTools({ db: h.db, memory: async () => new PostgresMemoryStore(h.db, embedder) }),
     credentials: new CredentialResolver(h.db),
     embedderFor: async () => embedder,
     step: directSteps,
@@ -408,7 +408,7 @@ describe("lazy tool loading (D-106)", () => {
   const manyTools = () => {
     const tools = builtinTools({
       db: h.db,
-      memory: async () => new MemoryService(h.db, hashEmbedder()),
+      memory: async () => new PostgresMemoryStore(h.db, hashEmbedder()),
     });
     registerToolsLoad(tools);
     for (const g of ["crm", "sheets", "mail"])

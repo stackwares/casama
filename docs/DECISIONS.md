@@ -1148,3 +1148,43 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - AWS KMS wrap and unwrap against a fake KMS, with signed requests.
   - pgTAP (`encryption_rls.test.sql`): keys aren't readable, and the mode can't be changed from the app.
   - widget (`encryption_test.dart`).
+
+## D-137 Memory backends
+
+- **The interface:** `MemoryStore` (`packages/agent/src/memory-store.ts`) with these methods:
+  - `recall` (the most relevant memories plus every pinned one)
+  - `write` (an exact duplicate is updated instead of added)
+  - `update`, `delete`, `list`
+  - `deleteAll` for a set of bots
+- **Who uses it:** the run loop (recall, compaction episodes, extraction), the `memory.search` and `memory.write` tools, the memory screen (`GET`/`PATCH`/`DELETE /v1/bots/{id}/memories…`), the privacy export, and account deletion.
+- **The stores:**
+  - **Built in (default):** `PostgresMemoryStore` wraps the existing hybrid-search store.
+  - **Supermemory (v3):** each memory is a document tagged `kasama_bot_<bot>`, with kind, pinned and importance in its metadata. Recall uses `/v3/search` with the tag; listing uses `/v3/documents/list`; edits are `PATCH`; deletes are `DELETE`, and bulk delete goes by tag.
+  - **Honcho (v2):**
+    - **Layout:** each bot has a session `kasama-<bot>` in the workspace's Honcho workspace (default `kasama-<org>`), and each memory is a message from the bot's peer `bot-<bot>`, with kind, pinned and importance in its metadata.
+    - **Recall:** Honcho's search, filtered to the session.
+    - **Edits and deletes:** Honcho messages can only change their metadata, so an edit stores the new text in metadata and a delete marks it deleted, which hides it.
+    - **Deleting everything:** deletes the bots' sessions.
+- **Request shapes:** both adapters were built from the providers' public API docs and tested only against local fakes.
+- **Settings:**
+  - `PUT /v1/orgs/{id}/memory-backend` (admins, audited) takes the provider, the workspace's own API key (into Vault), and optionally a Honcho workspace and a server address for self-hosted providers.
+  - The connection is checked before saving.
+  - `copy_existing` copies every bot's current memories into the new store first.
+  - `DELETE` switches back to built-in memory. Memories in the provider stay there; built-in memories were never removed.
+  - In the app: Workspace settings → "Where memory is kept".
+- **Ids:** `Memory.id` and `memory.written.memory_id` are strings: a uuid for built-in memory, the provider's id otherwise. The memory routes take the bot in the path, so the right store is used.
+- **Privacy:**
+  - The export's `memories.json` comes from the provider when one is configured.
+  - Purging an account's solely owned workspace calls `deleteAll` for its bots before the rows cascade away.
+- **Not yet:** semantic near-duplicate merging in external stores (only exact text duplicates are caught), and moving memories back from a provider to built-in memory.
+- **Tests:**
+  - API (`memory-backends.test.ts`), with fake Supermemory and Honcho servers:
+    - A bad address is refused.
+    - Copying keeps pinned memories.
+    - The tools write and search the provider, and nothing lands in Postgres.
+    - The memory screen lists, edits and deletes in the provider.
+    - The export includes provider memories.
+    - Account deletion bulk-deletes them.
+    - Honcho's session layout, recall, edits through metadata, hidden deletes and session deletion.
+    - Members can't change the backend; switching back to built-in works.
+  - widget (`memory_backend_test.dart`).
