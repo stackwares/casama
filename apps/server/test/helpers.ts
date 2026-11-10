@@ -17,6 +17,7 @@ import { dbosWorkflows, type Workflows } from "../src/api/workflows.ts";
 import { billingFromEnv, kasamaCloudProvider } from "../src/billing/index.ts";
 import { loadEnv } from "../src/env.ts";
 import type { EmailMessage, EmailSender } from "../src/services/email.ts";
+import { attachTelephony } from "../src/api/routes/telephony.ts";
 
 export const JWT_SECRET = "test-secret-at-least-32-characters-long!!";
 
@@ -74,7 +75,11 @@ export async function startHarness(
         deepgram?: string;
         elevenlabs?: string;
         treg?: string;
+        twilio?: string;
+        twilioLookups?: string;
       };
+      /** "self": this harness's own served address. */
+      publicApiUrl?: string;
       /** ChatGPT plan sign-in endpoints (a fake OpenAI). */
       chatgpt?: { authUrl?: string; apiUrl?: string };
     };
@@ -142,6 +147,7 @@ export async function startHarness(
       push: opts.worker.push,
       egressExemptCidrs: opts.worker.egressExemptCidrs,
       providerBases: opts.worker.providerBases,
+      publicApiUrl: opts.worker.publicApiUrl === "self" ? `http://127.0.0.1:${localPort}` : opts.worker.publicApiUrl,
       chatgpt: opts.worker.chatgpt,
       local: localOpts,
       billing: billing.enabled ? billing : undefined,
@@ -192,6 +198,7 @@ export async function startHarness(
     }) as unknown as Server;
     await new Promise((r) => server?.once("listening", r));
     if (opts.local) attachLocalConnect(server, deps);
+    attachTelephony(server, deps);
   }
   const tokenFor = (u: { id: string; email: string }, claims: Record<string, unknown> = {}) =>
     new SignJWT({ email: u.email, role: "authenticated", ...claims })

@@ -21,6 +21,7 @@ import * as knowledge from "./knowledge.ts";
 import * as botSharing from "./bot-sharing.ts";
 import * as channels from "./channels.ts";
 import * as encryption from "./encryption.ts";
+import * as telephony from "./telephony.ts";
 import * as pages from "./pages.ts";
 import * as passwordManagers from "./password-managers.ts";
 import * as replays from "./replays.ts";
@@ -55,6 +56,7 @@ export const routes = {
   ...botSharing,
   ...channels,
   ...encryption,
+  ...telephony,
   ...pages,
   ...passwordManagers,
   ...replays,
@@ -88,6 +90,7 @@ export {
   botSharing,
   channels,
   encryption,
+  telephony,
   pages,
   passwordManagers,
   replays,

@@ -1,0 +1,26 @@
+{
+  "name": "calls",
+  "turns": [
+    {
+      "when": { "systemIncludes": "extract lasting memories" },
+      "events": [
+        { "type": "text", "text": "{\"memories\":[]}" },
+        { "type": "finish", "usage": { "inputTokens": 50, "outputTokens": 5 }, "finishReason": "stop", "model": "" }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "Call Luigi's" },
+      "events": [
+        { "type": "tool_call", "call": { "callId": "c1", "name": "voice__call", "args": { "number": "+1 (415) 555-0199", "purpose": "Book a table for 2 tonight at 7pm", "notes": "Name: Ana" } } },
+        { "type": "finish", "usage": { "inputTokens": 300, "outputTokens": 20 }, "finishReason": "tool-calls", "model": "" }
+      ]
+    },
+    {
+      "when": { "lastRole": "tool", "lastToolName": "voice.call" },
+      "events": [
+        { "type": "text", "text": "Booked: a table for 2 at 7pm under Ana." },
+        { "type": "finish", "usage": { "inputTokens": 400, "outputTokens": 20 }, "finishReason": "stop", "model": "" }
+      ]
+    }
+  ]
+}

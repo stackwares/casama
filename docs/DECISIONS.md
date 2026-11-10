@@ -1286,3 +1286,46 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - The run is attributed to the key's person and audited.
   - Calling out: a bot in another workspace adds the published bot as an `a2a` integration (the connection test lists `send`), hands it a task through `a2a.planner.send`, and gets the answer. Turning A2A off removes the card.
   - widget (`a2a_test.dart`).
+
+## D-141 Calls for you
+
+- **The tool:** `voice.call(number, purpose, notes)` (high risk, send category) phones a business for the person the run acts for, through the workspace's own Twilio account.
+  - **Setup:** admins connect it in workspace settings → Phone calls with an account SID, an auth token (into Vault) and a caller number; the account is checked before saving.
+  - **Approval:** under the default autonomy it always asks first.
+  - **Waiting:** the tool waits for the call to end (up to 20 minutes), streaming transcript lines as tool output, and returns how the call ended plus the full transcript.
+- **Placing the call:**
+  - Twilio's Calls API, with recording off, a 30-second ring, signed status callbacks to `/hooks/telephony/{call}`, and TwiML `<Connect><Stream>` pointing at the API's `/telephony/stream/{call}`.
+  - The stream proves itself with a one-time token sent as a TwiML `<Parameter>`; only its hash is stored, and it's spent on use.
+  - Shapes follow Twilio's public REST and Media Streams docs and were tested against fakes.
+- **The live-voice stack:** the API bridges Twilio's μ-law audio frames to a realtime voice session.
+  - **The session:** minted by the worker (only the worker reads model keys, D-065) in a new phone mode: `audio/pcmu` in and out; the call's instructions (name, purpose, notes, and "say you're an AI assistant calling on behalf of …; never pretend to be a person"); and a single `end_call` function.
+  - **The bridge:** the API connects to the realtime WebSocket with the session's ephemeral key and sends `response.create`, so the bot speaks first.
+  - **Audio:** bot audio goes back as Twilio `media` frames.
+  - **Barge-in:** speech from the other side clears Twilio's buffer and cancels the response.
+  - **Transcripts:** both sides are saved as they arrive.
+  - **Hanging up:** `end_call` leaves the stream after the goodbye plays, which ends the call.
+- **The person's controls:**
+  - **Notification:** when a call starts, the person gets one linking to `/calls/{id}`, which shows the live transcript.
+  - **End:** hangs up through Twilio.
+  - **Take over:** redirects the call to the person's own phone (`<Dial>`, saved to `profiles.phone_number`).
+  - **Listening in to the audio is not yet built;** the live transcript stands in for it.
+- **Limits:**
+  - International (E.164) numbers only.
+  - Never emergency or short numbers (a set of emergency codes, including ones dialed with a country code).
+  - The `call_deny_list` of prefixes (Kasama Cloud keeps one; self-hosters can add their own).
+  - A daily cap per workspace (default 10).
+  - Business numbers by default: Twilio Lookup's caller-name type. A number Lookup calls `CONSUMER` is refused unless admins allow personal numbers. Unknown types are allowed, since Lookup's caller name mostly covers US numbers.
+  - Recording stays off.
+- **Usage:** each completed call adds `phone_minutes` (rounded up) to the usage ledger with Twilio's approximate rate. It's not billable, since the workspace's own Twilio account pays. Kasama-provided telephony and its credit pricing wait for the legal review the spec requires before a hosted launch.
+- **Tests:**
+  - API (`calls.test.ts`), with fake Twilio, Lookup and OpenAI, and the test playing Twilio's media stream:
+    - The call is placed with recording off.
+    - A stream with the wrong token is dropped.
+    - The bot speaks first, and its audio reaches Twilio.
+    - The session uses μ-law with only `end_call` and says it's an AI calling for the person.
+    - Barge-in clears audio, and `end_call` hangs up.
+    - The status webhook rejects bad signatures.
+    - The run gets the transcript, and minutes are recorded.
+    - Emergency, short, denied, personal and over-cap numbers are refused.
+    - Take-over dials the person's phone; ending hangs up.
+  - widget (`outbound_call_test.dart`).

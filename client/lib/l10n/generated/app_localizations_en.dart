@@ -5052,4 +5052,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get a2aCardUrl => 'Agent card';
+
+  @override
+  String get phoneCalls => 'Phone calls';
+
+  @override
+  String get phoneCallsHelp =>
+      'Let bots call businesses for you through your Twilio account. Every call asks first under the usual approvals.';
+
+  @override
+  String get twilioSid => 'Account SID';
+
+  @override
+  String get twilioToken => 'Auth token';
+
+  @override
+  String get twilioFrom => 'Calls come from';
+
+  @override
+  String get phoneCallsPersonal => 'Allow calling personal numbers';
+
+  @override
+  String get phoneCallsCap => 'Calls per day';
+
+  @override
+  String get phoneCallsOff => 'Not connected';
+
+  @override
+  String get outCall => 'Call';
+
+  @override
+  String get outCallRinging => 'Ringing…';
+
+  @override
+  String get outCallLive => 'On the call';
+
+  @override
+  String outCallEnded(int seconds) {
+    return 'Ended after ${seconds}s';
+  }
+
+  @override
+  String get outCallEndedByYou => 'You ended the call';
+
+  @override
+  String get outCallTakenOver => 'You took over the call';
+
+  @override
+  String get outCallFailed => 'Didn\'t go through';
+
+  @override
+  String get outCallNothingYet => 'Nothing said yet.';
+
+  @override
+  String get outCallTakeOver => 'Take over';
+
+  @override
+  String get outCallEnd => 'End call';
+
+  @override
+  String get outCallYourPhone => 'Your phone number';
+
+  @override
+  String get outCallYourPhoneHelp =>
+      'International format, like +14155550123. Leave empty to use the one saved.';
 }

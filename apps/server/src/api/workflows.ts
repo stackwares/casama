@@ -51,6 +51,7 @@ export interface Workflows {
     orgId: string,
     botId: string,
     greeting?: string,
+    phone?: boolean,
   ): Promise<
     VoiceResult<{
       model: string;
@@ -149,12 +150,13 @@ export async function dbosWorkflows(databaseUrl: string): Promise<Workflows> {
       );
       return withTimeout(h.getResult({ pollingIntervalMs: 50 }), 60_000, "speech");
     },
-    async voiceSession(orgId, botId, greeting) {
+    async voiceSession(orgId, botId, greeting, phone) {
       const h = await client.enqueue<(...a: unknown[]) => Promise<never>>(
         { queueName: "voice", workflowName: "voiceSession" },
         orgId,
         botId,
         greeting ?? null,
+        phone ?? null,
       );
       return withTimeout(h.getResult({ pollingIntervalMs: 25 }), 20_000, "voice session");
     },

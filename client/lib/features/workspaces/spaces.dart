@@ -562,6 +562,7 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
         ),
         if (admin) ...[const SizedBox(height: AppSpace.lg), BotToBotSwitch(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), A2aSwitch(orgId: org.id)],
+        if (admin) ...[const SizedBox(height: AppSpace.lg), PhoneCallsSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), MemoryBackendSection(orgId: org.id)],
         if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), EncryptionSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
@@ -830,6 +831,131 @@ class A2aSwitch extends ConsumerWidget {
             ref.invalidate(_a2aProvider(orgId));
           },
         ),
+      ],
+    );
+  }
+}
+
+final _telephonyProvider = FutureProvider.autoDispose.family<TelephonySettings, String>((ref, orgId) => ref.watch(backendProvider).telephony(orgId));
+
+/// Calls for you (D-141): the workspace's Twilio account (admins).
+class PhoneCallsSection extends ConsumerWidget {
+  const PhoneCallsSection({super.key, required this.orgId});
+  final String orgId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final t = ref.watch(_telephonyProvider(orgId)).value;
+    if (t == null) return const SizedBox.shrink();
+    return GroupedCard(
+      children: [
+        GroupedTile(
+          key: const Key('phoneCalls'),
+          icon: LucideIcons.phoneOutgoing,
+          title: l10n.phoneCalls,
+          subtitle: t.connected ? '${t.fromNumber} · ${l10n.phoneCallsCap}: ${t.dailyCap}' : '${l10n.phoneCallsOff} · ${l10n.phoneCallsHelp}',
+          onTap: () async {
+            final changed = await showAdaptiveSheet<bool>(
+              context: context,
+              builder: (_) => _PhoneCallsSheet(orgId: orgId, current: t),
+            );
+            if (changed == true) ref.invalidate(_telephonyProvider(orgId));
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _PhoneCallsSheet extends ConsumerStatefulWidget {
+  const _PhoneCallsSheet({required this.orgId, required this.current});
+  final String orgId;
+  final TelephonySettings current;
+
+  @override
+  ConsumerState<_PhoneCallsSheet> createState() => _PhoneCallsSheetState();
+}
+
+class _PhoneCallsSheetState extends ConsumerState<_PhoneCallsSheet> {
+  late final _sid = TextEditingController(text: widget.current.accountSid ?? '');
+  final _token = TextEditingController();
+  late final _from = TextEditingController(text: widget.current.fromNumber ?? '');
+  late final _cap = TextEditingController(text: '${widget.current.dailyCap}');
+  late var _personal = widget.current.allowPersonalNumbers;
+  var _busy = false;
+
+  @override
+  void dispose() {
+    for (final c in [_sid, _token, _from, _cap]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _valid =>
+      RegExp(r'^AC[0-9a-fA-F]{32}$').hasMatch(_sid.text.trim()) && RegExp(r'^\+[1-9][0-9]{7,14}$').hasMatch(_from.text.trim()) && (widget.current.connected || _token.text.trim().length >= 16);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return FormSheet(
+      icon: LucideIcons.phoneOutgoing,
+      title: l10n.phoneCalls,
+      subtitle: l10n.phoneCallsHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('savePhoneCalls'),
+      onSubmit: !_valid || _busy
+          ? null
+          : () async {
+              setState(() => _busy = true);
+              final r = await runGuarded(
+                context,
+                () => ref
+                    .read(backendProvider)
+                    .setTelephony(
+                      widget.orgId,
+                      SetTelephonyRequest(
+                        accountSid: _sid.text.trim(),
+                        authToken: _token.text.trim().isEmpty ? null : _token.text.trim(),
+                        fromNumber: _from.text.trim(),
+                        allowPersonalNumbers: _personal,
+                        dailyCap: int.tryParse(_cap.text.trim()) ?? 10,
+                      ),
+                    ),
+              );
+              if (!mounted) return;
+              setState(() => _busy = false);
+              if (r != null) Navigator.pop(context, true);
+            },
+      children: [
+        TextField(
+          key: const Key('twilioSid'),
+          controller: _sid,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(labelText: l10n.twilioSid),
+        ),
+        TextField(
+          key: const Key('twilioToken'),
+          controller: _token,
+          obscureText: true,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(labelText: l10n.twilioToken),
+        ),
+        TextField(
+          key: const Key('twilioFrom'),
+          controller: _from,
+          keyboardType: TextInputType.phone,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(labelText: l10n.twilioFrom),
+        ),
+        TextField(
+          key: const Key('phoneCallsCap'),
+          controller: _cap,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: l10n.phoneCallsCap),
+        ),
+        SwitchListTile(key: const Key('phoneCallsPersonal'), contentPadding: EdgeInsets.zero, title: Text(l10n.phoneCallsPersonal), value: _personal, onChanged: (v) => setState(() => _personal = v)),
       ],
     );
   }

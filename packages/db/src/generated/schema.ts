@@ -125,6 +125,7 @@ export const profiles = pgTable("profiles", {
 	timezone: text().default('UTC').notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	quietHours: jsonb("quiet_hours"),
+	phoneNumber: text("phone_number"),
 }, (table) => [
 	foreignKey({
 			columns: [table.userId],
@@ -138,6 +139,7 @@ export const profiles = pgTable("profiles", {
 	pgPolicy("profiles_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("profiles_display_name_check", sql`char_length(display_name) <= 120`),
+	check("profiles_phone_number_check", sql`(phone_number IS NULL) OR (phone_number ~ '^\+[1-9][0-9]{7,14}$'::text)`),
 ]);
 
 export const plans = pgTable("plans", {
@@ -1334,6 +1336,45 @@ export const notifications = pgTable("notifications", {
 	check("notifications_push_status_check", sql`push_status = ANY (ARRAY['sent'::text, 'deferred'::text, 'none'::text])`),
 ]);
 
+export const usageLedger = pgTable("usage_ledger", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id"),
+	runId: uuid("run_id"),
+	kind: text().notNull(),
+	quantity: numeric({ precision: 18, scale:  3 }).notNull(),
+	costUsd: numeric("cost_usd", { precision: 12, scale:  6 }).default('0').notNull(),
+	model: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	billable: boolean().notNull(),
+	billedAt: timestamp("billed_at", { withTimezone: true, mode: 'string' }),
+	meta: jsonb().default({}).notNull(),
+	source: text().default('key').notNull(),
+}, (table) => [
+	index("usage_ledger_bot_time_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
+	index("usage_ledger_org_time_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
+	index("usage_ledger_unbilled_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(billable AND (billed_at IS NULL))`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "usage_ledger_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "usage_ledger_bot_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "usage_ledger_run_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("usage_ledger_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("usage_ledger_source_check", sql`source = ANY (ARRAY['key'::text, 'chatgpt_plan'::text])`),
+	check("usage_ledger_kind_check", sql`kind = ANY (ARRAY['tokens_in'::text, 'tokens_out'::text, 'computer_seconds'::text, 'stream_seconds'::text, 'tts_chars'::text, 'stt_seconds'::text, 'voice_seconds'::text, 'media_images'::text, 'media_video_seconds'::text, 'search_queries'::text, 'data_calls'::text, 'phone_minutes'::text])`),
+]);
+
 export const tasks = pgTable("tasks", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -1420,45 +1461,6 @@ export const tasks = pgTable("tasks", {
 	check("tasks_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 300)`),
 	check("tasks_status_check", sql`status = ANY (ARRAY['todo'::text, 'in_progress'::text, 'in_review'::text, 'blocked'::text, 'done'::text])`),
 	check("tasks_priority_check", sql`priority = ANY (ARRAY['urgent'::text, 'high'::text, 'medium'::text, 'low'::text, 'none'::text])`),
-]);
-
-export const usageLedger = pgTable("usage_ledger", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	botId: uuid("bot_id"),
-	runId: uuid("run_id"),
-	kind: text().notNull(),
-	quantity: numeric({ precision: 18, scale:  3 }).notNull(),
-	costUsd: numeric("cost_usd", { precision: 12, scale:  6 }).default('0').notNull(),
-	model: text(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	billable: boolean().notNull(),
-	billedAt: timestamp("billed_at", { withTimezone: true, mode: 'string' }),
-	meta: jsonb().default({}).notNull(),
-	source: text().default('key').notNull(),
-}, (table) => [
-	index("usage_ledger_bot_time_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
-	index("usage_ledger_org_time_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
-	index("usage_ledger_unbilled_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(billable AND (billed_at IS NULL))`),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "usage_ledger_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.botId],
-			foreignColumns: [bots.id],
-			name: "usage_ledger_bot_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.runId],
-			foreignColumns: [runs.id],
-			name: "usage_ledger_run_id_fkey"
-		}).onDelete("set null"),
-	pgPolicy("usage_ledger_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("usage_ledger_source_check", sql`source = ANY (ARRAY['key'::text, 'chatgpt_plan'::text])`),
-	check("usage_ledger_kind_check", sql`kind = ANY (ARRAY['tokens_in'::text, 'tokens_out'::text, 'computer_seconds'::text, 'stream_seconds'::text, 'tts_chars'::text, 'stt_seconds'::text, 'voice_seconds'::text, 'media_images'::text, 'media_video_seconds'::text, 'search_queries'::text, 'data_calls'::text])`),
 ]);
 
 export const botRevisions = pgTable("bot_revisions", {
@@ -2865,6 +2867,85 @@ export const orgMemoryBackends = pgTable("org_memory_backends", {
 	check("org_memory_backends_provider_check", sql`provider = ANY (ARRAY['honcho'::text, 'supermemory'::text])`),
 	check("org_memory_backends_base_url_check", sql`(base_url IS NULL) OR (base_url ~ '^https?://'::text)`),
 	check("org_memory_backends_workspace_check", sql`(workspace IS NULL) OR ((char_length(workspace) >= 1) AND (char_length(workspace) <= 100))`),
+]);
+
+export const orgTelephony = pgTable("org_telephony", {
+	orgId: uuid("org_id").primaryKey().notNull(),
+	provider: text().default('twilio').notNull(),
+	accountSid: text("account_sid").notNull(),
+	fromNumber: text("from_number").notNull(),
+	vaultSecretId: uuid("vault_secret_id").notNull(),
+	allowPersonalNumbers: boolean("allow_personal_numbers").default(false).notNull(),
+	dailyCap: integer("daily_cap").default(10).notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "org_telephony_org_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("org_telephony_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("org_telephony_provider_check", sql`provider = 'twilio'::text`),
+	check("org_telephony_account_sid_check", sql`account_sid ~ '^AC[0-9a-fA-F]{32}$'::text`),
+	check("org_telephony_from_number_check", sql`from_number ~ '^\+[1-9][0-9]{7,14}$'::text`),
+	check("org_telephony_daily_cap_check", sql`(daily_cap >= 0) AND (daily_cap <= 500)`),
+]);
+
+export const callDenyList = pgTable("call_deny_list", {
+	prefix: text().primaryKey().notNull(),
+	reason: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("call_deny_list_prefix_check", sql`prefix ~ '^\+[0-9]{1,15}$'::text`),
+]);
+
+export const outboundCalls = pgTable("outbound_calls", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	runId: uuid("run_id"),
+	number: text().notNull(),
+	purpose: text().notNull(),
+	notes: text(),
+	status: text().default('queued').notNull(),
+	providerCallId: text("provider_call_id"),
+	streamTokenHash: text("stream_token_hash").notNull(),
+	transcript: jsonb().default([]).notNull(),
+	seconds: integer(),
+	error: text(),
+	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }),
+	endedAt: timestamp("ended_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("outbound_calls_org_day_idx").using("btree", table.orgId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "outbound_calls_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "outbound_calls_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "outbound_calls_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "outbound_calls_run_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("outbound_calls_select", { as: "permissive", for: "select", to: ["authenticated"] }),
+	check("outbound_calls_notes_check", sql`char_length(notes) <= 4000`),
+	check("outbound_calls_purpose_check", sql`(char_length(purpose) >= 1) AND (char_length(purpose) <= 500)`),
+	check("outbound_calls_status_check", sql`status = ANY (ARRAY['queued'::text, 'ringing'::text, 'in_progress'::text, 'completed'::text, 'failed'::text, 'busy'::text, 'no_answer'::text, 'ended_by_user'::text, 'taken_over'::text])`),
 ]);
 
 export const agentImportFiles = pgTable("agent_import_files", {

@@ -623,6 +623,55 @@ class FakeBackend implements Backend {
   @override
   Future<bool> allowBotToBot(String orgId) async => botToBot;
 
+  // Calls for you (D-141)
+  var tel = TelephonySettings(connected: false, accountSid: null, fromNumber: null, allowPersonalNumbers: false, dailyCap: 10);
+  SetTelephonyRequest? setTel;
+  final callLog = <String>[];
+  var outbound = OutboundCall(
+    id: 'call-9',
+    botId: botId,
+    number: '+14155550199',
+    purpose: 'Book a table for 2 at 7pm',
+    status: OutboundCallStatusEnum.inProgress,
+    transcript: [
+      OutboundCallTranscriptInner(role: OutboundCallTranscriptInnerRoleEnum.bot, text: "Hi, I'm Max, an AI assistant calling for Ana."),
+      OutboundCallTranscriptInner(role: OutboundCallTranscriptInnerRoleEnum.callee, text: 'Sure, what time?'),
+    ],
+    seconds: null,
+    startedAt: DateTime.utc(2026, 11, 3, 18),
+    endedAt: null,
+    createdAt: DateTime.utc(2026, 11, 3, 18),
+  );
+  @override
+  Future<TelephonySettings> telephony(String orgId) async => tel;
+  @override
+  Future<TelephonySettings> setTelephony(String orgId, SetTelephonyRequest request) async {
+    setTel = request;
+    return tel = TelephonySettings(
+      connected: true,
+      accountSid: request.accountSid,
+      fromNumber: request.fromNumber,
+      allowPersonalNumbers: request.allowPersonalNumbers ?? false,
+      dailyCap: request.dailyCap ?? 10,
+    );
+  }
+
+  @override
+  Future<TelephonySettings> removeTelephony(String orgId) async => tel = TelephonySettings(connected: false, accountSid: null, fromNumber: null, allowPersonalNumbers: false, dailyCap: 10);
+  @override
+  Future<OutboundCall> outboundCall(String id) async => outbound;
+  @override
+  Future<OutboundCall> endOutboundCall(String id) async {
+    callLog.add('end:$id');
+    return outbound = OutboundCall.fromJson({...outbound.toJson(), 'status': 'ended_by_user'});
+  }
+
+  @override
+  Future<OutboundCall> takeOverOutboundCall(String id, {String? phone}) async {
+    callLog.add('takeover:$id:$phone');
+    return outbound = OutboundCall.fromJson({...outbound.toJson(), 'status': 'taken_over'});
+  }
+
   // Agent-to-agent (D-140)
   var a2aOn = false;
   var a2aPublished = false;

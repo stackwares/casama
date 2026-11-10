@@ -8625,6 +8625,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Agent card'**
   String get a2aCardUrl;
+
+  /// No description provided for @phoneCalls.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone calls'**
+  String get phoneCalls;
+
+  /// No description provided for @phoneCallsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Let bots call businesses for you through your Twilio account. Every call asks first under the usual approvals.'**
+  String get phoneCallsHelp;
+
+  /// No description provided for @twilioSid.
+  ///
+  /// In en, this message translates to:
+  /// **'Account SID'**
+  String get twilioSid;
+
+  /// No description provided for @twilioToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Auth token'**
+  String get twilioToken;
+
+  /// No description provided for @twilioFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls come from'**
+  String get twilioFrom;
+
+  /// No description provided for @phoneCallsPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow calling personal numbers'**
+  String get phoneCallsPersonal;
+
+  /// No description provided for @phoneCallsCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls per day'**
+  String get phoneCallsCap;
+
+  /// No description provided for @phoneCallsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get phoneCallsOff;
+
+  /// No description provided for @outCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get outCall;
+
+  /// No description provided for @outCallRinging.
+  ///
+  /// In en, this message translates to:
+  /// **'Ringing…'**
+  String get outCallRinging;
+
+  /// No description provided for @outCallLive.
+  ///
+  /// In en, this message translates to:
+  /// **'On the call'**
+  String get outCallLive;
+
+  /// No description provided for @outCallEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended after {seconds}s'**
+  String outCallEnded(int seconds);
+
+  /// No description provided for @outCallEndedByYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You ended the call'**
+  String get outCallEndedByYou;
+
+  /// No description provided for @outCallTakenOver.
+  ///
+  /// In en, this message translates to:
+  /// **'You took over the call'**
+  String get outCallTakenOver;
+
+  /// No description provided for @outCallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t go through'**
+  String get outCallFailed;
+
+  /// No description provided for @outCallNothingYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing said yet.'**
+  String get outCallNothingYet;
+
+  /// No description provided for @outCallTakeOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Take over'**
+  String get outCallTakeOver;
+
+  /// No description provided for @outCallEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End call'**
+  String get outCallEnd;
+
+  /// No description provided for @outCallYourPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone number'**
+  String get outCallYourPhone;
+
+  /// No description provided for @outCallYourPhoneHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'International format, like +14155550123. Leave empty to use the one saved.'**
+  String get outCallYourPhoneHelp;
 }
 
 class _AppLocalizationsDelegate

@@ -273,6 +273,12 @@ Class | Method | HTTP request | Description
 [*TeachApi*](doc/TeachApi.md) | [**saveTeach**](doc/TeachApi.md#saveteach) | **POST** /v1/teach/{id}/save | Save the (edited) draft as one of the bot&#39;s skills, and optionally try it now
 [*TeachApi*](doc/TeachApi.md) | [**startTeach**](doc/TeachApi.md#startteach) | **POST** /v1/teach | Start recording a task while you have control of a computer (D-120)
 [*TeachApi*](doc/TeachApi.md) | [**stopTeach**](doc/TeachApi.md#stopteach) | **POST** /v1/teach/{id}/stop | Stop recording; the bot drafts a skill from it
+[*TelephonyApi*](doc/TelephonyApi.md) | [**deleteTelephony**](doc/TelephonyApi.md#deletetelephony) | **DELETE** /v1/orgs/{id}/telephony | 
+[*TelephonyApi*](doc/TelephonyApi.md) | [**endOutboundCall**](doc/TelephonyApi.md#endoutboundcall) | **POST** /v1/outbound-calls/{id}/end | 
+[*TelephonyApi*](doc/TelephonyApi.md) | [**getOutboundCall**](doc/TelephonyApi.md#getoutboundcall) | **GET** /v1/outbound-calls/{id} | A call a bot placed, with its live transcript
+[*TelephonyApi*](doc/TelephonyApi.md) | [**getTelephony**](doc/TelephonyApi.md#gettelephony) | **GET** /v1/orgs/{id}/telephony | 
+[*TelephonyApi*](doc/TelephonyApi.md) | [**setTelephony**](doc/TelephonyApi.md#settelephony) | **PUT** /v1/orgs/{id}/telephony | Connect the workspace&#39;s Twilio account for calls bots place (D-141)
+[*TelephonyApi*](doc/TelephonyApi.md) | [**takeOverOutboundCall**](doc/TelephonyApi.md#takeoveroutboundcall) | **POST** /v1/outbound-calls/{id}/take-over | Move the call to your own phone (saves the number to your profile)
 [*UsageApi*](doc/UsageApi.md) | [**getUsage**](doc/UsageApi.md#getusage) | **GET** /v1/usage | 
 [*VoiceApi*](doc/VoiceApi.md) | [**answerVoiceCall**](doc/VoiceApi.md#answervoicecall) | **POST** /v1/calls/{id}/answer | Answer a call; then start a voice session with its call_id
 [*VoiceApi*](doc/VoiceApi.md) | [**createVoiceSession**](doc/VoiceApi.md#createvoicesession) | **POST** /v1/voice/session | Start a live call: mints an ephemeral realtime key with the bot&#39;s persona and tools
@@ -522,6 +528,8 @@ Class | Method | HTTP request | Description
  - [Organization](doc/Organization.md)
  - [OrganizationList](doc/OrganizationList.md)
  - [OrganizationWithRole](doc/OrganizationWithRole.md)
+ - [OutboundCall](doc/OutboundCall.md)
+ - [OutboundCallTranscriptInner](doc/OutboundCallTranscriptInner.md)
  - [PageList](doc/PageList.md)
  - [PageVersion](doc/PageVersion.md)
  - [PageViewLink](doc/PageViewLink.md)
@@ -619,6 +627,7 @@ Class | Method | HTTP request | Description
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
  - [SetMemoryBackendRequest](doc/SetMemoryBackendRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
+ - [SetTelephonyRequest](doc/SetTelephonyRequest.md)
  - [SignupChallenge](doc/SignupChallenge.md)
  - [SkillCatalog](doc/SkillCatalog.md)
  - [SkillLoadedEvent](doc/SkillLoadedEvent.md)
@@ -648,6 +657,7 @@ Class | Method | HTTP request | Description
  - [SwitchBranchRequest](doc/SwitchBranchRequest.md)
  - [SwitchBranchResponse](doc/SwitchBranchResponse.md)
  - [TakeLeaseRequest](doc/TakeLeaseRequest.md)
+ - [TakeOverCallRequest](doc/TakeOverCallRequest.md)
  - [TakeoverRequest](doc/TakeoverRequest.md)
  - [TakeoverRequestList](doc/TakeoverRequestList.md)
  - [TakeoverRequestedEvent](doc/TakeoverRequestedEvent.md)
@@ -664,6 +674,7 @@ Class | Method | HTTP request | Description
  - [TeachDraftInputsInner](doc/TeachDraftInputsInner.md)
  - [TeachSession](doc/TeachSession.md)
  - [TeachStep](doc/TeachStep.md)
+ - [TelephonySettings](doc/TelephonySettings.md)
  - [Template](doc/Template.md)
  - [TemplateList](doc/TemplateList.md)
  - [TemplateRoutinesInner](doc/TemplateRoutinesInner.md)

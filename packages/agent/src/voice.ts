@@ -171,10 +171,13 @@ export async function createRealtimeSession(
     tools: RealtimeTool[];
     bases?: VoiceBases;
     fetch?: typeof fetch;
+    /** A phone call (D-141): 8 kHz G.711 μ-law audio in and out, as telephony carries. */
+    phone?: boolean;
   },
 ) {
   const f = opts.fetch ?? fetch;
   const base = opts.bases?.openai ?? "https://api.openai.com";
+  const pcmu = opts.phone ? { format: { type: "audio/pcmu" } } : {};
   const model = opts.model ?? DEFAULT_REALTIME_MODEL;
   const res = await ok(
     await f(`${base}/v1/realtime/client_secrets`, {
@@ -187,8 +190,8 @@ export async function createRealtimeSession(
           model,
           instructions: opts.instructions,
           audio: {
-            input: { transcription: { model: "gpt-4o-mini-transcribe" } },
-            output: { voice: opts.voice ?? "marin" },
+            input: { transcription: { model: "gpt-4o-mini-transcribe" }, ...pcmu },
+            output: { voice: opts.voice ?? "marin", ...pcmu },
           },
           tools: opts.tools.map((t) => ({ type: "function", ...t })),
           tool_choice: "auto",

@@ -295,6 +295,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/a2a.ts` (A2A 1.0 shapes, `A2aClient`, `A2aAdapter` for `integrations.kind = a2a`); `apps/server/src/api/routes/a2a.ts` (agent cards, the JSON-RPC endpoint, bot publishing); `organizations.a2a_enabled`, `bots.a2a_published`, `a2a_tasks`; the app's A2A switch, the bot's publish sheet and the A2A integration type.
 
+## Calls for you (D-141)
+
+- `packages/agent/src/telephony.ts` (`voice.call`, `TwilioClient`, number rules, call instructions); phone mode in `createRealtimeSession` and the worker's `voiceSession`; `apps/server/src/api/routes/telephony.ts` (Twilio settings, call status, end and take over, the signed status webhook, and the Media Streams ⇄ realtime bridge `attachTelephony`); `org_telephony`, `outbound_calls`, `call_deny_list`, `profiles.phone_number`; the app's `/calls/{id}` screen and Phone calls settings.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

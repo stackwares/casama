@@ -208,6 +208,8 @@ import 'package:kasama_api/src/model/org_settings.dart';
 import 'package:kasama_api/src/model/organization.dart';
 import 'package:kasama_api/src/model/organization_list.dart';
 import 'package:kasama_api/src/model/organization_with_role.dart';
+import 'package:kasama_api/src/model/outbound_call.dart';
+import 'package:kasama_api/src/model/outbound_call_transcript_inner.dart';
 import 'package:kasama_api/src/model/page_list.dart';
 import 'package:kasama_api/src/model/page_version.dart';
 import 'package:kasama_api/src/model/page_view_link.dart';
@@ -297,6 +299,7 @@ import 'package:kasama_api/src/model/set_git_sync_request.dart';
 import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
 import 'package:kasama_api/src/model/set_memory_backend_request.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
+import 'package:kasama_api/src/model/set_telephony_request.dart';
 import 'package:kasama_api/src/model/signup_challenge.dart';
 import 'package:kasama_api/src/model/skill_catalog.dart';
 import 'package:kasama_api/src/model/skill_loaded_event.dart';
@@ -325,6 +328,7 @@ import 'package:kasama_api/src/model/suspend_org_request.dart';
 import 'package:kasama_api/src/model/switch_branch_request.dart';
 import 'package:kasama_api/src/model/switch_branch_response.dart';
 import 'package:kasama_api/src/model/take_lease_request.dart';
+import 'package:kasama_api/src/model/take_over_call_request.dart';
 import 'package:kasama_api/src/model/takeover_request.dart';
 import 'package:kasama_api/src/model/takeover_request_list.dart';
 import 'package:kasama_api/src/model/takeover_requested_event.dart';
@@ -339,6 +343,7 @@ import 'package:kasama_api/src/model/teach_draft.dart';
 import 'package:kasama_api/src/model/teach_draft_inputs_inner.dart';
 import 'package:kasama_api/src/model/teach_session.dart';
 import 'package:kasama_api/src/model/teach_step.dart';
+import 'package:kasama_api/src/model/telephony_settings.dart';
 import 'package:kasama_api/src/model/template.dart';
 import 'package:kasama_api/src/model/template_list.dart';
 import 'package:kasama_api/src/model/template_routines_inner.dart';
@@ -864,6 +869,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return OrganizationList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'OrganizationWithRole':
           return OrganizationWithRole.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'OutboundCall':
+          return OutboundCall.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'OutboundCallTranscriptInner':
+          return OutboundCallTranscriptInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PageList':
           return PageList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PageVersion':
@@ -1066,6 +1075,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetMemoryBackendRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetOrgLimitsRequest':
           return SetOrgLimitsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetTelephonyRequest':
+          return SetTelephonyRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SignupChallenge':
           return SignupChallenge.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillCatalog':
@@ -1125,6 +1136,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SwitchBranchResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TakeLeaseRequest':
           return TakeLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TakeOverCallRequest':
+          return TakeOverCallRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TakeoverRequest':
           return TakeoverRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TakeoverRequestList':
@@ -1159,6 +1172,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return TeachSession.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TeachStep':
           return TeachStep.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TelephonySettings':
+          return TelephonySettings.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Template':
           return Template.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TemplateList':

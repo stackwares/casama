@@ -462,8 +462,8 @@ export const voiceSpeakWorkflow = DBOS.registerWorkflow(
   { name: "voiceSpeak" },
 );
 export const voiceSessionWorkflow = DBOS.registerWorkflow(
-  async (orgId: string, botId: string, greeting?: string | null) =>
-    DBOS.runStep(() => voiceSession(voiceRt(), orgId, botId, greeting ?? undefined), { name: "session" }),
+  async (orgId: string, botId: string, greeting?: string | null, phone?: boolean | null) =>
+    DBOS.runStep(() => voiceSession(voiceRt(), orgId, botId, greeting ?? undefined, phone ?? undefined), { name: "session" }),
   { name: "voiceSession" },
 );
 

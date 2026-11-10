@@ -7,6 +7,7 @@ import '../features/bots/bot_template.dart';
 import '../features/mcp/mcp_screens.dart';
 import '../features/bots/action_rules_screen.dart';
 import '../features/bots/channels_screen.dart';
+import '../features/calls/outbound_call_screen.dart';
 import '../features/bots/knowledge_screen.dart';
 import '../features/bots/plugins_screen.dart';
 import '../features/bots/replays_screen.dart';
@@ -228,6 +229,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: _page((_, s) => TeachDraftScreen(sessionId: s.pathParameters['id']!)),
           ),
           GoRoute(path: '/password-managers', pageBuilder: _page((_, _) => const PasswordManagersScreen())),
+          GoRoute(
+            path: '/calls/:id',
+            pageBuilder: _page((_, s) => OutboundCallScreen(callId: s.pathParameters['id']!)),
+          ),
           GoRoute(
             path: '/pages',
             pageBuilder: _page((_, s) => PagesScreen(botId: s.uri.queryParameters['bot'])),

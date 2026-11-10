@@ -24,6 +24,7 @@ import { createPagesApp } from "./pages/app.ts";
 import { abuseControlsOn } from "./services/abuse.ts";
 import { disabledEmail, resendEmail } from "./services/email.ts";
 import { chromiumPdf } from "./services/pdf.ts";
+import { attachTelephony } from "./api/routes/telephony.ts";
 
 const env = loadEnv();
 // Encryption at rest (D-136): the key that wraps workspace data keys, if configured.
@@ -113,6 +114,7 @@ if (env.MODE === "api") {
   }
   attachTerminal(server as unknown as import("node:http").Server, deps);
   attachStream(server as unknown as import("node:http").Server, deps);
+  attachTelephony(server as unknown as import("node:http").Server, deps);
   attachLocalConnect(server as unknown as import("node:http").Server, deps);
   stoppers.push(() => new Promise((r) => server.close(r)));
 } else {
@@ -126,6 +128,7 @@ if (env.MODE === "api") {
     cloud,
     databaseUrl: env.WORKER_DATABASE_URL ?? env.DATABASE_URL,
     pagesUrl: env.PAGES_URL,
+    publicApiUrl: env.PUBLIC_API_URL,
     dataResale: env.TREG_RESALE === "on" && env.TREG_API_KEY ? { tregKey: env.TREG_API_KEY, tregUrl: env.TREG_API_URL } : undefined,
     apns:
       env.APNS_KEY_P8 && env.APNS_KEY_ID && env.APNS_TEAM_ID

@@ -916,6 +916,27 @@ class SupabaseBackend implements Backend {
   Future<bool> allowBotToBot(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.allowBotToBot;
 
   @override
+  Future<TelephonySettings> telephony(String orgId) async => (await api.telephony.getTelephony(id: orgId)).data!;
+
+  @override
+  Future<TelephonySettings> setTelephony(String orgId, SetTelephonyRequest request) async => (await api.telephony.setTelephony(id: orgId, setTelephonyRequest: request)).data!;
+
+  @override
+  Future<TelephonySettings> removeTelephony(String orgId) async => (await api.telephony.deleteTelephony(id: orgId)).data!;
+
+  @override
+  Future<OutboundCall> outboundCall(String id) async => (await api.telephony.getOutboundCall(id: id)).data!;
+
+  @override
+  Future<OutboundCall> endOutboundCall(String id) async => (await api.telephony.endOutboundCall(id: id)).data!;
+
+  @override
+  Future<OutboundCall> takeOverOutboundCall(String id, {String? phone}) async => (await api.telephony.takeOverOutboundCall(
+    id: id,
+    takeOverCallRequest: TakeOverCallRequest(phone: phone),
+  )).data!;
+
+  @override
   Future<bool> a2aEnabled(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.a2aEnabled;
 
   @override

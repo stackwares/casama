@@ -2835,5 +2835,32 @@
   "a2aPublish": "Publish as an A2A agent",
   "a2aPublishHelp": "Outside agents with a workspace API key can give this bot tasks.",
   "a2aWorkspaceOff": "Turn on agent-to-agent in workspace settings first.",
-  "a2aCardUrl": "Agent card"
+  "a2aCardUrl": "Agent card",
+  "phoneCalls": "Phone calls",
+  "phoneCallsHelp": "Let bots call businesses for you through your Twilio account. Every call asks first under the usual approvals.",
+  "twilioSid": "Account SID",
+  "twilioToken": "Auth token",
+  "twilioFrom": "Calls come from",
+  "phoneCallsPersonal": "Allow calling personal numbers",
+  "phoneCallsCap": "Calls per day",
+  "phoneCallsOff": "Not connected",
+  "outCall": "Call",
+  "outCallRinging": "Ringing…",
+  "outCallLive": "On the call",
+  "outCallEnded": "Ended after {seconds}s",
+  "@outCallEnded": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "outCallEndedByYou": "You ended the call",
+  "outCallTakenOver": "You took over the call",
+  "outCallFailed": "Didn't go through",
+  "outCallNothingYet": "Nothing said yet.",
+  "outCallTakeOver": "Take over",
+  "outCallEnd": "End call",
+  "outCallYourPhone": "Your phone number",
+  "outCallYourPhoneHelp": "International format, like +14155550123. Leave empty to use the one saved."
 }

@@ -35,6 +35,8 @@ import {
   registerChannelTools,
   registerPhoneCallTools,
   registerDataTools,
+  registerCallTools,
+  TwilioClient,
   TregProvider,
   memoryStoreFor,
   ApnsVoipSender,
@@ -107,7 +109,11 @@ export interface WorkerOptions {
     fish_audio?: string;
     cursor?: string;
     treg?: string;
+    twilio?: string;
+    twilioLookups?: string;
   };
+  /** The API's public address, for Twilio's call webhooks and media streams (D-141). */
+  publicApiUrl?: string;
   /** Paid data resale on Kasama Cloud (D-138): Kasama's Treg key, used only when resale is on. */
   dataResale?: { tregKey: string; tregUrl?: string };
   /** Billing (Kasama Cloud only); settles usage into credits every minute. */
@@ -281,6 +287,32 @@ export async function startWorker(opts: WorkerOptions) {
   registerChannelTools(tools, { db, fetch: fetchOut, local: opts.local });
   const voip = opts.voip ?? (opts.apns ? new ApnsVoipSender(opts.apns) : undefined);
   registerPhoneCallTools(tools, { db, notifications, voip });
+  // Calls for you (D-141): the workspace's own Twilio account.
+  registerCallTools(tools, {
+    db,
+    notifications,
+    publicApiUrl: opts.publicApiUrl,
+    twilioFor: async (orgId) => {
+      const [t] = await db.execute<{ account_sid: string; from_number: string; token: string | null; allow_personal_numbers: boolean; daily_cap: number }>(sql`
+        select t.account_sid, t.from_number, v.decrypted_secret as token, t.allow_personal_numbers, t.daily_cap
+        from public.org_telephony t left join vault.decrypted_secrets v on v.id = t.vault_secret_id where t.org_id = ${orgId}::uuid`);
+      if (!t?.token) return null;
+      return {
+        accountSid: t.account_sid,
+        authToken: t.token,
+        fromNumber: t.from_number,
+        allowPersonal: t.allow_personal_numbers,
+        dailyCap: t.daily_cap,
+        client: new TwilioClient({
+          accountSid: t.account_sid,
+          authToken: t.token,
+          apiUrl: opts.providerBases?.twilio,
+          lookupsUrl: opts.providerBases?.twilioLookups,
+          fetch: opts.providerBases?.twilio ? fetch : fetchOut,
+        }),
+      };
+    },
+  });
   // Paid data (D-138): the workspace's own Treg key, else Kasama's resale key when it's on.
   registerDataTools(tools, {
     db,
