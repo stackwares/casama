@@ -199,6 +199,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/checkins.ts` (`applyCheckins`, cap, scan context, `suggestions.add`), `routines.kind`, `bot_checkins`, `suggestions`, scan runs without a conversation in `worker/routines.ts`, `apps/server/src/api/routes/checkins.ts` (`/v1/bots/{id}/checkins`, `/v1/for-you`, accept and dismiss), and the Inbox's For you tab.
 
+## Action rules (D-115)
+
+- `packages/domain/src/action-rules.ts` (categories, targets, resolution, previews), `action_rules`, the approval gate in `run.ts` (allow, ask, hand off; credential changes always handed off), `apps/server/src/api/routes/action-rules.ts`, and the bot's Action rules screen.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

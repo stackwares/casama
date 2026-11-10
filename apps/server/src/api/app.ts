@@ -14,6 +14,7 @@ import { httpMetrics, renderMetrics } from "./metrics.ts";
 import { idempotency } from "./middleware/idempotency.ts";
 import { rateLimit } from "./middleware/rate-limit.ts";
 import { registerAbuseRoutes } from "./routes/abuse.ts";
+import { registerActionRuleRoutes } from "./routes/action-rules.ts";
 import { registerAdminRoutes } from "./routes/admin.ts";
 import { registerAppearanceRoutes } from "./routes/appearance.ts";
 import { registerAppRoutes } from "./routes/apps.ts";
@@ -209,6 +210,7 @@ export function createApp(deps: AppDeps) {
   registerBotTemplateRoutes(app, deps);
   registerProjectRoutes(app, deps);
   registerCheckinRoutes(app, deps);
+  registerActionRuleRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {
     db: deps.db,

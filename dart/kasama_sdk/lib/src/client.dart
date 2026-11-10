@@ -88,6 +88,7 @@ class KasamaClient {
   SkillsApi get skills => api.getSkillsApi();
   ProjectsApi get projects => api.getProjectsApi();
   CheckinsApi get checkins => api.getCheckinsApi();
+  ActionRulesApi get actionRules => api.getActionRulesApi();
 
   /// Wallpaper photo search, when the server has a photo source (D-087).
   AppearanceApi get appearance => api.getAppearanceApi();

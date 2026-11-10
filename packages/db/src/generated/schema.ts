@@ -1839,6 +1839,43 @@ export const suggestions = pgTable("suggestions", {
 	check("suggestions_status_check", sql`status = ANY (ARRAY['pending'::text, 'accepted'::text, 'dismissed'::text, 'expired'::text])`),
 ]);
 
+export const actionRules = pgTable("action_rules", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id"),
+	matchKind: text("match_kind").notNull(),
+	matchValue: text("match_value").notNull(),
+	target: jsonb(),
+	rule: text().notNull(),
+	createdBy: uuid("created_by"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("action_rules_bot_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.botId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "action_rules_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "action_rules_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "action_rules_created_by_fkey"
+		}).onDelete("set null"),
+	pgPolicy("action_rules_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(is_member(org_id) AND ((bot_id IS NULL) OR can_access_bot(bot_id)))` }),
+	pgPolicy("action_rules_write", { as: "permissive", for: "all", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("action_rules_match_kind_check", sql`match_kind = ANY (ARRAY['tool'::text, 'group'::text, 'category'::text])`),
+	check("action_rules_match_value_check", sql`(char_length(match_value) >= 1) AND (char_length(match_value) <= 200)`),
+	check("action_rules_rule_check", sql`rule = ANY (ARRAY['allow'::text, 'allow_within_limits'::text, 'ask'::text, 'hand_off'::text])`),
+	check("action_rules_check", sql`(match_kind <> 'category'::text) OR (match_value = ANY (ARRAY['send'::text, 'pay'::text, 'delete'::text, 'publish'::text, 'share'::text, 'sign_in'::text]))`),
+	check("action_rules_check1", sql`(rule <> 'allow_within_limits'::text) OR (target IS NOT NULL)`),
+]);
+
 export const ttsCache = pgTable("tts_cache", {
 	messageId: uuid("message_id").notNull(),
 	voiceKey: text("voice_key").notNull(),

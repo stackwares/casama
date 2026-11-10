@@ -48,13 +48,14 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:kasama_api/kasama_api.dart';
 
 
-final api = KasamaApi().getAdminApi();
+final api = KasamaApi().getActionRulesApi();
+final CreateActionRuleRequest createActionRuleRequest = ; // CreateActionRuleRequest | 
 
 try {
-    final response = await api.adminAbuseEvents();
+    final response = await api.createActionRule(createActionRuleRequest);
     print(response);
 } catch on DioException (e) {
-    print("Exception when calling AdminApi->adminAbuseEvents: $e\n");
+    print("Exception when calling ActionRulesApi->createActionRule: $e\n");
 }
 
 ```
@@ -65,6 +66,9 @@ All URIs are relative to *http://localhost:8787*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*ActionRulesApi*](doc/ActionRulesApi.md) | [**createActionRule**](doc/ActionRulesApi.md#createactionrule) | **POST** /v1/action-rules | 
+[*ActionRulesApi*](doc/ActionRulesApi.md) | [**deleteActionRule**](doc/ActionRulesApi.md#deleteactionrule) | **DELETE** /v1/action-rules/{id} | 
+[*ActionRulesApi*](doc/ActionRulesApi.md) | [**listActionRules**](doc/ActionRulesApi.md#listactionrules) | **GET** /v1/action-rules | A bot&#39;s rules plus the workspace&#39;s (or only the workspace&#39;s without bot_id)
 [*AdminApi*](doc/AdminApi.md) | [**adminAbuseEvents**](doc/AdminApi.md#adminabuseevents) | **GET** /v1/admin/abuse | Recent abuse signals and actions (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
 [*AdminApi*](doc/AdminApi.md) | [**adminOverview**](doc/AdminApi.md#adminoverview) | **GET** /v1/admin/overview | Instance totals (owner only)
@@ -225,6 +229,9 @@ Class | Method | HTTP request | Description
  - [Accepted](doc/Accepted.md)
  - [AcceptedSuggestion](doc/AcceptedSuggestion.md)
  - [AccountDeletion](doc/AccountDeletion.md)
+ - [ActionRule](doc/ActionRule.md)
+ - [ActionRuleList](doc/ActionRuleList.md)
+ - [ActionRuleTarget](doc/ActionRuleTarget.md)
  - [AdminOrg](doc/AdminOrg.md)
  - [AdminOrgList](doc/AdminOrgList.md)
  - [AdminOverview](doc/AdminOverview.md)
@@ -286,6 +293,7 @@ Class | Method | HTTP request | Description
  - [ConnectKeyList](doc/ConnectKeyList.md)
  - [Conversation](doc/Conversation.md)
  - [ConversationList](doc/ConversationList.md)
+ - [CreateActionRuleRequest](doc/CreateActionRuleRequest.md)
  - [CreateBotRequest](doc/CreateBotRequest.md)
  - [CreateBotShareRequest](doc/CreateBotShareRequest.md)
  - [CreateCheckpointRequest](doc/CreateCheckpointRequest.md)
@@ -320,6 +328,7 @@ Class | Method | HTTP request | Description
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
+ - [DeletedRule](doc/DeletedRule.md)
  - [DismissSuggestionRequest](doc/DismissSuggestionRequest.md)
  - [EditMessageRequest](doc/EditMessageRequest.md)
  - [FileSearchResult](doc/FileSearchResult.md)

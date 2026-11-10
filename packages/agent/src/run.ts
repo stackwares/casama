@@ -43,6 +43,18 @@ import {
   secretRequestState,
 } from "./secret-requests.ts";
 import { SETUP_GUIDE } from "./tools/setup.ts";
+import {
+  type ActionRule,
+  describeActionRule,
+  extractTarget,
+  isCredentialChange,
+  resolveActionRule,
+  toolCategory,
+} from "@kasama/domain";
+
+/** What the model is told when a step goes to the person (D-115). */
+const handOffMessage = (why: string) =>
+  `${why} Don't do it yourself. Prepare everything up to that step, then ask the person to finish it: use computer.request_takeover if you're working on your computer, otherwise tell them exactly what to do.`;
 import { endRunSpan, recordRunSpan, runTraceId, startRunChildSpan } from "@kasama/observability";
 import {
   DEFAULT_LAZY_THRESHOLD,
@@ -398,7 +410,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       const gate = await step("voice-gate", () =>
         approvalGate(deps, registry, info, call, false, bus, redactor),
       );
-      let blocked: string | null = null;
+      let blocked: string | null = gate.handOff ?? null;
       if (gate.approvalId) {
         const wait = deps.waitForApproval ?? ((id, run, ms) => pollApproval(db, id, run, ms));
         await wait(gate.approvalId, info.runId, APPROVAL_TTL_MS);
@@ -514,7 +526,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         const gate = await step(`gate-${i}-${call.callId}`, () =>
           approvalGate(deps, registry, info, call, untrusted, bus, redactor),
         );
-        let blocked: string | null = null;
+        let blocked: string | null = gate.handOff ?? null;
         if (gate.approvalId) {
           const wait = deps.waitForApproval ?? ((id, run, ms) => pollApproval(db, id, run, ms));
           await wait(gate.approvalId, info.runId, APPROVAL_TTL_MS);
@@ -1672,7 +1684,7 @@ async function approvalGate(
   untrusted: boolean,
   busFn: () => Promise<EventBus>,
   redactorFn: () => Promise<Redactor>,
-): Promise<{ approvalId: string | null }> {
+): Promise<{ approvalId: string | null; handOff?: string }> {
   const bus = await busFn();
   const redactor = await redactorFn();
   const argsRedacted = redactor.value(call.args);
@@ -1691,9 +1703,33 @@ async function approvalGate(
     return { approvalId: null }; // the tool step reports the error
   }
   const risk = def.riskFor?.(args as never) ?? def.risk;
-  const [grant] = await deps.db.execute<{ id: string }>(
-    sql`select id from public.tool_grants where bot_id = ${info.botId}::uuid and tool_name = ${call.name}`,
-  );
+  // Action rules (D-115): the most specific rule for this call decides before autonomy does.
+  if (isCredentialChange(call.name, args))
+    return {
+      approvalId: null,
+      handOff: handOffMessage(
+        "Changing passwords and two-step settings is always done by the person.",
+      ),
+    };
+  const rules = await deps.db.execute<ActionRule>(sql`
+    select id, bot_id, match_kind, match_value, target, rule from public.action_rules
+    where org_id = ${info.orgId}::uuid and (bot_id is null or bot_id = ${info.botId}::uuid)`);
+  const rule = rules.length
+    ? resolveActionRule([...rules], {
+        botId: info.botId,
+        tool: call.name,
+        category: toolCategory(call.name, def.category),
+        target: extractTarget(args),
+      })
+    : null;
+  if (rule?.rule === "hand_off")
+    return {
+      approvalId: null,
+      handOff: handOffMessage(
+        `A rule says the person finishes this step: ${describeActionRule(rule)}.`,
+      ),
+    };
+  const grant = rule?.rule === "allow" || rule?.rule === "allow_within_limits" ? rule : undefined;
   // On the user's own machine (desktop companion), high-risk actions always ask (D-066).
   const onLocal =
     risk === "high" && def.requires?.computer && deps.computers
@@ -1702,15 +1738,17 @@ async function approvalGate(
           .then((c) => c.kind === "local")
           .catch(() => false)
       : false;
-  const needed = needsApproval({
-    autonomy: info.autonomy,
-    risk,
-    readOnly: def.readOnly === true,
-    confirmUnderDefault: def.confirm === true,
-    untrustedSinceApproval: untrusted,
-    granted: !!grant,
-    forceHighRisk: onLocal,
-  });
+  const needed =
+    rule?.rule === "ask" ||
+    needsApproval({
+      autonomy: info.autonomy,
+      risk,
+      readOnly: def.readOnly === true,
+      confirmUnderDefault: def.confirm === true,
+      untrustedSinceApproval: untrusted,
+      granted: !!grant,
+      forceHighRisk: onLocal,
+    });
   if (!needed) return { approvalId: null };
 
   // Some tools show more than their arguments, such as a skill's diff (D-104).

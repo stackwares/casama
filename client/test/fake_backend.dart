@@ -205,6 +205,25 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  final rules = <ActionRule>[];
+  @override
+  Future<List<ActionRule>> actionRules(String orgId, {String? botId}) async => List.of(rules);
+  @override
+  Future<void> createActionRule(String orgId, {String? botId, required String category, required String rule, List<String> domains = const [], double? maxAmount}) async {
+    rules.add(ActionRule(
+      id: 'rule${rules.length + 1}',
+      orgId: orgId,
+      botId: botId,
+      matchKind: ActionRuleMatchKindEnum.category,
+      matchValue: category,
+      target: domains.isEmpty && maxAmount == null ? null : ActionRuleTarget(domains: domains, maxAmount: maxAmount),
+      rule: ActionRuleRuleEnum.values.firstWhere((r) => r.value == rule),
+      preview: domains.isEmpty ? '$category: $rule' : 'Sends messages to anyone at ${domains.join(' or ')} without asking',
+      createdAt: DateTime(2026),
+    ));
+  }
+  @override
+  Future<void> deleteActionRule(String id) async => rules.removeWhere((r) => r.id == id);
   BotCheckins checkins = BotCheckins(enabled: false, briefTime: '08:00', scanEveryHours: 3, dailyCapUsd: 1);
   final suggestionActions = <String>[];
   @override

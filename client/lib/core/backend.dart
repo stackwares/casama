@@ -345,6 +345,10 @@ abstract class Backend {
 
   // Task board
   Future<List<Task>> tasks(String orgId, {String? projectId});
+  // Action rules (D-115)
+  Future<List<ActionRule>> actionRules(String orgId, {String? botId});
+  Future<void> createActionRule(String orgId, {String? botId, required String category, required String rule, List<String> domains = const [], double? maxAmount});
+  Future<void> deleteActionRule(String id);
   // Check-ins (D-114)
   Future<BotCheckins> botCheckins(String botId);
   Future<BotCheckins> setBotCheckins(String botId, BotCheckins settings);

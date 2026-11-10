@@ -3,6 +3,9 @@ import 'package:kasama_api/src/model/abuse_event_list.dart';
 import 'package:kasama_api/src/model/accepted.dart';
 import 'package:kasama_api/src/model/accepted_suggestion.dart';
 import 'package:kasama_api/src/model/account_deletion.dart';
+import 'package:kasama_api/src/model/action_rule.dart';
+import 'package:kasama_api/src/model/action_rule_list.dart';
+import 'package:kasama_api/src/model/action_rule_target.dart';
 import 'package:kasama_api/src/model/admin_org.dart';
 import 'package:kasama_api/src/model/admin_org_list.dart';
 import 'package:kasama_api/src/model/admin_overview.dart';
@@ -61,6 +64,7 @@ import 'package:kasama_api/src/model/connect_key.dart';
 import 'package:kasama_api/src/model/connect_key_list.dart';
 import 'package:kasama_api/src/model/conversation.dart';
 import 'package:kasama_api/src/model/conversation_list.dart';
+import 'package:kasama_api/src/model/create_action_rule_request.dart';
 import 'package:kasama_api/src/model/create_bot_request.dart';
 import 'package:kasama_api/src/model/create_bot_share_request.dart';
 import 'package:kasama_api/src/model/create_checkpoint_request.dart';
@@ -94,6 +98,7 @@ import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
+import 'package:kasama_api/src/model/deleted_rule.dart';
 import 'package:kasama_api/src/model/dismiss_suggestion_request.dart';
 import 'package:kasama_api/src/model/edit_message_request.dart';
 import 'package:kasama_api/src/model/file_search_result.dart';
@@ -302,6 +307,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AcceptedSuggestion.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AccountDeletion':
           return AccountDeletion.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ActionRule':
+          return ActionRule.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ActionRuleList':
+          return ActionRuleList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ActionRuleTarget':
+          return ActionRuleTarget.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOrg':
           return AdminOrg.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOrgList':
@@ -427,6 +438,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Conversation.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConversationList':
           return ConversationList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateActionRuleRequest':
+          return CreateActionRuleRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateBotRequest':
           return CreateBotRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateBotShareRequest':
@@ -496,6 +509,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedId.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRoutine':
           return DeletedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedRule':
+          return DeletedRule.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DismissSuggestionRequest':
           return DismissSuggestionRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'EditMessageRequest':

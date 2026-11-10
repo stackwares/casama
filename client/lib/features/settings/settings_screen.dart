@@ -728,6 +728,13 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
               },
             ),
             GroupedTile(
+              key: const Key('botRules'),
+              icon: LucideIcons.shieldCheck,
+              title: l10n.actionRules,
+              subtitle: l10n.actionRulesRow,
+              onTap: () => context.push('/bots/${bot.id}/rules'),
+            ),
+            GroupedTile(
               key: const Key('botCheckins'),
               icon: LucideIcons.sun,
               title: l10n.checkins,

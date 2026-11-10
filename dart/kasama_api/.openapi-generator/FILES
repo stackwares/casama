@@ -4,6 +4,7 @@ analysis_options.yaml
 build.yaml
 lib/kasama_api.dart
 lib/src/api.dart
+lib/src/api/action_rules_api.dart
 lib/src/api/admin_api.dart
 lib/src/api/appearance_api.dart
 lib/src/api/approvals_api.dart
@@ -40,6 +41,9 @@ lib/src/model/abuse_event_list.dart
 lib/src/model/accepted.dart
 lib/src/model/accepted_suggestion.dart
 lib/src/model/account_deletion.dart
+lib/src/model/action_rule.dart
+lib/src/model/action_rule_list.dart
+lib/src/model/action_rule_target.dart
 lib/src/model/admin_org.dart
 lib/src/model/admin_org_list.dart
 lib/src/model/admin_overview.dart
@@ -101,6 +105,7 @@ lib/src/model/connect_key.dart
 lib/src/model/connect_key_list.dart
 lib/src/model/conversation.dart
 lib/src/model/conversation_list.dart
+lib/src/model/create_action_rule_request.dart
 lib/src/model/create_bot_request.dart
 lib/src/model/create_bot_share_request.dart
 lib/src/model/create_checkpoint_request.dart
@@ -135,6 +140,7 @@ lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
 lib/src/model/deleted_routine.dart
+lib/src/model/deleted_rule.dart
 lib/src/model/dismiss_suggestion_request.dart
 lib/src/model/edit_message_request.dart
 lib/src/model/file_search_result.dart

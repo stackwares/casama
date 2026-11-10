@@ -1,3 +1,4 @@
+import * as actionRules from "./action-rules.ts";
 import * as admin from "./admin.ts";
 import * as appearance from "./appearance.ts";
 import * as apps from "./apps.ts";
@@ -34,8 +35,10 @@ export const routes = {
   ...botTemplate,
   ...projects,
   ...checkins,
+  ...actionRules,
 };
 export {
+  actionRules,
   admin,
   appearance,
   autonomy,

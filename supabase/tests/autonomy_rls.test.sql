@@ -50,7 +50,7 @@ select is((select count(*)::int from public.integrations), 1, 'member sees only 
 select is((select count(*)::int from public.routines), 1, 'member sees the bot''s routines');
 select is((select count(*)::int from public.notifications), 0, 'notifications are personal');
 select is((select status from public.decide_approval('e0000000-0000-0000-0000-00000000000a', 'approved', true)), 'approved', 'member approves with always-allow');
-select is((select count(*)::int from public.tool_grants where tool_name = 'shell.exec'), 1, 'always-allow creates a grant');
+select is((select count(*)::int from public.action_rules where match_kind = 'tool' and match_value = 'shell.exec' and rule = 'allow'), 1, 'always-allow creates an allow rule (D-115)');
 select throws_ok($$ select public.decide_approval('e0000000-0000-0000-0000-00000000000a', 'denied') $$, '55000', null, 'an approval is decided once');
 select lives_ok($$ insert into public.devices (user_id, platform, fcm_token) values ('a0000000-0000-0000-0000-00000000000c', 'ios', 'token-c') $$, 'users register their own devices');
 select throws_ok($$ insert into public.devices (user_id, platform, fcm_token) values ('a0000000-0000-0000-0000-00000000000a', 'ios', 'token-x') $$, '42501', null, 'not for someone else');

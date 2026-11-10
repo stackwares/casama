@@ -278,7 +278,8 @@ function decideWhenPending(runId: string, decision: "approved" | "denied", alway
       if (a) {
         await tdb.admin`update public.approvals set status = ${decision}, always_allow = ${alwaysAllow}, decided_by = ${userId}, decided_at = now() where id = ${a.id}`;
         if (alwaysAllow) {
-          await tdb.admin`insert into public.tool_grants (org_id, bot_id, tool_name) select org_id, bot_id, tool_name from public.approvals where id = ${a.id} on conflict do nothing`;
+          // What decide_approval does for "always allow": a tool rule (D-115).
+          await tdb.admin`insert into public.action_rules (org_id, bot_id, match_kind, match_value, rule) select org_id, bot_id, 'tool', tool_name, 'allow' from public.approvals where id = ${a.id}`;
         }
         return a.id;
       }

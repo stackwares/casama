@@ -3773,4 +3773,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get on => 'On';
+
+  @override
+  String get actionRules => 'Action rules';
+
+  @override
+  String get actionRulesRow => 'What it may do without asking';
+
+  @override
+  String get actionRulesHelp =>
+      'Rules decide per action: allow, allow within limits, ask first, or hand it to you to finish. The most specific rule wins; with no rule, the bot\'s autonomy decides. Bots can\'t change their own rules.';
+
+  @override
+  String get addRule => 'Add a rule';
+
+  @override
+  String get addRuleHelp =>
+      'Pick what the bot is doing and how it should handle it.';
+
+  @override
+  String get noRules => 'No rules yet. The bot\'s autonomy level decides.';
+
+  @override
+  String get otherTools => 'Specific tools';
+
+  @override
+  String get workspaceRule => 'Workspace rule';
+
+  @override
+  String get catSend => 'Sending messages';
+
+  @override
+  String get catPay => 'Payments';
+
+  @override
+  String get catDelete => 'Deleting';
+
+  @override
+  String get catPublish => 'Publishing';
+
+  @override
+  String get catShare => 'Sharing and invites';
+
+  @override
+  String get catSignIn => 'Signing in';
+
+  @override
+  String get whenTheBot => 'When the bot is';
+
+  @override
+  String get itShould => 'It should';
+
+  @override
+  String get ruleAllow => 'Go ahead';
+
+  @override
+  String get ruleAllowLimits => 'Go ahead within limits';
+
+  @override
+  String get ruleAsk => 'Ask me first';
+
+  @override
+  String get ruleHandOff => 'Hand it to me to finish';
+
+  @override
+  String get ruleDomains => 'Only to these domains (comma separated)';
+
+  @override
+  String get ruleMaxAmount => 'Up to this amount';
+
+  @override
+  String get ruleForWorkspace => 'For every bot in the workspace';
 }

@@ -8415,6 +8415,171 @@
           "risk",
           "created_at"
         ]
+      },
+      "ActionRule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "match_kind": {
+            "type": "string",
+            "enum": [
+              "tool",
+              "group",
+              "category"
+            ]
+          },
+          "match_value": {
+            "type": "string"
+          },
+          "target": {
+            "$ref": "#/components/schemas/ActionRuleTarget"
+          },
+          "rule": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "allow_within_limits",
+              "ask",
+              "hand_off"
+            ]
+          },
+          "preview": {
+            "type": "string",
+            "description": "In plain language, e.g. Sends messages to anyone at acme.com without asking"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "org_id",
+          "bot_id",
+          "match_kind",
+          "match_value",
+          "target",
+          "rule",
+          "preview",
+          "created_at"
+        ]
+      },
+      "ActionRuleTarget": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "domains": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 253
+            },
+            "maxItems": 20
+          },
+          "recipients": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            },
+            "maxItems": 50
+          },
+          "max_amount": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "CreateActionRuleRequest": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Null or missing: the whole workspace (admins)"
+          },
+          "match_kind": {
+            "type": "string",
+            "enum": [
+              "tool",
+              "group",
+              "category"
+            ]
+          },
+          "match_value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "target": {
+            "$ref": "#/components/schemas/ActionRuleTarget"
+          },
+          "rule": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "allow_within_limits",
+              "ask",
+              "hand_off"
+            ]
+          }
+        },
+        "required": [
+          "org_id",
+          "match_kind",
+          "match_value",
+          "rule"
+        ]
+      },
+      "DeletedRule": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "ActionRuleList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionRule"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
       }
     },
     "parameters": {}
@@ -18243,6 +18408,191 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/action-rules": {
+      "post": {
+        "operationId": "createActionRule",
+        "tags": [
+          "action-rules"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateActionRuleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionRule"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listActionRules",
+        "tags": [
+          "action-rules"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A bot's rules plus the workspace's (or only the workspace's without bot_id)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "org_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "bot_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionRuleList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/action-rules/{id}": {
+      "delete": {
+        "operationId": "deleteActionRule",
+        "tags": [
+          "action-rules"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedRule"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/problem+json": {
                 "schema": {

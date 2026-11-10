@@ -878,6 +878,30 @@ class SupabaseBackend implements Backend {
   Future<List<Task>> tasks(String orgId, {String? projectId}) async => (await api.tasks.listTasks(orgId: orgId, projectId: projectId)).data!.items;
 
   @override
+  Future<List<ActionRule>> actionRules(String orgId, {String? botId}) async =>
+      (await api.actionRules.listActionRules(orgId: orgId, botId: botId)).data!.items;
+
+  @override
+  Future<void> createActionRule(String orgId, {String? botId, required String category, required String rule, List<String> domains = const [], double? maxAmount}) async {
+    final limited = domains.isNotEmpty || maxAmount != null;
+    await api.actionRules.createActionRule(
+      createActionRuleRequest: CreateActionRuleRequest(
+        orgId: orgId,
+        botId: botId,
+        matchKind: CreateActionRuleRequestMatchKindEnum.category,
+        matchValue: category,
+        target: limited ? ActionRuleTarget(domains: domains.isEmpty ? null : domains, maxAmount: maxAmount) : null,
+        rule: CreateActionRuleRequestRuleEnum.values.firstWhere((r) => r.value == rule),
+      ),
+    );
+  }
+
+  @override
+  Future<void> deleteActionRule(String id) async {
+    await api.actionRules.deleteActionRule(id: id);
+  }
+
+  @override
   Future<BotCheckins> botCheckins(String botId) async => (await api.checkins.getBotCheckins(id: botId)).data!;
 
   @override

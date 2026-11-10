@@ -6585,6 +6585,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On'**
   String get on;
+
+  /// No description provided for @actionRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Action rules'**
+  String get actionRules;
+
+  /// No description provided for @actionRulesRow.
+  ///
+  /// In en, this message translates to:
+  /// **'What it may do without asking'**
+  String get actionRulesRow;
+
+  /// No description provided for @actionRulesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules decide per action: allow, allow within limits, ask first, or hand it to you to finish. The most specific rule wins; with no rule, the bot\'s autonomy decides. Bots can\'t change their own rules.'**
+  String get actionRulesHelp;
+
+  /// No description provided for @addRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a rule'**
+  String get addRule;
+
+  /// No description provided for @addRuleHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick what the bot is doing and how it should handle it.'**
+  String get addRuleHelp;
+
+  /// No description provided for @noRules.
+  ///
+  /// In en, this message translates to:
+  /// **'No rules yet. The bot\'s autonomy level decides.'**
+  String get noRules;
+
+  /// No description provided for @otherTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Specific tools'**
+  String get otherTools;
+
+  /// No description provided for @workspaceRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace rule'**
+  String get workspaceRule;
+
+  /// No description provided for @catSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending messages'**
+  String get catSend;
+
+  /// No description provided for @catPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get catPay;
+
+  /// No description provided for @catDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting'**
+  String get catDelete;
+
+  /// No description provided for @catPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publishing'**
+  String get catPublish;
+
+  /// No description provided for @catShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing and invites'**
+  String get catShare;
+
+  /// No description provided for @catSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in'**
+  String get catSignIn;
+
+  /// No description provided for @whenTheBot.
+  ///
+  /// In en, this message translates to:
+  /// **'When the bot is'**
+  String get whenTheBot;
+
+  /// No description provided for @itShould.
+  ///
+  /// In en, this message translates to:
+  /// **'It should'**
+  String get itShould;
+
+  /// No description provided for @ruleAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Go ahead'**
+  String get ruleAllow;
+
+  /// No description provided for @ruleAllowLimits.
+  ///
+  /// In en, this message translates to:
+  /// **'Go ahead within limits'**
+  String get ruleAllowLimits;
+
+  /// No description provided for @ruleAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask me first'**
+  String get ruleAsk;
+
+  /// No description provided for @ruleHandOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand it to me to finish'**
+  String get ruleHandOff;
+
+  /// No description provided for @ruleDomains.
+  ///
+  /// In en, this message translates to:
+  /// **'Only to these domains (comma separated)'**
+  String get ruleDomains;
+
+  /// No description provided for @ruleMaxAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to this amount'**
+  String get ruleMaxAmount;
+
+  /// No description provided for @ruleForWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'For every bot in the workspace'**
+  String get ruleForWorkspace;
 }
 
 class _AppLocalizationsDelegate
