@@ -4770,4 +4770,163 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get botToBotHelp =>
       'When off, bots can\'t @mention, message or hand work to each other. Each bot can still split its own work into subagents.';
+
+  @override
+  String get capMessages => 'Messages (iMessage)';
+
+  @override
+  String get chatApps => 'Chat apps';
+
+  @override
+  String get chatAppsRow => 'Telegram, email, SMS, Slack, WhatsApp and more';
+
+  @override
+  String get chatAppsAdd => 'Connect a chat app';
+
+  @override
+  String get chatAppsEmpty => 'No chat apps yet';
+
+  @override
+  String get chatAppsHelp =>
+      'Let people message this bot from Telegram, email, SMS, Slack, WhatsApp, Messenger, Feishu or iMessage. It only answers people on the allowed list; everyone else is logged here.';
+
+  @override
+  String get chatAppsAddHelp =>
+      'Paste the credentials from the app\'s developer settings. They\'re stored encrypted and never shown again.';
+
+  @override
+  String get chatAppsKind => 'App';
+
+  @override
+  String get chatAppsSenders => 'Allowed senders';
+
+  @override
+  String get chatAppsSendersHelp =>
+      'One per line: email addresses (or *@company.com), phone numbers, or user ids.';
+
+  @override
+  String get chatAppsMac => 'Mac';
+
+  @override
+  String get chatAppsNoMac =>
+      'Turn on \"Use this computer for bots\" with Messages allowed in the desktop app on your Mac first.';
+
+  @override
+  String chatAppsConnected(String name) {
+    return '$name is connected';
+  }
+
+  @override
+  String get chatAppsTelegramDone =>
+      'Telegram is already sending messages here. Message your bot to try it.';
+
+  @override
+  String get chatAppsPasteUrl =>
+      'Paste this address into the app\'s webhook settings.';
+
+  @override
+  String get chatAppsWebhookUrl => 'Webhook address';
+
+  @override
+  String get chatAppsVerifyToken => 'Verify token';
+
+  @override
+  String chatAppsAllowed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count allowed senders',
+      one: '1 allowed sender',
+      zero: 'Nobody allowed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatAppsActivity => 'Activity';
+
+  @override
+  String get chatAppsNoActivity => 'No messages yet.';
+
+  @override
+  String get chatAppsIgnored => 'Ignored: not on the allowed list';
+
+  @override
+  String get chatAppsRoutine => 'Started a routine';
+
+  @override
+  String get chatAppsFailed => 'Couldn\'t send';
+
+  @override
+  String get chatAppsSent => 'Sent';
+
+  @override
+  String get chatAppsAnswered => 'Answered';
+
+  @override
+  String get chatAppsRemove => 'Disconnect';
+
+  @override
+  String get chBotToken => 'Bot token';
+
+  @override
+  String get chAddress => 'Email address';
+
+  @override
+  String get chApiKey => 'API key';
+
+  @override
+  String get chSigningSecret => 'Signing secret';
+
+  @override
+  String get chPhoneNumber => 'Phone number';
+
+  @override
+  String get chAccountSid => 'Account SID';
+
+  @override
+  String get chAuthToken => 'Auth token';
+
+  @override
+  String get chPhoneNumberId => 'Phone number ID';
+
+  @override
+  String get chAccessToken => 'Access token';
+
+  @override
+  String get chAppSecret => 'App secret';
+
+  @override
+  String get chPageToken => 'Page access token';
+
+  @override
+  String get chAppId => 'App ID';
+
+  @override
+  String get chEncryptKey => 'Encrypt key';
+
+  @override
+  String get chVerificationToken => 'Verification token';
+
+  @override
+  String get routineMessage => 'When a matching message arrives';
+
+  @override
+  String get triggerMessage => 'Messages';
+
+  @override
+  String get messageTriggerHelp =>
+      'Starts when an email or chat message to this bot matches. Connect the app under Chat apps first.';
+
+  @override
+  String get messageTriggerAnyApp => 'Any app';
+
+  @override
+  String get messageTriggerSender => 'From (address, number, or *@company.com)';
+
+  @override
+  String get messageTriggerSubject => 'Subject contains';
+
+  @override
+  String get messageTriggerWords => 'Message contains';
 }

@@ -16,6 +16,7 @@ import '../../ui/page.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
+import '../bots/channels_screen.dart' show channelKindName;
 
 /// A bot's routines: one-time, repeating (cron in a timezone), or webhook-triggered.
 class RoutinesScreen extends ConsumerWidget {
@@ -118,13 +119,7 @@ class _RoutineCard extends ConsumerWidget {
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final ok = await showConfirm(
-      context: context,
-      title: l10n.deleteRoutineTitle(routine.name),
-      message: l10n.deleteRoutineBody,
-      confirmLabel: l10n.delete,
-      destructive: true,
-    );
+    final ok = await showConfirm(context: context, title: l10n.deleteRoutineTitle(routine.name), message: l10n.deleteRoutineBody, confirmLabel: l10n.delete, destructive: true);
     if (!ok || !context.mounted) return;
     await runGuarded(context, () => ref.read(backendProvider).deleteRoutine(routine.id));
     ref.invalidate(routinesProvider(routine.botId));
@@ -141,6 +136,7 @@ class _RoutineCard extends ConsumerWidget {
       RoutineTrigger.github => (LucideIcons.codeXml, l10n.routineGithub),
       RoutineTrigger.webhook => (LucideIcons.webhook, l10n.routineWebhook),
       RoutineTrigger.calendarEvent => (LucideIcons.calendarClock, l10n.routineCalendar(r.calendar?.offsetMinutes ?? 0)),
+      RoutineTrigger.message => (LucideIcons.mailOpen, l10n.routineMessage),
     };
     final next = r.enabled && r.nextRunAt != null ? l10n.nextRun(_formatWhen(context, r.nextRunAt!)) : null;
     final last = r.lastRunAt != null ? l10n.lastRun(_formatWhen(context, r.lastRunAt!)) : null;
@@ -230,12 +226,7 @@ class _RoutineCard extends ConsumerWidget {
 }
 
 /// Common schedules so people don't have to write cron by hand.
-const schedulePresets = <(String, String)>[
-  ('0 7 * * *', 'everyDayAt7'),
-  ('0 9 * * 1-5', 'weekdaysAt9'),
-  ('0 * * * *', 'everyHour'),
-  ('0 9 * * 1', 'mondaysAt9'),
-];
+const schedulePresets = <(String, String)>[('0 7 * * *', 'everyDayAt7'), ('0 9 * * 1-5', 'weekdaysAt9'), ('0 * * * *', 'everyHour'), ('0 9 * * 1', 'mondaysAt9')];
 
 class NewRoutineSheet extends ConsumerStatefulWidget {
   const NewRoutineSheet({super.key, required this.botId});
@@ -257,6 +248,11 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
   var _outsideGuests = false;
   var _videoLink = false;
   final _titleMatch = TextEditingController();
+  // Message triggers (D-134)
+  MessageTriggerConfigChannelKindEnum? _msgKind = MessageTriggerConfigChannelKindEnum.email;
+  final _msgSender = TextEditingController();
+  final _msgSubject = TextEditingController();
+  final _msgText = TextEditingController();
   DateTime _runAt = DateTime.now().add(const Duration(hours: 1));
   var _busy = false;
 
@@ -279,12 +275,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
   }
 
   Future<void> _pickTime() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _runAt,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
+    final date = await showDatePicker(context: context, initialDate: _runAt, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
     if (date == null || !mounted) return;
     final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_runAt));
     if (time == null) return;
@@ -294,21 +285,17 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final calendars = (ref.watch(integrationsProvider).value ?? const <Integration>[])
-        .where((i) => i.appId == 'google_calendar' || i.name.contains('calendar') || i.name.contains('outlook'))
-        .toList();
+    final calendars = (ref.watch(integrationsProvider).value ?? const <Integration>[]).where((i) => i.appId == 'google_calendar' || i.name.contains('calendar') || i.name.contains('outlook')).toList();
     _calendarId ??= calendars.firstOrNull?.id;
-    final valid = _name.text.trim().isNotEmpty &&
+    final valid =
+        _name.text.trim().isNotEmpty &&
         _instructions.text.trim().isNotEmpty &&
         (_trigger != 'once' || _runAt.isAfter(DateTime.now())) &&
-        (_trigger != 'calendar_event' || _calendarId != null);
+        (_trigger != 'calendar_event' || _calendarId != null) &&
+        (_trigger != 'message' || _msgKind != null || [_msgSender, _msgSubject, _msgText].any((c) => c.text.trim().isNotEmpty));
     final now = DateTime.now();
     final tomorrow9 = DateTime(now.year, now.month, now.day + 1, 9);
-    final quick = <(String, DateTime)>[
-      (l10n.inMinutes(15), now.add(const Duration(minutes: 15))),
-      (l10n.inHours(1), now.add(const Duration(hours: 1))),
-      (l10n.tomorrowAt9, tomorrow9),
-    ];
+    final quick = <(String, DateTime)>[(l10n.inMinutes(15), now.add(const Duration(minutes: 15))), (l10n.inHours(1), now.add(const Duration(hours: 1))), (l10n.tomorrowAt9, tomorrow9)];
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.md),
       child: Column(
@@ -334,8 +321,15 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
           ),
           const SizedBox(height: AppSpace.md),
           AppSegmentedControl<String>(
-            values: const ['once', 'schedule', 'calendar_event', 'github', 'webhook'],
-            labels: {'once': l10n.triggerOnce, 'schedule': l10n.triggerSchedule, 'calendar_event': l10n.triggerCalendar, 'github': l10n.triggerGithub, 'webhook': l10n.triggerWebhook},
+            values: const ['once', 'schedule', 'calendar_event', 'message', 'github', 'webhook'],
+            labels: {
+              'once': l10n.triggerOnce,
+              'schedule': l10n.triggerSchedule,
+              'calendar_event': l10n.triggerCalendar,
+              'message': l10n.triggerMessage,
+              'github': l10n.triggerGithub,
+              'webhook': l10n.triggerWebhook,
+            },
             groupValue: _trigger,
             onValueChanged: (v) => setState(() => _trigger = v),
           ),
@@ -344,18 +338,10 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
             Wrap(
               spacing: 8,
               runSpacing: 4,
-              children: [
-                for (final q in quick)
-                  ChoiceChip(label: Text(q.$1), selected: (_runAt.difference(q.$2).inMinutes).abs() < 1, onSelected: (_) => setState(() => _runAt = q.$2)),
-              ],
+              children: [for (final q in quick) ChoiceChip(label: Text(q.$1), selected: (_runAt.difference(q.$2).inMinutes).abs() < 1, onSelected: (_) => setState(() => _runAt = q.$2))],
             ),
             const SizedBox(height: AppSpace.xs),
-            OutlinedButton.icon(
-              key: const Key('routineRunAt'),
-              onPressed: _pickTime,
-              icon: const Icon(LucideIcons.calendar, size: 18),
-              label: Text(_formatWhen(context, _runAt)),
-            ),
+            OutlinedButton.icon(key: const Key('routineRunAt'), onPressed: _pickTime, icon: const Icon(LucideIcons.calendar, size: 18), label: Text(_formatWhen(context, _runAt))),
           ],
           if (_trigger == 'calendar_event') ...[
             const SizedBox(height: AppSpace.sm),
@@ -370,10 +356,14 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                 onChanged: (v) => setState(() => _calendarId = v),
               ),
               const SizedBox(height: AppSpace.sm),
-              Wrap(spacing: 8, runSpacing: 4, children: [
-                for (final m in const [-30, -15, -5, 0, 15])
-                  ChoiceChip(key: Key('offset$m'), label: Text(l10n.calendarOffset(m)), selected: _offset == m, onSelected: (_) => setState(() => _offset = m)),
-              ]),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final m in const [-30, -15, -5, 0, 15])
+                    ChoiceChip(key: Key('offset$m'), label: Text(l10n.calendarOffset(m)), selected: _offset == m, onSelected: (_) => setState(() => _offset = m)),
+                ],
+              ),
               CheckboxListTile(
                 key: const Key('routineOutsideGuests'),
                 contentPadding: EdgeInsets.zero,
@@ -381,24 +371,52 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                 value: _outsideGuests,
                 onChanged: (v) => setState(() => _outsideGuests = v ?? false),
               ),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.calendarVideoLink),
-                value: _videoLink,
-                onChanged: (v) => setState(() => _videoLink = v ?? false),
+              CheckboxListTile(contentPadding: EdgeInsets.zero, title: Text(l10n.calendarVideoLink), value: _videoLink, onChanged: (v) => setState(() => _videoLink = v ?? false)),
+              TextField(
+                controller: _titleMatch,
+                decoration: InputDecoration(labelText: l10n.calendarTitleMatch),
               ),
-              TextField(controller: _titleMatch, decoration: InputDecoration(labelText: l10n.calendarTitleMatch)),
             ],
+          ],
+          if (_trigger == 'message') ...[
+            const SizedBox(height: AppSpace.sm),
+            Text(l10n.messageTriggerHelp),
+            const SizedBox(height: AppSpace.sm),
+            DropdownButtonFormField<MessageTriggerConfigChannelKindEnum?>(
+              key: const Key('messageKind'),
+              initialValue: _msgKind,
+              decoration: InputDecoration(labelText: l10n.chatAppsKind),
+              items: [
+                DropdownMenuItem(value: null, child: Text(l10n.messageTriggerAnyApp)),
+                for (final k in MessageTriggerConfigChannelKindEnum.values) DropdownMenuItem(value: k, child: Text(channelKindName(ChannelKind.values.firstWhere((c) => c.value == k.value)))),
+              ],
+              onChanged: (v) => setState(() => _msgKind = v),
+            ),
+            TextField(
+              key: const Key('messageSender'),
+              controller: _msgSender,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(labelText: l10n.messageTriggerSender),
+            ),
+            TextField(
+              key: const Key('messageSubject'),
+              controller: _msgSubject,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(labelText: l10n.messageTriggerSubject),
+            ),
+            TextField(
+              key: const Key('messageText'),
+              controller: _msgText,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(labelText: l10n.messageTriggerWords),
+            ),
           ],
           if (_trigger == 'schedule') ...[
             const SizedBox(height: AppSpace.sm),
             Wrap(
               spacing: 8,
               runSpacing: 4,
-              children: [
-                for (final p in schedulePresets)
-                  ChoiceChip(label: Text(_presetLabel(p.$2)), selected: _cron.text == p.$1, onSelected: (_) => setState(() => _cron.text = p.$1)),
-              ],
+              children: [for (final p in schedulePresets) ChoiceChip(label: Text(_presetLabel(p.$2)), selected: _cron.text == p.$1, onSelected: (_) => setState(() => _cron.text = p.$1))],
             ),
             const SizedBox(height: AppSpace.sm),
             TextField(
@@ -441,6 +459,14 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                                     outsideGuests: _outsideGuests ? true : null,
                                     hasVideoLink: _videoLink ? true : null,
                                     titleMatch: _titleMatch.text.trim().isEmpty ? null : _titleMatch.text.trim(),
+                                  )
+                                : null,
+                            message: _trigger == 'message'
+                                ? MessageTriggerConfig(
+                                    channelKind: _msgKind,
+                                    sender: _msgSender.text.trim().isEmpty ? null : _msgSender.text.trim(),
+                                    subjectMatch: _msgSubject.text.trim().isEmpty ? null : _msgSubject.text.trim(),
+                                    textMatch: _msgText.text.trim().isEmpty ? null : _msgText.text.trim(),
                                   )
                                 : null,
                           ),

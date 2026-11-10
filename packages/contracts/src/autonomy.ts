@@ -154,7 +154,7 @@ export const AttachIntegrationRequest = z
   .openapi("AttachIntegrationRequest");
 
 export const RoutineTrigger = z
-  .enum(["schedule", "once", "github", "webhook", "calendar_event"])
+  .enum(["schedule", "once", "github", "webhook", "calendar_event", "message"])
   .openapi("RoutineTrigger", {
     description: "schedule repeats on a cron; once runs a single time at run_at",
   });
@@ -170,6 +170,16 @@ export const CalendarTriggerConfig = z
   })
   .openapi("CalendarTriggerConfig");
 
+export const MessageTriggerConfig = z
+  .object({
+    channel_id: Uuid.optional(),
+    channel_kind: z.enum(["telegram", "email", "sms", "slack", "whatsapp", "messenger", "feishu", "imessage"]).optional(),
+    sender: z.string().max(300).optional().openapi({ description: "An address or id; *@domain for email" }),
+    subject_match: z.string().max(200).optional(),
+    text_match: z.string().max(200).optional(),
+  })
+  .openapi("MessageTriggerConfig");
+
 export const Routine = z
   .object({
     id: Uuid,
@@ -180,6 +190,7 @@ export const Routine = z
     timezone: z.string(),
     trigger: RoutineTrigger,
     calendar: CalendarTriggerConfig.nullable().optional(),
+    message: MessageTriggerConfig.nullable().optional(),
     notify: z.boolean(),
     enabled: z.boolean(),
     next_run_at: ts.nullable(),
@@ -216,6 +227,7 @@ export const CreateRoutineRequest = z
       .optional()
       .openapi({ description: "GitHub event names to accept" }),
     calendar: CalendarTriggerConfig.optional().openapi({ description: "Required for calendar_event triggers (D-132)" }),
+    message: MessageTriggerConfig.optional().openapi({ description: "Filters for message triggers: an email or chat message that matches starts the routine (D-134)" }),
   })
   .openapi("CreateRoutineRequest");
 

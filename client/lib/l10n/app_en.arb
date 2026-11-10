@@ -1766,21 +1766,45 @@
   "folderName": "Folder name",
   "archiveBot": "Archive bot",
   "archiveBotTitle": "Archive {name}?",
-  "@archiveBotTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@archiveBotTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "archiveBotBody": "It leaves the sidebar and stops running. Its chats and history are kept, and you can bring it back from Archived bots.",
   "archive": "Archive",
   "archivedBots": "Archived bots",
   "unarchive": "Bring back",
   "botArchived": "{name} archived.",
-  "@botArchived": {"placeholders": {"name": {"type": "String"}}},
+  "@botArchived": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "settingsHistory": "Settings history",
   "settingsHistoryHelp": "Every change to this bot's settings, and who made it",
   "noHistory": "No changes yet.",
   "restoreSettings": "Restore these settings",
   "restoreSettingsBody": "Put back {fields} as they were before this change? The current settings stay in the history.",
-  "@restoreSettingsBody": {"placeholders": {"fields": {"type": "String"}}},
+  "@restoreSettingsBody": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
   "changedByBot": "Changed by {name}",
-  "@changedByBot": {"placeholders": {"name": {"type": "String"}}},
+  "@changedByBot": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "changedByPerson": "Changed by a person",
   "changedBySystem": "Changed by Kasama",
   "fieldName": "name",
@@ -1791,12 +1815,33 @@
   "fieldComputer": "computer",
   "fieldArchived": "archived",
   "secretRequestTitle": "{bot} needs a {service} key",
-  "@secretRequestTitle": {"placeholders": {"bot": {"type": "String"}, "service": {"type": "String"}}},
+  "@secretRequestTitle": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      },
+      "service": {
+        "type": "String"
+      }
+    }
+  },
   "secretRequestHosts": "Only for {hosts}",
-  "@secretRequestHosts": {"placeholders": {"hosts": {"type": "String"}}},
+  "@secretRequestHosts": {
+    "placeholders": {
+      "hosts": {
+        "type": "String"
+      }
+    }
+  },
   "secretRequestHelp": "Goes straight to the vault. The bot never sees it.",
   "secretSaved": "Saved {name}",
-  "@secretSaved": {"placeholders": {"name": {"type": "String"}}},
+  "@secretSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "secretDeclined": "Declined",
   "decline": "Decline",
   "signInCode": "Sign-in code",
@@ -1805,12 +1850,27 @@
   "totpSeedHelp": "From the site's two-step setup. Bots only ever get the current code, never the key.",
   "scanQrCode": "Scan QR code",
   "totpRequestTitle": "{bot} needs a {service} sign-in code",
-  "@totpRequestTitle": {"placeholders": {"bot": {"type": "String"}, "service": {"type": "String"}}},
+  "@totpRequestTitle": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      },
+      "service": {
+        "type": "String"
+      }
+    }
+  },
   "search": "Search",
   "searchHint": "Search chats, memories, skills, tickets and files",
   "searchEmptyPrompt": "Type at least 2 characters.",
   "searchNoResults": "Nothing found for “{query}”.",
-  "@searchNoResults": {"placeholders": {"query": {"type": "String"}}},
+  "@searchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "searchMessages": "Messages",
   "searchChats": "Chats",
   "searchTickets": "Tickets",
@@ -1822,10 +1882,22 @@
   "searchSkills": "Search skills",
   "all": "All",
   "skillFiles": "{count, plural, =1{1 file} other{{count} files}}",
-  "@skillFiles": {"placeholders": {"count": {"type": "int"}}},
+  "@skillFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "install": "Install",
   "skillInstalled": "Installed {name}.",
-  "@skillInstalled": {"placeholders": {"name": {"type": "String"}}},
+  "@skillInstalled": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "noResults": "No results.",
   "importFromGitHub": "Import from GitHub",
   "importFromGitHubHelp": "Paste a link to a folder with a SKILL.md. You'll see every file before anything is installed. Private repositories use a GITHUB_TOKEN secret allowed for api.github.com.",
@@ -1833,7 +1905,13 @@
   "skillScriptsNote": "Scripts in a skill only ever run on a bot's computer, never on the server.",
   "binaryFile": "(binary file)",
   "skillUpdate": "Update {name}",
-  "@skillUpdate": {"placeholders": {"name": {"type": "String"}}},
+  "@skillUpdate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "checkingForUpdates": "Checking for updates…",
   "skillUpToDate": "Already up to date.",
   "update": "Update",
@@ -1845,7 +1923,13 @@
   "checkForUpdates": "Check for updates",
   "attachSkill": "Attach a skill",
   "setupTitle": "Set up {name}",
-  "@setupTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@setupTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "setupBody": "Answer a few quick questions and it will propose its instructions, routines and the accounts to connect. Nothing changes until you approve.",
   "startSetup": "Start setup",
   "skipSetup": "Skip for now",
@@ -1860,7 +1944,16 @@
   "quietHours": "Quiet hours",
   "quietHoursHelp": "Notifications wait until quiet hours end; your inbox still fills. Approvals for a chat you're in still come through.",
   "quietHoursRange": "{start} to {end}",
-  "@quietHoursRange": {"placeholders": {"start": {"type": "String"}, "end": {"type": "String"}}},
+  "@quietHoursRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
   "off": "Off",
   "botNotifications": "Notifications from this bot",
   "botNotificationsHelp": "Whether this bot follows your quiet hours",
@@ -1879,14 +1972,35 @@
   "notABotTemplate": "That file isn't a Kasama bot template.",
   "importBot": "Import a bot",
   "botImported": "{name} is ready.",
-  "@botImported": {"placeholders": {"name": {"type": "String"}}},
+  "@botImported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "botImportedConnect": "{name} is ready. Connect {services} in Integrations so it can use them.",
-  "@botImportedConnect": {"placeholders": {"name": {"type": "String"}, "services": {"type": "String"}}},
+  "@botImportedConnect": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "services": {
+        "type": "String"
+      }
+    }
+  },
   "whatComesWithIt": "What comes with it",
   "connectAfterImport": "Connect after importing",
   "importRoutines": "Schedule its routines",
   "importMemories": "{count, plural, =1{Keep its 1 memory} other{Keep its {count} memories}}",
-  "@importMemories": {"placeholders": {"count": {"type": "int"}}},
+  "@importMemories": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "startingRoutine": "Starting the routine…",
   "offlineSaved": "Offline. Showing saved messages.",
   "projects": "Projects",
@@ -1920,10 +2034,22 @@
   "forYouEmpty": "Nothing for you right now",
   "forYouEmptyHelp": "Turn on check-ins in a bot's settings for a morning brief and suggestions through the day.",
   "morningBriefFrom": "Morning brief from {name}",
-  "@morningBriefFrom": {"placeholders": {"name": {"type": "String"}}},
+  "@morningBriefFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "suggestions": "Suggestions",
   "suggestedBy": "Suggested by {name}",
-  "@suggestedBy": {"placeholders": {"name": {"type": "String"}}},
+  "@suggestedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "dismissSuggestion": "Dismiss this suggestion?",
   "justThisOnce": "Just this once",
   "dontSuggestAgain": "Don't suggest it again",
@@ -1933,7 +2059,13 @@
   "briefTime": "Morning brief at",
   "scanEvery": "Look every",
   "hours": "{count, plural, =1{1 hour} other{{count} hours}}",
-  "@hours": {"placeholders": {"count": {"type": "int"}}},
+  "@hours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dailyCap": "Daily limit",
   "on": "On",
   "actionRules": "Action rules",
@@ -1968,12 +2100,30 @@
   "watcherDone": "Done",
   "watcherExpired": "Expired",
   "firedTimes": "{count, plural, =0{not fired yet} =1{fired once} other{fired {count} times}}",
-  "@firedTimes": {"placeholders": {"count": {"type": "int"}}},
+  "@firedTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "connectAiApp": "Connect an AI app",
   "connectAiAppAsk": "{app} wants to use Kasama",
-  "@connectAiAppAsk": {"placeholders": {"app": {"type": "String"}}},
+  "@connectAiAppAsk": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
   "connectAiAppHelp": "It can list your bots, ask them to do things and read results in the workspace you pick, as you. Your bots' approvals and rules still apply. You'll go back to {host}.",
-  "@connectAiAppHelp": {"placeholders": {"host": {"type": "String"}}},
+  "@connectAiAppHelp": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
   "connectAiAppDone": "Done. You can go back to the AI app.",
   "refuse": "Refuse",
   "allow": "Allow",
@@ -1999,7 +2149,13 @@
   "pagePublic": "Anyone with the link",
   "pageRefreshes": "Refreshes on schedule",
   "pageUpdated": "Updated {date}",
-  "@pageUpdated": {"placeholders": {"date": {"type": "String"}}},
+  "@pageUpdated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "exportPdf": "Export PDF",
   "pageMakePublicTitle": "Make this page public?",
   "pageMakePublicBody": "Anyone with the link can open it, including the data on it. You can take it back any time; the link stops working.",
@@ -2007,7 +2163,13 @@
   "pagePublicLinkTitle": "Public link",
   "pagePublicLinkBody": "Copied. It isn't listed in search engines.",
   "deletePageTitle": "Delete \"{title}\"?",
-  "@deletePageTitle": {"placeholders": {"title": {"type": "String"}}},
+  "@deletePageTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "openPages": "Open in Pages",
   "skillInstructions": "Instructions",
   "discard": "Discard",
@@ -2022,25 +2184,70 @@
   "teachDraftTitle": "New skill",
   "teachDrafting": "Writing a skill from your recording…",
   "teachSteps": "{count, plural, =1{1 step} other{{count} steps}}",
-  "@teachSteps": {"placeholders": {"count": {"type": "int"}}},
+  "@teachSteps": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "teachRecordedSteps": "What you showed ({count, plural, =1{1 step} other{{count} steps}})",
-  "@teachRecordedSteps": {"placeholders": {"count": {"type": "int"}}},
+  "@teachRecordedSteps": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "teachReviewHelp": "Check the steps, inputs and success checks, then save. You can try it right away.",
   "teachDraftFailed": "The bot couldn't write a draft. Write the steps yourself from the recording below, or discard it.",
   "teachAlreadySaved": "This skill is saved",
   "teachSaveAndTry": "Save and try",
   "teachSaved": "Saved {name}",
-  "@teachSaved": {"placeholders": {"name": {"type": "String"}}},
+  "@teachSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "teachDiscardTitle": "Discard this recording?",
   "teachDiscardBody": "Every step, snapshot and screenshot it captured is deleted.",
   "teachStepClick": "Click at {x}, {y}",
-  "@teachStepClick": {"placeholders": {"x": {"type": "int"}, "y": {"type": "int"}}},
+  "@teachStepClick": {
+    "placeholders": {
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  },
   "teachStepType": "Type “{text}”",
-  "@teachStepType": {"placeholders": {"text": {"type": "String"}}},
+  "@teachStepType": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "teachStepSecret": "Type secret {name}",
-  "@teachStepSecret": {"placeholders": {"name": {"type": "String"}}},
+  "@teachStepSecret": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "teachStepKey": "Press {key}",
-  "@teachStepKey": {"placeholders": {"key": {"type": "String"}}},
+  "@teachStepKey": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "teachStepScroll": "Scroll",
   "plugins": "Plugins",
   "pluginsRow": "Skills and tools from plugin packages",
@@ -2050,11 +2257,29 @@
   "addPluginHelp": "Paste a GitHub link to the plugin's folder. You'll see what it adds before anything is installed.",
   "pluginAdds": "It adds",
   "pluginStdio": "Runs on the bot's computer: {command}",
-  "@pluginStdio": {"placeholders": {"command": {"type": "String"}}},
+  "@pluginStdio": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
   "pluginRemote": "Connects to {url}",
-  "@pluginRemote": {"placeholders": {"url": {"type": "String"}}},
+  "@pluginRemote": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "pluginTalksTo": "Talks to: {hosts}",
-  "@pluginTalksTo": {"placeholders": {"hosts": {"type": "String"}}},
+  "@pluginTalksTo": {
+    "placeholders": {
+      "hosts": {
+        "type": "String"
+      }
+    }
+  },
   "pluginSkill": "Skill",
   "pluginHosts": "Network",
   "pluginServerError": "Couldn't start",
@@ -2063,24 +2288,78 @@
   "checkForUpdate": "Check for update",
   "uninstall": "Uninstall",
   "uninstallPluginTitle": "Uninstall {name}?",
-  "@uninstallPluginTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@uninstallPluginTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "uninstallPluginBody": "Its skills, tools, files and saved secrets are removed from this bot.",
   "updatePluginTitle": "Update {name}",
-  "@updatePluginTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@updatePluginTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "pluginDiffSkillsAdded": "New skills: {names}",
-  "@pluginDiffSkillsAdded": {"placeholders": {"names": {"type": "String"}}},
+  "@pluginDiffSkillsAdded": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "pluginDiffSkillsChanged": "Changed skills: {names}",
-  "@pluginDiffSkillsChanged": {"placeholders": {"names": {"type": "String"}}},
+  "@pluginDiffSkillsChanged": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "pluginDiffSkillsRemoved": "Removed skills: {names}",
-  "@pluginDiffSkillsRemoved": {"placeholders": {"names": {"type": "String"}}},
+  "@pluginDiffSkillsRemoved": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "pluginDiffServersAdded": "New tool servers: {names}",
-  "@pluginDiffServersAdded": {"placeholders": {"names": {"type": "String"}}},
+  "@pluginDiffServersAdded": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "pluginDiffServersChanged": "Changed tool servers: {names}",
-  "@pluginDiffServersChanged": {"placeholders": {"names": {"type": "String"}}},
+  "@pluginDiffServersChanged": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "pluginDiffServersRemoved": "Removed tool servers: {names}",
-  "@pluginDiffServersRemoved": {"placeholders": {"names": {"type": "String"}}},
+  "@pluginDiffServersRemoved": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "pluginDiffHosts": "Talks to new hosts: {hosts}",
-  "@pluginDiffHosts": {"placeholders": {"hosts": {"type": "String"}}},
+  "@pluginDiffHosts": {
+    "placeholders": {
+      "hosts": {
+        "type": "String"
+      }
+    }
+  },
   "pluginDiffNone": "No changes to what it adds.",
   "next": "Next",
   "botNameLabel": "Name",
@@ -2091,41 +2370,119 @@
   "agentImportReviewHelp": "Untick anything you don't want. Nothing is created until you import.",
   "agentImportNoPersona": "No persona file was found.",
   "agentImportSkills": "{count, plural, =1{1 skill} other{{count} skills}}",
-  "@agentImportSkills": {"placeholders": {"count": {"type": "int"}}},
+  "@agentImportSkills": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "agentImportRoutines": "{count, plural, =1{1 routine} other{{count} routines}}",
-  "@agentImportRoutines": {"placeholders": {"count": {"type": "int"}}},
+  "@agentImportRoutines": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "agentImportMemories": "{count, plural, =1{1 memory} other{{count} memories}}",
-  "@agentImportMemories": {"placeholders": {"count": {"type": "int"}}},
+  "@agentImportMemories": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "agentImportLeftovers": "Copy {count, plural, =1{1 other file} other{{count} other files}} to ~/imported/ on its computer",
-  "@agentImportLeftovers": {"placeholders": {"count": {"type": "int"}}},
+  "@agentImportLeftovers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "agentImportSkipped": "Not imported: {files}",
-  "@agentImportSkipped": {"placeholders": {"files": {"type": "String"}}},
+  "@agentImportSkipped": {
+    "placeholders": {
+      "files": {
+        "type": "String"
+      }
+    }
+  },
   "agentImportedWithFiles": "Imported {name} and copied {count} files to its computer",
-  "@agentImportedWithFiles": {"placeholders": {"name": {"type": "String"}, "count": {"type": "int"}}},
+  "@agentImportedWithFiles": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "agentImportedFilesLater": "Imported {name}. Its other files couldn't be copied yet; give it a computer and import again to copy them.",
-  "@agentImportedFilesLater": {"placeholders": {"name": {"type": "String"}}},
+  "@agentImportedFilesLater": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "importMemoryTitle": "Import memories from ChatGPT or Claude",
   "importMemoryHelp": "Copy this prompt into ChatGPT or Claude, then paste its answer below.",
   "importMemoryPick": "Keep what's right; untick the rest.",
   "importMemoryPaste": "Its answer",
   "importMemoryNone": "No memories found in that answer.",
   "memoriesImported": "Added {count, plural, =1{1 memory} other{{count} memories}}",
-  "@memoriesImported": {"placeholders": {"count": {"type": "int"}}},
+  "@memoriesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "routinesAsFiles": "Routines and skills as files",
   "routinesAsFilesHelp": "Every routine and skill as a Markdown file: export them, edit them anywhere, import them back, or keep them in a GitHub repository.",
   "exportFiles": "Export as files",
   "importFiles": "Import files",
   "importFilesApply": "Apply",
   "filesPreview": "{created} new, {updated} changed, {unchanged} unchanged",
-  "@filesPreview": {"placeholders": {"created": {"type": "int"}, "updated": {"type": "int"}, "unchanged": {"type": "int"}}},
+  "@filesPreview": {
+    "placeholders": {
+      "created": {
+        "type": "int"
+      },
+      "updated": {
+        "type": "int"
+      },
+      "unchanged": {
+        "type": "int"
+      }
+    }
+  },
   "filesImported": "Imported: {created} new, {updated} changed",
-  "@filesImported": {"placeholders": {"created": {"type": "int"}, "updated": {"type": "int"}}},
+  "@filesImported": {
+    "placeholders": {
+      "created": {
+        "type": "int"
+      },
+      "updated": {
+        "type": "int"
+      }
+    }
+  },
   "gitSync": "Git sync",
   "gitSyncOff": "Off",
   "gitSyncHelp": "Changes in Kasama are committed to the repository, and pushes to it update Kasama after they're checked. If a file changed in both places, Kasama keeps its version and opens a pull request. Needs a GITHUB_TOKEN secret allowed for api.github.com.",
   "gitSyncNeedsToken": "Needs a GITHUB_TOKEN secret",
   "gitSyncLast": "Synced {date}",
-  "@gitSyncLast": {"placeholders": {"date": {"type": "String"}}},
+  "@gitSyncLast": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "gitSyncPr": "Pull request waiting for you",
   "syncNow": "Sync now",
   "syncQueued": "Syncing within a minute",
@@ -2151,46 +2508,139 @@
   "knowledgeShareAll": "Share with every bot in the workspace",
   "knowledgeShared": "Whole workspace",
   "knowledgeReady": "{docs, plural, =1{1 document} other{{docs} documents}}, {chunks} passages",
-  "@knowledgeReady": {"placeholders": {"docs": {"type": "int"}, "chunks": {"type": "int"}}},
+  "@knowledgeReady": {
+    "placeholders": {
+      "docs": {
+        "type": "int"
+      },
+      "chunks": {
+        "type": "int"
+      }
+    }
+  },
   "knowledgeError": "Couldn't read it",
   "knowledgeSyncing": "Reading…",
   "knowledgePending": "Waiting to be read",
   "add": "Add",
   "skillIdeas": "Skill ideas",
   "skillIdeaFrom": "{bot} suggests a skill: {name}",
-  "@skillIdeaFrom": {"placeholders": {"bot": {"type": "String"}, "name": {"type": "String"}}},
+  "@skillIdeaFrom": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "skillEditFrom": "{bot} suggests improving {name}",
-  "@skillEditFrom": {"placeholders": {"bot": {"type": "String"}, "name": {"type": "String"}}},
+  "@skillEditFrom": {
+    "placeholders": {
+      "bot": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "skillUsesTools": "Uses: {tools}",
-  "@skillUsesTools": {"placeholders": {"tools": {"type": "String"}}},
+  "@skillUsesTools": {
+    "placeholders": {
+      "tools": {
+        "type": "String"
+      }
+    }
+  },
   "saveSkill": "Save skill",
   "applyEdit": "Apply change",
   "skillSaved": "Saved {name}",
-  "@skillSaved": {"placeholders": {"name": {"type": "String"}}},
+  "@skillSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "skillUpdated": "Updated {name}",
-  "@skillUpdated": {"placeholders": {"name": {"type": "String"}}},
+  "@skillUpdated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "skillStats": "How it's doing",
   "skillNotUsedYet": "Not used yet",
   "skillStatsLine": "Used {uses} times · {rate}% went well · {failures} failed · {corrections} corrected",
-  "@skillStatsLine": {"placeholders": {"uses": {"type": "int"}, "rate": {"type": "int"}, "failures": {"type": "int"}, "corrections": {"type": "int"}}},
+  "@skillStatsLine": {
+    "placeholders": {
+      "uses": {
+        "type": "int"
+      },
+      "rate": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      },
+      "corrections": {
+        "type": "int"
+      }
+    }
+  },
   "skillLastFailure": "Last problem: {date}",
-  "@skillLastFailure": {"placeholders": {"date": {"type": "String"}}},
+  "@skillLastFailure": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "skillHistory": "Earlier versions",
   "replays": "Replays",
   "replaysRow": "Recorded steps it runs without thinking",
   "noReplays": "No replays yet",
   "replaysHelp": "A replay is a recorded set of browser or desktop steps the bot runs as is, which is faster and cheaper. If a step doesn't work any more, the bot takes over from there and can update the replay. Save one from a teach recording, or ask the bot to save what it just did.",
   "replaySteps": "{count, plural, =1{1 step} other{{count} steps}}",
-  "@replaySteps": {"placeholders": {"count": {"type": "int"}}},
+  "@replaySteps": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "replayRuns": "run {runs} times, {failures} needed help",
-  "@replayRuns": {"placeholders": {"runs": {"type": "int"}, "failures": {"type": "int"}}},
+  "@replayRuns": {
+    "placeholders": {
+      "runs": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
+    }
+  },
   "runReplay": "Run {name}",
-  "@runReplay": {"placeholders": {"name": {"type": "String"}}},
+  "@runReplay": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "runReplayHelp": "Check the values it fills in, then run it.",
   "run": "Run",
   "saveAsReplay": "Also save as a replay",
   "replaySaved": "Saved the replay {name}",
-  "@replaySaved": {"placeholders": {"name": {"type": "String"}}},
+  "@replaySaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "passwordManagers": "Password managers",
   "passwordManagersRow": "1Password or Bitwarden logins for bots",
   "noPasswordManagers": "No password managers connected",
@@ -2200,9 +2650,21 @@
   "pmJustMe": "Just me",
   "pmNoVaults": "No vaults chosen yet",
   "pmVaults": "{count, plural, =1{1 vault} other{{count} vaults}}",
-  "@pmVaults": {"placeholders": {"count": {"type": "int"}}},
+  "@pmVaults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pmLogins": "{count, plural, =1{1 login} other{{count} logins}}",
-  "@pmLogins": {"placeholders": {"count": {"type": "int"}}},
+  "@pmLogins": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pmOnePasswordHelp": "Uses a 1Password Connect server with a service account's token.",
   "pmBitwardenHelp": "Uses Bitwarden's Vault Management API (bw serve) for your organization's collections.",
   "pmConnectUrl": "Connect server address",
@@ -2228,21 +2690,100 @@
   "sharingOnlyCreator": "Only its creator",
   "sharingEveryoneChats": "Everyone can chat; add people who should edit it",
   "sharingEveryoneRole": "Everyone who is {role}",
-  "@sharingEveryoneRole": {"placeholders": {"role": {"type": "String"}}},
+  "@sharingEveryoneRole": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "accessChat": "Can chat",
   "accessEdit": "Can edit",
   "accessAdmin": "Can manage",
   "sharingSaved": "Sharing saved",
   "triggerCalendar": "Meetings",
   "routineCalendar": "{minutes, plural, =0{At the start of matching meetings} other{Around matching meetings ({minutes} min)}}",
-  "@routineCalendar": {"placeholders": {"minutes": {"type": "int"}}},
+  "@routineCalendar": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "calendarTriggerNeedsCalendar": "Connect Google Calendar or Outlook first.",
   "calendarTriggerCalendar": "Calendar",
   "calendarOffset": "{minutes, plural, =0{At start} other{{minutes} min}}",
-  "@calendarOffset": {"placeholders": {"minutes": {"type": "int"}}},
+  "@calendarOffset": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "calendarOutsideGuests": "Only meetings with people outside my company",
   "calendarVideoLink": "Only meetings with a video link",
   "calendarTitleMatch": "Only titles containing (optional)",
   "botToBot": "Bots can talk to each other",
-  "botToBotHelp": "When off, bots can't @mention, message or hand work to each other. Each bot can still split its own work into subagents."
+  "botToBotHelp": "When off, bots can't @mention, message or hand work to each other. Each bot can still split its own work into subagents.",
+  "capMessages": "Messages (iMessage)",
+  "chatApps": "Chat apps",
+  "chatAppsRow": "Telegram, email, SMS, Slack, WhatsApp and more",
+  "chatAppsAdd": "Connect a chat app",
+  "chatAppsEmpty": "No chat apps yet",
+  "chatAppsHelp": "Let people message this bot from Telegram, email, SMS, Slack, WhatsApp, Messenger, Feishu or iMessage. It only answers people on the allowed list; everyone else is logged here.",
+  "chatAppsAddHelp": "Paste the credentials from the app's developer settings. They're stored encrypted and never shown again.",
+  "chatAppsKind": "App",
+  "chatAppsSenders": "Allowed senders",
+  "chatAppsSendersHelp": "One per line: email addresses (or *@company.com), phone numbers, or user ids.",
+  "chatAppsMac": "Mac",
+  "chatAppsNoMac": "Turn on \"Use this computer for bots\" with Messages allowed in the desktop app on your Mac first.",
+  "chatAppsConnected": "{name} is connected",
+  "@chatAppsConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatAppsTelegramDone": "Telegram is already sending messages here. Message your bot to try it.",
+  "chatAppsPasteUrl": "Paste this address into the app's webhook settings.",
+  "chatAppsWebhookUrl": "Webhook address",
+  "chatAppsVerifyToken": "Verify token",
+  "chatAppsAllowed": "{count, plural, =0{Nobody allowed} =1{1 allowed sender} other{{count} allowed senders}}",
+  "@chatAppsAllowed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatAppsActivity": "Activity",
+  "chatAppsNoActivity": "No messages yet.",
+  "chatAppsIgnored": "Ignored: not on the allowed list",
+  "chatAppsRoutine": "Started a routine",
+  "chatAppsFailed": "Couldn't send",
+  "chatAppsSent": "Sent",
+  "chatAppsAnswered": "Answered",
+  "chatAppsRemove": "Disconnect",
+  "chBotToken": "Bot token",
+  "chAddress": "Email address",
+  "chApiKey": "API key",
+  "chSigningSecret": "Signing secret",
+  "chPhoneNumber": "Phone number",
+  "chAccountSid": "Account SID",
+  "chAuthToken": "Auth token",
+  "chPhoneNumberId": "Phone number ID",
+  "chAccessToken": "Access token",
+  "chAppSecret": "App secret",
+  "chPageToken": "Page access token",
+  "chAppId": "App ID",
+  "chEncryptKey": "Encrypt key",
+  "chVerificationToken": "Verification token",
+  "routineMessage": "When a matching message arrives",
+  "triggerMessage": "Messages",
+  "messageTriggerHelp": "Starts when an email or chat message to this bot matches. Connect the app under Chat apps first.",
+  "messageTriggerAnyApp": "Any app",
+  "messageTriggerSender": "From (address, number, or *@company.com)",
+  "messageTriggerSubject": "Subject contains",
+  "messageTriggerWords": "Message contains"
 }

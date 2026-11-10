@@ -32,6 +32,7 @@ import {
   registerKnowledgeTools,
   registerReplayTools,
   registerLoginTools,
+  registerChannelTools,
   registerProjectTools,
   registerSecretRequestTool,
   registerSetupTools,
@@ -263,6 +264,7 @@ export async function startWorker(opts: WorkerOptions) {
   registerKnowledgeTools(tools, { db, embedderFor });
   registerReplayTools(tools, { db, fetch: fetchOut });
   registerLoginTools(tools, { db, fetch: fetchOut });
+  registerChannelTools(tools, { db, fetch: fetchOut, local: opts.local });
   registerPageTools(tools, { db, pagesUrl: opts.pagesUrl ?? "http://localhost:8790" });
   // Projects (D-113): the tools start planning runs; the heartbeat lives in the minute tick.
   registerProjectTools(tools, {

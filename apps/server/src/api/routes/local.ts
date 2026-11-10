@@ -162,7 +162,7 @@ function requireClaims(claims: JwtClaims | undefined): JwtClaims {
 
 type DeviceRow = typeof localDevices.$inferSelect;
 const caps = (c: unknown) =>
-  (c ?? {}) as { shell?: boolean; files?: boolean; browser?: boolean; desktop?: boolean };
+  (c ?? {}) as { shell?: boolean; files?: boolean; browser?: boolean; desktop?: boolean; messages?: boolean };
 
 export function registerLocalRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db } = deps;
@@ -402,7 +402,15 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
     // Only bots the user allowed may act on their machine (health checks carry no run).
     if (path !== "/health" && !listingOnly) {
       const runId = (activity as { run_id?: string } | undefined)?.run_id;
-      const [allowed] = runId
+      // iMessage chat apps (D-134) poll and send with no run: allowed when the Mac's owner
+      // connected it to a bot they allowed on this machine.
+      const imessage = !runId && /^\/imessage\/(new|send)(\?|$)/.test(path);
+      const [allowed] = imessage
+        ? await deps.db.execute<{ ok: boolean }>(sql`
+            select true as ok from public.channels ch, public.local_devices d
+            where ch.kind = 'imessage' and ch.enabled and ch.config ->> 'computer_id' = ${computerId}
+              and d.computer_id = ${computerId}::uuid and d.enabled and ch.bot_id = any(d.allowed_bot_ids) limit 1`)
+        : runId
         ? await deps.db.execute<{ ok: boolean }>(sql`
             select r.bot_id = any(d.allowed_bot_ids) and d.enabled as ok
             from public.runs r, public.local_devices d

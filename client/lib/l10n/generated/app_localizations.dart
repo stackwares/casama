@@ -8127,6 +8127,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When off, bots can\'t @mention, message or hand work to each other. Each bot can still split its own work into subagents.'**
   String get botToBotHelp;
+
+  /// No description provided for @capMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages (iMessage)'**
+  String get capMessages;
+
+  /// No description provided for @chatApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat apps'**
+  String get chatApps;
+
+  /// No description provided for @chatAppsRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram, email, SMS, Slack, WhatsApp and more'**
+  String get chatAppsRow;
+
+  /// No description provided for @chatAppsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a chat app'**
+  String get chatAppsAdd;
+
+  /// No description provided for @chatAppsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No chat apps yet'**
+  String get chatAppsEmpty;
+
+  /// No description provided for @chatAppsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Let people message this bot from Telegram, email, SMS, Slack, WhatsApp, Messenger, Feishu or iMessage. It only answers people on the allowed list; everyone else is logged here.'**
+  String get chatAppsHelp;
+
+  /// No description provided for @chatAppsAddHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the credentials from the app\'s developer settings. They\'re stored encrypted and never shown again.'**
+  String get chatAppsAddHelp;
+
+  /// No description provided for @chatAppsKind.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get chatAppsKind;
+
+  /// No description provided for @chatAppsSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed senders'**
+  String get chatAppsSenders;
+
+  /// No description provided for @chatAppsSendersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'One per line: email addresses (or *@company.com), phone numbers, or user ids.'**
+  String get chatAppsSendersHelp;
+
+  /// No description provided for @chatAppsMac.
+  ///
+  /// In en, this message translates to:
+  /// **'Mac'**
+  String get chatAppsMac;
+
+  /// No description provided for @chatAppsNoMac.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on \"Use this computer for bots\" with Messages allowed in the desktop app on your Mac first.'**
+  String get chatAppsNoMac;
+
+  /// No description provided for @chatAppsConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is connected'**
+  String chatAppsConnected(String name);
+
+  /// No description provided for @chatAppsTelegramDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram is already sending messages here. Message your bot to try it.'**
+  String get chatAppsTelegramDone;
+
+  /// No description provided for @chatAppsPasteUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste this address into the app\'s webhook settings.'**
+  String get chatAppsPasteUrl;
+
+  /// No description provided for @chatAppsWebhookUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Webhook address'**
+  String get chatAppsWebhookUrl;
+
+  /// No description provided for @chatAppsVerifyToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify token'**
+  String get chatAppsVerifyToken;
+
+  /// No description provided for @chatAppsAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nobody allowed} =1{1 allowed sender} other{{count} allowed senders}}'**
+  String chatAppsAllowed(int count);
+
+  /// No description provided for @chatAppsActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get chatAppsActivity;
+
+  /// No description provided for @chatAppsNoActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet.'**
+  String get chatAppsNoActivity;
+
+  /// No description provided for @chatAppsIgnored.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignored: not on the allowed list'**
+  String get chatAppsIgnored;
+
+  /// No description provided for @chatAppsRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Started a routine'**
+  String get chatAppsRoutine;
+
+  /// No description provided for @chatAppsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send'**
+  String get chatAppsFailed;
+
+  /// No description provided for @chatAppsSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get chatAppsSent;
+
+  /// No description provided for @chatAppsAnswered.
+  ///
+  /// In en, this message translates to:
+  /// **'Answered'**
+  String get chatAppsAnswered;
+
+  /// No description provided for @chatAppsRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get chatAppsRemove;
+
+  /// No description provided for @chBotToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot token'**
+  String get chBotToken;
+
+  /// No description provided for @chAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get chAddress;
+
+  /// No description provided for @chApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get chApiKey;
+
+  /// No description provided for @chSigningSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing secret'**
+  String get chSigningSecret;
+
+  /// No description provided for @chPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get chPhoneNumber;
+
+  /// No description provided for @chAccountSid.
+  ///
+  /// In en, this message translates to:
+  /// **'Account SID'**
+  String get chAccountSid;
+
+  /// No description provided for @chAuthToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Auth token'**
+  String get chAuthToken;
+
+  /// No description provided for @chPhoneNumberId.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number ID'**
+  String get chPhoneNumberId;
+
+  /// No description provided for @chAccessToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Access token'**
+  String get chAccessToken;
+
+  /// No description provided for @chAppSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'App secret'**
+  String get chAppSecret;
+
+  /// No description provided for @chPageToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Page access token'**
+  String get chPageToken;
+
+  /// No description provided for @chAppId.
+  ///
+  /// In en, this message translates to:
+  /// **'App ID'**
+  String get chAppId;
+
+  /// No description provided for @chEncryptKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypt key'**
+  String get chEncryptKey;
+
+  /// No description provided for @chVerificationToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification token'**
+  String get chVerificationToken;
+
+  /// No description provided for @routineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'When a matching message arrives'**
+  String get routineMessage;
+
+  /// No description provided for @triggerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get triggerMessage;
+
+  /// No description provided for @messageTriggerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts when an email or chat message to this bot matches. Connect the app under Chat apps first.'**
+  String get messageTriggerHelp;
+
+  /// No description provided for @messageTriggerAnyApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Any app'**
+  String get messageTriggerAnyApp;
+
+  /// No description provided for @messageTriggerSender.
+  ///
+  /// In en, this message translates to:
+  /// **'From (address, number, or *@company.com)'**
+  String get messageTriggerSender;
+
+  /// No description provided for @messageTriggerSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject contains'**
+  String get messageTriggerSubject;
+
+  /// No description provided for @messageTriggerWords.
+  ///
+  /// In en, this message translates to:
+  /// **'Message contains'**
+  String get messageTriggerWords;
 }
 
 class _AppLocalizationsDelegate

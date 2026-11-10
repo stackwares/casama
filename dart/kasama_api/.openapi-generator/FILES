@@ -10,6 +10,7 @@ lib/src/api/appearance_api.dart
 lib/src/api/approvals_api.dart
 lib/src/api/billing_api.dart
 lib/src/api/bots_api.dart
+lib/src/api/channels_api.dart
 lib/src/api/chat_api.dart
 lib/src/api/checkins_api.dart
 lib/src/api/computers_api.dart
@@ -103,6 +104,11 @@ lib/src/model/calendar_trigger_config.dart
 lib/src/model/catalog_app.dart
 lib/src/model/catalog_app_api_key.dart
 lib/src/model/catalog_skill.dart
+lib/src/model/channel.dart
+lib/src/model/channel_event.dart
+lib/src/model/channel_event_list.dart
+lib/src/model/channel_kind.dart
+lib/src/model/channel_list.dart
 lib/src/model/chat_gpt_sign_in_complete_request.dart
 lib/src/model/chat_gpt_sign_in_start.dart
 lib/src/model/chat_gpt_sign_in_start_request.dart
@@ -129,6 +135,7 @@ lib/src/model/conversation_list.dart
 lib/src/model/create_action_rule_request.dart
 lib/src/model/create_bot_request.dart
 lib/src/model/create_bot_share_request.dart
+lib/src/model/create_channel_request.dart
 lib/src/model/create_checkpoint_request.dart
 lib/src/model/create_computer_request.dart
 lib/src/model/create_connect_key_request.dart
@@ -163,6 +170,7 @@ lib/src/model/credit_pack.dart
 lib/src/model/delete_account_request.dart
 lib/src/model/delete_integration200_response.dart
 lib/src/model/delete_result.dart
+lib/src/model/deleted_channel.dart
 lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
@@ -237,6 +245,7 @@ lib/src/model/message_completed_event.dart
 lib/src/model/message_completed_event_payload.dart
 lib/src/model/message_delta_event.dart
 lib/src/model/message_delta_event_payload.dart
+lib/src/model/message_trigger_config.dart
 lib/src/model/model_choice.dart
 lib/src/model/model_fallback_event.dart
 lib/src/model/model_fallback_event_payload.dart
@@ -404,6 +413,7 @@ lib/src/model/transcription.dart
 lib/src/model/ui_action_part.dart
 lib/src/model/ui_shown_event.dart
 lib/src/model/ui_shown_event_payload.dart
+lib/src/model/update_channel_request.dart
 lib/src/model/update_computer_request.dart
 lib/src/model/update_credential_request.dart
 lib/src/model/update_integration_request.dart

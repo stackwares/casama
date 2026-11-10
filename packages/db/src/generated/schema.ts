@@ -2613,6 +2613,106 @@ export const botAccess = pgTable("bot_access", {
 	check("bot_access_check", sql`(user_id IS NULL) <> (role IS NULL)`),
 ]);
 
+export const channels = pgTable("channels", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	kind: text().notNull(),
+	name: text().notNull(),
+	config: jsonb().default({}).notNull(),
+	vaultSecretId: uuid("vault_secret_id"),
+	allowedSenders: text("allowed_senders").array().default([""]).notNull(),
+	enabled: boolean().default(true).notNull(),
+	lastInboundAt: timestamp("last_inbound_at", { withTimezone: true, mode: 'string' }),
+	lastError: text("last_error"),
+	createdBy: uuid("created_by"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("channels_bot_idx").using("btree", table.botId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "channels_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "channels_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "channels_created_by_fkey"
+		}).onDelete("set null"),
+	pgPolicy("channels_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
+	pgPolicy("channels_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("channels_kind_check", sql`kind = ANY (ARRAY['telegram'::text, 'email'::text, 'sms'::text, 'slack'::text, 'whatsapp'::text, 'messenger'::text, 'feishu'::text, 'imessage'::text])`),
+	check("channels_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 100)`),
+]);
+
+export const channelThreads = pgTable("channel_threads", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	channelId: uuid("channel_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	threadKey: text("thread_key").notNull(),
+	conversationId: uuid("conversation_id").notNull(),
+	reply: jsonb().default({}).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("channel_threads_conversation_idx").using("btree", table.conversationId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "channel_threads_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.conversationId],
+			foreignColumns: [conversations.id],
+			name: "channel_threads_conversation_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.channelId],
+			foreignColumns: [channels.id],
+			name: "channel_threads_channel_id_fkey"
+		}).onDelete("cascade"),
+	unique("channel_threads_channel_id_thread_key_key").on(table.channelId, table.threadKey),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("channel_threads_thread_key_check", sql`(char_length(thread_key) >= 1) AND (char_length(thread_key) <= 500)`),
+]);
+
+export const channelEvents = pgTable("channel_events", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	channelId: uuid("channel_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	direction: text().notNull(),
+	status: text().notNull(),
+	sender: text(),
+	threadKey: text("thread_key"),
+	preview: text(),
+	detail: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("channel_events_channel_idx").using("btree", table.channelId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.channelId],
+			foreignColumns: [channels.id],
+			name: "channel_events_channel_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "channel_events_org_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("channel_events_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
+   FROM channels c
+  WHERE ((c.id = channel_events.channel_id) AND can_manage_bot(c.bot_id))))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("channel_events_direction_check", sql`direction = ANY (ARRAY['in'::text, 'out'::text])`),
+	check("channel_events_status_check", sql`status = ANY (ARRAY['accepted'::text, 'ignored'::text, 'routine'::text, 'sent'::text, 'failed'::text])`),
+	check("channel_events_preview_check", sql`char_length(preview) <= 300`),
+]);
+
 export const agentImportFiles = pgTable("agent_import_files", {
 	importId: uuid("import_id").notNull(),
 	path: text().notNull(),

@@ -5,6 +5,7 @@ import {
   CredentialResolver,
   checkCalendarTriggers,
   checkWatchers,
+  pollIMessage,
   gitSyncTick,
   knowledgeTick,
   collect,
@@ -22,7 +23,7 @@ import {
 import type { Database } from "@kasama/db";
 import { DEFAULT_MODELS } from "@kasama/domain";
 import { sql } from "drizzle-orm";
-import { claimDueRoutines, fireDueCalendarRuns, handleRoutineWebhook } from "./routines.ts";
+import { claimDueRoutines, fireDueCalendarRuns, handleRoutineWebhook, startRoutineForMessage } from "./routines.ts";
 import { type VoiceRuntime, voiceSession, voiceSpeak, voiceTranscribe } from "./voice.ts";
 
 export const QUEUES = {
@@ -145,6 +146,16 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       { name: "watchers" },
     );
     runIds.push(...fired);
+    // Chat apps (D-134): new iMessages from the user's Mac.
+    if (rt().agent.local) {
+      const local = rt().agent.local as { apiUrl: string; internalToken: string };
+      runIds.push(
+        ...(await DBOS.runStep(
+          () => pollIMessage(rt().db, local, fetch, (id, text) => startRoutineForMessage(rt().db, id, text)).catch(() => [] as string[]),
+          { name: "imessage" },
+        )),
+      );
+    }
     // Knowledge sources (D-125): new, resynced and daily-due sources.
     await DBOS.runStep(
       () =>

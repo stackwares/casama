@@ -11,6 +11,8 @@ export const LocalCapabilities = z
     desktop: z.boolean().optional(),
     /** Local MCP servers on this computer (D-096). */
     mcp: z.boolean().optional(),
+    /** Messages on a Mac: read new iMessages and send replies for an iMessage chat app (D-134). */
+    messages: z.boolean().optional(),
   })
   .openapi("LocalCapabilities");
 

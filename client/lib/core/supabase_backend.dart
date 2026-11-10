@@ -1,6 +1,8 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+
 import 'dart:async';
 
 import 'package:kasama_sdk/kasama_sdk.dart' hide AuthException;
@@ -78,8 +80,7 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<void> sendMagicLink(String email) async =>
-      supabase.auth.signInWithOtp(email: email, data: await _signupData());
+  Future<void> sendMagicLink(String email) async => supabase.auth.signInWithOtp(email: email, data: await _signupData());
 
   @override
   Future<void> signInWithProvider(String provider) async {
@@ -95,28 +96,23 @@ class SupabaseBackend implements Backend {
   Future<List<OrganizationWithRole>> organizations() async => (await api.workspaces.listOrgs()).data!.items;
 
   @override
-  Future<Organization> createOrganization(String name) async =>
-      (await api.workspaces.createOrg(createOrganizationRequest: CreateOrganizationRequest(name: name))).data!;
+  Future<Organization> createOrganization(String name) async => (await api.workspaces.createOrg(createOrganizationRequest: CreateOrganizationRequest(name: name))).data!;
 
   @override
   Future<void> acceptInvite(String token) async => api.workspaces.acceptInvite(token: token);
 
   @override
-  Future<Organization> updateOrg(String orgId, {String? name, String? icon, String? color}) async =>
-      (await api.workspaces.updateOrg(id: orgId, updateOrganizationRequest: UpdateOrganizationRequest(name: name, icon: icon, color: color))).data!;
+  Future<Organization> updateOrg(String orgId, {String? name, String? icon, String? color}) async => (await api.workspaces.updateOrg(
+    id: orgId,
+    updateOrganizationRequest: UpdateOrganizationRequest(name: name, icon: icon, color: color),
+  )).data!;
   @override
   Future<List<InviteLink>> inviteLinks(String orgId) async => (await api.workspaces.listInviteLinks(id: orgId)).data!.items;
   @override
-  Future<CreatedInviteLink> createInviteLink(String orgId, {String role = 'member', int? expiresInDays, int? maxUses}) async =>
-      (await api.workspaces.createInviteLink(
-        id: orgId,
-        createInviteLinkRequest: CreateInviteLinkRequest(
-          role: CreateInviteLinkRequestRoleEnum.values.firstWhere((r) => r.value == role),
-          expiresInDays: expiresInDays,
-          maxUses: maxUses,
-        ),
-      ))
-          .data!;
+  Future<CreatedInviteLink> createInviteLink(String orgId, {String role = 'member', int? expiresInDays, int? maxUses}) async => (await api.workspaces.createInviteLink(
+    id: orgId,
+    createInviteLinkRequest: CreateInviteLinkRequest(role: CreateInviteLinkRequestRoleEnum.values.firstWhere((r) => r.value == role), expiresInDays: expiresInDays, maxUses: maxUses),
+  )).data!;
   @override
   Future<void> revokeInviteLink(String orgId, String linkId) async => api.workspaces.revokeInviteLink(id: orgId, linkId: linkId);
   @override
@@ -126,10 +122,9 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<Invite> invite(String orgId, String email, {bool admin = false}) async => (await api.workspaces.createInvite(
-        id: orgId,
-        createInviteRequest: CreateInviteRequest(email: email, role: admin ? InviteRole.admin : InviteRole.member),
-      ))
-          .data!;
+    id: orgId,
+    createInviteRequest: CreateInviteRequest(email: email, role: admin ? InviteRole.admin : InviteRole.member),
+  )).data!;
 
   // --- keys -----------------------------------------------------------------
 
@@ -137,28 +132,24 @@ class SupabaseBackend implements Backend {
   Future<List<Credential>> credentials(String orgId) async => (await api.credentials.listCredentials(orgId: orgId)).data!.items;
 
   @override
-  Future<Credential> addCredential(String orgId, ProviderId provider, String label, {String? apiKey, String? baseUrl}) async =>
-      (await api.credentials.createCredential(
-        createCredentialRequest:
-            CreateCredentialRequest(orgId: orgId, provider: provider, label: label, apiKey: apiKey, baseUrl: baseUrl),
-      ))
-          .data!;
+  Future<Credential> addCredential(String orgId, ProviderId provider, String label, {String? apiKey, String? baseUrl}) async => (await api.credentials.createCredential(
+    createCredentialRequest: CreateCredentialRequest(orgId: orgId, provider: provider, label: label, apiKey: apiKey, baseUrl: baseUrl),
+  )).data!;
 
   @override
-  Future<CredentialTestResult> testCredential(String credentialId, {String? model}) async =>
-      (await api.credentials.testCredential(id: credentialId, testCredentialRequest: TestCredentialRequest(model: model))).data!;
+  Future<CredentialTestResult> testCredential(String credentialId, {String? model}) async => (await api.credentials.testCredential(
+    id: credentialId,
+    testCredentialRequest: TestCredentialRequest(model: model),
+  )).data!;
 
   @override
-  Future<ModelOptionList> models(String credentialId) async =>
-      (await api.credentials.listCredentialModels(id: credentialId)).data!;
+  Future<ModelOptionList> models(String credentialId) async => (await api.credentials.listCredentialModels(id: credentialId)).data!;
 
   @override
-  Future<Credential> updateCredential(String credentialId, {String? label, bool? fallbackOnLimit}) async =>
-      (await api.credentials.updateCredential(
-        id: credentialId,
-        updateCredentialRequest: UpdateCredentialRequest(label: label, fallbackOnLimit: fallbackOnLimit),
-      ))
-          .data!;
+  Future<Credential> updateCredential(String credentialId, {String? label, bool? fallbackOnLimit}) async => (await api.credentials.updateCredential(
+    id: credentialId,
+    updateCredentialRequest: UpdateCredentialRequest(label: label, fallbackOnLimit: fallbackOnLimit),
+  )).data!;
 
   @override
   Future<void> deleteCredential(String credentialId) async => api.credentials.deleteCredential(id: credentialId);
@@ -171,13 +162,13 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<Credential> connectChatGpt(String orgId, {String? credentialId}) => connectChatGptLoopback(
-        api.credentials,
-        orgId: orgId,
-        credentialId: credentialId,
-        openBrowser: (url) async {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-        },
-      );
+    api.credentials,
+    orgId: orgId,
+    credentialId: credentialId,
+    openBrowser: (url) async {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    },
+  );
 
   // --- bots -----------------------------------------------------------------
 
@@ -188,34 +179,41 @@ class SupabaseBackend implements Backend {
   Future<List<Conversation>> groupChats(String orgId) async => (await api.chat.listGroupChats(orgId: orgId)).data!.items;
 
   @override
-  Future<Conversation> createGroupChat(String leadBotId, List<String> botIds, {String? title}) async =>
-      (await api.chat.createConversation(createConversationRequest: CreateConversationRequest(botId: leadBotId, botIds: botIds, title: title))).data!;
+  Future<Conversation> createGroupChat(String leadBotId, List<String> botIds, {String? title}) async => (await api.chat.createConversation(
+    createConversationRequest: CreateConversationRequest(botId: leadBotId, botIds: botIds, title: title),
+  )).data!;
 
   @override
-  Future<Bot> createBot(String orgId,
-          {required String name, required String credentialId, required String model, String persona = '', String? templateId, String? avatarUrl}) async =>
+  Future<Bot> createBot(String orgId, {required String name, required String credentialId, required String model, String persona = '', String? templateId, String? avatarUrl}) async =>
       (await api.bots.createBot(
         createBotRequest: CreateBotRequest(
           orgId: orgId,
           name: name,
           personaMd: persona,
-          modelPolicy: ModelPolicy(primary: ModelChoice(credentialId: credentialId, model: model)),
+          modelPolicy: ModelPolicy(
+            primary: ModelChoice(credentialId: credentialId, model: model),
+          ),
           templateId: templateId,
           avatarUrl: avatarUrl,
         ),
-      ))
-          .data!;
+      )).data!;
 
   @override
   Future<List<Template>> templates() async => (await api.bots.listTemplates()).data!.items;
 
   @override
-  Future<SendMessageResponse> editMessage(String conversationId, String messageId, String text) async =>
-      (await api.chat.editMessage(id: conversationId, messageId: messageId, editMessageRequest: EditMessageRequest(text: text))).data!;
+  Future<SendMessageResponse> editMessage(String conversationId, String messageId, String text) async => (await api.chat.editMessage(
+    id: conversationId,
+    messageId: messageId,
+    editMessageRequest: EditMessageRequest(text: text),
+  )).data!;
 
   @override
   Future<void> switchBranch(String conversationId, String messageId) async {
-    await api.chat.switchBranch(id: conversationId, switchBranchRequest: SwitchBranchRequest(messageId: messageId));
+    await api.chat.switchBranch(
+      id: conversationId,
+      switchBranchRequest: SwitchBranchRequest(messageId: messageId),
+    );
   }
 
   @override
@@ -234,20 +232,14 @@ class SupabaseBackend implements Backend {
   @override
   Future<List<BotFolder>> botFolders(String orgId) async {
     final rows = await supabase.from('bot_folders').select('id, name, sort_key').eq('org_id', orgId).order('sort_key').order('name');
-    return [
-      for (final r in rows) BotFolder(id: r['id'] as String, name: r['name'] as String, sortKey: (r['sort_key'] as num?)?.toDouble() ?? 0),
-    ];
+    return [for (final r in rows) BotFolder(id: r['id'] as String, name: r['name'] as String, sortKey: (r['sort_key'] as num?)?.toDouble() ?? 0)];
   }
 
   @override
   Future<void> setBotFolder(String orgId, String botId, String? folderName) async {
     String? folderId;
     if (folderName != null) {
-      final row = await supabase
-          .from('bot_folders')
-          .upsert({'org_id': orgId, 'name': folderName}, onConflict: 'org_id,name')
-          .select('id')
-          .single();
+      final row = await supabase.from('bot_folders').upsert({'org_id': orgId, 'name': folderName}, onConflict: 'org_id,name').select('id').single();
       folderId = row['id'] as String;
     }
     await supabase.from('bots').update({'folder_id': folderId}).eq('id', botId);
@@ -261,8 +253,7 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<List<Bot>> archivedBots(String orgId) async =>
-      (await api.bots.listBots(orgId: orgId, archived: 'true')).data!.items;
+  Future<List<Bot>> archivedBots(String orgId) async => (await api.bots.listBots(orgId: orgId, archived: 'true')).data!.items;
 
   @override
   Future<void> setBotArchived(String botId, bool archived) async {
@@ -280,28 +271,21 @@ class SupabaseBackend implements Backend {
   String get _uid => supabase.auth.currentUser!.id;
 
   @override
-  Future<BotTemplateFile> exportBot(String botId, {bool memories = false}) async =>
-      (await api.bots.exportBot(id: botId, memories: memories ? 'true' : null)).data!;
+  Future<BotTemplateFile> exportBot(String botId, {bool memories = false}) async => (await api.bots.exportBot(id: botId, memories: memories ? 'true' : null)).data!;
 
   @override
-  Future<BotShareLink> createBotShare(String botId, {bool memories = false}) async =>
-      (await api.bots.createBotShare(id: botId, createBotShareRequest: CreateBotShareRequest(includeMemories: memories))).data!;
+  Future<BotShareLink> createBotShare(String botId, {bool memories = false}) async => (await api.bots.createBotShare(
+    id: botId,
+    createBotShareRequest: CreateBotShareRequest(includeMemories: memories),
+  )).data!;
 
   @override
   Future<BotTemplateFile> getBotShare(String token) async => (await api.bots.getBotShare(token: token)).data!;
 
   @override
-  Future<ImportBotResponse> importBot(String orgId, BotTemplateFile template,
-          {required String credentialId, required String model, bool memories = true, bool routines = true}) async =>
+  Future<ImportBotResponse> importBot(String orgId, BotTemplateFile template, {required String credentialId, required String model, bool memories = true, bool routines = true}) async =>
       (await api.bots.importBot(
-        importBotRequest: ImportBotRequest(
-          orgId: orgId,
-          template: template,
-          credentialId: credentialId,
-          model: model,
-          includeMemories: memories,
-          includeRoutines: routines,
-        ),
+        importBotRequest: ImportBotRequest(orgId: orgId, template: template, credentialId: credentialId, model: model, includeMemories: memories, includeRoutines: routines),
       )).data!;
 
   @override
@@ -356,21 +340,21 @@ class SupabaseBackend implements Backend {
   @override
   Future<void> restoreBotRevision(String botId, BotRevision revision) async {
     final s = revision.snapshot;
-    await supabase.from('bots').update({
-      for (final f in revision.changedFields)
-        if (const {'name', 'persona_md', 'model_policy', 'autonomy', 'budget', 'default_computer_id', 'archived_at'}.contains(f)) f: s[f],
-    }).eq('id', botId);
+    await supabase
+        .from('bots')
+        .update({
+          for (final f in revision.changedFields)
+            if (const {'name', 'persona_md', 'model_policy', 'autonomy', 'budget', 'default_computer_id', 'archived_at'}.contains(f)) f: s[f],
+        })
+        .eq('id', botId);
   }
 
   @override
   Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy, String? avatarUrl}) async {
-    await supabase.from('bots').update({
-      if (avatarUrl != null) 'avatar_url': avatarUrl.isEmpty ? null : avatarUrl,
-      'name': ?name,
-      'persona_md': ?persona,
-      'autonomy': ?autonomy,
-      'model_policy': ?modelPolicy,
-    }).eq('id', botId);
+    await supabase
+        .from('bots')
+        .update({if (avatarUrl != null) 'avatar_url': avatarUrl.isEmpty ? null : avatarUrl, 'name': ?name, 'persona_md': ?persona, 'autonomy': ?autonomy, 'model_policy': ?modelPolicy})
+        .eq('id', botId);
   }
 
   @override
@@ -388,8 +372,7 @@ class SupabaseBackend implements Backend {
       (await api.appearance.searchWallpapers(q: query == null || query.trim().isEmpty ? null : query.trim(), page: page)).data!.items;
 
   @override
-  Future<void> trackWallpaperDownload(String downloadLocation) async =>
-      api.appearance.trackWallpaperDownload(wallpaperDownloadRequest: WallpaperDownloadRequest(downloadLocation: downloadLocation));
+  Future<void> trackWallpaperDownload(String downloadLocation) async => api.appearance.trackWallpaperDownload(wallpaperDownloadRequest: WallpaperDownloadRequest(downloadLocation: downloadLocation));
 
   // --- chat -----------------------------------------------------------------
 
@@ -397,8 +380,7 @@ class SupabaseBackend implements Backend {
   Future<List<Conversation>> conversations(String botId) async => (await api.chat.listConversations(id: botId)).data!.items;
 
   @override
-  Future<Conversation> createConversation(String botId) async =>
-      (await api.chat.createConversation(createConversationRequest: CreateConversationRequest(botId: botId))).data!;
+  Future<Conversation> createConversation(String botId) async => (await api.chat.createConversation(createConversationRequest: CreateConversationRequest(botId: botId))).data!;
 
   static String _text(Object? content) {
     if (content is! List) return '';
@@ -410,20 +392,15 @@ class SupabaseBackend implements Backend {
     return [
       for (final p in content.whereType<Map>())
         if (p['type'] == 'file' && p['path'] is String)
-          AttachmentRef(
-            path: p['path'] as String,
-            name: '${p['name'] ?? (p['path'] as String).split('/').last}',
-            mimeType: '${p['mime_type'] ?? ''}',
-            size: (p['size'] as num?)?.toInt() ?? 0,
-          ),
+          AttachmentRef(path: p['path'] as String, name: '${p['name'] ?? (p['path'] as String).split('/').last}', mimeType: '${p['mime_type'] ?? ''}', size: (p['size'] as num?)?.toInt() ?? 0),
     ];
   }
+
   static List<UiPart> _ui(Object? content) => content is! List
       ? const []
       : [
           for (final p in content.whereType<Map>())
-            if (p['type'] == 'ui' && p['surface_id'] is String && p['messages'] is List)
-              UiPart(surfaceId: p['surface_id'] as String, messages: List<Object?>.from(p['messages'] as List)),
+            if (p['type'] == 'ui' && p['surface_id'] is String && p['messages'] is List) UiPart(surfaceId: p['surface_id'] as String, messages: List<Object?>.from(p['messages'] as List)),
         ];
 
   static String? _uiAction(Object? content) {
@@ -433,7 +410,6 @@ class SupabaseBackend implements Backend {
     }
     return null;
   }
-
 
   @override
   Future<List<ChatMessageView>> messages(String conversationId) async {
@@ -477,19 +453,12 @@ class SupabaseBackend implements Backend {
         sendMessageRequest: SendMessageRequest(
           text: text,
           skills: skills.isEmpty ? null : skills,
-          attachments: attachments.isEmpty
-              ? null
-              : [for (final a in attachments) MessageAttachment(path: a.path, name: a.name, mimeType: a.mimeType, size: a.size)],
+          attachments: attachments.isEmpty ? null : [for (final a in attachments) MessageAttachment(path: a.path, name: a.name, mimeType: a.mimeType, size: a.size)],
           uiAction: uiAction == null
               ? null
-              : UiActionPart(
-                  surfaceId: '${uiAction['surface_id']}',
-                  name: '${uiAction['name']}',
-                  context: Map<String, Object?>.from(uiAction['context'] as Map? ?? const {}),
-                ),
+              : UiActionPart(surfaceId: '${uiAction['surface_id']}', name: '${uiAction['name']}', context: Map<String, Object?>.from(uiAction['context'] as Map? ?? const {})),
         ),
-      ))
-          .data!;
+      )).data!;
 
   @override
   Future<void> cancelRun(String runId) async => api.runs.cancelRun(id: runId);
@@ -564,8 +533,8 @@ class SupabaseBackend implements Backend {
               },
             )
             .subscribe((status, _) {
-          if (status == sb.RealtimeSubscribeStatus.subscribed) unawaited(catchUp());
-        });
+              if (status == sb.RealtimeSubscribeStatus.subscribed) unawaited(catchUp());
+            });
         unawaited(catchUp());
         // Safety net when Realtime is unavailable or a broadcast was missed.
         poll = Timer.periodic(const Duration(seconds: 2), (_) => unawaited(catchUp()));
@@ -577,12 +546,7 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<List<RunSummary>> runs(String botId) async {
-    final rows = await supabase
-        .from('runs')
-        .select('id, status, trigger, created_at, cost_usd')
-        .eq('bot_id', botId)
-        .order('created_at', ascending: false)
-        .limit(50);
+    final rows = await supabase.from('runs').select('id, status, trigger, created_at, cost_usd').eq('bot_id', botId).order('created_at', ascending: false).limit(50);
     return [
       for (final r in rows)
         RunSummary(
@@ -602,11 +566,7 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> updateMemory(String id, {String? content, bool? pinned}) async {
-    await supabase.from('memories').update({
-      'content': ?content,
-      'pinned': ?pinned,
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }).eq('id', id);
+    await supabase.from('memories').update({'content': ?content, 'pinned': ?pinned, 'updated_at': DateTime.now().toUtc().toIso8601String()}).eq('id', id);
   }
 
   @override
@@ -631,8 +591,7 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<void> saveSkill(String orgId,
-      {String? id, String? botId, required String name, required String description, required String bodyMd, bool enabled = true}) async {
+  Future<void> saveSkill(String orgId, {String? id, String? botId, required String name, required String description, required String bodyMd, bool enabled = true}) async {
     final row = {'org_id': orgId, 'bot_id': botId, 'name': name, 'description': description, 'body_md': bodyMd, 'enabled': enabled};
     if (id == null) {
       await supabase.from('skills').insert(row);
@@ -649,16 +608,21 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> installCatalogSkill(String orgId, String catalogId, {String? botId}) async {
-    await api.skills.installCatalogSkill(installCatalogSkillRequest: InstallCatalogSkillRequest(orgId: orgId, catalogId: catalogId, botId: botId));
+    await api.skills.installCatalogSkill(
+      installCatalogSkillRequest: InstallCatalogSkillRequest(orgId: orgId, catalogId: catalogId, botId: botId),
+    );
   }
 
   @override
-  Future<GitHubSkillPreview> previewGitHubSkill(String orgId, String url) async =>
-      (await api.skills.previewGitHubSkill(gitHubSkillPreviewRequest: GitHubSkillPreviewRequest(orgId: orgId, url: url))).data!;
+  Future<GitHubSkillPreview> previewGitHubSkill(String orgId, String url) async => (await api.skills.previewGitHubSkill(
+    gitHubSkillPreviewRequest: GitHubSkillPreviewRequest(orgId: orgId, url: url),
+  )).data!;
 
   @override
   Future<void> installGitHubSkill(String orgId, String url, String commit, {String? botId}) async {
-    await api.skills.installGitHubSkill(installGitHubSkillRequest: InstallGitHubSkillRequest(orgId: orgId, url: url, commit: commit, botId: botId));
+    await api.skills.installGitHubSkill(
+      installGitHubSkillRequest: InstallGitHubSkillRequest(orgId: orgId, url: url, commit: commit, botId: botId),
+    );
   }
 
   @override
@@ -666,25 +630,25 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> applySkillUpdate(String skillId, String commit) async {
-    await api.skills.applySkillUpdate(id: skillId, applySkillUpdateRequest: ApplySkillUpdateRequest(commit: commit));
+    await api.skills.applySkillUpdate(
+      id: skillId,
+      applySkillUpdateRequest: ApplySkillUpdateRequest(commit: commit),
+    );
   }
 
   // --- approvals and notifications ------------------------------------------
 
   @override
-  Future<List<Approval>> approvals(String orgId, {bool pendingOnly = true}) async =>
-      (await api.approvals.listApprovals(orgId: orgId, status: pendingOnly ? 'pending' : null)).data!.items;
+  Future<List<Approval>> approvals(String orgId, {bool pendingOnly = true}) async => (await api.approvals.listApprovals(orgId: orgId, status: pendingOnly ? 'pending' : null)).data!.items;
 
   @override
-  Future<Approval> decideApproval(String approvalId, {required bool approve, bool alwaysAllow = false}) async =>
-      (await api.approvals.decideApproval(
-        id: approvalId,
-        approvalDecisionRequest: ApprovalDecisionRequest(
-          decision: approve ? ApprovalDecisionRequestDecisionEnum.approved : ApprovalDecisionRequestDecisionEnum.denied,
-          alwaysAllow: approve && alwaysAllow ? true : null,
-        ),
-      ))
-          .data!;
+  Future<Approval> decideApproval(String approvalId, {required bool approve, bool alwaysAllow = false}) async => (await api.approvals.decideApproval(
+    id: approvalId,
+    approvalDecisionRequest: ApprovalDecisionRequest(
+      decision: approve ? ApprovalDecisionRequestDecisionEnum.approved : ApprovalDecisionRequestDecisionEnum.denied,
+      alwaysAllow: approve && alwaysAllow ? true : null,
+    ),
+  )).data!;
 
   static NotificationView _notification(Map row) {
     final payload = row['payload'] is Map ? row['payload'] as Map : const {};
@@ -701,11 +665,7 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<List<NotificationView>> notifications() async {
-    final rows = await supabase
-        .from('notifications')
-        .select('id, kind, payload, read_at, created_at')
-        .order('created_at', ascending: false)
-        .limit(100);
+    final rows = await supabase.from('notifications').select('id, kind, payload, read_at, created_at').order('created_at', ascending: false).limit(100);
     return [for (final r in rows) _notification(r)];
   }
 
@@ -751,10 +711,7 @@ class SupabaseBackend implements Backend {
   Future<void> registerDevice(String platform, String token) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
-    await supabase.from('devices').upsert(
-      {'user_id': userId, 'platform': platform, 'fcm_token': token, 'last_seen_at': DateTime.now().toUtc().toIso8601String()},
-      onConflict: 'fcm_token',
-    );
+    await supabase.from('devices').upsert({'user_id': userId, 'platform': platform, 'fcm_token': token, 'last_seen_at': DateTime.now().toUtc().toIso8601String()}, onConflict: 'fcm_token');
   }
 
   // --- routines -------------------------------------------------------------
@@ -763,28 +720,38 @@ class SupabaseBackend implements Backend {
   Future<List<Routine>> routines(String botId) async => (await api.routines.listRoutines(id: botId)).data!.items;
 
   @override
-  Future<CreatedRoutine> createRoutine(String botId,
-          {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt, CalendarTriggerConfig? calendar}) async =>
-      (await api.routines.createRoutine(
-        createRoutineRequest: CreateRoutineRequest(
-          botId: botId,
-          name: name,
-          instructions: instructions,
-          trigger: RoutineTrigger.values.firstWhere((t) => t.value == trigger),
-          scheduleCron: trigger == 'schedule' ? cron : null,
-          runAt: trigger == 'once' ? runAt?.toUtc() : null,
-          timezone: timezone,
-          calendar: trigger == 'calendar_event' ? calendar : null,
-        ),
-      ))
-          .data!;
+  Future<CreatedRoutine> createRoutine(
+    String botId, {
+    required String name,
+    required String instructions,
+    required String trigger,
+    String? cron,
+    String? timezone,
+    DateTime? runAt,
+    CalendarTriggerConfig? calendar,
+    MessageTriggerConfig? message,
+  }) async => (await api.routines.createRoutine(
+    createRoutineRequest: CreateRoutineRequest(
+      botId: botId,
+      name: name,
+      instructions: instructions,
+      trigger: RoutineTrigger.values.firstWhere((t) => t.value == trigger),
+      scheduleCron: trigger == 'schedule' ? cron : null,
+      runAt: trigger == 'once' ? runAt?.toUtc() : null,
+      timezone: timezone,
+      calendar: trigger == 'calendar_event' ? calendar : null,
+      message: trigger == 'message' ? message : null,
+    ),
+  )).data!;
 
   @override
   Future<void> deleteRoutine(String routineId) async => api.routines.deleteRoutine(id: routineId);
 
   @override
-  Future<void> setRoutineEnabled(String routineId, bool enabled) async =>
-      api.routines.updateRoutine(id: routineId, updateRoutineRequest: UpdateRoutineRequest(enabled: enabled));
+  Future<void> setRoutineEnabled(String routineId, bool enabled) async => api.routines.updateRoutine(
+    id: routineId,
+    updateRoutineRequest: UpdateRoutineRequest(enabled: enabled),
+  );
 
   @override
   Future<String> runRoutine(String routineId) async => (await api.routines.runRoutine(id: routineId)).data!.runId;
@@ -795,37 +762,21 @@ class SupabaseBackend implements Backend {
   Future<List<Integration>> integrations(String orgId) async => (await api.integrations.listIntegrations(orgId: orgId)).data!.items;
 
   @override
-  Future<Integration> createIntegration(String orgId,
-          {required String kind, required String name, required Map<String, Object?> config, String? secret}) async =>
+  Future<Integration> createIntegration(String orgId, {required String kind, required String name, required Map<String, Object?> config, String? secret}) async =>
       (await api.integrations.createIntegration(
-        createIntegrationRequest: CreateIntegrationRequest(
-          orgId: orgId,
-          kind: IntegrationKind.values.firstWhere((k) => k.value == kind),
-          name: name,
-          config: config,
-          secret: secret,
-        ),
-      ))
-          .data!;
+        createIntegrationRequest: CreateIntegrationRequest(orgId: orgId, kind: IntegrationKind.values.firstWhere((k) => k.value == kind), name: name, config: config, secret: secret),
+      )).data!;
 
   @override
-  Future<IntegrationTestResult> testIntegration(String integrationId) async =>
-      (await api.integrations.testIntegration(id: integrationId)).data!;
+  Future<IntegrationTestResult> testIntegration(String integrationId) async => (await api.integrations.testIntegration(id: integrationId)).data!;
 
   @override
   Future<AppCatalog> appCatalog() async => (await api.integrations.listApps()).data!;
 
   @override
-  Future<ConnectAppResponse> connectApp(String orgId, {required String appId, required String method, String? apiKey, String? integrationId}) async =>
-      (await api.integrations.connectApp(
-        connectAppRequest: ConnectAppRequest(
-          orgId: orgId,
-          appId: appId,
-          method: ConnectAppRequestMethodEnum.values.firstWhere((m) => m.value == method),
-          apiKey: apiKey,
-          integrationId: integrationId,
-        ),
-      )).data!;
+  Future<ConnectAppResponse> connectApp(String orgId, {required String appId, required String method, String? apiKey, String? integrationId}) async => (await api.integrations.connectApp(
+    connectAppRequest: ConnectAppRequest(orgId: orgId, appId: appId, method: ConnectAppRequestMethodEnum.values.firstWhere((m) => m.value == method), apiKey: apiKey, integrationId: integrationId),
+  )).data!;
 
   @override
   Future<ConnectFlowStatus> connectStatus(String flowId) async => (await api.integrations.connectStatus(id: flowId)).data!;
@@ -835,25 +786,22 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<Integration> setToolRisks(String integrationId, Map<String, String> risks) async => (await api.integrations.updateIntegration(
-        id: integrationId,
-        updateIntegrationRequest: UpdateIntegrationRequest(
-          riskOverrides: {
-            for (final e in risks.entries) e.key: UpdateIntegrationRequestRiskOverridesEnum.values.firstWhere((r) => r.value == e.value),
-          },
-        ),
-      )).data!;
+    id: integrationId,
+    updateIntegrationRequest: UpdateIntegrationRequest(riskOverrides: {for (final e in risks.entries) e.key: UpdateIntegrationRequestRiskOverridesEnum.values.firstWhere((r) => r.value == e.value)}),
+  )).data!;
 
   @override
   Future<List<ProviderApp>> providerApps(String integrationId, {String? query}) async =>
       (await api.integrations.listProviderApps(id: integrationId, q: query == null || query.trim().isEmpty ? null : query.trim())).data!.items;
 
   @override
-  Future<String> connectProviderApp(String integrationId, String app) async =>
-      (await api.integrations.connectProviderApp(id: integrationId, providerConnectRequest: ProviderConnectRequest(app: app))).data!.redirectUrl;
+  Future<String> connectProviderApp(String integrationId, String app) async => (await api.integrations.connectProviderApp(
+    id: integrationId,
+    providerConnectRequest: ProviderConnectRequest(app: app),
+  )).data!.redirectUrl;
 
   @override
-  Future<List<ProviderAccount>> providerAccounts(String integrationId) async =>
-      (await api.integrations.listProviderAccounts(id: integrationId)).data!.items;
+  Future<List<ProviderAccount>> providerAccounts(String integrationId) async => (await api.integrations.listProviderAccounts(id: integrationId)).data!.items;
 
   @override
   Future<Set<String>> botIntegrationIds(String botId) async {
@@ -864,7 +812,10 @@ class SupabaseBackend implements Backend {
   @override
   Future<void> setBotIntegration(String botId, String integrationId, bool enabled) async {
     if (enabled) {
-      await api.integrations.attachIntegration(id: botId, attachIntegrationRequest: AttachIntegrationRequest(integrationId: integrationId));
+      await api.integrations.attachIntegration(
+        id: botId,
+        attachIntegrationRequest: AttachIntegrationRequest(integrationId: integrationId),
+      );
     } else {
       await supabase.from('bot_integrations').delete().eq('bot_id', botId).eq('integration_id', integrationId);
     }
@@ -874,10 +825,9 @@ class SupabaseBackend implements Backend {
   Future<List<Secret>> secrets(String orgId) async => (await api.secrets.listSecrets(orgId: orgId)).data!.items;
 
   @override
-  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts, bool totp = false}) async =>
-      api.secrets.createSecret(
-        createSecretRequest: CreateSecretRequest(orgId: orgId, name: name, value: value, allowedHosts: hosts, kind: totp ? SecretKind.totp : SecretKind.plain),
-      );
+  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts, bool totp = false}) async => api.secrets.createSecret(
+    createSecretRequest: CreateSecretRequest(orgId: orgId, name: name, value: value, allowedHosts: hosts, kind: totp ? SecretKind.totp : SecretKind.plain),
+  );
 
   @override
   Future<void> deleteSecret(String secretId) async => api.secrets.deleteSecret(id: secretId);
@@ -891,15 +841,19 @@ class SupabaseBackend implements Backend {
   Future<McpAuthRequestInfo> mcpAuthRequest(String id) async => (await api.mcp.getMcpAuthRequest(id: id)).data!;
 
   @override
-  Future<String> decideMcpAuthRequest(String id, {required String orgId, required bool approve}) async =>
-      (await api.mcp.decideMcpAuthRequest(id: id, mcpConsentRequest: McpConsentRequest(orgId: orgId, approve: approve))).data!.redirectUrl;
+  Future<String> decideMcpAuthRequest(String id, {required String orgId, required bool approve}) async => (await api.mcp.decideMcpAuthRequest(
+    id: id,
+    mcpConsentRequest: McpConsentRequest(orgId: orgId, approve: approve),
+  )).data!.redirectUrl;
 
   @override
   Future<List<McpKey>> mcpKeys(String orgId) async => (await api.mcp.listMcpKeys(id: orgId)).data!.items;
 
   @override
-  Future<CreatedMcpKey> createMcpKey(String orgId, String name) async =>
-      (await api.mcp.createMcpKey(id: orgId, createMcpKeyRequest: CreateMcpKeyRequest(name: name))).data!;
+  Future<CreatedMcpKey> createMcpKey(String orgId, String name) async => (await api.mcp.createMcpKey(
+    id: orgId,
+    createMcpKeyRequest: CreateMcpKeyRequest(name: name),
+  )).data!;
 
   @override
   Future<void> revokeMcpKey(String orgId, String keyId) async {
@@ -911,7 +865,10 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> setMcpDecideApprovals(String orgId, bool allowed) async {
-    await api.privacy.updateOrgSettings(id: orgId, updateOrgSettingsRequest: UpdateOrgSettingsRequest(mcpDecideApprovals: allowed));
+    await api.privacy.updateOrgSettings(
+      id: orgId,
+      updateOrgSettingsRequest: UpdateOrgSettingsRequest(mcpDecideApprovals: allowed),
+    );
   }
 
   @override
@@ -919,38 +876,39 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> setAllowBotToBot(String orgId, bool allowed) async {
-    await api.privacy.updateOrgSettings(id: orgId, updateOrgSettingsRequest: UpdateOrgSettingsRequest(allowBotToBot: allowed));
+    await api.privacy.updateOrgSettings(
+      id: orgId,
+      updateOrgSettingsRequest: UpdateOrgSettingsRequest(allowBotToBot: allowed),
+    );
   }
 
   @override
   Future<BotAccess> botAccess(String botId) async => (await api.bots.getBotAccess(id: botId)).data!;
 
   @override
-  Future<BotAccess> setBotAccess(String botId, SetBotAccessRequest request) async =>
-      (await api.bots.setBotAccess(id: botId, setBotAccessRequest: request)).data!;
+  Future<BotAccess> setBotAccess(String botId, SetBotAccessRequest request) async => (await api.bots.setBotAccess(id: botId, setBotAccessRequest: request)).data!;
 
   @override
   Future<List<WorkspaceMember>> members(String orgId) async => (await api.workspaces.listMembers(id: orgId)).data!.items;
 
   @override
-  Future<WelcomeChat> startWelcome({String? firstName}) async =>
-      (await api.bots.startWelcome(startWelcomeRequest: StartWelcomeRequest(firstName: firstName))).data!;
+  Future<WelcomeChat> startWelcome({String? firstName}) async => (await api.bots.startWelcome(startWelcomeRequest: StartWelcomeRequest(firstName: firstName))).data!;
 
   @override
-  Future<List<PasswordManager>> passwordManagers(String orgId) async =>
-      (await api.passwordManagers.listPasswordManagers(orgId: orgId)).data!.items;
+  Future<List<PasswordManager>> passwordManagers(String orgId) async => (await api.passwordManagers.listPasswordManagers(orgId: orgId)).data!.items;
 
   @override
-  Future<PasswordManager> connectPasswordManager(CreatePasswordManagerRequest request) async =>
-      (await api.passwordManagers.createPasswordManager(createPasswordManagerRequest: request)).data!;
+  Future<PasswordManager> connectPasswordManager(CreatePasswordManagerRequest request) async => (await api.passwordManagers.createPasswordManager(createPasswordManagerRequest: request)).data!;
 
   @override
-  Future<List<PasswordManagerVault>> passwordManagerVaults(String id) async =>
-      (await api.passwordManagers.listPasswordManagerVaults(id: id)).data!.items;
+  Future<List<PasswordManagerVault>> passwordManagerVaults(String id) async => (await api.passwordManagers.listPasswordManagerVaults(id: id)).data!.items;
 
   @override
   Future<void> setPasswordManagerVaults(String id, List<String> vaults) async {
-    await api.passwordManagers.updatePasswordManager(id: id, updatePasswordManagerRequest: UpdatePasswordManagerRequest(allowedVaults: vaults));
+    await api.passwordManagers.updatePasswordManager(
+      id: id,
+      updatePasswordManagerRequest: UpdatePasswordManagerRequest(allowedVaults: vaults),
+    );
   }
 
   @override
@@ -962,8 +920,10 @@ class SupabaseBackend implements Backend {
   Future<List<Replay>> replays(String botId) async => (await api.replays.listReplays(botId: botId)).data!.items;
 
   @override
-  Future<RunReplayResponse> runReplay(String id, Map<String, String> params) async =>
-      (await api.replays.runReplay(id: id, runReplayRequest: RunReplayRequest(params: params))).data!;
+  Future<RunReplayResponse> runReplay(String id, Map<String, String> params) async => (await api.replays.runReplay(
+    id: id,
+    runReplayRequest: RunReplayRequest(params: params),
+  )).data!;
 
   @override
   Future<void> deleteReplay(String id) async {
@@ -971,16 +931,20 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<Replay> replayFromTeach(String teachId, String name, {String? description}) async =>
-      (await api.replays.replayFromTeach(id: teachId, replayFromTeachRequest: ReplayFromTeachRequest(name: name, description: description))).data!;
+  Future<Replay> replayFromTeach(String teachId, String name, {String? description}) async => (await api.replays.replayFromTeach(
+    id: teachId,
+    replayFromTeachRequest: ReplayFromTeachRequest(name: name, description: description),
+  )).data!;
 
   @override
-  Future<List<SkillProposal>> skillProposals(String orgId, {String? botId}) async =>
-      (await api.skills.listSkillProposals(orgId: orgId, botId: botId)).data!.items;
+  Future<List<SkillProposal>> skillProposals(String orgId, {String? botId}) async => (await api.skills.listSkillProposals(orgId: orgId, botId: botId)).data!.items;
 
   @override
   Future<void> acceptSkillProposal(String id, {String? bodyMd}) async {
-    await api.skills.acceptSkillProposal(id: id, acceptSkillProposalRequest: AcceptSkillProposalRequest(bodyMd: bodyMd));
+    await api.skills.acceptSkillProposal(
+      id: id,
+      acceptSkillProposalRequest: AcceptSkillProposalRequest(bodyMd: bodyMd),
+    );
   }
 
   @override
@@ -992,12 +956,10 @@ class SupabaseBackend implements Backend {
   Future<SkillStats> skillStats(String skillId) async => (await api.skills.getSkillStats(id: skillId)).data!;
 
   @override
-  Future<List<KnowledgeSource>> knowledgeSources(String orgId, {String? botId}) async =>
-      (await api.knowledge.listKnowledgeSources(orgId: orgId, botId: botId)).data!.items;
+  Future<List<KnowledgeSource>> knowledgeSources(String orgId, {String? botId}) async => (await api.knowledge.listKnowledgeSources(orgId: orgId, botId: botId)).data!.items;
 
   @override
-  Future<KnowledgeSource> addKnowledgeSource(CreateKnowledgeSourceRequest request) async =>
-      (await api.knowledge.createKnowledgeSource(createKnowledgeSourceRequest: request)).data!;
+  Future<KnowledgeSource> addKnowledgeSource(CreateKnowledgeSourceRequest request) async => (await api.knowledge.createKnowledgeSource(createKnowledgeSourceRequest: request)).data!;
 
   @override
   Future<void> resyncKnowledgeSource(String id) async {
@@ -1010,18 +972,42 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<List<Channel>> channels(String botId) async => (await api.channels.listChannels(botId: botId)).data!.items;
+
+  @override
+  Future<Channel> createChannel(CreateChannelRequest request) async => (await api.channels.createChannel(createChannelRequest: request)).data!;
+
+  @override
+  Future<Channel> updateChannel(String id, {String? name, List<String>? allowedSenders, bool? enabled}) async => (await api.channels.updateChannel(
+    id: id,
+    updateChannelRequest: UpdateChannelRequest(name: name, allowedSenders: allowedSenders, enabled: enabled),
+  )).data!;
+
+  @override
+  Future<void> deleteChannel(String id) async {
+    await api.channels.deleteChannel(id: id);
+  }
+
+  @override
+  Future<List<ChannelEvent>> channelEvents(String id) async => (await api.channels.listChannelEvents(id: id)).data!.items;
+
+  @override
   Future<Uint8List> exportWorkspaceFiles(String orgId) async => base64Decode((await api.files.exportWorkspaceFiles(id: orgId)).data!.zipBase64);
 
   @override
-  Future<WorkspaceFilesResult> importWorkspaceFiles(String orgId, Uint8List zip, {bool dryRun = false}) async =>
-      (await api.files.importWorkspaceFiles(id: orgId, importWorkspaceFilesRequest: ImportWorkspaceFilesRequest(zipBase64: base64Encode(zip), dryRun: dryRun))).data!;
+  Future<WorkspaceFilesResult> importWorkspaceFiles(String orgId, Uint8List zip, {bool dryRun = false}) async => (await api.files.importWorkspaceFiles(
+    id: orgId,
+    importWorkspaceFilesRequest: ImportWorkspaceFilesRequest(zipBase64: base64Encode(zip), dryRun: dryRun),
+  )).data!;
 
   @override
   Future<GitSyncStatus> gitSync(String orgId) async => (await api.files.getGitSync(id: orgId)).data!;
 
   @override
-  Future<GitSyncStatus> setGitSync(String orgId, {required String repo, String? branch, String? path, bool enabled = true}) async =>
-      (await api.files.setGitSync(id: orgId, setGitSyncRequest: SetGitSyncRequest(repo: repo, branch: branch, path: path, enabled: enabled))).data!;
+  Future<GitSyncStatus> setGitSync(String orgId, {required String repo, String? branch, String? path, bool enabled = true}) async => (await api.files.setGitSync(
+    id: orgId,
+    setGitSyncRequest: SetGitSyncRequest(repo: repo, branch: branch, path: path, enabled: enabled),
+  )).data!;
 
   @override
   Future<GitSyncStatus> runGitSync(String orgId) async => (await api.files.runGitSync(id: orgId)).data!;
@@ -1031,46 +1017,52 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<AgentImportPlan> startAgentImport(String orgId, {Uint8List? zip, Map<String, Uint8List>? files}) async => (await api.imports.startAgentImport(
-        startAgentImportRequest: StartAgentImportRequest(
-          orgId: orgId,
-          zipBase64: zip == null ? null : base64Encode(zip),
-          files: files == null ? null : [for (final e in files.entries) StartAgentImportRequestFilesInner(path: e.key, contentBase64: base64Encode(e.value))],
-        ),
-      ))
-          .data!;
+    startAgentImportRequest: StartAgentImportRequest(
+      orgId: orgId,
+      zipBase64: zip == null ? null : base64Encode(zip),
+      files: files == null ? null : [for (final e in files.entries) StartAgentImportRequestFilesInner(path: e.key, contentBase64: base64Encode(e.value))],
+    ),
+  )).data!;
 
   @override
-  Future<int> writeAgentImportFiles(String importId, String botId) async =>
-      (await api.imports.writeAgentImportFiles(id: importId, writeAgentImportFilesRequest: WriteAgentImportFilesRequest(botId: botId))).data!.written;
+  Future<int> writeAgentImportFiles(String importId, String botId) async => (await api.imports.writeAgentImportFiles(
+    id: importId,
+    writeAgentImportFilesRequest: WriteAgentImportFilesRequest(botId: botId),
+  )).data!.written;
 
   @override
   Future<String> memoryImportPrompt() async => (await api.imports.getMemoryImportPrompt()).data!.prompt;
 
   @override
-  Future<List<ImportedMemoryItem>> parseMemoryImport(String text) async =>
-      (await api.imports.parseMemoryImport(parseMemoryImportRequest: ParseMemoryImportRequest(text: text))).data!.memories;
+  Future<List<ImportedMemoryItem>> parseMemoryImport(String text) async => (await api.imports.parseMemoryImport(parseMemoryImportRequest: ParseMemoryImportRequest(text: text))).data!.memories;
 
   @override
-  Future<int> saveImportedMemories(String botId, List<ImportedMemoryItem> memories) async =>
-      (await api.imports.saveImportedMemories(id: botId, saveImportedMemoriesRequest: SaveImportedMemoriesRequest(memories: memories))).data!.saved;
+  Future<int> saveImportedMemories(String botId, List<ImportedMemoryItem> memories) async => (await api.imports.saveImportedMemories(
+    id: botId,
+    saveImportedMemoriesRequest: SaveImportedMemoriesRequest(memories: memories),
+  )).data!.saved;
 
   @override
   Future<List<Plugin>> plugins(String botId) async => (await api.plugins.listPlugins(botId: botId)).data!.items;
 
   @override
-  Future<PluginPreview> previewPlugin(String orgId, String url) async =>
-      (await api.plugins.previewPlugin(previewPluginRequest: PreviewPluginRequest(orgId: orgId, url: url))).data!;
+  Future<PluginPreview> previewPlugin(String orgId, String url) async => (await api.plugins.previewPlugin(
+    previewPluginRequest: PreviewPluginRequest(orgId: orgId, url: url),
+  )).data!;
 
   @override
-  Future<Plugin> installPlugin(String orgId, String botId, String url, String commit, Map<String, String> secrets) async =>
-      (await api.plugins.installPlugin(installPluginRequest: InstallPluginRequest(orgId: orgId, botId: botId, url: url, commit: commit, secrets: secrets))).data!;
+  Future<Plugin> installPlugin(String orgId, String botId, String url, String commit, Map<String, String> secrets) async => (await api.plugins.installPlugin(
+    installPluginRequest: InstallPluginRequest(orgId: orgId, botId: botId, url: url, commit: commit, secrets: secrets),
+  )).data!;
 
   @override
   Future<PluginUpdatePreview> pluginUpdate(String id) async => (await api.plugins.getPluginUpdate(id: id)).data!;
 
   @override
-  Future<Plugin> updatePlugin(String id, String commit, {Map<String, String> secrets = const {}}) async =>
-      (await api.plugins.updatePlugin(id: id, updatePluginRequest: UpdatePluginRequest(commit: commit, secrets: secrets))).data!;
+  Future<Plugin> updatePlugin(String id, String commit, {Map<String, String> secrets = const {}}) async => (await api.plugins.updatePlugin(
+    id: id,
+    updatePluginRequest: UpdatePluginRequest(commit: commit, secrets: secrets),
+  )).data!;
 
   @override
   Future<void> uninstallPlugin(String id) async {
@@ -1078,8 +1070,9 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<TeachSession> startTeach(String computerId, String botId) async =>
-      (await api.teach.startTeach(startTeachRequest: StartTeachRequest(computerId: computerId, botId: botId))).data!;
+  Future<TeachSession> startTeach(String computerId, String botId) async => (await api.teach.startTeach(
+    startTeachRequest: StartTeachRequest(computerId: computerId, botId: botId),
+  )).data!;
 
   @override
   Future<TeachSession> teach(String id) async => (await api.teach.getTeach(id: id)).data!;
@@ -1088,15 +1081,20 @@ class SupabaseBackend implements Backend {
   Future<TeachStep> addTeachStep(String id, AddTeachStepRequest step) async => (await api.teach.addTeachStep(id: id, addTeachStepRequest: step)).data!;
 
   @override
-  Future<TeachStep> markTeachSecret(String id, int seq, String name) async =>
-      (await api.teach.markTeachSecret(id: id, seq: seq, markTeachSecretRequest: MarkTeachSecretRequest(secretName: name))).data!;
+  Future<TeachStep> markTeachSecret(String id, int seq, String name) async => (await api.teach.markTeachSecret(
+    id: id,
+    seq: seq,
+    markTeachSecretRequest: MarkTeachSecretRequest(secretName: name),
+  )).data!;
 
   @override
   Future<TeachSession> stopTeach(String id) async => (await api.teach.stopTeach(id: id)).data!;
 
   @override
-  Future<SaveTeachResponse> saveTeach(String id, {required String name, required String description, required String body, bool tryNow = false}) async =>
-      (await api.teach.saveTeach(id: id, saveTeachRequest: SaveTeachRequest(name: name, description: description, body: body, tryNow: tryNow))).data!;
+  Future<SaveTeachResponse> saveTeach(String id, {required String name, required String description, required String body, bool tryNow = false}) async => (await api.teach.saveTeach(
+    id: id,
+    saveTeachRequest: SaveTeachRequest(name: name, description: description, body: body, tryNow: tryNow),
+  )).data!;
 
   @override
   Future<void> cancelTeach(String id) async {
@@ -1107,18 +1105,16 @@ class SupabaseBackend implements Backend {
   Future<List<BotPage>> pages(String orgId, {String? botId}) async => (await api.pages.listPages(orgId: orgId, botId: botId)).data!.items;
 
   @override
-  Future<String> pageViewLink(String id, {bool pdf = false}) async =>
-      (await api.pages.createPageViewLink(id: id, pageViewLinkRequest: PageViewLinkRequest(format: pdf ? PageViewLinkRequestFormatEnum.pdf : PageViewLinkRequestFormatEnum.html)))
-          .data!
-          .url;
+  Future<String> pageViewLink(String id, {bool pdf = false}) async => (await api.pages.createPageViewLink(
+    id: id,
+    pageViewLinkRequest: PageViewLinkRequest(format: pdf ? PageViewLinkRequestFormatEnum.pdf : PageViewLinkRequestFormatEnum.html),
+  )).data!.url;
 
   @override
   Future<String?> setPageVisibility(String id, BotPageVisibilityEnum visibility, {int? expiresInDays}) async => (await api.pages.updatePage(
-        id: id,
-        updatePageRequest: UpdatePageRequest(visibility: UpdatePageRequestVisibilityEnum.values.byName(visibility.name), expiresInDays: expiresInDays),
-      ))
-          .data!
-          .publicUrl;
+    id: id,
+    updatePageRequest: UpdatePageRequest(visibility: UpdatePageRequestVisibilityEnum.values.byName(visibility.name), expiresInDays: expiresInDays),
+  )).data!.publicUrl;
 
   @override
   Future<void> deletePage(String id) async {
@@ -1142,8 +1138,7 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<List<ActionRule>> actionRules(String orgId, {String? botId}) async =>
-      (await api.actionRules.listActionRules(orgId: orgId, botId: botId)).data!.items;
+  Future<List<ActionRule>> actionRules(String orgId, {String? botId}) async => (await api.actionRules.listActionRules(orgId: orgId, botId: botId)).data!.items;
 
   @override
   Future<void> createActionRule(String orgId, {String? botId, required String category, required String rule, List<String> domains = const [], double? maxAmount}) async {
@@ -1169,8 +1164,7 @@ class SupabaseBackend implements Backend {
   Future<BotCheckins> botCheckins(String botId) async => (await api.checkins.getBotCheckins(id: botId)).data!;
 
   @override
-  Future<BotCheckins> setBotCheckins(String botId, BotCheckins settings) async =>
-      (await api.checkins.setBotCheckins(id: botId, botCheckins: settings)).data!;
+  Future<BotCheckins> setBotCheckins(String botId, BotCheckins settings) async => (await api.checkins.setBotCheckins(id: botId, botCheckins: settings)).data!;
 
   @override
   Future<ForYou> forYou(String orgId) async => (await api.checkins.getForYou(orgId: orgId)).data!;
@@ -1180,7 +1174,10 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> dismissSuggestion(String id, {bool dontSuggestAgain = false}) async {
-    await api.checkins.dismissSuggestion(id: id, dismissSuggestionRequest: DismissSuggestionRequest(dontSuggestAgain: dontSuggestAgain));
+    await api.checkins.dismissSuggestion(
+      id: id,
+      dismissSuggestionRequest: DismissSuggestionRequest(dontSuggestAgain: dontSuggestAgain),
+    );
   }
 
   @override
@@ -1214,18 +1211,16 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired}) async =>
-      (await api.tasks.createTask(
-        createTaskRequest: CreateTaskRequest(
-          orgId: orgId,
-          title: title,
-          detailsMd: details,
-          priority: priority == null ? null : TaskPriority.values.firstWhere((p) => p.value == priority),
-          assigneeBotId: assigneeBotId,
-          reviewRequired: reviewRequired,
-        ),
-      ))
-          .data!;
+  Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired}) async => (await api.tasks.createTask(
+    createTaskRequest: CreateTaskRequest(
+      orgId: orgId,
+      title: title,
+      detailsMd: details,
+      priority: priority == null ? null : TaskPriority.values.firstWhere((p) => p.value == priority),
+      assigneeBotId: assigneeBotId,
+      reviewRequired: reviewRequired,
+    ),
+  )).data!;
 
   @override
   Future<Task> updateTask(
@@ -1238,21 +1233,19 @@ class SupabaseBackend implements Backend {
     String? assigneeUserId,
     bool? reviewRequired,
     double? position,
-  }) async =>
-      (await api.tasks.updateTask(
-        id: taskId,
-        updateTaskRequest: UpdateTaskRequest(
-          title: title,
-          detailsMd: details,
-          status: status == null ? null : TaskStatus.values.firstWhere((s) => s.value == status),
-          priority: priority == null ? null : TaskPriority.values.firstWhere((p) => p.value == priority),
-          assigneeBotId: assigneeBotId,
-          assigneeUserId: assigneeUserId,
-          reviewRequired: reviewRequired,
-          position: position,
-        ),
-      ))
-          .data!;
+  }) async => (await api.tasks.updateTask(
+    id: taskId,
+    updateTaskRequest: UpdateTaskRequest(
+      title: title,
+      detailsMd: details,
+      status: status == null ? null : TaskStatus.values.firstWhere((s) => s.value == status),
+      priority: priority == null ? null : TaskPriority.values.firstWhere((p) => p.value == priority),
+      assigneeBotId: assigneeBotId,
+      assigneeUserId: assigneeUserId,
+      reviewRequired: reviewRequired,
+      position: position,
+    ),
+  )).data!;
 
   @override
   Future<void> deleteTask(String taskId) async => api.tasks.deleteTask(id: taskId);
@@ -1261,8 +1254,10 @@ class SupabaseBackend implements Backend {
   Future<List<TaskComment>> taskComments(String taskId) async => (await api.tasks.listTaskComments(id: taskId)).data!.items;
 
   @override
-  Future<TaskComment> addTaskComment(String taskId, String body) async =>
-      (await api.tasks.createTaskComment(id: taskId, createTaskCommentRequest: CreateTaskCommentRequest(bodyMd: body))).data!;
+  Future<TaskComment> addTaskComment(String taskId, String body) async => (await api.tasks.createTaskComment(
+    id: taskId,
+    createTaskCommentRequest: CreateTaskCommentRequest(bodyMd: body),
+  )).data!;
 
   // --- owner admin console (Phase 6) ---------------------------------------
 
@@ -1281,11 +1276,15 @@ class SupabaseBackend implements Backend {
   @override
   Future<List<AdminOrg>> adminOrgs() async => (await api.admin.adminOrgs()).data!.items;
   @override
-  Future<AdminOrg> setOrgLimits(String orgId, Map<String, num> limits) async =>
-      (await api.admin.setOrgLimits(id: orgId, setOrgLimitsRequest: SetOrgLimitsRequest(limits: limits))).data!;
+  Future<AdminOrg> setOrgLimits(String orgId, Map<String, num> limits) async => (await api.admin.setOrgLimits(
+    id: orgId,
+    setOrgLimitsRequest: SetOrgLimitsRequest(limits: limits),
+  )).data!;
   @override
-  Future<AdminOrg> suspendOrg(String orgId, String reason) async =>
-      (await api.admin.suspendOrg(id: orgId, suspendOrgRequest: SuspendOrgRequest(reason: reason))).data!;
+  Future<AdminOrg> suspendOrg(String orgId, String reason) async => (await api.admin.suspendOrg(
+    id: orgId,
+    suspendOrgRequest: SuspendOrgRequest(reason: reason),
+  )).data!;
   @override
   Future<AdminOrg> unsuspendOrg(String orgId) async => (await api.admin.unsuspendOrg(id: orgId)).data!;
   @override
@@ -1310,9 +1309,8 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<List<TwoStepFactor>> twoStepFactors() async => [
-        for (final f in (await supabase.auth.mfa.listFactors()).totp)
-          TwoStepFactor(id: f.id, name: f.friendlyName ?? 'Authenticator', createdAt: f.createdAt),
-      ];
+    for (final f in (await supabase.auth.mfa.listFactors()).totp) TwoStepFactor(id: f.id, name: f.friendlyName ?? 'Authenticator', createdAt: f.createdAt),
+  ];
 
   @override
   bool get twoStepCodeNeeded {
@@ -1322,9 +1320,7 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  bool get twoStepVerified =>
-      supabase.auth.currentSession != null &&
-      supabase.auth.mfa.getAuthenticatorAssuranceLevel().currentLevel == sb.AuthenticatorAssuranceLevels.aal2;
+  bool get twoStepVerified => supabase.auth.currentSession != null && supabase.auth.mfa.getAuthenticatorAssuranceLevel().currentLevel == sb.AuthenticatorAssuranceLevels.aal2;
 
   @override
   Future<TwoStepEnrollment> startTwoStep() async {
@@ -1334,11 +1330,7 @@ class SupabaseBackend implements Backend {
       await supabase.auth.mfa.unenroll(f.id);
     }
     final n = all.where((f) => f.status == sb.FactorStatus.verified).length + 1;
-    final r = await supabase.auth.mfa.enroll(
-      factorType: sb.FactorType.totp,
-      issuer: config?.productName ?? 'Kasama',
-      friendlyName: 'Authenticator $n · ${DateTime.now().millisecondsSinceEpoch}',
-    );
+    final r = await supabase.auth.mfa.enroll(factorType: sb.FactorType.totp, issuer: config?.productName ?? 'Kasama', friendlyName: 'Authenticator $n · ${DateTime.now().millisecondsSinceEpoch}');
     final totp = r.totp!;
     return TwoStepEnrollment(factorId: r.id, secret: totp.secret, uri: totp.uri, qrSvg: totp.qrCode);
   }
@@ -1376,21 +1368,17 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<bool> setRequireTwoStep(String orgId, bool value) async => (await api.privacy.updateOrgSettings(
-        id: orgId,
-        updateOrgSettingsRequest: UpdateOrgSettingsRequest(requireMfa: value),
-      ))
-          .data!
-          .requireMfa;
+    id: orgId,
+    updateOrgSettingsRequest: UpdateOrgSettingsRequest(requireMfa: value),
+  )).data!.requireMfa;
 
   @override
   Future<int> retentionDays(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.runEventRetentionDays;
   @override
   Future<int> setRetentionDays(String orgId, int days) async => (await api.privacy.updateOrgSettings(
-        id: orgId,
-        updateOrgSettingsRequest: UpdateOrgSettingsRequest(runEventRetentionDays: days),
-      ))
-          .data!
-          .runEventRetentionDays;
+    id: orgId,
+    updateOrgSettingsRequest: UpdateOrgSettingsRequest(runEventRetentionDays: days),
+  )).data!.runEventRetentionDays;
   @override
   Future<void> signInWithSso(String email) async {
     await supabase.auth.signInWithSSO(domain: email.split('@').last.trim().toLowerCase());
@@ -1403,34 +1391,31 @@ class SupabaseBackend implements Backend {
   @override
   Future<PlanCatalog> plans() async => (await api.billing.listPlans()).data!;
   @override
-  Future<String> checkoutUrl(String orgId, {String? planCode, String? packCode}) async =>
-      (await api.billing.createCheckout(id: orgId, checkoutRequest: CheckoutRequest(planCode: planCode, packCode: packCode)))
-          .data!
-          .url;
+  Future<String> checkoutUrl(String orgId, {String? planCode, String? packCode}) async => (await api.billing.createCheckout(
+    id: orgId,
+    checkoutRequest: CheckoutRequest(planCode: planCode, packCode: packCode),
+  )).data!.url;
   @override
-  Future<String> billingPortalUrl(String orgId) async =>
-      (await api.billing.billingPortal(id: orgId, portalRequest: PortalRequest())).data!.url;
+  Future<String> billingPortalUrl(String orgId) async => (await api.billing.billingPortal(id: orgId, portalRequest: PortalRequest())).data!.url;
   @override
-  Future<BillingSummary> verifyPurchase(String orgId,
-          {required String source, required String productId, String? transactionId, String? purchaseToken}) async =>
-      (await api.billing.verifyPurchase(
-        id: orgId,
-        purchaseRequest: PurchaseRequest(
-          source_: source == 'app_store' ? PurchaseRequestSource_Enum.appStore : PurchaseRequestSource_Enum.googlePlay,
-          productId: productId,
-          transactionId: transactionId,
-          purchaseToken: purchaseToken,
-        ),
-      ))
-          .data!;
+  Future<BillingSummary> verifyPurchase(String orgId, {required String source, required String productId, String? transactionId, String? purchaseToken}) async => (await api.billing.verifyPurchase(
+    id: orgId,
+    purchaseRequest: PurchaseRequest(
+      source_: source == 'app_store' ? PurchaseRequestSource_Enum.appStore : PurchaseRequestSource_Enum.googlePlay,
+      productId: productId,
+      transactionId: transactionId,
+      purchaseToken: purchaseToken,
+    ),
+  )).data!;
   @override
   Future<BillingUsage> billingUsage(String orgId) async => (await api.billing.billingUsage(id: orgId)).data!;
   @override
   Future<List<ConnectKey>> connectKeys(String orgId) async => (await api.billing.listConnectKeys(id: orgId)).data!.items;
   @override
-  Future<CreatedConnectKey> createConnectKey(String orgId, String instanceName) async =>
-      (await api.billing.createConnectKey(id: orgId, createConnectKeyRequest: CreateConnectKeyRequest(instanceName: instanceName)))
-          .data!;
+  Future<CreatedConnectKey> createConnectKey(String orgId, String instanceName) async => (await api.billing.createConnectKey(
+    id: orgId,
+    createConnectKeyRequest: CreateConnectKeyRequest(instanceName: instanceName),
+  )).data!;
   @override
   Future<void> revokeConnectKey(String orgId, String keyId) => api.billing.revokeConnectKey(id: orgId, keyId: keyId);
 
@@ -1444,43 +1429,34 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<CreatedLocalDevice> createLocalDevice(String orgId, String name, String platform) async => (await api.localComputer.createLocalDevice(
-        createLocalDeviceRequest: CreateLocalDeviceRequest(
-          orgId: orgId,
-          name: name,
-          platform: CreateLocalDeviceRequestPlatformEnum.values.firstWhere((p) => p.value == platform),
-        ),
-      ))
-          .data!;
+    createLocalDeviceRequest: CreateLocalDeviceRequest(orgId: orgId, name: name, platform: CreateLocalDeviceRequestPlatformEnum.values.firstWhere((p) => p.value == platform)),
+  )).data!;
 
   @override
-  Future<List<Integration>> setLocalMcpServers(String deviceId, List<LocalMcpServerInfo> servers) async =>
-      (await api.localComputer.setLocalMcpServers(
-        id: deviceId,
-        setLocalMcpServersRequest: SetLocalMcpServersRequest(servers: servers),
-      ))
-          .data!
-          .items;
+  Future<List<Integration>> setLocalMcpServers(String deviceId, List<LocalMcpServerInfo> servers) async => (await api.localComputer.setLocalMcpServers(
+    id: deviceId,
+    setLocalMcpServersRequest: SetLocalMcpServersRequest(servers: servers),
+  )).data!.items;
 
   @override
-  Future<LocalDevice> updateLocalDevice(String id, {Set<String>? capabilities, List<String>? roots, List<String>? botIds, bool? enabled}) async =>
-      (await api.localComputer.updateLocalDevice(
-        id: id,
-        updateLocalDeviceRequest: UpdateLocalDeviceRequest(
-          capabilities: capabilities == null
-              ? null
-              : LocalCapabilities(
-                  shell: capabilities.contains('shell'),
-                  files: capabilities.contains('files'),
-                  browser: capabilities.contains('browser'),
-                  desktop: capabilities.contains('desktop'),
-                  mcp: capabilities.contains('mcp'),
-                ),
-          allowedRoots: roots,
-          allowedBotIds: botIds,
-          enabled: enabled,
-        ),
-      ))
-          .data!;
+  Future<LocalDevice> updateLocalDevice(String id, {Set<String>? capabilities, List<String>? roots, List<String>? botIds, bool? enabled}) async => (await api.localComputer.updateLocalDevice(
+    id: id,
+    updateLocalDeviceRequest: UpdateLocalDeviceRequest(
+      capabilities: capabilities == null
+          ? null
+          : LocalCapabilities(
+              shell: capabilities.contains('shell'),
+              files: capabilities.contains('files'),
+              browser: capabilities.contains('browser'),
+              desktop: capabilities.contains('desktop'),
+              mcp: capabilities.contains('mcp'),
+              messages: capabilities.contains('messages'),
+            ),
+      allowedRoots: roots,
+      allowedBotIds: botIds,
+      enabled: enabled,
+    ),
+  )).data!;
 
   @override
   Future<void> deleteLocalDevice(String id) async => api.localComputer.deleteLocalDevice(id: id);
@@ -1494,28 +1470,23 @@ class SupabaseBackend implements Backend {
   Future<Uint8List> speech(String messageId) async => (await api.voice.messageSpeech(id: messageId)).data!;
 
   @override
-  Future<VoiceSession> voiceSession(String botId, {String? conversationId}) async =>
-      (await api.voice.createVoiceSession(voiceSessionRequest: VoiceSessionRequest(botId: botId, conversationId: conversationId))).data!;
+  Future<VoiceSession> voiceSession(String botId, {String? conversationId}) async => (await api.voice.createVoiceSession(
+    voiceSessionRequest: VoiceSessionRequest(botId: botId, conversationId: conversationId),
+  )).data!;
 
   @override
-  Future<VoiceToolResult> voiceTool(String botId, String conversationId, String callId, String name, Map<String, Object?> arguments) async =>
-      (await api.voice.voiceTool(
-        voiceToolRequest: VoiceToolRequest(botId: botId, conversationId: conversationId, callId: callId, name: name, arguments: arguments),
-      ))
-          .data!;
+  Future<VoiceToolResult> voiceTool(String botId, String conversationId, String callId, String name, Map<String, Object?> arguments) async => (await api.voice.voiceTool(
+    voiceToolRequest: VoiceToolRequest(botId: botId, conversationId: conversationId, callId: callId, name: name, arguments: arguments),
+  )).data!;
 
   @override
-  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds) async =>
-      api.voice.saveVoiceTranscript(
-        voiceTranscriptRequest: VoiceTranscriptRequest(
-          conversationId: conversationId,
-          seconds: seconds,
-          turns: [
-            for (final (role, text) in turns)
-              VoiceTranscriptRequestTurnsInner(role: VoiceTranscriptRequestTurnsInnerRoleEnum.values.firstWhere((r) => r.value == role), text: text),
-          ],
-        ),
-      );
+  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds) async => api.voice.saveVoiceTranscript(
+    voiceTranscriptRequest: VoiceTranscriptRequest(
+      conversationId: conversationId,
+      seconds: seconds,
+      turns: [for (final (role, text) in turns) VoiceTranscriptRequestTurnsInner(role: VoiceTranscriptRequestTurnsInnerRoleEnum.values.firstWhere((r) => r.value == role), text: text)],
+    ),
+  );
 
   @override
   Future<void> updateBotVoice(String botId, Map<String, Object?> voice) async {
@@ -1525,27 +1496,21 @@ class SupabaseBackend implements Backend {
   // --- computer management and live view (Phase 5) -------------------------
 
   @override
-  Future<Computer> createComputer(String orgId, {required String name, required bool private, String? ownerBotId, String profile = 'headless'}) async =>
-      (await api.computers.createComputer(
-        createComputerRequest: CreateComputerRequest(
-          orgId: orgId,
-          name: name,
-          kind: private ? CreateComputerRequestKindEnum.private : CreateComputerRequestKindEnum.team,
-          ownerBotId: ownerBotId,
-          profile: CreateComputerRequestProfileEnum.values.firstWhere((p) => p.value == profile),
-        ),
-      ))
-          .data!;
+  Future<Computer> createComputer(String orgId, {required String name, required bool private, String? ownerBotId, String profile = 'headless'}) async => (await api.computers.createComputer(
+    createComputerRequest: CreateComputerRequest(
+      orgId: orgId,
+      name: name,
+      kind: private ? CreateComputerRequestKindEnum.private : CreateComputerRequestKindEnum.team,
+      ownerBotId: ownerBotId,
+      profile: CreateComputerRequestProfileEnum.values.firstWhere((p) => p.value == profile),
+    ),
+  )).data!;
 
   @override
   Future<Computer> updateComputer(String computerId, {String? name, String? profile}) async => (await api.computers.updateComputer(
-        id: computerId,
-        updateComputerRequest: UpdateComputerRequest(
-          name: name,
-          profile: profile == null ? null : UpdateComputerRequestProfileEnum.values.firstWhere((p) => p.value == profile),
-        ),
-      ))
-          .data!;
+    id: computerId,
+    updateComputerRequest: UpdateComputerRequest(name: name, profile: profile == null ? null : UpdateComputerRequestProfileEnum.values.firstWhere((p) => p.value == profile)),
+  )).data!;
 
   @override
   Future<void> deleteComputer(String computerId) async => api.computers.deleteComputer(id: computerId);
@@ -1557,25 +1522,31 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<StreamSession> streamSession(String computerId, {String mode = 'control'}) async => (await api.computers.createStreamSession(
-        id: computerId,
-        streamSessionRequest: StreamSessionRequest(mode: StreamMode.values.firstWhere((m) => m.value == mode)),
-      ))
-          .data!;
+    id: computerId,
+    streamSessionRequest: StreamSessionRequest(mode: StreamMode.values.firstWhere((m) => m.value == mode)),
+  )).data!;
 
   @override
   Future<Lease> lease(String computerId) async => (await api.computers.getLease(id: computerId)).data!;
 
   @override
-  Future<Lease> takeLease(String computerId, {bool allowShell = false}) async =>
-      (await api.computers.takeLease(id: computerId, takeLeaseRequest: TakeLeaseRequest(allowShell: allowShell))).data!;
+  Future<Lease> takeLease(String computerId, {bool allowShell = false}) async => (await api.computers.takeLease(
+    id: computerId,
+    takeLeaseRequest: TakeLeaseRequest(allowShell: allowShell),
+  )).data!;
 
   @override
-  Future<Lease> releaseLease(String computerId, {String? note}) async =>
-      (await api.computers.releaseLease(id: computerId, releaseLeaseRequest: ReleaseLeaseRequest(note: note))).data!;
+  Future<Lease> releaseLease(String computerId, {String? note}) async => (await api.computers.releaseLease(
+    id: computerId,
+    releaseLeaseRequest: ReleaseLeaseRequest(note: note),
+  )).data!;
 
   @override
   Future<void> fulfillSecretRequest(String requestId, String value) async {
-    await api.secrets.fulfillSecretRequest(id: requestId, fulfillSecretRequestBody: FulfillSecretRequestBody(value: value));
+    await api.secrets.fulfillSecretRequest(
+      id: requestId,
+      fulfillSecretRequestBody: FulfillSecretRequestBody(value: value),
+    );
   }
 
   @override
@@ -1587,8 +1558,10 @@ class SupabaseBackend implements Backend {
   Future<List<TakeoverRequest>> takeovers(String orgId) async => (await api.computers.listTakeovers(orgId: orgId)).data!.items;
 
   @override
-  Future<void> dismissTakeover(String takeoverId, {String? note}) async =>
-      api.computers.dismissTakeover(id: takeoverId, releaseLeaseRequest: ReleaseLeaseRequest(note: note));
+  Future<void> dismissTakeover(String takeoverId, {String? note}) async => api.computers.dismissTakeover(
+    id: takeoverId,
+    releaseLeaseRequest: ReleaseLeaseRequest(note: note),
+  );
 
   // --- computers ------------------------------------------------------------
 
@@ -1602,12 +1575,10 @@ class SupabaseBackend implements Backend {
   Future<Computer> stopComputer(String id) async => (await api.computers.stopComputer(id: id)).data!;
 
   @override
-  Future<List<ComputerFileEntry>> listFiles(String computerId, String path) async =>
-      (await api.computers.listComputerFiles(id: computerId, path: path.isEmpty ? null : path)).data!.entries;
+  Future<List<ComputerFileEntry>> listFiles(String computerId, String path) async => (await api.computers.listComputerFiles(id: computerId, path: path.isEmpty ? null : path)).data!.entries;
 
   @override
-  Future<Uint8List> downloadFile(String computerId, String path) async =>
-      Uint8List.fromList(await api.downloadComputerFile(computerId, path));
+  Future<Uint8List> downloadFile(String computerId, String path) async => Uint8List.fromList(await api.downloadComputerFile(computerId, path));
 
   @override
   Future<void> uploadFile(String computerId, String path, Uint8List bytes) async => api.uploadComputerFile(computerId, path, bytes);
@@ -1619,8 +1590,7 @@ class SupabaseBackend implements Backend {
   Future<List<Checkpoint>> checkpoints(String computerId) async => (await api.computers.listCheckpoints(id: computerId)).data!.items;
 
   @override
-  Future<void> restoreCheckpoint(String computerId, String checkpointId) async =>
-      api.computers.restoreCheckpoint(id: computerId, cid: checkpointId);
+  Future<void> restoreCheckpoint(String computerId, String checkpointId) async => api.computers.restoreCheckpoint(id: computerId, cid: checkpointId);
 
   @override
   Future<Uint8List?> screenshot(String computerId) async {
@@ -1639,6 +1609,5 @@ class SupabaseBackend implements Backend {
     return (uri.replace(queryParameters: {...uri.queryParameters, 'access_token': ?token}), headers);
   }
 }
-
 
 String _solvePuzzle((String, int) p) => solveSignupChallenge(p.$1, p.$2);

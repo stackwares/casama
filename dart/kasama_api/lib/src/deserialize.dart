@@ -53,6 +53,10 @@ import 'package:kasama_api/src/model/calendar_trigger_config.dart';
 import 'package:kasama_api/src/model/catalog_app.dart';
 import 'package:kasama_api/src/model/catalog_app_api_key.dart';
 import 'package:kasama_api/src/model/catalog_skill.dart';
+import 'package:kasama_api/src/model/channel.dart';
+import 'package:kasama_api/src/model/channel_event.dart';
+import 'package:kasama_api/src/model/channel_event_list.dart';
+import 'package:kasama_api/src/model/channel_list.dart';
 import 'package:kasama_api/src/model/chat_gpt_sign_in_complete_request.dart';
 import 'package:kasama_api/src/model/chat_gpt_sign_in_start.dart';
 import 'package:kasama_api/src/model/chat_gpt_sign_in_start_request.dart';
@@ -78,6 +82,7 @@ import 'package:kasama_api/src/model/conversation_list.dart';
 import 'package:kasama_api/src/model/create_action_rule_request.dart';
 import 'package:kasama_api/src/model/create_bot_request.dart';
 import 'package:kasama_api/src/model/create_bot_share_request.dart';
+import 'package:kasama_api/src/model/create_channel_request.dart';
 import 'package:kasama_api/src/model/create_checkpoint_request.dart';
 import 'package:kasama_api/src/model/create_computer_request.dart';
 import 'package:kasama_api/src/model/create_connect_key_request.dart';
@@ -111,6 +116,7 @@ import 'package:kasama_api/src/model/credit_pack.dart';
 import 'package:kasama_api/src/model/delete_account_request.dart';
 import 'package:kasama_api/src/model/delete_integration200_response.dart';
 import 'package:kasama_api/src/model/delete_result.dart';
+import 'package:kasama_api/src/model/deleted_channel.dart';
 import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
@@ -183,6 +189,7 @@ import 'package:kasama_api/src/model/message_completed_event.dart';
 import 'package:kasama_api/src/model/message_completed_event_payload.dart';
 import 'package:kasama_api/src/model/message_delta_event.dart';
 import 'package:kasama_api/src/model/message_delta_event_payload.dart';
+import 'package:kasama_api/src/model/message_trigger_config.dart';
 import 'package:kasama_api/src/model/model_choice.dart';
 import 'package:kasama_api/src/model/model_fallback_event.dart';
 import 'package:kasama_api/src/model/model_fallback_event_payload.dart';
@@ -338,6 +345,7 @@ import 'package:kasama_api/src/model/transcription.dart';
 import 'package:kasama_api/src/model/ui_action_part.dart';
 import 'package:kasama_api/src/model/ui_shown_event.dart';
 import 'package:kasama_api/src/model/ui_shown_event_payload.dart';
+import 'package:kasama_api/src/model/update_channel_request.dart';
 import 'package:kasama_api/src/model/update_computer_request.dart';
 import 'package:kasama_api/src/model/update_credential_request.dart';
 import 'package:kasama_api/src/model/update_integration_request.dart';
@@ -517,6 +525,17 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CatalogAppApiKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogSkill':
           return CatalogSkill.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Channel':
+          return Channel.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ChannelEvent':
+          return ChannelEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ChannelEventList':
+          return ChannelEventList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ChannelKind':
+          
+          
+        case 'ChannelList':
+          return ChannelList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ChatGptSignInCompleteRequest':
           return ChatGptSignInCompleteRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ChatGptSignInStart':
@@ -570,6 +589,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateBotRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateBotShareRequest':
           return CreateBotShareRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateChannelRequest':
+          return CreateChannelRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateCheckpointRequest':
           return CreateCheckpointRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateComputerRequest':
@@ -639,6 +660,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeleteIntegration200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteResult':
           return DeleteResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedChannel':
+          return DeletedChannel.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedComputer':
           return DeletedComputer.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedDevice':
@@ -789,6 +812,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return MessageDeltaEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'MessageDeltaEventPayload':
           return MessageDeltaEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MessageTriggerConfig':
+          return MessageTriggerConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ModelChoice':
           return ModelChoice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ModelFallbackEvent':
@@ -1135,6 +1160,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UiShownEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UiShownEventPayload':
           return UiShownEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateChannelRequest':
+          return UpdateChannelRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateComputerRequest':
           return UpdateComputerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateCredentialRequest':

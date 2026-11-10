@@ -180,20 +180,8 @@ class SettingsScreen extends ConsumerWidget {
                     subtitle: l10n.integrationsRowHelp,
                     onTap: () => context.push('/settings/integrations'),
                   ),
-                  GroupedTile(
-                    key: const Key('settingsSecrets'),
-                    icon: LucideIcons.lock,
-                    title: l10n.secrets,
-                    subtitle: l10n.secretsRowHelp,
-                    onTap: () => context.push('/settings/secrets'),
-                  ),
-                  GroupedTile(
-                    key: const Key('settingsComputers'),
-                    icon: LucideIcons.monitor,
-                    title: l10n.computers,
-                    subtitle: l10n.computersRowHelp,
-                    onTap: () => context.push('/settings/computers'),
-                  ),
+                  GroupedTile(key: const Key('settingsSecrets'), icon: LucideIcons.lock, title: l10n.secrets, subtitle: l10n.secretsRowHelp, onTap: () => context.push('/settings/secrets')),
+                  GroupedTile(key: const Key('settingsComputers'), icon: LucideIcons.monitor, title: l10n.computers, subtitle: l10n.computersRowHelp, onTap: () => context.push('/settings/computers')),
                   if (ref.watch(companionProvider).supported)
                     GroupedTile(
                       key: const Key('settingsCompanion'),
@@ -220,33 +208,16 @@ class SettingsScreen extends ConsumerWidget {
                     key: const Key('settingsTwoStep'),
                     icon: LucideIcons.smartphone,
                     title: l10n.twoStepSignIn,
-                    subtitle: org?.requireMfa == true && org?.role != OrgRole.member && !backend.twoStepVerified
-                        ? l10n.twoStepNeededForAdmin
-                        : l10n.twoStepHelp,
+                    subtitle: org?.requireMfa == true && org?.role != OrgRole.member && !backend.twoStepVerified ? l10n.twoStepNeededForAdmin : l10n.twoStepHelp,
                     onTap: () => context.push('/settings/two-step'),
                   ),
-                  GroupedTile(
-                    key: const Key('settingsPrivacy'),
-                    icon: LucideIcons.shieldCheck,
-                    title: l10n.privacy,
-                    subtitle: l10n.privacyRowHelp,
-                    onTap: () => context.push('/settings/privacy'),
-                  ),
+                  GroupedTile(key: const Key('settingsPrivacy'), icon: LucideIcons.shieldCheck, title: l10n.privacy, subtitle: l10n.privacyRowHelp, onTap: () => context.push('/settings/privacy')),
                   if (ref.watch(adminOverviewProvider).value != null)
-                    GroupedTile(
-                      key: const Key('settingsAdmin'),
-                      icon: LucideIcons.shieldUser,
-                      title: l10n.adminConsole,
-                      subtitle: l10n.adminRowHelp,
-                      onTap: () => context.push('/settings/admin'),
-                    ),
+                    GroupedTile(key: const Key('settingsAdmin'), icon: LucideIcons.shieldUser, title: l10n.adminConsole, subtitle: l10n.adminRowHelp, onTap: () => context.push('/settings/admin')),
                   GroupedTile(
                     icon: LucideIcons.languages,
                     title: l10n.language,
-                    trailing: Text(
-                      _languageName(Localizations.localeOf(context)),
-                      style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
-                    ),
+                    trailing: Text(_languageName(Localizations.localeOf(context)), style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
                   ),
                 ],
               ),
@@ -259,13 +230,7 @@ class SettingsScreen extends ConsumerWidget {
                     destructive: true,
                     showChevron: false,
                     onTap: () async {
-                      final ok = await showConfirm(
-                        context: context,
-                        title: l10n.signOut,
-                        message: l10n.signOutConfirm,
-                        confirmLabel: l10n.signOut,
-                        destructive: true,
-                      );
+                      final ok = await showConfirm(context: context, title: l10n.signOut, message: l10n.signOutConfirm, confirmLabel: l10n.signOut, destructive: true);
                       if (ok && context.mounted) await runGuarded(context, backend.signOut);
                     },
                   ),
@@ -441,14 +406,9 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
           }
         : null;
     final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).updateBot(
-        bot.id,
-        name: _name!.text.trim(),
-        persona: _persona!.text,
-        autonomy: _autonomy,
-        modelPolicy: policy,
-        avatarUrl: _avatar == bot.avatarUrl ? null : (_avatar ?? ''),
-      );
+      await ref
+          .read(backendProvider)
+          .updateBot(bot.id, name: _name!.text.trim(), persona: _persona!.text, autonomy: _autonomy, modelPolicy: policy, avatarUrl: _avatar == bot.avatarUrl ? null : (_avatar ?? ''));
       return true;
     });
     if (!mounted) return;
@@ -475,16 +435,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
       _avatarLoaded = true;
     }
     final keys = (ref.watch(credentialsProvider).value ?? const <Credential>[])
-        .where(
-          (k) => const {
-            ProviderId.openrouter,
-            ProviderId.openai,
-            ProviderId.anthropic,
-            ProviderId.google,
-            ProviderId.xai,
-            ProviderId.openaiCompatible,
-          }.contains(k.provider),
-        )
+        .where((k) => const {ProviderId.openrouter, ProviderId.openai, ProviderId.anthropic, ProviderId.google, ProviderId.xai, ProviderId.openaiCompatible}.contains(k.provider))
         .toList();
     final computers = ref.watch(computersProvider).value ?? const <Computer>[];
     final usable = computers.where((c) => c.kind == ComputerKindEnum.team || c.kind == ComputerKindEnum.local || c.ownerBotId == bot.id).toList();
@@ -530,12 +481,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                 spacing: AppSpace.sm,
                 children: [
                   Text(l10n.botIcon, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
-                  MascotPicker(
-                    value: _avatar,
-                    initials: botInitials(name),
-                    initialsLabel: l10n.botIconInitials,
-                    onChanged: (v) => setState(() => _avatar = v),
-                  ),
+                  MascotPicker(value: _avatar, initials: botInitials(name), initialsLabel: l10n.botIconInitials, onChanged: (v) => setState(() => _avatar = v)),
                 ],
               ),
               TextField(
@@ -556,12 +502,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                     final t = choice?.template;
                     if (t == null || !context.mounted) return;
                     if (_persona!.text.trim().isNotEmpty) {
-                      final ok = await showConfirm(
-                        context: context,
-                        title: l10n.replaceInstructionsTitle,
-                        message: l10n.replaceInstructionsBody(t.name),
-                        confirmLabel: l10n.replace,
-                      );
+                      final ok = await showConfirm(context: context, title: l10n.replaceInstructionsTitle, message: l10n.replaceInstructionsBody(t.name), confirmLabel: l10n.replace);
                       if (!ok) return;
                     }
                     setState(() => _persona!.text = t.persona ?? '');
@@ -655,8 +596,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                             value: c.id,
                             label: c.name,
                             subtitle: [
-                              if ((c.kind == ComputerKindEnum.team ? l10n.teamComputer : l10n.privateComputer) != c.name)
-                                c.kind == ComputerKindEnum.team ? l10n.teamComputer : l10n.privateComputer,
+                              if ((c.kind == ComputerKindEnum.team ? l10n.teamComputer : l10n.privateComputer) != c.name) c.kind == ComputerKindEnum.team ? l10n.teamComputer : l10n.privateComputer,
                               c.profile == ComputerProfileEnum.desktop ? l10n.profileDesktop : l10n.profileHeadless,
                             ].join(' · '),
                             icon: c.profile == ComputerProfileEnum.desktop ? LucideIcons.monitor : LucideIcons.squareTerminal,
@@ -727,55 +667,14 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                 );
               },
             ),
-            GroupedTile(
-              key: const Key('botSharing'),
-              icon: LucideIcons.users,
-              title: l10n.sharing,
-              subtitle: l10n.sharingRow,
-              onTap: () => context.push('/bots/${bot.id}/sharing'),
-            ),
-            GroupedTile(
-              key: const Key('botReplays'),
-              icon: LucideIcons.listVideo,
-              title: l10n.replays,
-              subtitle: l10n.replaysRow,
-              onTap: () => context.push('/bots/${bot.id}/replays'),
-            ),
-            GroupedTile(
-              key: const Key('botKnowledge'),
-              icon: LucideIcons.library,
-              title: l10n.knowledge,
-              subtitle: l10n.knowledgeRow,
-              onTap: () => context.push('/bots/${bot.id}/knowledge'),
-            ),
-            GroupedTile(
-              key: const Key('botPlugins'),
-              icon: LucideIcons.puzzle,
-              title: l10n.plugins,
-              subtitle: l10n.pluginsRow,
-              onTap: () => context.push('/bots/${bot.id}/plugins'),
-            ),
-            GroupedTile(
-              key: const Key('botPages'),
-              icon: LucideIcons.fileText,
-              title: l10n.pages,
-              subtitle: l10n.pagesRow,
-              onTap: () => context.push('/pages?bot=${bot.id}'),
-            ),
-            GroupedTile(
-              key: const Key('botWatchers'),
-              icon: LucideIcons.eye,
-              title: l10n.watchers,
-              subtitle: l10n.watchersRow,
-              onTap: () => context.push('/bots/${bot.id}/watchers'),
-            ),
-            GroupedTile(
-              key: const Key('botRules'),
-              icon: LucideIcons.shieldCheck,
-              title: l10n.actionRules,
-              subtitle: l10n.actionRulesRow,
-              onTap: () => context.push('/bots/${bot.id}/rules'),
-            ),
+            GroupedTile(key: const Key('botSharing'), icon: LucideIcons.users, title: l10n.sharing, subtitle: l10n.sharingRow, onTap: () => context.push('/bots/${bot.id}/sharing')),
+            GroupedTile(key: const Key('botReplays'), icon: LucideIcons.listVideo, title: l10n.replays, subtitle: l10n.replaysRow, onTap: () => context.push('/bots/${bot.id}/replays')),
+            GroupedTile(key: const Key('botChatApps'), icon: LucideIcons.messagesSquare, title: l10n.chatApps, subtitle: l10n.chatAppsRow, onTap: () => context.push('/bots/${bot.id}/chat-apps')),
+            GroupedTile(key: const Key('botKnowledge'), icon: LucideIcons.library, title: l10n.knowledge, subtitle: l10n.knowledgeRow, onTap: () => context.push('/bots/${bot.id}/knowledge')),
+            GroupedTile(key: const Key('botPlugins'), icon: LucideIcons.puzzle, title: l10n.plugins, subtitle: l10n.pluginsRow, onTap: () => context.push('/bots/${bot.id}/plugins')),
+            GroupedTile(key: const Key('botPages'), icon: LucideIcons.fileText, title: l10n.pages, subtitle: l10n.pagesRow, onTap: () => context.push('/pages?bot=${bot.id}')),
+            GroupedTile(key: const Key('botWatchers'), icon: LucideIcons.eye, title: l10n.watchers, subtitle: l10n.watchersRow, onTap: () => context.push('/bots/${bot.id}/watchers')),
+            GroupedTile(key: const Key('botRules'), icon: LucideIcons.shieldCheck, title: l10n.actionRules, subtitle: l10n.actionRulesRow, onTap: () => context.push('/bots/${bot.id}/rules')),
             GroupedTile(
               key: const Key('botCheckins'),
               icon: LucideIcons.sun,
@@ -806,20 +705,8 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                 GoRouter.maybeOf(context)?.go('/bots/${bot.id}/chat?c=$conv');
               },
             ),
-            GroupedTile(
-              key: const Key('shareBot'),
-              icon: LucideIcons.share2,
-              title: l10n.shareAsTemplate,
-              subtitle: l10n.shareAsTemplateRow,
-              onTap: () => showShareBot(context, bot),
-            ),
-            GroupedTile(
-              key: const Key('botHistory'),
-              icon: LucideIcons.history,
-              title: l10n.settingsHistory,
-              subtitle: l10n.settingsHistoryHelp,
-              onTap: () => context.push('/bots/${bot.id}/history'),
-            ),
+            GroupedTile(key: const Key('shareBot'), icon: LucideIcons.share2, title: l10n.shareAsTemplate, subtitle: l10n.shareAsTemplateRow, onTap: () => showShareBot(context, bot)),
+            GroupedTile(key: const Key('botHistory'), icon: LucideIcons.history, title: l10n.settingsHistory, subtitle: l10n.settingsHistoryHelp, onTap: () => context.push('/bots/${bot.id}/history')),
             GroupedTile(
               key: const Key('archiveBot'),
               icon: LucideIcons.archive,
@@ -920,11 +807,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
   Future<void> _save() async {
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).updateBotVoice(widget.botId, {
-        'tts_provider': ?_tts,
-        'stt_provider': ?_stt,
-        if (_voice.text.trim().isNotEmpty) 'tts_voice': _voice.text.trim(),
-      });
+      await ref.read(backendProvider).updateBotVoice(widget.botId, {'tts_provider': ?_tts, 'stt_provider': ?_stt, if (_voice.text.trim().isNotEmpty) 'tts_voice': _voice.text.trim()});
       return true;
     });
     if (!mounted) return;

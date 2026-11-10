@@ -15,8 +15,7 @@ class AttachmentRef {
   bool get isImage => mimeType.startsWith('image/');
 
   Map<String, Object?> toJson() => {'path': path, 'name': name, 'mime_type': mimeType, 'size': size};
-  static AttachmentRef fromJson(Map<String, dynamic> j) =>
-      AttachmentRef(path: j['path'] as String, name: j['name'] as String, mimeType: j['mime_type'] as String, size: (j['size'] as num).toInt());
+  static AttachmentRef fromJson(Map<String, dynamic> j) => AttachmentRef(path: j['path'] as String, name: j['name'] as String, mimeType: j['mime_type'] as String, size: (j['size'] as num).toInt());
 }
 
 /// An interactive UI a bot showed (D-086): one A2UI surface and the messages that build it.
@@ -40,34 +39,36 @@ class ChatMessageView {
     this.siblingCount = 1,
     this.botId,
   });
+
   /// For the offline cache (D-112): text, attachments and versions; bot UIs are left out.
   Map<String, Object?> toJson() => {
-        'id': id,
-        'role': role,
-        'text': text,
-        'created_at': createdAt.toIso8601String(),
-        'run_id': runId,
-        'attachments': [for (final a in attachments) a.toJson()],
-        'sibling_index': siblingIndex,
-        'sibling_count': siblingCount,
-        'bot_id': botId,
-      };
+    'id': id,
+    'role': role,
+    'text': text,
+    'created_at': createdAt.toIso8601String(),
+    'run_id': runId,
+    'attachments': [for (final a in attachments) a.toJson()],
+    'sibling_index': siblingIndex,
+    'sibling_count': siblingCount,
+    'bot_id': botId,
+  };
   static ChatMessageView fromJson(Map<String, dynamic> j) => ChatMessageView(
-        id: j['id'] as String,
-        role: j['role'] as String,
-        text: j['text'] as String? ?? '',
-        createdAt: DateTime.parse(j['created_at'] as String),
-        runId: j['run_id'] as String?,
-        attachments: [for (final a in (j['attachments'] as List? ?? const [])) AttachmentRef.fromJson(a as Map<String, dynamic>)],
-        siblingIndex: (j['sibling_index'] as num?)?.toInt() ?? 1,
-        siblingCount: (j['sibling_count'] as num?)?.toInt() ?? 1,
-        botId: j['bot_id'] as String?,
-      );
+    id: j['id'] as String,
+    role: j['role'] as String,
+    text: j['text'] as String? ?? '',
+    createdAt: DateTime.parse(j['created_at'] as String),
+    runId: j['run_id'] as String?,
+    attachments: [for (final a in (j['attachments'] as List? ?? const [])) AttachmentRef.fromJson(a as Map<String, dynamic>)],
+    siblingIndex: (j['sibling_index'] as num?)?.toInt() ?? 1,
+    siblingCount: (j['sibling_count'] as num?)?.toInt() ?? 1,
+    botId: j['bot_id'] as String?,
+  );
 
   final String id;
   final String role;
   final String text;
   final DateTime createdAt;
+
   /// Its place among edited versions of the same message (D-108).
   final int siblingIndex;
   final int siblingCount;
@@ -85,16 +86,7 @@ class ChatMessageView {
 }
 
 class SkillView {
-  const SkillView({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.bodyMd,
-    required this.enabled,
-    this.botId,
-    this.source = 'manual',
-    this.sourceRef = const {},
-  });
+  const SkillView({required this.id, required this.name, required this.description, required this.bodyMd, required this.enabled, this.botId, this.source = 'manual', this.sourceRef = const {}});
   final String id;
   final String name;
   final String description;
@@ -153,9 +145,7 @@ class QuietHoursView {
   final String start;
   final String end;
   Map<String, Object?> toJson() => {'enabled': enabled, 'start': start, 'end': end};
-  static QuietHoursView? fromJson(Object? j) => j is Map
-      ? QuietHoursView(enabled: j['enabled'] == true, start: '${j['start'] ?? '22:00'}', end: '${j['end'] ?? '07:00'}')
-      : null;
+  static QuietHoursView? fromJson(Object? j) => j is Map ? QuietHoursView(enabled: j['enabled'] == true, start: '${j['start'] ?? '22:00'}', end: '${j['end'] ?? '07:00'}') : null;
 }
 
 /// One person's quiet-hours choice for one bot: default, always or custom.
@@ -216,40 +206,48 @@ abstract class Backend {
   Future<List<Credential>> credentials(String orgId);
   Future<Credential> addCredential(String orgId, ProviderId provider, String label, {String? apiKey, String? baseUrl});
   Future<CredentialTestResult> testCredential(String credentialId, {String? model});
+
   /// Models the key can use, recommended first (live from the provider, or Kasama's short list).
   Future<ModelOptionList> models(String credentialId);
   Future<Credential> updateCredential(String credentialId, {String? label, bool? fallbackOnLimit});
+
   /// Deletes a key and its Vault secret; a ChatGPT sign-in is revoked first.
   Future<void> deleteCredential(String credentialId);
 
   // ChatGPT plan sign-in (D-091)
   /// Whether this server lets people connect a ChatGPT plan.
   bool get chatGptSignIn;
+
   /// Whether this device can run the sign-in (the desktop apps; phones and the web can't).
   bool get canConnectChatGpt;
+
   /// Opens the browser to sign in with ChatGPT and returns the connected plan.
   Future<Credential> connectChatGpt(String orgId, {String? credentialId});
 
   // Bots
   Future<List<Bot>> bots(String orgId);
+
   /// Group chats (D-118).
   Future<List<Conversation>> groupChats(String orgId);
   Future<Conversation> createGroupChat(String leadBotId, List<String> botIds, {String? title});
-  Future<Bot> createBot(String orgId,
-      {required String name, required String credentialId, required String model, String persona, String? templateId, String? avatarUrl});
+  Future<Bot> createBot(String orgId, {required String name, required String credentialId, required String model, String persona, String? templateId, String? avatarUrl});
   Future<List<Template>> templates();
+
   /// [avatarUrl]: `mascot:<name>` for a cloud bot, '' to go back to initials, null to leave it.
   Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy, String? avatarUrl});
   Future<UsageReport> usage(String orgId, {String period});
+
   /// Workspace search (D-103), including files on awake computers.
   Future<SearchResponse> search(String orgId, String query);
 
   // Bot folders, archive and settings history (D-100)
   Future<List<BotFolder>> botFolders(String orgId);
+
   /// Moves a bot into the named folder (created when new); null takes it out of folders.
   Future<void> setBotFolder(String orgId, String botId, String? folderName);
   Future<List<Bot>> archivedBots(String orgId);
   Future<void> setBotArchived(String botId, bool archived);
+
   /// Starts (or reruns) the setup interview; returns its conversation (D-105).
   Future<String> startBotSetup(String botId);
   Future<void> skipBotSetup(String botId);
@@ -257,25 +255,28 @@ abstract class Backend {
   Future<BotTemplateFile> exportBot(String botId, {bool memories = false});
   Future<BotShareLink> createBotShare(String botId, {bool memories = false});
   Future<BotTemplateFile> getBotShare(String token);
-  Future<ImportBotResponse> importBot(String orgId, BotTemplateFile template,
-      {required String credentialId, required String model, bool memories = true, bool routines = true});
+  Future<ImportBotResponse> importBot(String orgId, BotTemplateFile template, {required String credentialId, required String model, bool memories = true, bool routines = true});
   // Quiet hours (D-109)
   Future<QuietHoursView> quietHours();
   Future<void> setQuietHours(QuietHoursView hours);
   Future<BotQuietView> botQuiet(String botId);
   Future<void> setBotQuiet(String botId, BotQuietView value);
   Future<List<BotRevision>> botRevisions(String botId);
+
   /// Puts back the settings from before [revision]; the current ones become a new revision.
   Future<void> restoreBotRevision(String botId, BotRevision revision);
 
   // Appearance
   /// Whether the server can search wallpaper photos (Unsplash; D-087).
   bool get wallpapersEnabled;
+
   /// A trace viewer link with {trace_id} in it, when the server has one (D-107).
   String? get traceUrlTemplate;
+
   /// One run (its status, totals and trace id).
   Future<Run> run(String runId);
   Future<List<WallpaperPhoto>> searchWallpapers({String? query, int page = 1});
+
   /// Tells the photo source a photo was chosen.
   Future<void> trackWallpaperDownload(String downloadLocation);
 
@@ -284,13 +285,17 @@ abstract class Backend {
   Future<Conversation> createConversation(String botId);
   Future<List<ChatMessageView>> messages(String conversationId);
   Future<String?> activeRun(String conversationId);
+
   /// [skills]: skills picked with / in the composer (D-104).
   Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const []});
   Future<void> cancelRun(String runId);
+
   /// Edits a sent message: forks there and reruns (D-108).
   Future<SendMessageResponse> editMessage(String conversationId, String messageId, String text);
+
   /// Shows the branch containing [messageId].
   Future<void> switchBranch(String conversationId, String messageId);
+
   /// A message and its edited versions, oldest first.
   Future<List<String>> messageSiblings(String conversationId, String messageId);
   Stream<RunEventItem> watchRun(String runId, {int afterSeq = 0});
@@ -318,14 +323,24 @@ abstract class Backend {
   Future<List<NotificationView>> notifications();
   Future<void> markNotificationsRead();
   Future<void> markNotificationRead(String id);
+
   /// New notifications for the signed-in user, live.
   Stream<NotificationView> watchNotifications();
   Future<void> registerDevice(String platform, String token);
 
   // Routines
   Future<List<Routine>> routines(String botId);
-  Future<CreatedRoutine> createRoutine(String botId,
-      {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt, CalendarTriggerConfig? calendar});
+  Future<CreatedRoutine> createRoutine(
+    String botId, {
+    required String name,
+    required String instructions,
+    required String trigger,
+    String? cron,
+    String? timezone,
+    DateTime? runAt,
+    CalendarTriggerConfig? calendar,
+    MessageTriggerConfig? message,
+  });
   Future<void> setRoutineEnabled(String routineId, bool enabled);
   Future<void> deleteRoutine(String routineId);
   Future<String> runRoutine(String routineId);
@@ -339,6 +354,7 @@ abstract class Backend {
 
   // Built-in apps (D-089)
   Future<AppCatalog> appCatalog();
+
   /// Connects an app: done at once with an API key, or a sign-in to open for OAuth.
   Future<ConnectAppResponse> connectApp(String orgId, {required String appId, required String method, String? apiKey, String? integrationId});
   Future<ConnectFlowStatus> connectStatus(String flowId);
@@ -348,6 +364,7 @@ abstract class Backend {
   Future<String> connectProviderApp(String integrationId, String app);
   Future<List<ProviderAccount>> providerAccounts(String integrationId);
   Future<List<Secret>> secrets(String orgId);
+
   /// [totp]: a sign-in code seed (otpauth:// link or base32 key) bots use as {{totp:NAME}} (D-102).
   Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts, bool totp = false});
   Future<void> deleteSecret(String secretId);
@@ -392,6 +409,12 @@ abstract class Backend {
   Future<KnowledgeSource> addKnowledgeSource(CreateKnowledgeSourceRequest request);
   Future<void> resyncKnowledgeSource(String id);
   Future<void> deleteKnowledgeSource(String id);
+  // Chat apps (D-134)
+  Future<List<Channel>> channels(String botId);
+  Future<Channel> createChannel(CreateChannelRequest request);
+  Future<Channel> updateChannel(String id, {String? name, List<String>? allowedSenders, bool? enabled});
+  Future<void> deleteChannel(String id);
+  Future<List<ChannelEvent>> channelEvents(String id);
   // Routines and skills as files (D-124)
   Future<Uint8List> exportWorkspaceFiles(String orgId);
   Future<WorkspaceFilesResult> importWorkspaceFiles(String orgId, Uint8List zip, {bool dryRun = false});
@@ -423,6 +446,7 @@ abstract class Backend {
   // Pages (D-119): opened in the system browser, never embedded.
   Future<List<BotPage>> pages(String orgId, {String? botId});
   Future<String> pageViewLink(String id, {bool pdf = false});
+
   /// Returns the new public link when made public.
   Future<String?> setPageVisibility(String id, BotPageVisibilityEnum visibility, {int? expiresInDays});
   Future<void> deletePage(String id);
@@ -449,20 +473,12 @@ abstract class Backend {
   Future<void> signOffMilestone(String projectId, String milestoneId);
   // Ticket board (D-098)
   Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired});
+
   /// Changes a ticket; assigning a new bot starts its work.
-  Future<Task> updateTask(
-    String taskId, {
-    String? title,
-    String? details,
-    String? status,
-    String? priority,
-    String? assigneeBotId,
-    String? assigneeUserId,
-    bool? reviewRequired,
-    double? position,
-  });
+  Future<Task> updateTask(String taskId, {String? title, String? details, String? status, String? priority, String? assigneeBotId, String? assigneeUserId, bool? reviewRequired, double? position});
   Future<void> deleteTask(String taskId);
   Future<List<TaskComment>> taskComments(String taskId);
+
   /// A comment on a bot's ticket wakes that bot.
   Future<TaskComment> addTaskComment(String taskId, String body);
 
@@ -470,6 +486,7 @@ abstract class Backend {
   Future<AdminOverview?> adminOverview();
   Future<List<AdminUser>> adminUsers();
   Future<List<AdminOrg>> adminOrgs();
+
   /// Suspends a workspace: its computers stop and its bots stop running; data is kept (D-094).
   Future<AdminOrg> suspendOrg(String orgId, String reason);
   Future<AdminOrg> unsuspendOrg(String orgId);
@@ -483,13 +500,17 @@ abstract class Backend {
   Future<AccountDeletion> deleteAccount(String confirmEmail);
   // Two-step sign-in (D-093)
   Future<List<TwoStepFactor>> twoStepFactors();
+
   /// The account has two-step sign-in but this session hasn't passed the second step yet.
   bool get twoStepCodeNeeded;
+
   /// This session passed the second step (aal2).
   bool get twoStepVerified;
   Future<TwoStepEnrollment> startTwoStep();
+
   /// Finishes setting up [factorId] with a code from the app.
   Future<void> verifyTwoStep(String factorId, String code);
+
   /// Signing in: passes the second step with a code.
   Future<void> passTwoStep(String code);
   Future<void> removeTwoStep(String factorId);
@@ -498,6 +519,7 @@ abstract class Backend {
 
   Future<int> retentionDays(String orgId);
   Future<int> setRetentionDays(String orgId, int days);
+
   /// Enterprise SSO: opens the identity provider for the email's domain.
   Future<void> signInWithSso(String email);
 
@@ -506,8 +528,7 @@ abstract class Backend {
   Future<PlanCatalog> plans();
   Future<String> checkoutUrl(String orgId, {String? planCode, String? packCode});
   Future<String> billingPortalUrl(String orgId);
-  Future<BillingSummary> verifyPurchase(String orgId,
-      {required String source, required String productId, String? transactionId, String? purchaseToken});
+  Future<BillingSummary> verifyPurchase(String orgId, {required String source, required String productId, String? transactionId, String? purchaseToken});
   Future<BillingUsage> billingUsage(String orgId);
   Future<List<ConnectKey>> connectKeys(String orgId);
   Future<CreatedConnectKey> createConnectKey(String orgId, String instanceName);
@@ -519,6 +540,7 @@ abstract class Backend {
   Future<List<LocalDevice>> localDevices(String orgId);
   Future<CreatedLocalDevice> createLocalDevice(String orgId, String name, String platform);
   Future<LocalDevice> updateLocalDevice(String id, {Set<String>? capabilities, List<String>? roots, List<String>? botIds, bool? enabled});
+
   /// Registers this computer's local MCP servers (no secrets) as local_mcp integrations (D-096).
   Future<List<Integration>> setLocalMcpServers(String deviceId, List<LocalMcpServerInfo> servers);
   Future<void> deleteLocalDevice(String id);

@@ -21,7 +21,15 @@ class ComputerdConfig {
     this.extraPath = const [],
     this.extraEnv = const {},
     this.mcpServers = const {},
+    this.imessageDb,
+    this.imessageSendCommand,
   });
+
+  /// iMessage chat apps (D-134): the Messages database to read (default ~/Library/Messages/chat.db).
+  final String? imessageDb;
+  /// iMessage: a command run with the recipient and text as its last two arguments, instead of
+  /// AppleScript (tests).
+  final List<String>? imessageSendCommand;
 
   /// Companion mode: local MCP servers the user added (D-096), reached at `/mcp/<key>`.
   final Map<String, LocalMcpServer> mcpServers;
@@ -65,6 +73,8 @@ class ComputerdConfig {
       allowedRoots: env['COMPUTERD_ALLOWED_ROOTS']?.split(':').where((r) => r.isNotEmpty).toList(),
       capabilities: env['COMPUTERD_CAPABILITIES']?.split(',').map((c) => c.trim()).where((c) => c.isNotEmpty).toSet(),
       mcpServers: LocalMcpServer.parseAll(env['COMPUTERD_MCP_SERVERS']),
+      imessageDb: env['COMPUTERD_IMESSAGE_DB'],
+      imessageSendCommand: env['COMPUTERD_IMESSAGE_SEND_CMD']?.split(' ').where((s) => s.isNotEmpty).toList(),
     );
   }
 }
@@ -138,6 +148,15 @@ class Computerd {
         case ('POST' || 'GET', ['mcp', final key]):
           if (config.companion) _need('mcp');
           return await mcp.handle(req, key);
+        // iMessage chat apps (D-134): only on a user's Mac, with Messages allowed.
+        case ('GET', ['imessage', 'new']) || ('POST', ['imessage', 'send']) when !config.companion:
+          throw _ApiError(404, 'not_found', 'No such endpoint');
+        case ('GET', ['imessage', 'new']):
+          _need('messages');
+          return await _imessageNew(req);
+        case ('POST', ['imessage', 'send']):
+          _need('messages');
+          return await _imessageSend(req);
         case ('POST', ['exec']):
           return await _exec(req);
         case ('POST', ['exec', final id, 'kill']):
@@ -190,6 +209,52 @@ class Computerd {
         await _json(res, 500, {'code': 'internal_error', 'message': e.toString()});
       } catch (_) {}
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // iMessage (D-134)
+
+  /// Messages received since a row id (from other people, with text), oldest first, plus the newest
+  /// row id so the first call can take a baseline without answering old messages.
+  Future<void> _imessageNew(HttpRequest req) async {
+    final since = int.tryParse(req.uri.queryParameters['since'] ?? '') ?? 0;
+    final db = config.imessageDb ?? p.join(config.home, 'Library', 'Messages', 'chat.db');
+    if (!File(db).existsSync()) throw _ApiError(501, 'no_messages', 'Messages has no database on this computer');
+    Future<List<dynamic>> query(String q) async {
+      final r = await Process.run('sqlite3', ['-readonly', '-json', db, q]);
+      if (r.exitCode != 0) {
+        throw _ApiError(502, 'messages_unreadable', 'Could not read Messages (give the Kasama app Full Disk Access): ${(r.stderr as String).trim()}');
+      }
+      final out = (r.stdout as String).trim();
+      return out.isEmpty ? const [] : jsonDecode(out) as List<dynamic>;
+    }
+
+    final latest = await query('select coalesce(max(ROWID), 0) as latest from message');
+    final rows = since <= 0
+        ? const []
+        : await query('select m.ROWID as rowid, h.id as handle, m.text as text from message m join handle h on h.ROWID = m.handle_id '
+            'where m.is_from_me = 0 and m.ROWID > $since and m.text is not null and m.text != \'\' order by m.ROWID limit 50');
+    await _json(req.response, 200, {
+      'latest': (latest.isEmpty ? 0 : (latest.first as Map)['latest']) ?? 0,
+      'messages': rows,
+    });
+  }
+
+  Future<void> _imessageSend(HttpRequest req) async {
+    final body = jsonDecode(await utf8.decoder.bind(req).join()) as Map<String, dynamic>;
+    final to = body['to'] as String? ?? '';
+    final text = body['text'] as String? ?? '';
+    if (to.isEmpty || text.isEmpty) throw _ApiError(400, 'invalid_request', 'Need to and text');
+    final cmd = config.imessageSendCommand ??
+        [
+          'osascript',
+          '-e', 'on run argv',
+          '-e', 'tell application "Messages" to send (item 2 of argv) to participant (item 1 of argv) of (1st account whose service type = iMessage)',
+          '-e', 'end run',
+        ];
+    final r = await Process.run(cmd.first, [...cmd.skip(1), to, text]);
+    if (r.exitCode != 0) throw _ApiError(502, 'send_failed', 'Messages could not send: ${(r.stderr as String).trim()}');
+    await _json(req.response, 200, {'ok': true});
   }
 
   Future<void> _json(HttpResponse res, int status, Object body) async {

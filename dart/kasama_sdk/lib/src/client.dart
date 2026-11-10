@@ -47,23 +47,23 @@ class KasamaClient {
 
   /// Connects to an API server and loads its public configuration.
   static Future<KasamaClient> connect(String baseUrl, {SessionStore? sessions}) async {
-    final dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 60),
-    ));
+    final dio = Dio(BaseOptions(baseUrl: baseUrl, connectTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 60)));
     final api = KasamaApi(dio: dio, interceptors: const []);
     final config = (await api.getSystemApi().getConfig()).data!;
     final auth = AuthClient(supabaseUrl: config.supabaseUrl, anonKey: config.supabaseAnonKey);
     final client = KasamaClient._(baseUrl, api, config, auth, sessions ?? MemorySessionStore());
-    dio.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) async {
-      final secure = options.extra['secure'];
-      if (secure is List && secure.isNotEmpty) {
-        final session = await client.currentSession();
-        if (session != null) options.headers['Authorization'] = 'Bearer ${session.accessToken}';
-      }
-      handler.next(options);
-    }));
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final secure = options.extra['secure'];
+          if (secure is List && secure.isNotEmpty) {
+            final session = await client.currentSession();
+            if (session != null) options.headers['Authorization'] = 'Bearer ${session.accessToken}';
+          }
+          handler.next(options);
+        },
+      ),
+    );
     return client;
   }
 
@@ -96,6 +96,7 @@ class KasamaClient {
   ImportApi get imports => api.getImportApi();
   FilesApi get files => api.getFilesApi();
   KnowledgeApi get knowledge => api.getKnowledgeApi();
+  ChannelsApi get channels => api.getChannelsApi();
   ReplaysApi get replays => api.getReplaysApi();
   PasswordManagersApi get passwordManagers => api.getPasswordManagersApi();
   McpApi get mcp => api.getMcpApi();
@@ -120,11 +121,7 @@ class KasamaClient {
       '/v1/computers/$computerId/files',
       queryParameters: {'path': path},
       data: Stream.fromIterable([bytes]),
-      options: Options(headers: {
-        ...await _authHeader(),
-        'content-type': 'application/octet-stream',
-        'content-length': bytes.length,
-      }),
+      options: Options(headers: {...await _authHeader(), 'content-type': 'application/octet-stream', 'content-length': bytes.length}),
     );
     return UploadResult.fromJson(res.data!);
   }
@@ -135,11 +132,7 @@ class KasamaClient {
       '/v1/voice/transcribe',
       queryParameters: {'bot_id': botId, 'language': ?language},
       data: Stream.fromIterable([audio]),
-      options: Options(headers: {
-        ...await _authHeader(),
-        'content-type': mime,
-        'content-length': audio.length,
-      }),
+      options: Options(headers: {...await _authHeader(), 'content-type': mime, 'content-length': audio.length}),
     );
     return Transcription.fromJson(res.data!);
   }
@@ -157,11 +150,7 @@ class KasamaClient {
   /// WebSocket URL and headers for a computer's interactive terminal.
   Future<(Uri, Map<String, String>)> terminalEndpoint(String computerId, {int cols = 120, int rows = 32}) async {
     final base = Uri.parse(baseUrl);
-    final uri = base.replace(
-      scheme: base.scheme == 'https' ? 'wss' : 'ws',
-      path: '/v1/computers/$computerId/terminal',
-      queryParameters: {'cols': '$cols', 'rows': '$rows'},
-    );
+    final uri = base.replace(scheme: base.scheme == 'https' ? 'wss' : 'ws', path: '/v1/computers/$computerId/terminal', queryParameters: {'cols': '$cols', 'rows': '$rows'});
     return (uri, await _authHeader());
   }
 
@@ -183,11 +172,7 @@ class KasamaClient {
   /// Signs up, carrying a sign-up proof when the server asks for one (D-094).
   Future<AuthSession?> signUp(String email, String password) async {
     final proof = await signupProof(api, config);
-    final session = await auth.signUp(
-      email: email,
-      password: password,
-      data: proof == null ? null : {'signup_proof': proof},
-    );
+    final session = await auth.signUp(email: email, password: password, data: proof == null ? null : {'signup_proof': proof});
     if (session != null) await sessions.save(session);
     return session;
   }

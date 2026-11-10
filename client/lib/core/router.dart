@@ -6,6 +6,7 @@ import '../features/bots/bot_history_screen.dart';
 import '../features/bots/bot_template.dart';
 import '../features/mcp/mcp_screens.dart';
 import '../features/bots/action_rules_screen.dart';
+import '../features/bots/channels_screen.dart';
 import '../features/bots/knowledge_screen.dart';
 import '../features/bots/plugins_screen.dart';
 import '../features/bots/replays_screen.dart';
@@ -107,9 +108,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/onboarding', pageBuilder: _page((_, _) => const OnboardingScreen())),
       GoRoute(path: '/welcome', pageBuilder: _page((_, _) => const WelcomeScreen())),
       GoRoute(path: '/two-step', pageBuilder: _page((_, _) => const TwoStepPromptScreen())),
-      GoRoute(path: '/join/:token', pageBuilder: _page((_, s) => JoinScreen(token: s.pathParameters['token']!))),
-      GoRoute(path: '/oauth/consent/:id', pageBuilder: _page((_, s) => McpConsentScreen(requestId: s.pathParameters['id']!))),
-      GoRoute(path: '/import/:token', pageBuilder: _page((_, s) => ImportBotScreen(token: s.pathParameters['token']!))),
+      GoRoute(
+        path: '/join/:token',
+        pageBuilder: _page((_, s) => JoinScreen(token: s.pathParameters['token']!)),
+      ),
+      GoRoute(
+        path: '/oauth/consent/:id',
+        pageBuilder: _page((_, s) => McpConsentScreen(requestId: s.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/import/:token',
+        pageBuilder: _page((_, s) => ImportBotScreen(token: s.pathParameters['token']!)),
+      ),
       ShellRoute(
         pageBuilder: (context, state, child) => MaterialPage(
           key: state.pageKey,
@@ -118,9 +128,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/bots',
-            pageBuilder: _page(
-              (context, _) => layoutFor(MediaQuery.sizeOf(context).width) == LayoutSize.desktop ? const SizedBox.shrink() : const BotsScreen(),
-            ),
+            pageBuilder: _page((context, _) => layoutFor(MediaQuery.sizeOf(context).width) == LayoutSize.desktop ? const SizedBox.shrink() : const BotsScreen()),
             routes: [
               GoRoute(
                 path: ':botId/chat',
@@ -153,6 +161,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ':botId/knowledge',
                 pageBuilder: _page((_, s) => KnowledgeScreen(botId: s.pathParameters['botId']!)),
+              ),
+              GoRoute(
+                path: ':botId/chat-apps',
+                pageBuilder: _page((_, s) => ChannelsScreen(botId: s.pathParameters['botId']!)),
               ),
               GoRoute(
                 path: ':botId/plugins',
@@ -203,14 +215,31 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/projects',
             pageBuilder: _page((_, _) => const ProjectsScreen()),
-            routes: [GoRoute(path: ':id', pageBuilder: _page((_, s) => ProjectScreen(projectId: s.pathParameters['id']!)))],
+            routes: [
+              GoRoute(
+                path: ':id',
+                pageBuilder: _page((_, s) => ProjectScreen(projectId: s.pathParameters['id']!)),
+              ),
+            ],
           ),
           GoRoute(path: '/search', pageBuilder: _page((_, _) => const SearchScreen())),
-          GoRoute(path: '/teach/:id', pageBuilder: _page((_, s) => TeachDraftScreen(sessionId: s.pathParameters['id']!))),
+          GoRoute(
+            path: '/teach/:id',
+            pageBuilder: _page((_, s) => TeachDraftScreen(sessionId: s.pathParameters['id']!)),
+          ),
           GoRoute(path: '/password-managers', pageBuilder: _page((_, _) => const PasswordManagersScreen())),
-          GoRoute(path: '/pages', pageBuilder: _page((_, s) => PagesScreen(botId: s.uri.queryParameters['bot']))),
-          GoRoute(path: '/groups/:id', pageBuilder: _page((_, s) => GroupChatScreen(conversationId: s.pathParameters['id']!))),
-          GoRoute(path: '/run-routine/:ref', pageBuilder: _page((_, s) => RunRoutineScreen(reference: s.pathParameters['ref']!))),
+          GoRoute(
+            path: '/pages',
+            pageBuilder: _page((_, s) => PagesScreen(botId: s.uri.queryParameters['bot'])),
+          ),
+          GoRoute(
+            path: '/groups/:id',
+            pageBuilder: _page((_, s) => GroupChatScreen(conversationId: s.pathParameters['id']!)),
+          ),
+          GoRoute(
+            path: '/run-routine/:ref',
+            pageBuilder: _page((_, s) => RunRoutineScreen(reference: s.pathParameters['ref']!)),
+          ),
           GoRoute(
             path: '/approvals/:id',
             pageBuilder: _page((_, s) => ApprovalScreen(approvalId: s.pathParameters['id']!)),
@@ -239,7 +268,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'integrations',
                 pageBuilder: _page((_, _) => const IntegrationsScreen()),
-                routes: [GoRoute(path: ':id', pageBuilder: _page((_, s) => IntegrationDetailScreen(integrationId: s.pathParameters['id']!)))],
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    pageBuilder: _page((_, s) => IntegrationDetailScreen(integrationId: s.pathParameters['id']!)),
+                  ),
+                ],
               ),
               GoRoute(path: 'secrets', pageBuilder: _page((_, _) => const SecretsScreen())),
               GoRoute(path: 'computers', pageBuilder: _page((_, _) => const ComputersScreen())),

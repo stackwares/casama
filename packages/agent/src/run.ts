@@ -44,6 +44,7 @@ import {
 } from "./secret-requests.ts";
 import { computerMcpFor } from "./plugins.ts";
 import { hasLoginPlaceholders, resolveLoginPlaceholders } from "./password-managers.ts";
+import { replyToChannel } from "./channels/service.ts";
 import { REPLAY_STOPPED } from "./replays.ts";
 import { learnFromRun } from "./skill-learning.ts";
 import { afterWelcomeRun, WELCOME_GUIDE } from "./welcome.ts";
@@ -764,6 +765,12 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       }),
     );
     await step("complete", () => finishCompleted(db, info, finalMessage.messageId, bus));
+    // Chat apps (D-134): a reply in a thread from Telegram, email, … goes back there.
+    await step("channel-reply", () =>
+      replyToChannel(db, { conversationId: info.conversationId }, finalMessage.text, deps.fetch ?? safeFetch, deps.local).catch((err) => {
+        log?.warn("channel reply failed", { run_id: runId, error: (err as Error).message });
+      }),
+    );
     // Welcome chat (D-129): the setup offer after the first value, "What I learned" after setup.
     await step("welcome", () =>
       afterWelcomeRun(db, { runId: info.runId, orgId: info.orgId, botId: info.botId, conversationId: info.conversationId, userId: info.createdBy }).catch((err) => {

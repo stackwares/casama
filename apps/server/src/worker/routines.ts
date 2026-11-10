@@ -24,7 +24,7 @@ type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 export async function createRoutineRun(
   tx: Tx | Database,
   r: RoutineRow,
-  trigger: "routine" | "webhook" | "calendar",
+  trigger: "routine" | "webhook" | "calendar" | "message",
   eventText?: string,
 ) {
   // Check-in scans (D-114) keep no conversation: a quiet scan writes nothing. Their instructions
@@ -56,7 +56,7 @@ export async function createRoutineRun(
     returning id`);
   const runId = run?.id as string;
   const text = eventText
-    ? `${r.instructions_md}\n\nThe event that triggered this run:\n${wrapUntrusted(trigger === "calendar" ? "calendar" : "webhook", eventText)}`
+    ? `${r.instructions_md}\n\nThe event that triggered this run:\n${wrapUntrusted(trigger === "calendar" ? "calendar" : trigger === "message" ? "message" : "webhook", eventText)}`
     : r.instructions_md;
   await tx.execute(sql`
     insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
@@ -104,6 +104,13 @@ export async function claimDueRoutines(
     }
     return runIds;
   });
+}
+
+/** Chat apps (D-134): a routine started by an inbound email or chat message. */
+export async function startRoutineForMessage(db: Database, routineId: string, eventText: string): Promise<string | null> {
+  const [r] = await db.execute<RoutineRow>(sql`select * from public.routines where id = ${routineId}::uuid and enabled`);
+  if (!r) return null;
+  return createRoutineRun(db, r, "message", eventText);
 }
 
 /** Calendar triggers (D-132): routine runs for events whose time has come, with the event in context. */

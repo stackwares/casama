@@ -267,6 +267,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `organizations.allow_bot_to_bot` (workspace settings), checked in `wakeMentioned` (group chats, with a `notice` run event) and `bots.delegate`; the app's switch in workspace settings and `NoticeKind.info` in chat.
 
+## Chat apps (D-134)
+
+- `packages/agent/src/channels/` (`adapters.ts` per provider; `service.ts` with `handleInbound`, `replyToChannel`, `channel.send`, `pollIMessage`); `channels`, `channel_threads`, `channel_events`; `apps/server/src/api/routes/channels.ts` (CRUD and `/hooks/channels/{id}`); the `channel-reply` run step; the `message` routine trigger (`startRoutineForMessage`); computerd `/imessage/new` and `/imessage/send` behind the companion's Messages permission; the bot's Chat apps screen.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

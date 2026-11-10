@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +36,7 @@ class CompanionScreen extends ConsumerWidget {
       'files' => l10n.capFiles,
       'browser' => l10n.capBrowser,
       'mcp' => l10n.capMcp,
+      'messages' => l10n.capMessages,
       _ => l10n.capDesktop,
     };
     return SubPage(
@@ -104,7 +106,8 @@ class CompanionScreen extends ConsumerWidget {
                         SectionHeader(title: l10n.companionCapabilities),
                         GroupedCard(
                           children: [
-                            for (final c in capabilityKeys)
+                            // Messages (iMessage chat apps, D-134) only exists on a Mac.
+                            for (final c in [...capabilityKeys, if (defaultTargetPlatform == TargetPlatform.macOS) 'messages'])
                               GroupedTile(
                                 key: Key('cap-$c'),
                                 icon: switch (c) {
@@ -112,6 +115,7 @@ class CompanionScreen extends ConsumerWidget {
                                   'files' => LucideIcons.folder,
                                   'browser' => LucideIcons.globe,
                                   'mcp' => LucideIcons.plug,
+                                  'messages' => LucideIcons.messageCircle,
                                   _ => LucideIcons.mousePointer2,
                                 },
                                 title: capLabel(c),
@@ -155,7 +159,10 @@ class CompanionScreen extends ConsumerWidget {
                                 ),
                             ],
                           ),
-                        _CodingAgentsSection(shellOn: caps.contains('shell'), onAllow: () => runGuarded(context, () => controller.save(capabilities: {...caps, 'shell'}))),
+                        _CodingAgentsSection(
+                          shellOn: caps.contains('shell'),
+                          onAllow: () => runGuarded(context, () => controller.save(capabilities: {...caps, 'shell'})),
+                        ),
                         _LocalMcpSection(device: device, enabled: caps.contains('mcp')),
                         SectionHeader(title: l10n.botsAllowed),
                         GroupedCard(
@@ -181,14 +188,7 @@ class CompanionScreen extends ConsumerWidget {
                         Padding(padding: const EdgeInsets.fromLTRB(4, 8, 4, 0), child: FormNote(l10n.botsAllowedHelp)),
                         const SizedBox(height: AppSpace.lg),
                         GroupedCard(
-                          children: [
-                            GroupedTile(
-                              icon: LucideIcons.unlink,
-                              destructive: true,
-                              title: l10n.unpairComputer,
-                              onTap: () => runGuarded(context, controller.unpair),
-                            ),
-                          ],
+                          children: [GroupedTile(icon: LucideIcons.unlink, destructive: true, title: l10n.unpairComputer, onTap: () => runGuarded(context, controller.unpair))],
                         ),
                       ],
                     );
@@ -199,7 +199,6 @@ class CompanionScreen extends ConsumerWidget {
     );
   }
 }
-
 
 /// Splits a command line into words, keeping "quoted parts" together.
 List<String> splitCommand(String line) {
@@ -278,10 +277,7 @@ class _LocalMcpSection extends ConsumerWidget {
                 ),
             ],
           ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
-          child: FormNote(enabled ? l10n.localMcpHelp : l10n.localMcpNeedsCapability),
-        ),
+        Padding(padding: const EdgeInsets.fromLTRB(4, 8, 4, 0), child: FormNote(enabled ? l10n.localMcpHelp : l10n.localMcpNeedsCapability)),
       ],
     );
   }
@@ -332,15 +328,7 @@ class _LocalMcpFormState extends State<_LocalMcpForm> {
         for (final line in _env.text.split('\n'))
           if (line.contains('=')) line.substring(0, line.indexOf('=')).trim(): line.substring(line.indexOf('=') + 1).trim(),
       }..removeWhere((k, _) => k.isEmpty);
-      out = LocalMcpConfig(
-        key: LocalMcpConfig.keyFor(label, widget.taken),
-        label: label,
-        kind: 'stdio',
-        command: words.first,
-        args: words.skip(1).toList(),
-        cwd: _cwd,
-        env: env,
-      );
+      out = LocalMcpConfig(key: LocalMcpConfig.keyFor(label, widget.taken), label: label, kind: 'stdio', command: words.first, args: words.skip(1).toList(), cwd: _cwd, env: env);
     }
     Navigator.pop(context, out);
   }
@@ -355,7 +343,11 @@ class _LocalMcpFormState extends State<_LocalMcpForm> {
       submitKey: const Key('saveLocalMcp'),
       onSubmit: _submit,
       children: [
-        TextField(key: const Key('localMcpLabel'), controller: _label, decoration: InputDecoration(labelText: l10n.localMcpName)),
+        TextField(
+          key: const Key('localMcpLabel'),
+          controller: _label,
+          decoration: InputDecoration(labelText: l10n.localMcpName),
+        ),
         SegmentedButton<String>(
           segments: [
             ButtonSegment(value: 'stdio', label: Text(l10n.localMcpStdio)),
@@ -407,7 +399,6 @@ class _LocalMcpFormState extends State<_LocalMcpForm> {
   }
 }
 
-
 final _codingAgentsProvider = FutureProvider<List<String>>((ref) => ref.watch(companionProvider).detectCodingAgents());
 
 /// Coding agents found on this computer (D-097).
@@ -430,10 +421,7 @@ class _CodingAgentsSection extends ConsumerWidget {
           AppCard(child: FormNote(l10n.codingAgentsNone, icon: LucideIcons.codeXml))
         else
           GroupedCard(
-            children: [
-              for (final a in found)
-                GroupedTile(key: Key('codingAgent-$a'), icon: LucideIcons.codeXml, title: _labels[a] ?? a, subtitle: a),
-            ],
+            children: [for (final a in found) GroupedTile(key: Key('codingAgent-$a'), icon: LucideIcons.codeXml, title: _labels[a] ?? a, subtitle: a)],
           ),
         if (found.isNotEmpty && !shellOn)
           Padding(

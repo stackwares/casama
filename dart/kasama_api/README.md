@@ -102,6 +102,11 @@ Class | Method | HTTP request | Description
 [*BotsApi*](doc/BotsApi.md) | [**setBotAccess**](doc/BotsApi.md#setbotaccess) | **PUT** /v1/bots/{id}/access | Replace the bot&#39;s visibility and access list
 [*BotsApi*](doc/BotsApi.md) | [**startBotSetup**](doc/BotsApi.md#startbotsetup) | **POST** /v1/bots/{id}/setup | Start (or rerun) the bot&#39;s setup interview in a new conversation
 [*BotsApi*](doc/BotsApi.md) | [**startWelcome**](doc/BotsApi.md#startwelcome) | **POST** /v1/welcome | A new person&#39;s personal workspace, bot and welcome chat (D-129); the same chat again if it exists
+[*ChannelsApi*](doc/ChannelsApi.md) | [**createChannel**](doc/ChannelsApi.md#createchannel) | **POST** /v1/channels | Connect a chat app to a bot
+[*ChannelsApi*](doc/ChannelsApi.md) | [**deleteChannel**](doc/ChannelsApi.md#deletechannel) | **DELETE** /v1/channels/{id} | 
+[*ChannelsApi*](doc/ChannelsApi.md) | [**listChannelEvents**](doc/ChannelsApi.md#listchannelevents) | **GET** /v1/channels/{id}/events | Recent messages in and out, including ignored senders
+[*ChannelsApi*](doc/ChannelsApi.md) | [**listChannels**](doc/ChannelsApi.md#listchannels) | **GET** /v1/channels | A bot&#39;s chat apps (D-134)
+[*ChannelsApi*](doc/ChannelsApi.md) | [**updateChannel**](doc/ChannelsApi.md#updatechannel) | **PATCH** /v1/channels/{id} | 
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**editMessage**](doc/ChatApi.md#editmessage) | **POST** /v1/conversations/{id}/messages/{message_id}/edit | Edit a sent message: forks the conversation there and reruns it (the old branch stays)
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
@@ -341,6 +346,11 @@ Class | Method | HTTP request | Description
  - [CatalogApp](doc/CatalogApp.md)
  - [CatalogAppApiKey](doc/CatalogAppApiKey.md)
  - [CatalogSkill](doc/CatalogSkill.md)
+ - [Channel](doc/Channel.md)
+ - [ChannelEvent](doc/ChannelEvent.md)
+ - [ChannelEventList](doc/ChannelEventList.md)
+ - [ChannelKind](doc/ChannelKind.md)
+ - [ChannelList](doc/ChannelList.md)
  - [ChatGptSignInCompleteRequest](doc/ChatGptSignInCompleteRequest.md)
  - [ChatGptSignInStart](doc/ChatGptSignInStart.md)
  - [ChatGptSignInStartRequest](doc/ChatGptSignInStartRequest.md)
@@ -367,6 +377,7 @@ Class | Method | HTTP request | Description
  - [CreateActionRuleRequest](doc/CreateActionRuleRequest.md)
  - [CreateBotRequest](doc/CreateBotRequest.md)
  - [CreateBotShareRequest](doc/CreateBotShareRequest.md)
+ - [CreateChannelRequest](doc/CreateChannelRequest.md)
  - [CreateCheckpointRequest](doc/CreateCheckpointRequest.md)
  - [CreateComputerRequest](doc/CreateComputerRequest.md)
  - [CreateConnectKeyRequest](doc/CreateConnectKeyRequest.md)
@@ -401,6 +412,7 @@ Class | Method | HTTP request | Description
  - [DeleteAccountRequest](doc/DeleteAccountRequest.md)
  - [DeleteIntegration200Response](doc/DeleteIntegration200Response.md)
  - [DeleteResult](doc/DeleteResult.md)
+ - [DeletedChannel](doc/DeletedChannel.md)
  - [DeletedComputer](doc/DeletedComputer.md)
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
@@ -475,6 +487,7 @@ Class | Method | HTTP request | Description
  - [MessageCompletedEventPayload](doc/MessageCompletedEventPayload.md)
  - [MessageDeltaEvent](doc/MessageDeltaEvent.md)
  - [MessageDeltaEventPayload](doc/MessageDeltaEventPayload.md)
+ - [MessageTriggerConfig](doc/MessageTriggerConfig.md)
  - [ModelChoice](doc/ModelChoice.md)
  - [ModelFallbackEvent](doc/ModelFallbackEvent.md)
  - [ModelFallbackEventPayload](doc/ModelFallbackEventPayload.md)
@@ -642,6 +655,7 @@ Class | Method | HTTP request | Description
  - [UiActionPart](doc/UiActionPart.md)
  - [UiShownEvent](doc/UiShownEvent.md)
  - [UiShownEventPayload](doc/UiShownEventPayload.md)
+ - [UpdateChannelRequest](doc/UpdateChannelRequest.md)
  - [UpdateComputerRequest](doc/UpdateComputerRequest.md)
  - [UpdateCredentialRequest](doc/UpdateCredentialRequest.md)
  - [UpdateIntegrationRequest](doc/UpdateIntegrationRequest.md)

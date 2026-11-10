@@ -126,7 +126,14 @@ const routineOut = (r: RoutineRow) => ({
     | "once"
     | "github"
     | "webhook"
-    | "calendar_event",
+    | "calendar_event"
+    | "message",
+  message: (() => {
+    const t = r.trigger as Record<string, unknown> & { type?: string };
+    if (t?.type !== "message") return null;
+    const { type: _t, ...rest } = t;
+    return rest as { channel_id?: string; channel_kind?: "email"; sender?: string; subject_match?: string; text_match?: string };
+  })(),
   calendar: (() => {
     const t = r.trigger as { type?: string; integration_id?: string; offset_minutes?: number; calendar?: string; outside_guests?: boolean; title_match?: string; has_video_link?: boolean };
     if (t?.type !== "calendar_event" || !t.integration_id) return null;
@@ -587,6 +594,12 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     }
     let webhookSecret: string | undefined;
     let triggerJson: Record<string, unknown> = { type: trigger };
+    if (trigger === "message") {
+      const m = body.message ?? {};
+      if (!m.channel_id && !m.channel_kind && !m.sender && !m.subject_match && !m.text_match)
+        throw new ApiError(400, "validation_failed", "A message routine needs at least one filter (chat app, sender, subject or words)");
+      triggerJson = { type: trigger, ...m };
+    }
     if (trigger === "calendar_event") {
       const cal = body.calendar;
       if (!cal) throw new ApiError(400, "validation_failed", "A calendar routine needs its calendar and offset");

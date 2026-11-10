@@ -1,6 +1,7 @@
 export * from "./acting.ts";
 export * from "./chatgpt-auth.ts";
 export * from "./calendar-triggers.ts";
+export * from "./channels/index.ts";
 export * from "./checkins.ts";
 export * from "./computers.ts";
 export * from "./context.ts";

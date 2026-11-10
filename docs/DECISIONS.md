@@ -1004,3 +1004,61 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Tests:**
   - API (`group-chats.test.ts`): with the switch off, @everyone gets only the lead's plan, and the notice names the bots that weren't told.
   - widget (`bot_to_bot_test.dart`).
+
+## D-134 Chat apps
+
+- **Which apps:**
+  - Telegram (Bot API)
+  - Email (Resend inbound and sending)
+  - SMS (Twilio)
+  - Slack (Events API and Web API)
+  - WhatsApp (Cloud API)
+  - Messenger (Graph API)
+  - Feishu (open platform events v2)
+  - iMessage (through the desktop app on the person's own Mac)
+- **Where things live:**
+  - Connections are `channels` rows on a bot. Settings that aren't secret (addresses, numbers, ids, an optional `api_base`) go in `config`.
+  - Secrets go to Vault as one JSON value and are never returned.
+  - Each adapter (`packages/agent/src/channels/adapters.ts`) does four jobs: answers the provider's setup handshake, checks its signature, turns its payload into standard messages, and sends replies.
+- **How each app proves a request is real:**
+  - Telegram: the secret token header. Kasama generates the token and calls `setWebhook` on connect.
+  - Email: a Svix-style `whsec_` signature with a 5-minute window.
+  - SMS: Twilio's signature over the public URL and sorted parameters.
+  - Slack: the v0 signature with a 5-minute window, plus `url_verification`.
+  - WhatsApp and Messenger: `X-Hub-Signature-256`, plus the `hub.challenge` GET with a generated verify token, shown once.
+  - Feishu: the lark SHA-256 signature, plus `url_verification` checked against its token.
+- **The webhook:**
+  - Providers post to `/hooks/channels/{id}`. Behind a proxy, signatures are checked against `PUBLIC_API_URL`.
+  - A failed signature gets a 401 and nothing else happens.
+  - SMS gets an empty TwiML answer; the reply goes out later through the API.
+- **The sender gate:**
+  - A bot only answers people on the channel's allowed list: email addresses (or `*@domain`), phone numbers or user ids.
+  - Messages from anyone else are logged as `ignored` in `channel_events` and get no reply. The app shows them in the chat app's activity list.
+- **One conversation per thread:**
+  - What counts as a thread: a Telegram chat, an email sender plus base subject (Re:/Fwd: stripped), an SMS or WhatsApp number, a Slack thread, a Messenger sender, a Feishu chat, an iMessage handle.
+  - `channel_threads` maps each thread to its conversation and stores how to reply.
+  - Each message lands as a user message, prefixed "(App, from Name)" and carrying a `channel` part, and starts a run with trigger `channel`.
+  - When the run completes, a new `channel-reply` step in the run loop sends its final text back to the thread.
+  - Send failures are logged and saved on the channel as `last_error`.
+- **Routines on messages:**
+  - A routine with trigger `message` has optional filters: chat app, app kind, sender (`*@domain` works), subject contains, message contains. At least one is required.
+  - A matching message starts the routine (`startRoutineForMessage`), with the message as untrusted context, whoever sent it. So a routine can file a vendor's invoice even though the vendor can't chat with the bot.
+  - A routed message isn't also answered.
+  - In the app it's the routine sheet's "Messages" option.
+- **Sending first:**
+  - `channel.send` (high risk, send category) starts a new message through one of the bot's chat apps.
+  - It works only to people on that app's allowed list, so approvals and the list both apply.
+- **iMessage:**
+  - There's no bot API, so the person's own Mac does the work.
+  - **Setup:** the desktop app's "Use this computer for bots" gains a Mac-only **Messages** permission.
+  - **Reading:** computerd answers `GET /imessage/new?since=` by reading `~/Library/Messages/chat.db` read-only through `sqlite3`. This needs Full Disk Access.
+  - **Sending:** `POST /imessage/send` uses AppleScript. Both endpoints exist only in companion mode with the permission on.
+  - **Polling:** the worker checks every minute through the device tunnel.
+    - The first poll only takes a baseline, so old messages are never answered.
+    - The tunnel lets these two paths through without a run, but only when an enabled iMessage chat app is tied to that Mac and its bot is one the owner allowed there.
+  - **Connecting:** only the Mac's owner can connect it.
+- **Not yet:** attachments and images (text only), Slack and Feishu OAuth app installs (paste a bot token), group chats on WhatsApp and iMessage.
+- **Tests:**
+  - unit (`channels.test.ts` in the agent package): every adapter's signature check (good and bad), payload parsing and send request; allowlists; routine filters.
+  - API (`channels.test.ts`), with a fake provider: Telegram `setWebhook` with the stored secret; bad signature refused; two messages in one conversation; a stranger ignored and logged; the reply sent back to the chat; turning a chat app off; disconnecting removes its Vault secret. Email: a vendor invoice starts a message routine, a vendor's other email is ignored, and a colleague gets an answer. Meta handshake, missing credentials, members refused.
+  - pgTAP (`channels_rls.test.sql`), computerd (iMessage baseline, own messages skipped, sending, the permission), widget (`channels_test.dart`: connect WhatsApp, webhook address and verify token, senders, activity, disconnect; a message routine).

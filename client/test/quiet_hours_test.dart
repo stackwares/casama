@@ -23,7 +23,7 @@ void main() {
   });
 
   testWidgets('a bot can be let through quiet hours', (tester) async {
-    await setSize(tester, const Size(1000, 2400));
+    await setSize(tester, const Size(1000, 3000));
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const BotSettingsScreen(botId: botId)));
     await tester.pumpAndSettle();

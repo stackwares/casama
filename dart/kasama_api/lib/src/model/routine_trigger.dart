@@ -21,7 +21,10 @@ enum RoutineTrigger {
       webhook(r'webhook'),
           /// schedule repeats on a cron; once runs a single time at run_at
       @JsonValue(r'calendar_event')
-      calendarEvent(r'calendar_event');
+      calendarEvent(r'calendar_event'),
+          /// schedule repeats on a cron; once runs a single time at run_at
+      @JsonValue(r'message')
+      message(r'message');
 
   const RoutineTrigger(this.value);
 

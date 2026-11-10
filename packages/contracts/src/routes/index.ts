@@ -19,6 +19,7 @@ import * as voice from "./voice.ts";
 import * as agentImport from "./agent-import.ts";
 import * as knowledge from "./knowledge.ts";
 import * as botSharing from "./bot-sharing.ts";
+import * as channels from "./channels.ts";
 import * as pages from "./pages.ts";
 import * as passwordManagers from "./password-managers.ts";
 import * as replays from "./replays.ts";
@@ -51,6 +52,7 @@ export const routes = {
   ...agentImport,
   ...knowledge,
   ...botSharing,
+  ...channels,
   ...pages,
   ...passwordManagers,
   ...replays,
@@ -82,6 +84,7 @@ export {
   agentImport,
   knowledge,
   botSharing,
+  channels,
   pages,
   passwordManagers,
   replays,
