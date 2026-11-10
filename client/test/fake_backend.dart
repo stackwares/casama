@@ -622,6 +622,32 @@ class FakeBackend implements Backend {
   var botToBot = true;
   @override
   Future<bool> allowBotToBot(String orgId) async => botToBot;
+
+  // Encryption at rest (D-136)
+  var encryptionMode = EncryptionStatusModeEnum.off;
+  final encryptionActions = <String>[];
+  EncryptionStatus _enc() => EncryptionStatus(
+    mode: encryptionMode,
+    available: true,
+    key: encryptionMode == EncryptionStatusModeEnum.off ? null : EncryptionStatusKeyEnum.serverKey,
+    since: null,
+    rotatedAt: encryptionActions.contains('rotate') ? DateTime.utc(2026, 11, 2) : null,
+  );
+  @override
+  Future<EncryptionStatus> encryption(String orgId) async => _enc();
+  @override
+  Future<EncryptionStatus> setEncryption(String orgId, bool enabled) async {
+    encryptionActions.add('set:$enabled');
+    encryptionMode = enabled ? EncryptionStatusModeEnum.encrypting : EncryptionStatusModeEnum.decrypting;
+    return _enc();
+  }
+
+  @override
+  Future<EncryptionStatus> rotateEncryptionKey(String orgId) async {
+    encryptionActions.add('rotate');
+    return _enc();
+  }
+
   @override
   Future<void> setAllowBotToBot(String orgId, bool allowed) async => botToBot = allowed;
 

@@ -45,7 +45,7 @@ import {
   registerWatcherTools,
   TavilySearchProvider,
 } from "@kasama/agent";
-import { createDb, type Database } from "@kasama/db";
+import { contentKeys, createDb, type Database } from "@kasama/db";
 import type { Logger } from "@kasama/observability";
 import { LocalProvider, SupervisorProvider, unavailableProvider } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
@@ -154,6 +154,8 @@ export async function startWorker(opts: WorkerOptions) {
     ? undefined
     : createDb(opts.databaseUrl, { max: (opts.runConcurrency ?? 20) + 5 });
   const db = opts.db ?? (handle as NonNullable<typeof handle>).db;
+  // Encryption at rest (D-136): load workspace keys and follow changes.
+  if (handle) await contentKeys.attach(handle.client);
   const fetchOut = createSafeFetch({ exemptCidrs: opts.egressExemptCidrs });
   // OpenAI's public endpoints go through the safe fetch; an admin's override (a local fake in
   // tests, or a proxy) is called directly.

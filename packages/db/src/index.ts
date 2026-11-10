@@ -3,6 +3,7 @@ import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as relations from "./generated/relations.ts";
 import * as schema from "./generated/schema.ts";
+import { contentKeys } from "./content-crypto.ts";
 
 export { schema };
 export const fullSchema = { ...schema, ...relations };
@@ -26,7 +27,13 @@ export interface DbHandle {
 }
 
 export function createDb(url: string, opts: { max?: number } = {}): DbHandle {
-  const client = postgres(url, { max: opts.max ?? 10, onnotice: () => {}, prepare: false });
+  // Encrypted content (D-136) is decrypted as rows are read.
+  const client = postgres(url, {
+    max: opts.max ?? 10,
+    onnotice: () => {},
+    prepare: false,
+    transform: { value: { from: (v: unknown) => contentKeys.open(v) } },
+  });
   const db = drizzle(client, { schema: fullSchema });
   return { db, client, close: () => client.end() };
 }
@@ -69,3 +76,4 @@ export function pgErrorMessage(err: unknown): string | undefined {
   }
   return undefined;
 }
+export * from "./content-crypto.ts";

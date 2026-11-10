@@ -105,6 +105,7 @@ import {
 } from "./takeover.ts";
 import { ticketAfterRun, ticketStarted } from "./tickets.ts";
 import { type ToolDefinition, ToolError, ToolRegistry } from "./tools/registry.ts";
+import { contentKeys } from "@kasama/db";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
 export type StepRunner = <T>(name: string, fn: () => Promise<T>) => Promise<T>;
@@ -1620,7 +1621,7 @@ async function compact(
   if (!summary || !info.conversationId) return info.summary;
   // Fold everything before the current message into the summary.
   await db.execute(sql`
-    update public.conversations set summary = ${summary},
+    update public.conversations set summary = ${contentKeys.seal(info.orgId, summary)},
       summary_through = (select max(created_at) from public.messages
                          where conversation_id = ${info.conversationId}::uuid and (${info.current?.id ?? null}::uuid is null or id <> ${info.current?.id ?? null}::uuid)
                            and created_at <= coalesce((select created_at from public.messages where id = ${info.current?.id ?? null}::uuid), now()))
@@ -1694,7 +1695,7 @@ async function saveFinalMessage(
   if (info.conversationId) {
     await db.execute(sql`
       insert into public.messages (id, org_id, conversation_id, role, content, run_id, parent_message_id, bot_id)
-      values (${final.messageId}::uuid, ${info.orgId}::uuid, ${info.conversationId}::uuid, 'assistant', ${JSON.stringify(content)}::jsonb, ${info.runId}::uuid,
+      values (${final.messageId}::uuid, ${info.orgId}::uuid, ${info.conversationId}::uuid, 'assistant', ${contentKeys.sealJson(info.orgId, content)}::jsonb, ${info.runId}::uuid,
               ${!info.group && info.current && /^[0-9a-f-]{36}$/.test(info.current.id) ? info.current.id : null}::uuid, ${info.botId}::uuid)
       on conflict (id) do nothing`);
     // In a group chat, several bots answer at once; their replies append to the thread (D-118).

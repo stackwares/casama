@@ -4940,4 +4940,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callDecline => 'Decline';
+
+  @override
+  String get encryption => 'Encrypt content';
+
+  @override
+  String get encryptionHelp =>
+      'Messages, memories, tickets, pages and knowledge are encrypted before they\'re stored, with this workspace\'s own key. Search then matches titles and meaning, not exact words in encrypted text.';
+
+  @override
+  String get encryptionOff => 'Off';
+
+  @override
+  String get encryptionUnavailable =>
+      'Not available: this server has no encryption key set up';
+
+  @override
+  String get encryptionEncrypting =>
+      'Turning on: encrypting what\'s already stored';
+
+  @override
+  String get encryptionOnServer => 'On, with the server\'s key';
+
+  @override
+  String get encryptionOnKms => 'On, with AWS KMS';
+
+  @override
+  String get encryptionDecrypting => 'Turning off: decrypting what\'s stored';
+
+  @override
+  String get encryptionConfirm =>
+      'Content will be encrypted with this workspace\'s key. If the workspace is deleted, its key is destroyed and the content can\'t be recovered. Exact-word search stops matching encrypted text.';
+
+  @override
+  String get encryptionTurnOn => 'Turn on';
+
+  @override
+  String get encryptionRotate => 'Rotate key';
+
+  @override
+  String get encryptionRotateHelp =>
+      'Rewraps the workspace key with the server\'s current key';
+
+  @override
+  String encryptionRotated(String date) {
+    return 'Last rotated $date';
+  }
 }

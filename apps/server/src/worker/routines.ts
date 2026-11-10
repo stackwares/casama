@@ -3,6 +3,7 @@ import { checkinCapReached, describeEvent, scanContext, wrapUntrusted } from "@k
 import type { Database } from "@kasama/db";
 import { nextRunAt } from "@kasama/domain";
 import { sql } from "drizzle-orm";
+import { contentKeys } from "@kasama/db";
 
 interface RoutineRow {
   id: string;
@@ -60,7 +61,7 @@ export async function createRoutineRun(
     : r.instructions_md;
   await tx.execute(sql`
     insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
-    values (${r.org_id}::uuid, ${conversationId}::uuid, 'user', ${r.created_by}::uuid, ${JSON.stringify([{ type: "text", text }])}::jsonb, ${runId}::uuid)`);
+    values (${r.org_id}::uuid, ${conversationId}::uuid, 'user', ${r.created_by}::uuid, ${contentKeys.sealJson(r.org_id, [{ type: "text", text }])}::jsonb, ${runId}::uuid)`);
   await tx.execute(
     sql`update public.routines set last_run_id = ${runId}::uuid, last_run_at = now() where id = ${r.id}::uuid`,
   );

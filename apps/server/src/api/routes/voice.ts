@@ -2,7 +2,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { callGreeting, callNotAnswered, VOICE_PRICES } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, schema, withUserSession } from "@kasama/db";
+import { type JwtClaims, schema, withUserSession, contentKeys } from "@kasama/db";
 import { eq, sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -212,7 +212,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       await db.execute(sql`
         insert into public.messages (org_id, conversation_id, role, author_user_id, content)
         values (${conv.orgId}::uuid, ${conv.id}::uuid, ${t.role}, ${t.role === "user" ? claims.sub : null}::uuid,
-                ${JSON.stringify([{ type: "text", text: t.text, voice: true }])}::jsonb)`);
+                ${contentKeys.sealJson(conv.orgId, [{ type: "text", text: t.text, voice: true }])}::jsonb)`);
     }
     await db.execute(
       sql`update public.conversations set last_message_at = now() where id = ${conv.id}::uuid`,

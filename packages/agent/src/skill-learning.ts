@@ -138,9 +138,11 @@ export async function learnFromRun(d: LearnDeps, run: FinishedRun) {
     select id from public.skill_proposals where bot_id = ${run.botId}::uuid and kind = 'new'
       and source_run_ids && array(select jsonb_array_elements_text(${JSON.stringify(ids)}::jsonb))::uuid[] limit 1`);
   if (dup) return null;
-  const answers = await db.execute<{ run_id: string; text: string }>(sql`
-    select m.run_id, coalesce((select string_agg(p ->> 'text', ' ') from jsonb_array_elements(m.content) p where p ->> 'type' = 'text'), '') as text
-    from public.messages m where m.role = 'assistant' and m.run_id = any(array(select jsonb_array_elements_text(${JSON.stringify(ids.slice(0, 4))}::jsonb))::uuid[])`);
+  const answers = (
+    await db.execute<{ run_id: string; content: Array<{ type?: string; text?: string }> }>(sql`
+    select m.run_id, m.content
+    from public.messages m where m.role = 'assistant' and m.run_id = any(array(select jsonb_array_elements_text(${JSON.stringify(ids.slice(0, 4))}::jsonb))::uuid[])`)
+  ).map((a) => ({ run_id: a.run_id, text: (Array.isArray(a.content) ? a.content : []).filter((p) => p.type === "text").map((p) => p.text ?? "").join(" ") }));
   const examples = [run, ...similar.slice(0, 3).map((s) => ({ runId: s.run_id, task: s.task }))]
     .map((r, i) => {
       const t = r.runId === run.runId ? tools : (similar.find((s) => s.run_id === r.runId)?.tools ?? []);

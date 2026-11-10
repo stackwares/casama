@@ -100,6 +100,13 @@ account; deleted accounts are purged with their solely owned workspaces and comp
 `ACCOUNT_DELETION_GRACE_DAYS` (default 7). Run events are kept for each workspace's retention setting
 (default 180 days).
 
+**Encryption at rest** is available once the server has a key: set `CONTENT_ENCRYPTION_KEY` (run
+`openssl rand -base64 32`) or AWS KMS (`CONTENT_KMS_KEY_ID`, `CONTENT_KMS_REGION`, `AWS_ACCESS_KEY_ID`,
+`AWS_SECRET_ACCESS_KEY`). Workspace owners then turn it on under workspace settings. Keep the key
+safe and backed up: without it, encrypted content can't be read. To change it, put the old key in
+`CONTENT_ENCRYPTION_KEY_PREVIOUS`, set the new one, have owners rotate (or rotate all keys), then
+remove the old one.
+
 **Telemetry** is off. With `TELEMETRY=on` the worker sends, once a week, a random instance id, the
 Kasama version and two numbers (bots and users active in the last 7 days) to
 `TELEMETRY_URL`. Nothing else: no names, emails, content, keys or addresses.

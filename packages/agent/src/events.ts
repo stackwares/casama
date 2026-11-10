@@ -1,5 +1,5 @@
 import { parseRunEventPayload, RUN_EVENT_TYPES, type RunEventType } from "@kasama/contracts";
-import type { Database } from "@kasama/db";
+import { contentKeys, type Database } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import type { Redactor } from "./redact.ts";
 
@@ -20,10 +20,24 @@ export class EventBus {
     if ((RUN_EVENT_TYPES as string[]).includes(type))
       parseRunEventPayload(type as RunEventType, clean);
     const rows = await this.db.execute<{ seq: number }>(
-      sql`select seq from public.append_run_event(${runId}::uuid, ${type}, ${JSON.stringify(clean)}::jsonb)`,
+      sql`select seq from public.append_run_event(${runId}::uuid, ${type}, ${await sealRunPayload(this.db, runId, clean)}::jsonb)`,
     );
     return rows[0]?.seq ?? 0;
   }
+}
+
+const runOrgs = new Map<string, string>();
+/** A run event payload as JSON, sealed when the run's workspace encrypts content (D-136). */
+export async function sealRunPayload(db: Database, runId: string, payload: unknown) {
+  if (!contentKeys.anySealing) return JSON.stringify(payload);
+  let org = runOrgs.get(runId);
+  if (!org) {
+    const [r] = await db.execute<{ org_id: string }>(sql`select org_id from public.runs where id = ${runId}::uuid`);
+    org = r?.org_id ?? "";
+    if (runOrgs.size > 5000) runOrgs.clear();
+    runOrgs.set(runId, org);
+  }
+  return contentKeys.sealJson(org, payload);
 }
 
 /** Buffers message.delta text so a run writes at most one delta per interval (default 200 ms = 5/s). */

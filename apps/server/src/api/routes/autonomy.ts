@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { startTicketWork } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type Database, type JwtClaims, pgErrorCode, schema, withUserSession } from "@kasama/db";
+import { type Database, type JwtClaims, pgErrorCode, schema, withUserSession, contentKeys } from "@kasama/db";
 import {
   BOT_TEMPLATES,
   isValidCron,
@@ -831,7 +831,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         .values({
           orgId: b.org_id,
           title: b.title,
-          detailsMd: b.details_md ?? "",
+          detailsMd: contentKeys.seal(b.org_id, b.details_md ?? ""),
           status: b.status ?? "todo",
           priority: b.priority ?? "none",
           assigneeBotId: b.assignee_bot_id ?? null,
@@ -864,7 +864,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         .update(tasks)
         .set({
           ...(b.title !== undefined ? { title: b.title } : {}),
-          ...(b.details_md !== undefined ? { detailsMd: b.details_md } : {}),
+          ...(b.details_md !== undefined ? { detailsMd: contentKeys.seal(cur.orgId, b.details_md) } : {}),
           ...(b.status !== undefined ? { status: b.status } : {}),
           ...(b.priority !== undefined ? { priority: b.priority } : {}),
           ...(b.assignee_bot_id !== undefined ? { assigneeBotId: b.assignee_bot_id } : {}),
@@ -929,7 +929,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const [row] = await withUserSession(db, claims, (tx) =>
       tx.execute<Parameters<typeof commentOut>[0]>(sql`
         insert into public.task_comments (org_id, task_id, author_type, author_user_id, body_md)
-        values (${t.orgId}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${body_md})
+        values (${t.orgId}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${contentKeys.seal(t.orgId, body_md)})
         returning id, task_id, author_type, author_user_id, author_bot_id, body_md, created_at`),
     );
     if (!row) throw new Error("comment insert returned nothing");

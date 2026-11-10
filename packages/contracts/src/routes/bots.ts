@@ -375,3 +375,32 @@ export const startWelcome = createRoute({
     409: problemResponses[409],
   },
 });
+
+// Encryption at rest (D-136): content the app can't read from Postgres directly comes through the API.
+export const getConversationThread = createRoute({
+  operationId: "getConversationThread",
+  method: "get",
+  path: "/v1/conversations/{id}/thread",
+  tags: ["chat"],
+  security,
+  summary: "The branch being shown, oldest first (what conversation_thread returns, with content opened)",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse("Messages", z.object({ items: z.array(z.record(z.string(), z.unknown())) }).openapi("ConversationThread")),
+    401: e401,
+    404: e404,
+  },
+});
+
+export const updateMemory = createRoute({
+  operationId: "updateMemory",
+  method: "patch",
+  path: "/v1/memories/{id}",
+  tags: ["memory"],
+  security,
+  request: {
+    params: idParam,
+    body: jsonBody(z.object({ content: z.string().min(1).max(8000).optional(), pinned: z.boolean().optional() }).openapi("UpdateMemoryRequest")),
+  },
+  responses: { 200: jsonResponse("Memory", Memory), 401: e401, 404: e404 },
+});

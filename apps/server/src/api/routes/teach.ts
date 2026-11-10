@@ -7,7 +7,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { activeUserLease, captureTeachContext } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, pgErrorCode, withUserSession } from "@kasama/db";
+import { type JwtClaims, pgErrorCode, withUserSession, contentKeys } from "@kasama/db";
 import { focusedIsPassword, nextSecretName, type TeachStepView, teachTranscript } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
@@ -97,7 +97,7 @@ export function registerTeachRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         values (${s.org_id}::uuid, ${s.bot_id}::uuid, ${conv?.id}::uuid, ${claims.sub}::uuid, ${trigger}) returning id`);
       await tx.execute(sql`
         insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
-        values (${s.org_id}::uuid, ${conv?.id}::uuid, 'user', ${claims.sub}::uuid, ${JSON.stringify([{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
+        values (${s.org_id}::uuid, ${conv?.id}::uuid, 'user', ${claims.sub}::uuid, ${contentKeys.sealJson(s.org_id, [{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
       return { conversation_id: conv?.id as string, run_id: run?.id as string };
     });
     return created;

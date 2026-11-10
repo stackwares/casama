@@ -15,6 +15,7 @@ lib/src/api/chat_api.dart
 lib/src/api/checkins_api.dart
 lib/src/api/computers_api.dart
 lib/src/api/credentials_api.dart
+lib/src/api/encryption_api.dart
 lib/src/api/files_api.dart
 lib/src/api/import_api.dart
 lib/src/api/integrations_api.dart
@@ -132,6 +133,7 @@ lib/src/model/connect_key.dart
 lib/src/model/connect_key_list.dart
 lib/src/model/conversation.dart
 lib/src/model/conversation_list.dart
+lib/src/model/conversation_thread.dart
 lib/src/model/create_action_rule_request.dart
 lib/src/model/create_bot_request.dart
 lib/src/model/create_bot_share_request.dart
@@ -185,6 +187,7 @@ lib/src/model/deleted_teach.dart
 lib/src/model/deleted_watcher.dart
 lib/src/model/dismiss_suggestion_request.dart
 lib/src/model/edit_message_request.dart
+lib/src/model/encryption_status.dart
 lib/src/model/file_search_result.dart
 lib/src/model/for_you.dart
 lib/src/model/for_you_approval.dart
@@ -351,6 +354,7 @@ lib/src/model/send_message_request.dart
 lib/src/model/send_message_response.dart
 lib/src/model/set_bot_access_request.dart
 lib/src/model/set_bot_access_request_entries_inner.dart
+lib/src/model/set_encryption_request.dart
 lib/src/model/set_git_sync_request.dart
 lib/src/model/set_local_mcp_servers_request.dart
 lib/src/model/set_org_limits_request.dart
@@ -420,6 +424,7 @@ lib/src/model/update_computer_request.dart
 lib/src/model/update_credential_request.dart
 lib/src/model/update_integration_request.dart
 lib/src/model/update_local_device_request.dart
+lib/src/model/update_memory_request.dart
 lib/src/model/update_notice.dart
 lib/src/model/update_org_settings_request.dart
 lib/src/model/update_organization_request.dart

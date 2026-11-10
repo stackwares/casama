@@ -12,6 +12,7 @@ import { type Embedder, toPgVector } from "./embeddings.ts";
 import { createAdapter, loadIntegration } from "./integrations.ts";
 import { chunkSections, type ParsedDoc, parseDocument, parseHtml } from "./knowledge-parse.ts";
 import type { ToolRegistry } from "./tools/registry.ts";
+import { contentKeys } from "@kasama/db";
 
 export const KNOWLEDGE_SYNC_HOURS = 24;
 const MAX_PAGES = 50;
@@ -204,7 +205,7 @@ export async function syncKnowledgeSource(d: KnowledgeDeps, sourceId: string) {
         await tx.execute(sql`
           insert into public.knowledge_chunks (org_id, source_id, doc_ref, doc_title, location, url, position, text, embedding)
           values (${s.org_id}::uuid, ${s.id}::uuid, ${r.doc.ref.slice(0, 2000)}, ${r.doc.title.slice(0, 300)}, ${r.location?.slice(0, 300) ?? null},
-                  ${r.doc.url}, ${r.position}, ${r.text}, ${vectors[i] ?? null}::extensions.vector)`);
+                  ${r.doc.url}, ${r.position}, ${contentKeys.seal(s.org_id, r.text)}, ${vectors[i] ?? null}::extensions.vector)`);
       await tx.execute(sql`
         update public.knowledge_sources set status = ${docs.length ? "ready" : "error"}, documents = ${docs.length}, chunks = ${kept.length},
           error = ${errors.length ? errors.join("\n").slice(0, 2000) : docs.length ? null : "Nothing could be read"},

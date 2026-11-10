@@ -79,6 +79,7 @@ import 'package:kasama_api/src/model/connect_key.dart';
 import 'package:kasama_api/src/model/connect_key_list.dart';
 import 'package:kasama_api/src/model/conversation.dart';
 import 'package:kasama_api/src/model/conversation_list.dart';
+import 'package:kasama_api/src/model/conversation_thread.dart';
 import 'package:kasama_api/src/model/create_action_rule_request.dart';
 import 'package:kasama_api/src/model/create_bot_request.dart';
 import 'package:kasama_api/src/model/create_bot_share_request.dart';
@@ -131,6 +132,7 @@ import 'package:kasama_api/src/model/deleted_teach.dart';
 import 'package:kasama_api/src/model/deleted_watcher.dart';
 import 'package:kasama_api/src/model/dismiss_suggestion_request.dart';
 import 'package:kasama_api/src/model/edit_message_request.dart';
+import 'package:kasama_api/src/model/encryption_status.dart';
 import 'package:kasama_api/src/model/file_search_result.dart';
 import 'package:kasama_api/src/model/for_you.dart';
 import 'package:kasama_api/src/model/for_you_approval.dart';
@@ -286,6 +288,7 @@ import 'package:kasama_api/src/model/send_message_request.dart';
 import 'package:kasama_api/src/model/send_message_response.dart';
 import 'package:kasama_api/src/model/set_bot_access_request.dart';
 import 'package:kasama_api/src/model/set_bot_access_request_entries_inner.dart';
+import 'package:kasama_api/src/model/set_encryption_request.dart';
 import 'package:kasama_api/src/model/set_git_sync_request.dart';
 import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
@@ -352,6 +355,7 @@ import 'package:kasama_api/src/model/update_computer_request.dart';
 import 'package:kasama_api/src/model/update_credential_request.dart';
 import 'package:kasama_api/src/model/update_integration_request.dart';
 import 'package:kasama_api/src/model/update_local_device_request.dart';
+import 'package:kasama_api/src/model/update_memory_request.dart';
 import 'package:kasama_api/src/model/update_notice.dart';
 import 'package:kasama_api/src/model/update_org_settings_request.dart';
 import 'package:kasama_api/src/model/update_organization_request.dart';
@@ -585,6 +589,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Conversation.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConversationList':
           return ConversationList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ConversationThread':
+          return ConversationThread.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateActionRuleRequest':
           return CreateActionRuleRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateBotRequest':
@@ -692,6 +698,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DismissSuggestionRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'EditMessageRequest':
           return EditMessageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'EncryptionStatus':
+          return EncryptionStatus.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'FileSearchResult':
           return FileSearchResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ForYou':
@@ -1035,6 +1043,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetBotAccessRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotAccessRequestEntriesInner':
           return SetBotAccessRequestEntriesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetEncryptionRequest':
+          return SetEncryptionRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetGitSyncRequest':
           return SetGitSyncRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetLocalMcpServersRequest':
@@ -1176,6 +1186,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateIntegrationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateLocalDeviceRequest':
           return UpdateLocalDeviceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateMemoryRequest':
+          return UpdateMemoryRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateNotice':
           return UpdateNotice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateOrgSettingsRequest':

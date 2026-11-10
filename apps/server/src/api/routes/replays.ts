@@ -2,7 +2,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { replayFromTeach } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, pgErrorCode, withUserSession } from "@kasama/db";
+import { type JwtClaims, pgErrorCode, withUserSession, contentKeys } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -71,7 +71,7 @@ export function registerReplayRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
                 ${JSON.stringify({ replay_id: r.id, params })}::jsonb) returning id`);
       await tx.execute(sql`
         insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
-        values (${r.org_id}::uuid, ${conv?.id}::uuid, 'user', ${claims.sub}::uuid, ${JSON.stringify([{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
+        values (${r.org_id}::uuid, ${conv?.id}::uuid, 'user', ${claims.sub}::uuid, ${contentKeys.sealJson(r.org_id, [{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
       return { conversation_id: conv?.id as string, run_id: run?.id as string };
     });
     await deps.workflows.startRun(created.run_id);

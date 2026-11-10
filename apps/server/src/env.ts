@@ -82,6 +82,16 @@ export const EnvSchema = z.object({
    * Firebase project the apps are built with. Unset: no push; the in-app inbox still works.
    */
   FCM_SERVICE_ACCOUNT: z.string().optional(),
+  /** Encryption at rest (D-136): the server key that wraps workspace data keys (32 bytes, base64), and older keys during a rotation (comma-separated). */
+  CONTENT_ENCRYPTION_KEY: z.string().optional(),
+  CONTENT_ENCRYPTION_KEY_PREVIOUS: z.string().optional(),
+  /** Or AWS KMS: the key's id or ARN, its region, and credentials (an optional endpoint for tests or VPC endpoints). */
+  CONTENT_KMS_KEY_ID: z.string().optional(),
+  CONTENT_KMS_REGION: z.string().optional(),
+  CONTENT_KMS_ENDPOINT: z.url().optional(),
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_SESSION_TOKEN: z.string().optional(),
   /** iOS call rings through PushKit (D-135): an APNs token key (.p8, inline or a path), its id, the team, and the app's VoIP topic. */
   APNS_KEY_P8: z.string().optional(),
   APNS_KEY_ID: z.string().optional(),

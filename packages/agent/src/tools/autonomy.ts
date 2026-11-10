@@ -14,6 +14,8 @@ import type { NotificationService } from "../notifications.ts";
 import type { SearchProvider } from "../search.ts";
 import { startTicketWork } from "../tickets.ts";
 import { type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
+import { contentKeys } from "@kasama/db";
+import { sealRunPayload } from "../events.ts";
 
 export interface AutonomyToolDeps {
   db: Database;
@@ -51,15 +53,15 @@ async function ancestry(db: Database, runId: string) {
 
 /** Final text of a finished run (from its message.completed event). */
 async function finalText(db: Database, runId: string) {
-  const [e] = await db.execute<{ text: string | null }>(sql`
-    select (select string_agg(p ->> 'text', '') from jsonb_array_elements(payload -> 'content') p where p ->> 'type' = 'text') as text
-    from public.run_events where run_id = ${runId}::uuid and type = 'message.completed' order by seq desc limit 1`);
-  return e?.text ?? "";
+  // Read in the app, not in SQL: the payload may be sealed (D-136).
+  const [e] = await db.execute<{ payload: { content?: Array<{ type?: string; text?: string }> } }>(sql`
+    select payload from public.run_events where run_id = ${runId}::uuid and type = 'message.completed' order by seq desc limit 1`);
+  return (e?.payload.content ?? []).filter((p) => p.type === "text").map((p) => p.text ?? "").join("");
 }
 
 async function emit(db: Database, runId: string, type: string, payload: Record<string, unknown>) {
   await db.execute(
-    sql`select public.append_run_event(${runId}::uuid, ${type}, ${JSON.stringify(payload)}::jsonb)`,
+    sql`select public.append_run_event(${runId}::uuid, ${type}, ${await sealRunPayload(db, runId, payload)}::jsonb)`,
   );
 }
 
@@ -203,7 +205,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         throw new ToolError("bot_not_found", `No bot named ${args.assignee}.`);
       const [t] = await db.execute<{ id: string }>(sql`
         insert into public.tasks (org_id, created_by_bot_id, assignee_bot_id, title, details_md, parent_run_id, priority, review_required)
-        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${assignee?.id ?? null}::uuid, ${args.title}, ${args.details ?? ""}, ${ctx.runId}::uuid,
+        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${assignee?.id ?? null}::uuid, ${args.title}, ${contentKeys.seal(ctx.orgId, args.details ?? "")}, ${ctx.runId}::uuid,
                 ${args.priority ?? "none"}, ${args.review_required ?? false})
         returning id`);
       if (t) await startAssignee(t.id, assignee?.id, ctx);
@@ -228,7 +230,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       if (args.assignee && !assignee)
         throw new ToolError("bot_not_found", `No bot named ${args.assignee}.`);
       const rows = await db.execute<{ id: string }>(sql`
-        update public.tasks set status = coalesce(${args.status ?? null}, status), result_md = coalesce(${args.result ?? null}, result_md),
+        update public.tasks set status = coalesce(${args.status ?? null}, status), result_md = coalesce(${contentKeys.seal(ctx.orgId, args.result ?? null)}, result_md),
           priority = coalesce(${args.priority ?? null}, priority), assignee_bot_id = coalesce(${assignee?.id ?? null}::uuid, assignee_bot_id),
           updated_at = now()
         where id = ${args.task_id}::uuid and org_id = ${ctx.orgId}::uuid returning id`);
@@ -246,7 +248,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     async execute(args, ctx) {
       const rows = await db.execute<{ id: string }>(sql`
         insert into public.task_comments (org_id, task_id, author_type, author_bot_id, body_md)
-        select t.org_id, t.id, 'bot', ${ctx.botId}::uuid, ${args.body} from public.tasks t
+        select t.org_id, t.id, 'bot', ${ctx.botId}::uuid, ${contentKeys.seal(ctx.orgId, args.body)} from public.tasks t
         where t.id = ${args.task_id}::uuid and t.org_id = ${ctx.orgId}::uuid returning id`);
       if (!rows.length) throw new ToolError("task_not_found", "No such ticket.");
       await db.execute(
@@ -558,7 +560,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     const childId = child?.id as string;
     if (conversationId) {
       await db.execute(sql`insert into public.messages (org_id, conversation_id, role, content, run_id)
-        values (${ctx.orgId}::uuid, ${conversationId}::uuid, 'user', ${JSON.stringify([{ type: "text", text: opts.task }])}::jsonb, ${childId}::uuid)`);
+        values (${ctx.orgId}::uuid, ${conversationId}::uuid, 'user', ${contentKeys.sealJson(ctx.orgId, [{ type: "text", text: opts.task }])}::jsonb, ${childId}::uuid)`);
     }
     await emit(db, ctx.runId, "subrun.started", {
       child_run_id: childId,

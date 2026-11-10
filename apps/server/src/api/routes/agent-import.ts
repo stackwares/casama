@@ -7,7 +7,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { botComputerId } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
+import { type JwtClaims, withUserSession, contentKeys } from "@kasama/db";
 import { AgentImportError, MEMORY_EXPORT_PROMPT, parseMemoryExport, planAgentImport } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { unzipSync } from "fflate";
@@ -166,7 +166,7 @@ export function registerAgentImportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
       for (const m of memories)
         await tx.execute(sql`
           insert into public.memories (org_id, bot_id, kind, content, importance)
-          values (${bot.org_id}::uuid, ${id}::uuid, ${m.kind}, ${m.content}, ${m.kind === "preference" ? 0.7 : 0.6})`);
+          values (${bot.org_id}::uuid, ${id}::uuid, ${m.kind}, ${contentKeys.seal(bot.org_id, m.content)}, ${m.kind === "preference" ? 0.7 : 0.6})`);
     });
     return c.json({ saved: memories.length }, 200);
   });

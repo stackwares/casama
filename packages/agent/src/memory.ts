@@ -1,4 +1,4 @@
-import type { Database } from "@kasama/db";
+import { contentKeys, type Database } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { type Embedder, toPgVector } from "./embeddings.ts";
 import {
@@ -89,7 +89,7 @@ export class MemoryService {
     }
     if (dup) {
       await this.db.execute(sql`
-        update public.memories set content = ${content}, embedding = coalesce(${vec}::extensions.vector, embedding),
+        update public.memories set content = ${contentKeys.seal(input.orgId, content)}, embedding = coalesce(${vec}::extensions.vector, embedding),
           importance = greatest(importance, ${input.importance ?? 0.5}), source_run_id = coalesce(${input.sourceRunId ?? null}::uuid, source_run_id),
           updated_at = now()
         where id = ${dup.id}::uuid`);
@@ -97,7 +97,7 @@ export class MemoryService {
     }
     const [row] = await this.db.execute<{ id: string }>(sql`
       insert into public.memories (org_id, bot_id, kind, content, embedding, importance, source_run_id)
-      values (${input.orgId}::uuid, ${input.botId}::uuid, ${input.kind}, ${content}, ${vec}::extensions.vector,
+      values (${input.orgId}::uuid, ${input.botId}::uuid, ${input.kind}, ${contentKeys.seal(input.orgId, content)}, ${vec}::extensions.vector,
               ${input.importance ?? 0.5}, ${input.sourceRunId ?? null}::uuid)
       returning id`);
     if (!row) throw new Error("memory insert returned nothing");

@@ -11,6 +11,7 @@ import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import type { NotificationService } from "./notifications.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
+import { contentKeys } from "@kasama/db";
 
 type StartRun = (runId: string) => Promise<void>;
 
@@ -75,7 +76,7 @@ async function postToThread(db: Database, p: ProjectRow, text: string) {
   if (!p.conversation_id) return;
   await db.execute(sql`
     insert into public.messages (org_id, conversation_id, role, content)
-    values (${p.org_id}::uuid, ${p.conversation_id}::uuid, 'assistant', ${JSON.stringify([{ type: "text", text }])}::jsonb)`);
+    values (${p.org_id}::uuid, ${p.conversation_id}::uuid, 'assistant', ${contentKeys.sealJson(p.org_id, [{ type: "text", text }])}::jsonb)`);
   await db.execute(
     sql`update public.conversations set last_message_at = now() where id = ${p.conversation_id}::uuid`,
   );
@@ -118,7 +119,7 @@ export async function startProjectRun(
     await tx.execute(sql`
       insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
       values (${p.org_id}::uuid, ${conv}::uuid, 'user', ${p.owner_user_id}::uuid,
-              ${JSON.stringify([{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
+              ${contentKeys.sealJson(p.org_id, [{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
     if (kind !== "plan")
       await tx.execute(sql`
         update public.projects set sessions = sessions + 1, last_session_at = now(), status_reason = ${kind}, updated_at = now()
@@ -405,7 +406,7 @@ export function registerProjectTools(
             await tx.execute(sql`
               insert into public.tasks (org_id, created_by_bot_id, assignee_bot_id, title, details_md, priority, project_id, milestone_id, created_by_user_id)
               values (${p.org_id}::uuid, ${ctx.botId}::uuid, ${t.assignee_bot ? (assignees.get(t.assignee_bot) ?? null) : null}::uuid,
-                      ${t.title}, ${t.details ?? ""}, ${t.priority ?? "medium"}, ${p.id}::uuid, ${ms?.id}::uuid, ${p.owner_user_id}::uuid)`);
+                      ${t.title}, ${contentKeys.seal(p.org_id, t.details ?? "")}, ${t.priority ?? "medium"}, ${p.id}::uuid, ${ms?.id}::uuid, ${p.owner_user_id}::uuid)`);
             count++;
           }
         }

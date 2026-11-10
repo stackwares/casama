@@ -2,7 +2,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { applyCheckins } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
+import { type JwtClaims, withUserSession, contentKeys } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -79,12 +79,10 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       const briefs = await tx.execute<{
         bot_id: string;
         conversation_id: string;
-        text: string;
+        content: Array<{ type?: string; text?: string }>;
         created_at: string;
       }>(sql`
-        select distinct on (rt.bot_id) rt.bot_id, m.conversation_id,
-          coalesce((select string_agg(p ->> 'text', ' ') from jsonb_array_elements(m.content) p where p ->> 'type' = 'text'), '') as text,
-          m.created_at
+        select distinct on (rt.bot_id) rt.bot_id, m.conversation_id, m.content, m.created_at
         from public.routines rt
         join public.bot_checkins ck on ck.bot_id = rt.bot_id and ck.enabled and ck.user_id = ${claims.sub}::uuid
         join public.messages m on m.conversation_id = rt.conversation_id and m.role = 'assistant'
@@ -117,7 +115,12 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     });
     return c.json(
       {
-        briefs: out.briefs.map((b) => ({ ...b, created_at: iso(b.created_at) })),
+        // Text is taken here, not in SQL: content may be sealed (D-136).
+        briefs: out.briefs.map(({ content, ...b }) => ({
+          ...b,
+          text: (Array.isArray(content) ? content : []).filter((p) => p.type === "text").map((p) => p.text ?? "").join(" "),
+          created_at: iso(b.created_at),
+        })),
         suggestions: out.suggestions.map((s) => ({
           ...s,
           expires_at: iso(s.expires_at),
@@ -169,7 +172,7 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         values (${s.org_id}::uuid, ${s.bot_id}::uuid, ${conv?.id}::uuid, ${claims.sub}::uuid, 'chat') returning id`);
       await tx.execute(sql`
         insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
-        values (${s.org_id}::uuid, ${conv?.id}::uuid, 'user', ${claims.sub}::uuid, ${JSON.stringify([{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
+        values (${s.org_id}::uuid, ${conv?.id}::uuid, 'user', ${claims.sub}::uuid, ${contentKeys.sealJson(s.org_id, [{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
       return { conversation_id: conv?.id as string, run_id: run?.id as string };
     });
     await db.execute(
@@ -189,7 +192,7 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (dont_suggest_again)
       await db.execute(sql`
         insert into public.memories (org_id, bot_id, kind, content, importance, pinned)
-        values (${s.org_id}::uuid, ${s.bot_id}::uuid, 'preference', ${`Don't suggest this again: ${s.title}`.slice(0, 8000)}, 0.9, true)`);
+        values (${s.org_id}::uuid, ${s.bot_id}::uuid, 'preference', ${contentKeys.seal(s.org_id, `Don't suggest this again: ${s.title}`.slice(0, 8000))}, 0.9, true)`);
     return c.json({ ok: true }, 200);
   });
 }

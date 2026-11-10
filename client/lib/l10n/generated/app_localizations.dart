@@ -8427,6 +8427,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Decline'**
   String get callDecline;
+
+  /// No description provided for @encryption.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypt content'**
+  String get encryption;
+
+  /// No description provided for @encryptionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages, memories, tickets, pages and knowledge are encrypted before they\'re stored, with this workspace\'s own key. Search then matches titles and meaning, not exact words in encrypted text.'**
+  String get encryptionHelp;
+
+  /// No description provided for @encryptionOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get encryptionOff;
+
+  /// No description provided for @encryptionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available: this server has no encryption key set up'**
+  String get encryptionUnavailable;
+
+  /// No description provided for @encryptionEncrypting.
+  ///
+  /// In en, this message translates to:
+  /// **'Turning on: encrypting what\'s already stored'**
+  String get encryptionEncrypting;
+
+  /// No description provided for @encryptionOnServer.
+  ///
+  /// In en, this message translates to:
+  /// **'On, with the server\'s key'**
+  String get encryptionOnServer;
+
+  /// No description provided for @encryptionOnKms.
+  ///
+  /// In en, this message translates to:
+  /// **'On, with AWS KMS'**
+  String get encryptionOnKms;
+
+  /// No description provided for @encryptionDecrypting.
+  ///
+  /// In en, this message translates to:
+  /// **'Turning off: decrypting what\'s stored'**
+  String get encryptionDecrypting;
+
+  /// No description provided for @encryptionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Content will be encrypted with this workspace\'s key. If the workspace is deleted, its key is destroyed and the content can\'t be recovered. Exact-word search stops matching encrypted text.'**
+  String get encryptionConfirm;
+
+  /// No description provided for @encryptionTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get encryptionTurnOn;
+
+  /// No description provided for @encryptionRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate key'**
+  String get encryptionRotate;
+
+  /// No description provided for @encryptionRotateHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewraps the workspace key with the server\'s current key'**
+  String get encryptionRotateHelp;
+
+  /// No description provided for @encryptionRotated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last rotated {date}'**
+  String encryptionRotated(String date);
 }
 
 class _AppLocalizationsDelegate

@@ -275,6 +275,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/phone-calls.ts` (`voice.call_user`, `ApnsVoipSender`, `ringCall`, `callNotAnswered`, `expireCalls` in the minute tick), `PushSender.sendCall` (FCM high priority); `voice_calls`, `voip_tokens`; `/v1/calls/*` and `call_id` on `/v1/voice/session` in `routes/voice.ts`; the app's `features/voice/phone_calls.dart` (CallKit and Android calling screen through flutter_callkit_incoming, the desktop/web ringing banner) and PushKit in `ios/Runner/AppDelegate.swift`.
 
+## Encryption at rest (D-136)
+
+- `packages/db/src/content-crypto.ts` (`KeyRing`/`contentKeys`, `LocalKeyWrapper`, `AwsKmsKeyWrapper`, and the value transform in `createDb`); `packages/agent/src/encryption.ts` (on/off, rotation, `sweepEncryption` in the minute tick); `org_keys` and `organizations.content_encryption`; `apps/server/src/content-keys.ts` (server key configuration); `/v1/orgs/{id}/encryption*`, `/v1/conversations/{id}/thread`, `PATCH /v1/memories/{id}`; the workspace settings section in the app.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

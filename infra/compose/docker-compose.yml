@@ -206,6 +206,10 @@ services:
       APNS_KEY_P8: ${APNS_KEY_P8:-}
       APNS_KEY_ID: ${APNS_KEY_ID:-}
       APNS_TEAM_ID: ${APNS_TEAM_ID:-}
+      CONTENT_ENCRYPTION_KEY: ${CONTENT_ENCRYPTION_KEY:-}
+      CONTENT_ENCRYPTION_KEY_PREVIOUS: ${CONTENT_ENCRYPTION_KEY_PREVIOUS:-}
+      CONTENT_KMS_KEY_ID: ${CONTENT_KMS_KEY_ID:-}
+      CONTENT_KMS_REGION: ${CONTENT_KMS_REGION:-}
     depends_on: { migrate: { condition: service_completed_successfully } }
 
   # The only service with Docker access. It joins each computer's private network to reach computerd.

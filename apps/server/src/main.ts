@@ -1,6 +1,7 @@
 import { serve } from "@hono/node-server";
 import { ComputerService } from "@kasama/agent";
-import { createDb } from "@kasama/db";
+import { contentKeys, createDb } from "@kasama/db";
+import { configureContentKeys } from "./content-keys.ts";
 import { createLogger, initObservability, shutdownObservability } from "@kasama/observability";
 import { LocalProvider, SupervisorProvider, unavailableProvider } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
@@ -25,6 +26,8 @@ import { disabledEmail, resendEmail } from "./services/email.ts";
 import { chromiumPdf } from "./services/pdf.ts";
 
 const env = loadEnv();
+// Encryption at rest (D-136): the key that wraps workspace data keys, if configured.
+configureContentKeys(env);
 // The worker reaches personal computers through the API's internal tunnel (D-066).
 const localOpts = {
   apiUrl: env.API_INTERNAL_URL ?? `http://127.0.0.1:${env.PORT}`,
@@ -59,6 +62,7 @@ process.once("SIGINT", () => void shutdown("SIGINT"));
 if (env.MODE === "api") {
   const handle = createDb(env.DATABASE_URL);
   stoppers.push(handle.close);
+  await contentKeys.attach(handle.client);
   const workflows = await dbosWorkflows(env.DATABASE_URL);
   stoppers.push(workflows.close);
   const hub = await pgRunEventHub(handle.client);

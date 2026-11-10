@@ -6,7 +6,7 @@
  * - When a run in such a conversation finishes, its reply goes back to the thread.
  * - `channel.send` (high risk) starts a new message to an allowed sender.
  */
-import type { Database } from "@kasama/db";
+import { contentKeys, type Database } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { ToolError, type ToolRegistry } from "../tools/registry.ts";
@@ -134,7 +134,7 @@ export async function handleInbound(
     await db.execute(sql`
       insert into public.messages (org_id, conversation_id, role, content, run_id)
       values (${c.org_id}::uuid, ${conversationId}::uuid, 'user',
-              ${JSON.stringify([{ type: "text", text: `(${KIND_NAMES[c.kind]}, from ${m.senderName ?? m.sender}${m.subject ? `, subject "${m.subject}"` : ""})\n${m.text}` }, { type: "channel", kind: c.kind, channel_id: c.id, sender: m.sender, sender_name: m.senderName ?? null }])}::jsonb,
+              ${contentKeys.sealJson(c.org_id, [{ type: "text", text: `(${KIND_NAMES[c.kind]}, from ${m.senderName ?? m.sender}${m.subject ? `, subject "${m.subject}"` : ""})\n${m.text}` }, { type: "channel", kind: c.kind, channel_id: c.id, sender: m.sender, sender_name: m.senderName ?? null }])}::jsonb,
               ${run?.id}::uuid)`);
     await db.execute(sql`update public.conversations set last_message_at = now() where id = ${conversationId}::uuid`);
     await log(db, c, { direction: "in", status: "accepted", sender: m.sender, threadKey: m.threadKey, text: m.text });

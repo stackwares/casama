@@ -3,7 +3,7 @@
  * conversation the bot asks a few questions as cards, then calls `setup.apply` with everything it
  * proposes; the approval card shows it all and nothing changes until the person approves.
  */
-import type { Database } from "@kasama/db";
+import { contentKeys, type Database } from "@kasama/db";
 import { isValidCron, isValidTimezone, nextRunAt } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -58,7 +58,7 @@ export function registerSetupTools(registry: ToolRegistry, deps: { db: Database 
         for (const m of args.memories)
           await tx.execute(sql`
             insert into public.memories (org_id, bot_id, kind, content, importance, source_run_id)
-            values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, 'preference', ${m}, 0.8, ${ctx.runId}::uuid)`);
+            values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, 'preference', ${contentKeys.seal(ctx.orgId, m)}, 0.8, ${ctx.runId}::uuid)`);
         for (const r of args.routines)
           await tx.execute(sql`
             insert into public.routines (org_id, bot_id, created_by, name, instructions_md, schedule_cron, timezone, trigger, notify, next_run_at)

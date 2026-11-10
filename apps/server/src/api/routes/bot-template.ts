@@ -2,7 +2,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { OpenAPIHono, z } from "@hono/zod-openapi";
 import { type BotTemplateFile, routes } from "@kasama/contracts";
-import { type Database, type JwtClaims, withUserSession } from "@kasama/db";
+import { type Database, type JwtClaims, withUserSession, contentKeys } from "@kasama/db";
 import { isValidCron, isValidTimezone, nextRunAt } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { enforceLimit } from "../../billing/limits.ts";
@@ -212,7 +212,7 @@ export function registerBotTemplateRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
       if (body.include_memories)
         for (const m of t.memories)
           await tx.execute(sql`
-            insert into public.memories (org_id, bot_id, kind, content) values (${body.org_id}::uuid, ${botId}::uuid, ${m.kind}, ${m.content})`);
+            insert into public.memories (org_id, bot_id, kind, content) values (${body.org_id}::uuid, ${botId}::uuid, ${m.kind}, ${contentKeys.seal(body.org_id, m.content)})`);
     });
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${body.org_id}::uuid, 'user', ${claims.sub}::uuid, 'bot.imported', 'bot', ${botId}::uuid, ${JSON.stringify({ name: t.name })}::jsonb)`);

@@ -5,6 +5,7 @@
  */
 import type { Database } from "@kasama/db";
 import { sql } from "drizzle-orm";
+import { contentKeys } from "@kasama/db";
 
 type TicketRow = {
   id: string;
@@ -81,7 +82,7 @@ export async function startTicketWork(
     await tx.execute(sql`
       insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
       values (${t.org_id}::uuid, ${conversationId}::uuid, 'user', ${opts.actorUserId}::uuid,
-              ${JSON.stringify([{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
+              ${contentKeys.sealJson(t.org_id, [{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
     await tx.execute(
       sql`update public.conversations set last_message_at = now() where id = ${conversationId}::uuid`,
     );
@@ -122,7 +123,7 @@ export async function ticketAfterRun(
     const text = outcome.text.trim().slice(0, 4000) || "Finished.";
     const next = t.review_required ? "in_review" : "done";
     await db.execute(sql`
-      update public.tasks set status = ${next}, result_md = ${text}, updated_at = now() where id = ${t.id}::uuid`);
+      update public.tasks set status = ${next}, result_md = ${contentKeys.seal(t.org_id, text)}, updated_at = now() where id = ${t.id}::uuid`);
     await addBotComment(db, t, info.botId, text);
     return;
   }
@@ -151,5 +152,5 @@ async function addBotComment(
 ) {
   await db.execute(sql`
     insert into public.task_comments (org_id, task_id, author_type, author_bot_id, body_md)
-    values (${t.org_id}::uuid, ${t.id}::uuid, 'bot', ${botId}::uuid, ${body})`);
+    values (${t.org_id}::uuid, ${t.id}::uuid, 'bot', ${botId}::uuid, ${contentKeys.seal(t.org_id, body)})`);
 }

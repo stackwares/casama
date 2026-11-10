@@ -13,6 +13,7 @@ import type { Database } from "@kasama/db";
 import { defaultModelFor } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { surfaceMessages } from "./tools/ui.ts";
+import { contentKeys } from "@kasama/db";
 
 export const WELCOME_FOCUS = [
   { id: "email_calendar", label: "Email and calendar" },
@@ -299,14 +300,14 @@ export async function postScripted(
     const [m] = await db.execute<{ id: string }>(sql`
       insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
       values (${c.orgId}::uuid, ${c.conversationId}::uuid, 'user', ${c.userId}::uuid,
-              ${JSON.stringify([{ type: "text", text: user.text }, ...(user.uiAction ? [{ type: "ui_action", ...user.uiAction }] : [])])}::jsonb, ${runId}::uuid)
+              ${contentKeys.sealJson(c.orgId, [{ type: "text", text: user.text }, ...(user.uiAction ? [{ type: "ui_action", ...user.uiAction }] : [])])}::jsonb, ${runId}::uuid)
       returning id`);
     userMessageId = m?.id ?? null;
   }
   const messageId = randomUUID();
   await db.execute(sql`
     insert into public.messages (id, org_id, conversation_id, role, content, run_id, bot_id, created_at)
-    values (${messageId}::uuid, ${c.orgId}::uuid, ${c.conversationId}::uuid, 'assistant', ${JSON.stringify(parts)}::jsonb, ${runId}::uuid, ${c.botId}::uuid,
+    values (${messageId}::uuid, ${c.orgId}::uuid, ${c.conversationId}::uuid, 'assistant', ${contentKeys.sealJson(c.orgId, parts)}::jsonb, ${runId}::uuid, ${c.botId}::uuid,
             clock_timestamp())`);
   let seq = 1;
   for (const [type, payload] of [
@@ -316,7 +317,7 @@ export async function postScripted(
   ] as const)
     await db.execute(sql`
       insert into public.run_events (run_id, seq, org_id, bot_id, type, payload)
-      values (${runId}::uuid, ${seq++}, ${c.orgId}::uuid, ${c.botId}::uuid, ${type}, ${JSON.stringify(payload)}::jsonb)`);
+      values (${runId}::uuid, ${seq++}, ${c.orgId}::uuid, ${c.botId}::uuid, ${type}, ${contentKeys.sealJson(c.orgId, payload)}::jsonb)`);
   await db.execute(sql`update public.conversations set last_message_at = now() where id = ${c.conversationId}::uuid`);
   return { runId, messageId, userMessageId };
 }
@@ -367,7 +368,7 @@ export async function handleWelcomeAction(
   };
   const memory = async (content: string) =>
     db.execute(sql`insert into public.memories (org_id, bot_id, kind, content, importance, pinned)
-      values (${c.orgId}::uuid, ${c.botId}::uuid, 'preference', ${content.slice(0, 8000)}, 0.8, true)`);
+      values (${c.orgId}::uuid, ${c.botId}::uuid, 'preference', ${contentKeys.seal(c.orgId, content.slice(0, 8000))}, 0.8, true)`);
   /** A user message and a queued normal run (the model's turn). */
   const modelTurn = async (text: string, purpose?: string) => {
     await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides);
@@ -377,7 +378,7 @@ export async function handleWelcomeAction(
     const [m] = await db.execute<{ id: string }>(sql`
       insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
       values (${c.orgId}::uuid, ${c.conversationId}::uuid, 'user', ${c.userId}::uuid,
-              ${JSON.stringify([{ type: "text", text }, { type: "ui_action", ...uiAction }])}::jsonb, ${run?.id}::uuid) returning id`);
+              ${contentKeys.sealJson(c.orgId, [{ type: "text", text }, { type: "ui_action", ...uiAction }])}::jsonb, ${run?.id}::uuid) returning id`);
     await saveState(db, c.conversationId, s, purpose);
     return { runId: run?.id as string, messageId: m?.id as string, queue: true };
   };
@@ -501,7 +502,7 @@ export async function startWelcome(
       returning id`);
     await tx.execute(sql`
       insert into public.messages (org_id, conversation_id, role, content, bot_id)
-      values (${a.orgId}::uuid, ${conv?.id}::uuid, 'assistant', ${JSON.stringify(openingMessage(a.botName))}::jsonb, ${bot?.id}::uuid)`);
+      values (${a.orgId}::uuid, ${conv?.id}::uuid, 'assistant', ${contentKeys.sealJson(a.orgId, openingMessage(a.botName))}::jsonb, ${bot?.id}::uuid)`);
     return { orgId: a.orgId, botId: bot?.id as string, conversationId: conv?.id as string };
   });
 }

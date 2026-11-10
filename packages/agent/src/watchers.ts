@@ -11,6 +11,7 @@ import { actingUserOf } from "./acting.ts";
 import { createAdapter, loadIntegration } from "./integrations.ts";
 import { loadSecrets } from "./secrets.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
+import { contentKeys } from "@kasama/db";
 
 type StartRun = (runId: string) => Promise<void>;
 
@@ -150,7 +151,7 @@ async function fire(d: WatcherDeps, w: WatcherRow, change: string) {
       .join("\n\n");
     await tx.execute(sql`
       insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
-      values (${w.org_id}::uuid, ${conv}::uuid, 'user', ${w.created_by}::uuid, ${JSON.stringify([{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
+      values (${w.org_id}::uuid, ${conv}::uuid, 'user', ${w.created_by}::uuid, ${contentKeys.sealJson(w.org_id, [{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
     return run?.id as string;
   });
 }

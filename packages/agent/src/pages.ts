@@ -10,6 +10,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
+import { contentKeys } from "@kasama/db";
 
 export const PAGE_HTML_MAX = 2_000_000;
 export const PAGE_DATA_MAX = 1_000_000;
@@ -23,10 +24,11 @@ export async function savePageVersion(
   pageId: string,
   change: { html?: string; data?: unknown; title?: string },
 ) {
+  const [o] = await db.execute<{ org_id: string }>(sql`select org_id from public.pages where id = ${pageId}::uuid`);
   const [p] = await db.execute<{ version: number; org_id: string }>(sql`
     update public.pages set
-      html = coalesce(${change.html ?? null}, html),
-      data = coalesce(${change.data === undefined ? null : JSON.stringify(change.data)}::jsonb, data),
+      html = coalesce(${contentKeys.seal(o?.org_id, change.html ?? null)}, html),
+      data = coalesce(${change.data === undefined ? null : contentKeys.sealJson(o?.org_id, change.data)}::jsonb, data),
       title = coalesce(${change.title ?? null}, title),
       version = version + 1, updated_at = now()
     where id = ${pageId}::uuid returning version, org_id`);
@@ -114,7 +116,7 @@ export function registerPageTools(registry: ToolRegistry, deps: { db: Database; 
         const [p] = await db.execute<{ id: string }>(sql`
           insert into public.pages (org_id, bot_id, created_by, conversation_id, title, html, data, visibility)
           values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${user ?? null}::uuid, ${run?.conversation_id ?? null}::uuid,
-                  ${args.title}, ${html}, ${JSON.stringify(data ?? {})}::jsonb, ${args.visibility ?? "private"})
+                  ${args.title}, ${contentKeys.seal(ctx.orgId, html)}, ${contentKeys.sealJson(ctx.orgId, data ?? {})}::jsonb, ${args.visibility ?? "private"})
           returning id`);
         id = p?.id as string;
         await db.execute(sql`

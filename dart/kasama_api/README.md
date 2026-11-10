@@ -109,6 +109,7 @@ Class | Method | HTTP request | Description
 [*ChannelsApi*](doc/ChannelsApi.md) | [**updateChannel**](doc/ChannelsApi.md#updatechannel) | **PATCH** /v1/channels/{id} | 
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**editMessage**](doc/ChatApi.md#editmessage) | **POST** /v1/conversations/{id}/messages/{message_id}/edit | Edit a sent message: forks the conversation there and reruns it (the old branch stays)
+[*ChatApi*](doc/ChatApi.md) | [**getConversationThread**](doc/ChatApi.md#getconversationthread) | **GET** /v1/conversations/{id}/thread | The branch being shown, oldest first (what conversation_thread returns, with content opened)
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**listGroupChats**](doc/ChatApi.md#listgroupchats) | **GET** /v1/group-chats | Group chats in a workspace that you can see (D-118)
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
@@ -150,6 +151,9 @@ Class | Method | HTTP request | Description
 [*CredentialsApi*](doc/CredentialsApi.md) | [**startChatGptSignIn**](doc/CredentialsApi.md#startchatgptsignin) | **POST** /v1/credentials/chatgpt/start | Begin ChatGPT sign-in; returns the authorize URL for a loopback callback
 [*CredentialsApi*](doc/CredentialsApi.md) | [**testCredential**](doc/CredentialsApi.md#testcredential) | **POST** /v1/credentials/{id}/test | Validate a key with a 1-token call
 [*CredentialsApi*](doc/CredentialsApi.md) | [**updateCredential**](doc/CredentialsApi.md#updatecredential) | **PATCH** /v1/credentials/{id} | Rename a credential or change its settings
+[*EncryptionApi*](doc/EncryptionApi.md) | [**getEncryption**](doc/EncryptionApi.md#getencryption) | **GET** /v1/orgs/{id}/encryption | Encryption at rest for a workspace (D-136)
+[*EncryptionApi*](doc/EncryptionApi.md) | [**rotateEncryptionKey**](doc/EncryptionApi.md#rotateencryptionkey) | **POST** /v1/orgs/{id}/encryption/rotate | Rewrap the workspace&#39;s data key with the server&#39;s current key (rows are not rewritten)
+[*EncryptionApi*](doc/EncryptionApi.md) | [**setEncryption**](doc/EncryptionApi.md#setencryption) | **PUT** /v1/orgs/{id}/encryption | Turn encryption at rest on or off (owners); existing rows are sealed or opened in the background
 [*FilesApi*](doc/FilesApi.md) | [**deleteGitSync**](doc/FilesApi.md#deletegitsync) | **DELETE** /v1/orgs/{id}/git-sync | 
 [*FilesApi*](doc/FilesApi.md) | [**exportWorkspaceFiles**](doc/FilesApi.md#exportworkspacefiles) | **POST** /v1/orgs/{id}/files/export | Routines and skills as Markdown files, zipped (D-124)
 [*FilesApi*](doc/FilesApi.md) | [**getGitSync**](doc/FilesApi.md#getgitsync) | **GET** /v1/orgs/{id}/git-sync | 
@@ -189,6 +193,7 @@ Class | Method | HTTP request | Description
 [*McpApi*](doc/McpApi.md) | [**listMcpKeys**](doc/McpApi.md#listmcpkeys) | **GET** /v1/orgs/{id}/mcp-keys | 
 [*McpApi*](doc/McpApi.md) | [**revokeMcpKey**](doc/McpApi.md#revokemcpkey) | **DELETE** /v1/orgs/{id}/mcp-keys/{key_id} | 
 [*MemoryApi*](doc/MemoryApi.md) | [**listMemories**](doc/MemoryApi.md#listmemories) | **GET** /v1/bots/{id}/memories | 
+[*MemoryApi*](doc/MemoryApi.md) | [**updateMemory**](doc/MemoryApi.md#updatememory) | **PATCH** /v1/memories/{id} | 
 [*PagesApi*](doc/PagesApi.md) | [**createPageViewLink**](doc/PagesApi.md#createpageviewlink) | **POST** /v1/pages/{id}/view-link | A single-use link (60 s) that opens the page in a browser
 [*PagesApi*](doc/PagesApi.md) | [**deletePage**](doc/PagesApi.md#deletepage) | **DELETE** /v1/pages/{id} | 
 [*PagesApi*](doc/PagesApi.md) | [**getPage**](doc/PagesApi.md#getpage) | **GET** /v1/pages/{id} | 
@@ -378,6 +383,7 @@ Class | Method | HTTP request | Description
  - [ConnectKeyList](doc/ConnectKeyList.md)
  - [Conversation](doc/Conversation.md)
  - [ConversationList](doc/ConversationList.md)
+ - [ConversationThread](doc/ConversationThread.md)
  - [CreateActionRuleRequest](doc/CreateActionRuleRequest.md)
  - [CreateBotRequest](doc/CreateBotRequest.md)
  - [CreateBotShareRequest](doc/CreateBotShareRequest.md)
@@ -431,6 +437,7 @@ Class | Method | HTTP request | Description
  - [DeletedWatcher](doc/DeletedWatcher.md)
  - [DismissSuggestionRequest](doc/DismissSuggestionRequest.md)
  - [EditMessageRequest](doc/EditMessageRequest.md)
+ - [EncryptionStatus](doc/EncryptionStatus.md)
  - [FileSearchResult](doc/FileSearchResult.md)
  - [ForYou](doc/ForYou.md)
  - [ForYouApproval](doc/ForYouApproval.md)
@@ -597,6 +604,7 @@ Class | Method | HTTP request | Description
  - [SendMessageResponse](doc/SendMessageResponse.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
  - [SetBotAccessRequestEntriesInner](doc/SetBotAccessRequestEntriesInner.md)
+ - [SetEncryptionRequest](doc/SetEncryptionRequest.md)
  - [SetGitSyncRequest](doc/SetGitSyncRequest.md)
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
@@ -666,6 +674,7 @@ Class | Method | HTTP request | Description
  - [UpdateCredentialRequest](doc/UpdateCredentialRequest.md)
  - [UpdateIntegrationRequest](doc/UpdateIntegrationRequest.md)
  - [UpdateLocalDeviceRequest](doc/UpdateLocalDeviceRequest.md)
+ - [UpdateMemoryRequest](doc/UpdateMemoryRequest.md)
  - [UpdateNotice](doc/UpdateNotice.md)
  - [UpdateOrgSettingsRequest](doc/UpdateOrgSettingsRequest.md)
  - [UpdateOrganizationRequest](doc/UpdateOrganizationRequest.md)

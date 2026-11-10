@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../mcp/mcp_screens.dart';
 import 'workspace_files.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -58,7 +60,10 @@ class SpaceAvatar extends StatelessWidget {
       alignment: Alignment.center,
       child: glyph != null
           ? Icon(glyph, size: size * 0.55, color: c)
-          : Text(name.isEmpty ? '?' : name.characters.first.toUpperCase(), style: TextStyle(color: c, fontWeight: FontWeight.w800, fontSize: size * 0.45)),
+          : Text(
+              name.isEmpty ? '?' : name.characters.first.toUpperCase(),
+              style: TextStyle(color: c, fontWeight: FontWeight.w800, fontSize: size * 0.45),
+            ),
     );
   }
 }
@@ -100,7 +105,12 @@ class WorkspaceSwitcher extends ConsumerWidget {
                     avatar,
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(org.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                      child: Text(
+                        org.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                      ),
                     ),
                     Icon(LucideIcons.chevronsUpDown, size: 16, color: context.colorScheme.onSurfaceVariant),
                   ],
@@ -113,68 +123,72 @@ class WorkspaceSwitcher extends ConsumerWidget {
 
 /// The workspace list: switch, create, or join with a link.
 Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiveSheet<void>(
-      context: context,
-      builder: (c) => Consumer(
-        builder: (context, ref, _) {
-          final l10n = context.l10n;
-          final orgs = ref.watch(organizationsProvider).value ?? const <OrganizationWithRole>[];
-          final current = ref.watch(currentOrgProvider);
-          final badges = ref.watch(workspaceBadgesProvider).value ?? const {};
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpace.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+  context: context,
+  builder: (c) => Consumer(
+    builder: (context, ref, _) {
+      final l10n = context.l10n;
+      final orgs = ref.watch(organizationsProvider).value ?? const <OrganizationWithRole>[];
+      final current = ref.watch(currentOrgProvider);
+      final badges = ref.watch(workspaceBadgesProvider).value ?? const {};
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpace.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.spaces, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: AppSpace.md),
+            GroupedCard(
               children: [
-                Text(l10n.spaces, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                const SizedBox(height: AppSpace.md),
-                GroupedCard(
-                  children: [
-                    for (final o in orgs)
-                      ListTile(
-                        key: Key('space-${o.id}'),
-                        leading: SpaceAvatar(name: o.name, icon: o.icon, color: o.color),
-                        title: Text(o.name),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if ((badges[o.id] ?? 0) > 0) Badge(label: Text('${badges[o.id]}')),
-                            if (o.id == current?.id) Padding(padding: const EdgeInsets.only(left: 8), child: Icon(LucideIcons.check, color: context.colorScheme.primary)),
-                          ],
-                        ),
-                        onTap: () {
-                          ref.read(selectedOrgIdProvider.notifier).select(o.id);
-                          Navigator.pop(c);
-                          GoRouter.maybeOf(context)?.go('/bots');
-                        },
-                      ),
-                  ],
-                ),
-                const SizedBox(height: AppSpace.md),
-                OutlinedButton.icon(
-                  key: const Key('newWorkspace'),
-                  icon: const Icon(LucideIcons.plus, size: 18),
-                  label: Text(l10n.newWorkspace),
-                  onPressed: () async {
-                    Navigator.pop(c);
-                    await showAdaptiveSheet<void>(context: context, builder: (_) => const NewSpaceSheet());
-                  },
-                ),
-                const SizedBox(height: AppSpace.sm),
-                TextButton.icon(
-                  key: const Key('joinWorkspace'),
-                  icon: const Icon(LucideIcons.link, size: 18),
-                  label: Text(l10n.joinWithLink),
-                  onPressed: () async {
-                    Navigator.pop(c);
-                    await showAdaptiveSheet<void>(context: context, builder: (_) => const JoinSpaceSheet());
-                  },
-                ),
+                for (final o in orgs)
+                  ListTile(
+                    key: Key('space-${o.id}'),
+                    leading: SpaceAvatar(name: o.name, icon: o.icon, color: o.color),
+                    title: Text(o.name),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if ((badges[o.id] ?? 0) > 0) Badge(label: Text('${badges[o.id]}')),
+                        if (o.id == current?.id)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Icon(LucideIcons.check, color: context.colorScheme.primary),
+                          ),
+                      ],
+                    ),
+                    onTap: () {
+                      ref.read(selectedOrgIdProvider.notifier).select(o.id);
+                      Navigator.pop(c);
+                      GoRouter.maybeOf(context)?.go('/bots');
+                    },
+                  ),
               ],
             ),
-          );
-        },
-      ),
-    );
+            const SizedBox(height: AppSpace.md),
+            OutlinedButton.icon(
+              key: const Key('newWorkspace'),
+              icon: const Icon(LucideIcons.plus, size: 18),
+              label: Text(l10n.newWorkspace),
+              onPressed: () async {
+                Navigator.pop(c);
+                await showAdaptiveSheet<void>(context: context, builder: (_) => const NewSpaceSheet());
+              },
+            ),
+            const SizedBox(height: AppSpace.sm),
+            TextButton.icon(
+              key: const Key('joinWorkspace'),
+              icon: const Icon(LucideIcons.link, size: 18),
+              label: Text(l10n.joinWithLink),
+              onPressed: () async {
+                Navigator.pop(c);
+                await showAdaptiveSheet<void>(context: context, builder: (_) => const JoinSpaceSheet());
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  ),
+);
 
 /// The icon and color pickers shared by the new-workspace sheet and workspace settings.
 class _LookPicker extends StatelessWidget {
@@ -195,10 +209,7 @@ class _LookPicker extends StatelessWidget {
         Wrap(
           spacing: 6,
           runSpacing: 6,
-          children: [
-            for (final e in spaceIcons.entries)
-              ChoiceChip(key: Key('icon-${e.key}'), label: Icon(e.value, size: 18), selected: icon == e.key, onSelected: (_) => onIcon(e.key)),
-          ],
+          children: [for (final e in spaceIcons.entries) ChoiceChip(key: Key('icon-${e.key}'), label: Icon(e.value, size: 18), selected: icon == e.key, onSelected: (_) => onIcon(e.key))],
         ),
         Text(l10n.workspaceColor, style: context.textTheme.labelLarge),
         Wrap(
@@ -267,7 +278,11 @@ class _NewSpaceSheetState extends ConsumerState<NewSpaceSheet> {
         Navigator.pop(context);
       },
       children: [
-        TextField(key: const Key('workspaceNameField'), controller: _name, decoration: InputDecoration(labelText: l10n.workspaceName)),
+        TextField(
+          key: const Key('workspaceNameField'),
+          controller: _name,
+          decoration: InputDecoration(labelText: l10n.workspaceName),
+        ),
         _LookPicker(icon: _icon, color: _color, onIcon: (v) => setState(() => _icon = v), onColor: (v) => setState(() => _color = v)),
       ],
     );
@@ -312,7 +327,11 @@ class _JoinSpaceSheetState extends ConsumerState<JoinSpaceSheet> {
         if (ok && context.mounted) Navigator.pop(context);
       },
       children: [
-        TextField(key: const Key('inviteLinkField'), controller: _link, decoration: InputDecoration(labelText: l10n.inviteLinkField, hintText: 'https://…/join/kjoin_…')),
+        TextField(
+          key: const Key('inviteLinkField'),
+          controller: _link,
+          decoration: InputDecoration(labelText: l10n.inviteLinkField, hintText: 'https://…/join/kjoin_…'),
+        ),
       ],
     );
   }
@@ -363,10 +382,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
       body: Center(
         child: _failed
             ? EmptyState(icon: LucideIcons.unlink, title: l10n.joinWithLink, message: l10n.joinFailed)
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [const CircularProgressIndicator(), const SizedBox(height: 16), Text(l10n.joiningWorkspace)],
-              ),
+            : Column(mainAxisSize: MainAxisSize.min, children: [const CircularProgressIndicator(), const SizedBox(height: 16), Text(l10n.joiningWorkspace)]),
       ),
     );
   }
@@ -464,7 +480,10 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
                     DropdownButton<String>(
                       key: const Key('linkRole'),
                       value: _role,
-                      items: [DropdownMenuItem(value: 'member', child: Text(l10n.roleMember)), DropdownMenuItem(value: 'admin', child: Text(l10n.roleAdmin))],
+                      items: [
+                        DropdownMenuItem(value: 'member', child: Text(l10n.roleMember)),
+                        DropdownMenuItem(value: 'admin', child: Text(l10n.roleAdmin)),
+                      ],
                       onChanged: (v) => setState(() => _role = v ?? _role),
                     ),
                     DropdownButton<int?>(
@@ -514,10 +533,7 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
                     key: Key('link-${l.id}'),
                     icon: LucideIcons.link,
                     title: '${l.tokenHint}… · ${l.role == InviteLinkRoleEnum.admin ? l10n.roleAdmin : l10n.roleMember}',
-                    subtitle: [
-                      l10n.linkUses('${l.uses}${l.maxUses == null ? '' : '/${l.maxUses}'}'),
-                      if (l.revokedAt != null) l10n.linkRevoked,
-                    ].join(' · '),
+                    subtitle: [l10n.linkUses('${l.uses}${l.maxUses == null ? '' : '/${l.maxUses}'}'), if (l.revokedAt != null) l10n.linkRevoked].join(' · '),
                     trailing: l.revokedAt != null
                         ? null
                         : TextButton(
@@ -533,16 +549,19 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
             ),
         ],
         const SizedBox(height: AppSpace.lg),
-        GroupedCard(children: [
-          GroupedTile(
-            key: const Key('passwordManagers'),
-            icon: LucideIcons.keyRound,
-            title: l10n.passwordManagers,
-            subtitle: l10n.passwordManagersRow,
-            onTap: () => context.push('/password-managers'),
-          ),
-        ]),
+        GroupedCard(
+          children: [
+            GroupedTile(
+              key: const Key('passwordManagers'),
+              icon: LucideIcons.keyRound,
+              title: l10n.passwordManagers,
+              subtitle: l10n.passwordManagersRow,
+              onTap: () => context.push('/password-managers'),
+            ),
+          ],
+        ),
         if (admin) ...[const SizedBox(height: AppSpace.lg), BotToBotSwitch(orgId: org.id)],
+        if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), EncryptionSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), WorkspaceFilesSection(orgId: org.id)],
       ],
@@ -561,17 +580,83 @@ class BotToBotSwitch extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final on = ref.watch(_botToBotProvider(orgId)).value ?? true;
-    return GroupedCard(children: [
-      SwitchListTile(
-        key: const Key('botToBot'),
-        title: Text(l10n.botToBot),
-        subtitle: Text(l10n.botToBotHelp),
-        value: on,
-        onChanged: (v) async {
-          await runGuarded(context, () => ref.read(backendProvider).setAllowBotToBot(orgId, v));
-          ref.invalidate(_botToBotProvider(orgId));
-        },
-      ),
-    ]);
+    return GroupedCard(
+      children: [
+        SwitchListTile(
+          key: const Key('botToBot'),
+          title: Text(l10n.botToBot),
+          subtitle: Text(l10n.botToBotHelp),
+          value: on,
+          onChanged: (v) async {
+            await runGuarded(context, () => ref.read(backendProvider).setAllowBotToBot(orgId, v));
+            ref.invalidate(_botToBotProvider(orgId));
+          },
+        ),
+      ],
+    );
+  }
+}
+
+final _encryptionProvider = FutureProvider.autoDispose.family<EncryptionStatus, String>((ref, orgId) => ref.watch(backendProvider).encryption(orgId));
+
+/// Encryption at rest (D-136): owners turn it on or off and rotate the key.
+class EncryptionSection extends ConsumerWidget {
+  const EncryptionSection({super.key, required this.orgId});
+  final String orgId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final s = ref.watch(_encryptionProvider(orgId)).value;
+    if (s == null) return const SizedBox.shrink();
+    final on = s.mode == EncryptionStatusModeEnum.on_ || s.mode == EncryptionStatusModeEnum.encrypting;
+    final status = switch (s.mode) {
+      EncryptionStatusModeEnum.encrypting => l10n.encryptionEncrypting,
+      EncryptionStatusModeEnum.on_ => s.key == EncryptionStatusKeyEnum.awsKms ? l10n.encryptionOnKms : l10n.encryptionOnServer,
+      EncryptionStatusModeEnum.decrypting => l10n.encryptionDecrypting,
+      _ => s.available ? l10n.encryptionOff : l10n.encryptionUnavailable,
+    };
+    Future<void> toggle(bool v) async {
+      if (v) {
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (d) => AlertDialog(
+            title: Text(l10n.encryption),
+            content: Text(l10n.encryptionConfirm),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(d, false), child: Text(l10n.cancel)),
+              FilledButton(key: const Key('confirmEncryption'), onPressed: () => Navigator.pop(d, true), child: Text(l10n.encryptionTurnOn)),
+            ],
+          ),
+        );
+        if (ok != true || !context.mounted) return;
+      }
+      await runGuarded(context, () => ref.read(backendProvider).setEncryption(orgId, v));
+      ref.invalidate(_encryptionProvider(orgId));
+    }
+
+    return GroupedCard(
+      children: [
+        SwitchListTile(
+          key: const Key('encryption'),
+          title: Text(l10n.encryption),
+          subtitle: Text('$status\n${l10n.encryptionHelp}'),
+          isThreeLine: true,
+          value: on,
+          onChanged: s.available || on ? toggle : null,
+        ),
+        if (on)
+          GroupedTile(
+            key: const Key('rotateKey'),
+            icon: LucideIcons.rotateCw,
+            title: l10n.encryptionRotate,
+            subtitle: s.rotatedAt != null ? l10n.encryptionRotated(MaterialLocalizations.of(context).formatMediumDate(s.rotatedAt!.toLocal())) : l10n.encryptionRotateHelp,
+            onTap: () async {
+              await runGuarded(context, () => ref.read(backendProvider).rotateEncryptionKey(orgId));
+              ref.invalidate(_encryptionProvider(orgId));
+            },
+          ),
+      ],
+    );
   }
 }

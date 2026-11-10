@@ -1,7 +1,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { existingWelcome, handleWelcomeAction, startWelcome } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
-import { type JwtClaims, schema, withUserSession } from "@kasama/db";
+import { type JwtClaims, schema, withUserSession, contentKeys } from "@kasama/db";
 import { parseMentions, templateById } from "@kasama/domain";
 import { withSpan } from "@kasama/observability";
 import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
@@ -257,7 +257,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       await tx.execute(sql`
         insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
         values (${bot.org_id}::uuid, ${conv?.id}::uuid, 'user', ${claims.sub}::uuid,
-                ${JSON.stringify([{ type: "text", text: "Let's get you set up." }])}::jsonb, ${run?.id}::uuid)`);
+                ${contentKeys.sealJson(bot.org_id, [{ type: "text", text: "Let's get you set up." }])}::jsonb, ${run?.id}::uuid)`);
       await tx.execute(
         sql`update public.bots set setup_status = 'pending' where id = ${id}::uuid and setup_status <> 'pending'`,
       );
@@ -375,7 +375,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       const [msg] = await tx.execute<{ id: string }>(sql`
         insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id, parent_message_id)
         values (${m.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid,
-                ${JSON.stringify([{ type: "text", text }, ...kept])}::jsonb, ${run?.id}::uuid, ${m.parent}::uuid)
+                ${contentKeys.sealJson(m.org_id, [{ type: "text", text }, ...kept])}::jsonb, ${run?.id}::uuid, ${m.parent}::uuid)
         returning id`);
       await tx.execute(sql`
         update public.conversations set head_message_id = ${msg?.id}::uuid, last_message_at = now() where id = ${id}::uuid`);
@@ -429,7 +429,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       }
       const [msg] = await tx.execute<{ id: string }>(sql`
         insert into public.messages (org_id, conversation_id, role, author_user_id, content)
-        values (${conv.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${JSON.stringify(parts)}::jsonb) returning id`);
+        values (${conv.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${contentKeys.sealJson(conv.org_id, parts)}::jsonb) returning id`);
       const runIds: string[] = [];
       for (const botId of targets) {
         const [run] = await tx.execute<{ id: string }>(sql`
@@ -504,7 +504,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         const [msg] = await tx.execute<{ id: string }>(sql`
           insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
           values (${conv.orgId}::uuid, ${conv.id}::uuid, 'user', ${claims.sub}::uuid,
-                  ${JSON.stringify([
+                  ${contentKeys.sealJson(conv.orgId, [
                     { type: "text", text },
                     ...(attachments ?? []).map((f) => ({ type: "file", ...f })),
                     ...(ui_action ? [{ type: "ui_action", ...ui_action }] : []),
@@ -837,6 +837,36 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       if (value.source === "live") modelCache.set(id, { at: Date.now(), value });
     }
     return c.json({ items: value.models, source: value.source, error: value.error }, 200);
+  });
+
+  // Encryption at rest (D-136): the thread with content opened, for apps whose rows are sealed.
+  app.openapi(routes.getConversationThread, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const rows = await withUserSession(db, claims, async (tx) => {
+      const [conv] = await tx.execute<{ id: string }>(sql`select id from public.conversations where id = ${id}::uuid`);
+      if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
+      return tx.execute<Record<string, unknown>>(sql`select * from public.conversation_thread(${id}::uuid)`);
+    });
+    return c.json({ items: rows.map((r) => ({ ...r, created_at: r.created_at ? iso(r.created_at as string) : null })) }, 200);
+  });
+
+  app.openapi(routes.updateMemory, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const b = c.req.valid("json");
+    const [m] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ id: string; org_id: string }>(sql`select id, org_id from public.memories where id = ${id}::uuid`),
+    );
+    if (!m) throw new ApiError(404, "memory_not_found", "Memory not found");
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ id: string; kind: "fact"; content: string; importance: number; pinned: boolean; created_at: string; updated_at: string }>(sql`
+        update public.memories set content = coalesce(${contentKeys.seal(m.org_id, b.content ?? null)}, content),
+          pinned = coalesce(${b.pinned ?? null}::boolean, pinned), updated_at = now()
+        where id = ${id}::uuid returning id, kind, content, importance, pinned, created_at, updated_at`),
+    );
+    if (!row) throw new ApiError(404, "memory_not_found", "Memory not found");
+    return c.json({ ...row, importance: Number(row.importance), created_at: iso(row.created_at), updated_at: iso(row.updated_at) }, 200);
   });
 
   app.openapi(routes.listMemories, async (c) => {

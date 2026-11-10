@@ -2,7 +2,7 @@ import type { Server } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { serve } from "@hono/node-server";
 import { ComputerService } from "@kasama/agent";
-import { createDb, type DbHandle } from "@kasama/db";
+import { contentKeys, createDb, type DbHandle, LocalKeyWrapper } from "@kasama/db";
 import { createAuthUser, startTestDatabase, type TestDatabase } from "@kasama/db/testing";
 import { createLogger } from "@kasama/observability";
 import { LocalProvider, unavailableProvider } from "@kasama/sandbox";
@@ -58,6 +58,8 @@ export async function startHarness(
   opts: {
     email?: boolean;
     rateLimit?: number;
+    /** Encryption at rest: the server key (base64, 32 bytes). */
+    contentKey?: string;
     worker?: {
       /** Recorded model responses; omit only in live checks (real provider calls). */
       fixtures?: string;
@@ -93,6 +95,11 @@ export async function startHarness(
 ): Promise<Harness> {
   const tdb = await startTestDatabase();
   const handle = createDb(tdb.url, { max: 5 });
+  // Encryption at rest (D-136): tests that cover it pass a server key.
+  if (opts.contentKey) {
+    contentKeys.configure(new LocalKeyWrapper(opts.contentKey));
+    await contentKeys.attach(handle.client);
+  }
   const env = loadEnv({
     DATABASE_URL: tdb.url,
     SUPABASE_URL: "http://127.0.0.1:54321",

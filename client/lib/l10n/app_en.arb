@@ -2795,5 +2795,25 @@
     }
   },
   "callAnswer": "Answer",
-  "callDecline": "Decline"
+  "callDecline": "Decline",
+  "encryption": "Encrypt content",
+  "encryptionHelp": "Messages, memories, tickets, pages and knowledge are encrypted before they're stored, with this workspace's own key. Search then matches titles and meaning, not exact words in encrypted text.",
+  "encryptionOff": "Off",
+  "encryptionUnavailable": "Not available: this server has no encryption key set up",
+  "encryptionEncrypting": "Turning on: encrypting what's already stored",
+  "encryptionOnServer": "On, with the server's key",
+  "encryptionOnKms": "On, with AWS KMS",
+  "encryptionDecrypting": "Turning off: decrypting what's stored",
+  "encryptionConfirm": "Content will be encrypted with this workspace's key. If the workspace is deleted, its key is destroyed and the content can't be recovered. Exact-word search stops matching encrypted text.",
+  "encryptionTurnOn": "Turn on",
+  "encryptionRotate": "Rotate key",
+  "encryptionRotateHelp": "Rewraps the workspace key with the server's current key",
+  "encryptionRotated": "Last rotated {date}",
+  "@encryptionRotated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

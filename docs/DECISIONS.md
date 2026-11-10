@@ -1093,3 +1093,58 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - pgTAP (`phone_calls_rls.test.sql`).
   - widget (`phone_calls_test.dart`): the banner; answer opens the live call with the call id and speak-first; decline; push payload parsing.
   - Also fixed: the call screen stops listening to the call before hanging up when it closes.
+
+## D-136 Encryption at rest
+
+- **What's covered:**
+  - `messages.content`
+  - `run_events.payload`
+  - `memories.content`
+  - `conversations.summary`
+  - ticket details, results and comments: `tasks.details_md`, `tasks.result_md`, `task_comments.body_md`
+  - page content and data, with their versions: `pages.html`/`data`, `page_versions.html`/`data`
+  - `knowledge_chunks.text`
+  - It's off by default, per workspace.
+- **Keys:** envelope encryption with AES-256-GCM.
+  - Each workspace has one data key in `org_keys`. It's wrapped either by the server's key (`CONTENT_ENCRYPTION_KEY`, 32 bytes, base64) or by AWS KMS (`CONTENT_KMS_KEY_ID` plus region and credentials).
+  - The KMS calls (Encrypt and Decrypt over the JSON 1.1 API with Signature Version 4) were written from AWS's public docs.
+  - Nobody reads `org_keys` through the app: no policies.
+  - Deleting a workspace deletes its key (cascade), which leaves its sealed rows unreadable.
+- **Format:**
+  - Text columns hold `enc:v1:<keyId>:<base64(iv | ciphertext | tag)>`.
+  - JSON columns hold `{"$enc": "enc:v1:…"}`.
+  - Length checks on the covered columns apply to plaintext, with a higher limit for sealed text.
+- **Writes:**
+  - Every write path for these columns seals the value before it reaches Postgres: `contentKeys.seal`/`sealJson` with the row's workspace. Plaintext is passed through for workspaces that don't encrypt.
+  - Run events are sealed by the event bus, with each run's workspace cached.
+- **Reads:**
+  - Decryption is transparent: the database client (`createDb`) has a postgres.js value transform that opens any sealed value it reads, so server code is unchanged.
+  - Each API and worker process keeps a key ring of unwrapped workspace keys in memory. It's loaded at start and reloaded on `LISTEN kasama_org_keys`; triggers notify when a key or a workspace's mode changes.
+- **Turning it on and off:**
+  - `PUT /v1/orgs/{id}/encryption` (owners only, audited) creates and wraps the key and sets the mode to `encrypting`. New writes are sealed from then on.
+  - The worker's minute sweep seals existing rows, 500 per column per pass, then sets the mode to `on`. After that it re-checks only the last hour's rows, as a backstop for any write path that was missed.
+  - Turning it off sets `decrypting`; the sweep opens every row, then sets `off` and deletes the key.
+  - A trigger stops app sessions from changing the mode directly, so it only changes through the API, after the key exists.
+- **Rotation:** `POST /v1/orgs/{id}/encryption/rotate` rewraps the data key with the server's current key. Rows aren't rewritten.
+  - To change the server key, set the new key in `CONTENT_ENCRYPTION_KEY` and the old one in `CONTENT_ENCRYPTION_KEY_PREVIOUS`, rotate (or call `rewrapAllKeys`), then drop the old key.
+- **The app:**
+  - Postgres no longer has plaintext, so the app reads through the API:
+    - **Threads:** when a thread from Supabase has sealed content, the app loads `GET /v1/conversations/{id}/thread` instead.
+    - **Memory edits:** they use `PATCH /v1/memories/{id}`, which seals.
+    - **Realtime:** carries only ids for sealed run events (`sealed: true`, no payload); the app fetches them from the API's events endpoint.
+  - Owners turn encryption on (after a confirmation) or off, and rotate the key, under workspace settings.
+- **Search:** Postgres can't search ciphertext.
+  - Memory and knowledge search use embeddings only; embeddings stay unencrypted, as the confirmation says.
+  - Workspace search still matches titles and names, but not words inside sealed text.
+  - SQL that read text out of message content now reads it in TypeScript: the For you brief, skill learning, and a sub-run's final answer.
+  - Ops metrics that read computer events' payloads don't see sealed workspaces.
+- **Tests:**
+  - API (`encryption.test.ts`):
+    - Owners only.
+    - New messages, memories and run events are ciphertext in Postgres and plaintext through the API.
+    - The sweep seals older rows and moves the workspace to `on`; the thread endpoint returns plaintext.
+    - Rotation changes the wrapped key and wrapper but no rows, and a server holding only the new key still reads everything.
+    - Turning it off opens every row and deletes the key.
+    - AWS KMS wrap and unwrap against a fake KMS, with signed requests.
+  - pgTAP (`encryption_rls.test.sql`): keys aren't readable, and the mode can't be changed from the app.
+  - widget (`encryption_test.dart`).

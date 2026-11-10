@@ -414,8 +414,12 @@ class SupabaseBackend implements Backend {
   @override
   Future<List<ChatMessageView>> messages(String conversationId) async {
     // The branch being shown (D-108), oldest first.
-    final List<dynamic> all = await supabase.rpc('conversation_thread', params: {'p_conversation': conversationId});
-    final rows = all.cast<Map<String, dynamic>>().where((r) => r['role'] == 'user' || r['role'] == 'assistant').toList();
+    List<dynamic> all = await supabase.rpc('conversation_thread', params: {'p_conversation': conversationId});
+    // A workspace that encrypts content (D-136): Postgres has ciphertext, so read the thread through the API.
+    if (all.any((r) => r is Map && r['content'] is Map && (r['content'] as Map).containsKey(r'$enc'))) {
+      all = (await api.chat.getConversationThread(id: conversationId)).data!.items;
+    }
+    final rows = all.map((r) => Map<String, dynamic>.from(r as Map)).where((r) => r['role'] == 'user' || r['role'] == 'assistant').toList();
     return [
       for (final r in rows.length > 500 ? rows.sublist(rows.length - 500) : rows)
         ChatMessageView(
@@ -524,6 +528,11 @@ class SupabaseBackend implements Backend {
               event: 'run_event',
               callback: (message) {
                 final data = message['payload'] is Map ? message['payload'] as Map : message;
+                // Sealed events (D-136) arrive as ids only: fetch them from the API.
+                if (data['sealed'] == true) {
+                  unawaited(catchUp());
+                  return;
+                }
                 try {
                   final before = buffer.lastSeq;
                   deliver([RunEventItem.fromJson(Map<String, dynamic>.from(data))]);
@@ -566,7 +575,11 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> updateMemory(String id, {String? content, bool? pinned}) async {
-    await supabase.from('memories').update({'content': ?content, 'pinned': ?pinned, 'updated_at': DateTime.now().toUtc().toIso8601String()}).eq('id', id);
+    // Through the API, which seals the content when the workspace encrypts (D-136).
+    await api.memory.updateMemory(
+      id: id,
+      updateMemoryRequest: UpdateMemoryRequest(content: content, pinned: pinned),
+    );
   }
 
   @override
@@ -889,6 +902,18 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<bool> allowBotToBot(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.allowBotToBot;
+
+  @override
+  Future<EncryptionStatus> encryption(String orgId) async => (await api.encryption.getEncryption(id: orgId)).data!;
+
+  @override
+  Future<EncryptionStatus> setEncryption(String orgId, bool enabled) async => (await api.encryption.setEncryption(
+    id: orgId,
+    setEncryptionRequest: SetEncryptionRequest(enabled: enabled),
+  )).data!;
+
+  @override
+  Future<EncryptionStatus> rotateEncryptionKey(String orgId) async => (await api.encryption.rotateEncryptionKey(id: orgId)).data!;
 
   @override
   Future<void> setAllowBotToBot(String orgId, bool allowed) async {
