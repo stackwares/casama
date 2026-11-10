@@ -23,6 +23,7 @@ export * from "./secrets.ts";
 export * from "./takeover.ts";
 export * from "./tools/autonomy.ts";
 export * from "./tools/builtin.ts";
+export * from "./tools/coding.ts";
 export * from "./tools/computer.ts";
 export * from "./tools/desktop.ts";
 export * from "./tools/registry.ts";

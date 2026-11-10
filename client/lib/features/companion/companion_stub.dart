@@ -36,4 +36,6 @@ class _Unsupported implements Companion {
   Future<void> start({required String apiUrl, required String deviceToken, required CompanionSettings settings}) async {}
   @override
   Future<void> stop() async {}
+  @override
+  Future<List<String>> detectCodingAgents() async => const [];
 }

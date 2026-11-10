@@ -5301,6 +5301,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On {device}'**
   String localMcpOnDevice(String device);
+
+  /// No description provided for @codingAgents.
+  ///
+  /// In en, this message translates to:
+  /// **'Coding agents'**
+  String get codingAgents;
+
+  /// No description provided for @codingAgentsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots can hand coding tasks to these agents on this computer. They use your own sign-ins and work in the folders you share.'**
+  String get codingAgentsHelp;
+
+  /// No description provided for @codingAgentsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No coding agents found. Install Claude Code, Codex or Cursor\'s command-line agent to hand them coding tasks.'**
+  String get codingAgentsNone;
+
+  /// No description provided for @codingAgentsNeedShell.
+  ///
+  /// In en, this message translates to:
+  /// **'Coding agents run as commands, so they need Run commands turned on.'**
+  String get codingAgentsNeedShell;
+
+  /// No description provided for @allowCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get allowCommands;
 }
 
 class _AppLocalizationsDelegate

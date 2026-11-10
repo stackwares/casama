@@ -35,6 +35,10 @@ class FakeCompanion implements Companion {
   }
 
   void act(CompanionActivity? a) => _activity.value = a;
+
+  List<String> codingAgents = const [];
+  @override
+  Future<List<String>> detectCodingAgents() async => codingAgents;
 }
 
 class MemoryTokens implements DeviceTokenStore {

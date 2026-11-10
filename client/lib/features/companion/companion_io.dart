@@ -94,6 +94,25 @@ class _TokenStore implements DeviceTokenStore {
 /// Desktop companion (macOS, Windows, Linux): an embedded computerd on 127.0.0.1, limited to the
 /// folders and capabilities the user approved, reached by the API over one WebSocket (D-066).
 class IoCompanion implements Companion {
+  @override
+  Future<List<String>> detectCodingAgents() async {
+    // Apps launched from Finder get a minimal PATH; look where installers usually put them too.
+    final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '';
+    final dirs = {
+      ...(Platform.environment['PATH'] ?? '').split(Platform.isWindows ? ';' : ':'),
+      '/opt/homebrew/bin',
+      '/usr/local/bin',
+      '$home/.local/bin',
+      '$home/.npm-global/bin',
+    }.where((d) => d.isNotEmpty);
+    final found = <String>[];
+    for (final bin in const ['claude', 'codex', 'cursor-agent']) {
+      final names = Platform.isWindows ? ['$bin.cmd', '$bin.exe'] : [bin];
+      if (dirs.any((d) => names.any((n) => File('$d/$n').existsSync()))) found.add(bin);
+    }
+    return found;
+  }
+
   final _status = ValueNotifier(CompanionStatus.off);
   final _activity = ValueNotifier<CompanionActivity?>(null);
   Computerd? _computerd;

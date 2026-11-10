@@ -27,11 +27,11 @@ const needComputer = async (ctx: ToolContext): Promise<SandboxHandle> => {
 };
 
 /** Streams exec output to tool.output events, at most every 250 ms. */
-async function runStreaming(
-  ctx: ToolContext,
+export async function runStreaming(
+  ctx: Pick<ToolContext, "output">,
   h: SandboxHandle,
   cmd: string,
-  opts: { cwd?: string; timeoutMs?: number },
+  opts: { cwd?: string; timeoutMs?: number; env?: Record<string, string>; signal?: AbortSignal },
 ) {
   let pending = "";
   let out = "";

@@ -1680,5 +1680,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "codingAgents": "Coding agents",
+  "codingAgentsHelp": "Bots can hand coding tasks to these agents on this computer. They use your own sign-ins and work in the folders you share.",
+  "codingAgentsNone": "No coding agents found. Install Claude Code, Codex or Cursor's command-line agent to hand them coding tasks.",
+  "codingAgentsNeedShell": "Coding agents run as commands, so they need Run commands turned on.",
+  "allowCommands": "Turn on"
 }

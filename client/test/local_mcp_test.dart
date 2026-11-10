@@ -70,4 +70,31 @@ void main() {
     expect(mcp.m[orgId], isEmpty);
     expect(backend.localMcpSyncs.last, isEmpty);
   });
+
+  testWidgets('shows coding agents found on this computer and turns on commands for them', (tester) async {
+    await setSize(tester, const Size(700, 1800));
+    final backend = FakeBackend();
+    final companion = FakeCompanion()..codingAgents = ['claude', 'codex'];
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        backendProvider.overrideWithValue(backend),
+        companionProvider.overrideWithValue(companion),
+        deviceTokenStoreProvider.overrideWithValue(MemoryTokens()),
+        localMcpStoreProvider.overrideWithValue(MemoryMcp()),
+      ],
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: CompanionScreen(),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pairComputer')));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.byKey(const Key('codingAgent-codex')), 200);
+    expect(find.text('Claude Code'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('allowCodingAgents')));
+    await tester.pumpAndSettle();
+    expect(companion.started?.capabilities, contains('shell'));
+  });
 }

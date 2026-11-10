@@ -22,6 +22,7 @@ import {
   ReplayGateway,
   recordingGateway,
   registerAutonomyTools,
+  registerCodingTools,
   registerComputerTools,
   registerDesktopTools,
   TavilySearchProvider,
@@ -74,6 +75,7 @@ export interface WorkerOptions {
     elevenlabs?: string;
     cartesia?: string;
     fish_audio?: string;
+    cursor?: string;
   };
   /** Billing (Kasama Cloud only); settles usage into credits every minute. */
   billing?: import("../billing/service.ts").BillingService;
@@ -166,6 +168,13 @@ export async function startWorker(opts: WorkerOptions) {
     registerComputerTools(tools);
     registerDesktopTools(tools);
   }
+  // Coding agents (D-097): on the bot's computer, the user's own computer, or Cursor's cloud.
+  registerCodingTools(tools, {
+    db,
+    computers,
+    fetch: opts.providerBases?.cursor ? fetch : fetchOut,
+    cursorApiUrl: opts.providerBases?.cursor,
+  });
 
   const push =
     opts.push ??

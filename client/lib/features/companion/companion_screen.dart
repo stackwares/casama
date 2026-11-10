@@ -155,6 +155,7 @@ class CompanionScreen extends ConsumerWidget {
                                 ),
                             ],
                           ),
+                        _CodingAgentsSection(shellOn: caps.contains('shell'), onAllow: () => runGuarded(context, () => controller.save(capabilities: {...caps, 'shell'}))),
                         _LocalMcpSection(device: device, enabled: caps.contains('mcp')),
                         SectionHeader(title: l10n.botsAllowed),
                         GroupedCard(
@@ -401,6 +402,51 @@ class _LocalMcpFormState extends State<_LocalMcpForm> {
           ),
         ],
         if (_error != null) FormNote(_error!, icon: LucideIcons.circleAlert, color: context.appColors.negative),
+      ],
+    );
+  }
+}
+
+
+final _codingAgentsProvider = FutureProvider<List<String>>((ref) => ref.watch(companionProvider).detectCodingAgents());
+
+/// Coding agents found on this computer (D-097).
+class _CodingAgentsSection extends ConsumerWidget {
+  const _CodingAgentsSection({required this.shellOn, required this.onAllow});
+  final bool shellOn;
+  final VoidCallback onAllow;
+
+  static const _labels = {'claude': 'Claude Code', 'codex': 'Codex', 'cursor-agent': 'Cursor'};
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final found = ref.watch(_codingAgentsProvider).value ?? const <String>[];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.codingAgents),
+        if (found.isEmpty)
+          AppCard(child: FormNote(l10n.codingAgentsNone, icon: LucideIcons.codeXml))
+        else
+          GroupedCard(
+            children: [
+              for (final a in found)
+                GroupedTile(key: Key('codingAgent-$a'), icon: LucideIcons.codeXml, title: _labels[a] ?? a, subtitle: a),
+            ],
+          ),
+        if (found.isNotEmpty && !shellOn)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+            child: Row(
+              children: [
+                Expanded(child: FormNote(l10n.codingAgentsNeedShell)),
+                TextButton(key: const Key('allowCodingAgents'), onPressed: onAllow, child: Text(l10n.allowCommands)),
+              ],
+            ),
+          )
+        else if (found.isNotEmpty)
+          Padding(padding: const EdgeInsets.fromLTRB(4, 8, 4, 0), child: FormNote(l10n.codingAgentsHelp)),
       ],
     );
   }

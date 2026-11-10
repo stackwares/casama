@@ -3041,4 +3041,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String localMcpOnDevice(String device) {
     return 'On $device';
   }
+
+  @override
+  String get codingAgents => 'Coding agents';
+
+  @override
+  String get codingAgentsHelp =>
+      'Bots can hand coding tasks to these agents on this computer. They use your own sign-ins and work in the folders you share.';
+
+  @override
+  String get codingAgentsNone =>
+      'No coding agents found. Install Claude Code, Codex or Cursor\'s command-line agent to hand them coding tasks.';
+
+  @override
+  String get codingAgentsNeedShell =>
+      'Coding agents run as commands, so they need Run commands turned on.';
+
+  @override
+  String get allowCommands => 'Turn on';
 }

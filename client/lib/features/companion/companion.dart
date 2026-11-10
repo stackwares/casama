@@ -114,6 +114,9 @@ abstract class Companion {
   bool get supported;
   Future<void> start({required String apiUrl, required String deviceToken, required CompanionSettings settings});
   Future<void> stop();
+
+  /// Coding agents installed on this computer (D-097): any of claude, codex, cursor-agent.
+  Future<List<String>> detectCodingAgents();
 }
 
 final deviceTokenStoreProvider = Provider<DeviceTokenStore>((ref) => impl.createTokenStore());

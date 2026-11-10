@@ -130,6 +130,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - computerd `POST /mcp/<key>` bridges MCP Streamable HTTP to a stdio or loopback server on the user's computer; servers are `local_mcp` integrations registered by the app (`PUT /v1/local-devices/{id}/mcp-servers`); the worker's `LocalMcpAdapter` reaches them through the device tunnel. App: companion screen → Local tools (MCP), env kept in secure storage.
 
+## Coding agents (D-097)
+
+- `tools/coding.ts`: `coding.delegate` runs Claude Code, Codex or Cursor's agent headless on the user's companion computer or the bot's computer, or starts a Cursor cloud agent; the companion screen lists agents found on the computer.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).
