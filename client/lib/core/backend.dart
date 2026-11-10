@@ -362,6 +362,11 @@ abstract class Backend {
   Future<void> revokeMcpKey(String orgId, String keyId);
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
+  // Self-improving skills (D-126)
+  Future<List<SkillProposal>> skillProposals(String orgId, {String? botId});
+  Future<void> acceptSkillProposal(String id, {String? bodyMd});
+  Future<void> dismissSkillProposal(String id);
+  Future<SkillStats> skillStats(String skillId);
   // Knowledge sources (D-125)
   Future<List<KnowledgeSource>> knowledgeSources(String orgId, {String? botId});
   Future<KnowledgeSource> addKnowledgeSource(CreateKnowledgeSourceRequest request);

@@ -239,6 +239,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/knowledge-parse.ts` (PDF, DOCX, Markdown, HTML, CSV, chunking), `packages/agent/src/knowledge.ts` (website crawl with robots.txt, GitHub, connections, `knowledgeTick` in the minute tick, `knowledge.search`), `knowledge_sources`/`knowledge_uploads`/`knowledge_chunks` and `search_knowledge`, `apps/server/src/api/routes/knowledge.ts`, and the bot's Knowledge screen.
 
+## Self-improving skills (D-126)
+
+- `packages/agent/src/skill-learning.ts` (`learnFromRun` from the run loop's `learn` steps, proposals, `applySkillProposal`), `run_digests`/`skill_proposals`/`skill_revisions` (with the revision trigger), `apps/server/src/api/routes/skill-learning.ts`, and the For you cards and skill stats sheet.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

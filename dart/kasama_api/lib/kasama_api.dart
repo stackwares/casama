@@ -46,6 +46,7 @@ export 'package:kasama_api/src/api/workspaces_api.dart';
 
 export 'package:kasama_api/src/model/abuse_event.dart';
 export 'package:kasama_api/src/model/abuse_event_list.dart';
+export 'package:kasama_api/src/model/accept_skill_proposal_request.dart';
 export 'package:kasama_api/src/model/accepted.dart';
 export 'package:kasama_api/src/model/accepted_suggestion.dart';
 export 'package:kasama_api/src/model/account_deletion.dart';
@@ -324,6 +325,10 @@ export 'package:kasama_api/src/model/skill_catalog.dart';
 export 'package:kasama_api/src/model/skill_loaded_event.dart';
 export 'package:kasama_api/src/model/skill_loaded_event_payload.dart';
 export 'package:kasama_api/src/model/skill_preview_file.dart';
+export 'package:kasama_api/src/model/skill_proposal.dart';
+export 'package:kasama_api/src/model/skill_proposal_list.dart';
+export 'package:kasama_api/src/model/skill_stats.dart';
+export 'package:kasama_api/src/model/skill_stats_revisions_inner.dart';
 export 'package:kasama_api/src/model/skill_update_check.dart';
 export 'package:kasama_api/src/model/start_agent_import_request.dart';
 export 'package:kasama_api/src/model/start_agent_import_request_files_inner.dart';

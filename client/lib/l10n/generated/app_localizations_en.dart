@@ -4477,4 +4477,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get add => 'Add';
+
+  @override
+  String get skillIdeas => 'Skill ideas';
+
+  @override
+  String skillIdeaFrom(String bot, String name) {
+    return '$bot suggests a skill: $name';
+  }
+
+  @override
+  String skillEditFrom(String bot, String name) {
+    return '$bot suggests improving $name';
+  }
+
+  @override
+  String skillUsesTools(String tools) {
+    return 'Uses: $tools';
+  }
+
+  @override
+  String get saveSkill => 'Save skill';
+
+  @override
+  String get applyEdit => 'Apply change';
+
+  @override
+  String skillSaved(String name) {
+    return 'Saved $name';
+  }
+
+  @override
+  String skillUpdated(String name) {
+    return 'Updated $name';
+  }
+
+  @override
+  String get skillStats => 'How it\'s doing';
+
+  @override
+  String get skillNotUsedYet => 'Not used yet';
+
+  @override
+  String skillStatsLine(int uses, int rate, int failures, int corrections) {
+    return 'Used $uses times · $rate% went well · $failures failed · $corrections corrected';
+  }
+
+  @override
+  String skillLastFailure(String date) {
+    return 'Last problem: $date';
+  }
+
+  @override
+  String get skillHistory => 'Earlier versions';
 }

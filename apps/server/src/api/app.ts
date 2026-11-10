@@ -36,6 +36,7 @@ import { registerPrivacyRoutes } from "./routes/privacy.ts";
 import { registerTeachRoutes } from "./routes/teach.ts";
 import { registerProjectRoutes } from "./routes/projects.ts";
 import { registerSearchRoutes } from "./routes/search.ts";
+import { registerSkillLearningRoutes } from "./routes/skill-learning.ts";
 import { registerSkillRoutes } from "./routes/skills.ts";
 import { registerSystemRoutes } from "./routes/system.ts";
 import { registerVoiceRoutes } from "./routes/voice.ts";
@@ -232,6 +233,7 @@ export function createApp(deps: AppDeps) {
   registerAgentImportRoutes(app, deps);
   registerWorkspaceFileRoutes(app, deps);
   registerKnowledgeRoutes(app, deps);
+  registerSkillLearningRoutes(app, deps);
   registerMcpRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {

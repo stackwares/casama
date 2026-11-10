@@ -218,11 +218,15 @@ Class | Method | HTTP request | Description
 [*SecretsApi*](doc/SecretsApi.md) | [**fulfillSecretRequest**](doc/SecretsApi.md#fulfillsecretrequest) | **POST** /v1/secrets/requests/{id}/fulfill | Save the value a bot asked for (into Vault, for that bot and those hosts only)
 [*SecretsApi*](doc/SecretsApi.md) | [**listSecretRequests**](doc/SecretsApi.md#listsecretrequests) | **GET** /v1/secrets/requests | Bots waiting for a secret (pending requests you can see)
 [*SecretsApi*](doc/SecretsApi.md) | [**listSecrets**](doc/SecretsApi.md#listsecrets) | **GET** /v1/secrets | 
+[*SkillsApi*](doc/SkillsApi.md) | [**acceptSkillProposal**](doc/SkillsApi.md#acceptskillproposal) | **POST** /v1/skill-proposals/{id}/accept | Save the proposed skill or edit, optionally changed first
 [*SkillsApi*](doc/SkillsApi.md) | [**applySkillUpdate**](doc/SkillsApi.md#applyskillupdate) | **POST** /v1/skills/{id}/update | Update a GitHub skill to a newer commit (after reviewing the diff)
 [*SkillsApi*](doc/SkillsApi.md) | [**checkSkillUpdate**](doc/SkillsApi.md#checkskillupdate) | **GET** /v1/skills/{id}/update | Compare a GitHub skill with its source&#39;s latest commit (diff before updating)
+[*SkillsApi*](doc/SkillsApi.md) | [**dismissSkillProposal**](doc/SkillsApi.md#dismissskillproposal) | **POST** /v1/skill-proposals/{id}/dismiss | 
 [*SkillsApi*](doc/SkillsApi.md) | [**getSkillCatalog**](doc/SkillsApi.md#getskillcatalog) | **GET** /v1/skills/catalog | The curated skills that ship with this server
+[*SkillsApi*](doc/SkillsApi.md) | [**getSkillStats**](doc/SkillsApi.md#getskillstats) | **GET** /v1/skills/{id}/stats | Uses, success rate, last failure and history of a skill
 [*SkillsApi*](doc/SkillsApi.md) | [**installCatalogSkill**](doc/SkillsApi.md#installcatalogskill) | **POST** /v1/skills/install | Install a catalog skill to the workspace (admins) or one bot (its managers)
 [*SkillsApi*](doc/SkillsApi.md) | [**installGitHubSkill**](doc/SkillsApi.md#installgithubskill) | **POST** /v1/skills/github/install | Install a GitHub skill pinned to the previewed commit
+[*SkillsApi*](doc/SkillsApi.md) | [**listSkillProposals**](doc/SkillsApi.md#listskillproposals) | **GET** /v1/skill-proposals | Skills and skill edits bots proposed from their runs (D-126)
 [*SkillsApi*](doc/SkillsApi.md) | [**previewGitHubSkill**](doc/SkillsApi.md#previewgithubskill) | **POST** /v1/skills/github/preview | Read a skill folder from GitHub at its latest commit and show its files before installing
 [*SystemApi*](doc/SystemApi.md) | [**getConfig**](doc/SystemApi.md#getconfig) | **GET** /v1/config | Public client configuration (no auth)
 [*SystemApi*](doc/SystemApi.md) | [**getSignupChallenge**](doc/SystemApi.md#getsignupchallenge) | **GET** /v1/signup/challenge | A proof-of-work puzzle for signing up when the server asks for one (no auth)
@@ -269,6 +273,7 @@ Class | Method | HTTP request | Description
 
  - [AbuseEvent](doc/AbuseEvent.md)
  - [AbuseEventList](doc/AbuseEventList.md)
+ - [AcceptSkillProposalRequest](doc/AcceptSkillProposalRequest.md)
  - [Accepted](doc/Accepted.md)
  - [AcceptedSuggestion](doc/AcceptedSuggestion.md)
  - [AccountDeletion](doc/AccountDeletion.md)
@@ -547,6 +552,10 @@ Class | Method | HTTP request | Description
  - [SkillLoadedEvent](doc/SkillLoadedEvent.md)
  - [SkillLoadedEventPayload](doc/SkillLoadedEventPayload.md)
  - [SkillPreviewFile](doc/SkillPreviewFile.md)
+ - [SkillProposal](doc/SkillProposal.md)
+ - [SkillProposalList](doc/SkillProposalList.md)
+ - [SkillStats](doc/SkillStats.md)
+ - [SkillStatsRevisionsInner](doc/SkillStatsRevisionsInner.md)
  - [SkillUpdateCheck](doc/SkillUpdateCheck.md)
  - [StartAgentImportRequest](doc/StartAgentImportRequest.md)
  - [StartAgentImportRequestFilesInner](doc/StartAgentImportRequestFilesInner.md)

@@ -7689,6 +7689,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add'**
   String get add;
+
+  /// No description provided for @skillIdeas.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill ideas'**
+  String get skillIdeas;
+
+  /// No description provided for @skillIdeaFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} suggests a skill: {name}'**
+  String skillIdeaFrom(String bot, String name);
+
+  /// No description provided for @skillEditFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} suggests improving {name}'**
+  String skillEditFrom(String bot, String name);
+
+  /// No description provided for @skillUsesTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses: {tools}'**
+  String skillUsesTools(String tools);
+
+  /// No description provided for @saveSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Save skill'**
+  String get saveSkill;
+
+  /// No description provided for @applyEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply change'**
+  String get applyEdit;
+
+  /// No description provided for @skillSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String skillSaved(String name);
+
+  /// No description provided for @skillUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {name}'**
+  String skillUpdated(String name);
+
+  /// No description provided for @skillStats.
+  ///
+  /// In en, this message translates to:
+  /// **'How it\'s doing'**
+  String get skillStats;
+
+  /// No description provided for @skillNotUsedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not used yet'**
+  String get skillNotUsedYet;
+
+  /// No description provided for @skillStatsLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {uses} times · {rate}% went well · {failures} failed · {corrections} corrected'**
+  String skillStatsLine(int uses, int rate, int failures, int corrections);
+
+  /// No description provided for @skillLastFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Last problem: {date}'**
+  String skillLastFailure(String date);
+
+  /// No description provided for @skillHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier versions'**
+  String get skillHistory;
 }
 
 class _AppLocalizationsDelegate

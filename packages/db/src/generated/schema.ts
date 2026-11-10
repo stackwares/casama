@@ -1960,6 +1960,115 @@ export const watchers = pgTable("watchers", {
 	check("watchers_status_check", sql`status = ANY (ARRAY['active'::text, 'paused'::text, 'done'::text, 'expired'::text])`),
 ]);
 
+export const runDigests = pgTable("run_digests", {
+	runId: uuid("run_id").primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	task: text().notNull(),
+	tools: text().array().default([""]).notNull(),
+	skills: text().array().default([""]).notNull(),
+	status: text().notNull(),
+	corrected: boolean().default(false).notNull(),
+	correction: text(),
+	embedding: vector("embedding", { dimensions: 1536 }),
+	tsv: tsvector("tsv").generatedAlwaysAs(sql`to_tsvector('simple'::regconfig, task)`),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("run_digests_bot_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "run_digests_run_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "run_digests_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "run_digests_bot_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("run_digests_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("run_digests_status_check", sql`status = ANY (ARRAY['completed'::text, 'failed'::text, 'cancelled'::text])`),
+]);
+
+export const skillProposals = pgTable("skill_proposals", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	kind: text().notNull(),
+	skillId: uuid("skill_id"),
+	name: text().notNull(),
+	description: text().notNull(),
+	bodyMd: text("body_md").notNull(),
+	previousBodyMd: text("previous_body_md"),
+	tools: text().array().default([""]).notNull(),
+	reason: text().default("").notNull(),
+	sourceRunIds: uuid("source_run_ids").array().default([""]).notNull(),
+	status: text().default('pending').notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	resolvedAt: timestamp("resolved_at", { withTimezone: true, mode: 'string' }),
+	resolvedBy: uuid("resolved_by"),
+}, (table) => [
+	index("skill_proposals_pending_idx").using("btree", table.orgId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")).where(sql`(status = 'pending'::text)`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "skill_proposals_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "skill_proposals_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.skillId],
+			foreignColumns: [skills.id],
+			name: "skill_proposals_skill_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.resolvedBy],
+			foreignColumns: [users.id],
+			name: "skill_proposals_resolved_by_fkey"
+		}).onDelete("set null"),
+	pgPolicy("skill_proposals_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("skill_proposals_kind_check", sql`kind = ANY (ARRAY['new'::text, 'edit'::text])`),
+	check("skill_proposals_name_check", sql`name ~ '^[a-z0-9][a-z0-9_-]{0,62}$'::text`),
+	check("skill_proposals_description_check", sql`(char_length(description) >= 1) AND (char_length(description) <= 300)`),
+	check("skill_proposals_body_md_check", sql`char_length(body_md) <= 50000`),
+	check("skill_proposals_status_check", sql`status = ANY (ARRAY['pending'::text, 'accepted'::text, 'dismissed'::text, 'applied'::text])`),
+]);
+
+export const skillRevisions = pgTable("skill_revisions", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	skillId: uuid("skill_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	description: text().notNull(),
+	bodyMd: text("body_md").notNull(),
+	changedByBot: uuid("changed_by_bot"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("skill_revisions_skill_idx").using("btree", table.skillId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.skillId],
+			foreignColumns: [skills.id],
+			name: "skill_revisions_skill_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "skill_revisions_org_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("skill_revisions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
+   FROM skills s
+  WHERE (s.id = skill_revisions.skill_id)))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+]);
+
 export const mcpClients = pgTable("mcp_clients", {
 	clientId: text("client_id").primaryKey().notNull(),
 	name: text().notNull(),

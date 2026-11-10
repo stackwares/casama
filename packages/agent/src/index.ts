@@ -30,6 +30,7 @@ export * from "./safe-fetch.ts";
 export * from "./search.ts";
 export * from "./secret-requests.ts";
 export * from "./secrets.ts";
+export * from "./skill-learning.ts";
 export * from "./takeover.ts";
 export * from "./teach.ts";
 export * from "./tickets.ts";

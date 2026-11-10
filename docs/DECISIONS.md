@@ -847,3 +847,21 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - parsers, chunking and `robots.txt` (`knowledge-parse.test.ts`)
   - API (`knowledge.test.ts`): uploads with an unsupported file reported, cited search, a website crawl that skips a disallowed page, a GitHub source shared with the workspace, full-text-only search, and permissions with resync and delete
   - widget (`knowledge_test.dart`)
+
+## D-126 Self-improving skills
+
+- **Run digests:** each chat run leaves a digest when it finishes (group chats excepted). It holds the request, the tools used (memory, knowledge, skills and suggestions bookkeeping left out), the skills loaded, how it ended, whether the person later corrected it, and an embedding of the request (`run_digests`).
+- **New skills:** a successful run that used at least two tools and no skill, and matches at least two earlier successful runs, makes the bot propose a skill. A match means cosine distance under 0.3, or 60% shared words without an embedding key. The cheap model writes the name, description, steps and tools from up to four examples (requests, tools, answers). A proposal is made only once per group of runs, and names never clash.
+- **Edits:**
+  - A run that loaded a skill and failed leads to an edit proposal, with the error.
+  - So does a correction in the next message of the same chat ("no…", "actually…", "that's wrong", "it should…"); the earlier run is marked corrected.
+  - The model rewrites the skill and says what changed. The app shows the change as a line diff.
+  - Plugin skills are never edited this way.
+- **Approval:** proposals wait for the owner, who gets a notification and sees cards in Inbox → For you (save or apply, or dismiss). The API accepts an edited version. An action rule allowing `skills.create` or `skills.update` for the bot applies proposals at once.
+- **History and stats:** a trigger copies a skill's old text into `skill_revisions` on every change, whether by a person or a bot. `GET /v1/skills/{id}/stats` reports uses, successes, failures, corrections, success rate and last failure from the digests, plus the earlier versions; the bot's Skills screen shows them.
+- **Not yet:**
+  - Proposals appear in the For you inbox and as a notification, not as a card inside the chat. A chat card needs a new run event type and app support.
+  - Digests start now, so existing history doesn't count.
+- **Tests:**
+  - API (`skill-learning.test.ts`): three similar runs leading to one proposal; one-tool and unrelated runs ignored; no repeat proposal; members can't accept; accept with a change; a correction leading to an edit with a diff; stats and history; a failure leading to an edit auto-applied under an action rule.
+  - widget (`skill_proposals_test.dart`): the diff, the For you cards and the stats sheet.

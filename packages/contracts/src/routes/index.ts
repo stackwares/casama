@@ -19,6 +19,7 @@ import * as voice from "./voice.ts";
 import * as agentImport from "./agent-import.ts";
 import * as knowledge from "./knowledge.ts";
 import * as pages from "./pages.ts";
+import * as skillLearning from "./skill-learning.ts";
 import * as plugins from "./plugins.ts";
 import * as teach from "./teach.ts";
 import * as watchers from "./watchers.ts";
@@ -47,6 +48,7 @@ export const routes = {
   ...agentImport,
   ...knowledge,
   ...pages,
+  ...skillLearning,
   ...plugins,
   ...teach,
   ...watchers,
@@ -74,6 +76,7 @@ export {
   agentImport,
   knowledge,
   pages,
+  skillLearning,
   plugins,
   teach,
   watchers,

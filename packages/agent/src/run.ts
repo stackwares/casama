@@ -43,6 +43,7 @@ import {
   secretRequestState,
 } from "./secret-requests.ts";
 import { computerMcpFor } from "./plugins.ts";
+import { learnFromRun } from "./skill-learning.ts";
 import { SETUP_GUIDE } from "./tools/setup.ts";
 import {
   type ActionRule,
@@ -726,6 +727,12 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       }),
     );
     await step("complete", () => finishCompleted(db, info, finalMessage.messageId, bus));
+    await step("learn", () =>
+      learnStep(deps, info, "completed", undefined, chainFor, bus).catch((err) => {
+        log?.warn("skill learning failed", { run_id: runId, error: (err as Error).message });
+        return null;
+      }),
+    );
     if (info.trigger === "task")
       await step("ticket", () => ticketAfterRun(db, info, { ok: true, text: finalMessage.text }));
     if (info.routine?.notify && deps.notifications) {
@@ -766,6 +773,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         bus,
       ),
     );
+    // A run that used a skill and failed may lead to an edit proposal (D-126).
+    await step("learn-failed", () => learnStep(deps, info, "failed", message, chainFor, bus).catch(() => null)).catch(() => null);
     return { status: "failed" };
   }
 }
@@ -1649,6 +1658,50 @@ async function extractStep(
   }
   await recordUsage(deps.db, info, r.model, r.usage, bus, providerOf(undefined, r.model, chain));
   return r.memories.length;
+}
+
+/** Self-improving skills (D-126): the run's digest, and a skill or edit proposal when it fits. */
+async function learnStep(
+  deps: RunDeps,
+  info: RunInfo,
+  status: "completed" | "failed",
+  error: string | undefined,
+  chainFor: (
+    c: Array<{ credential_id: string; model: string } | undefined>,
+  ) => Promise<ResolvedModel[]>,
+  busFn: () => Promise<EventBus>,
+) {
+  if (!info.current?.text || info.group) return null;
+  const chain = await chainFor([info.policy.cheap ?? info.policy.primary]);
+  const cheap = chain[0];
+  if (!cheap) return null;
+  const stream = withFallback(deps.gateway, chain, deps.fallback);
+  const r = await learnFromRun(
+    {
+      db: deps.db,
+      embedder: await deps.embedderFor(info.orgId),
+      complete: async (system, text) => {
+        const out = await collect(stream({ system: [system], messages: [{ role: "user", content: text }], maxOutputTokens: 1500 }));
+        const bus = await busFn();
+        await recordUsage(deps.db, info, out.model || cheap.model, out.usage, bus, providerOf(undefined, out.model || cheap.model, chain));
+        return out.text;
+      },
+      notify: deps.notifications
+        ? (user, org, payload) => deps.notifications?.notify(user, org, "suggestion", payload).then(() => undefined) ?? Promise.resolve()
+        : undefined,
+    },
+    {
+      runId: info.runId,
+      orgId: info.orgId,
+      botId: info.botId,
+      conversationId: info.conversationId,
+      task: info.current.text,
+      status,
+      error,
+      owner: info.createdBy ?? info.botOwner,
+    },
+  );
+  return r?.id ?? null;
 }
 
 async function setTerminal(db: Database, info: RunInfo, status: string, error: unknown) {

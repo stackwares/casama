@@ -569,6 +569,33 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  // Self-improving skills (D-126)
+  final proposals = <SkillProposal>[];
+  final proposalActions = <String>[];
+  @override
+  Future<List<SkillProposal>> skillProposals(String orgId, {String? botId}) async => List.of(proposals);
+  @override
+  Future<void> acceptSkillProposal(String id, {String? bodyMd}) async {
+    proposalActions.add('accept:$id');
+    proposals.removeWhere((p) => p.id == id);
+  }
+  @override
+  Future<void> dismissSkillProposal(String id) async {
+    proposalActions.add('dismiss:$id');
+    proposals.removeWhere((p) => p.id == id);
+  }
+  @override
+  Future<SkillStats> skillStats(String skillId) async => SkillStats(
+        uses: 4,
+        successes: 3,
+        failures: 1,
+        corrections: 0,
+        successRate: 0.75,
+        lastFailureAt: DateTime(2026, 11, 9),
+        lastFailureRunId: null,
+        revisions: [SkillStatsRevisionsInner(id: 'rev-a', description: 'd', bodyMd: 'Old steps', byBot: true, createdAt: DateTime(2026, 11, 8))],
+      );
+
   // Knowledge sources (D-125)
   final knowledgeList = <KnowledgeSource>[];
   final knowledgeActions = <String>[];

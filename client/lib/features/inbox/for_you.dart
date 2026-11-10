@@ -12,6 +12,7 @@ import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/page.dart';
 import '../chat/widgets/chat_markdown.dart';
+import '../skills/skill_proposals.dart';
 
 /// The "For you" feed (D-114): the latest morning briefs, pending suggestions and approvals.
 final forYouProvider = FutureProvider.autoDispose<ForYou>((ref) async {
@@ -28,11 +29,12 @@ class ForYouList extends ConsumerWidget {
     final l10n = context.l10n;
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     Bot? bot(String id) => bots.where((b) => b.id == id).firstOrNull;
+    final proposals = ref.watch(skillProposalsProvider).value ?? const <SkillProposal>[];
     return AsyncView(
       value: ref.watch(forYouProvider),
       onRetry: () => ref.invalidate(forYouProvider),
       data: (f) {
-        if (f.briefs.isEmpty && f.suggestions.isEmpty && f.approvals.isEmpty) {
+        if (f.briefs.isEmpty && f.suggestions.isEmpty && f.approvals.isEmpty && proposals.isEmpty) {
           return EmptyState(icon: LucideIcons.sun, title: l10n.forYouEmpty, message: l10n.forYouEmptyHelp);
         }
         return ListView(
@@ -60,6 +62,8 @@ class ForYouList extends ConsumerWidget {
                   ),
                 ),
               ),
+            if (proposals.isNotEmpty) SectionHeader(title: l10n.skillIdeas),
+            for (final p in proposals) SkillProposalCard(proposal: p, botName: bot(p.botId)?.name ?? ''),
             if (f.suggestions.isNotEmpty) SectionHeader(title: l10n.suggestions),
             for (final s in f.suggestions) _SuggestionCard(s: s, botName: bot(s.botId)?.name ?? ''),
             if (f.approvals.isNotEmpty) SectionHeader(title: l10n.approvals),

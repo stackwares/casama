@@ -1,5 +1,6 @@
 import 'package:kasama_api/src/model/abuse_event.dart';
 import 'package:kasama_api/src/model/abuse_event_list.dart';
+import 'package:kasama_api/src/model/accept_skill_proposal_request.dart';
 import 'package:kasama_api/src/model/accepted.dart';
 import 'package:kasama_api/src/model/accepted_suggestion.dart';
 import 'package:kasama_api/src/model/account_deletion.dart';
@@ -263,6 +264,10 @@ import 'package:kasama_api/src/model/skill_catalog.dart';
 import 'package:kasama_api/src/model/skill_loaded_event.dart';
 import 'package:kasama_api/src/model/skill_loaded_event_payload.dart';
 import 'package:kasama_api/src/model/skill_preview_file.dart';
+import 'package:kasama_api/src/model/skill_proposal.dart';
+import 'package:kasama_api/src/model/skill_proposal_list.dart';
+import 'package:kasama_api/src/model/skill_stats.dart';
+import 'package:kasama_api/src/model/skill_stats_revisions_inner.dart';
 import 'package:kasama_api/src/model/skill_update_check.dart';
 import 'package:kasama_api/src/model/start_agent_import_request.dart';
 import 'package:kasama_api/src/model/start_agent_import_request_files_inner.dart';
@@ -374,6 +379,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AbuseEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AbuseEventList':
           return AbuseEventList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AcceptSkillProposalRequest':
+          return AcceptSkillProposalRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Accepted':
           return Accepted.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AcceptedSuggestion':
@@ -945,6 +952,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SkillLoadedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillPreviewFile':
           return SkillPreviewFile.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SkillProposal':
+          return SkillProposal.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SkillProposalList':
+          return SkillProposalList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SkillStats':
+          return SkillStats.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SkillStatsRevisionsInner':
+          return SkillStatsRevisionsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillUpdateCheck':
           return SkillUpdateCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StartAgentImportRequest':

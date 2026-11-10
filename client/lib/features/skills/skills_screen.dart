@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
 import '../../core/providers.dart';
+import 'skill_proposals.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -86,6 +87,12 @@ class SkillsScreen extends ConsumerWidget {
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              IconButton(
+                                key: Key('skillStats-${s.id}'),
+                                tooltip: l10n.skillStats,
+                                icon: const Icon(LucideIcons.chartColumn, size: 18),
+                                onPressed: () => showAdaptiveSheet<void>(context: context, builder: (_) => SkillStatsSheet(skillId: s.id, name: s.name)),
+                              ),
                               if (s.source == 'github')
                                 IconButton(
                                   key: Key('checkUpdate-${s.id}'),

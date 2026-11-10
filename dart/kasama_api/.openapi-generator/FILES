@@ -46,6 +46,7 @@ lib/src/auth/oauth.dart
 lib/src/deserialize.dart
 lib/src/model/abuse_event.dart
 lib/src/model/abuse_event_list.dart
+lib/src/model/accept_skill_proposal_request.dart
 lib/src/model/accepted.dart
 lib/src/model/accepted_suggestion.dart
 lib/src/model/account_deletion.dart
@@ -324,6 +325,10 @@ lib/src/model/skill_catalog.dart
 lib/src/model/skill_loaded_event.dart
 lib/src/model/skill_loaded_event_payload.dart
 lib/src/model/skill_preview_file.dart
+lib/src/model/skill_proposal.dart
+lib/src/model/skill_proposal_list.dart
+lib/src/model/skill_stats.dart
+lib/src/model/skill_stats_revisions_inner.dart
 lib/src/model/skill_update_check.dart
 lib/src/model/start_agent_import_request.dart
 lib/src/model/start_agent_import_request_files_inner.dart

@@ -914,6 +914,23 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<List<SkillProposal>> skillProposals(String orgId, {String? botId}) async =>
+      (await api.skills.listSkillProposals(orgId: orgId, botId: botId)).data!.items;
+
+  @override
+  Future<void> acceptSkillProposal(String id, {String? bodyMd}) async {
+    await api.skills.acceptSkillProposal(id: id, acceptSkillProposalRequest: AcceptSkillProposalRequest(bodyMd: bodyMd));
+  }
+
+  @override
+  Future<void> dismissSkillProposal(String id) async {
+    await api.skills.dismissSkillProposal(id: id);
+  }
+
+  @override
+  Future<SkillStats> skillStats(String skillId) async => (await api.skills.getSkillStats(id: skillId)).data!;
+
+  @override
   Future<List<KnowledgeSource>> knowledgeSources(String orgId, {String? botId}) async =>
       (await api.knowledge.listKnowledgeSources(orgId: orgId, botId: botId)).data!.items;
 
