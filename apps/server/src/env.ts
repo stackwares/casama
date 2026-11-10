@@ -7,6 +7,8 @@ export const EnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().default(8787),
   DATABASE_URL: z.string().min(1),
+  /** The worker's least-privilege role (kasama_worker, D-095); unset: the worker uses DATABASE_URL. */
+  WORKER_DATABASE_URL: z.string().min(1).optional(),
   SUPABASE_URL: z.url(),
   SUPABASE_ANON_KEY: z.string().min(1),
   /** Legacy HS256 secret. When unset, tokens are verified against the project's JWKS. */

@@ -118,8 +118,11 @@ export async function startHarness(
   let worker: { stop(): Promise<void> } | undefined;
   if (opts.worker) {
     const { startWorker } = await import("../src/worker/index.ts");
+    // The worker runs as its least-privilege role (D-095), so tests prove the grants are enough.
+    await tdb.admin.unsafe("alter role kasama_worker login password 'kasama-worker-test'");
+    const workerUrl = tdb.url.replace("postgres@", "kasama_worker:kasama-worker-test@");
     worker = await startWorker({
-      databaseUrl: tdb.url,
+      databaseUrl: workerUrl,
       logger: createLogger("worker", "error"),
       logLevel: "error",
       modelFixtures: opts.worker.fixtures,

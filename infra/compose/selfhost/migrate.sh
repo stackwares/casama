@@ -18,4 +18,8 @@ for f in $(ls /migrations/*.sql | sort); do
     $PSQL -c "insert into public.kasama_migrations (name) values ('$name')"
   fi
 done
+# The worker's least-privilege role (D-095) logs in with its own password.
+if [ -n "${WORKER_DB_PASSWORD:-}" ]; then
+  $PSQL -c "alter role kasama_worker with login password '$WORKER_DB_PASSWORD'"
+fi
 echo "migrations up to date"

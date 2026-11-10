@@ -66,6 +66,7 @@ if [[ -f "$ENV_FILE" ]]; then
   # Settings added by newer releases get generated values; nothing existing is changed.
   grep -q "^COMPUTER_TOKEN_SECRET=" "$ENV_FILE" || echo "COMPUTER_TOKEN_SECRET=$(rand 32)" >>"$ENV_FILE"
   grep -q "^SAML_PRIVATE_KEY=" "$ENV_FILE" || echo "SAML_PRIVATE_KEY=$(saml_key)" >>"$ENV_FILE"
+  grep -q "^WORKER_DB_PASSWORD=" "$ENV_FILE" || echo "WORKER_DB_PASSWORD=$(rand 24)" >>"$ENV_FILE"
 else
   if [[ -z "$domain" && "$local" -eq 0 ]]; then
     if [[ -t 0 ]]; then
@@ -95,6 +96,7 @@ HTTPS_PORT=443
 TURN_PUBLIC_HOST=$turn_host
 
 POSTGRES_PASSWORD=$(rand 24)
+WORKER_DB_PASSWORD=$(rand 24)
 JWT_SECRET=$jwt_secret
 ANON_KEY=$(jwt anon "$jwt_secret")
 SERVICE_ROLE_KEY=$(jwt service_role "$jwt_secret")

@@ -122,6 +122,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `services/abuse.ts` and `routes/abuse.ts`: sign-up hook (App Check or proof of work), `/v1/signup/challenge`, `/internal/abuse` for egress reports, suspension; admin suspend/lift and `/v1/admin/abuse`. Egress proxy: mail and mining ports and pools refused and reported. `ComputerService.checkCanStart` (suspended, unverified free workspaces). App: sign-up proof, banner, owner console Abuse tab.
 
+## Worker database role (D-095)
+
+- The worker connects as `kasama_worker` (`WORKER_DATABASE_URL`): explicit per-table policies, Vault read and update, a few `auth.users` columns, its own `dbos` schema; no superuser or RLS bypass. New tables call `public.allow_worker`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

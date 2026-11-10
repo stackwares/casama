@@ -177,6 +177,7 @@ services:
     entrypoint: ["/bin/sh", "/migrate.sh"]
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      WORKER_DB_PASSWORD: ${WORKER_DB_PASSWORD:-}
     volumes:
       - ./selfhost/migrate.sh:/migrate.sh:ro
       - ../../supabase/migrations:/migrations:ro
@@ -195,6 +196,8 @@ services:
       <<: *kasama-env
       MODE: worker
       RUN_CONCURRENCY: ${RUN_CONCURRENCY:-20}
+      # Least-privilege database role (D-095); empty falls back to DATABASE_URL.
+      WORKER_DATABASE_URL: ${WORKER_DB_PASSWORD:+postgres://kasama_worker:${WORKER_DB_PASSWORD}@db:5432/postgres}
       # Push notifications: the Firebase service account JSON on one line (optional).
       FCM_SERVICE_ACCOUNT: ${FCM_SERVICE_ACCOUNT:-}
     depends_on: { migrate: { condition: service_completed_successfully } }

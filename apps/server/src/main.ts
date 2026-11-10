@@ -110,7 +110,7 @@ if (env.MODE === "api") {
     telemetry:
       env.TELEMETRY === "on" ? { url: env.TELEMETRY_URL, version: KASAMA_VERSION } : undefined,
     cloud,
-    databaseUrl: env.DATABASE_URL,
+    databaseUrl: env.WORKER_DATABASE_URL ?? env.DATABASE_URL,
     fcmServiceAccountJson: env.FCM_SERVICE_ACCOUNT
       ? inlineOrFile(env.FCM_SERVICE_ACCOUNT)
       : undefined,
