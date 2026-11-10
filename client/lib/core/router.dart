@@ -32,6 +32,7 @@ import '../features/quick_ask/quick_ask_screen.dart';
 import '../features/voice/call_screen.dart';
 import '../features/workspaces/onboarding_screen.dart';
 import '../features/auth/two_step_screen.dart';
+import '../features/board/board_screen.dart';
 import 'providers.dart';
 import 'telemetry.dart';
 
@@ -135,7 +136,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/inbox',
             pageBuilder: _page((_, s) => InboxScreen(initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? 0)),
           ),
-          GoRoute(path: '/tasks', pageBuilder: _page((_, _) => const InboxScreen(initialTab: 2))),
+          GoRoute(path: '/tasks', pageBuilder: _page((_, _) => const BoardScreen())),
           GoRoute(
             path: '/approvals/:id',
             pageBuilder: _page((_, s) => ApprovalScreen(approvalId: s.pathParameters['id']!)),

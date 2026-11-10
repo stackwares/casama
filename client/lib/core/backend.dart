@@ -218,7 +218,24 @@ abstract class Backend {
 
   // Task board
   Future<List<Task>> tasks(String orgId);
-  Future<void> setTaskStatus(String taskId, String status);
+  // Ticket board (D-098)
+  Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired});
+  /// Changes a ticket; assigning a new bot starts its work.
+  Future<Task> updateTask(
+    String taskId, {
+    String? title,
+    String? details,
+    String? status,
+    String? priority,
+    String? assigneeBotId,
+    String? assigneeUserId,
+    bool? reviewRequired,
+    double? position,
+  });
+  Future<void> deleteTask(String taskId);
+  Future<List<TaskComment>> taskComments(String taskId);
+  /// A comment on a bot's ticket wakes that bot.
+  Future<TaskComment> addTaskComment(String taskId, String body);
 
   // Owner admin console (Phase 6). Null when the user is not the instance owner.
   Future<AdminOverview?> adminOverview();

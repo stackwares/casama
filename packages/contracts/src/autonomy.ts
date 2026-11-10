@@ -208,15 +208,70 @@ export const Template = z
   })
   .openapi("Template");
 
+export const TaskStatus = z
+  .enum(["todo", "in_progress", "in_review", "blocked", "done"])
+  .openapi("TaskStatus");
+export const TaskPriority = z
+  .enum(["urgent", "high", "medium", "low", "none"])
+  .openapi("TaskPriority");
+
 export const Task = z
   .object({
     id: Uuid,
     title: z.string(),
     details_md: z.string(),
-    status: z.enum(["todo", "doing", "done", "blocked"]),
+    status: TaskStatus,
+    priority: TaskPriority,
     assignee_bot_id: Uuid.nullable(),
+    assignee_user_id: Uuid.nullable(),
     created_by_bot_id: Uuid.nullable(),
+    created_by_user_id: Uuid.nullable(),
     result_md: z.string().nullable(),
+    due_at: ts.nullable(),
+    labels: z.array(z.string()),
+    position: z.number(),
+    review_required: z.boolean(),
+    conversation_id: Uuid.nullable(),
+    comments: z.number().int().openapi({ description: "How many comments the ticket has" }),
     updated_at: ts,
+    created_at: ts,
   })
   .openapi("Task");
+
+export const CreateTaskRequest = z
+  .object({
+    org_id: Uuid,
+    title: z.string().trim().min(1).max(300),
+    details_md: z.string().max(10_000).optional(),
+    status: TaskStatus.optional(),
+    priority: TaskPriority.optional(),
+    assignee_bot_id: Uuid.nullable()
+      .optional()
+      .openapi({ description: "The bot starts on it at once" }),
+    assignee_user_id: Uuid.nullable().optional(),
+    due_at: ts.nullable().optional(),
+    labels: z.array(z.string().trim().min(1).max(40)).max(10).optional(),
+    review_required: z.boolean().optional(),
+  })
+  .openapi("CreateTaskRequest");
+
+export const UpdateTaskRequest = CreateTaskRequest.omit({ org_id: true })
+  .partial()
+  .extend({ position: z.number().optional() })
+  .openapi("UpdateTaskRequest");
+
+export const TaskComment = z
+  .object({
+    id: Uuid,
+    task_id: Uuid,
+    author_type: z.enum(["user", "bot"]),
+    author_user_id: Uuid.nullable(),
+    author_bot_id: Uuid.nullable(),
+    body_md: z.string(),
+    created_at: ts,
+  })
+  .openapi("TaskComment");
+
+export const CreateTaskCommentRequest = z
+  .object({ body_md: z.string().trim().min(1).max(20_000) })
+  .openapi("CreateTaskCommentRequest");

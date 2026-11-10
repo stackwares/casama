@@ -29,8 +29,8 @@ class InboxScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final pending = ref.watch(approvalsProvider).value?.length ?? 0;
     return DefaultTabController(
-      length: 3,
-      initialIndex: initialTab,
+      length: 2,
+      initialIndex: initialTab.clamp(0, 1),
       child: Scaffold(
         appBar: ShellHeader(
           title: l10n.inbox,
@@ -47,14 +47,13 @@ class InboxScreen extends ConsumerWidget {
                   tabs: [
                     Tab(height: 40, text: pending == 0 ? l10n.approvals : l10n.approvalsCount(pending)),
                     Tab(height: 40, text: l10n.notifications),
-                    Tab(height: 40, text: l10n.taskBoard),
                   ],
                 ),
               ),
             ),
           ),
         ),
-        body: const TabBarView(children: [ApprovalsList(), NotificationsList(), TaskBoard()]),
+        body: const TabBarView(children: [ApprovalsList(), NotificationsList()]),
       ),
     );
   }
@@ -381,94 +380,6 @@ class _NotificationRow extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// The shared task board bots and people use to hand work around.
-class TaskBoard extends ConsumerWidget {
-  const TaskBoard({super.key});
-
-  static const statuses = ['todo', 'doing', 'blocked', 'done'];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final colors = context.appColors;
-    final scheme = context.colorScheme;
-    (String, Color, IconData) style(String s) => switch (s) {
-      'todo' => (l10n.taskTodo, scheme.onSurfaceVariant, LucideIcons.circle),
-      'doing' => (l10n.taskDoing, colors.working, LucideIcons.circlePlay),
-      'blocked' => (l10n.taskBlocked, colors.negative, LucideIcons.ban),
-      _ => (l10n.taskDone, colors.positive, LucideIcons.circleCheck),
-    };
-    return AsyncView(
-      value: ref.watch(tasksProvider),
-      onRetry: () => ref.invalidate(tasksProvider),
-      data: (items) => items.isEmpty
-          ? EmptyState(icon: LucideIcons.squareKanban, title: l10n.noTasks, message: l10n.noTasksHelp)
-          : RefreshIndicator(
-              onRefresh: () async => ref.invalidate(tasksProvider),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final side = pageSide(constraints.maxWidth);
-                  return ListView(
-                    padding: EdgeInsets.fromLTRB(side, 0, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
-                    children: [
-                      for (final s in statuses)
-                        if (items.any((t) => t.status.value == s)) ...[
-                          SectionHeader(title: '${style(s).$1} · ${items.where((t) => t.status.value == s).length}'),
-                          GroupedCard(
-                            children: [
-                              for (final t in items.where((t) => t.status.value == s))
-                                GroupedTile(
-                                  key: Key('task-${t.id}'),
-                                  icon: style(s).$3,
-                                  iconColor: style(s).$2,
-                                  title: t.title,
-                                  subtitle: [
-                                    if (t.assigneeBotId != null) ref.watch(botProvider(t.assigneeBotId!))?.name ?? l10n.aBot,
-                                    relativeTime(t.updatedAt, context),
-                                  ].join(' · '),
-                                  trailing: PopupMenuButton<String>(
-                                    key: Key('taskStatus-${t.id}'),
-                                    tooltip: l10n.changeStatus,
-                                    initialValue: t.status.value,
-                                    onSelected: (v) async {
-                                      await runGuarded(context, () => ref.read(backendProvider).setTaskStatus(t.id, v));
-                                      ref.invalidate(tasksProvider);
-                                    },
-                                    itemBuilder: (_) => [
-                                      for (final o in statuses)
-                                        PopupMenuItem(
-                                          value: o,
-                                          child: ListTile(
-                                            dense: true,
-                                            leading: Icon(style(o).$3, color: style(o).$2),
-                                            title: Text(style(o).$1),
-                                          ),
-                                        ),
-                                    ],
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          StatusLabel(text: style(t.status.value).$1, color: style(t.status.value).$2, pill: true),
-                                          Icon(LucideIcons.chevronDown, size: 18, color: scheme.onSurfaceVariant),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                    ],
-                  );
-                },
-              ),
-            ),
     );
   }
 }

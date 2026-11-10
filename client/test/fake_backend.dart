@@ -291,7 +291,6 @@ class FakeBackend implements Backend {
   final integrationList = <Integration>[];
   final attached = <String>{};
   final secretList = <Secret>[];
-  final taskStatus = <String, String>{};
 
   @override
   Future<List<Approval>> approvals(String orgId, {bool pendingOnly = true}) async =>
@@ -476,21 +475,68 @@ class FakeBackend implements Backend {
   @override
   Future<void> deleteSecret(String secretId) async => secretList.removeWhere((s) => s.id == secretId);
 
+  final taskList = <Task>[
+    Task(
+      id: 't1',
+      title: 'Summarize the release notes',
+      detailsMd: '',
+      status: TaskStatus.todo,
+      priority: TaskPriority.high,
+      assigneeBotId: botId,
+      assigneeUserId: null,
+      createdByBotId: botId,
+      createdByUserId: null,
+      resultMd: null,
+      dueAt: null,
+      labels: const [],
+      position: 1,
+      reviewRequired: false,
+      conversationId: null,
+      comments: 1,
+      updatedAt: DateTime(2026),
+      createdAt: DateTime(2026),
+    ),
+  ];
+  final taskCommentList = <String, List<TaskComment>>{
+    't1': [
+      TaskComment(id: 'c1', taskId: 't1', authorType: TaskCommentAuthorTypeEnum.bot, authorUserId: null, authorBotId: botId, bodyMd: 'Started reading.', createdAt: DateTime(2026)),
+    ],
+  };
   @override
-  Future<List<Task>> tasks(String orgId) async => [
-        Task(
-          id: 't1',
-          title: 'Summarize the release notes',
-          detailsMd: '',
-          status: TaskStatusEnum.values.firstWhere((s) => s.value == (taskStatus['t1'] ?? 'todo')),
-          assigneeBotId: botId,
-          createdByBotId: botId,
-          resultMd: null,
-          updatedAt: DateTime.now(),
-        ),
-      ];
+  Future<List<Task>> tasks(String orgId) async => List.of(taskList);
   @override
-  Future<void> setTaskStatus(String taskId, String status) async => taskStatus[taskId] = status;
+  Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired}) async {
+    final t = taskList.first.rebuild(id: 't${taskList.length + 1}', title: title, detailsMd: details ?? '', assigneeBotId: assigneeBotId,
+        priority: TaskPriority.values.firstWhere((p) => p.value == (priority ?? 'none')), reviewRequired: reviewRequired ?? false, comments: 0);
+    taskList.add(t);
+    return t;
+  }
+  @override
+  Future<Task> updateTask(String taskId, {String? title, String? details, String? status, String? priority, String? assigneeBotId, String? assigneeUserId, bool? reviewRequired, double? position}) async {
+    final i = taskList.indexWhere((t) => t.id == taskId);
+    final t = taskList[i];
+    taskList[i] = t.rebuild(
+      title: title ?? t.title,
+      detailsMd: details ?? t.detailsMd,
+      status: status == null ? t.status : TaskStatus.values.firstWhere((s) => s.value == status),
+      priority: priority == null ? t.priority : TaskPriority.values.firstWhere((p) => p.value == priority),
+      assigneeBotId: assigneeBotId ?? t.assigneeBotId,
+      assigneeUserId: assigneeUserId ?? t.assigneeUserId,
+      reviewRequired: reviewRequired ?? t.reviewRequired,
+      position: position ?? t.position.toDouble(),
+    );
+    return taskList[i];
+  }
+  @override
+  Future<void> deleteTask(String taskId) async => taskList.removeWhere((t) => t.id == taskId);
+  @override
+  Future<List<TaskComment>> taskComments(String taskId) async => List.of(taskCommentList[taskId] ?? const []);
+  @override
+  Future<TaskComment> addTaskComment(String taskId, String body) async {
+    final c = TaskComment(id: 'c${DateTime.now().microsecondsSinceEpoch}', taskId: taskId, authorType: TaskCommentAuthorTypeEnum.user, authorUserId: 'me', authorBotId: null, bodyMd: body, createdAt: DateTime(2026));
+    (taskCommentList[taskId] ??= []).add(c);
+    return c;
+  }
 
   // --- Phase 6: admin -------------------------------------------------------
 
@@ -943,3 +989,39 @@ Credential chatGptCredential(String orgId,
       fallbackOnLimit: fallbackOnLimit,
       createdAt: DateTime(2026),
     );
+
+
+extension on Task {
+  Task rebuild({
+    String? id,
+    String? title,
+    String? detailsMd,
+    TaskStatus? status,
+    TaskPriority? priority,
+    String? assigneeBotId,
+    String? assigneeUserId,
+    bool? reviewRequired,
+    double? position,
+    int? comments,
+  }) =>
+      Task(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        detailsMd: detailsMd ?? this.detailsMd,
+        status: status ?? this.status,
+        priority: priority ?? this.priority,
+        assigneeBotId: assigneeBotId ?? this.assigneeBotId,
+        assigneeUserId: assigneeUserId ?? this.assigneeUserId,
+        createdByBotId: createdByBotId,
+        createdByUserId: createdByUserId,
+        resultMd: resultMd,
+        dueAt: dueAt,
+        labels: labels,
+        position: position ?? this.position,
+        reviewRequired: reviewRequired ?? this.reviewRequired,
+        conversationId: conversationId,
+        comments: comments ?? this.comments,
+        updatedAt: updatedAt,
+        createdAt: createdAt,
+      );
+}

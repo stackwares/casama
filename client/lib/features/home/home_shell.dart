@@ -85,9 +85,10 @@ class HomeShell extends ConsumerWidget {
   final Widget child;
 
   int get _index {
-    if (location.startsWith('/inbox') || location.startsWith('/approvals') || location.startsWith('/tasks')) return 1;
-    if (location.startsWith('/computer')) return 2;
-    if (location.startsWith('/settings')) return 3;
+    if (location.startsWith('/inbox') || location.startsWith('/approvals')) return 1;
+    if (location.startsWith('/tasks')) return 2;
+    if (location.startsWith('/computer')) return 3;
+    if (location.startsWith('/settings')) return 4;
     return 0;
   }
 
@@ -106,6 +107,7 @@ class HomeShell extends ConsumerWidget {
     return [
       _Dest('/bots', LucideIcons.messagesSquare, LucideIcons.messagesSquare, l10n.navBots),
       _Dest('/inbox', LucideIcons.inbox, LucideIcons.inbox, l10n.inbox),
+      _Dest('/tasks', LucideIcons.squareKanban, LucideIcons.squareKanban, l10n.navBoard),
       _Dest('/computer', LucideIcons.monitor, LucideIcons.monitor, l10n.navComputer),
       _Dest('/settings', LucideIcons.settings, LucideIcons.settings, l10n.navSettings),
     ];

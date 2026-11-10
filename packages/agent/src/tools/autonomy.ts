@@ -12,6 +12,7 @@ import { wrapUntrusted } from "../context.ts";
 import { MEDIA_PRICES, type MediaProvider } from "../media.ts";
 import type { NotificationService } from "../notifications.ts";
 import type { SearchProvider } from "../search.ts";
+import { startTicketWork } from "../tickets.ts";
 import { type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
 
 export interface AutonomyToolDeps {
@@ -23,6 +24,8 @@ export interface AutonomyToolDeps {
   searchFor?: (orgId: string) => Promise<SearchProvider | null>;
   /** Runs a child run to completion (a child DBOS workflow in the worker). Late-bound. */
   runChild?: (runId: string) => Promise<{ status: string }>;
+  /** Starts a run without waiting (a bot assigning a ticket to another bot). Late-bound. */
+  startRun?: (runId: string) => Promise<void>;
 }
 
 interface RunRow {
@@ -169,43 +172,123 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     return b;
   };
 
+  const STATUSES = ["todo", "in_progress", "in_review", "blocked", "done"] as const;
+  const PRIORITIES = ["urgent", "high", "medium", "low", "none"] as const;
+
+  /** Assigning a ticket to another bot starts that bot's work (D-098). */
+  const startAssignee = async (
+    taskId: string,
+    assigneeId: string | null | undefined,
+    ctx: { botId: string },
+  ) => {
+    if (!assigneeId || assigneeId === ctx.botId || !deps.startRun) return;
+    await startTicketWork(db, { ticketId: taskId, actorUserId: null }, deps.startRun);
+  };
+
   registry.register({
     name: "tasks.create",
-    description: "Add a task to the shared task board, optionally assigned to a bot by name.",
+    description:
+      "Add a ticket to the board, optionally assigned to a bot by name (that bot starts on it right away).",
     risk: "low",
     schema: z.object({
       title: z.string().min(1).max(300),
       details: z.string().max(10_000).optional(),
       assignee: z.string().max(100).optional(),
+      priority: z.enum(PRIORITIES).optional(),
+      review_required: z.boolean().optional(),
     }),
     async execute(args, ctx) {
       const assignee = args.assignee ? await botByRef(ctx.orgId, args.assignee) : undefined;
       if (args.assignee && !assignee)
         throw new ToolError("bot_not_found", `No bot named ${args.assignee}.`);
       const [t] = await db.execute<{ id: string }>(sql`
-        insert into public.tasks (org_id, created_by_bot_id, assignee_bot_id, title, details_md, parent_run_id)
-        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${assignee?.id ?? null}::uuid, ${args.title}, ${args.details ?? ""}, ${ctx.runId}::uuid)
+        insert into public.tasks (org_id, created_by_bot_id, assignee_bot_id, title, details_md, parent_run_id, priority, review_required)
+        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${assignee?.id ?? null}::uuid, ${args.title}, ${args.details ?? ""}, ${ctx.runId}::uuid,
+                ${args.priority ?? "none"}, ${args.review_required ?? false})
         returning id`);
-      return { content: `Created task ${t?.id}.`, preview: args.title };
+      if (t) await startAssignee(t.id, assignee?.id, ctx);
+      return { content: `Created ticket ${t?.id}.`, preview: args.title };
     },
   });
 
   registry.register({
     name: "tasks.update",
     description:
-      "Update a task on the board: status (todo, doing, done, blocked) and an optional result.",
+      "Update a ticket: status (todo, in_progress, in_review, blocked, done), a result, priority or the bot it's assigned to.",
     risk: "low",
     schema: z.object({
       task_id: z.uuid(),
-      status: z.enum(["todo", "doing", "done", "blocked"]).optional(),
+      status: z.enum(STATUSES).optional(),
       result: z.string().max(20_000).optional(),
+      priority: z.enum(PRIORITIES).optional(),
+      assignee: z.string().max(100).optional().describe("A bot's name, to hand the ticket over"),
     }),
     async execute(args, ctx) {
+      const assignee = args.assignee ? await botByRef(ctx.orgId, args.assignee) : undefined;
+      if (args.assignee && !assignee)
+        throw new ToolError("bot_not_found", `No bot named ${args.assignee}.`);
       const rows = await db.execute<{ id: string }>(sql`
-        update public.tasks set status = coalesce(${args.status ?? null}, status), result_md = coalesce(${args.result ?? null}, result_md), updated_at = now()
+        update public.tasks set status = coalesce(${args.status ?? null}, status), result_md = coalesce(${args.result ?? null}, result_md),
+          priority = coalesce(${args.priority ?? null}, priority), assignee_bot_id = coalesce(${assignee?.id ?? null}::uuid, assignee_bot_id),
+          updated_at = now()
         where id = ${args.task_id}::uuid and org_id = ${ctx.orgId}::uuid returning id`);
-      if (!rows.length) throw new ToolError("task_not_found", "No such task.");
-      return { content: "Task updated.", preview: args.status ?? "updated" };
+      if (!rows.length) throw new ToolError("task_not_found", "No such ticket.");
+      if (assignee) await startAssignee(args.task_id, assignee.id, ctx);
+      return { content: "Ticket updated.", preview: args.status ?? "updated" };
+    },
+  });
+
+  registry.register({
+    name: "tasks.comment",
+    description: "Post a comment on a ticket (progress, questions, results).",
+    risk: "low",
+    schema: z.object({ task_id: z.uuid(), body: z.string().min(1).max(20_000) }),
+    async execute(args, ctx) {
+      const rows = await db.execute<{ id: string }>(sql`
+        insert into public.task_comments (org_id, task_id, author_type, author_bot_id, body_md)
+        select t.org_id, t.id, 'bot', ${ctx.botId}::uuid, ${args.body} from public.tasks t
+        where t.id = ${args.task_id}::uuid and t.org_id = ${ctx.orgId}::uuid returning id`);
+      if (!rows.length) throw new ToolError("task_not_found", "No such ticket.");
+      await db.execute(
+        sql`update public.tasks set updated_at = now() where id = ${args.task_id}::uuid`,
+      );
+      return { content: "Comment posted.", preview: args.body.slice(0, 120) };
+    },
+  });
+
+  registry.register({
+    name: "tasks.list",
+    readOnly: true,
+    description: "List tickets on the board, newest first (optionally by status, or only yours).",
+    risk: "low",
+    schema: z.object({
+      status: z.enum(STATUSES).optional(),
+      mine: z.boolean().optional().describe("Only tickets assigned to you"),
+      limit: z.number().int().min(1).max(100).optional(),
+    }),
+    async execute(args, ctx) {
+      const rows = await db.execute<{
+        id: string;
+        title: string;
+        status: string;
+        priority: string;
+        bot: string | null;
+      }>(sql`
+        select t.id, t.title, t.status, t.priority, b.name as bot from public.tasks t
+        left join public.bots b on b.id = t.assignee_bot_id
+        where t.org_id = ${ctx.orgId}::uuid
+          and (${args.status ?? null}::text is null or t.status = ${args.status ?? null})
+          and (${args.mine ?? false} = false or t.assignee_bot_id = ${ctx.botId}::uuid)
+        order by t.updated_at desc limit ${args.limit ?? 30}`);
+      const text = rows.length
+        ? rows
+            .map(
+              (r) =>
+                `- ${r.title} [${r.status}, ${r.priority}${r.bot ? `, ${r.bot}` : ""}] (id ${r.id})`,
+            )
+            .join("\n")
+        : "No tickets.";
+      return { content: text, preview: `${rows.length} tickets` };
     },
   });
 

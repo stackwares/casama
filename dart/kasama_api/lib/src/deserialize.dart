@@ -60,6 +60,8 @@ import 'package:kasama_api/src/model/create_local_device_request.dart';
 import 'package:kasama_api/src/model/create_organization_request.dart';
 import 'package:kasama_api/src/model/create_routine_request.dart';
 import 'package:kasama_api/src/model/create_secret_request.dart';
+import 'package:kasama_api/src/model/create_task_comment_request.dart';
+import 'package:kasama_api/src/model/create_task_request.dart';
 import 'package:kasama_api/src/model/created_connect_key.dart';
 import 'package:kasama_api/src/model/created_local_device.dart';
 import 'package:kasama_api/src/model/created_routine.dart';
@@ -170,6 +172,8 @@ import 'package:kasama_api/src/model/takeover_requested_event_payload.dart';
 import 'package:kasama_api/src/model/takeover_resolved_event.dart';
 import 'package:kasama_api/src/model/takeover_resolved_event_payload.dart';
 import 'package:kasama_api/src/model/task.dart';
+import 'package:kasama_api/src/model/task_comment.dart';
+import 'package:kasama_api/src/model/task_comment_list.dart';
 import 'package:kasama_api/src/model/task_list.dart';
 import 'package:kasama_api/src/model/template.dart';
 import 'package:kasama_api/src/model/template_list.dart';
@@ -194,6 +198,7 @@ import 'package:kasama_api/src/model/update_local_device_request.dart';
 import 'package:kasama_api/src/model/update_notice.dart';
 import 'package:kasama_api/src/model/update_org_settings_request.dart';
 import 'package:kasama_api/src/model/update_routine_request.dart';
+import 'package:kasama_api/src/model/update_task_request.dart';
 import 'package:kasama_api/src/model/upload_result.dart';
 import 'package:kasama_api/src/model/usage_event.dart';
 import 'package:kasama_api/src/model/usage_event_payload.dart';
@@ -363,6 +368,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateRoutineRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateSecretRequest':
           return CreateSecretRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateTaskCommentRequest':
+          return CreateTaskCommentRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateTaskRequest':
+          return CreateTaskRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedConnectKey':
           return CreatedConnectKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedLocalDevice':
@@ -613,8 +622,18 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return TakeoverResolvedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Task':
           return Task.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TaskComment':
+          return TaskComment.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TaskCommentList':
+          return TaskCommentList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TaskList':
           return TaskList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TaskPriority':
+          
+          
+        case 'TaskStatus':
+          
+          
         case 'Template':
           return Template.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TemplateList':
@@ -661,6 +680,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateOrgSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateRoutineRequest':
           return UpdateRoutineRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateTaskRequest':
+          return UpdateTaskRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UploadResult':
           return UploadResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UsageEvent':

@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type { OpenAPIHono } from "@hono/zod-openapi";
+import { startTicketWork } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
 import { type Database, type JwtClaims, pgErrorCode, schema, withUserSession } from "@kasama/db";
 import {
@@ -565,6 +566,54 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     );
   });
 
+  type TaskRow = typeof tasks.$inferSelect;
+  const taskOut = (t: TaskRow, comments = 0) => ({
+    id: t.id,
+    title: t.title,
+    details_md: t.detailsMd,
+    status: t.status as "todo",
+    priority: t.priority as "none",
+    assignee_bot_id: t.assigneeBotId,
+    assignee_user_id: t.assigneeUserId ?? null,
+    created_by_bot_id: t.createdByBotId,
+    created_by_user_id: t.createdByUserId ?? null,
+    result_md: t.resultMd,
+    due_at: t.dueAt ? iso(t.dueAt) : null,
+    labels: t.labels ?? [],
+    position: Number(t.position ?? 0),
+    review_required: t.reviewRequired ?? false,
+    conversation_id: t.conversationId ?? null,
+    comments,
+    updated_at: iso(t.updatedAt),
+    created_at: iso(t.createdAt),
+  });
+  const commentCounts = async (ids: string[]) => {
+    if (!ids.length) return new Map<string, number>();
+    const rows = await db.execute<{ task_id: string; n: number }>(sql`
+      select task_id, count(*)::int as n from public.task_comments
+      where task_id = any(${`{${ids.join(",")}}`}::uuid[]) group by task_id`);
+    return new Map(rows.map((r) => [r.task_id, r.n]));
+  };
+  /** Bots and people a ticket is given to must be in its workspace. */
+  const checkAssignees = async (orgId: string, botId?: string | null, userId?: string | null) => {
+    if (botId) {
+      const [b] = await db.execute<{ id: string }>(
+        sql`select id from public.bots where id = ${botId}::uuid and org_id = ${orgId}::uuid`,
+      );
+      if (!b) throw new ApiError(400, "bad_assignee", "That bot is not in this workspace");
+    }
+    if (userId) {
+      const [m] = await db.execute<{ id: string }>(
+        sql`select id from public.memberships where user_id = ${userId}::uuid and org_id = ${orgId}::uuid`,
+      );
+      if (!m) throw new ApiError(400, "bad_assignee", "That person is not in this workspace");
+    }
+  };
+  const startWork = (ticketId: string, actor: string, comment?: string) =>
+    startTicketWork(db, { ticketId, actorUserId: actor, comment }, (runId) =>
+      deps.workflows.startRun(runId),
+    );
+
   app.openapi(routes.listTasks, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { org_id } = c.req.valid("query");
@@ -574,24 +623,131 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         .select()
         .from(tasks)
         .where(eq(tasks.orgId, org_id))
-        .orderBy(desc(tasks.updatedAt))
+        .orderBy(tasks.position, desc(tasks.updatedAt))
         .limit(500),
     );
-    return c.json(
-      {
-        items: rows.map((t) => ({
-          id: t.id,
-          title: t.title,
-          details_md: t.detailsMd,
-          status: t.status as "todo",
-          assignee_bot_id: t.assigneeBotId,
-          created_by_bot_id: t.createdByBotId,
-          result_md: t.resultMd,
-          updated_at: iso(t.updatedAt),
-        })),
-      },
-      200,
+    const counts = await commentCounts(rows.map((r) => r.id));
+    return c.json({ items: rows.map((t) => taskOut(t, counts.get(t.id) ?? 0)) }, 200);
+  });
+
+  app.openapi(routes.createTask, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const b = c.req.valid("json");
+    if (!(await isMember(db, claims, b.org_id)))
+      throw new ApiError(404, "org_not_found", "Workspace not found");
+    await checkAssignees(b.org_id, b.assignee_bot_id, b.assignee_user_id);
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx
+        .insert(tasks)
+        .values({
+          orgId: b.org_id,
+          title: b.title,
+          detailsMd: b.details_md ?? "",
+          status: b.status ?? "todo",
+          priority: b.priority ?? "none",
+          assigneeBotId: b.assignee_bot_id ?? null,
+          assigneeUserId: b.assignee_user_id ?? null,
+          dueAt: b.due_at ?? null,
+          labels: b.labels ?? [],
+          reviewRequired: b.review_required ?? false,
+          createdByUserId: claims.sub,
+          position: Date.now() / 1000,
+        })
+        .returning(),
     );
+    if (!row) throw new Error("task insert returned nothing");
+    if (row.assigneeBotId) await startWork(row.id, claims.sub);
+    const [fresh] = await db.select().from(tasks).where(eq(tasks.id, row.id));
+    return c.json(taskOut(fresh ?? row), 201);
+  });
+
+  app.openapi(routes.updateTask, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const b = c.req.valid("json");
+    const [cur] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(tasks).where(eq(tasks.id, id)),
+    );
+    if (!cur) throw new ApiError(404, "task_not_found", "Ticket not found");
+    await checkAssignees(cur.orgId, b.assignee_bot_id, b.assignee_user_id);
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx
+        .update(tasks)
+        .set({
+          ...(b.title !== undefined ? { title: b.title } : {}),
+          ...(b.details_md !== undefined ? { detailsMd: b.details_md } : {}),
+          ...(b.status !== undefined ? { status: b.status } : {}),
+          ...(b.priority !== undefined ? { priority: b.priority } : {}),
+          ...(b.assignee_bot_id !== undefined ? { assigneeBotId: b.assignee_bot_id } : {}),
+          ...(b.assignee_user_id !== undefined ? { assigneeUserId: b.assignee_user_id } : {}),
+          ...(b.due_at !== undefined ? { dueAt: b.due_at } : {}),
+          ...(b.labels !== undefined ? { labels: b.labels } : {}),
+          ...(b.review_required !== undefined ? { reviewRequired: b.review_required } : {}),
+          ...(b.position !== undefined ? { position: b.position } : {}),
+          updatedAt: sql`now()`,
+        })
+        .where(eq(tasks.id, id))
+        .returning(),
+    );
+    if (!row) throw new ApiError(404, "task_not_found", "Ticket not found");
+    // A newly assigned bot starts on it (moving a ticket by hand never wakes a bot).
+    if (row.assigneeBotId && row.assigneeBotId !== cur.assigneeBotId && row.status !== "done")
+      await startWork(row.id, claims.sub);
+    const [fresh] = await db.select().from(tasks).where(eq(tasks.id, id));
+    const counts = await commentCounts([id]);
+    return c.json(taskOut(fresh ?? row, counts.get(id) ?? 0), 200);
+  });
+
+  app.openapi(routes.deleteTask, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.delete(tasks).where(eq(tasks.id, id)).returning({ id: tasks.id }),
+    );
+    if (!rows.length) throw new ApiError(404, "task_not_found", "Ticket not found");
+    return c.body(null, 204);
+  });
+
+  const commentOut = (r: {
+    id: string;
+    task_id: string;
+    author_type: string;
+    author_user_id: string | null;
+    author_bot_id: string | null;
+    body_md: string;
+    created_at: Date | string;
+  }) => ({ ...r, author_type: r.author_type as "user", created_at: iso(r.created_at) });
+
+  app.openapi(routes.listTaskComments, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.execute<Parameters<typeof commentOut>[0]>(sql`
+        select id, task_id, author_type, author_user_id, author_bot_id, body_md, created_at
+        from public.task_comments where task_id = ${id}::uuid order by created_at`),
+    );
+    return c.json({ items: rows.map(commentOut) }, 200);
+  });
+
+  app.openapi(routes.createTaskComment, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { body_md } = c.req.valid("json");
+    const [t] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(tasks).where(eq(tasks.id, id)),
+    );
+    if (!t) throw new ApiError(404, "task_not_found", "Ticket not found");
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx.execute<Parameters<typeof commentOut>[0]>(sql`
+        insert into public.task_comments (org_id, task_id, author_type, author_user_id, body_md)
+        values (${t.orgId}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${body_md})
+        returning id, task_id, author_type, author_user_id, author_bot_id, body_md, created_at`),
+    );
+    if (!row) throw new Error("comment insert returned nothing");
+    await db.execute(sql`update public.tasks set updated_at = now() where id = ${id}::uuid`);
+    // A person's comment on a bot's ticket wakes that bot.
+    if (t.assigneeBotId && t.status !== "done") await startWork(id, claims.sub, body_md);
+    return c.json(commentOut(row), 201);
   });
 
   // --- webhooks (no JWT; the worker verifies the HMAC signature) --------------------

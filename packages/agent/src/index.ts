@@ -21,6 +21,7 @@ export * from "./safe-fetch.ts";
 export * from "./search.ts";
 export * from "./secrets.ts";
 export * from "./takeover.ts";
+export * from "./tickets.ts";
 export * from "./tools/autonomy.ts";
 export * from "./tools/builtin.ts";
 export * from "./tools/coding.ts";

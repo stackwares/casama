@@ -1,0 +1,68 @@
+{
+  "name": "tickets",
+  "turns": [
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "assigned the ticket \"Fix login\""
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Fixed the login redirect and added a test."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "assigned the ticket \"Write docs\""
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Wrote the setup guide."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "New comment on the ticket"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Thanks, I'll include that."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

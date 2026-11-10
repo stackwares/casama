@@ -7,13 +7,17 @@ import {
   CreateIntegrationRequest,
   CreateRoutineRequest,
   CreateSecretRequest,
+  CreateTaskCommentRequest,
+  CreateTaskRequest,
   Integration,
   IntegrationTestResult,
   Routine,
   Secret,
   Task,
+  TaskComment,
   Template,
   UpdateRoutineRequest,
+  UpdateTaskRequest,
 } from "../autonomy.ts";
 import { IdempotencyKeyHeader, jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 
@@ -222,6 +226,63 @@ export const listTasks = createRoute({
   security,
   request: { query: orgQuery },
   responses: { 200: jsonResponse("The shared task board", list("TaskList", Task)), 401: e401 },
+});
+
+export const createTask = createRoute({
+  operationId: "createTask",
+  method: "post",
+  path: "/v1/tasks",
+  tags: ["tasks"],
+  security,
+  summary: "Create a ticket; assigning a bot starts its work",
+  request: { body: jsonBody(CreateTaskRequest) },
+  responses: { 201: jsonResponse("Created", Task), 400: e400, 401: e401, 404: e404 },
+});
+
+export const updateTask = createRoute({
+  operationId: "updateTask",
+  method: "patch",
+  path: "/v1/tasks/{id}",
+  tags: ["tasks"],
+  security,
+  summary: "Change a ticket (moving, reassigning, editing); a newly assigned bot starts its work",
+  request: { params: idParam, body: jsonBody(UpdateTaskRequest) },
+  responses: { 200: jsonResponse("Updated", Task), 400: e400, 401: e401, 404: e404 },
+});
+
+export const deleteTask = createRoute({
+  operationId: "deleteTask",
+  method: "delete",
+  path: "/v1/tasks/{id}",
+  tags: ["tasks"],
+  security,
+  request: { params: idParam },
+  responses: { 204: { description: "Deleted" }, 401: e401, 404: e404 },
+});
+
+export const listTaskComments = createRoute({
+  operationId: "listTaskComments",
+  method: "get",
+  path: "/v1/tasks/{id}/comments",
+  tags: ["tasks"],
+  security,
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse("Comments, oldest first", list("TaskCommentList", TaskComment)),
+    401: e401,
+    404: e404,
+  },
+});
+
+export const createTaskComment = createRoute({
+  operationId: "createTaskComment",
+  method: "post",
+  path: "/v1/tasks/{id}/comments",
+  tags: ["tasks"],
+  security,
+  summary: "Comment on a ticket; a comment on a bot's ticket wakes that bot",
+  request: { params: idParam, body: jsonBody(CreateTaskCommentRequest) },
+  responses: { 201: jsonResponse("Posted", TaskComment), 400: e400, 401: e401, 404: e404 },
 });
 
 const webhook = (kind: "github" | "custom") =>

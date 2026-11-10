@@ -163,7 +163,12 @@ Class | Method | HTTP request | Description
 [*SystemApi*](doc/SystemApi.md) | [**getSignupChallenge**](doc/SystemApi.md#getsignupchallenge) | **GET** /v1/signup/challenge | A proof-of-work puzzle for signing up when the server asks for one (no auth)
 [*SystemApi*](doc/SystemApi.md) | [**healthz**](doc/SystemApi.md#healthz) | **GET** /healthz | 
 [*SystemApi*](doc/SystemApi.md) | [**readyz**](doc/SystemApi.md#readyz) | **GET** /readyz | 
+[*TasksApi*](doc/TasksApi.md) | [**createTask**](doc/TasksApi.md#createtask) | **POST** /v1/tasks | Create a ticket; assigning a bot starts its work
+[*TasksApi*](doc/TasksApi.md) | [**createTaskComment**](doc/TasksApi.md#createtaskcomment) | **POST** /v1/tasks/{id}/comments | Comment on a ticket; a comment on a bot&#39;s ticket wakes that bot
+[*TasksApi*](doc/TasksApi.md) | [**deleteTask**](doc/TasksApi.md#deletetask) | **DELETE** /v1/tasks/{id} | 
+[*TasksApi*](doc/TasksApi.md) | [**listTaskComments**](doc/TasksApi.md#listtaskcomments) | **GET** /v1/tasks/{id}/comments | 
 [*TasksApi*](doc/TasksApi.md) | [**listTasks**](doc/TasksApi.md#listtasks) | **GET** /v1/tasks | 
+[*TasksApi*](doc/TasksApi.md) | [**updateTask**](doc/TasksApi.md#updatetask) | **PATCH** /v1/tasks/{id} | Change a ticket (moving, reassigning, editing); a newly assigned bot starts its work
 [*UsageApi*](doc/UsageApi.md) | [**getUsage**](doc/UsageApi.md#getusage) | **GET** /v1/usage | 
 [*VoiceApi*](doc/VoiceApi.md) | [**createVoiceSession**](doc/VoiceApi.md#createvoicesession) | **POST** /v1/voice/session | Start a live call: mints an ephemeral realtime key with the bot&#39;s persona and tools
 [*VoiceApi*](doc/VoiceApi.md) | [**messageSpeech**](doc/VoiceApi.md#messagespeech) | **GET** /v1/messages/{id}/speech | Read aloud: MP3 audio of an assistant message (cached per voice)
@@ -246,6 +251,8 @@ Class | Method | HTTP request | Description
  - [CreateOrganizationRequest](doc/CreateOrganizationRequest.md)
  - [CreateRoutineRequest](doc/CreateRoutineRequest.md)
  - [CreateSecretRequest](doc/CreateSecretRequest.md)
+ - [CreateTaskCommentRequest](doc/CreateTaskCommentRequest.md)
+ - [CreateTaskRequest](doc/CreateTaskRequest.md)
  - [CreatedConnectKey](doc/CreatedConnectKey.md)
  - [CreatedLocalDevice](doc/CreatedLocalDevice.md)
  - [CreatedRoutine](doc/CreatedRoutine.md)
@@ -366,7 +373,11 @@ Class | Method | HTTP request | Description
  - [TakeoverResolvedEvent](doc/TakeoverResolvedEvent.md)
  - [TakeoverResolvedEventPayload](doc/TakeoverResolvedEventPayload.md)
  - [Task](doc/Task.md)
+ - [TaskComment](doc/TaskComment.md)
+ - [TaskCommentList](doc/TaskCommentList.md)
  - [TaskList](doc/TaskList.md)
+ - [TaskPriority](doc/TaskPriority.md)
+ - [TaskStatus](doc/TaskStatus.md)
  - [Template](doc/Template.md)
  - [TemplateList](doc/TemplateList.md)
  - [TemplateRoutinesInner](doc/TemplateRoutinesInner.md)
@@ -390,6 +401,7 @@ Class | Method | HTTP request | Description
  - [UpdateNotice](doc/UpdateNotice.md)
  - [UpdateOrgSettingsRequest](doc/UpdateOrgSettingsRequest.md)
  - [UpdateRoutineRequest](doc/UpdateRoutineRequest.md)
+ - [UpdateTaskRequest](doc/UpdateTaskRequest.md)
  - [UploadResult](doc/UploadResult.md)
  - [UsageEvent](doc/UsageEvent.md)
  - [UsageEventPayload](doc/UsageEventPayload.md)

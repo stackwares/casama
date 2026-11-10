@@ -5331,6 +5331,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn on'**
   String get allowCommands;
+
+  /// No description provided for @navBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Board'**
+  String get navBoard;
+
+  /// No description provided for @board.
+  ///
+  /// In en, this message translates to:
+  /// **'Board'**
+  String get board;
+
+  /// No description provided for @newTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'New ticket'**
+  String get newTicket;
+
+  /// No description provided for @ticketTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get ticketTitle;
+
+  /// No description provided for @ticketDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get ticketDetails;
+
+  /// No description provided for @taskInReview.
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get taskInReview;
+
+  /// No description provided for @priority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get priority;
+
+  /// No description provided for @priorityUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent'**
+  String get priorityUrgent;
+
+  /// No description provided for @priorityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get priorityHigh;
+
+  /// No description provided for @priorityMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get priorityMedium;
+
+  /// No description provided for @priorityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get priorityLow;
+
+  /// No description provided for @priorityNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No priority'**
+  String get priorityNone;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @filterMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine'**
+  String get filterMine;
+
+  /// No description provided for @filterBots.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots'**
+  String get filterBots;
+
+  /// No description provided for @assignee.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned to'**
+  String get assignee;
+
+  /// No description provided for @unassigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Unassigned'**
+  String get unassigned;
+
+  /// No description provided for @assignToMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get assignToMe;
+
+  /// No description provided for @reviewRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs review'**
+  String get reviewRequired;
+
+  /// No description provided for @reviewRequiredHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The bot finishes in review instead of done.'**
+  String get reviewRequiredHelp;
+
+  /// No description provided for @comments.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get comments;
+
+  /// No description provided for @addComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a comment'**
+  String get addComment;
+
+  /// No description provided for @sendComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get sendComment;
+
+  /// No description provided for @openThread.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the bot\'s thread'**
+  String get openThread;
+
+  /// No description provided for @deleteTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete ticket'**
+  String get deleteTicket;
+
+  /// No description provided for @noTickets.
+  ///
+  /// In en, this message translates to:
+  /// **'No tickets yet'**
+  String get noTickets;
+
+  /// No description provided for @noTicketsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a ticket and assign it to a bot to get it started, or ask a bot to plan work here.'**
+  String get noTicketsHelp;
+
+  /// No description provided for @ticketStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get ticketStatus;
 }
 
 class _AppLocalizationsDelegate

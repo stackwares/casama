@@ -670,11 +670,55 @@ class SupabaseBackend implements Backend {
   Future<List<Task>> tasks(String orgId) async => (await api.tasks.listTasks(orgId: orgId)).data!.items;
 
   @override
-  Future<void> setTaskStatus(String taskId, String status) async {
-    await supabase
-        .from('tasks')
-        .update({'status': status, 'updated_at': DateTime.now().toUtc().toIso8601String()}).eq('id', taskId);
-  }
+  Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired}) async =>
+      (await api.tasks.createTask(
+        createTaskRequest: CreateTaskRequest(
+          orgId: orgId,
+          title: title,
+          detailsMd: details,
+          priority: priority == null ? null : TaskPriority.values.firstWhere((p) => p.value == priority),
+          assigneeBotId: assigneeBotId,
+          reviewRequired: reviewRequired,
+        ),
+      ))
+          .data!;
+
+  @override
+  Future<Task> updateTask(
+    String taskId, {
+    String? title,
+    String? details,
+    String? status,
+    String? priority,
+    String? assigneeBotId,
+    String? assigneeUserId,
+    bool? reviewRequired,
+    double? position,
+  }) async =>
+      (await api.tasks.updateTask(
+        id: taskId,
+        updateTaskRequest: UpdateTaskRequest(
+          title: title,
+          detailsMd: details,
+          status: status == null ? null : TaskStatus.values.firstWhere((s) => s.value == status),
+          priority: priority == null ? null : TaskPriority.values.firstWhere((p) => p.value == priority),
+          assigneeBotId: assigneeBotId,
+          assigneeUserId: assigneeUserId,
+          reviewRequired: reviewRequired,
+          position: position,
+        ),
+      ))
+          .data!;
+
+  @override
+  Future<void> deleteTask(String taskId) async => api.tasks.deleteTask(id: taskId);
+
+  @override
+  Future<List<TaskComment>> taskComments(String taskId) async => (await api.tasks.listTaskComments(id: taskId)).data!.items;
+
+  @override
+  Future<TaskComment> addTaskComment(String taskId, String body) async =>
+      (await api.tasks.createTaskComment(id: taskId, createTaskCommentRequest: CreateTaskCommentRequest(bodyMd: body))).data!;
 
   // --- owner admin console (Phase 6) ---------------------------------------
 

@@ -52,6 +52,7 @@ import {
   TAKEOVER_TTL_MS,
   takeoverState,
 } from "./takeover.ts";
+import { ticketAfterRun, ticketStarted } from "./tickets.ts";
 import { type ToolDefinition, ToolError, ToolRegistry } from "./tools/registry.ts";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
@@ -569,6 +570,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       }),
     );
     await step("complete", () => finishCompleted(db, info, finalMessage.messageId, bus));
+    if (info.trigger === "task")
+      await step("ticket", () => ticketAfterRun(db, info, { ok: true, text: finalMessage.text }));
     if (info.routine?.notify && deps.notifications) {
       const notifications = deps.notifications;
       const routine = info.routine;
@@ -858,6 +861,7 @@ async function admit(
     model: info.policy.primary.model,
     computer_id: null,
   });
+  if (info.trigger === "task") await ticketStarted(db, info.conversationId, info.botId);
   return { ok: true };
 }
 
@@ -1339,6 +1343,8 @@ async function finishFailed(
       error_code: outcome.code,
       message: outcome.message,
     });
+    if (info.trigger === "task")
+      await ticketAfterRun(db, info, { ok: false, message: outcome.message }).catch(() => {});
   }
 }
 

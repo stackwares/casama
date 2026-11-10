@@ -134,6 +134,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `tools/coding.ts`: `coding.delegate` runs Claude Code, Codex or Cursor's agent headless on the user's companion computer or the bot's computer, or starts a Cursor cloud agent; the companion screen lists agents found on the computer.
 
+## Ticket board (D-098)
+
+- `tasks` with five statuses, priorities, owners, order and a bot thread; `task_comments`; `packages/agent/src/tickets.ts` starts and settles bot work; app Board tab (`features/board`).
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

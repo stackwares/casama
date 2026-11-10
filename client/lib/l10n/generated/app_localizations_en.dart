@@ -3059,4 +3059,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allowCommands => 'Turn on';
+
+  @override
+  String get navBoard => 'Board';
+
+  @override
+  String get board => 'Board';
+
+  @override
+  String get newTicket => 'New ticket';
+
+  @override
+  String get ticketTitle => 'Title';
+
+  @override
+  String get ticketDetails => 'Details';
+
+  @override
+  String get taskInReview => 'In review';
+
+  @override
+  String get priority => 'Priority';
+
+  @override
+  String get priorityUrgent => 'Urgent';
+
+  @override
+  String get priorityHigh => 'High';
+
+  @override
+  String get priorityMedium => 'Medium';
+
+  @override
+  String get priorityLow => 'Low';
+
+  @override
+  String get priorityNone => 'No priority';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterMine => 'Mine';
+
+  @override
+  String get filterBots => 'Bots';
+
+  @override
+  String get assignee => 'Assigned to';
+
+  @override
+  String get unassigned => 'Unassigned';
+
+  @override
+  String get assignToMe => 'Me';
+
+  @override
+  String get reviewRequired => 'Needs review';
+
+  @override
+  String get reviewRequiredHelp =>
+      'The bot finishes in review instead of done.';
+
+  @override
+  String get comments => 'Comments';
+
+  @override
+  String get addComment => 'Add a comment';
+
+  @override
+  String get sendComment => 'Send';
+
+  @override
+  String get openThread => 'Open the bot\'s thread';
+
+  @override
+  String get deleteTicket => 'Delete ticket';
+
+  @override
+  String get noTickets => 'No tickets yet';
+
+  @override
+  String get noTicketsHelp =>
+      'Add a ticket and assign it to a bot to get it started, or ask a bot to plan work here.';
+
+  @override
+  String get ticketStatus => 'Status';
 }

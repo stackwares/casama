@@ -3,6 +3,8 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:kasama_api/src/model/task_priority.dart';
+import 'package:kasama_api/src/model/task_status.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -28,13 +30,33 @@ class Task {
 
     required  this.status,
 
+    required  this.priority,
+
     required  this.assigneeBotId,
+
+    required  this.assigneeUserId,
 
     required  this.createdByBotId,
 
+    required  this.createdByUserId,
+
     required  this.resultMd,
 
+    required  this.dueAt,
+
+    required  this.labels,
+
+    required  this.position,
+
+    required  this.reviewRequired,
+
+    required  this.conversationId,
+
+    required  this.comments,
+
     required  this.updatedAt,
+
+    required  this.createdAt,
   });
 
   @JsonKey(
@@ -81,7 +103,19 @@ class Task {
   )
 
 
-  final TaskStatusEnum status;
+  final TaskStatus status;
+
+
+
+  @JsonKey(
+    
+    name: r'priority',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final TaskPriority priority;
 
 
 
@@ -99,6 +133,18 @@ class Task {
 
   @JsonKey(
     
+    name: r'assignee_user_id',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? assigneeUserId;
+
+
+
+  @JsonKey(
+    
     name: r'created_by_bot_id',
     required: true,
     includeIfNull: true,
@@ -106,6 +152,18 @@ class Task {
 
 
   final String? createdByBotId;
+
+
+
+  @JsonKey(
+    
+    name: r'created_by_user_id',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? createdByUserId;
 
 
 
@@ -123,6 +181,79 @@ class Task {
 
   @JsonKey(
     
+    name: r'due_at',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final DateTime? dueAt;
+
+
+
+  @JsonKey(
+    
+    name: r'labels',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final List<String> labels;
+
+
+
+  @JsonKey(
+    
+    name: r'position',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final num position;
+
+
+
+  @JsonKey(
+    
+    name: r'review_required',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final bool reviewRequired;
+
+
+
+  @JsonKey(
+    
+    name: r'conversation_id',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? conversationId;
+
+
+
+      /// How many comments the ticket has
+  @JsonKey(
+    
+    name: r'comments',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final int comments;
+
+
+
+  @JsonKey(
+    
     name: r'updated_at',
     required: true,
     includeIfNull: false,
@@ -130,6 +261,18 @@ class Task {
 
 
   final DateTime updatedAt;
+
+
+
+  @JsonKey(
+    
+    name: r'created_at',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final DateTime createdAt;
 
 
 
@@ -141,10 +284,20 @@ class Task {
       other.title == title &&
       other.detailsMd == detailsMd &&
       other.status == status &&
+      other.priority == priority &&
       other.assigneeBotId == assigneeBotId &&
+      other.assigneeUserId == assigneeUserId &&
       other.createdByBotId == createdByBotId &&
+      other.createdByUserId == createdByUserId &&
       other.resultMd == resultMd &&
-      other.updatedAt == updatedAt;
+      other.dueAt == dueAt &&
+      other.labels == labels &&
+      other.position == position &&
+      other.reviewRequired == reviewRequired &&
+      other.conversationId == conversationId &&
+      other.comments == comments &&
+      other.updatedAt == updatedAt &&
+      other.createdAt == createdAt;
 
     @override
     int get hashCode =>
@@ -152,10 +305,20 @@ class Task {
         title.hashCode +
         detailsMd.hashCode +
         status.hashCode +
+        priority.hashCode +
         (assigneeBotId == null ? 0 : assigneeBotId.hashCode) +
+        (assigneeUserId == null ? 0 : assigneeUserId.hashCode) +
         (createdByBotId == null ? 0 : createdByBotId.hashCode) +
+        (createdByUserId == null ? 0 : createdByUserId.hashCode) +
         (resultMd == null ? 0 : resultMd.hashCode) +
-        updatedAt.hashCode;
+        (dueAt == null ? 0 : dueAt.hashCode) +
+        labels.hashCode +
+        position.hashCode +
+        reviewRequired.hashCode +
+        (conversationId == null ? 0 : conversationId.hashCode) +
+        comments.hashCode +
+        updatedAt.hashCode +
+        createdAt.hashCode;
 
   factory Task.fromJson(Map<String, dynamic> json) => _$TaskFromJson(json);
 
@@ -167,24 +330,4 @@ class Task {
   }
 
 }
-
-
-enum TaskStatusEnum {
-@JsonValue(r'todo')
-todo(r'todo'),
-@JsonValue(r'doing')
-doing(r'doing'),
-@JsonValue(r'done')
-done(r'done'),
-@JsonValue(r'blocked')
-blocked(r'blocked');
-
-const TaskStatusEnum(this.value);
-
-final String value;
-
-@override
-String toString() => value;
-}
-
 

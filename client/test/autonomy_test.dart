@@ -114,18 +114,6 @@ void main() {
     expect(backend.deletedRoutines, [r.id]);
   });
 
-  testWidgets('task board groups tasks and changes status', (tester) async {
-    final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const InboxScreen(initialTab: 2)));
-    await tester.pumpAndSettle();
-    expect(find.text('Summarize the release notes'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('taskStatus-t1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Done').last);
-    await tester.pumpAndSettle();
-    expect(backend.taskStatus, {'t1': 'done'});
-  });
-
   testWidgets('routines: create a schedule in a timezone, run now, and webhook secrets show once', (tester) async {
     await setSize(tester, const Size(600, 1000));
     final backend = FakeBackend();

@@ -27,7 +27,17 @@ class FloatingTabChrome extends StatelessWidget {
       minimum: const EdgeInsets.only(bottom: 8),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Center(child: _PillBar(destinations: destinations, currentIndex: currentIndex, onSelected: onDestinationSelected)),
+        // Slots shrink on narrow phones so every tab fits (up to tabSlotWidth each).
+        child: LayoutBuilder(
+          builder: (context, c) => Center(
+            child: _PillBar(
+              destinations: destinations,
+              currentIndex: currentIndex,
+              onSelected: onDestinationSelected,
+              slotWidth: destinations.isEmpty ? tabSlotWidth : ((c.maxWidth - 14) / destinations.length).clamp(56.0, tabSlotWidth),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -44,7 +54,9 @@ class FloatingTabDestination {
 }
 
 class _PillBar extends StatelessWidget {
-  const _PillBar({required this.destinations, required this.currentIndex, required this.onSelected});
+  const _PillBar({required this.destinations, required this.currentIndex, required this.onSelected, required this.slotWidth});
+
+  final double slotWidth;
 
   final List<FloatingTabDestination> destinations;
   final int currentIndex;
@@ -71,16 +83,16 @@ class _PillBar extends StatelessWidget {
             AnimatedPositionedDirectional(
               duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 380),
               curve: Curves.easeOutBack,
-              start: currentIndex * FloatingTabChrome.tabSlotWidth,
+              start: currentIndex * slotWidth,
               top: 0,
               bottom: 0,
-              width: FloatingTabChrome.tabSlotWidth,
+              width: slotWidth,
               child: DecoratedBox(decoration: ShapeDecoration(shape: const StadiumBorder(), color: scheme.primary.withValues(alpha: 0.16))),
             ),
             Row(mainAxisSize: MainAxisSize.min, children: [
               for (var i = 0; i < destinations.length; i++)
                 SizedBox(
-                  width: FloatingTabChrome.tabSlotWidth,
+                  width: slotWidth,
                   child: _TabButton(
                     spec: destinations[i],
                     selected: i == currentIndex,

@@ -222,6 +222,13 @@ export async function startWorker(opts: WorkerOptions) {
       );
       return handle.getResult({ pollingIntervalMs: 250 });
     },
+    startRun: async (runId) => {
+      if (!client) throw new Error("worker not started");
+      await client.enqueue(
+        { queueName: QUEUES.runs, workflowName: "agentRun", workflowID: runId },
+        runId,
+      );
+    },
   });
   configureWorkflows({
     db,

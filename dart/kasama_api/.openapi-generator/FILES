@@ -96,6 +96,8 @@ lib/src/model/create_local_device_request.dart
 lib/src/model/create_organization_request.dart
 lib/src/model/create_routine_request.dart
 lib/src/model/create_secret_request.dart
+lib/src/model/create_task_comment_request.dart
+lib/src/model/create_task_request.dart
 lib/src/model/created_connect_key.dart
 lib/src/model/created_local_device.dart
 lib/src/model/created_routine.dart
@@ -216,7 +218,11 @@ lib/src/model/takeover_requested_event_payload.dart
 lib/src/model/takeover_resolved_event.dart
 lib/src/model/takeover_resolved_event_payload.dart
 lib/src/model/task.dart
+lib/src/model/task_comment.dart
+lib/src/model/task_comment_list.dart
 lib/src/model/task_list.dart
+lib/src/model/task_priority.dart
+lib/src/model/task_status.dart
 lib/src/model/template.dart
 lib/src/model/template_list.dart
 lib/src/model/template_routines_inner.dart
@@ -240,6 +246,7 @@ lib/src/model/update_local_device_request.dart
 lib/src/model/update_notice.dart
 lib/src/model/update_org_settings_request.dart
 lib/src/model/update_routine_request.dart
+lib/src/model/update_task_request.dart
 lib/src/model/upload_result.dart
 lib/src/model/usage_event.dart
 lib/src/model/usage_event_payload.dart
