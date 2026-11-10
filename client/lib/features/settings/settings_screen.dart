@@ -671,6 +671,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
             GroupedTile(key: const Key('botSharing'), icon: LucideIcons.users, title: l10n.sharing, subtitle: l10n.sharingRow, onTap: () => context.push('/bots/${bot.id}/sharing')),
             GroupedTile(key: const Key('botReplays'), icon: LucideIcons.listVideo, title: l10n.replays, subtitle: l10n.replaysRow, onTap: () => context.push('/bots/${bot.id}/replays')),
             GroupedTile(key: const Key('botChatApps'), icon: LucideIcons.messagesSquare, title: l10n.chatApps, subtitle: l10n.chatAppsRow, onTap: () => context.push('/bots/${bot.id}/chat-apps')),
+            GroupedTile(key: const Key('botLinks'), icon: LucideIcons.link, title: l10n.links, subtitle: l10n.linksRow, onTap: () => context.push('/bots/${bot.id}/links')),
             GroupedTile(
               key: const Key('botA2a'),
               icon: LucideIcons.bot,

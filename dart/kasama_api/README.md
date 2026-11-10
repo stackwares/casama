@@ -183,6 +183,11 @@ Class | Method | HTTP request | Description
 [*KnowledgeApi*](doc/KnowledgeApi.md) | [**deleteKnowledgeSource**](doc/KnowledgeApi.md#deleteknowledgesource) | **DELETE** /v1/knowledge-sources/{id} | 
 [*KnowledgeApi*](doc/KnowledgeApi.md) | [**listKnowledgeSources**](doc/KnowledgeApi.md#listknowledgesources) | **GET** /v1/knowledge-sources | A bot&#39;s knowledge sources and the workspace&#39;s shared ones (D-125)
 [*KnowledgeApi*](doc/KnowledgeApi.md) | [**resyncKnowledgeSource**](doc/KnowledgeApi.md#resyncknowledgesource) | **POST** /v1/knowledge-sources/{id}/sync | 
+[*LinksApi*](doc/LinksApi.md) | [**acceptBotLink**](doc/LinksApi.md#acceptbotlink) | **POST** /v1/links/accept | Accept a contact&#39;s invite with one of your bots (works across Kasama servers)
+[*LinksApi*](doc/LinksApi.md) | [**createBotLink**](doc/LinksApi.md#createbotlink) | **POST** /v1/bots/{id}/links | Invite a trusted contact&#39;s bot to link with this one (D-143)
+[*LinksApi*](doc/LinksApi.md) | [**listBotLinks**](doc/LinksApi.md#listbotlinks) | **GET** /v1/bots/{id}/links | 
+[*LinksApi*](doc/LinksApi.md) | [**listLinkExchanges**](doc/LinksApi.md#listlinkexchanges) | **GET** /v1/links/{id}/exchanges | 
+[*LinksApi*](doc/LinksApi.md) | [**revokeBotLink**](doc/LinksApi.md#revokebotlink) | **DELETE** /v1/links/{id} | 
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**createLocalDevice**](doc/LocalComputerApi.md#createlocaldevice) | **POST** /v1/local-devices | Pair this machine as a bot computer (desktop companion); returns a device token once
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**deleteLocalDevice**](doc/LocalComputerApi.md#deletelocaldevice) | **DELETE** /v1/local-devices/{id} | 
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**listLocalDevices**](doc/LocalComputerApi.md#listlocaldevices) | **GET** /v1/local-devices | 
@@ -316,6 +321,7 @@ Class | Method | HTTP request | Description
 
  - [AbuseEvent](doc/AbuseEvent.md)
  - [AbuseEventList](doc/AbuseEventList.md)
+ - [AcceptBotLinkRequest](doc/AcceptBotLinkRequest.md)
  - [AcceptSkillProposalRequest](doc/AcceptSkillProposalRequest.md)
  - [Accepted](doc/Accepted.md)
  - [AcceptedSuggestion](doc/AcceptedSuggestion.md)
@@ -356,6 +362,8 @@ Class | Method | HTTP request | Description
  - [BotAccessEntry](doc/BotAccessEntry.md)
  - [BotBudget](doc/BotBudget.md)
  - [BotCheckins](doc/BotCheckins.md)
+ - [BotLink](doc/BotLink.md)
+ - [BotLinkList](doc/BotLinkList.md)
  - [BotList](doc/BotList.md)
  - [BotPage](doc/BotPage.md)
  - [BotPageDetail](doc/BotPageDetail.md)
@@ -402,6 +410,7 @@ Class | Method | HTTP request | Description
  - [ConversationList](doc/ConversationList.md)
  - [ConversationThread](doc/ConversationThread.md)
  - [CreateActionRuleRequest](doc/CreateActionRuleRequest.md)
+ - [CreateBotLinkRequest](doc/CreateBotLinkRequest.md)
  - [CreateBotRequest](doc/CreateBotRequest.md)
  - [CreateBotShareRequest](doc/CreateBotShareRequest.md)
  - [CreateChannelRequest](doc/CreateChannelRequest.md)
@@ -425,6 +434,7 @@ Class | Method | HTTP request | Description
  - [CreateSecretRequest](doc/CreateSecretRequest.md)
  - [CreateTaskCommentRequest](doc/CreateTaskCommentRequest.md)
  - [CreateTaskRequest](doc/CreateTaskRequest.md)
+ - [CreatedBotLink](doc/CreatedBotLink.md)
  - [CreatedConnectKey](doc/CreatedConnectKey.md)
  - [CreatedInviteLink](doc/CreatedInviteLink.md)
  - [CreatedLocalDevice](doc/CreatedLocalDevice.md)
@@ -493,6 +503,8 @@ Class | Method | HTTP request | Description
  - [Lease](doc/Lease.md)
  - [LeaseChangedEvent](doc/LeaseChangedEvent.md)
  - [LeaseChangedEventPayload](doc/LeaseChangedEventPayload.md)
+ - [LinkExchange](doc/LinkExchange.md)
+ - [LinkExchangeList](doc/LinkExchangeList.md)
  - [LocalCapabilities](doc/LocalCapabilities.md)
  - [LocalDevice](doc/LocalDevice.md)
  - [LocalDeviceList](doc/LocalDeviceList.md)

@@ -27,6 +27,7 @@ export * from "./channels.ts";
 export * from "./encryption.ts";
 export * from "./telephony.ts";
 export * from "./payments.ts";
+export * from "./links.ts";
 export * from "./pages.ts";
 export * from "./password-managers.ts";
 export * from "./replays.ts";

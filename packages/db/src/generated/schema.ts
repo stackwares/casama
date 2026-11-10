@@ -3001,6 +3001,49 @@ export const outboundCalls = pgTable("outbound_calls", {
 	check("outbound_calls_status_check", sql`status = ANY (ARRAY['queued'::text, 'ringing'::text, 'in_progress'::text, 'completed'::text, 'failed'::text, 'busy'::text, 'no_answer'::text, 'ended_by_user'::text, 'taken_over'::text])`),
 ]);
 
+export const botLinks = pgTable("bot_links", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	ownerUserId: uuid("owner_user_id").notNull(),
+	name: text().notNull(),
+	status: text().default('pending').notNull(),
+	inviteCodeHash: text("invite_code_hash"),
+	inviteExpiresAt: timestamp("invite_expires_at", { withTimezone: true, mode: 'string' }),
+	peerLinkId: uuid("peer_link_id"),
+	peerBotId: text("peer_bot_id"),
+	peerBotName: text("peer_bot_name"),
+	remoteUrl: text("remote_url"),
+	inboundTokenHash: text("inbound_token_hash"),
+	outboundSecretId: uuid("outbound_secret_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	activatedAt: timestamp("activated_at", { withTimezone: true, mode: 'string' }),
+	revokedAt: timestamp("revoked_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("bot_links_bot_idx").using("btree", table.botId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "bot_links_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "bot_links_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.ownerUserId],
+			foreignColumns: [users.id],
+			name: "bot_links_owner_user_id_fkey"
+		}).onDelete("cascade"),
+	unique("bot_links_inbound_token_hash_key").on(table.inboundTokenHash),
+	pgPolicy("bot_links_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((owner_user_id = ( SELECT auth.uid() AS uid)) OR can_manage_bot(bot_id))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("bot_links_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 100)`),
+	check("bot_links_status_check", sql`status = ANY (ARRAY['pending'::text, 'active'::text, 'revoked'::text])`),
+	check("bot_links_remote_url_check", sql`(remote_url IS NULL) OR (remote_url ~ '^https?://'::text)`),
+]);
+
 export const orgPayments = pgTable("org_payments", {
 	orgId: uuid("org_id").primaryKey().notNull(),
 	provider: text().default('stripe').notNull(),
@@ -3021,6 +3064,42 @@ export const orgPayments = pgTable("org_payments", {
 	check("org_payments_provider_check", sql`provider = 'stripe'::text`),
 	check("org_payments_monthly_cap_usd_check", sql`monthly_cap_usd >= (0)::numeric`),
 	check("org_payments_bot_monthly_cap_usd_check", sql`bot_monthly_cap_usd >= (0)::numeric`),
+]);
+
+export const linkExchanges = pgTable("link_exchanges", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	linkId: uuid("link_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	direction: text().notNull(),
+	request: text().notNull(),
+	response: text(),
+	status: text().default('working').notNull(),
+	runId: uuid("run_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	answeredAt: timestamp("answered_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("link_exchanges_link_idx").using("btree", table.linkId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.linkId],
+			foreignColumns: [botLinks.id],
+			name: "link_exchanges_link_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "link_exchanges_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "link_exchanges_run_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("link_exchanges_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
+   FROM bot_links l
+  WHERE ((l.id = link_exchanges.link_id) AND ((l.owner_user_id = ( SELECT auth.uid() AS uid)) OR can_manage_bot(l.bot_id)))))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("link_exchanges_direction_check", sql`direction = ANY (ARRAY['out'::text, 'in'::text])`),
+	check("link_exchanges_status_check", sql`status = ANY (ARRAY['working'::text, 'answered'::text, 'failed'::text])`),
 ]);
 
 export const agentImportFiles = pgTable("agent_import_files", {

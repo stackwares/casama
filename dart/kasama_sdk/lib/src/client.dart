@@ -101,6 +101,7 @@ class KasamaClient {
   A2aApi get a2a => api.getA2aApi();
   TelephonyApi get telephony => api.getTelephonyApi();
   PaymentsApi get payments => api.getPaymentsApi();
+  LinksApi get links => api.getLinksApi();
   ReplaysApi get replays => api.getReplaysApi();
   PasswordManagersApi get passwordManagers => api.getPasswordManagersApi();
   McpApi get mcp => api.getMcpApi();

@@ -5165,4 +5165,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentsBotCap => 'Per-bot limit per month (USD)';
+
+  @override
+  String get links => 'Linked bots';
+
+  @override
+  String get linksRow => 'Link with a trusted contact\'s bot';
+
+  @override
+  String get linksHelp =>
+      'Your bot can ask a linked contact\'s bot for things like a dinner slot. Each bot answers under its own person\'s rules and shares only what\'s needed; both of you see every exchange.';
+
+  @override
+  String get linksEmpty => 'No linked bots yet';
+
+  @override
+  String get linksInvite => 'Invite a contact';
+
+  @override
+  String get linksContactName => 'Contact\'s name';
+
+  @override
+  String get linksInviteReady => 'Send this invite';
+
+  @override
+  String get linksInviteHelp =>
+      'Send it to your contact. They accept it in Kasama with one of their bots. It works once, for 7 days.';
+
+  @override
+  String get linksAccept => 'Accept an invite';
+
+  @override
+  String get linksAcceptHelp => 'Paste the invite your contact sent you.';
+
+  @override
+  String get linksInviteText => 'Invite';
+
+  @override
+  String linksActive(String bot) {
+    return 'Linked with $bot';
+  }
+
+  @override
+  String get linksPending => 'Waiting for your contact to accept';
+
+  @override
+  String get linksRevoked => 'Unlinked';
+
+  @override
+  String get linksExchanges => 'Exchanges';
+
+  @override
+  String get linksNoExchanges => 'Nothing asked yet.';
+
+  @override
+  String get linksNoAnswer => 'No answer';
+
+  @override
+  String get linksWorking => 'Working…';
+
+  @override
+  String get linksRevoke => 'Unlink';
 }

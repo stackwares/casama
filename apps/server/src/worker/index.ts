@@ -37,6 +37,7 @@ import {
   registerDataTools,
   registerCallTools,
   registerPaymentTools,
+  registerLinkTools,
   StripeIssuingProvider,
   TwilioClient,
   TregProvider,
@@ -278,6 +279,16 @@ export async function startWorker(opts: WorkerOptions) {
         { queueName: QUEUES.runs, workflowName: "agentRun", workflowID: runId },
         runId,
       );
+    },
+  });
+  // Linked agents (D-143): the linked bot's run is awaited from the tool, so it uses the sub-run queue.
+  registerLinkTools(tools, {
+    db,
+    notifications,
+    fetch: fetchOut,
+    startRun: async (runId) => {
+      if (!client) throw new Error("worker not started");
+      await client.enqueue({ queueName: QUEUES.subruns, workflowName: "agentRun", workflowID: runId }, runId);
     },
   });
   // Check-in scans leave suggestions (D-114).

@@ -1,5 +1,6 @@
 import 'package:kasama_api/src/model/abuse_event.dart';
 import 'package:kasama_api/src/model/abuse_event_list.dart';
+import 'package:kasama_api/src/model/accept_bot_link_request.dart';
 import 'package:kasama_api/src/model/accept_skill_proposal_request.dart';
 import 'package:kasama_api/src/model/accepted.dart';
 import 'package:kasama_api/src/model/accepted_suggestion.dart';
@@ -38,6 +39,8 @@ import 'package:kasama_api/src/model/bot_access.dart';
 import 'package:kasama_api/src/model/bot_access_entry.dart';
 import 'package:kasama_api/src/model/bot_budget.dart';
 import 'package:kasama_api/src/model/bot_checkins.dart';
+import 'package:kasama_api/src/model/bot_link.dart';
+import 'package:kasama_api/src/model/bot_link_list.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
 import 'package:kasama_api/src/model/bot_page.dart';
 import 'package:kasama_api/src/model/bot_page_detail.dart';
@@ -82,6 +85,7 @@ import 'package:kasama_api/src/model/conversation.dart';
 import 'package:kasama_api/src/model/conversation_list.dart';
 import 'package:kasama_api/src/model/conversation_thread.dart';
 import 'package:kasama_api/src/model/create_action_rule_request.dart';
+import 'package:kasama_api/src/model/create_bot_link_request.dart';
 import 'package:kasama_api/src/model/create_bot_request.dart';
 import 'package:kasama_api/src/model/create_bot_share_request.dart';
 import 'package:kasama_api/src/model/create_channel_request.dart';
@@ -105,6 +109,7 @@ import 'package:kasama_api/src/model/create_routine_request.dart';
 import 'package:kasama_api/src/model/create_secret_request.dart';
 import 'package:kasama_api/src/model/create_task_comment_request.dart';
 import 'package:kasama_api/src/model/create_task_request.dart';
+import 'package:kasama_api/src/model/created_bot_link.dart';
 import 'package:kasama_api/src/model/created_connect_key.dart';
 import 'package:kasama_api/src/model/created_invite_link.dart';
 import 'package:kasama_api/src/model/created_local_device.dart';
@@ -170,6 +175,8 @@ import 'package:kasama_api/src/model/knowledge_source_list.dart';
 import 'package:kasama_api/src/model/lease.dart';
 import 'package:kasama_api/src/model/lease_changed_event.dart';
 import 'package:kasama_api/src/model/lease_changed_event_payload.dart';
+import 'package:kasama_api/src/model/link_exchange.dart';
+import 'package:kasama_api/src/model/link_exchange_list.dart';
 import 'package:kasama_api/src/model/local_capabilities.dart';
 import 'package:kasama_api/src/model/local_device.dart';
 import 'package:kasama_api/src/model/local_device_list.dart';
@@ -434,6 +441,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AbuseEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AbuseEventList':
           return AbuseEventList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AcceptBotLinkRequest':
+          return AcceptBotLinkRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AcceptSkillProposalRequest':
           return AcceptSkillProposalRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Accepted':
@@ -516,6 +525,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BotBudget.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotCheckins':
           return BotCheckins.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotLink':
+          return BotLink.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotLinkList':
+          return BotLinkList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotList':
           return BotList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotPage':
@@ -610,6 +623,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ConversationThread.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateActionRuleRequest':
           return CreateActionRuleRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateBotLinkRequest':
+          return CreateBotLinkRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateBotRequest':
           return CreateBotRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateBotShareRequest':
@@ -656,6 +671,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateTaskCommentRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateTaskRequest':
           return CreateTaskRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreatedBotLink':
+          return CreatedBotLink.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedConnectKey':
           return CreatedConnectKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedInviteLink':
@@ -795,6 +812,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return LeaseChangedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LeaseChangedEventPayload':
           return LeaseChangedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LinkExchange':
+          return LinkExchange.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LinkExchangeList':
+          return LinkExchangeList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LocalCapabilities':
           return LocalCapabilities.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LocalDevice':

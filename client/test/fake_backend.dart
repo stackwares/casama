@@ -623,6 +623,47 @@ class FakeBackend implements Backend {
   @override
   Future<bool> allowBotToBot(String orgId) async => botToBot;
 
+  // Linked agents (D-143)
+  final linkList = <BotLink>[];
+  final linkActions = <String>[];
+  BotLink _link(String id, String name, BotLinkStatusEnum status, {String? peer}) =>
+      BotLink(id: id, botId: botId, name: name, status: status, peerBotName: peer, remoteUrl: null, exchanges: 1, createdAt: DateTime.utc(2026, 11, 3), activatedAt: null);
+  @override
+  Future<List<BotLink>> botLinks(String botId) async => List.of(linkList);
+  @override
+  Future<CreatedBotLink> createBotLink(String botId, String name) async {
+    linkActions.add('invite:$name');
+    linkList.add(_link('lk-${linkList.length + 1}', name, BotLinkStatusEnum.pending));
+    return CreatedBotLink.fromJson({...linkList.last.toJson(), 'invite': 'kasama-link:abc123'});
+  }
+
+  @override
+  Future<BotLink> acceptBotLink(String invite, String botId, String name) async {
+    linkActions.add('accept:$invite:$name');
+    linkList.add(_link('lk-${linkList.length + 1}', name, BotLinkStatusEnum.active, peer: 'Ben'));
+    return linkList.last;
+  }
+
+  @override
+  Future<BotLink> revokeBotLink(String id) async {
+    linkActions.add('revoke:$id');
+    final i = linkList.indexWhere((l) => l.id == id);
+    linkList[i] = BotLink.fromJson({...linkList[i].toJson(), 'status': 'revoked'});
+    return linkList[i];
+  }
+
+  @override
+  Future<List<LinkExchange>> linkExchanges(String id) async => [
+    LinkExchange(
+      id: 'ex-1',
+      direction: LinkExchangeDirectionEnum.out_,
+      request: 'Find a dinner slot for 4 next week',
+      response: 'Thursday at 7pm works.',
+      status: LinkExchangeStatusEnum.answered,
+      createdAt: DateTime.utc(2026, 11, 3),
+    ),
+  ];
+
   // Payments (D-142)
   var pay = PaymentSettings(connected: false, provider: null, monthlyCapUsd: 500, botMonthlyCapUsd: 200, spentThisMonthUsd: 0, webhookUrl: null);
   SetPaymentSettingsRequest? setPay;

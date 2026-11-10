@@ -1,0 +1,33 @@
+{
+  "name": "links",
+  "turns": [
+    {
+      "when": { "systemIncludes": "extract lasting memories" },
+      "events": [
+        { "type": "text", "text": "{\"memories\":[]}" },
+        { "type": "finish", "usage": { "inputTokens": 50, "outputTokens": 5 }, "finishReason": "stop", "model": "" }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "Find a dinner slot" },
+      "events": [
+        { "type": "text", "text": "Thursday at 7pm works for Sam." },
+        { "type": "finish", "usage": { "inputTokens": 200, "outputTokens": 20 }, "finishReason": "stop", "model": "" }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "Ask Sam's assistant" },
+      "events": [
+        { "type": "tool_call", "call": { "callId": "l1", "name": "links__ask", "args": { "contact": "Sam", "request": "Find a dinner slot for 4 next week" } } },
+        { "type": "finish", "usage": { "inputTokens": 300, "outputTokens": 20 }, "finishReason": "tool-calls", "model": "" }
+      ]
+    },
+    {
+      "when": { "lastRole": "tool", "lastToolName": "links.ask" },
+      "events": [
+        { "type": "text", "text": "Sam's assistant says Thursday at 7pm." },
+        { "type": "finish", "usage": { "inputTokens": 400, "outputTokens": 20 }, "finishReason": "stop", "model": "" }
+      ]
+    }
+  ]
+}

@@ -1367,3 +1367,35 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - Real-time authorization declines a wrong merchant and an over-amount charge, approves the right one, then marks the card used and cancels it; later charges are declined.
   - Bans, merchant matching, monthly caps and the one-hour expiry.
   - widget (`payments_test.dart`).
+
+## D-143 Linked agents
+
+- **Linking:**
+  - A bot's manager creates an invite (`POST /v1/bots/{id}/links`). It's a `kasama-link:` string carrying the server's address, the link id, a one-time code (only its hash is kept) and the bot's name. It works once, for 7 days.
+  - The trusted contact accepts it with one of their bots (`POST /v1/links/accept`). Inviting and accepting are the two approvals.
+  - Either side revokes (`DELETE /v1/links/{id}`), and the link ends for both.
+- **On the same server:** a link is two `bot_links` rows pointing at each other.
+- **Across Kasama servers:**
+  - The accepting server calls the inviting server's `POST /links/{id}/accept` with the code, its own address, its bot, and a fresh `klink_` token.
+  - The inviting server answers with its own token and bot. Each side stores the other's token in Vault and only a hash of its own.
+  - Requests then go over A2A (D-140) to `/a2a/{bot}` with the link token. A link token also unlocks that bot's agent card, whether or not the bot is published.
+  - Revoking calls the other server's `POST /links/{id}/revoke` with the link token.
+- **Asking:** `links.ask(contact, request)` (medium risk, send category) sends a structured request to the linked bot named by the contact.
+  - **What the other bot receives:** "a request from <bot>, the linked assistant of <person>", with an instruction to answer under its own person's rules and share only what the request needs.
+  - **Same server:** it runs as the other bot, created by its owner, so their approvals, action rules and budgets apply (trigger `link`, on the sub-run queue, awaited up to 5 minutes). It can say it's still waiting for its person's approval.
+  - **Another server:** an A2A task on that server's bot, run as that link's owner.
+- **Both timelines:**
+  - Every exchange is recorded on each side's link (`link_exchanges`: direction, request, answer, run).
+  - The receiving owner gets a notification.
+  - The app's Linked bots screen (bot settings) lists links and their exchanges. Each person sees only their own side.
+- **Tests:**
+  - API (`links.test.ts`), on one server:
+    - Invite, then accept (a second accept is refused).
+    - The asker's tool gets the answer; the answering run belongs to the other owner.
+    - Both sides' exchanges and the notification; the other side's records stay private.
+    - Revoking ends it for both.
+  - Across two servers over real HTTP:
+    - The token handshake activates both sides.
+    - The request goes over A2A and is answered as the other owner, with exchanges recorded on both servers.
+    - Revoking on one server revokes on the other, and asking then fails.
+  - widget (`links_test.dart`).

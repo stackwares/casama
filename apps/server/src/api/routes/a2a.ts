@@ -46,9 +46,18 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   });
 
   app.get("/a2a/:botId/.well-known/agent-card.json", async (c) => {
-    const b = await published(c.req.param("botId"));
+    const botId = c.req.param("botId");
+    let b = await published(botId);
+    // A linked bot's card is shown to the link's other side (D-143), published or not.
+    const tok = (c.req.header("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+    if (!b && tok.startsWith("klink_") && /^[0-9a-f-]{36}$/.test(botId)) {
+      const [l] = await db.execute<{ org_id: string; name: string; persona_md: string | null }>(sql`
+        select bo.org_id, bo.name, bo.persona_md from public.bot_links l join public.bots bo on bo.id = l.bot_id
+        where l.inbound_token_hash = ${createHash("sha256").update(tok).digest("hex")} and l.status = 'active' and l.bot_id = ${botId}::uuid`);
+      if (l) b = { id: botId, ...l };
+    }
     if (!b) return c.json({ error: "not_found" }, 404);
-    c.header("cache-control", "public, max-age=300");
+    c.header("cache-control", tok.startsWith("klink_") ? "private, no-store" : "public, max-age=300");
     return c.json(card(c, b));
   });
 
@@ -74,6 +83,10 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         select content from public.messages where run_id = ${t.run_id}::uuid and role = 'assistant' order by created_at desc limit 1`);
       const text = (Array.isArray(m?.content) ? m.content : []).filter((p) => p.type === "text").map((p) => p.text ?? "").join("");
       out.artifacts = [{ artifactId: `${t.id}-answer`, name: "answer", parts: [{ text }] }];
+      // A linked request's answer goes on the link's record too (D-143).
+      await db.execute(sql`
+        update public.link_exchanges set response = ${text.slice(0, 20_000)}, status = 'answered', answered_at = now()
+        where run_id = ${t.run_id}::uuid and direction = 'in' and response is null`);
       out.status.message = agentMsg(text, t);
     } else if (t.status === "waiting_approval" || t.status === "waiting_takeover")
       out.status.message = agentMsg("Waiting for the bot's owner to approve a step.", t);
@@ -91,11 +104,28 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.post("/a2a/:botId", async (c) => {
     const rpcError = (id: unknown, code: number, message: string, status = 200) => c.json({ jsonrpc: "2.0", id: id ?? null, error: { code, message } }, status as 200);
-    const b = await published(c.req.param("botId"));
+    const tok = (c.req.header("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+    const botId = c.req.param("botId");
+    // A linked bot on another Kasama server (D-143) calls with its link's token, whether or not
+    // this bot is published; the request runs as this bot's owner.
+    let linkId: string | null = null;
+    let b = tok.startsWith("klink_") ? null : await published(botId);
+    let linkOwner: string | null = null;
+    if (tok.startsWith("klink_") && /^[0-9a-f-]{36}$/.test(botId)) {
+      const [l] = await db.execute<{ id: string; owner_user_id: string; org_id: string; name: string; persona_md: string | null }>(sql`
+        select l.id, l.owner_user_id, bo.org_id, bo.name, bo.persona_md from public.bot_links l join public.bots bo on bo.id = l.bot_id
+        where l.inbound_token_hash = ${createHash("sha256").update(tok).digest("hex")} and l.status = 'active' and l.bot_id = ${botId}::uuid and bo.archived_at is null`);
+      if (l) {
+        linkId = l.id;
+        linkOwner = l.owner_user_id;
+        b = { id: botId, org_id: l.org_id, name: l.name, persona_md: l.persona_md };
+      }
+    }
     if (!b) return rpcError(null, E.invalid, "No such A2A agent", 404);
     // A workspace API key of this bot's workspace.
-    const tok = (c.req.header("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
-    const [key] = tok.startsWith("ksk_")
+    const [key] = linkOwner
+      ? [{ user_id: linkOwner }]
+      : tok.startsWith("ksk_")
       ? await db.execute<{ user_id: string }>(sql`
           update public.mcp_tokens set last_used_at = now()
           where token_hash = ${hash(tok)} and kind = 'api_key' and revoked_at is null and org_id = ${b.org_id}::uuid
@@ -161,6 +191,13 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           await db.execute(sql`
             insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
             values (${b.org_id}::uuid, 'user', ${key.user_id}::uuid, 'a2a.task', 'bot', ${b.id}::uuid, ${JSON.stringify({ task_id: t?.id, run_id: run?.id })}::jsonb)`);
+          if (linkId) {
+            await db.execute(sql`
+              insert into public.link_exchanges (link_id, org_id, direction, request, run_id) values (${linkId}::uuid, ${b.org_id}::uuid, 'in', ${text.slice(0, 4000)}, ${run?.id}::uuid)`);
+            await db.execute(sql`
+              insert into public.notifications (user_id, org_id, kind, payload, push_status, push_after)
+              values (${key.user_id}::uuid, ${b.org_id}::uuid, 'link_exchange', ${JSON.stringify({ title: "A linked assistant asked your bot", body: text.slice(0, 200), link: `/bots/${b.id}/links`, bot_id: b.id })}::jsonb, 'deferred', now())`);
+          }
           await deps.workflows.startRun(run?.id as string);
           // Blocking by default: wait for the run to finish (or need an approval) within a minute.
           const cfg = (p.configuration ?? {}) as { returnImmediately?: boolean };

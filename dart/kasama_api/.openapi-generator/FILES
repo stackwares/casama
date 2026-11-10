@@ -21,6 +21,7 @@ lib/src/api/files_api.dart
 lib/src/api/import_api.dart
 lib/src/api/integrations_api.dart
 lib/src/api/knowledge_api.dart
+lib/src/api/links_api.dart
 lib/src/api/local_computer_api.dart
 lib/src/api/mcp_api.dart
 lib/src/api/memory_api.dart
@@ -53,6 +54,7 @@ lib/src/auth/oauth.dart
 lib/src/deserialize.dart
 lib/src/model/abuse_event.dart
 lib/src/model/abuse_event_list.dart
+lib/src/model/accept_bot_link_request.dart
 lib/src/model/accept_skill_proposal_request.dart
 lib/src/model/accepted.dart
 lib/src/model/accepted_suggestion.dart
@@ -93,6 +95,8 @@ lib/src/model/bot_access.dart
 lib/src/model/bot_access_entry.dart
 lib/src/model/bot_budget.dart
 lib/src/model/bot_checkins.dart
+lib/src/model/bot_link.dart
+lib/src/model/bot_link_list.dart
 lib/src/model/bot_list.dart
 lib/src/model/bot_page.dart
 lib/src/model/bot_page_detail.dart
@@ -139,6 +143,7 @@ lib/src/model/conversation.dart
 lib/src/model/conversation_list.dart
 lib/src/model/conversation_thread.dart
 lib/src/model/create_action_rule_request.dart
+lib/src/model/create_bot_link_request.dart
 lib/src/model/create_bot_request.dart
 lib/src/model/create_bot_share_request.dart
 lib/src/model/create_channel_request.dart
@@ -162,6 +167,7 @@ lib/src/model/create_routine_request.dart
 lib/src/model/create_secret_request.dart
 lib/src/model/create_task_comment_request.dart
 lib/src/model/create_task_request.dart
+lib/src/model/created_bot_link.dart
 lib/src/model/created_connect_key.dart
 lib/src/model/created_invite_link.dart
 lib/src/model/created_local_device.dart
@@ -230,6 +236,8 @@ lib/src/model/knowledge_source_list.dart
 lib/src/model/lease.dart
 lib/src/model/lease_changed_event.dart
 lib/src/model/lease_changed_event_payload.dart
+lib/src/model/link_exchange.dart
+lib/src/model/link_exchange_list.dart
 lib/src/model/local_capabilities.dart
 lib/src/model/local_device.dart
 lib/src/model/local_device_list.dart

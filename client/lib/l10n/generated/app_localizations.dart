@@ -8835,6 +8835,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Per-bot limit per month (USD)'**
   String get paymentsBotCap;
+
+  /// No description provided for @links.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked bots'**
+  String get links;
+
+  /// No description provided for @linksRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Link with a trusted contact\'s bot'**
+  String get linksRow;
+
+  /// No description provided for @linksHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bot can ask a linked contact\'s bot for things like a dinner slot. Each bot answers under its own person\'s rules and shares only what\'s needed; both of you see every exchange.'**
+  String get linksHelp;
+
+  /// No description provided for @linksEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No linked bots yet'**
+  String get linksEmpty;
+
+  /// No description provided for @linksInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a contact'**
+  String get linksInvite;
+
+  /// No description provided for @linksContactName.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact\'s name'**
+  String get linksContactName;
+
+  /// No description provided for @linksInviteReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Send this invite'**
+  String get linksInviteReady;
+
+  /// No description provided for @linksInviteHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send it to your contact. They accept it in Kasama with one of their bots. It works once, for 7 days.'**
+  String get linksInviteHelp;
+
+  /// No description provided for @linksAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept an invite'**
+  String get linksAccept;
+
+  /// No description provided for @linksAcceptHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the invite your contact sent you.'**
+  String get linksAcceptHelp;
+
+  /// No description provided for @linksInviteText.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get linksInviteText;
+
+  /// No description provided for @linksActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked with {bot}'**
+  String linksActive(String bot);
+
+  /// No description provided for @linksPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your contact to accept'**
+  String get linksPending;
+
+  /// No description provided for @linksRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlinked'**
+  String get linksRevoked;
+
+  /// No description provided for @linksExchanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchanges'**
+  String get linksExchanges;
+
+  /// No description provided for @linksNoExchanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing asked yet.'**
+  String get linksNoExchanges;
+
+  /// No description provided for @linksNoAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'No answer'**
+  String get linksNoAnswer;
+
+  /// No description provided for @linksWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get linksWorking;
+
+  /// No description provided for @linksRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink'**
+  String get linksRevoke;
 }
 
 class _AppLocalizationsDelegate
