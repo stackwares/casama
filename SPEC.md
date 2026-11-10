@@ -893,9 +893,6 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 | Import an agent        | Import OpenClaw or Hermes Agent folders, and ChatGPT or Claude memory                                                                                              | An imported folder becomes a bot with its persona, skills, routines and memories after a review step                                | 2    |
 | Routines as files      | Routines and skills as Markdown files, synced with a git repo                                                                                                      | Editing a routine file in the repo changes the routine; editing it in the app updates the file                                      | 2    |
 | Knowledge sources      | Uploaded documents, Drive folders, Notion pages and websites, indexed for bots to search with citations                                                            | A bot answers a question from an uploaded PDF and cites the page; a Drive change shows up after the next sync                       | 2    |
-| Public bots            | A share link and a website widget let outsiders chat with a bot under a separate, restricted profile                                                               | A visitor chats through the widget; the bot cannot reach the owner's memory, computer or secrets; the owner can take over           | 2    |
-| Your own browser       | A browser extension lets bots work in the user's own signed-in browser, in a labeled tab group                                                                     | A bot completes a task on a site the user is signed in to, without signing in again, and never reads other tabs                     | 2    |
-| Meeting bots           | Bots join video calls, take notes and turn them into tickets and follow-ups                                                                                        | A bot joins a test Meet call from a calendar event, saves the transcript and creates tickets for action items                       | 2    |
 | Self-improving skills  | Bots propose a skill after repeating a task and propose fixes when a skill fails                                                                                   | After the same kind of task twice the bot offers a skill; a failure produces a proposed fix shown as a diff                         | 2    |
 | Step replay            | Replay recorded browser and desktop steps without model calls; the bot takes over when a step breaks                                                              | A recorded form fill replays with new values at zero model tokens, and recovers after the page layout changes                       | 2    |
 | Password managers      | 1Password and Bitwarden logins filled into the bot's browser without the model seeing them                                                                        | A bot signs in with a vault item; the password never appears in events, logs or model input; other sites are refused                | 2    |
@@ -1072,25 +1069,6 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - `knowledge_sources` (org\_id, bot\_id or null for the whole workspace, kind upload, drive, notion, website or github, config jsonb, status, last\_synced\_at) and `knowledge_chunks` (source\_id, document reference, title, text, embedding, tsv).
 - The worker parses uploads (PDF, DOCX, Markdown, HTML, CSV) and syncs connected sources through the existing app connections, daily or on change notices where offered. Website sources crawl within one domain and respect robots.txt.
 - Tool `knowledge.search` uses the same hybrid search as memory and returns snippets with citations (document, page or heading, link), which the chat shows as sources. Without an embedding key, search is full-text only (D-017).
-
-### Public bots
-
-- A bot can get public entry points: a share link (a public route in the web app) and a website widget (one script tag). Visitors are guests, anonymous or with a verified email.
-- Public conversations use the bot's separate public profile: its own instructions, a strict tool allowlist (no shell, files, computer, secrets or owner memory), its own knowledge sources, rate limits per visitor and per bot, and a budget cap. Everything visitors write is untrusted.
-- The owner sees every transcript, gets a notification when a visitor asks for a person, and can take over a conversation and hand it back.
-- `bot_public_profiles` and `guest_sessions`; public conversations carry `guest_session_id`, and guests read only their own conversation through a signed guest token. Usage counts toward the owner's quotas.
-
-### Your own browser
-
-- A browser extension (Manifest V3, for Chrome, Edge and Brave) pairs with the user's account like the companion and connects to the API with a device token.
-- Allowed bots act only inside a tab group labeled with the bot's name, using the user's existing sign-ins. The extension never reads other tabs, refuses sites on the user's block list, shows a banner with Stop, and always asks before purchases or before submitting forms on sites that aren't allowlisted.
-- The `browser.*` tools route to the extension when the bot uses "my browser", with the same events, approvals and audit log as computer browsers.
-
-### Meeting bots
-
-- `MeetingProvider` interface. The first adapter joins Google Meet, Zoom and Teams as a named guest from the bot's desktop computer (Chromium with a virtual audio device), so it stays self-hostable; a hosted meeting-bot service can be added behind the same interface.
-- A routine trigger on calendar events with a meeting link (through the calendar connection) sends the bot; users can also paste a link. The bot announces itself in the meeting chat when it joins.
-- The live transcript goes into the conversation. After the call the bot writes a summary, creates tickets for action items and drafts follow-ups for approval. Joining a meeting that isn't on the owner's calendar is high risk.
 
 ### Self-improving skills
 
@@ -1310,7 +1288,7 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 Build these only after v1 launch unless the product owner reprioritizes. Designs and acceptance criteria are in the Post-v1 roadmap; each wave's gate is that every acceptance criterion in its rows passes.
 
 - [ ] Wave 1: local MCP servers, coding agents, ticket board, spaces, bots that manage bots, ask for a secret, sign-in codes for bots, search, skills library, setup interview and starter bots, lazy tool loading, run tracing, app polish, projects, check-ins, action rules, watchers, hosted MCP endpoint
-- [ ] Wave 2: group chats, pages, teach by showing, plugins, import an agent, routines and skills as files, knowledge sources, public bots, your own browser, meeting bots, self-improving skills, step replay, password managers, bot sharing
+- [ ] Wave 2: group chats, pages, teach by showing, plugins, import an agent, routines and skills as files, knowledge sources, self-improving skills, step replay, password managers, bot sharing
 - [ ] Wave 3: channel adapters in this order: Telegram, email (Resend), SMS (Twilio), Slack, WhatsApp, Messenger, iMessage, Feishu, each with sender allowlists, plus email and chat triggers for routines
 - [ ] Channel gate: a Telegram message and an email each get replies in the same thread; unknown senders are ignored
 - [ ] Wave 3: phone-call voice, encryption at rest, memory backends, paid data services, additional `SandboxProvider` adapters (Boat, boxd, CreateOS, Novita, Railway-backed runners, Kubernetes, Incus, Alibaba Wuying) passing the contract suite, agent-to-agent (A2A), calls for you, payments, linked agents, voice upgrades, and the ops extras
@@ -1339,7 +1317,6 @@ Nine decisions have defaults the coding agent can build on now; confirm each by 
 | Model costs grow faster than expected                                                    | Hosted version loses money                 | BYO keys, budgets, quotas, cheap internal model, caching                                                                   |
 | OpenAI changes or withdraws ChatGPT plan usage for third-party apps                      | People on plans lose model access          | Keep API keys and fallbacks first-class; feature flag; plan errors never switch billing silently                           |
 | Local MCP servers and coding agents act on the user's own machine                        | Unwanted changes to the user's files or accounts | Off until approved per server; shared folders only; overlay with Stop; high-risk actions always ask; pushes need approval  |
-| Strangers abuse public bots (prompt injection, spam, cost)                               | Data leaks or runaway bills                | Separate public profile with a strict tool allowlist; no owner memory, computer or secrets; per-visitor rate limits and budget caps |
 | Prompt injection leads to harmful actions                                                | Trust and legal exposure                   | Untrusted-content labeling, approvals after untrusted input, secret placeholders, evals with injection tasks               |
 | Meta app review delays for WhatsApp and Messenger                                        | Post-v1 channels ship late                 | Channels are post-v1; start Meta verification only when channel work begins                                                |
 | Scope is large for one team                                                              | Slow launch                                | Strict phase gates; every phase ships a usable product                                                                     |
