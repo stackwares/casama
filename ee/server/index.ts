@@ -8,6 +8,7 @@ import type { Context, Hono } from "hono";
 import { type EeFeature, type License, verifyLicense } from "./license.ts";
 
 export { type License, verifyLicense } from "./license.ts";
+export { forwardAuditLogs, otlpLogs, sendBatch, signAuditBatch } from "./audit-forward.ts";
 
 export interface EeDeps {
   db: Database;
@@ -52,6 +53,56 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
       };
     return { claims, license: l };
   };
+
+  // ---------------------------------------------------------------- audit forwarding (D-146)
+  const forwarderOut = (r: Record<string, unknown>) => ({
+    id: r.id,
+    kind: r.kind,
+    config: r.config,
+    enabled: r.enabled,
+    sent_rows: Number(r.sent_rows ?? 0),
+    last_sent_at: r.last_sent_at ? new Date(String(r.last_sent_at)).toISOString() : null,
+    last_error: r.last_error ?? null,
+  });
+  app.get("/v1/orgs/:id/audit-forwarders", async (c) => {
+    const orgId = c.req.param("id");
+    const g = await guard(c, "audit_forwarding", orgId);
+    if (g.error) return g.error;
+    const rows = await deps.db.execute<Record<string, unknown>>(sql`
+      select id, kind, config, enabled, sent_rows, last_sent_at, last_error from public.audit_forwarders where org_id = ${orgId}::uuid order by created_at`);
+    return c.json({ items: rows.map(forwarderOut) });
+  });
+  app.post("/v1/orgs/:id/audit-forwarders", async (c) => {
+    const orgId = c.req.param("id");
+    const g = await guard(c, "audit_forwarding", orgId);
+    if (g.error) return g.error;
+    const b = (await c.req.json().catch(() => ({}))) as { kind?: string; config?: Record<string, unknown>; secret?: string; from?: "now" | "start" };
+    const cfg = b.config ?? {};
+    const okUrl = (u: unknown) => typeof u === "string" && /^https?:\/\//.test(u);
+    if (b.kind === "webhook" && (!okUrl(cfg.url) || !b.secret)) return problem(c, 400, "validation_failed", "A webhook needs config.url and a signing secret");
+    if (b.kind === "otlp" && !okUrl(cfg.url)) return problem(c, 400, "validation_failed", "OTLP needs config.url");
+    if (b.kind === "s3" && (typeof cfg.bucket !== "string" || !b.secret)) return problem(c, 400, "validation_failed", "S3 needs config.bucket and credentials");
+    if (!["webhook", "otlp", "s3"].includes(String(b.kind))) return problem(c, 400, "validation_failed", "kind is webhook, otlp or s3");
+    // From now on (default), or the whole history from the start.
+    const [r] = await deps.db.execute<Record<string, unknown>>(sql`
+      insert into public.audit_forwarders (org_id, kind, config, vault_secret_id, cursor_at, cursor_id)
+      values (${orgId}::uuid, ${b.kind}, ${JSON.stringify(cfg)}::jsonb, ${b.secret ? sql`(select vault.create_secret(${b.secret}, null, 'audit forwarder'))` : sql`null`},
+              ${b.from === "start" ? sql`null` : sql`clock_timestamp()`}, ${b.from === "start" ? null : "ffffffff-ffff-ffff-ffff-ffffffffffff"}::uuid)
+      returning id, kind, config, enabled, sent_rows, last_sent_at, last_error`);
+    await deps.db.execute(sql`
+      insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${orgId}::uuid, 'user', ${g.claims.sub}::uuid, 'audit.forwarder_added', 'audit_forwarder', ${String(r?.id)}::uuid, ${JSON.stringify({ kind: b.kind })}::jsonb)`);
+    return c.json(forwarderOut(r ?? {}), 201);
+  });
+  app.delete("/v1/orgs/:id/audit-forwarders/:fid", async (c) => {
+    const orgId = c.req.param("id");
+    const g = await guard(c, "audit_forwarding", orgId);
+    if (g.error) return g.error;
+    await deps.db.execute(sql`
+      with gone as (delete from public.audit_forwarders where id = ${c.req.param("fid")}::uuid and org_id = ${orgId}::uuid returning vault_secret_id)
+      delete from vault.secrets where id in (select vault_secret_id from gone)`);
+    return c.json({ deleted: c.req.param("fid") });
+  });
 
   // ---------------------------------------------------------------- audit export
   app.get("/v1/orgs/:id/audit-log/export", async (c) => {

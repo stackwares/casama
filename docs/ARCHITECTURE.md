@@ -314,6 +314,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 ## Ops extras (D-145 to D-148)
 
 - D-145: the sign-up allowlist in `routes/abuse.ts` (compose wires the hook); `AiGatewayConfig` in `CredentialResolver`; `packages/agent/src/secret-store.ts` (`SecretStore`, Vault and Infisical), `org_secret_stores`, `secrets.store`, `routes/secret-store.ts`, and "Where secrets are kept" in workspace settings.
+- D-146: `ee/server/audit-forward.ts` (webhook, OTLP and S3 senders and the cursor pass), `audit_forwarders`, the forwarder routes in `ee/server/index.ts`, and the worker's minute tick.
 
 ## Production and launch (Phase 8)
 

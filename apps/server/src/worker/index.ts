@@ -118,6 +118,8 @@ export interface WorkerOptions {
   };
   /** The API's public address, for Twilio's call webhooks and media streams (D-141). */
   publicApiUrl?: string;
+  /** Audit-log forwarding (D-146): on when the enterprise license includes it. */
+  auditForwarding?: boolean;
   /** Cloudflare AI Gateway for model calls (D-145). */
   aiGateway?: import("@kasama/agent").AiGatewayConfig;
   /** Paid data resale on Kasama Cloud (D-138): Kasama's Treg key, used only when resale is on. */
@@ -389,6 +391,7 @@ export async function startWorker(opts: WorkerOptions) {
       realtimeModel: opts.realtimeModel,
     },
     voip,
+    auditForwarding: opts.auditForwarding,
     agent: {
       payments,
       db,

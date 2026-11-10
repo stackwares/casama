@@ -1446,3 +1446,26 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - Gateway URLs and the auth header, an own base URL winning, and the provider filter.
     - Infisical: a bad identity refused, existing secrets moved (Vault row cleared), new secrets written to Infisical, bots reading values from it, and switching back to Vault restoring the values.
   - widget (`secret_store_test.dart`).
+
+## D-146 Audit-log forwarding
+
+- **What it is:** an enterprise feature (`ee/`, license feature `audit_forwarding`). Admins add forwarders per workspace (`/v1/orgs/{id}/audit-forwarders`, audited). Each forwarder streams that workspace's `audit_log` rows to one destination.
+- **Destinations:**
+  - **Signed webhook:** JSON `{forwarder_id, events}`, with `X-Kasama-Signature: t=<unix>,v1=<hex HMAC-SHA256 of "t.body">` and a batch id header.
+  - **OTLP/HTTP logs endpoint:** JSON to `<url>/v1/logs`. Each row becomes a log record (body = action; attributes = id, actor, target, metadata) under `service.name=kasama`, scope `kasama.audit`. Optional headers (an auth token, say) are stored as a JSON secret.
+  - **S3-compatible storage:** a JSON Lines object per batch at `<prefix>/<org>/YYYY/MM/DD/<ms>-<first id>.jsonl`, signed with Signature Version 4 and addressed path-style, so AWS S3, R2 and MinIO all work.
+  - Secrets go to Vault.
+- **At least once, from a cursor:**
+  - Rows go in `(created_at, id)` order from each forwarder's cursor, in batches of 500, up to 10 batches per pass.
+  - The cursor moves only after the destination accepts a batch. A failure keeps it in place (recorded as `last_error`), so the same rows go again on the next pass.
+  - The comparison and the update happen in SQL so timestamps keep their microseconds. Rounding them in JavaScript resent the last row, which a test caught.
+  - New forwarders start from now; `from: "start"` sends the whole history.
+- **Running it:** the worker runs a pass every minute when the server's license includes the feature.
+- **Tests:**
+  - API (`audit-forwarding.test.ts`), with fake destinations:
+    - Members refused; a webhook without a secret refused.
+    - All three destinations get the new rows.
+    - A busy webhook (503) keeps its cursor and gets the same batch next pass, while the others aren't sent anything twice.
+    - The webhook signature, the OTLP header and records, and the S3 signature header and JSON Lines body.
+    - A pass with nothing new sends nothing.
+  - Without the license: 402.

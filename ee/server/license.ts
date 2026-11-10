@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { importSPKI, jwtVerify } from "jose";
 
-export type EeFeature = "audit_export" | "sso" | "advanced_roles";
+export type EeFeature = "audit_export" | "sso" | "advanced_roles" | "audit_forwarding";
 
 export interface License {
   customer: string;

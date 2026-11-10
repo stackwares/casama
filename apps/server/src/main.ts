@@ -129,6 +129,10 @@ if (env.MODE === "api") {
     databaseUrl: env.WORKER_DATABASE_URL ?? env.DATABASE_URL,
     pagesUrl: env.PAGES_URL,
     publicApiUrl: env.PUBLIC_API_URL,
+    auditForwarding: await import("@kasama/ee")
+      .then((m) => m.verifyLicense(env.KASAMA_LICENSE_KEY))
+      .then((l) => !!l && l.expiresAt > new Date() && l.features.includes("audit_forwarding"))
+      .catch(() => false),
     aiGateway: env.AI_GATEWAY_URL
       ? {
           url: env.AI_GATEWAY_URL,

@@ -60,6 +60,8 @@ let runtime:
       chatgpt?: ChatGptConfig;
       /** iOS call rings (D-135). */
       voip?: import("@kasama/agent").VoipSender;
+      /** Audit-log forwarding is licensed (D-146). */
+      auditForwarding?: boolean;
     }
   | undefined;
 export function configureWorkflows(r: NonNullable<typeof runtime>) {
@@ -129,6 +131,9 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     await DBOS.runStep(() => sweepEncryption(rt().db).catch(() => 0), { name: "encryption-sweep" });
     // Payments (D-142): unused cards are cancelled after their hour.
     await DBOS.runStep(() => (rt().agent.payments ? expireCards(rt().agent.payments as never).catch(() => 0) : Promise.resolve(0)), { name: "expire-cards" });
+    // Audit-log forwarding (D-146, enterprise): stream new rows to each workspace's destinations.
+    if (rt().auditForwarding)
+      await DBOS.runStep(() => import("@kasama/ee").then((m) => m.forwardAuditLogs(rt().db, { fetch: rt().fetch })).catch(() => 0), { name: "audit-forward" });
     // Phone calls nobody answered (D-135) become a push with the reason.
     await DBOS.runStep(() => expireCalls({ db: rt().db, notifications: rt().agent.notifications }).catch(() => 0), { name: "expire-calls" });
     const runIds = await DBOS.runStep(() => claimDueRoutines(rt().db), { name: "claim-due" });
