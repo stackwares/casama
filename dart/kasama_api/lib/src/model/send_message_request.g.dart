@@ -13,6 +13,8 @@ abstract class _$SendMessageRequestCWProxy {
 
   SendMessageRequest uiAction(UiActionPart? uiAction);
 
+  SendMessageRequest skills(List<String>? skills);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `SendMessageRequest(...).copyWith.fieldName(value)`.
@@ -25,6 +27,7 @@ abstract class _$SendMessageRequestCWProxy {
     String? text,
     List<MessageAttachment>? attachments,
     UiActionPart? uiAction,
+    List<String>? skills,
   });
 }
 
@@ -46,6 +49,9 @@ class _$SendMessageRequestCWProxyImpl implements _$SendMessageRequestCWProxy {
   SendMessageRequest uiAction(UiActionPart? uiAction) =>
       call(uiAction: uiAction);
 
+  @override
+  SendMessageRequest skills(List<String>? skills) => call(skills: skills);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `SendMessageRequest(...).copyWith.fieldName(value)`.
@@ -59,6 +65,7 @@ class _$SendMessageRequestCWProxyImpl implements _$SendMessageRequestCWProxy {
     Object? text = const $CopyWithPlaceholder(),
     Object? attachments = const $CopyWithPlaceholder(),
     Object? uiAction = const $CopyWithPlaceholder(),
+    Object? skills = const $CopyWithPlaceholder(),
   }) {
     return SendMessageRequest(
       text: text == const $CopyWithPlaceholder()
@@ -73,6 +80,10 @@ class _$SendMessageRequestCWProxyImpl implements _$SendMessageRequestCWProxy {
           ? _value.uiAction
           // ignore: cast_nullable_to_non_nullable
           : uiAction as UiActionPart?,
+      skills: skills == const $CopyWithPlaceholder()
+          ? _value.skills
+          // ignore: cast_nullable_to_non_nullable
+          : skills as List<String>?,
     );
   }
 }
@@ -105,6 +116,10 @@ SendMessageRequest _$SendMessageRequestFromJson(
       (v) =>
           v == null ? null : UiActionPart.fromJson(v as Map<String, dynamic>),
     ),
+    skills: $checkedConvert(
+      'skills',
+      (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+    ),
   );
   return val;
 }, fieldKeyMap: const {'uiAction': 'ui_action'});
@@ -114,4 +129,5 @@ Map<String, dynamic> _$SendMessageRequestToJson(SendMessageRequest instance) =>
       'text': ?instance.text,
       'attachments': ?instance.attachments?.map((e) => e.toJson()).toList(),
       'ui_action': ?instance.uiAction?.toJson(),
+      'skills': ?instance.skills,
     };

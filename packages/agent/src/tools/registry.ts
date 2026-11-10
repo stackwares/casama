@@ -48,6 +48,14 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
    * shell and file tools wait too unless the person allowed them.
    */
   screen?: boolean;
+  /**
+   * Extra fields shown on the approval card (for example a diff of what will change). Merged into
+   * the redacted arguments only for approvals; never passed to the tool.
+   */
+  approvalDetails?: (
+    args: z.infer<S>,
+    ctx: { orgId: string; botId: string },
+  ) => Promise<Record<string, unknown>>;
   /** Raw JSON Schema for tools defined outside Zod (integration tools). */
   jsonSchema?: Record<string, unknown>;
   execute(args: z.infer<S>, ctx: ToolContext): Promise<ToolResult>;

@@ -378,11 +378,12 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction}) async =>
+  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const []}) async =>
       (await api.chat.sendMessage(
         id: conversationId,
         sendMessageRequest: SendMessageRequest(
           text: text,
+          skills: skills.isEmpty ? null : skills,
           attachments: attachments.isEmpty
               ? null
               : [for (final a in attachments) MessageAttachment(path: a.path, name: a.name, mimeType: a.mimeType, size: a.size)],
@@ -530,6 +531,8 @@ class SupabaseBackend implements Backend {
           bodyMd: r['body_md'] as String,
           enabled: r['enabled'] as bool,
           botId: r['bot_id'] as String?,
+          source: (r['source'] as String?) ?? 'manual',
+          sourceRef: Map<String, Object?>.from((r['source_ref'] as Map?) ?? const {}),
         ),
     ];
   }
@@ -547,6 +550,31 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> deleteSkill(String id) async => supabase.from('skills').delete().eq('id', id);
+
+  @override
+  Future<SkillCatalog> skillCatalog() async => (await api.skills.getSkillCatalog()).data!;
+
+  @override
+  Future<void> installCatalogSkill(String orgId, String catalogId, {String? botId}) async {
+    await api.skills.installCatalogSkill(installCatalogSkillRequest: InstallCatalogSkillRequest(orgId: orgId, catalogId: catalogId, botId: botId));
+  }
+
+  @override
+  Future<GitHubSkillPreview> previewGitHubSkill(String orgId, String url) async =>
+      (await api.skills.previewGitHubSkill(gitHubSkillPreviewRequest: GitHubSkillPreviewRequest(orgId: orgId, url: url))).data!;
+
+  @override
+  Future<void> installGitHubSkill(String orgId, String url, String commit, {String? botId}) async {
+    await api.skills.installGitHubSkill(installGitHubSkillRequest: InstallGitHubSkillRequest(orgId: orgId, url: url, commit: commit, botId: botId));
+  }
+
+  @override
+  Future<SkillUpdateCheck> checkSkillUpdate(String skillId) async => (await api.skills.checkSkillUpdate(id: skillId)).data!;
+
+  @override
+  Future<void> applySkillUpdate(String skillId, String commit) async {
+    await api.skills.applySkillUpdate(id: skillId, applySkillUpdateRequest: ApplySkillUpdateRequest(commit: commit));
+  }
 
   // --- approvals and notifications ------------------------------------------
 

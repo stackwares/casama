@@ -74,6 +74,8 @@ export const EnvSchema = z.object({
   CLOUD_COMPUTER_USD_PER_HOUR: z.coerce.number().nonnegative().default(0.05),
   /** Cloud Connect, self-hosted side: use Kasama Cloud computers with this key. Unset = off. */
   KASAMA_CLOUD_URL: z.url().optional(),
+  /** GitHub API base for skill imports (tests point it at a fake). */
+  GITHUB_API_URL: z.url().optional(),
   KASAMA_CLOUD_KEY: z.string().optional(),
   /**
    * Push notifications: a Firebase service account (JSON text, or a path to the JSON file) for the

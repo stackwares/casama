@@ -1,0 +1,11 @@
+{
+  "categories": ["work", "research", "data", "build", "life"],
+  "skills": {
+    "meeting-notes": "work",
+    "weekly-report": "work",
+    "research-brief": "research",
+    "csv-cleanup": "data",
+    "code-review": "build",
+    "trip-planner": "life"
+  }
+}

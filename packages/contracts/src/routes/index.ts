@@ -8,6 +8,7 @@ import * as computers from "./computers.ts";
 import * as local from "./local.ts";
 import * as privacy from "./privacy.ts";
 import * as search from "./search.ts";
+import * as skills from "./skills.ts";
 import * as system from "./system.ts";
 import * as voice from "./voice.ts";
 import * as workspaces from "./workspaces.ts";
@@ -26,6 +27,7 @@ export const routes = {
   ...appearance,
   ...apps,
   ...search,
+  ...skills,
 };
 export {
   admin,
@@ -37,6 +39,7 @@ export {
   local,
   privacy,
   search,
+  skills,
   system,
   voice,
   workspaces,

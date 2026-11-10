@@ -55,6 +55,8 @@ class SkillView {
     required this.bodyMd,
     required this.enabled,
     this.botId,
+    this.source = 'manual',
+    this.sourceRef = const {},
   });
   final String id;
   final String name;
@@ -62,6 +64,10 @@ class SkillView {
   final String bodyMd;
   final bool enabled;
   final String? botId;
+
+  /// manual, catalog, github or bot (D-104).
+  final String source;
+  final Map<String, Object?> sourceRef;
 }
 
 class NotificationView {
@@ -201,7 +207,8 @@ abstract class Backend {
   Future<Conversation> createConversation(String botId);
   Future<List<ChatMessageView>> messages(String conversationId);
   Future<String?> activeRun(String conversationId);
-  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction});
+  /// [skills]: skills picked with / in the composer (D-104).
+  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const []});
   Future<void> cancelRun(String runId);
   Stream<RunEventItem> watchRun(String runId, {int afterSeq = 0});
   Future<List<RunEventItem>> runEvents(String runId);
@@ -214,6 +221,13 @@ abstract class Backend {
   Future<List<SkillView>> skills(String orgId);
   Future<void> saveSkill(String orgId, {String? id, String? botId, required String name, required String description, required String bodyMd, bool enabled = true});
   Future<void> deleteSkill(String id);
+  // Skills library (D-104)
+  Future<SkillCatalog> skillCatalog();
+  Future<void> installCatalogSkill(String orgId, String catalogId, {String? botId});
+  Future<GitHubSkillPreview> previewGitHubSkill(String orgId, String url);
+  Future<void> installGitHubSkill(String orgId, String url, String commit, {String? botId});
+  Future<SkillUpdateCheck> checkSkillUpdate(String skillId);
+  Future<void> applySkillUpdate(String skillId, String commit);
 
   // Approvals and notifications
   Future<List<Approval>> approvals(String orgId, {bool pendingOnly = true});

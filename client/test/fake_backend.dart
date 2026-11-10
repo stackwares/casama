@@ -204,6 +204,45 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  final sentSkills = <List<String>>[];
+  final catalogInstalls = <(String, String?)>[];
+  final githubInstalls = <(String, String)>[];
+  String? appliedUpdate;
+  @override
+  Future<SkillCatalog> skillCatalog() async => SkillCatalog(
+        categories: const ['work', 'data'],
+        items: [
+          CatalogSkill(id: 'meeting-notes', name: 'meeting-notes', description: 'Summarize meetings', category: 'work', files: const []),
+          CatalogSkill(id: 'csv-cleanup', name: 'csv-cleanup', description: 'Clean CSV files', category: 'data', files: const ['scripts/clean.py']),
+        ],
+      );
+  @override
+  Future<void> installCatalogSkill(String orgId, String catalogId, {String? botId}) async => catalogInstalls.add((catalogId, botId));
+  @override
+  Future<GitHubSkillPreview> previewGitHubSkill(String orgId, String url) async => GitHubSkillPreview(
+        repo: 'acme/skills',
+        path: 'pr-labels',
+        ref: null,
+        commit: 'a' * 40,
+        name: 'pr-labels',
+        description: 'Label pull requests',
+        skillMd: '---\nname: pr-labels\n---\nSteps',
+        files: [SkillPreviewFile(path: 'label.sh', size: 21, executable: true, text: 'echo label')],
+      );
+  @override
+  Future<void> installGitHubSkill(String orgId, String url, String commit, {String? botId}) async => githubInstalls.add((url, commit));
+  @override
+  Future<SkillUpdateCheck> checkSkillUpdate(String skillId) async => SkillUpdateCheck(
+        currentCommit: 'a' * 40,
+        latestCommit: 'b' * 40,
+        hasUpdate: true,
+        diff: const ['- old step', '+ new step'],
+        filesAdded: const [],
+        filesRemoved: const ['label.sh'],
+        filesChanged: const [],
+      );
+  @override
+  Future<void> applySkillUpdate(String skillId, String commit) async => appliedUpdate = commit;
   final searches = <String>[];
   @override
   Future<SearchResponse> search(String orgId, String query) async {
@@ -317,8 +356,9 @@ class FakeBackend implements Backend {
   Future<String?> activeRun(String conversationId) async => null;
   final sentAttachments = <List<AttachmentRef>>[];
   @override
-  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction}) async {
+  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const []}) async {
     sent.add(text);
+    sentSkills.add(skills);
     sentAttachments.add(attachments);
     if (uiAction != null) sentUiActions.add(uiAction);
     return SendMessageResponse(messageId: 'm1', runId: runId, conversationId: conversationId);
@@ -351,7 +391,8 @@ class FakeBackend implements Backend {
   @override
   Future<void> deleteMemory(String id) async {}
   @override
-  Future<List<SkillView>> skills(String orgId) async => const [];
+  Future<List<SkillView>> skills(String orgId) async => skillViews;
+  List<SkillView> skillViews = const [];
   @override
   Future<void> saveSkill(String orgId,
       {String? id, String? botId, required String name, required String description, required String bodyMd, bool enabled = true}) async {}

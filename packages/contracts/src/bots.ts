@@ -124,6 +124,13 @@ export const SendMessageRequest = z
     text: z.string().trim().max(100_000).default(""),
     attachments: z.array(MessageAttachment).max(10).optional(),
     ui_action: UiActionPart.optional(),
+    skills: z
+      .array(z.string().regex(/^[a-z0-9][a-z0-9_-]{0,62}$/))
+      .max(5)
+      .optional()
+      .openapi({
+        description: "Skills picked with / in the composer; the run loads them up front (D-104)",
+      }),
   })
   .refine((b) => b.text.length > 0 || (b.attachments?.length ?? 0) > 0 || !!b.ui_action, {
     message: "Send some text or an attachment",

@@ -208,7 +208,7 @@ class ChatController extends Notifier<ChatState> {
     state = const ChatState();
   }
 
-  Future<void> send(String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction}) async {
+  Future<void> send(String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const []}) async {
     final trimmed = text.trim();
     if ((trimmed.isEmpty && attachments.isEmpty && uiAction == null) || state.running) return;
     var conversationId = state.conversationId;
@@ -223,7 +223,7 @@ class ChatController extends Notifier<ChatState> {
       lastUserText: trimmed,
       answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
     );
-    final sent = await _backend.send(conversationId, trimmed, attachments: attachments, uiAction: uiAction);
+    final sent = await _backend.send(conversationId, trimmed, attachments: attachments, uiAction: uiAction, skills: skills);
     unawaited(ref.read(runActivitiesProvider).started(sent.runId, ref.read(botProvider(botId))?.name ?? ''));
     _attach(sent.runId);
   }

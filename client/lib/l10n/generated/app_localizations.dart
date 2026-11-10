@@ -5931,6 +5931,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Files on sleeping computers aren\'t searched. Start a computer to include its files.'**
   String get searchFilesAsleep;
+
+  /// No description provided for @installFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Install for'**
+  String get installFor;
+
+  /// No description provided for @wholeWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'The whole workspace'**
+  String get wholeWorkspace;
+
+  /// No description provided for @skillCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill catalog'**
+  String get skillCatalog;
+
+  /// No description provided for @searchSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'Search skills'**
+  String get searchSkills;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @skillFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}}'**
+  String skillFiles(int count);
+
+  /// No description provided for @install.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get install;
+
+  /// No description provided for @skillInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed {name}.'**
+  String skillInstalled(String name);
+
+  /// No description provided for @noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results.'**
+  String get noResults;
+
+  /// No description provided for @importFromGitHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from GitHub'**
+  String get importFromGitHub;
+
+  /// No description provided for @importFromGitHubHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a link to a folder with a SKILL.md. You\'ll see every file before anything is installed. Private repositories use a GITHUB_TOKEN secret allowed for api.github.com.'**
+  String get importFromGitHubHelp;
+
+  /// No description provided for @preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get preview;
+
+  /// No description provided for @skillScriptsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Scripts in a skill only ever run on a bot\'s computer, never on the server.'**
+  String get skillScriptsNote;
+
+  /// No description provided for @binaryFile.
+  ///
+  /// In en, this message translates to:
+  /// **'(binary file)'**
+  String get binaryFile;
+
+  /// No description provided for @skillUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update {name}'**
+  String skillUpdate(String name);
+
+  /// No description provided for @checkingForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates…'**
+  String get checkingForUpdates;
+
+  /// No description provided for @skillUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Already up to date.'**
+  String get skillUpToDate;
+
+  /// No description provided for @update.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get update;
+
+  /// No description provided for @filesAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get filesAdded;
+
+  /// No description provided for @filesChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed'**
+  String get filesChanged;
+
+  /// No description provided for @filesRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get filesRemoved;
+
+  /// No description provided for @fromCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'From the catalog'**
+  String get fromCatalog;
+
+  /// No description provided for @savedByBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved by a bot'**
+  String get savedByBot;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get checkForUpdates;
+
+  /// No description provided for @attachSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a skill'**
+  String get attachSkill;
 }
 
 class _AppLocalizationsDelegate

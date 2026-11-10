@@ -20,6 +20,7 @@ lib/src/api/routines_api.dart
 lib/src/api/runs_api.dart
 lib/src/api/search_api.dart
 lib/src/api/secrets_api.dart
+lib/src/api/skills_api.dart
 lib/src/api/system_api.dart
 lib/src/api/tasks_api.dart
 lib/src/api/usage_api.dart
@@ -44,6 +45,7 @@ lib/src/model/admin_service_list.dart
 lib/src/model/admin_user.dart
 lib/src/model/admin_user_list.dart
 lib/src/model/app_catalog.dart
+lib/src/model/apply_skill_update_request.dart
 lib/src/model/approval.dart
 lib/src/model/approval_decision_request.dart
 lib/src/model/approval_list.dart
@@ -64,6 +66,7 @@ lib/src/model/bot_secret_request.dart
 lib/src/model/bot_secret_request_list.dart
 lib/src/model/catalog_app.dart
 lib/src/model/catalog_app_api_key.dart
+lib/src/model/catalog_skill.dart
 lib/src/model/chat_gpt_sign_in_complete_request.dart
 lib/src/model/chat_gpt_sign_in_start.dart
 lib/src/model/chat_gpt_sign_in_start_request.dart
@@ -121,8 +124,13 @@ lib/src/model/deleted_id.dart
 lib/src/model/deleted_routine.dart
 lib/src/model/file_search_result.dart
 lib/src/model/fulfill_secret_request_body.dart
+lib/src/model/git_hub_skill_preview.dart
+lib/src/model/git_hub_skill_preview_request.dart
 lib/src/model/health.dart
 lib/src/model/ice_server.dart
+lib/src/model/install_catalog_skill_request.dart
+lib/src/model/install_git_hub_skill_request.dart
+lib/src/model/installed_skill.dart
 lib/src/model/integration.dart
 lib/src/model/integration_device.dart
 lib/src/model/integration_kind.dart
@@ -216,8 +224,11 @@ lib/src/model/send_message_response.dart
 lib/src/model/set_local_mcp_servers_request.dart
 lib/src/model/set_org_limits_request.dart
 lib/src/model/signup_challenge.dart
+lib/src/model/skill_catalog.dart
 lib/src/model/skill_loaded_event.dart
 lib/src/model/skill_loaded_event_payload.dart
+lib/src/model/skill_preview_file.dart
+lib/src/model/skill_update_check.dart
 lib/src/model/stream_mode.dart
 lib/src/model/stream_session.dart
 lib/src/model/stream_session_request.dart

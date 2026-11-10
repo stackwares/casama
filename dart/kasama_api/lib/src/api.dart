@@ -23,6 +23,7 @@ import 'package:kasama_api/src/api/routines_api.dart';
 import 'package:kasama_api/src/api/runs_api.dart';
 import 'package:kasama_api/src/api/search_api.dart';
 import 'package:kasama_api/src/api/secrets_api.dart';
+import 'package:kasama_api/src/api/skills_api.dart';
 import 'package:kasama_api/src/api/system_api.dart';
 import 'package:kasama_api/src/api/tasks_api.dart';
 import 'package:kasama_api/src/api/usage_api.dart';
@@ -175,6 +176,12 @@ class KasamaApi {
   /// by doing that all interceptors will not be executed
   SecretsApi getSecretsApi() {
     return SecretsApi(dio);
+  }
+
+  /// Get SkillsApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  SkillsApi getSkillsApi() {
+    return SkillsApi(dio);
   }
 
   /// Get SystemApi instance, base route and serializer can be overridden by a given but be careful,

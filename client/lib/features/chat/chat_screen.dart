@@ -87,6 +87,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   String? _highlight;
   final _focusKey = GlobalKey();
   final _pending = <_Pending>[];
+  /// Skills picked with / for the next message (D-104).
+  final _pickedSkills = <String>[];
   var _dragging = false;
 
   static const _maxFileBytes = 25 * 1024 * 1024;
@@ -238,13 +240,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         : const <AttachmentRef>[];
     if (message.trim().isEmpty && attachments.isEmpty) return;
     if (_uploading && text == null) return;
+    final skills = text == null ? [..._pickedSkills] : const <String>[];
     if (text == null) {
       _input.clear();
-      setState(_pending.clear);
+      setState(() {
+        _pending.clear();
+        _pickedSkills.clear();
+      });
     }
     _stickToBottom = true;
     if (_touchFirst) FocusManager.instance.primaryFocus?.unfocus();
-    await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).send(message, attachments: attachments));
+    await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).send(message, attachments: attachments, skills: skills));
     if (!_touchFirst && mounted) _focus.requestFocus();
   }
 
@@ -464,6 +470,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        _SkillPicker(
+                          botId: widget.botId,
+                          input: _input,
+                          picked: _pickedSkills,
+                          onPick: (name) => setState(() {
+                            if (!_pickedSkills.contains(name) && _pickedSkills.length < 5) _pickedSkills.add(name);
+                            _input.clear();
+                          }),
+                          onRemove: (name) => setState(() => _pickedSkills.remove(name)),
+                        ),
                         ChatComposer(
                           controller: _input,
                           focusNode: _focus,
@@ -1068,6 +1084,82 @@ class _ConversationsSheet extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The / picker (D-104): typing / lists the bot's skills; picking one attaches it to the next
+/// message so the run loads it up front. Picked skills show as chips above the composer.
+class _SkillPicker extends ConsumerWidget {
+  const _SkillPicker({required this.botId, required this.input, required this.picked, required this.onPick, required this.onRemove});
+  final String botId;
+  final TextEditingController input;
+  final List<String> picked;
+  final ValueChanged<String> onPick;
+  final ValueChanged<String> onRemove;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: input,
+      builder: (context, value, _) {
+        final m = RegExp(r'^/([a-z0-9_-]*)$').firstMatch(value.text);
+        final skills = m == null
+            ? const <SkillView>[]
+            : (ref.watch(skillsProvider).value ?? const <SkillView>[])
+                .where((s) => s.enabled && (s.botId == null || s.botId == botId) && s.name.startsWith(m.group(1)!))
+                .take(8)
+                .toList();
+        if (skills.isEmpty && picked.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpace.xs),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (skills.isNotEmpty)
+                Material(
+                  key: const Key('skillPicker'),
+                  color: scheme.surfaceContainerHigh,
+                  borderRadius: AppRadius.cardAll,
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, 0),
+                        child: Align(alignment: AlignmentDirectional.centerStart, child: Text(l10n.attachSkill, style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant))),
+                      ),
+                      for (final s in skills)
+                        ListTile(
+                          key: Key('pickSkill-${s.name}'),
+                          dense: true,
+                          leading: const Icon(LucideIcons.bookOpen, size: 18),
+                          title: Text('/${s.name}'),
+                          subtitle: Text(s.description, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          onTap: () => onPick(s.name),
+                        ),
+                    ],
+                  ),
+                ),
+              if (picked.isNotEmpty)
+                Wrap(
+                  spacing: AppSpace.xs,
+                  children: [
+                    for (final name in picked)
+                      InputChip(
+                        key: Key('pickedSkill-$name'),
+                        avatar: const Icon(LucideIcons.bookOpen, size: 16),
+                        label: Text('/$name'),
+                        onDeleted: () => onRemove(name),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

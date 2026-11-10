@@ -3392,4 +3392,93 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get searchFilesAsleep =>
       'Files on sleeping computers aren\'t searched. Start a computer to include its files.';
+
+  @override
+  String get installFor => 'Install for';
+
+  @override
+  String get wholeWorkspace => 'The whole workspace';
+
+  @override
+  String get skillCatalog => 'Skill catalog';
+
+  @override
+  String get searchSkills => 'Search skills';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String skillFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get install => 'Install';
+
+  @override
+  String skillInstalled(String name) {
+    return 'Installed $name.';
+  }
+
+  @override
+  String get noResults => 'No results.';
+
+  @override
+  String get importFromGitHub => 'Import from GitHub';
+
+  @override
+  String get importFromGitHubHelp =>
+      'Paste a link to a folder with a SKILL.md. You\'ll see every file before anything is installed. Private repositories use a GITHUB_TOKEN secret allowed for api.github.com.';
+
+  @override
+  String get preview => 'Preview';
+
+  @override
+  String get skillScriptsNote =>
+      'Scripts in a skill only ever run on a bot\'s computer, never on the server.';
+
+  @override
+  String get binaryFile => '(binary file)';
+
+  @override
+  String skillUpdate(String name) {
+    return 'Update $name';
+  }
+
+  @override
+  String get checkingForUpdates => 'Checking for updates…';
+
+  @override
+  String get skillUpToDate => 'Already up to date.';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String get filesAdded => 'Added';
+
+  @override
+  String get filesChanged => 'Changed';
+
+  @override
+  String get filesRemoved => 'Removed';
+
+  @override
+  String get fromCatalog => 'From the catalog';
+
+  @override
+  String get savedByBot => 'Saved by a bot';
+
+  @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String get attachSkill => 'Attach a skill';
 }

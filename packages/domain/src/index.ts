@@ -8,3 +8,5 @@ export * from "./schedule.ts";
 export * from "./slug.ts";
 export * from "./templates.ts";
 export * from "./totp.ts";
+export * from "./diff.ts";
+export * from "./skill-format.ts";

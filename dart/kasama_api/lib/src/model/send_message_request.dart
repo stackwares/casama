@@ -27,6 +27,8 @@ class SendMessageRequest {
      this.attachments,
 
      this.uiAction,
+
+     this.skills,
   });
 
   @JsonKey(
@@ -65,19 +67,34 @@ class SendMessageRequest {
 
 
 
+      /// Skills picked with / in the composer; the run loads them up front (D-104)
+  @JsonKey(
+    
+    name: r'skills',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? skills;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is SendMessageRequest &&
       other.text == text &&
       other.attachments == attachments &&
-      other.uiAction == uiAction;
+      other.uiAction == uiAction &&
+      other.skills == skills;
 
     @override
     int get hashCode =>
         text.hashCode +
         attachments.hashCode +
-        uiAction.hashCode;
+        uiAction.hashCode +
+        skills.hashCode;
 
   factory SendMessageRequest.fromJson(Map<String, dynamic> json) => _$SendMessageRequestFromJson(json);
 

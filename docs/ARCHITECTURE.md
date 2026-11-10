@@ -155,6 +155,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `public.search_workspace` (security invoker; `messages.tsv`, trigram indexes), `GET /v1/search` (`apps/server/src/api/routes/search.ts`, plus file search on awake computers), and `client/lib/features/search/search_view.dart` (Cmd/Ctrl+K, phone tab, jump to message).
 
+## Skills library (D-104)
+
+- `skills/` (bundled catalog), `apps/server/src/services/skills.ts` (catalog, `GitHubReader`), `apps/server/src/api/routes/skills.ts`, `skill_files`, agent `tools/skills.ts` (`skills.create`, `skills.update`, `approvalDetails`), `skills.load` file sync, and the app's `skill_library.dart` plus the composer's `/` picker.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

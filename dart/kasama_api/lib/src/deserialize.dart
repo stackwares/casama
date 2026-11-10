@@ -10,6 +10,7 @@ import 'package:kasama_api/src/model/admin_service_list.dart';
 import 'package:kasama_api/src/model/admin_user.dart';
 import 'package:kasama_api/src/model/admin_user_list.dart';
 import 'package:kasama_api/src/model/app_catalog.dart';
+import 'package:kasama_api/src/model/apply_skill_update_request.dart';
 import 'package:kasama_api/src/model/approval.dart';
 import 'package:kasama_api/src/model/approval_decision_request.dart';
 import 'package:kasama_api/src/model/approval_list.dart';
@@ -28,6 +29,7 @@ import 'package:kasama_api/src/model/bot_secret_request.dart';
 import 'package:kasama_api/src/model/bot_secret_request_list.dart';
 import 'package:kasama_api/src/model/catalog_app.dart';
 import 'package:kasama_api/src/model/catalog_app_api_key.dart';
+import 'package:kasama_api/src/model/catalog_skill.dart';
 import 'package:kasama_api/src/model/chat_gpt_sign_in_complete_request.dart';
 import 'package:kasama_api/src/model/chat_gpt_sign_in_start.dart';
 import 'package:kasama_api/src/model/chat_gpt_sign_in_start_request.dart';
@@ -83,8 +85,13 @@ import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
 import 'package:kasama_api/src/model/file_search_result.dart';
 import 'package:kasama_api/src/model/fulfill_secret_request_body.dart';
+import 'package:kasama_api/src/model/git_hub_skill_preview.dart';
+import 'package:kasama_api/src/model/git_hub_skill_preview_request.dart';
 import 'package:kasama_api/src/model/health.dart';
 import 'package:kasama_api/src/model/ice_server.dart';
+import 'package:kasama_api/src/model/install_catalog_skill_request.dart';
+import 'package:kasama_api/src/model/install_git_hub_skill_request.dart';
+import 'package:kasama_api/src/model/installed_skill.dart';
 import 'package:kasama_api/src/model/integration.dart';
 import 'package:kasama_api/src/model/integration_device.dart';
 import 'package:kasama_api/src/model/integration_list.dart';
@@ -168,8 +175,11 @@ import 'package:kasama_api/src/model/send_message_response.dart';
 import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
 import 'package:kasama_api/src/model/signup_challenge.dart';
+import 'package:kasama_api/src/model/skill_catalog.dart';
 import 'package:kasama_api/src/model/skill_loaded_event.dart';
 import 'package:kasama_api/src/model/skill_loaded_event_payload.dart';
+import 'package:kasama_api/src/model/skill_preview_file.dart';
+import 'package:kasama_api/src/model/skill_update_check.dart';
 import 'package:kasama_api/src/model/stream_session.dart';
 import 'package:kasama_api/src/model/stream_session_request.dart';
 import 'package:kasama_api/src/model/subrun_completed_event.dart';
@@ -276,6 +286,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminUserList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AppCatalog':
           return AppCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ApplySkillUpdateRequest':
+          return ApplySkillUpdateRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Approval':
           return Approval.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ApprovalDecisionRequest':
@@ -318,6 +330,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CatalogApp.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogAppApiKey':
           return CatalogAppApiKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CatalogSkill':
+          return CatalogSkill.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ChatGptSignInCompleteRequest':
           return ChatGptSignInCompleteRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ChatGptSignInStart':
@@ -434,10 +448,20 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return FileSearchResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'FulfillSecretRequestBody':
           return FulfillSecretRequestBody.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GitHubSkillPreview':
+          return GitHubSkillPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GitHubSkillPreviewRequest':
+          return GitHubSkillPreviewRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
           return Health.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'IceServer':
           return IceServer.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InstallCatalogSkillRequest':
+          return InstallCatalogSkillRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InstallGitHubSkillRequest':
+          return InstallGitHubSkillRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InstalledSkill':
+          return InstalledSkill.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Integration':
           return Integration.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'IntegrationDevice':
@@ -634,10 +658,16 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetOrgLimitsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SignupChallenge':
           return SignupChallenge.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SkillCatalog':
+          return SkillCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillLoadedEvent':
           return SkillLoadedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillLoadedEventPayload':
           return SkillLoadedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SkillPreviewFile':
+          return SkillPreviewFile.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SkillUpdateCheck':
+          return SkillUpdateCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StreamMode':
           
           

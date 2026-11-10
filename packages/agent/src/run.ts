@@ -177,6 +177,16 @@ export function partsFiles(content: unknown): FilePart[] {
   );
 }
 
+/** Skills attached to a message with the / picker (D-104). */
+export function partsSkills(content: unknown): string[] {
+  if (!Array.isArray(content)) return [];
+  return content
+    .filter((p) => !!p && typeof p === "object" && (p as { type?: string }).type === "skill")
+    .map((p) => String((p as { name?: unknown }).name ?? ""))
+    .filter((n) => /^[a-z0-9][a-z0-9_-]{0,62}$/.test(n))
+    .slice(0, 5);
+}
+
 const kb = (n: number) =>
   n >= 1024 * 1024
     ? `${(n / 1024 / 1024).toFixed(1)} MB`
@@ -785,6 +795,22 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
         text: partsText(currentRow.content),
         files: partsFiles(currentRow.content),
       };
+    // Skills the person attached with the / picker load up front (D-104).
+    const attached = partsSkills(currentRow?.content);
+    if (current && attached.length) {
+      const loaded = await db.execute<{ name: string; body_md: string }>(sql`
+        select distinct on (name) name, body_md from public.skills
+        where org_id = ${row.org_id}::uuid and enabled and (bot_id is null or bot_id = ${row.bot_id}::uuid)
+          and name in (select jsonb_array_elements_text(${JSON.stringify(attached)}::jsonb))
+        order by name, bot_id nulls last`);
+      if (loaded.length)
+        current.text += `\n\n${loaded
+          .map(
+            (k) =>
+              `[The user attached the skill "${k.name}". Follow it for this request:]\n${k.body_md}`,
+          )
+          .join("\n\n")}`;
+    }
     history = (idx >= 0 ? msgs.slice(0, idx) : msgs)
       .map((m) => ({ role: m.role as "user" | "assistant", content: partsText(m.content) }))
       .filter((m) => m.content.length > 0);
@@ -1485,12 +1511,19 @@ async function approvalGate(
   });
   if (!needed) return { approvalId: null };
 
+  // Some tools show more than their arguments, such as a skill's diff (D-104).
+  const details = def.approvalDetails
+    ? await def
+        .approvalDetails(args as never, { orgId: info.orgId, botId: info.botId })
+        .catch(() => ({}))
+    : {};
+  const shown = { ...(argsRedacted as Record<string, unknown>), ...redactor.value(details) };
   const summary = `${info.botName} wants to run ${describeCall(call.name, argsRedacted as Record<string, unknown>)}`;
   const expires = new Date(Date.now() + APPROVAL_TTL_MS).toISOString();
   const inserted = await deps.db.execute<{ id: string; expires_at: Date }>(sql`
     insert into public.approvals (org_id, bot_id, run_id, call_id, tool_name, args_redacted, summary, risk, expires_at)
     values (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, ${call.callId}, ${call.name},
-            ${JSON.stringify(argsRedacted)}::jsonb, ${summary.slice(0, 500)}, ${risk}, ${expires}::timestamptz)
+            ${JSON.stringify(shown)}::jsonb, ${summary.slice(0, 500)}, ${risk}, ${expires}::timestamptz)
     on conflict (run_id, call_id) do update set summary = excluded.summary
     returning id, expires_at`);
   const approval = inserted[0];
@@ -1504,7 +1537,7 @@ async function approvalGate(
   await bus.append(info.runId, "approval.requested", {
     approval_id: approval.id,
     tool: call.name,
-    args_redacted: argsRedacted,
+    args_redacted: shown,
     risk,
     expires_at: new Date(approval.expires_at).toISOString(),
   });

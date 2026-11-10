@@ -1,4 +1,5 @@
 import type { Database } from "@kasama/db";
+import { collectExec } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import type { MemoryService } from "../memory.ts";
@@ -133,7 +134,33 @@ export function builtinTools(deps: {
         order by bot_id nulls last limit 1`);
       if (!skill) throw new ToolError("skill_not_found", `No enabled skill named "${args.name}".`);
       await ctx.emit("skill.loaded", { skill_id: skill.id, name: skill.name });
-      return { content: skill.body_md, preview: `loaded ${skill.name}` };
+      // A skill's files go to ~/skills/<name>/ on the computer (D-104); scripts run only there.
+      const files = await deps.db.execute<{
+        path: string;
+        content: string;
+        executable: boolean;
+      }>(sql`
+        select path, encode(content, 'base64') as content, executable from public.skill_files where skill_id = ${skill.id}::uuid`);
+      let note = "";
+      if (files.length && ctx.computer) {
+        try {
+          const handle = await ctx.computer();
+          for (const f of files) {
+            await handle.writeFile(
+              `skills/${skill.name}/${f.path}`,
+              Buffer.from(f.content, "base64"),
+            );
+            if (f.executable)
+              await collectExec(handle.exec(`chmod +x ~/skills/${skill.name}/${f.path}`));
+          }
+          note = `\n\n[This skill's files are in ~/skills/${skill.name}/: ${files.map((f) => f.path).join(", ")}]`;
+        } catch {
+          note = `\n\n[This skill has files (${files.map((f) => f.path).join(", ")}) but they could not be copied to your computer.]`;
+        }
+      } else if (files.length) {
+        note = `\n\n[This skill has files (${files.map((f) => f.path).join(", ")}) that need a computer.]`;
+      }
+      return { content: skill.body_md + note, preview: `loaded ${skill.name}` };
     },
   });
 

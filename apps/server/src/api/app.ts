@@ -26,6 +26,7 @@ import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
 import { registerPrivacyRoutes } from "./routes/privacy.ts";
 import { registerSearchRoutes } from "./routes/search.ts";
+import { registerSkillRoutes } from "./routes/skills.ts";
 import { registerSystemRoutes } from "./routes/system.ts";
 import { registerVoiceRoutes } from "./routes/voice.ts";
 import { registerWorkspaceRoutes } from "./routes/workspaces.ts";
@@ -201,6 +202,7 @@ export function createApp(deps: AppDeps) {
   registerAppearanceRoutes(app, deps, deps.wallpapers);
   registerAppRoutes(app, deps, deps.apps);
   registerSearchRoutes(app, deps);
+  registerSkillRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {
     db: deps.db,

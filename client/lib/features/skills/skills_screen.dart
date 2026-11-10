@@ -13,6 +13,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
+import 'skill_library.dart';
 
 /// Skills: Markdown instruction packs that bots load on demand.
 class SkillsScreen extends ConsumerWidget {
@@ -33,7 +34,11 @@ class SkillsScreen extends ConsumerWidget {
     final skills = ref.watch(skillsProvider);
     return SubPage(
       title: l10n.skills,
-      actions: [HeaderIconButton(icon: LucideIcons.plus, tooltip: l10n.newSkill, onPressed: () => _edit(context, ref))],
+      actions: [
+        HeaderIconButton(key: const Key('openCatalog'), icon: LucideIcons.library, tooltip: l10n.skillCatalog, onPressed: () => showSkillCatalog(context)),
+        HeaderIconButton(key: const Key('openGitHubImport'), icon: LucideIcons.gitBranch, tooltip: l10n.importFromGitHub, onPressed: () => showGitHubSkillImport(context)),
+        HeaderIconButton(icon: LucideIcons.plus, tooltip: l10n.newSkill, onPressed: () => _edit(context, ref)),
+      ],
       body: AsyncView(
         value: skills,
         onRetry: () => ref.invalidate(skillsProvider),
@@ -42,7 +47,19 @@ class SkillsScreen extends ConsumerWidget {
                 icon: LucideIcons.bookOpen,
                 title: l10n.noSkills,
                 message: l10n.skillsHelp,
-                action: GlowButton.icon(onPressed: () => _edit(context, ref), icon: const Icon(LucideIcons.plus, size: 18), label: Text(l10n.newSkill)),
+                action: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: AppSpace.sm,
+                  children: [
+                    GlowButton.icon(
+                      key: const Key('browseCatalog'),
+                      onPressed: () => showSkillCatalog(context),
+                      icon: const Icon(LucideIcons.library, size: 18),
+                      label: Text(l10n.skillCatalog),
+                    ),
+                    TextButton.icon(onPressed: () => _edit(context, ref), icon: const Icon(LucideIcons.plus, size: 18), label: Text(l10n.newSkill)),
+                  ],
+                ),
               )
             : PageColumn(
                 children: [
@@ -56,9 +73,27 @@ class SkillsScreen extends ConsumerWidget {
                           icon: LucideIcons.bookOpen,
                           iconColor: s.enabled ? null : context.colorScheme.onSurfaceVariant,
                           title: s.name,
-                          subtitle: s.description,
+                          subtitle: [
+                            s.description,
+                            switch (s.source) {
+                              'github' => 'GitHub ${s.sourceRef['repo'] ?? ''}',
+                              'catalog' => l10n.fromCatalog,
+                              'bot' => l10n.savedByBot,
+                              _ => null,
+                            },
+                          ].whereType<String>().join(' · '),
                           onTap: () => _edit(context, ref, s),
-                          trailing: Switch(
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (s.source == 'github')
+                                IconButton(
+                                  key: Key('checkUpdate-${s.id}'),
+                                  tooltip: l10n.checkForUpdates,
+                                  icon: const Icon(LucideIcons.refreshCw, size: 18),
+                                  onPressed: () => showSkillUpdate(context, s),
+                                ),
+                              Switch(
                             value: s.enabled,
                             onChanged: (v) async {
                               final org = ref.read(currentOrgProvider)!;
@@ -70,6 +105,8 @@ class SkillsScreen extends ConsumerWidget {
                               );
                               ref.invalidate(skillsProvider);
                             },
+                          ),
+                            ],
                           ),
                         ),
                     ],

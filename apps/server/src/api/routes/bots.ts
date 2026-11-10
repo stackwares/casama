@@ -264,7 +264,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.sendMessage, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
-    const { text, attachments, ui_action } = c.req.valid("json");
+    const { text, attachments, ui_action, skills: picked } = c.req.valid("json");
     return withSpan("chat.send", { conversation_id: id }, async (span) => {
       const created = await withUserSession(db, claims, async (tx) => {
         const [conv] = await tx.select().from(conversations).where(eq(conversations.id, id));
@@ -296,6 +296,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
                     { type: "text", text },
                     ...(attachments ?? []).map((f) => ({ type: "file", ...f })),
                     ...(ui_action ? [{ type: "ui_action", ...ui_action }] : []),
+                    ...(picked ?? []).map((name) => ({ type: "skill", name })),
                   ])}::jsonb, ${run.id}::uuid)
           returning id`);
         await tx
