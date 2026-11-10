@@ -1125,7 +1125,8 @@ class FakeBackend implements Backend {
   Future<List<Routine>> routines(String botId) async => routineList;
   @override
   Future<CreatedRoutine> createRoutine(String botId,
-      {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt}) async {
+      {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt, CalendarTriggerConfig? calendar}) async {
+    createdCalendar = calendar;
     final r = CreatedRoutine(
       id: 'r${routineList.length + 1}',
       botId: botId,
@@ -1164,6 +1165,7 @@ class FakeBackend implements Backend {
 
   @override
   Future<List<Integration>> integrations(String orgId) async => integrationList;
+  CalendarTriggerConfig? createdCalendar;
   @override
   Future<Integration> createIntegration(String orgId,
       {required String kind, required String name, required Map<String, Object?> config, String? secret}) async {

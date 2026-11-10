@@ -764,7 +764,7 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<CreatedRoutine> createRoutine(String botId,
-          {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt}) async =>
+          {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt, CalendarTriggerConfig? calendar}) async =>
       (await api.routines.createRoutine(
         createRoutineRequest: CreateRoutineRequest(
           botId: botId,
@@ -774,6 +774,7 @@ class SupabaseBackend implements Backend {
           scheduleCron: trigger == 'schedule' ? cron : null,
           runAt: trigger == 'once' ? runAt?.toUtc() : null,
           timezone: timezone,
+          calendar: trigger == 'calendar_event' ? calendar : null,
         ),
       ))
           .data!;

@@ -21,6 +21,8 @@ abstract class _$CreatedRoutineCWProxy {
 
   CreatedRoutine trigger(RoutineTrigger trigger);
 
+  CreatedRoutine calendar(CalendarTriggerConfig? calendar);
+
   CreatedRoutine notify(bool notify);
 
   CreatedRoutine enabled(bool enabled);
@@ -53,6 +55,7 @@ abstract class _$CreatedRoutineCWProxy {
     String? scheduleCron,
     String timezone,
     RoutineTrigger trigger,
+    CalendarTriggerConfig? calendar,
     bool notify,
     bool enabled,
     DateTime? nextRunAt,
@@ -93,6 +96,10 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
 
   @override
   CreatedRoutine trigger(RoutineTrigger trigger) => call(trigger: trigger);
+
+  @override
+  CreatedRoutine calendar(CalendarTriggerConfig? calendar) =>
+      call(calendar: calendar);
 
   @override
   CreatedRoutine notify(bool notify) => call(notify: notify);
@@ -137,6 +144,7 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
     Object? scheduleCron = const $CopyWithPlaceholder(),
     Object? timezone = const $CopyWithPlaceholder(),
     Object? trigger = const $CopyWithPlaceholder(),
+    Object? calendar = const $CopyWithPlaceholder(),
     Object? notify = const $CopyWithPlaceholder(),
     Object? enabled = const $CopyWithPlaceholder(),
     Object? nextRunAt = const $CopyWithPlaceholder(),
@@ -177,6 +185,10 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
           ? _value.trigger
           // ignore: cast_nullable_to_non_nullable
           : trigger as RoutineTrigger,
+      calendar: calendar == const $CopyWithPlaceholder()
+          ? _value.calendar
+          // ignore: cast_nullable_to_non_nullable
+          : calendar as CalendarTriggerConfig?,
       notify: notify == const $CopyWithPlaceholder() || notify == null
           ? _value.notify
           // ignore: cast_nullable_to_non_nullable
@@ -259,6 +271,12 @@ CreatedRoutine _$CreatedRoutineFromJson(
         'trigger',
         (v) => $enumDecode(_$RoutineTriggerEnumMap, v),
       ),
+      calendar: $checkedConvert(
+        'calendar',
+        (v) => v == null
+            ? null
+            : CalendarTriggerConfig.fromJson(v as Map<String, dynamic>),
+      ),
       notify: $checkedConvert('notify', (v) => v as bool),
       enabled: $checkedConvert('enabled', (v) => v as bool),
       nextRunAt: $checkedConvert(
@@ -301,6 +319,7 @@ Map<String, dynamic> _$CreatedRoutineToJson(CreatedRoutine instance) =>
       'schedule_cron': instance.scheduleCron,
       'timezone': instance.timezone,
       'trigger': _$RoutineTriggerEnumMap[instance.trigger]!,
+      'calendar': ?instance.calendar?.toJson(),
       'notify': instance.notify,
       'enabled': instance.enabled,
       'next_run_at': instance.nextRunAt?.toIso8601String(),
@@ -316,4 +335,5 @@ const _$RoutineTriggerEnumMap = {
   RoutineTrigger.once: 'once',
   RoutineTrigger.github: 'github',
   RoutineTrigger.webhook: 'webhook',
+  RoutineTrigger.calendarEvent: 'calendar_event',
 };

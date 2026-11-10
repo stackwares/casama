@@ -8067,6 +8067,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sharing saved'**
   String get sharingSaved;
+
+  /// No description provided for @triggerCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Meetings'**
+  String get triggerCalendar;
+
+  /// No description provided for @routineCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =0{At the start of matching meetings} other{Around matching meetings ({minutes} min)}}'**
+  String routineCalendar(int minutes);
+
+  /// No description provided for @calendarTriggerNeedsCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Google Calendar or Outlook first.'**
+  String get calendarTriggerNeedsCalendar;
+
+  /// No description provided for @calendarTriggerCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendarTriggerCalendar;
+
+  /// No description provided for @calendarOffset.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =0{At start} other{{minutes} min}}'**
+  String calendarOffset(int minutes);
+
+  /// No description provided for @calendarOutsideGuests.
+  ///
+  /// In en, this message translates to:
+  /// **'Only meetings with people outside my company'**
+  String get calendarOutsideGuests;
+
+  /// No description provided for @calendarVideoLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Only meetings with a video link'**
+  String get calendarVideoLink;
+
+  /// No description provided for @calendarTitleMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Only titles containing (optional)'**
+  String get calendarTitleMatch;
 }
 
 class _AppLocalizationsDelegate

@@ -2232,5 +2232,15 @@
   "accessChat": "Can chat",
   "accessEdit": "Can edit",
   "accessAdmin": "Can manage",
-  "sharingSaved": "Sharing saved"
+  "sharingSaved": "Sharing saved",
+  "triggerCalendar": "Meetings",
+  "routineCalendar": "{minutes, plural, =0{At the start of matching meetings} other{Around matching meetings ({minutes} min)}}",
+  "@routineCalendar": {"placeholders": {"minutes": {"type": "int"}}},
+  "calendarTriggerNeedsCalendar": "Connect Google Calendar or Outlook first.",
+  "calendarTriggerCalendar": "Calendar",
+  "calendarOffset": "{minutes, plural, =0{At start} other{{minutes} min}}",
+  "@calendarOffset": {"placeholders": {"minutes": {"type": "int"}}},
+  "calendarOutsideGuests": "Only meetings with people outside my company",
+  "calendarVideoLink": "Only meetings with a video link",
+  "calendarTitleMatch": "Only titles containing (optional)"
 }

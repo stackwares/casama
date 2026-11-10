@@ -3,6 +3,7 @@ import {
   type ChatGptConfig,
   type ComputerService,
   CredentialResolver,
+  checkCalendarTriggers,
   checkWatchers,
   gitSyncTick,
   knowledgeTick,
@@ -21,7 +22,7 @@ import {
 import type { Database } from "@kasama/db";
 import { DEFAULT_MODELS } from "@kasama/domain";
 import { sql } from "drizzle-orm";
-import { claimDueRoutines, handleRoutineWebhook } from "./routines.ts";
+import { claimDueRoutines, fireDueCalendarRuns, handleRoutineWebhook } from "./routines.ts";
 import { type VoiceRuntime, voiceSession, voiceSpeak, voiceTranscribe } from "./voice.ts";
 
 export const QUEUES = {
@@ -119,6 +120,12 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       },
     );
     const runIds = await DBOS.runStep(() => claimDueRoutines(rt().db), { name: "claim-due" });
+    // Calendar triggers (D-132): read calendars every 5 minutes; start the runs whose time has come.
+    await DBOS.runStep(
+      () => checkCalendarTriggers({ db: rt().db, fetch: rt().agent.fetch ?? fetch }).catch(() => 0),
+      { name: "calendar-check" },
+    );
+    runIds.push(...(await DBOS.runStep(() => fireDueCalendarRuns(rt().db).catch(() => [] as string[]), { name: "calendar-fire" })));
     // Projects (D-113): start the next session of each active project that has ready work.
     const sessions = await DBOS.runStep(
       (): Promise<string[]> =>

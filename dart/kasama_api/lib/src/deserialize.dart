@@ -49,6 +49,7 @@ import 'package:kasama_api/src/model/bot_template_file_memories_inner.dart';
 import 'package:kasama_api/src/model/bot_template_file_routines_inner.dart';
 import 'package:kasama_api/src/model/bot_template_file_skills_inner.dart';
 import 'package:kasama_api/src/model/bot_template_file_skills_inner_files_inner.dart';
+import 'package:kasama_api/src/model/calendar_trigger_config.dart';
 import 'package:kasama_api/src/model/catalog_app.dart';
 import 'package:kasama_api/src/model/catalog_app_api_key.dart';
 import 'package:kasama_api/src/model/catalog_skill.dart';
@@ -506,6 +507,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BotTemplateFileSkillsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotTemplateFileSkillsInnerFilesInner':
           return BotTemplateFileSkillsInnerFilesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CalendarTriggerConfig':
+          return CalendarTriggerConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogApp':
           return CatalogApp.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogAppApiKey':

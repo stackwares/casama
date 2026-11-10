@@ -2790,6 +2790,32 @@ export const runEvents = pgTable("run_events", {
 	check("run_events_seq_check", sql`seq > 0`),
 ]);
 
+export const calendarFires = pgTable("calendar_fires", {
+	routineId: uuid("routine_id").notNull(),
+	eventId: text("event_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	fireAt: timestamp("fire_at", { withTimezone: true, mode: 'string' }).notNull(),
+	event: jsonb().notNull(),
+	firedAt: timestamp("fired_at", { withTimezone: true, mode: 'string' }),
+	runId: uuid("run_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("calendar_fires_due_idx").using("btree", table.fireAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(fired_at IS NULL)`),
+	foreignKey({
+			columns: [table.routineId],
+			foreignColumns: [routines.id],
+			name: "calendar_fires_routine_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "calendar_fires_org_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.routineId, table.eventId], name: "calendar_fires_pkey"}),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("calendar_fires_event_id_check", sql`(char_length(event_id) >= 1) AND (char_length(event_id) <= 500)`),
+]);
+
 export const teachSteps = pgTable("teach_steps", {
 	sessionId: uuid("session_id").notNull(),
 	seq: integer().notNull(),

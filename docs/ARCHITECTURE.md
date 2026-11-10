@@ -259,6 +259,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `bot_access` with `bot_grant`, the updated `can_access_bot`/`can_manage_bot`, `can_admin_bot` and bots select policy; acting-user limits for personal computers and local MCP servers in `run.ts`; `apps/server/src/api/routes/bot-sharing.ts` (access, members), and the bot's Sharing screen.
 
+## Calendar triggers (D-132)
+
+- `packages/agent/src/calendar-triggers.ts` (`checkCalendarTriggers`, event parsing and filters), `fireDueCalendarRuns` in `worker/routines.ts`, both in the minute tick; `calendar_fires`, `worker_user_email_domain`, the `calendar_event` routine trigger, and the routine sheet's Meetings option.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

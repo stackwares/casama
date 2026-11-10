@@ -325,7 +325,7 @@ abstract class Backend {
   // Routines
   Future<List<Routine>> routines(String botId);
   Future<CreatedRoutine> createRoutine(String botId,
-      {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt});
+      {required String name, required String instructions, required String trigger, String? cron, String? timezone, DateTime? runAt, CalendarTriggerConfig? calendar});
   Future<void> setRoutineEnabled(String routineId, bool enabled);
   Future<void> deleteRoutine(String routineId);
   Future<String> runRoutine(String routineId);

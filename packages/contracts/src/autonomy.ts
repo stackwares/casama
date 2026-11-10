@@ -154,10 +154,21 @@ export const AttachIntegrationRequest = z
   .openapi("AttachIntegrationRequest");
 
 export const RoutineTrigger = z
-  .enum(["schedule", "once", "github", "webhook"])
+  .enum(["schedule", "once", "github", "webhook", "calendar_event"])
   .openapi("RoutineTrigger", {
     description: "schedule repeats on a cron; once runs a single time at run_at",
   });
+
+export const CalendarTriggerConfig = z
+  .object({
+    integration_id: Uuid.openapi({ description: "A connected Google or Outlook calendar" }),
+    offset_minutes: z.number().int().min(-1440).max(1440).openapi({ description: "Relative to the event's start; -15 is 15 minutes before" }),
+    calendar: z.string().max(200).optional(),
+    outside_guests: z.boolean().optional(),
+    title_match: z.string().max(200).optional(),
+    has_video_link: z.boolean().optional(),
+  })
+  .openapi("CalendarTriggerConfig");
 
 export const Routine = z
   .object({
@@ -168,6 +179,7 @@ export const Routine = z
     schedule_cron: z.string().nullable(),
     timezone: z.string(),
     trigger: RoutineTrigger,
+    calendar: CalendarTriggerConfig.nullable().optional(),
     notify: z.boolean(),
     enabled: z.boolean(),
     next_run_at: ts.nullable(),
@@ -203,6 +215,7 @@ export const CreateRoutineRequest = z
       .max(20)
       .optional()
       .openapi({ description: "GitHub event names to accept" }),
+    calendar: CalendarTriggerConfig.optional().openapi({ description: "Required for calendar_event triggers (D-132)" }),
   })
   .openapi("CreateRoutineRequest");
 

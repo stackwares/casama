@@ -337,6 +337,7 @@ Class | Method | HTTP request | Description
  - [BotTemplateFileRoutinesInner](doc/BotTemplateFileRoutinesInner.md)
  - [BotTemplateFileSkillsInner](doc/BotTemplateFileSkillsInner.md)
  - [BotTemplateFileSkillsInnerFilesInner](doc/BotTemplateFileSkillsInnerFilesInner.md)
+ - [CalendarTriggerConfig](doc/CalendarTriggerConfig.md)
  - [CatalogApp](doc/CatalogApp.md)
  - [CatalogAppApiKey](doc/CatalogAppApiKey.md)
  - [CatalogSkill](doc/CatalogSkill.md)

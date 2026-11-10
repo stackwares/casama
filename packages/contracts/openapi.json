@@ -4436,9 +4436,47 @@
           "schedule",
           "once",
           "github",
-          "webhook"
+          "webhook",
+          "calendar_event"
         ],
         "description": "schedule repeats on a cron; once runs a single time at run_at"
+      },
+      "CalendarTriggerConfig": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "integration_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "A connected Google or Outlook calendar"
+          },
+          "offset_minutes": {
+            "type": "integer",
+            "minimum": -1440,
+            "maximum": 1440,
+            "description": "Relative to the event's start; -15 is 15 minutes before"
+          },
+          "calendar": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "outside_guests": {
+            "type": "boolean"
+          },
+          "title_match": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "has_video_link": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "integration_id",
+          "offset_minutes"
+        ]
       },
       "Routine": {
         "type": "object",
@@ -4468,6 +4506,9 @@
           },
           "trigger": {
             "$ref": "#/components/schemas/RoutineTrigger"
+          },
+          "calendar": {
+            "$ref": "#/components/schemas/CalendarTriggerConfig"
           },
           "notify": {
             "type": "boolean"
@@ -4563,6 +4604,16 @@
             },
             "maxItems": 20,
             "description": "GitHub event names to accept"
+          },
+          "calendar": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CalendarTriggerConfig"
+              },
+              {
+                "description": "Required for calendar_event triggers (D-132)"
+              }
+            ]
           }
         },
         "required": [

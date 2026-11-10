@@ -4721,4 +4721,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharingSaved => 'Sharing saved';
+
+  @override
+  String get triggerCalendar => 'Meetings';
+
+  @override
+  String routineCalendar(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'Around matching meetings ($minutes min)',
+      zero: 'At the start of matching meetings',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get calendarTriggerNeedsCalendar =>
+      'Connect Google Calendar or Outlook first.';
+
+  @override
+  String get calendarTriggerCalendar => 'Calendar';
+
+  @override
+  String calendarOffset(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes min',
+      zero: 'At start',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get calendarOutsideGuests =>
+      'Only meetings with people outside my company';
+
+  @override
+  String get calendarVideoLink => 'Only meetings with a video link';
+
+  @override
+  String get calendarTitleMatch => 'Only titles containing (optional)';
 }

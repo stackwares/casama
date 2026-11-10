@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:kasama_api/src/model/calendar_trigger_config.dart';
 import 'package:kasama_api/src/model/routine_trigger.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -38,6 +39,8 @@ class CreateRoutineRequest {
      this.notify,
 
      this.events,
+
+     this.calendar,
   });
 
   @JsonKey(
@@ -152,6 +155,19 @@ class CreateRoutineRequest {
 
 
 
+      /// Required for calendar_event triggers (D-132)
+  @JsonKey(
+    
+    name: r'calendar',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final CalendarTriggerConfig? calendar;
+
+
+
 
 
     @override
@@ -164,7 +180,8 @@ class CreateRoutineRequest {
       other.runAt == runAt &&
       other.timezone == timezone &&
       other.notify == notify &&
-      other.events == events;
+      other.events == events &&
+      other.calendar == calendar;
 
     @override
     int get hashCode =>
@@ -176,7 +193,8 @@ class CreateRoutineRequest {
         runAt.hashCode +
         timezone.hashCode +
         notify.hashCode +
-        events.hashCode;
+        events.hashCode +
+        (calendar == null ? 0 : calendar.hashCode);
 
   factory CreateRoutineRequest.fromJson(Map<String, dynamic> json) => _$CreateRoutineRequestFromJson(json);
 

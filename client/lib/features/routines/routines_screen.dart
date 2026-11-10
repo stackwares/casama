@@ -140,6 +140,7 @@ class _RoutineCard extends ConsumerWidget {
       RoutineTrigger.once => (LucideIcons.alarmClock, l10n.routineOnce),
       RoutineTrigger.github => (LucideIcons.codeXml, l10n.routineGithub),
       RoutineTrigger.webhook => (LucideIcons.webhook, l10n.routineWebhook),
+      RoutineTrigger.calendarEvent => (LucideIcons.calendarClock, l10n.routineCalendar(r.calendar?.offsetMinutes ?? 0)),
     };
     final next = r.enabled && r.nextRunAt != null ? l10n.nextRun(_formatWhen(context, r.nextRunAt!)) : null;
     final last = r.lastRunAt != null ? l10n.lastRun(_formatWhen(context, r.lastRunAt!)) : null;
@@ -250,12 +251,18 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
   final _cron = TextEditingController(text: schedulePresets.first.$1);
   final _timezone = TextEditingController(text: DateTime.now().timeZoneName.contains('/') ? DateTime.now().timeZoneName : 'America/Chicago');
   var _trigger = 'once';
+  // Calendar triggers (D-132)
+  String? _calendarId;
+  var _offset = -15;
+  var _outsideGuests = false;
+  var _videoLink = false;
+  final _titleMatch = TextEditingController();
   DateTime _runAt = DateTime.now().add(const Duration(hours: 1));
   var _busy = false;
 
   @override
   void dispose() {
-    for (final c in [_name, _instructions, _cron, _timezone]) {
+    for (final c in [_name, _instructions, _cron, _timezone, _titleMatch]) {
       c.dispose();
     }
     super.dispose();
@@ -287,7 +294,14 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final valid = _name.text.trim().isNotEmpty && _instructions.text.trim().isNotEmpty && (_trigger != 'once' || _runAt.isAfter(DateTime.now()));
+    final calendars = (ref.watch(integrationsProvider).value ?? const <Integration>[])
+        .where((i) => i.appId == 'google_calendar' || i.name.contains('calendar') || i.name.contains('outlook'))
+        .toList();
+    _calendarId ??= calendars.firstOrNull?.id;
+    final valid = _name.text.trim().isNotEmpty &&
+        _instructions.text.trim().isNotEmpty &&
+        (_trigger != 'once' || _runAt.isAfter(DateTime.now())) &&
+        (_trigger != 'calendar_event' || _calendarId != null);
     final now = DateTime.now();
     final tomorrow9 = DateTime(now.year, now.month, now.day + 1, 9);
     final quick = <(String, DateTime)>[
@@ -320,8 +334,8 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
           ),
           const SizedBox(height: AppSpace.md),
           AppSegmentedControl<String>(
-            values: const ['once', 'schedule', 'github', 'webhook'],
-            labels: {'once': l10n.triggerOnce, 'schedule': l10n.triggerSchedule, 'github': l10n.triggerGithub, 'webhook': l10n.triggerWebhook},
+            values: const ['once', 'schedule', 'calendar_event', 'github', 'webhook'],
+            labels: {'once': l10n.triggerOnce, 'schedule': l10n.triggerSchedule, 'calendar_event': l10n.triggerCalendar, 'github': l10n.triggerGithub, 'webhook': l10n.triggerWebhook},
             groupValue: _trigger,
             onValueChanged: (v) => setState(() => _trigger = v),
           ),
@@ -342,6 +356,39 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
               icon: const Icon(LucideIcons.calendar, size: 18),
               label: Text(_formatWhen(context, _runAt)),
             ),
+          ],
+          if (_trigger == 'calendar_event') ...[
+            const SizedBox(height: AppSpace.sm),
+            if (calendars.isEmpty)
+              Text(l10n.calendarTriggerNeedsCalendar, key: const Key('noCalendar'))
+            else ...[
+              DropdownButtonFormField<String>(
+                key: const Key('routineCalendar'),
+                initialValue: _calendarId,
+                decoration: InputDecoration(labelText: l10n.calendarTriggerCalendar),
+                items: [for (final c in calendars) DropdownMenuItem(value: c.id, child: Text(c.name))],
+                onChanged: (v) => setState(() => _calendarId = v),
+              ),
+              const SizedBox(height: AppSpace.sm),
+              Wrap(spacing: 8, runSpacing: 4, children: [
+                for (final m in const [-30, -15, -5, 0, 15])
+                  ChoiceChip(key: Key('offset$m'), label: Text(l10n.calendarOffset(m)), selected: _offset == m, onSelected: (_) => setState(() => _offset = m)),
+              ]),
+              CheckboxListTile(
+                key: const Key('routineOutsideGuests'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.calendarOutsideGuests),
+                value: _outsideGuests,
+                onChanged: (v) => setState(() => _outsideGuests = v ?? false),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.calendarVideoLink),
+                value: _videoLink,
+                onChanged: (v) => setState(() => _videoLink = v ?? false),
+              ),
+              TextField(controller: _titleMatch, decoration: InputDecoration(labelText: l10n.calendarTitleMatch)),
+            ],
           ],
           if (_trigger == 'schedule') ...[
             const SizedBox(height: AppSpace.sm),
@@ -387,6 +434,15 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                             cron: _cron.text.trim(),
                             runAt: _runAt,
                             timezone: _timezone.text.trim().isEmpty ? null : _timezone.text.trim(),
+                            calendar: _trigger == 'calendar_event' && _calendarId != null
+                                ? CalendarTriggerConfig(
+                                    integrationId: _calendarId!,
+                                    offsetMinutes: _offset,
+                                    outsideGuests: _outsideGuests ? true : null,
+                                    hasVideoLink: _videoLink ? true : null,
+                                    titleMatch: _titleMatch.text.trim().isEmpty ? null : _titleMatch.text.trim(),
+                                  )
+                                : null,
                           ),
                     );
                     if (!context.mounted) return;

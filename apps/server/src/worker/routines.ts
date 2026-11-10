@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { checkinCapReached, scanContext, wrapUntrusted } from "@kasama/agent";
+import { checkinCapReached, describeEvent, scanContext, wrapUntrusted } from "@kasama/agent";
 import type { Database } from "@kasama/db";
 import { nextRunAt } from "@kasama/domain";
 import { sql } from "drizzle-orm";
@@ -24,7 +24,7 @@ type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 export async function createRoutineRun(
   tx: Tx | Database,
   r: RoutineRow,
-  trigger: "routine" | "webhook",
+  trigger: "routine" | "webhook" | "calendar",
   eventText?: string,
 ) {
   // Check-in scans (D-114) keep no conversation: a quiet scan writes nothing. Their instructions
@@ -56,7 +56,7 @@ export async function createRoutineRun(
     returning id`);
   const runId = run?.id as string;
   const text = eventText
-    ? `${r.instructions_md}\n\nThe event that triggered this run:\n${wrapUntrusted("webhook", eventText)}`
+    ? `${r.instructions_md}\n\nThe event that triggered this run:\n${wrapUntrusted(trigger === "calendar" ? "calendar" : "webhook", eventText)}`
     : r.instructions_md;
   await tx.execute(sql`
     insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
@@ -101,6 +101,26 @@ export async function claimDueRoutines(
       await tx.execute(
         sql`update public.routines set next_run_at = ${next.toISOString()}::timestamptz where id = ${r.id}::uuid`,
       );
+    }
+    return runIds;
+  });
+}
+
+/** Calendar triggers (D-132): routine runs for events whose time has come, with the event in context. */
+export async function fireDueCalendarRuns(db: Database, now = new Date()): Promise<string[]> {
+  return db.transaction(async (tx) => {
+    const due = await tx.execute<{ routine_id: string; event_id: string; event: import("@kasama/agent").CalEvent }>(sql`
+      select f.routine_id, f.event_id, f.event from public.calendar_fires f join public.routines r on r.id = f.routine_id
+      where f.fired_at is null and r.enabled and f.fire_at <= ${now.toISOString()}::timestamptz
+      order by f.fire_at limit 50 for update of f skip locked`);
+    const runIds: string[] = [];
+    for (const f of due) {
+      const [r] = await tx.execute<RoutineRow>(sql`select * from public.routines where id = ${f.routine_id}::uuid`);
+      if (!r) continue;
+      const runId = await createRoutineRun(tx, r, "calendar", describeEvent(f.event));
+      runIds.push(runId);
+      await tx.execute(sql`
+        update public.calendar_fires set fired_at = now(), run_id = ${runId}::uuid where routine_id = ${f.routine_id}::uuid and event_id = ${f.event_id}`);
     }
     return runIds;
   });

@@ -977,3 +977,18 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Tests:**
   - API (`bot-sharing.test.ts`): a private bot is invisible until a person is listed; chat, edit and admin access, checked with `can_manage_bot` as the user; only admins change sharing; outsiders refused; role grants; back to team.
   - widget (`sharing_test.dart`).
+
+## D-132 Calendar triggers
+
+- **The trigger:** a routine with `trigger = calendar_event` holds its connected calendar (an integration), an offset in minutes from the event's start (−15 means 15 minutes before) and optional filters: a calendar, outside guests only, a title match, a video link only.
+  - It's created through the routines API (`calendar`), and in the app under "Meetings", with offset chips (30, 15 or 5 before, at the start, 15 after) and the filters.
+- **Reading calendars without new provider code:**
+  - Every 5 minutes per routine (in the minute tick), the worker calls the calendar connection's own list-events tool. It finds the tool by name and names the time-range arguments the way its input schema does: `timeMin`/`timeMax`, `startDateTime`/`endDateTime`, and so on.
+  - It reads the next 36 hours from the reply, parsing Google (`items`, `hangoutLink`, `conferenceData`, `attendees[].self`), Microsoft Graph (`value`, `subject`, `emailAddress`, `onlineMeeting`, `body`) and plain shapes. Cancelled events are skipped.
+  - **Not yet:** provider change notifications; the 5-minute check covers it for now.
+- **Filters:** "outside guests" means an attendee whose email domain differs from the person's own. The person's domain comes from the event's `self` attendee, else the routine creator's email domain, read by the worker through `public.worker_user_email_domain` (the worker never reads `auth.*` itself, D-095). A "video link" is a Meet, Zoom, Teams, Webex or Whereby link anywhere in the event.
+- **One run per event:** each match becomes a row in `calendar_fires` (routine plus event; a moved event moves its unfired time). The minute tick claims due fires (`FOR UPDATE SKIP LOCKED`) and starts the routine's run with the event as untrusted calendar context: title, times, attendees, link, location and description. Runs start within a minute of their time.
+- **Tests:**
+  - unit (`calendar-triggers.test.ts`): Google and Microsoft shapes, the filters, argument naming.
+  - API (`calendar-triggers.test.ts`), with a real MCP calendar server: create the routine; one read per 5 minutes; only the meeting with an outside guest; not due 16 minutes before; one run at 15 minutes before, with the event in context; not twice.
+  - widget (`calendar_trigger_test.dart`).

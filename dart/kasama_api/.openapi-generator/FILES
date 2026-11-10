@@ -99,6 +99,7 @@ lib/src/model/bot_template_file_memories_inner.dart
 lib/src/model/bot_template_file_routines_inner.dart
 lib/src/model/bot_template_file_skills_inner.dart
 lib/src/model/bot_template_file_skills_inner_files_inner.dart
+lib/src/model/calendar_trigger_config.dart
 lib/src/model/catalog_app.dart
 lib/src/model/catalog_app_api_key.dart
 lib/src/model/catalog_skill.dart

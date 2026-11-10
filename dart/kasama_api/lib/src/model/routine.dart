@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:kasama_api/src/model/calendar_trigger_config.dart';
 import 'package:kasama_api/src/model/routine_trigger.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -34,6 +35,8 @@ class Routine {
     required  this.timezone,
 
     required  this.trigger,
+
+     this.calendar,
 
     required  this.notify,
 
@@ -134,6 +137,18 @@ class Routine {
 
   @JsonKey(
     
+    name: r'calendar',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final CalendarTriggerConfig? calendar;
+
+
+
+  @JsonKey(
+    
     name: r'notify',
     required: true,
     includeIfNull: false,
@@ -215,6 +230,7 @@ class Routine {
       other.scheduleCron == scheduleCron &&
       other.timezone == timezone &&
       other.trigger == trigger &&
+      other.calendar == calendar &&
       other.notify == notify &&
       other.enabled == enabled &&
       other.nextRunAt == nextRunAt &&
@@ -231,6 +247,7 @@ class Routine {
         (scheduleCron == null ? 0 : scheduleCron.hashCode) +
         timezone.hashCode +
         trigger.hashCode +
+        (calendar == null ? 0 : calendar.hashCode) +
         notify.hashCode +
         enabled.hashCode +
         (nextRunAt == null ? 0 : nextRunAt.hashCode) +

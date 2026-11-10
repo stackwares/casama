@@ -125,7 +125,20 @@ const routineOut = (r: RoutineRow) => ({
     | "schedule"
     | "once"
     | "github"
-    | "webhook",
+    | "webhook"
+    | "calendar_event",
+  calendar: (() => {
+    const t = r.trigger as { type?: string; integration_id?: string; offset_minutes?: number; calendar?: string; outside_guests?: boolean; title_match?: string; has_video_link?: boolean };
+    if (t?.type !== "calendar_event" || !t.integration_id) return null;
+    return {
+      integration_id: t.integration_id,
+      offset_minutes: Number(t.offset_minutes ?? 0),
+      ...(t.calendar ? { calendar: t.calendar } : {}),
+      ...(t.outside_guests !== undefined ? { outside_guests: t.outside_guests } : {}),
+      ...(t.title_match ? { title_match: t.title_match } : {}),
+      ...(t.has_video_link !== undefined ? { has_video_link: t.has_video_link } : {}),
+    };
+  })(),
   notify: r.notify,
   enabled: r.enabled,
   next_run_at: r.nextRunAt ? iso(r.nextRunAt) : null,
@@ -574,6 +587,14 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     }
     let webhookSecret: string | undefined;
     let triggerJson: Record<string, unknown> = { type: trigger };
+    if (trigger === "calendar_event") {
+      const cal = body.calendar;
+      if (!cal) throw new ApiError(400, "validation_failed", "A calendar routine needs its calendar and offset");
+      const [i] = await db.execute<{ id: string }>(sql`
+        select id from public.integrations where id = ${cal.integration_id}::uuid and org_id = ${bot.orgId}::uuid`);
+      if (!i) throw new ApiError(404, "integration_not_found", "Connect a calendar first");
+      triggerJson = { type: trigger, ...cal };
+    }
     if (trigger === "github" || trigger === "webhook") {
       webhookSecret = randomBytes(24).toString("hex");
       triggerJson = {

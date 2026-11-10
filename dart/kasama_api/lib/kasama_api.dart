@@ -99,6 +99,7 @@ export 'package:kasama_api/src/model/bot_template_file_memories_inner.dart';
 export 'package:kasama_api/src/model/bot_template_file_routines_inner.dart';
 export 'package:kasama_api/src/model/bot_template_file_skills_inner.dart';
 export 'package:kasama_api/src/model/bot_template_file_skills_inner_files_inner.dart';
+export 'package:kasama_api/src/model/calendar_trigger_config.dart';
 export 'package:kasama_api/src/model/catalog_app.dart';
 export 'package:kasama_api/src/model/catalog_app_api_key.dart';
 export 'package:kasama_api/src/model/catalog_skill.dart';

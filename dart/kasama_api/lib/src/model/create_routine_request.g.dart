@@ -25,6 +25,8 @@ abstract class _$CreateRoutineRequestCWProxy {
 
   CreateRoutineRequest events(List<String>? events);
 
+  CreateRoutineRequest calendar(CalendarTriggerConfig? calendar);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateRoutineRequest(...).copyWith.fieldName(value)`.
@@ -43,6 +45,7 @@ abstract class _$CreateRoutineRequestCWProxy {
     String? timezone,
     bool? notify,
     List<String>? events,
+    CalendarTriggerConfig? calendar,
   });
 }
 
@@ -84,6 +87,10 @@ class _$CreateRoutineRequestCWProxyImpl
   @override
   CreateRoutineRequest events(List<String>? events) => call(events: events);
 
+  @override
+  CreateRoutineRequest calendar(CalendarTriggerConfig? calendar) =>
+      call(calendar: calendar);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateRoutineRequest(...).copyWith.fieldName(value)`.
@@ -103,6 +110,7 @@ class _$CreateRoutineRequestCWProxyImpl
     Object? timezone = const $CopyWithPlaceholder(),
     Object? notify = const $CopyWithPlaceholder(),
     Object? events = const $CopyWithPlaceholder(),
+    Object? calendar = const $CopyWithPlaceholder(),
   }) {
     return CreateRoutineRequest(
       botId: botId == const $CopyWithPlaceholder() || botId == null
@@ -142,6 +150,10 @@ class _$CreateRoutineRequestCWProxyImpl
           ? _value.events
           // ignore: cast_nullable_to_non_nullable
           : events as List<String>?,
+      calendar: calendar == const $CopyWithPlaceholder()
+          ? _value.calendar
+          // ignore: cast_nullable_to_non_nullable
+          : calendar as CalendarTriggerConfig?,
     );
   }
 }
@@ -184,6 +196,12 @@ CreateRoutineRequest _$CreateRoutineRequestFromJson(
         'events',
         (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
       ),
+      calendar: $checkedConvert(
+        'calendar',
+        (v) => v == null
+            ? null
+            : CalendarTriggerConfig.fromJson(v as Map<String, dynamic>),
+      ),
     );
     return val;
   },
@@ -206,6 +224,7 @@ Map<String, dynamic> _$CreateRoutineRequestToJson(
   'timezone': ?instance.timezone,
   'notify': ?instance.notify,
   'events': ?instance.events,
+  'calendar': ?instance.calendar?.toJson(),
 };
 
 const _$RoutineTriggerEnumMap = {
@@ -213,4 +232,5 @@ const _$RoutineTriggerEnumMap = {
   RoutineTrigger.once: 'once',
   RoutineTrigger.github: 'github',
   RoutineTrigger.webhook: 'webhook',
+  RoutineTrigger.calendarEvent: 'calendar_event',
 };
