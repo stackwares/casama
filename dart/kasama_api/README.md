@@ -90,6 +90,7 @@ Class | Method | HTTP request | Description
 [*BotsApi*](doc/BotsApi.md) | [**createBot**](doc/BotsApi.md#createbot) | **POST** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listBots**](doc/BotsApi.md#listbots) | **GET** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listTemplates**](doc/BotsApi.md#listtemplates) | **GET** /v1/templates | 
+[*BotsApi*](doc/BotsApi.md) | [**startBotSetup**](doc/BotsApi.md#startbotsetup) | **POST** /v1/bots/{id}/setup | Start (or rerun) the bot&#39;s setup interview in a new conversation
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
@@ -398,6 +399,7 @@ Class | Method | HTTP request | Description
  - [SkillLoadedEventPayload](doc/SkillLoadedEventPayload.md)
  - [SkillPreviewFile](doc/SkillPreviewFile.md)
  - [SkillUpdateCheck](doc/SkillUpdateCheck.md)
+ - [StartSetupResponse](doc/StartSetupResponse.md)
  - [StreamMode](doc/StreamMode.md)
  - [StreamSession](doc/StreamSession.md)
  - [StreamSessionRequest](doc/StreamSessionRequest.md)

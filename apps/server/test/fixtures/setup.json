@@ -1,0 +1,109 @@
+{
+  "name": "setup",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 50,
+            "outputTokens": 5
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "systemIncludes": "This conversation is your setup interview",
+        "lastUserIncludes": "get you set up"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "s1",
+            "name": "setup__apply",
+            "args": {
+              "instructions": "You help Ada run a small bakery.\n- Keep replies under 80 words.\n- Use plain language.",
+              "memories": [
+                "Ada owns a bakery in Portland",
+                "Ada prefers bullet points"
+              ],
+              "routines": [
+                {
+                  "name": "Morning orders",
+                  "instructions": "Summarize today's orders.",
+                  "schedule_cron": "0 7 * * *"
+                }
+              ],
+              "connections": [
+                "Gmail"
+              ]
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "setup.apply"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "All set."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "hello"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Plain chat."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

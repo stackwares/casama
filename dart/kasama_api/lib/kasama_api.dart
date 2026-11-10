@@ -229,6 +229,7 @@ export 'package:kasama_api/src/model/skill_loaded_event.dart';
 export 'package:kasama_api/src/model/skill_loaded_event_payload.dart';
 export 'package:kasama_api/src/model/skill_preview_file.dart';
 export 'package:kasama_api/src/model/skill_update_check.dart';
+export 'package:kasama_api/src/model/start_setup_response.dart';
 export 'package:kasama_api/src/model/stream_mode.dart';
 export 'package:kasama_api/src/model/stream_session.dart';
 export 'package:kasama_api/src/model/stream_session_request.dart';

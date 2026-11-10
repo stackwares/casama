@@ -37,6 +37,7 @@ const botOut = (b: BotRow) => ({
   folder_id: b.folderId ?? null,
   sort_key: Number(b.sortKey ?? 0),
   archived_at: b.archivedAt ? iso(b.archivedAt) : null,
+  setup_status: (b.setupStatus ?? "done") as "pending",
   created_at: iso(b.createdAt),
 });
 
@@ -224,6 +225,41 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         .orderBy(bots.sortKey, bots.createdAt),
     );
     return c.json({ items: rows.map(botOut) }, 200);
+  });
+
+  app.openapi(routes.startBotSetup, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const created = await withUserSession(db, claims, async (tx) => {
+      const [bot] = await tx.execute<{ org_id: string; manage: boolean; suspended: boolean }>(sql`
+        select b.org_id, public.can_manage_bot(b.id) as manage, o.suspended_at is not null as suspended
+        from public.bots b join public.organizations o on o.id = b.org_id where b.id = ${id}::uuid and b.archived_at is null`);
+      if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
+      if (!bot.manage)
+        throw new ApiError(403, "forbidden", "Only people who manage this bot can set it up");
+      if (bot.suspended)
+        throw new ApiError(
+          403,
+          "workspace_suspended",
+          "This workspace is suspended. Contact the instance owner.",
+        );
+      const [conv] = await tx.execute<{ id: string }>(sql`
+        insert into public.conversations (org_id, bot_id, title, created_by, purpose, last_message_at)
+        values (${bot.org_id}::uuid, ${id}::uuid, 'Setup', ${claims.sub}::uuid, 'setup', now()) returning id`);
+      const [run] = await tx.execute<{ id: string }>(sql`
+        insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
+        values (${bot.org_id}::uuid, ${id}::uuid, ${conv?.id}::uuid, ${claims.sub}::uuid, 'chat') returning id`);
+      await tx.execute(sql`
+        insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+        values (${bot.org_id}::uuid, ${conv?.id}::uuid, 'user', ${claims.sub}::uuid,
+                ${JSON.stringify([{ type: "text", text: "Let's get you set up." }])}::jsonb, ${run?.id}::uuid)`);
+      await tx.execute(
+        sql`update public.bots set setup_status = 'pending' where id = ${id}::uuid and setup_status <> 'pending'`,
+      );
+      return { conversation_id: conv?.id as string, run_id: run?.id as string };
+    });
+    await deps.workflows.startRun(created.run_id);
+    return c.json(created, 201);
   });
 
   app.openapi(routes.createConversation, async (c) => {

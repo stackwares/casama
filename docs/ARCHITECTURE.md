@@ -159,6 +159,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `skills/` (bundled catalog), `apps/server/src/services/skills.ts` (catalog, `GitHubReader`), `apps/server/src/api/routes/skills.ts`, `skill_files`, agent `tools/skills.ts` (`skills.create`, `skills.update`, `approvalDetails`), `skills.load` file sync, and the app's `skill_library.dart` plus the composer's `/` picker.
 
+## Setup interview and starter bots (D-105)
+
+- `bots.setup_status`, `conversations.purpose`, `POST /v1/bots/{id}/setup`, agent `tools/setup.ts` (`SETUP_GUIDE`, `setup.apply`), the chat's setup card, and six more templates in `packages/domain/src/templates.ts`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

@@ -35,6 +35,8 @@ abstract class _$BotCWProxy {
 
   Bot archivedAt(DateTime? archivedAt);
 
+  Bot setupStatus(BotSetupStatusEnum setupStatus);
+
   Bot createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -60,6 +62,7 @@ abstract class _$BotCWProxy {
     String? folderId,
     num sortKey,
     DateTime? archivedAt,
+    BotSetupStatusEnum setupStatus,
     DateTime createdAt,
   });
 }
@@ -115,6 +118,10 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
   Bot archivedAt(DateTime? archivedAt) => call(archivedAt: archivedAt);
 
   @override
+  Bot setupStatus(BotSetupStatusEnum setupStatus) =>
+      call(setupStatus: setupStatus);
+
+  @override
   Bot createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -141,6 +148,7 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
     Object? folderId = const $CopyWithPlaceholder(),
     Object? sortKey = const $CopyWithPlaceholder(),
     Object? archivedAt = const $CopyWithPlaceholder(),
+    Object? setupStatus = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Bot(
@@ -202,6 +210,11 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
           ? _value.archivedAt
           // ignore: cast_nullable_to_non_nullable
           : archivedAt as DateTime?,
+      setupStatus:
+          setupStatus == const $CopyWithPlaceholder() || setupStatus == null
+          ? _value.setupStatus
+          // ignore: cast_nullable_to_non_nullable
+          : setupStatus as BotSetupStatusEnum,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -242,6 +255,7 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
         'folder_id',
         'sort_key',
         'archived_at',
+        'setup_status',
         'created_at',
       ],
     );
@@ -281,6 +295,10 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
         'archived_at',
         (v) => v == null ? null : DateTime.parse(v as String),
       ),
+      setupStatus: $checkedConvert(
+        'setup_status',
+        (v) => $enumDecode(_$BotSetupStatusEnumEnumMap, v),
+      ),
       createdAt: $checkedConvert(
         'created_at',
         (v) => DateTime.parse(v as String),
@@ -297,6 +315,7 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
     'folderId': 'folder_id',
     'sortKey': 'sort_key',
     'archivedAt': 'archived_at',
+    'setupStatus': 'setup_status',
     'createdAt': 'created_at',
   },
 );
@@ -316,6 +335,7 @@ Map<String, dynamic> _$BotToJson(Bot instance) => <String, dynamic>{
   'folder_id': instance.folderId,
   'sort_key': instance.sortKey,
   'archived_at': instance.archivedAt?.toIso8601String(),
+  'setup_status': _$BotSetupStatusEnumEnumMap[instance.setupStatus]!,
   'created_at': instance.createdAt.toIso8601String(),
 };
 
@@ -335,4 +355,10 @@ const _$BotStatusEnumEnumMap = {
   BotStatusEnum.working: 'working',
   BotStatusEnum.waiting: 'waiting',
   BotStatusEnum.disabled: 'disabled',
+};
+
+const _$BotSetupStatusEnumEnumMap = {
+  BotSetupStatusEnum.pending: 'pending',
+  BotSetupStatusEnum.done: 'done',
+  BotSetupStatusEnum.skipped: 'skipped',
 };

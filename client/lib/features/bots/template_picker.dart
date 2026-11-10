@@ -13,6 +13,11 @@ import '../../ui/bot_avatar.dart';
 /// The Lucide icon a persona names (kebab-case, from the server's templates).
 IconData personaIcon(String? name) => switch (name) {
   'briefcase' => LucideIcons.briefcase,
+  'mail-check' => LucideIcons.mailCheck,
+  'radar' => LucideIcons.radar,
+  'user-search' => LucideIcons.userSearch,
+  'receipt' => LucideIcons.receipt,
+  'network' => LucideIcons.network,
   'newspaper' => LucideIcons.newspaper,
   'life-buoy' => LucideIcons.lifeBuoy,
   'handshake' => LucideIcons.handshake,

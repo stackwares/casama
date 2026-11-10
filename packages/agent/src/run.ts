@@ -42,6 +42,7 @@ import {
   SecretRequestArgs,
   secretRequestState,
 } from "./secret-requests.ts";
+import { SETUP_GUIDE } from "./tools/setup.ts";
 import {
   hasPlaceholders,
   loadSecrets,
@@ -738,6 +739,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     timezone: string | null;
     summary: string | null;
     summary_through: Date | null;
+    purpose: string | null;
     bot_owner: string | null;
     parent_run_id: string | null;
     routine_id: string | null;
@@ -762,7 +764,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
            ) as acting_user_id,
            r.id, r.org_id, r.bot_id, r.conversation_id, r.created_by, r.trigger, r.status, r.budget as run_budget,
            b.name, b.persona_md, b.autonomy, b.model_policy, b.budget as bot_budget, b.created_by as bot_owner,
-           coalesce(p.timezone, po.timezone) as timezone, c.summary, c.summary_through, r.parent_run_id,
+           coalesce(p.timezone, po.timezone) as timezone, c.summary, c.summary_through, c.purpose, r.parent_run_id,
            r.routine_id, rt.notify as routine_notify, rt.created_by as routine_created_by, rt.name as routine_name, r.voice_call
     from public.runs r
     join public.bots b on b.id = r.bot_id
@@ -836,7 +838,9 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     perRunLimit: num(row.run_budget?.per_run_usd ?? row.bot_budget?.per_run_usd),
     dailyLimit: num(row.bot_budget?.daily_usd),
     botName: row.name,
-    persona: row.persona_md,
+    // A setup conversation adds the interview guide until setup is applied (D-105).
+    persona:
+      row.purpose === "setup" ? `${row.persona_md}\n\n${SETUP_GUIDE}`.trim() : row.persona_md,
     autonomy: row.autonomy,
     policy: row.model_policy ?? {},
     timezone: row.timezone ?? "UTC",

@@ -2719,6 +2719,15 @@
             ],
             "format": "date-time"
           },
+          "setup_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "done",
+              "skipped"
+            ],
+            "description": "The setup interview (D-105)"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -2739,6 +2748,7 @@
           "folder_id",
           "sort_key",
           "archived_at",
+          "setup_status",
           "created_at"
         ]
       },
@@ -3369,6 +3379,23 @@
         "required": [
           "surface_id",
           "name"
+        ]
+      },
+      "StartSetupResponse": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "run_id"
         ]
       },
       "ChatGptSignInStart": {
@@ -9419,6 +9446,73 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bots/{id}/setup": {
+      "post": {
+        "operationId": "startBotSetup",
+        "tags": [
+          "bots"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Start (or rerun) the bot's setup interview in a new conversation",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartSetupResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {

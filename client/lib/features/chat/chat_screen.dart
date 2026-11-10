@@ -14,6 +14,7 @@ import '../../core/voice.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/glow_button.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
@@ -371,6 +372,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               thread = const Center(
                 child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)),
               );
+            } else if (chat.entries.isEmpty && bot?.setupStatus == BotSetupStatusEnum.pending) {
+              thread = _SetupCard(bot: bot!, side: side);
             } else if (chat.entries.isEmpty) {
               thread = _EmptyThread(name: name, avatar: bot?.avatarUrl, side: side, onAsk: _send);
             } else {
@@ -1160,6 +1163,55 @@ class _SkillPicker extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// A new bot offers its setup interview (D-105): a few questions, then a proposal to approve.
+class _SetupCard extends ConsumerWidget {
+  const _SetupCard({required this.bot, required this.side});
+  final Bot bot;
+  final double side;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return Center(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: side, vertical: AppSpace.xl),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: Column(
+            key: const Key('setupCard'),
+            mainAxisSize: MainAxisSize.min,
+            spacing: AppSpace.md,
+            children: [
+              BotAvatar(name: bot.name, avatar: bot.avatarUrl, size: 72),
+              Text(l10n.setupTitle(bot.name), style: context.textTheme.titleLarge, textAlign: TextAlign.center),
+              Text(l10n.setupBody, textAlign: TextAlign.center, style: TextStyle(color: context.colorScheme.onSurfaceVariant)),
+              GlowButton.icon(
+                key: const Key('startSetup'),
+                onPressed: () async {
+                  final conv = await runGuarded(context, () => ref.read(backendProvider).startBotSetup(bot.id));
+                  if (conv == null || !context.mounted) return;
+                  ref.invalidate(botsProvider);
+                  GoRouter.maybeOf(context)?.go('/bots/${bot.id}/chat?c=$conv');
+                },
+                icon: const Icon(LucideIcons.sparkles, size: 18),
+                label: Text(l10n.startSetup),
+              ),
+              TextButton(
+                key: const Key('skipSetup'),
+                onPressed: () async {
+                  await runGuarded(context, () => ref.read(backendProvider).skipBotSetup(bot.id));
+                  ref.invalidate(botsProvider);
+                },
+                child: Text(l10n.skipSetup),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

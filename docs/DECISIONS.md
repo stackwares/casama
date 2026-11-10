@@ -559,3 +559,12 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **App:** Skills has Skill catalog (search, categories, install to the workspace or a bot), Import from GitHub (link, preview of every file, install), a source label on each skill, and Check for updates with the diff on GitHub skills.
 - **Tests:** domain (`skills.test.ts`), API with a fake GitHub (`skills.test.ts`: catalog and RLS, preview, pinned install, update diff, token use, bot tools and approval details, `/` skills reaching the model), widget tests (`skill_library_test.dart`).
 
+## D-105 Setup interview and starter bots
+
+- **Setup state:** `bots.setup_status` (pending for new bots, including ones made by other bots; existing bots were marked done) and `conversations.purpose` (`chat` or `setup`).
+- **Interview:** `POST /v1/bots/{id}/setup` (people who manage the bot) opens a "Setup" conversation with a short opening message and starts a run. In a setup conversation the bot's persona gets `SETUP_GUIDE`: ask three to six questions as `ui.show` cards (the work, writing style, tools and accounts, schedule), then call `setup.apply` once. The guide comes from the conversation, so every turn of the interview keeps it.
+- **`setup.apply`** (high risk, so the approval card shows the whole proposal): new instructions (saved as the bot, so bot history records it), up to five memories (`preference`), up to five routines (cron in the owner's timezone), and connections to add. Connections are named, not created: accounts need the person's own sign-in, so the bot asks them to connect those in Settings → Integrations (the preview and result say which). It marks setup done.
+- **App:** a new bot's empty chat shows Set up NAME (Start setup or Skip for now; skipping sets `skipped`). Bot settings has Run setup again.
+- **Starter bots** (persona templates, D-088): inbox triage (with a weekday morning routine), outbound prospector, recruiting screener (scorecard-based, ignores protected traits, people decide), bug triage, expense matcher, and a coordinator that plans work, checks the team with `bots.list`, and hands work out with `tasks.create` or `bots.delegate`.
+- **Tests:** API with a scripted model (`setup.test.ts`: permissions, approval contents, applied instructions, memories, routines and timezone, revision by the bot, no guide outside setup), widget test (`setup_test.dart`).
+

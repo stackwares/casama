@@ -243,6 +243,14 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<String> startBotSetup(String botId) async => (await api.bots.startBotSetup(id: botId)).data!.conversationId;
+
+  @override
+  Future<void> skipBotSetup(String botId) async {
+    await supabase.from('bots').update({'setup_status': 'skipped'}).eq('id', botId);
+  }
+
+  @override
   Future<List<BotRevision>> botRevisions(String botId) async {
     final rows = await supabase
         .from('bot_revisions')

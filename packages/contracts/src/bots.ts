@@ -57,9 +57,16 @@ export const Bot = z
     folder_id: Uuid.nullable().openapi({ description: "Its sidebar folder (bot_folders)" }),
     sort_key: z.number().openapi({ description: "Order within its folder" }),
     archived_at: ts.nullable(),
+    setup_status: z
+      .enum(["pending", "done", "skipped"])
+      .openapi({ description: "The setup interview (D-105)" }),
     created_at: ts,
   })
   .openapi("Bot");
+
+export const StartSetupResponse = z
+  .object({ conversation_id: Uuid, run_id: Uuid })
+  .openapi("StartSetupResponse");
 
 export const CreateBotRequest = z
   .object({

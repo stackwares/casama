@@ -718,6 +718,18 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
               },
             ),
             GroupedTile(
+              key: const Key('rerunSetup'),
+              icon: LucideIcons.sparkles,
+              title: l10n.rerunSetup,
+              subtitle: l10n.rerunSetupHelp,
+              onTap: () async {
+                final conv = await runGuarded(context, () => ref.read(backendProvider).startBotSetup(bot.id));
+                if (conv == null || !context.mounted) return;
+                ref.invalidate(botsProvider);
+                GoRouter.maybeOf(context)?.go('/bots/${bot.id}/chat?c=$conv');
+              },
+            ),
+            GroupedTile(
               key: const Key('botHistory'),
               icon: LucideIcons.history,
               title: l10n.settingsHistory,

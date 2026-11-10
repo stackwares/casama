@@ -1843,5 +1843,12 @@
   "fromCatalog": "From the catalog",
   "savedByBot": "Saved by a bot",
   "checkForUpdates": "Check for updates",
-  "attachSkill": "Attach a skill"
+  "attachSkill": "Attach a skill",
+  "setupTitle": "Set up {name}",
+  "@setupTitle": {"placeholders": {"name": {"type": "String"}}},
+  "setupBody": "Answer a few quick questions and it will propose its instructions, routines and the accounts to connect. Nothing changes until you approve.",
+  "startSetup": "Start setup",
+  "skipSetup": "Skip for now",
+  "rerunSetup": "Run setup again",
+  "rerunSetupHelp": "Answer the setup questions again and review a new proposal"
 }

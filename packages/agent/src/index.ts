@@ -31,5 +31,6 @@ export * from "./tools/coding.ts";
 export * from "./tools/computer.ts";
 export * from "./tools/desktop.ts";
 export * from "./tools/registry.ts";
+export * from "./tools/setup.ts";
 export * from "./tools/skills.ts";
 export * from "./voice.ts";

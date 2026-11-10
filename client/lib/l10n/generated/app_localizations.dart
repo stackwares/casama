@@ -6081,6 +6081,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Attach a skill'**
   String get attachSkill;
+
+  /// No description provided for @setupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up {name}'**
+  String setupTitle(String name);
+
+  /// No description provided for @setupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer a few quick questions and it will propose its instructions, routines and the accounts to connect. Nothing changes until you approve.'**
+  String get setupBody;
+
+  /// No description provided for @startSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Start setup'**
+  String get startSetup;
+
+  /// No description provided for @skipSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get skipSetup;
+
+  /// No description provided for @rerunSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Run setup again'**
+  String get rerunSetup;
+
+  /// No description provided for @rerunSetupHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer the setup questions again and review a new proposal'**
+  String get rerunSetupHelp;
 }
 
 class _AppLocalizationsDelegate

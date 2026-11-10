@@ -229,6 +229,7 @@ lib/src/model/skill_loaded_event.dart
 lib/src/model/skill_loaded_event_payload.dart
 lib/src/model/skill_preview_file.dart
 lib/src/model/skill_update_check.dart
+lib/src/model/start_setup_response.dart
 lib/src/model/stream_mode.dart
 lib/src/model/stream_session.dart
 lib/src/model/stream_session_request.dart

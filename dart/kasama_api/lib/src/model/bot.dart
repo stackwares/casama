@@ -52,6 +52,8 @@ class Bot {
 
     required  this.archivedAt,
 
+    required  this.setupStatus,
+
     required  this.createdAt,
   });
 
@@ -226,6 +228,19 @@ class Bot {
 
 
 
+      /// The setup interview (D-105)
+  @JsonKey(
+    
+    name: r'setup_status',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final BotSetupStatusEnum setupStatus;
+
+
+
   @JsonKey(
     
     name: r'created_at',
@@ -256,6 +271,7 @@ class Bot {
       other.folderId == folderId &&
       other.sortKey == sortKey &&
       other.archivedAt == archivedAt &&
+      other.setupStatus == setupStatus &&
       other.createdAt == createdAt;
 
     @override
@@ -274,6 +290,7 @@ class Bot {
         (folderId == null ? 0 : folderId.hashCode) +
         sortKey.hashCode +
         (archivedAt == null ? 0 : archivedAt.hashCode) +
+        setupStatus.hashCode +
         createdAt.hashCode;
 
   factory Bot.fromJson(Map<String, dynamic> json) => _$BotFromJson(json);
@@ -299,6 +316,27 @@ waiting(r'waiting'),
 disabled(r'disabled');
 
 const BotStatusEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+/// The setup interview (D-105)
+enum BotSetupStatusEnum {
+    /// The setup interview (D-105)
+@JsonValue(r'pending')
+pending(r'pending'),
+    /// The setup interview (D-105)
+@JsonValue(r'done')
+done(r'done'),
+    /// The setup interview (D-105)
+@JsonValue(r'skipped')
+skipped(r'skipped');
+
+const BotSetupStatusEnum(this.value);
 
 final String value;
 

@@ -188,6 +188,7 @@ class FakeBackend implements Backend {
         defaultComputerId: defaultComputer,
         folderId: botFolder,
         archivedAt: null,
+        setupStatus: setupStatus,
         sortKey: 0,
         createdAt: DateTime(2026),
       );
@@ -204,6 +205,15 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  BotSetupStatusEnum setupStatus = BotSetupStatusEnum.done;
+  var setupStarted = 0;
+  @override
+  Future<String> startBotSetup(String botId) async {
+    setupStarted++;
+    return 'setup-conv';
+  }
+  @override
+  Future<void> skipBotSetup(String botId) async => setupStatus = BotSetupStatusEnum.skipped;
   final sentSkills = <List<String>>[];
   final catalogInstalls = <(String, String?)>[];
   final githubInstalls = <(String, String)>[];

@@ -3481,4 +3481,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachSkill => 'Attach a skill';
+
+  @override
+  String setupTitle(String name) {
+    return 'Set up $name';
+  }
+
+  @override
+  String get setupBody =>
+      'Answer a few quick questions and it will propose its instructions, routines and the accounts to connect. Nothing changes until you approve.';
+
+  @override
+  String get startSetup => 'Start setup';
+
+  @override
+  String get skipSetup => 'Skip for now';
+
+  @override
+  String get rerunSetup => 'Run setup again';
+
+  @override
+  String get rerunSetupHelp =>
+      'Answer the setup questions again and review a new proposal';
 }

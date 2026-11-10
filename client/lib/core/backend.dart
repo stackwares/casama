@@ -191,6 +191,9 @@ abstract class Backend {
   Future<void> setBotFolder(String orgId, String botId, String? folderName);
   Future<List<Bot>> archivedBots(String orgId);
   Future<void> setBotArchived(String botId, bool archived);
+  /// Starts (or reruns) the setup interview; returns its conversation (D-105).
+  Future<String> startBotSetup(String botId);
+  Future<void> skipBotSetup(String botId);
   Future<List<BotRevision>> botRevisions(String botId);
   /// Puts back the settings from before [revision]; the current ones become a new revision.
   Future<void> restoreBotRevision(String botId, BotRevision revision);

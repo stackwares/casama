@@ -16,6 +16,7 @@ import {
   RunEventsPage,
   SendMessageRequest,
   SendMessageResponse,
+  StartSetupResponse,
   TestCredentialRequest,
   UpdateCredentialRequest,
   UsageReport,
@@ -300,4 +301,15 @@ export const getUsage = createRoute({
     query: z.object({ org_id: Uuid, period: z.enum(["day", "week", "month", "year"]).optional() }),
   },
   responses: { 200: jsonResponse("Usage and cost by bot", UsageReport), 401: e401, 404: e404 },
+});
+
+export const startBotSetup = createRoute({
+  operationId: "startBotSetup",
+  method: "post",
+  path: "/v1/bots/{id}/setup",
+  tags: ["bots"],
+  security,
+  summary: "Start (or rerun) the bot's setup interview in a new conversation",
+  request: { params: idParam },
+  responses: { 201: jsonResponse("Started", StartSetupResponse), 401: e401, 403: e403, 404: e404 },
 });

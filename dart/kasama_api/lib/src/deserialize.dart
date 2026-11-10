@@ -180,6 +180,7 @@ import 'package:kasama_api/src/model/skill_loaded_event.dart';
 import 'package:kasama_api/src/model/skill_loaded_event_payload.dart';
 import 'package:kasama_api/src/model/skill_preview_file.dart';
 import 'package:kasama_api/src/model/skill_update_check.dart';
+import 'package:kasama_api/src/model/start_setup_response.dart';
 import 'package:kasama_api/src/model/stream_session.dart';
 import 'package:kasama_api/src/model/stream_session_request.dart';
 import 'package:kasama_api/src/model/subrun_completed_event.dart';
@@ -668,6 +669,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SkillPreviewFile.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillUpdateCheck':
           return SkillUpdateCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'StartSetupResponse':
+          return StartSetupResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StreamMode':
           
           
