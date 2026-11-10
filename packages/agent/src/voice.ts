@@ -190,7 +190,8 @@ export async function createRealtimeSession(
           model,
           instructions: opts.instructions,
           audio: {
-            input: { transcription: { model: "gpt-4o-mini-transcribe" }, ...pcmu },
+            // Barge-in (D-144): the person talking over the bot interrupts its reply.
+            input: { transcription: { model: "gpt-4o-mini-transcribe" }, turn_detection: { type: "server_vad", interrupt_response: true, create_response: true }, ...pcmu },
             output: { voice: opts.voice ?? "marin", ...pcmu },
           },
           tools: opts.tools.map((t) => ({ type: "function", ...t })),

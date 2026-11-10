@@ -18,6 +18,8 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../bots/a2a_sheet.dart';
+import '../voice/wake_word.dart';
+import '../voice/wake_word_sheet.dart';
 import '../bots/template_picker.dart';
 import '../bots/bot_template.dart';
 import '../../ui/mascot.dart';
@@ -190,6 +192,15 @@ class SettingsScreen extends ConsumerWidget {
                       title: l10n.useThisComputer,
                       subtitle: l10n.companionRowHelp,
                       onTap: () => context.push('/settings/companion'),
+                    ),
+                  // Wake word (D-144): desktop and Android.
+                  if (wakeWordSupported)
+                    GroupedTile(
+                      key: const Key('settingsWakeWord'),
+                      icon: LucideIcons.audioLines,
+                      title: l10n.wakeWord,
+                      subtitle: ref.watch(wakeWordProvider).enabled ? l10n.wakeWordOnRow(ref.watch(wakeWordProvider).phrase) : l10n.wakeWordRow,
+                      onTap: () => showAdaptiveSheet<void>(context: context, builder: (_) => const WakeWordSheet()),
                     ),
                 ],
               ),

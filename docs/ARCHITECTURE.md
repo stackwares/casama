@@ -307,6 +307,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/links.ts` (`links.ask`, linked runs, tokens); `apps/server/src/api/routes/links.ts` (invites, accept on this or another server, revoke, exchanges, and the server-to-server `/links/{id}/accept|revoke`); `klink_` tokens at the A2A endpoint and agent card; `bot_links`, `link_exchanges`; the app's Linked bots screen.
 
+## Voice upgrades (D-144)
+
+- Barge-in in `RealtimeEvents` (`client/lib/core/voice.dart`) and `turn_detection` in `createRealtimeSession`; `client/lib/features/voice/talking_avatar.dart`; the wake word in `client/lib/features/voice/wake_word.dart` (sherpa-onnx keyword spotting, model download and checksum, keyword tokenizer, `WakeWordController`) and `wake_word_sheet.dart`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

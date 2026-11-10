@@ -2913,5 +2913,23 @@
   "linksNoExchanges": "Nothing asked yet.",
   "linksNoAnswer": "No answer",
   "linksWorking": "Working…",
-  "linksRevoke": "Unlink"
+  "linksRevoke": "Unlink",
+  "callAvatar": "Avatar",
+  "wakeWord": "Wake word",
+  "wakeWordRow": "Say a phrase to start a call with a bot",
+  "wakeWordOnRow": "Listening for \"{phrase}\"",
+  "@wakeWordOnRow": {
+    "placeholders": {
+      "phrase": {
+        "type": "String"
+      }
+    }
+  },
+  "wakeWordHelp": "While Kasama is open, this device listens for your phrase and starts a live call with the bot you choose.",
+  "wakeWordListen": "Listen for the wake word",
+  "wakeWordPhrase": "Phrase",
+  "wakeWordPhraseHelp": "Two or three words, like \"hey kasama\"",
+  "wakeWordBot": "Call this bot",
+  "wakeWordDownloading": "Downloading the on-device model…",
+  "wakeWordPrivacy": "Listening happens on this device with an open-source model (about 18 MB, downloaded once). Nothing is sent anywhere until the call starts."
 }

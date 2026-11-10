@@ -30,6 +30,7 @@ class FakeCall implements VoiceCall {
   final _state = ValueNotifier(CallState.live);
   final _transcript = ValueNotifier<List<CallTurn>>(const []);
   final _latency = ValueNotifier<int?>(null);
+  final speakingNow = ValueNotifier(false);
   final _tools = StreamController<CallToolRequest>.broadcast();
   final results = <String, String>{};
   var hungUp = false;
@@ -45,6 +46,8 @@ class FakeCall implements VoiceCall {
   ValueListenable<List<CallTurn>> get transcript => _transcript;
   @override
   ValueListenable<int?> get replyLatencyMs => _latency;
+  @override
+  ValueListenable<bool> get speaking => speakingNow;
   @override
   Stream<CallToolRequest> get toolCalls => _tools.stream;
   @override

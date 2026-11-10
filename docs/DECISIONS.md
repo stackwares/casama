@@ -1399,3 +1399,25 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - The request goes over A2A and is answered as the other owner, with exchanges recorded on both servers.
     - Revoking on one server revokes on the other, and asking then fails.
   - widget (`links_test.dart`).
+
+## D-144 Voice upgrades
+
+- **Barge-in:**
+  - The realtime session asks for server-side turn detection with `interrupt_response`.
+  - The app's call client (now `RealtimeEvents`, testable on its own) watches whether the bot is responding or its audio is playing. When the person starts speaking (`input_audio_buffer.speech_started`), it sends `response.cancel` and `output_audio_buffer.clear`, so the bot stops at once and listens.
+  - Phone calls (D-141) already cleared Twilio's buffer the same way.
+- **The animated avatar (optional):**
+  - On live calls, a button turns on `TalkingAvatar`, drawn on device from the bot's avatar. It breathes while listening; while the bot speaks (the speaking state comes from the call's audio buffer events) it bounces gently with a pulsing ring and a small voice meter.
+  - It follows reduced-motion settings, and the choice is remembered on the device.
+  - A face-tracking or lip-synced 3D avatar isn't built.
+- **Wake word (desktop and Android):**
+  - Settings → Wake word: a phrase (default "hey kasama") and the bot to call. Hearing the phrase opens a live call with that bot. It listens while the app is open.
+  - Detection runs on device with sherpa-onnx keyword spotting (Apache-2.0) and its GigaSpeech zipformer keyword model (Apache-2.0, int8 files). The model is downloaded once (about 18 MB) from the sherpa-onnx releases, checked against a pinned SHA-256, and unpacked into the app's support folder.
+  - openWakeWord was ruled out: its pretrained models are licensed for non-commercial use only.
+  - **Tokenizing the phrase:** the model's tokenizer isn't in the download (no `bpe.vocab`), so the app spells the phrase from `tokens.txt` itself. It lists every segmentation with the fewest pieces (up to four) as keyword lines with one tag. On the model's own examples this always includes the official tokenization.
+  - **Privacy:** audio stays on the device until the call starts.
+  - **Not offered:** on iOS (as the spec scopes it), or in the background on Android (that would need a foreground service).
+- **Tests:**
+  - unit: barge-in cancels and clears only while the bot is talking; the keyword tokenizer on a small vocabulary. The tokenizer was also checked offline against the real vocabulary and examples.
+  - widget: the avatar follows the speaking state and the choice is remembered; turning the wake word on prepares the model and listens for the phrase, and a detection opens the chosen bot's live call (fake engine).
+  - Both native builds work with the plugin.

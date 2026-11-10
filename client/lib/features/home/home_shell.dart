@@ -22,6 +22,7 @@ import '../computer/computer_screen.dart';
 import '../../ui/glow_button.dart';
 import '../workspaces/spaces.dart';
 import '../voice/phone_calls.dart';
+import '../voice/wake_word.dart';
 
 /// Phone: floating tab bar. Tablet: navigation rail. Desktop: a sidebar with the bot list, the
 /// chat, and the bot's computer beside it.
@@ -125,6 +126,8 @@ class HomeShell extends ConsumerWidget {
     final badge = ref.watch(inboxBadgeProvider);
     final inner = ref.watch(currentOrgProvider)?.suspended == true ? _SuspendedBanner(child: this.child) : this.child;
     final child = IncomingCallBanner(child: inner);
+    // The wake word listens while the app is open (D-144).
+    if (wakeWordSupported) ref.watch(wakeWordProvider);
     final dests = _destinations(context, phone: size == LayoutSize.phone);
     void go(int i) => context.go(dests[i].path);
     final shell = _buildShell(context, ref, size, badge, child, dests, go);

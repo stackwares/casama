@@ -5226,4 +5226,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linksRevoke => 'Unlink';
+
+  @override
+  String get callAvatar => 'Avatar';
+
+  @override
+  String get wakeWord => 'Wake word';
+
+  @override
+  String get wakeWordRow => 'Say a phrase to start a call with a bot';
+
+  @override
+  String wakeWordOnRow(String phrase) {
+    return 'Listening for \"$phrase\"';
+  }
+
+  @override
+  String get wakeWordHelp =>
+      'While Kasama is open, this device listens for your phrase and starts a live call with the bot you choose.';
+
+  @override
+  String get wakeWordListen => 'Listen for the wake word';
+
+  @override
+  String get wakeWordPhrase => 'Phrase';
+
+  @override
+  String get wakeWordPhraseHelp => 'Two or three words, like \"hey kasama\"';
+
+  @override
+  String get wakeWordBot => 'Call this bot';
+
+  @override
+  String get wakeWordDownloading => 'Downloading the on-device model…';
+
+  @override
+  String get wakeWordPrivacy =>
+      'Listening happens on this device with an open-source model (about 18 MB, downloaded once). Nothing is sent anywhere until the call starts.';
 }

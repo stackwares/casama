@@ -8949,6 +8949,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlink'**
   String get linksRevoke;
+
+  /// No description provided for @callAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar'**
+  String get callAvatar;
+
+  /// No description provided for @wakeWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake word'**
+  String get wakeWord;
+
+  /// No description provided for @wakeWordRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Say a phrase to start a call with a bot'**
+  String get wakeWordRow;
+
+  /// No description provided for @wakeWordOnRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening for \"{phrase}\"'**
+  String wakeWordOnRow(String phrase);
+
+  /// No description provided for @wakeWordHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'While Kasama is open, this device listens for your phrase and starts a live call with the bot you choose.'**
+  String get wakeWordHelp;
+
+  /// No description provided for @wakeWordListen.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen for the wake word'**
+  String get wakeWordListen;
+
+  /// No description provided for @wakeWordPhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Phrase'**
+  String get wakeWordPhrase;
+
+  /// No description provided for @wakeWordPhraseHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Two or three words, like \"hey kasama\"'**
+  String get wakeWordPhraseHelp;
+
+  /// No description provided for @wakeWordBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Call this bot'**
+  String get wakeWordBot;
+
+  /// No description provided for @wakeWordDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading the on-device model…'**
+  String get wakeWordDownloading;
+
+  /// No description provided for @wakeWordPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening happens on this device with an open-source model (about 18 MB, downloaded once). Nothing is sent anywhere until the call starts.'**
+  String get wakeWordPrivacy;
 }
 
 class _AppLocalizationsDelegate

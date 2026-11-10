@@ -15,6 +15,10 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'talking_avatar.dart';
+
 /// A live voice call with a bot (/bots/:id/call?c=conversation).
 class CallScreen extends ConsumerStatefulWidget {
   const CallScreen({super.key, required this.botId, this.conversationId, this.callId});
@@ -35,6 +39,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   var _muted = false;
   var _ending = false;
   final _started = DateTime.now();
+  var _avatar = false;
   StreamSubscription<CallToolRequest>? _toolSub;
   final _activeTools = <String>[];
 
@@ -42,6 +47,13 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   void initState() {
     super.initState();
     _connect();
+    unawaited(
+      SharedPreferences.getInstance()
+          .then((p) {
+            if (mounted && (p.getBool('voice.avatar') ?? false)) setState(() => _avatar = true);
+          })
+          .catchError((_) {}),
+    );
   }
 
   @override
@@ -159,6 +171,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                           decoration: BoxDecoration(shape: BoxShape.circle, color: scheme.errorContainer),
                           child: Icon(LucideIcons.phoneOff, size: 40, color: scheme.error),
                         )
+                      : _avatar && call != null
+                      ? TalkingAvatar(name: name.isEmpty ? '?' : name, avatar: bot?.avatarUrl, speaking: call.speaking, color: tint)
                       : BotAvatar(name: name.isEmpty ? '?' : name, avatar: bot?.avatarUrl, size: 96),
                 ),
               ),
@@ -251,7 +265,19 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                                 call.setMuted(_muted);
                               },
                       ),
-                      const SizedBox(width: 48),
+                      const SizedBox(width: 24),
+                      // The optional animated avatar (D-144), remembered on this device.
+                      _CallButton(
+                        buttonKey: const Key('avatarButton'),
+                        icon: LucideIcons.smile,
+                        label: l10n.callAvatar,
+                        selected: _avatar,
+                        onPressed: () {
+                          setState(() => _avatar = !_avatar);
+                          unawaited(SharedPreferences.getInstance().then((p) => p.setBool('voice.avatar', _avatar)).catchError((_) => false));
+                        },
+                      ),
+                      const SizedBox(width: 24),
                       _CallButton(buttonKey: const Key('hangUpButton'), icon: LucideIcons.phoneOff, label: l10n.hangUp, destructive: true, onPressed: _hangUp),
                     ],
                   ),

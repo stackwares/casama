@@ -141,6 +141,9 @@ abstract class VoiceCall {
   /// Time from the end of the user's speech to the start of the reply, for the last turn.
   ValueListenable<int?> get replyLatencyMs;
 
+  /// Whether the bot is speaking now (drives the animated avatar, D-144).
+  ValueListenable<bool> get speaking;
+
   /// Tool calls the model wants run; answer each with [sendToolResult].
   Stream<CallToolRequest> get toolCalls;
   void sendToolResult(String callId, String output);
@@ -159,15 +162,70 @@ class OpenAiRealtimeConnector implements VoiceCallConnector {
   Future<VoiceCall> connect(VoiceSession session) => _RealtimeCall.open(session);
 }
 
+/// Realtime events for a live call (D-065), with barge-in (D-144): when the person starts talking
+/// while the bot speaks, its response is cancelled and its queued audio dropped, so it listens.
+class RealtimeEvents {
+  RealtimeEvents(this.send);
+  final void Function(Map<String, Object?> event) send;
+  final transcript = ValueNotifier<List<CallTurn>>(const []);
+  final latency = ValueNotifier<int?>(null);
+  final speaking = ValueNotifier(false);
+  final tools = StreamController<CallToolRequest>.broadcast();
+  DateTime? _speechStopped;
+  var _responding = false;
+
+  void _add(String role, String text) {
+    if (text.trim().isEmpty) return;
+    transcript.value = [...transcript.value, CallTurn(role, text.trim())];
+  }
+
+  void handle(String raw) {
+    final e = jsonDecode(raw) as Map<String, dynamic>;
+    switch (e['type']) {
+      case 'response.created':
+        _responding = true;
+      case 'response.done':
+        _responding = false;
+      case 'input_audio_buffer.speech_started':
+        // Barge-in: stop the bot's reply and its buffered audio, then listen.
+        if (speaking.value || _responding) {
+          if (_responding) send({'type': 'response.cancel'});
+          send({'type': 'output_audio_buffer.clear'});
+          speaking.value = false;
+          _responding = false;
+        }
+      case 'input_audio_buffer.speech_stopped':
+        _speechStopped = DateTime.now();
+      case 'output_audio_buffer.started' || 'response.output_audio.delta':
+        speaking.value = true;
+        if (_speechStopped != null) {
+          latency.value = DateTime.now().difference(_speechStopped!).inMilliseconds;
+          _speechStopped = null;
+        }
+      case 'output_audio_buffer.stopped' || 'output_audio_buffer.cleared':
+        speaking.value = false;
+      case 'conversation.item.input_audio_transcription.completed':
+        _add('user', e['transcript'] as String? ?? '');
+      case 'response.output_audio_transcript.done':
+        _add('assistant', e['transcript'] as String? ?? '');
+      case 'response.function_call_arguments.done':
+        Map<String, Object?> args;
+        try {
+          args = (jsonDecode(e['arguments'] as String? ?? '{}') as Map).cast<String, Object?>();
+        } catch (_) {
+          args = const {};
+        }
+        tools.add(CallToolRequest(e['call_id'] as String, e['name'] as String, args));
+    }
+  }
+}
+
 class _RealtimeCall implements VoiceCall {
   final _state = ValueNotifier(CallState.connecting);
-  final _transcript = ValueNotifier<List<CallTurn>>(const []);
-  final _latency = ValueNotifier<int?>(null);
-  final _tools = StreamController<CallToolRequest>.broadcast();
+  late final _ev = RealtimeEvents(_send);
   RTCPeerConnection? _pc;
   RTCDataChannel? _events;
   MediaStream? _mic;
-  DateTime? _speechStopped;
   final _remoteRenderer = RTCVideoRenderer();
 
   static Future<_RealtimeCall> open(VoiceSession s) async {
@@ -193,7 +251,7 @@ class _RealtimeCall implements VoiceCall {
       await pc.addTrack(t, _mic!);
     }
     _events = await pc.createDataChannel('oai-events', RTCDataChannelInit());
-    _events!.onMessage = (m) => _onEvent(m.text);
+    _events!.onMessage = (m) => _ev.handle(m.text);
     // An answered phone call (D-135): the bot opens the conversation.
     if (s.speakFirst) {
       _events!.onDataChannelState = (st) {
@@ -212,44 +270,16 @@ class _RealtimeCall implements VoiceCall {
 
   void _send(Map<String, Object?> event) => _events?.send(RTCDataChannelMessage(jsonEncode(event)));
 
-  void _add(String role, String text) {
-    if (text.trim().isEmpty) return;
-    _transcript.value = [..._transcript.value, CallTurn(role, text.trim())];
-  }
-
-  void _onEvent(String raw) {
-    final e = jsonDecode(raw) as Map<String, dynamic>;
-    switch (e['type']) {
-      case 'input_audio_buffer.speech_stopped':
-        _speechStopped = DateTime.now();
-      case 'output_audio_buffer.started' || 'response.output_audio.delta':
-        if (_speechStopped != null) {
-          _latency.value = DateTime.now().difference(_speechStopped!).inMilliseconds;
-          _speechStopped = null;
-        }
-      case 'conversation.item.input_audio_transcription.completed':
-        _add('user', e['transcript'] as String? ?? '');
-      case 'response.output_audio_transcript.done':
-        _add('assistant', e['transcript'] as String? ?? '');
-      case 'response.function_call_arguments.done':
-        Map<String, Object?> args;
-        try {
-          args = (jsonDecode(e['arguments'] as String? ?? '{}') as Map).cast<String, Object?>();
-        } catch (_) {
-          args = const {};
-        }
-        _tools.add(CallToolRequest(e['call_id'] as String, e['name'] as String, args));
-    }
-  }
-
   @override
   ValueListenable<CallState> get state => _state;
   @override
-  ValueListenable<List<CallTurn>> get transcript => _transcript;
+  ValueListenable<List<CallTurn>> get transcript => _ev.transcript;
   @override
-  ValueListenable<int?> get replyLatencyMs => _latency;
+  ValueListenable<int?> get replyLatencyMs => _ev.latency;
   @override
-  Stream<CallToolRequest> get toolCalls => _tools.stream;
+  ValueListenable<bool> get speaking => _ev.speaking;
+  @override
+  Stream<CallToolRequest> get toolCalls => _ev.tools.stream;
 
   @override
   void sendToolResult(String callId, String output) {
@@ -277,7 +307,7 @@ class _RealtimeCall implements VoiceCall {
     await _pc?.close();
     _remoteRenderer.srcObject = null;
     await _remoteRenderer.dispose();
-    await _tools.close();
+    await _ev.tools.close();
   }
 }
 
