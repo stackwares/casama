@@ -532,6 +532,16 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
               ],
             ),
         ],
+        const SizedBox(height: AppSpace.lg),
+        GroupedCard(children: [
+          GroupedTile(
+            key: const Key('passwordManagers'),
+            icon: LucideIcons.keyRound,
+            title: l10n.passwordManagers,
+            subtitle: l10n.passwordManagersRow,
+            onTap: () => context.push('/password-managers'),
+          ),
+        ]),
         if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), WorkspaceFilesSection(orgId: org.id)],
       ],

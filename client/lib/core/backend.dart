@@ -362,6 +362,12 @@ abstract class Backend {
   Future<void> revokeMcpKey(String orgId, String keyId);
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
+  // Password managers (D-128)
+  Future<List<PasswordManager>> passwordManagers(String orgId);
+  Future<PasswordManager> connectPasswordManager(CreatePasswordManagerRequest request);
+  Future<List<PasswordManagerVault>> passwordManagerVaults(String id);
+  Future<void> setPasswordManagerVaults(String id, List<String> vaults);
+  Future<void> deletePasswordManager(String id);
   // Step replay (D-127)
   Future<List<Replay>> replays(String botId);
   Future<RunReplayResponse> runReplay(String id, Map<String, String> params);

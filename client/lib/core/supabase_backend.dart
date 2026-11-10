@@ -914,6 +914,28 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<List<PasswordManager>> passwordManagers(String orgId) async =>
+      (await api.passwordManagers.listPasswordManagers(orgId: orgId)).data!.items;
+
+  @override
+  Future<PasswordManager> connectPasswordManager(CreatePasswordManagerRequest request) async =>
+      (await api.passwordManagers.createPasswordManager(createPasswordManagerRequest: request)).data!;
+
+  @override
+  Future<List<PasswordManagerVault>> passwordManagerVaults(String id) async =>
+      (await api.passwordManagers.listPasswordManagerVaults(id: id)).data!.items;
+
+  @override
+  Future<void> setPasswordManagerVaults(String id, List<String> vaults) async {
+    await api.passwordManagers.updatePasswordManager(id: id, updatePasswordManagerRequest: UpdatePasswordManagerRequest(allowedVaults: vaults));
+  }
+
+  @override
+  Future<void> deletePasswordManager(String id) async {
+    await api.passwordManagers.deletePasswordManager(id: id);
+  }
+
+  @override
   Future<List<Replay>> replays(String botId) async => (await api.replays.listReplays(botId: botId)).data!.items;
 
   @override

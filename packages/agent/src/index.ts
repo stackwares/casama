@@ -22,6 +22,7 @@ export * from "./memory.ts";
 export * from "./models.ts";
 export * from "./notifications.ts";
 export * from "./pages.ts";
+export * from "./password-managers.ts";
 export * from "./plugins.ts";
 export * from "./projects.ts";
 export * from "./replays.ts";

@@ -4578,4 +4578,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String replaySaved(String name) {
     return 'Saved the replay $name';
   }
+
+  @override
+  String get passwordManagers => 'Password managers';
+
+  @override
+  String get passwordManagersRow => '1Password or Bitwarden logins for bots';
+
+  @override
+  String get noPasswordManagers => 'No password managers connected';
+
+  @override
+  String get passwordManagersHelp =>
+      'Bots can sign in with logins from the vaults you choose. They never see a password: it\'s filled into the browser only on that login\'s own sites.';
+
+  @override
+  String get connectPasswordManager => 'Connect a password manager';
+
+  @override
+  String get pmWorkspace => 'Whole workspace';
+
+  @override
+  String get pmJustMe => 'Just me';
+
+  @override
+  String get pmNoVaults => 'No vaults chosen yet';
+
+  @override
+  String pmVaults(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vaults',
+      one: '1 vault',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pmLogins(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count logins',
+      one: '1 login',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pmOnePasswordHelp =>
+      'Uses a 1Password Connect server with a service account\'s token.';
+
+  @override
+  String get pmBitwardenHelp =>
+      'Uses Bitwarden\'s Vault Management API (bw serve) for your organization\'s collections.';
+
+  @override
+  String get pmConnectUrl => 'Connect server address';
+
+  @override
+  String get pmConnectToken => 'Connect token';
+
+  @override
+  String get pmBwUrl => 'bw serve address';
+
+  @override
+  String get pmBwToken => 'Access token (optional)';
+
+  @override
+  String get pmForWorkspace => 'For the whole workspace';
+
+  @override
+  String get pmChooseVaults => 'Vaults bots may use';
+
+  @override
+  String get pmChooseVaultsHelp =>
+      'Only logins in the vaults or collections you tick are available to bots.';
 }

@@ -7833,6 +7833,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved the replay {name}'**
   String replaySaved(String name);
+
+  /// No description provided for @passwordManagers.
+  ///
+  /// In en, this message translates to:
+  /// **'Password managers'**
+  String get passwordManagers;
+
+  /// No description provided for @passwordManagersRow.
+  ///
+  /// In en, this message translates to:
+  /// **'1Password or Bitwarden logins for bots'**
+  String get passwordManagersRow;
+
+  /// No description provided for @noPasswordManagers.
+  ///
+  /// In en, this message translates to:
+  /// **'No password managers connected'**
+  String get noPasswordManagers;
+
+  /// No description provided for @passwordManagersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots can sign in with logins from the vaults you choose. They never see a password: it\'s filled into the browser only on that login\'s own sites.'**
+  String get passwordManagersHelp;
+
+  /// No description provided for @connectPasswordManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a password manager'**
+  String get connectPasswordManager;
+
+  /// No description provided for @pmWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole workspace'**
+  String get pmWorkspace;
+
+  /// No description provided for @pmJustMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Just me'**
+  String get pmJustMe;
+
+  /// No description provided for @pmNoVaults.
+  ///
+  /// In en, this message translates to:
+  /// **'No vaults chosen yet'**
+  String get pmNoVaults;
+
+  /// No description provided for @pmVaults.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 vault} other{{count} vaults}}'**
+  String pmVaults(int count);
+
+  /// No description provided for @pmLogins.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 login} other{{count} logins}}'**
+  String pmLogins(int count);
+
+  /// No description provided for @pmOnePasswordHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses a 1Password Connect server with a service account\'s token.'**
+  String get pmOnePasswordHelp;
+
+  /// No description provided for @pmBitwardenHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses Bitwarden\'s Vault Management API (bw serve) for your organization\'s collections.'**
+  String get pmBitwardenHelp;
+
+  /// No description provided for @pmConnectUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect server address'**
+  String get pmConnectUrl;
+
+  /// No description provided for @pmConnectToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect token'**
+  String get pmConnectToken;
+
+  /// No description provided for @pmBwUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'bw serve address'**
+  String get pmBwUrl;
+
+  /// No description provided for @pmBwToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Access token (optional)'**
+  String get pmBwToken;
+
+  /// No description provided for @pmForWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'For the whole workspace'**
+  String get pmForWorkspace;
+
+  /// No description provided for @pmChooseVaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaults bots may use'**
+  String get pmChooseVaults;
+
+  /// No description provided for @pmChooseVaultsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only logins in the vaults or collections you tick are available to bots.'**
+  String get pmChooseVaultsHelp;
 }
 
 class _AppLocalizationsDelegate

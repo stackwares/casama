@@ -13,6 +13,7 @@ import '../features/bots/watchers_screen.dart';
 import '../features/search/search_view.dart';
 import '../features/groups/group_chats.dart';
 import '../features/pages/pages_screen.dart';
+import '../features/settings/password_managers_screen.dart';
 import '../features/teach/teach_draft_screen.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/routines/run_routine_screen.dart';
@@ -198,6 +199,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(path: '/search', pageBuilder: _page((_, _) => const SearchScreen())),
           GoRoute(path: '/teach/:id', pageBuilder: _page((_, s) => TeachDraftScreen(sessionId: s.pathParameters['id']!))),
+          GoRoute(path: '/password-managers', pageBuilder: _page((_, _) => const PasswordManagersScreen())),
           GoRoute(path: '/pages', pageBuilder: _page((_, s) => PagesScreen(botId: s.uri.queryParameters['bot']))),
           GoRoute(path: '/groups/:id', pageBuilder: _page((_, s) => GroupChatScreen(conversationId: s.pathParameters['id']!))),
           GoRoute(path: '/run-routine/:ref', pageBuilder: _page((_, s) => RunRoutineScreen(reference: s.pathParameters['ref']!))),

@@ -2534,6 +2534,45 @@ export const replays = pgTable("replays", {
 	check("replays_source_check", sql`source = ANY (ARRAY['bot'::text, 'teach'::text, 'manual'::text])`),
 ]);
 
+export const passwordManagers = pgTable("password_managers", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	userId: uuid("user_id"),
+	provider: text().notNull(),
+	name: text().notNull(),
+	url: text().notNull(),
+	vaultSecretId: uuid("vault_secret_id"),
+	allowedVaults: text("allowed_vaults").array().default([""]).notNull(),
+	allowedBotIds: uuid("allowed_bot_ids").array(),
+	status: text().default('ok').notNull(),
+	lastError: text("last_error"),
+	createdBy: uuid("created_by"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "password_managers_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "password_managers_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "password_managers_created_by_fkey"
+		}).onDelete("set null"),
+	pgPolicy("password_managers_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(is_member(org_id) AND ((user_id IS NULL) OR (user_id = ( SELECT auth.uid() AS uid))))` }),
+	pgPolicy("password_managers_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("password_managers_provider_check", sql`provider = ANY (ARRAY['1password'::text, 'bitwarden'::text])`),
+	check("password_managers_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 100)`),
+	check("password_managers_url_check", sql`(char_length(url) >= 1) AND (char_length(url) <= 500)`),
+	check("password_managers_status_check", sql`status = ANY (ARRAY['ok'::text, 'error'::text])`),
+]);
+
 export const agentImportFiles = pgTable("agent_import_files", {
 	importId: uuid("import_id").notNull(),
 	path: text().notNull(),

@@ -187,6 +187,11 @@ Class | Method | HTTP request | Description
 [*PagesApi*](doc/PagesApi.md) | [**listPages**](doc/PagesApi.md#listpages) | **GET** /v1/pages | Pages you can open in a workspace (D-119)
 [*PagesApi*](doc/PagesApi.md) | [**revertPage**](doc/PagesApi.md#revertpage) | **POST** /v1/pages/{id}/revert | Bring back an earlier version (as a new version)
 [*PagesApi*](doc/PagesApi.md) | [**updatePage**](doc/PagesApi.md#updatepage) | **PATCH** /v1/pages/{id} | Change who can open a page; making it public returns a new link
+[*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**createPasswordManager**](doc/PasswordManagersApi.md#createpasswordmanager) | **POST** /v1/password-managers | Connect 1Password or Bitwarden; then choose which vaults bots may use
+[*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**deletePasswordManager**](doc/PasswordManagersApi.md#deletepasswordmanager) | **DELETE** /v1/password-managers/{id} | 
+[*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**listPasswordManagerVaults**](doc/PasswordManagersApi.md#listpasswordmanagervaults) | **GET** /v1/password-managers/{id}/vaults | 
+[*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**listPasswordManagers**](doc/PasswordManagersApi.md#listpasswordmanagers) | **GET** /v1/password-managers | The workspace&#39;s password managers and your own (D-128)
+[*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**updatePasswordManager**](doc/PasswordManagersApi.md#updatepasswordmanager) | **PATCH** /v1/password-managers/{id} | 
 [*PluginsApi*](doc/PluginsApi.md) | [**getPluginUpdate**](doc/PluginsApi.md#getpluginupdate) | **GET** /v1/plugins/{id}/update | The latest commit of the plugin&#39;s source and what changes
 [*PluginsApi*](doc/PluginsApi.md) | [**installPlugin**](doc/PluginsApi.md#installplugin) | **POST** /v1/plugins | Install a plugin for a bot, pinned to the previewed commit
 [*PluginsApi*](doc/PluginsApi.md) | [**listPlugins**](doc/PluginsApi.md#listplugins) | **GET** /v1/plugins | 
@@ -369,6 +374,7 @@ Class | Method | HTTP request | Description
  - [CreateLocalDeviceRequest](doc/CreateLocalDeviceRequest.md)
  - [CreateMcpKeyRequest](doc/CreateMcpKeyRequest.md)
  - [CreateOrganizationRequest](doc/CreateOrganizationRequest.md)
+ - [CreatePasswordManagerRequest](doc/CreatePasswordManagerRequest.md)
  - [CreateProjectRequest](doc/CreateProjectRequest.md)
  - [CreateRoutineRequest](doc/CreateRoutineRequest.md)
  - [CreateSecretRequest](doc/CreateSecretRequest.md)
@@ -393,6 +399,7 @@ Class | Method | HTTP request | Description
  - [DeletedId](doc/DeletedId.md)
  - [DeletedKnowledgeSource](doc/DeletedKnowledgeSource.md)
  - [DeletedPage](doc/DeletedPage.md)
+ - [DeletedPasswordManager](doc/DeletedPasswordManager.md)
  - [DeletedPlugin](doc/DeletedPlugin.md)
  - [DeletedReplay](doc/DeletedReplay.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
@@ -479,6 +486,10 @@ Class | Method | HTTP request | Description
  - [PageViewLinkRequest](doc/PageViewLinkRequest.md)
  - [ParseMemoryImportRequest](doc/ParseMemoryImportRequest.md)
  - [ParsedMemoryImport](doc/ParsedMemoryImport.md)
+ - [PasswordManager](doc/PasswordManager.md)
+ - [PasswordManagerList](doc/PasswordManagerList.md)
+ - [PasswordManagerVault](doc/PasswordManagerVault.md)
+ - [PasswordManagerVaultList](doc/PasswordManagerVaultList.md)
  - [Plan](doc/Plan.md)
  - [PlanCatalog](doc/PlanCatalog.md)
  - [Plugin](doc/Plugin.md)
@@ -628,6 +639,7 @@ Class | Method | HTTP request | Description
  - [UpdateOrganizationRequest](doc/UpdateOrganizationRequest.md)
  - [UpdatePageRequest](doc/UpdatePageRequest.md)
  - [UpdatePageResponse](doc/UpdatePageResponse.md)
+ - [UpdatePasswordManagerRequest](doc/UpdatePasswordManagerRequest.md)
  - [UpdatePluginRequest](doc/UpdatePluginRequest.md)
  - [UpdateProjectRequest](doc/UpdateProjectRequest.md)
  - [UpdateRoutineRequest](doc/UpdateRoutineRequest.md)

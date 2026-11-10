@@ -25,6 +25,7 @@ import 'package:kasama_api/src/api/local_computer_api.dart';
 import 'package:kasama_api/src/api/mcp_api.dart';
 import 'package:kasama_api/src/api/memory_api.dart';
 import 'package:kasama_api/src/api/pages_api.dart';
+import 'package:kasama_api/src/api/password_managers_api.dart';
 import 'package:kasama_api/src/api/plugins_api.dart';
 import 'package:kasama_api/src/api/privacy_api.dart';
 import 'package:kasama_api/src/api/projects_api.dart';
@@ -200,6 +201,12 @@ class KasamaApi {
   /// by doing that all interceptors will not be executed
   PagesApi getPagesApi() {
     return PagesApi(dio);
+  }
+
+  /// Get PasswordManagersApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  PasswordManagersApi getPasswordManagersApi() {
+    return PasswordManagersApi(dio);
   }
 
   /// Get PluginsApi instance, base route and serializer can be overridden by a given but be careful,

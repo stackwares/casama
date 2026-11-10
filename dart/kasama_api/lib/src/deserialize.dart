@@ -89,6 +89,7 @@ import 'package:kasama_api/src/model/create_knowledge_source_request_files_inner
 import 'package:kasama_api/src/model/create_local_device_request.dart';
 import 'package:kasama_api/src/model/create_mcp_key_request.dart';
 import 'package:kasama_api/src/model/create_organization_request.dart';
+import 'package:kasama_api/src/model/create_password_manager_request.dart';
 import 'package:kasama_api/src/model/create_project_request.dart';
 import 'package:kasama_api/src/model/create_routine_request.dart';
 import 'package:kasama_api/src/model/create_secret_request.dart';
@@ -112,6 +113,7 @@ import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_knowledge_source.dart';
 import 'package:kasama_api/src/model/deleted_page.dart';
+import 'package:kasama_api/src/model/deleted_password_manager.dart';
 import 'package:kasama_api/src/model/deleted_plugin.dart';
 import 'package:kasama_api/src/model/deleted_replay.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
@@ -195,6 +197,10 @@ import 'package:kasama_api/src/model/page_view_link.dart';
 import 'package:kasama_api/src/model/page_view_link_request.dart';
 import 'package:kasama_api/src/model/parse_memory_import_request.dart';
 import 'package:kasama_api/src/model/parsed_memory_import.dart';
+import 'package:kasama_api/src/model/password_manager.dart';
+import 'package:kasama_api/src/model/password_manager_list.dart';
+import 'package:kasama_api/src/model/password_manager_vault.dart';
+import 'package:kasama_api/src/model/password_manager_vault_list.dart';
 import 'package:kasama_api/src/model/plan.dart';
 import 'package:kasama_api/src/model/plan_catalog.dart';
 import 'package:kasama_api/src/model/plugin.dart';
@@ -333,6 +339,7 @@ import 'package:kasama_api/src/model/update_org_settings_request.dart';
 import 'package:kasama_api/src/model/update_organization_request.dart';
 import 'package:kasama_api/src/model/update_page_request.dart';
 import 'package:kasama_api/src/model/update_page_response.dart';
+import 'package:kasama_api/src/model/update_password_manager_request.dart';
 import 'package:kasama_api/src/model/update_plugin_request.dart';
 import 'package:kasama_api/src/model/update_project_request.dart';
 import 'package:kasama_api/src/model/update_routine_request.dart';
@@ -574,6 +581,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateMcpKeyRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateOrganizationRequest':
           return CreateOrganizationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreatePasswordManagerRequest':
+          return CreatePasswordManagerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateProjectRequest':
           return CreateProjectRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateRoutineRequest':
@@ -623,6 +632,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedKnowledgeSource.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedPage':
           return DeletedPage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedPasswordManager':
+          return DeletedPasswordManager.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedPlugin':
           return DeletedPlugin.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedReplay':
@@ -798,6 +809,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ParseMemoryImportRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ParsedMemoryImport':
           return ParsedMemoryImport.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PasswordManager':
+          return PasswordManager.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PasswordManagerList':
+          return PasswordManagerList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PasswordManagerVault':
+          return PasswordManagerVault.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PasswordManagerVaultList':
+          return PasswordManagerVaultList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Plan':
           return Plan.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PlanCatalog':
@@ -1107,6 +1126,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdatePageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdatePageResponse':
           return UpdatePageResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdatePasswordManagerRequest':
+          return UpdatePasswordManagerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdatePluginRequest':
           return UpdatePluginRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateProjectRequest':

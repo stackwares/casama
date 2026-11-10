@@ -569,6 +569,42 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  // Password managers (D-128)
+  final pmList = <PasswordManager>[];
+  final pmActions = <String>[];
+  @override
+  Future<List<PasswordManager>> passwordManagers(String orgId) async => List.of(pmList);
+  @override
+  Future<PasswordManager> connectPasswordManager(CreatePasswordManagerRequest request) async {
+    pmActions.add('connect:${request.provider.value}:${request.scope.value}');
+    final pm = PasswordManager(
+      id: 'pm-1',
+      scope: PasswordManagerScopeEnum.values.byName(request.scope.name),
+      provider: request.provider == CreatePasswordManagerRequestProviderEnum.n1password ? PasswordManagerProviderEnum.n1password : PasswordManagerProviderEnum.bitwarden,
+      name: request.name,
+      url: request.url,
+      allowedVaults: const [],
+      allowedBotIds: null,
+      status: PasswordManagerStatusEnum.ok,
+      lastError: null,
+      createdAt: DateTime(2026, 11, 10),
+    );
+    pmList.add(pm);
+    return pm;
+  }
+  @override
+  Future<List<PasswordManagerVault>> passwordManagerVaults(String id) async => [
+        PasswordManagerVault(id: 'v-work', name: 'Work', allowed: false, logins: null),
+        PasswordManagerVault(id: 'v-home', name: 'Home', allowed: false, logins: null),
+      ];
+  @override
+  Future<void> setPasswordManagerVaults(String id, List<String> vaults) async => pmActions.add('vaults:$id:${vaults.join(',')}');
+  @override
+  Future<void> deletePasswordManager(String id) async {
+    pmActions.add('delete:$id');
+    pmList.removeWhere((p) => p.id == id);
+  }
+
   // Step replay (D-127)
   final replayList = <Replay>[
     Replay(

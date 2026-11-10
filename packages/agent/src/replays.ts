@@ -10,6 +10,7 @@ import type { Database } from "@kasama/db";
 import { collectExec } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
+import { hasLoginPlaceholders, resolveLoginPlaceholders } from "./password-managers.ts";
 import { loadSecrets, resolvePlaceholders } from "./secrets.ts";
 import { type ToolContext, ToolError, type ToolRegistry } from "./tools/registry.ts";
 
@@ -84,7 +85,7 @@ export function checkReplaySteps(steps: ReplayStep[], params: ReplayParam[]) {
     for (const [, name] of JSON.stringify(s.args).matchAll(PARAM))
       if (!names.has(name as string)) throw new ToolError("unknown_param", `Step ${i + 1} uses {{param:${name}}}, which isn't declared.`);
     const typed = typeof s.args.text === "string" ? (s.args.text as string) : null;
-    if (typed && /fill|type/.test(s.tool) && s.target && PASSWORDISH.test(s.target.name) && !/\{\{(secret|param):/.test(typed))
+    if (typed && /fill|type/.test(s.tool) && s.target && PASSWORDISH.test(s.target.name) && !/\{\{(secret|param|login|totp):/.test(typed))
       throw new ToolError("password_in_replay", `Step ${i + 1} types into "${s.target.name}" in clear text; use {{secret:NAME}} instead.`);
   });
 }
@@ -106,7 +107,7 @@ export interface ReplayOutcome {
 
 /** Runs a replay's steps through the registered tools; stops at the first problem. */
 export async function executeReplay(
-  deps: { db: Database; registry: () => ToolRegistry },
+  deps: { db: Database; registry: () => ToolRegistry; fetch?: typeof fetch },
   replay: { name: string; params: ReplayParam[]; steps: ReplayStep[] },
   given: Record<string, string>,
   ctx: ToolContext,
@@ -133,9 +134,10 @@ export async function executeReplay(
       args = { ...args, ref };
     }
     try {
-      if (/\{\{(secret|totp):/.test(JSON.stringify(args))) {
+      if (/\{\{(secret|totp|login):/.test(JSON.stringify(args))) {
         const host = (await def.destinationHost?.(args as never, ctx)) ?? step.host ?? null;
-        args = resolvePlaceholders(args, secrets, host);
+        if (/\{\{(secret|totp):/.test(JSON.stringify(args))) args = resolvePlaceholders(args, secrets, host);
+        if (hasLoginPlaceholders(args)) args = await resolveLoginPlaceholders(deps.db, ctx, args, host, { fetch: deps.fetch ?? fetch });
       }
       const parsed = def.schema.safeParse(args);
       if (!parsed.success) return stop(`the step's arguments don't fit ${step.tool}`);
@@ -176,7 +178,7 @@ export async function loadReplay(db: Database, botId: string, nameOrId: string) 
   return r ?? null;
 }
 
-export function registerReplayTools(registry: ToolRegistry, deps: { db: Database }) {
+export function registerReplayTools(registry: ToolRegistry, deps: { db: Database; fetch?: typeof fetch }) {
   const { db } = deps;
   const tools = () => registry;
   registry.register({
@@ -190,7 +192,7 @@ export function registerReplayTools(registry: ToolRegistry, deps: { db: Database
     async execute(args, ctx) {
       const r = await loadReplay(db, ctx.botId, args.name);
       if (!r) throw new ToolError("replay_not_found", `You have no replay named ${args.name}.`);
-      const o = await executeReplay({ db, registry: tools }, r, args.params ?? {}, ctx);
+      const o = await executeReplay({ db, registry: tools, fetch: deps.fetch }, r, args.params ?? {}, ctx);
       await recordOutcome(db, r.id, o);
       return { content: describeOutcome(r.name, o), preview: o.ok ? `${r.name}: ${o.total} steps` : `${r.name}: stopped at step ${o.stoppedAt}` };
     },

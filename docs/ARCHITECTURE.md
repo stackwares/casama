@@ -247,6 +247,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/replays.ts` (`executeReplay`, `replay.run|save`, `replayFromTeach`), the replay-run path at the start of `run.ts`, `replays` and `runs.replay`, `apps/server/src/api/routes/replays.ts`, and the bot's Replays screen.
 
+## Password managers (D-128)
+
+- `packages/agent/src/password-managers.ts` (1Password Connect and Bitwarden `bw serve` clients, `{{login:Name:field}}` resolution in `run.ts` and replays, `logins.list`), `password_managers`, `apps/server/src/api/routes/password-managers.ts`, and the Password managers screen.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

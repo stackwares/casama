@@ -43,6 +43,7 @@ import {
   secretRequestState,
 } from "./secret-requests.ts";
 import { computerMcpFor } from "./plugins.ts";
+import { hasLoginPlaceholders, resolveLoginPlaceholders } from "./password-managers.ts";
 import { REPLAY_STOPPED } from "./replays.ts";
 import { learnFromRun } from "./skill-learning.ts";
 import { SETUP_GUIDE } from "./tools/setup.ts";
@@ -1484,6 +1485,15 @@ async function toolStep(
         if (err instanceof SecretError) throw new ToolError(err.code, err.message);
         throw err;
       }
+    }
+    // Password-manager logins (D-128): filled only on the item's own sites; the values are redacted.
+    if (hasLoginPlaceholders(args) && !def.keepsPlaceholders) {
+      if (!def.acceptsSecrets) throw new ToolError("secrets_not_accepted", `${def.name} does not accept {{login:...}} placeholders.`);
+      const host = (await def.destinationHost?.(args as never, toolCtx)) ?? null;
+      args = await resolveLoginPlaceholders(deps.db, info, args, host, {
+        fetch: deps.fetch ?? safeFetch,
+        onValue: (v, label) => redactor.add(v, label),
+      });
     }
     const res = await def.execute(args as never, {
       runId: info.runId,

@@ -891,3 +891,22 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - unit (`replays.test.ts`): parameters, finding refs, refusing clear-text passwords, teach to steps, running steps with refs and checks, stopping at a failed check or a missing element.
   - API (`replays.test.ts`): saving from a teach recording (private to its recorder), a replay run handing over to the model, delete permissions.
   - widget (`replays_test.dart`).
+
+## D-128 Password managers
+
+- **Providers (both mocked in tests; no real accounts):**
+  - **1Password:** through a 1Password Connect server's REST API (vaults, items, and item fields: username, password, OTP), using a service account's Connect token.
+  - **Bitwarden:** through its Vault Management API (`bw serve`: organization collections and their login items).
+- **Not yet: Bitwarden Secrets Manager.** It holds key-value secrets rather than logins, which the existing named secrets already cover.
+- **Scope:** `password_managers` belong to the whole workspace (admins connect them) or to one person (only runs acting for that person, D-091, can use them). The token is checked by listing vaults before saving, kept in Vault and never returned. Nothing is usable until someone chooses vaults or collections. An optional bot list narrows it further. Connecting and changing vaults are audited.
+- **The model never sees a password:**
+  - `logins.list` shows `[login:Name]` with the item's sites and whether it has one-time codes.
+  - The bot writes `{{login:Name:username}}`, `{{login:Name:password}}` or `{{login:Name:otp}}` into `browser.fill` (or any tool that accepts secrets).
+  - The executor fills these only when the destination host is one of the item's own URLs or a subdomain of one. Otherwise it refuses and names the item's sites.
+  - Filled values are added to the run's redactor, so they never appear in output.
+  - `otp` is the item's current code, computed from its seed through the sign-in codes flow (D-102), or taken as is when the provider already returns a code.
+  - Replays fill login placeholders the same way.
+- **App:** workspace settings → Password managers. It shows the workspace's managers and your own, and lets you connect one (1Password or Bitwarden, an address and a token; admins can share it with the workspace), choose vaults (with login counts) and remove one.
+- **Tests:**
+  - API (`password-managers.test.ts`), against fake Connect and `bw serve` servers: token check, admin-only workspace managers, no access before vaults are chosen, `[login:Name]` without values, filling only on the item's host with redaction and a one-time code, a personal Bitwarden usable only in runs acting for its owner and invisible to others.
+  - widget (`password_managers_test.dart`).
