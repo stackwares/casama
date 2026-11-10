@@ -879,6 +879,11 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 | Lazy tool loading      | The model starts with core tools and loads the rest when it needs them                                                                                             | For bots with 30+ tools, input tokens drop at least 30% and eval success does not drop                                              | 1    |
 | Run tracing            | OpenTelemetry spans for every run, model step and tool call; Langfuse attempt logging                                                                              | One trace shows a run's model and tool steps with timing, tokens and cost, and no prompt text                                       | 1    |
 | App polish             | Edit and resend, quiet hours, bot settings history, share a bot as a template, Siri and Android shortcuts, offline cache                                           | Each works on its platforms; an edited message reruns from that point and keeps the old branch                                      | 1    |
+| Projects               | A goal with a plan, milestones, tickets, budget and deadline; the lead bot works in sessions until the goal is met                                                  | A multi-session project reaches done with no person between milestones, stops cleanly at its budget and resumes after a restart     | 1    |
+| Check-ins              | Opt-in morning brief, scans of connected accounts every few hours, and a "For you" feed of suggested actions                                                        | The 08:00 brief lists today's meetings and emails needing replies; accepting a suggestion runs it through approvals; a quiet scan sends no push | 1    |
+| Action rules           | Per-action autonomy: allow, allow within limits, ask, or hand off, by tool, category or target                                                                     | Email to the user's domain sends without approval and external email waits; a bot cannot change its own rules                       | 1    |
+| Watchers               | "Tell me when": wake a bot when a page changes, a reply arrives, a query result changes or a time passes                                                           | A page watcher fires within one check interval of a change, and unchanged checks use no model tokens                                | 1    |
+| MCP server             | Kasama as an MCP server, so other AI apps and coding tools can hand tasks to Kasama bots                                                                           | An MCP client sends a task to a bot and gets the result; a high-risk step waits for approval in the Kasama app                      | 1    |
 | Group chats            | 2 to 10 bots in one chat, woken by `@Name` or `@everyone`                                                                                                          | `@everyone` gets a plan from the lead bot and work from each assigned bot; `@Name` wakes only that bot                              | 2    |
 | Pages                  | Full-screen dashboards and reports with public links, PDF export and refresh by routine                                                                            | A public link shows the page signed out and returns 404 once revoked; a routine refreshes it                                        | 2    |
 | Teach by showing       | Record a task on the bot's computer and turn it into a skill                                                                                                       | After one recorded demo, the bot completes the same form with new values; no typed password is stored                               | 2    |
@@ -889,6 +894,10 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 | Public bots            | A share link and a website widget let outsiders chat with a bot under a separate, restricted profile                                                               | A visitor chats through the widget; the bot cannot reach the owner's memory, computer or secrets; the owner can take over           | 2    |
 | Your own browser       | A browser extension lets bots work in the user's own signed-in browser, in a labeled tab group                                                                     | A bot completes a task on a site the user is signed in to, without signing in again, and never reads other tabs                     | 2    |
 | Meeting bots           | Bots join video calls, take notes and turn them into tickets and follow-ups                                                                                        | A bot joins a test Meet call from a calendar event, saves the transcript and creates tickets for action items                       | 2    |
+| Self-improving skills  | Bots propose a skill after repeating a task and propose fixes when a skill fails                                                                                   | After the same kind of task twice the bot offers a skill; a failure produces a proposed fix shown as a diff                         | 2    |
+| Step replay            | Replay recorded browser and desktop steps without model calls; the bot takes over when a step breaks                                                              | A recorded form fill replays with new values at zero model tokens, and recovers after the page layout changes                       | 2    |
+| Password managers      | 1Password and Bitwarden logins filled into the bot's browser without the model seeing them                                                                        | A bot signs in with a vault item; the password never appears in events, logs or model input; other sites are refused                | 2    |
+| Bot sharing            | Per-bot access (chat, edit, admin) and private bots; a bot acting for a person sees only what that person can                                                     | A chat-only member cannot edit a bot; a bot asked by member A cannot read a folder only member B can see                            | 2    |
 | Chat apps              | Telegram, email, Slack, WhatsApp, SMS, iMessage, Feishu and Messenger; routines started by an email or chat message                                                | The channel gate passes, and an email that matches a routine's filter starts that routine                                           | 3    |
 | Phone-call voice       | The bot calls the user with a native incoming-call screen                                                                                                          | The phone rings on the lock screen on iOS and Android; answering starts the live call within 2 s                                    | 3    |
 | Encryption at rest     | Content encrypted before it reaches Postgres, with a local key or AWS KMS                                                                                          | A database dump shows no message, event, memory or summary text, and the app works unchanged                                        | 3    |
@@ -896,6 +905,10 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 | Paid data services     | Bots buy data (places, emails, SEO) through Treg, charged to credits                                                                                               | The approval card shows the price, and the credit ledger charges cost plus 20%                                                      | 3    |
 | Sandbox providers      | Boat, boxd, CreateOS, Novita, Railway, Kubernetes, Incus and Alibaba Wuying                                                                                        | Each passes the provider contract suite                                                                                             | 3    |
 | Agent-to-agent         | Bots published as A2A agents, and external A2A agents callable by bots                                                                                             | An external A2A client gets a task done by a bot; a bot hands a task to an external A2A agent and gets the result                   | 3    |
+| Calls for you          | The bot phones businesses for the user, with a live transcript, listen-in and take-over                                                                           | The bot books a slot on a test line, the transcript streams live, and the user takes over mid-call                                  | 3    |
+| Payments               | Single-use virtual cards for an approved amount and merchant; hard bans no rule can relax                                                                          | A test purchase succeeds once; a second or larger charge declines; a gift-card purchase is refused                                  | 3    |
+| Linked agents          | A person's bot coordinates with a trusted contact's bot, across workspaces or servers                                                                             | Two users' bots agree a meeting time without either seeing the other's calendar details; revoking the link stops requests           | 3    |
+| Voice upgrades         | Wake word, interrupting the bot mid-sentence, and an optional animated avatar in live calls                                                                       | The wake word opens a live call within 1 s; speaking over the bot stops its speech within 300 ms                                    | 3    |
 | Ops extras             | Infisical, audit-log forwarding, Cloudflare AI Gateway, one-click local server, sign-up allowlist, encrypted backups, team computer folders, Helm chart, warm pool | Each works on a fresh self-hosted install                                                                                           | 3    |
 
 ### Local MCP servers on the user's computer
@@ -986,6 +999,36 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - **Shortcuts:** App Intents for Siri and Shortcuts on iOS and macOS, and app shortcuts on Android, for "Ask a bot" and "Run a routine".
 - **Offline cache** (D-042): a drift cache of bots, conversations and recent messages, so chats open instantly and can be read offline.
 
+### Projects
+
+- `projects` (org\_id, title, goal\_md, done\_criteria\_md, status planning, active, paused, blocked, done or cancelled, lead\_bot\_id, owner\_user\_id, budget\_usd, deadline\_at, plan\_md, version). Tickets gain `project_id`, `parent_task_id` and `milestone`; conversations, routines, watchers and pages can link to a project.
+- **Plan first:** the lead bot drafts milestones and tickets from the goal, and the owner approves or edits the plan before work starts. Milestones can require the owner's sign-off before the next one begins.
+- **Sessions:** each session is a normal run (so the 40-step and 30-minute limits still apply) that picks the next ready tickets, works them or assigns them to other bots or subagents, and ends by updating `plan_md` with what was done, what is next and any blocker. A DBOS project heartbeat starts the next session when tickets are ready, and stops when the project is paused, blocked, done, over budget or past its deadline. All runs carry `project_id`, so spend is summed per project.
+- Each session posts a short status to the project thread; a blocked project notifies the owner with the question. The project folder is `projects/<slug>/` on the lead bot's computer (the team computer when several bots work on it).
+- Project screen: goal, progress by milestone, the board filtered to the project, spend against budget and a timeline across every run. Tools: `projects.create`, `projects.plan`, `projects.update` and `projects.status`.
+
+### Check-ins
+
+- Off by default, per bot. A morning brief at a set time in the owner's timezone, plus a scan of the bot's connected accounts, tickets, projects and watchers every few hours (default 3, minimum 1). Both are routines (`routines.kind` brief or scan) and run on the bot's cheaper model with a daily spend cap.
+- Scans write `suggestions` (org\_id, bot\_id, user\_id, title, body\_md, proposed\_action jsonb, sources, urgency, status pending, accepted, dismissed or expired, expires\_at). Accepting runs the proposed action through normal approvals; dismissing can save a "don't suggest this" memory. A scan that finds nothing new writes nothing and sends nothing.
+- Home gets a "For you" feed per workspace: the latest brief, pending suggestions, approvals and pinned pages. Only urgent suggestions push, and quiet hours apply.
+
+### Action rules
+
+- `action_rules` (org\_id, bot\_id or null for the workspace, match by tool, tool group or category such as send, pay, delete, publish, share or sign\_in, an optional target such as a domain, recipient list or amount limit, and a rule: allow, allow within limits, ask or hand off). Hand off means the bot prepares the step and asks the person to finish it through take control.
+- The most specific rule wins and ask or hand off wins ties. The autonomy level stays as the default when no rule matches, and "always allow this tool" ticks become rules. Changing passwords and two-step settings is always hand off. Bots, including bots that manage bots, cannot edit rules.
+- A rules screen per bot, grouped by category, with plain-language previews ("Sends email to anyone at acme.com without asking").
+
+### Watchers
+
+- `watchers` (bot\_id, kind page\_change, reply, query or time, target, condition\_md, check\_every, expires\_at, what to run on a match, last\_value\_hash). Page watchers fetch through the egress proxy, or in the bot's browser for signed-in pages, and compare a chosen part of the page. Reply watchers listen to connected email, chat and ticket events; query watchers rerun an MCP or API call and compare the result.
+- Checks run in the worker without a model; only a match wakes the bot, with the change. "Tell me when…" in chat creates one through `watchers.create`, and the bot's screen lists active watchers with pause and delete.
+
+### Kasama as an MCP server
+
+- A Streamable HTTP MCP endpoint at `/mcp`, authenticated with workspace API keys or OAuth. Tools: list bots, send a task to a bot (starts a run and returns its id), get a run's status and result, and list pending approvals.
+- Runs started this way keep the bot's approvals, rules and budgets; approvals are still answered in the Kasama apps. The docs give copy-paste client configs.
+
 ### Group chats
 
 - `conversations.kind` (direct, group). Group chats list their bots in `conversation_bots` (conversation\_id, bot\_id, role lead or member), and `conversations.bot_id` stays the lead. A member sees a group chat only if they can see every bot in it.
@@ -1047,6 +1090,26 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - A routine trigger on calendar events with a meeting link (through the calendar connection) sends the bot; users can also paste a link. The bot announces itself in the meeting chat when it joins.
 - The live transcript goes into the conversation. After the call the bot writes a summary, creates tickets for action items and drafts follow-ups for approval. Joining a meeting that isn't on the owner's calendar is high risk.
 
+### Self-improving skills
+
+- When a run succeeds at a task that matches two or more earlier runs (by embedding of run summaries), the bot proposes a skill as a card with its name, steps and tools; accepting saves it. When a run that used a skill fails, or the user corrects it, the bot proposes an edit shown as a diff.
+- Skill changes need the owner's approval unless an action rule allows them. `skill_revisions` keeps history, and each skill shows uses, success rate and last failure.
+
+### Step replay
+
+- Teach-by-showing recordings and successful browser or desktop runs can be saved as replays: agent-browser and agent-desktop actions with element refs, parameters and checks. `replay.run(name, params)` runs them in the worker without model calls.
+- When an element is missing or a check fails, the bot takes over from that step with the model and offers to update the replay. Typed passwords are never stored; replays use `{{secret}}` and password-manager items.
+
+### Password managers
+
+- Connect 1Password (service account) or Bitwarden (Secrets Manager or an organization vault) per workspace or person, choosing which vaults or collections bots may use.
+- The executor fills logins into the bot's browser only for the item's own URLs, like `{{secret}}`; the model sees `[login:Name]`, never the password. One-time codes stored in an item use the sign-in codes flow.
+
+### Bot sharing
+
+- `bot_access` (bot\_id, user\_id or role, access chat, edit or admin). The workspace default stays "everyone can chat"; private bots are visible only to people listed.
+- A bot acting for a person (the run's acting user, as with ChatGPT plans in D-091) sees only the files, connections and knowledge that person can access.
+
 ### Chat apps
 
 - The Channels section stands, with iMessage and Feishu added after Messenger. iMessage works only through the desktop companion on the user's own Mac (Apple has no bot API) and needs that Mac online. Feishu uses its open platform's events and send API.
@@ -1080,6 +1143,26 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 
 - Off by default. When on, each chosen bot is published as an A2A agent with an agent card, and A2A tasks become runs with the same approvals, budgets and audit log. Callers authenticate with workspace API keys.
 - External A2A agents are added as integrations (`integrations.kind = a2a`), and bots call them with `a2a.send(agent, task)` (medium risk). Follow the A2A spec version that is current at build time.
+
+### Calls for you
+
+- Tool `voice.call(number, purpose, notes)` (high risk): the bot places an outbound call through a telephony provider (Twilio first) on the live-voice stack. It says at the start that it is an AI assistant calling for the user, works toward the stated purpose and hangs up when done.
+- The app shows a live transcript, and the user can listen in, take over or end the call. Recording is off by default and only allowed where consent rules permit.
+- Limits: business numbers by default, a daily call cap, never emergency numbers, and a number deny list on Kasama Cloud. Call minutes go to credits. Legal review comes before hosted launch.
+
+### Payments
+
+- A `PaymentProvider` interface; the first adapter issues single-use virtual cards (Stripe Issuing on Kasama Cloud; self-hosters bring their own issuing account). `payments.request(merchant, amount, currency, reason)` always needs approval with the amount shown. The card works once, for that merchant and amount plus a small tolerance, and expires after 1 h. The executor fills card details into checkout; the model never sees them.
+- Hard bans no rule can relax: trading securities, buying crypto or gift cards, transfers between accounts and payments to individuals. Monthly spend caps per bot and workspace. Legal review (card issuing terms, money transmission) comes before hosted launch.
+
+### Linked agents
+
+- A person links their bot with a trusted contact's bot; both approve and either can revoke. Links work across workspaces and, through A2A, across Kasama servers.
+- Linked bots exchange structured requests ("find a dinner slot for 4 next week"), each under its own owner's rules, sharing only what the request needs. Every exchange shows in both owners' timelines.
+
+### Voice upgrades
+
+- Wake word on desktop and Android with an on-device open-source model, opening a live call with the chosen bot. Barge-in: speaking over the bot stops its speech and it listens. An optional animated avatar for live calls, rendered on device from the bot's avatar.
 
 ### Ops extras
 
@@ -1224,11 +1307,11 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 
 Build these only after v1 launch unless the product owner reprioritizes. Designs and acceptance criteria are in the Post-v1 roadmap; each wave's gate is that every acceptance criterion in its rows passes.
 
-- [ ] Wave 1: local MCP servers, coding agents, ticket board, spaces, bots that manage bots, ask for a secret, sign-in codes for bots, search, skills library, setup interview and starter bots, lazy tool loading, run tracing, app polish
-- [ ] Wave 2: group chats, pages, teach by showing, plugins, import an agent, routines and skills as files, knowledge sources, public bots, your own browser, meeting bots
+- [ ] Wave 1: local MCP servers, coding agents, ticket board, spaces, bots that manage bots, ask for a secret, sign-in codes for bots, search, skills library, setup interview and starter bots, lazy tool loading, run tracing, app polish, projects, check-ins, action rules, watchers, MCP server
+- [ ] Wave 2: group chats, pages, teach by showing, plugins, import an agent, routines and skills as files, knowledge sources, public bots, your own browser, meeting bots, self-improving skills, step replay, password managers, bot sharing
 - [ ] Wave 3: channel adapters in this order: Telegram, email (Resend), SMS (Twilio), Slack, WhatsApp, Messenger, iMessage, Feishu, each with sender allowlists, plus email and chat triggers for routines
 - [ ] Channel gate: a Telegram message and an email each get replies in the same thread; unknown senders are ignored
-- [ ] Wave 3: phone-call voice, encryption at rest, memory backends, paid data services, additional `SandboxProvider` adapters (Boat, boxd, CreateOS, Novita, Railway-backed runners, Kubernetes, Incus, Alibaba Wuying) passing the contract suite, agent-to-agent (A2A), and the ops extras
+- [ ] Wave 3: phone-call voice, encryption at rest, memory backends, paid data services, additional `SandboxProvider` adapters (Boat, boxd, CreateOS, Novita, Railway-backed runners, Kubernetes, Incus, Alibaba Wuying) passing the contract suite, agent-to-agent (A2A), calls for you, payments, linked agents, voice upgrades, and the ops extras
 
 ## Open decisions and risks
 
