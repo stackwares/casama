@@ -76,6 +76,7 @@ import 'package:kasama_api/src/model/create_integration_request.dart';
 import 'package:kasama_api/src/model/create_invite_link_request.dart';
 import 'package:kasama_api/src/model/create_invite_request.dart';
 import 'package:kasama_api/src/model/create_local_device_request.dart';
+import 'package:kasama_api/src/model/create_mcp_key_request.dart';
 import 'package:kasama_api/src/model/create_organization_request.dart';
 import 'package:kasama_api/src/model/create_project_request.dart';
 import 'package:kasama_api/src/model/create_routine_request.dart';
@@ -85,6 +86,7 @@ import 'package:kasama_api/src/model/create_task_request.dart';
 import 'package:kasama_api/src/model/created_connect_key.dart';
 import 'package:kasama_api/src/model/created_invite_link.dart';
 import 'package:kasama_api/src/model/created_local_device.dart';
+import 'package:kasama_api/src/model/created_mcp_key.dart';
 import 'package:kasama_api/src/model/created_routine.dart';
 import 'package:kasama_api/src/model/credential.dart';
 import 'package:kasama_api/src/model/credential_list.dart';
@@ -133,6 +135,11 @@ import 'package:kasama_api/src/model/local_device.dart';
 import 'package:kasama_api/src/model/local_device_list.dart';
 import 'package:kasama_api/src/model/local_mcp_integration_list.dart';
 import 'package:kasama_api/src/model/local_mcp_server_info.dart';
+import 'package:kasama_api/src/model/mcp_auth_request_info.dart';
+import 'package:kasama_api/src/model/mcp_consent_request.dart';
+import 'package:kasama_api/src/model/mcp_consent_result.dart';
+import 'package:kasama_api/src/model/mcp_key.dart';
+import 'package:kasama_api/src/model/mcp_key_list.dart';
 import 'package:kasama_api/src/model/me.dart';
 import 'package:kasama_api/src/model/membership.dart';
 import 'package:kasama_api/src/model/memory.dart';
@@ -176,6 +183,7 @@ import 'package:kasama_api/src/model/purchase_request.dart';
 import 'package:kasama_api/src/model/redirect_url.dart';
 import 'package:kasama_api/src/model/release_lease_request.dart';
 import 'package:kasama_api/src/model/revoked_connect_key.dart';
+import 'package:kasama_api/src/model/revoked_key.dart';
 import 'package:kasama_api/src/model/routine.dart';
 import 'package:kasama_api/src/model/routine_list.dart';
 import 'package:kasama_api/src/model/run.dart';
@@ -466,6 +474,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateInviteRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateLocalDeviceRequest':
           return CreateLocalDeviceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateMcpKeyRequest':
+          return CreateMcpKeyRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateOrganizationRequest':
           return CreateOrganizationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateProjectRequest':
@@ -484,6 +494,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreatedInviteLink.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedLocalDevice':
           return CreatedLocalDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreatedMcpKey':
+          return CreatedMcpKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedRoutine':
           return CreatedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Credential':
@@ -589,6 +601,16 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return LocalMcpIntegrationList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LocalMcpServerInfo':
           return LocalMcpServerInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'McpAuthRequestInfo':
+          return McpAuthRequestInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'McpConsentRequest':
+          return McpConsentRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'McpConsentResult':
+          return McpConsentResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'McpKey':
+          return McpKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'McpKeyList':
+          return McpKeyList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Me':
           return Me.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Membership':
@@ -687,6 +709,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ReleaseLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevokedConnectKey':
           return RevokedConnectKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RevokedKey':
+          return RevokedKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Risk':
           
           

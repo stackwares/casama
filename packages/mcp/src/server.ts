@@ -92,11 +92,21 @@ type Bot = { id: string; name: string; status: string; org_id: string };
 
 export function createKasamaMcpServer(
   api: KasamaApi,
-  opts: { pollMs?: number; timeoutMs?: number } = {},
+  opts: {
+    pollMs?: number;
+    timeoutMs?: number;
+    /** Hosted /mcp (D-117): the token's workspace; others are invisible. */
+    scopeOrgId?: string;
+    /** Hosted /mcp: whether this workspace allows deciding approvals over MCP. */
+    canDecideApprovals?: () => Promise<boolean>;
+  } = {},
 ) {
   const server = new McpServer({ name: "kasama", version: VERSION });
 
-  const orgs = async () => (await api.call<{ items: Org[] }>("/v1/orgs")).items;
+  const orgs = async () =>
+    (await api.call<{ items: Org[] }>("/v1/orgs")).items.filter(
+      (o) => !opts.scopeOrgId || o.id === opts.scopeOrgId,
+    );
   const resolveOrg = async (org?: string) => {
     const all = await orgs();
     const o = org
@@ -243,12 +253,26 @@ export function createKasamaMcpServer(
       },
       annotations: { destructiveHint: true },
     },
-    async ({ approval_id, decision }) =>
-      json(
+    async ({ approval_id, decision }) => {
+      if (opts.canDecideApprovals && !(await opts.canDecideApprovals()))
+        throw new Error(
+          "This workspace doesn't allow deciding approvals over MCP. Approve it in the Kasama app.",
+        );
+      if (opts.scopeOrgId) {
+        const pending = (
+          await api.call<{ items: Array<{ id: string }> }>(
+            `/v1/approvals?org_id=${opts.scopeOrgId}&status=pending`,
+          )
+        ).items;
+        if (!pending.some((a) => a.id === approval_id))
+          throw new Error("No such pending approval in this workspace.");
+      }
+      return json(
         await api.call(`/v1/approvals/${approval_id}/decision`, {
           json: { decision: decision === "approve" ? "approved" : "denied" },
         }),
-      ),
+      );
+    },
   );
 
   return server;

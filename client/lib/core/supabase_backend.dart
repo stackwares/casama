@@ -878,6 +878,33 @@ class SupabaseBackend implements Backend {
   Future<List<Task>> tasks(String orgId, {String? projectId}) async => (await api.tasks.listTasks(orgId: orgId, projectId: projectId)).data!.items;
 
   @override
+  Future<McpAuthRequestInfo> mcpAuthRequest(String id) async => (await api.mcp.getMcpAuthRequest(id: id)).data!;
+
+  @override
+  Future<String> decideMcpAuthRequest(String id, {required String orgId, required bool approve}) async =>
+      (await api.mcp.decideMcpAuthRequest(id: id, mcpConsentRequest: McpConsentRequest(orgId: orgId, approve: approve))).data!.redirectUrl;
+
+  @override
+  Future<List<McpKey>> mcpKeys(String orgId) async => (await api.mcp.listMcpKeys(id: orgId)).data!.items;
+
+  @override
+  Future<CreatedMcpKey> createMcpKey(String orgId, String name) async =>
+      (await api.mcp.createMcpKey(id: orgId, createMcpKeyRequest: CreateMcpKeyRequest(name: name))).data!;
+
+  @override
+  Future<void> revokeMcpKey(String orgId, String keyId) async {
+    await api.mcp.revokeMcpKey(id: orgId, keyId: keyId);
+  }
+
+  @override
+  Future<bool> mcpDecideApprovals(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.mcpDecideApprovals;
+
+  @override
+  Future<void> setMcpDecideApprovals(String orgId, bool allowed) async {
+    await api.privacy.updateOrgSettings(id: orgId, updateOrgSettingsRequest: UpdateOrgSettingsRequest(mcpDecideApprovals: allowed));
+  }
+
+  @override
   Future<List<Watcher>> watchers(String botId) async => (await api.watchers.listWatchers(botId: botId)).data!.items;
 
   @override

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/bots/bot_history_screen.dart';
 import '../features/bots/bot_template.dart';
+import '../features/mcp/mcp_screens.dart';
 import '../features/bots/action_rules_screen.dart';
 import '../features/bots/watchers_screen.dart';
 import '../features/search/search_view.dart';
@@ -96,6 +97,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/onboarding', pageBuilder: _page((_, _) => const OnboardingScreen())),
       GoRoute(path: '/two-step', pageBuilder: _page((_, _) => const TwoStepPromptScreen())),
       GoRoute(path: '/join/:token', pageBuilder: _page((_, s) => JoinScreen(token: s.pathParameters['token']!))),
+      GoRoute(path: '/oauth/consent/:id', pageBuilder: _page((_, s) => McpConsentScreen(requestId: s.pathParameters['id']!))),
       GoRoute(path: '/import/:token', pageBuilder: _page((_, s) => ImportBotScreen(token: s.pathParameters['token']!))),
       ShellRoute(
         pageBuilder: (context, state, child) => MaterialPage(

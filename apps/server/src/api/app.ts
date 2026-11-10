@@ -27,6 +27,7 @@ import { registerCheckinRoutes } from "./routes/checkins.ts";
 import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
+import { type InProcessEnv, registerMcpRoutes } from "./routes/mcp.ts";
 import { registerPrivacyRoutes } from "./routes/privacy.ts";
 import { registerProjectRoutes } from "./routes/projects.ts";
 import { registerSearchRoutes } from "./routes/search.ts";
@@ -164,6 +165,12 @@ export function createApp(deps: AppDeps) {
 
   // Optional bearer auth: verifies the token when present; routes that need it call requireClaims.
   app.use("/v1/*", async (c, next) => {
+    // Hosted MCP tool calls (D-117) arrive in-process with their person already resolved.
+    const inProcess = (c.env as InProcessEnv | undefined)?.kasamaClaims;
+    if (inProcess) {
+      c.set("claims", inProcess);
+      return next();
+    }
     const header = c.req.header("authorization");
     if (header?.startsWith("Bearer ")) {
       try {
@@ -213,6 +220,7 @@ export function createApp(deps: AppDeps) {
   registerCheckinRoutes(app, deps);
   registerActionRuleRoutes(app, deps);
   registerWatcherRoutes(app, deps);
+  registerMcpRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {
     db: deps.db,

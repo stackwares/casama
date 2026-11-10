@@ -205,6 +205,29 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  final mcpActions = <String>[];
+  bool mcpApprovals = false;
+  @override
+  Future<McpAuthRequestInfo> mcpAuthRequest(String id) async =>
+      McpAuthRequestInfo(id: id, clientName: 'Phone AI', redirectHost: 'ai.example', expiresAt: DateTime(2030));
+  @override
+  Future<String> decideMcpAuthRequest(String id, {required String orgId, required bool approve}) async {
+    mcpActions.add('${approve ? 'allow' : 'refuse'}:$orgId');
+    return 'https://ai.example/callback?code=x';
+  }
+  @override
+  Future<List<McpKey>> mcpKeys(String orgId) async => const [];
+  @override
+  Future<CreatedMcpKey> createMcpKey(String orgId, String name) async {
+    mcpActions.add('key:$name');
+    return CreatedMcpKey(id: 'k1', name: name, hint: 'abcd', lastUsedAt: null, createdAt: DateTime(2026), key: 'ksk_secret_abcd', mcpUrl: 'http://api/mcp');
+  }
+  @override
+  Future<void> revokeMcpKey(String orgId, String keyId) async => mcpActions.add('revoke:$keyId');
+  @override
+  Future<bool> mcpDecideApprovals(String orgId) async => mcpApprovals;
+  @override
+  Future<void> setMcpDecideApprovals(String orgId, bool allowed) async => mcpApprovals = allowed;
   final watcherList = <Watcher>[
     Watcher(
       id: 'w1',

@@ -9,6 +9,7 @@ import * as billing from "./billing.ts";
 import * as bots from "./bots.ts";
 import * as computers from "./computers.ts";
 import * as local from "./local.ts";
+import * as mcp from "./mcp.ts";
 import * as privacy from "./privacy.ts";
 import * as projects from "./projects.ts";
 import * as search from "./search.ts";
@@ -38,6 +39,7 @@ export const routes = {
   ...checkins,
   ...actionRules,
   ...watchers,
+  ...mcp,
 };
 export {
   actionRules,
@@ -50,6 +52,7 @@ export {
   bots,
   computers,
   local,
+  mcp,
   privacy,
   projects,
   search,

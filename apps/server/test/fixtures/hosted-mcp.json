@@ -1,0 +1,94 @@
+{
+  "name": "mcp",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 50,
+            "outputTokens": 5
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "make a helper bot"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "m1",
+            "name": "bots__create",
+            "args": {
+              "name": "Helper",
+              "instructions": "Help out."
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "bots.create"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Helper is ready."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Hello from Kasama."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

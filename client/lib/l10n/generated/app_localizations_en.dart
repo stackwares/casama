@@ -3881,4 +3881,49 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get connectAiApp => 'Connect an AI app';
+
+  @override
+  String connectAiAppAsk(String app) {
+    return '$app wants to use Kasama';
+  }
+
+  @override
+  String connectAiAppHelp(String host) {
+    return 'It can list your bots, ask them to do things and read results in the workspace you pick, as you. Your bots\' approvals and rules still apply. You\'ll go back to $host.';
+  }
+
+  @override
+  String get connectAiAppDone => 'Done. You can go back to the AI app.';
+
+  @override
+  String get refuse => 'Refuse';
+
+  @override
+  String get allow => 'Allow';
+
+  @override
+  String get connectAiApps => 'Connect AI apps';
+
+  @override
+  String get connectAiAppsHelp =>
+      'Apps that support MCP connect to this address and sign in, or use an API key. They act as the person who connected them.';
+
+  @override
+  String get mcpApprovals => 'Allow approvals from AI apps';
+
+  @override
+  String get mcpApprovalsHelp =>
+      'Connected apps can approve or deny your bots\' actions. Off by default.';
+
+  @override
+  String get apiKeyOnce => 'Copy this key now; it won\'t be shown again.';
+
+  @override
+  String get newApiKey => 'New API key';
+
+  @override
+  String get apiKeyName => 'Name';
 }

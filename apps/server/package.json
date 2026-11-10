@@ -20,6 +20,7 @@
     "@kasama/db": "workspace:*",
     "@kasama/domain": "workspace:*",
     "@kasama/ee": "workspace:*",
+    "@kasama/mcp": "workspace:*",
     "@kasama/observability": "workspace:*",
     "@kasama/sandbox": "workspace:*",
     "@scalar/hono-api-reference": "^0.12.18",

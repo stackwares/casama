@@ -159,6 +159,11 @@ Class | Method | HTTP request | Description
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**localComputerConnect**](doc/LocalComputerApi.md#localcomputerconnect) | **GET** /v1/local-computer/connect | WebSocket for the desktop companion (authorization: Device &lt;token&gt;, or ?token&#x3D;). The API sends tool requests; the app answers from its embedded computerd.
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**setLocalMcpServers**](doc/LocalComputerApi.md#setlocalmcpservers) | **PUT** /v1/local-devices/{id}/mcp-servers | Register the local MCP servers on this computer (no secrets); each becomes a local_mcp integration
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**updateLocalDevice**](doc/LocalComputerApi.md#updatelocaldevice) | **PATCH** /v1/local-devices/{id} | Change capabilities, shared folders, allowed bots or turn the device off
+[*McpApi*](doc/McpApi.md) | [**createMcpKey**](doc/McpApi.md#createmcpkey) | **POST** /v1/orgs/{id}/mcp-keys | A workspace API key for the hosted MCP endpoint (admins); it acts as you in this workspace
+[*McpApi*](doc/McpApi.md) | [**decideMcpAuthRequest**](doc/McpApi.md#decidemcpauthrequest) | **POST** /v1/oauth/requests/{id}/consent | Allow or refuse an AI app&#39;s access to one workspace; returns where to send the browser
+[*McpApi*](doc/McpApi.md) | [**getMcpAuthRequest**](doc/McpApi.md#getmcpauthrequest) | **GET** /v1/oauth/requests/{id} | An AI app asking to connect, for the consent screen
+[*McpApi*](doc/McpApi.md) | [**listMcpKeys**](doc/McpApi.md#listmcpkeys) | **GET** /v1/orgs/{id}/mcp-keys | 
+[*McpApi*](doc/McpApi.md) | [**revokeMcpKey**](doc/McpApi.md#revokemcpkey) | **DELETE** /v1/orgs/{id}/mcp-keys/{key_id} | 
 [*MemoryApi*](doc/MemoryApi.md) | [**listMemories**](doc/MemoryApi.md#listmemories) | **GET** /v1/bots/{id}/memories | 
 [*PrivacyApi*](doc/PrivacyApi.md) | [**deleteMyAccount**](doc/PrivacyApi.md#deletemyaccount) | **DELETE** /v1/me | Delete your account: you are signed out now, and your data, workspaces you solely own and their computer snapshots are purged after the grace period
 [*PrivacyApi*](doc/PrivacyApi.md) | [**exportMyData**](doc/PrivacyApi.md#exportmydata) | **GET** /v1/me/export | Download everything you can see as a ZIP of JSON files
@@ -308,6 +313,7 @@ Class | Method | HTTP request | Description
  - [CreateInviteLinkRequest](doc/CreateInviteLinkRequest.md)
  - [CreateInviteRequest](doc/CreateInviteRequest.md)
  - [CreateLocalDeviceRequest](doc/CreateLocalDeviceRequest.md)
+ - [CreateMcpKeyRequest](doc/CreateMcpKeyRequest.md)
  - [CreateOrganizationRequest](doc/CreateOrganizationRequest.md)
  - [CreateProjectRequest](doc/CreateProjectRequest.md)
  - [CreateRoutineRequest](doc/CreateRoutineRequest.md)
@@ -317,6 +323,7 @@ Class | Method | HTTP request | Description
  - [CreatedConnectKey](doc/CreatedConnectKey.md)
  - [CreatedInviteLink](doc/CreatedInviteLink.md)
  - [CreatedLocalDevice](doc/CreatedLocalDevice.md)
+ - [CreatedMcpKey](doc/CreatedMcpKey.md)
  - [CreatedRoutine](doc/CreatedRoutine.md)
  - [Credential](doc/Credential.md)
  - [CredentialList](doc/CredentialList.md)
@@ -368,6 +375,11 @@ Class | Method | HTTP request | Description
  - [LocalDeviceList](doc/LocalDeviceList.md)
  - [LocalMcpIntegrationList](doc/LocalMcpIntegrationList.md)
  - [LocalMcpServerInfo](doc/LocalMcpServerInfo.md)
+ - [McpAuthRequestInfo](doc/McpAuthRequestInfo.md)
+ - [McpConsentRequest](doc/McpConsentRequest.md)
+ - [McpConsentResult](doc/McpConsentResult.md)
+ - [McpKey](doc/McpKey.md)
+ - [McpKeyList](doc/McpKeyList.md)
  - [Me](doc/Me.md)
  - [Membership](doc/Membership.md)
  - [Memory](doc/Memory.md)
@@ -415,6 +427,7 @@ Class | Method | HTTP request | Description
  - [RedirectUrl](doc/RedirectUrl.md)
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
  - [RevokedConnectKey](doc/RevokedConnectKey.md)
+ - [RevokedKey](doc/RevokedKey.md)
  - [Risk](doc/Risk.md)
  - [Routine](doc/Routine.md)
  - [RoutineList](doc/RoutineList.md)

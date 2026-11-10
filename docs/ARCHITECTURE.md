@@ -207,6 +207,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/watchers.ts` (`checkWatchers` in the worker's minute tick, `watchers.create|list|delete`), `watchers`, `apps/server/src/api/routes/watchers.ts`, and the bot's Watchers screen.
 
+## Hosted MCP endpoint (D-117)
+
+- `apps/server/src/api/routes/mcp.ts` (`/mcp` with `@kasama/mcp` tools over in-process API calls, the OAuth server, consent, API keys), `mcp_clients`/`mcp_auth_requests`/`mcp_tokens`, `organizations.mcp_decide_approvals`, `docs/MCP.md`, and the app's consent screen and Connect AI apps section.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

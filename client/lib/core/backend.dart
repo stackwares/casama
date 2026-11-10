@@ -345,6 +345,14 @@ abstract class Backend {
 
   // Task board
   Future<List<Task>> tasks(String orgId, {String? projectId});
+  // Hosted MCP (D-117)
+  Future<McpAuthRequestInfo> mcpAuthRequest(String id);
+  Future<String> decideMcpAuthRequest(String id, {required String orgId, required bool approve});
+  Future<List<McpKey>> mcpKeys(String orgId);
+  Future<CreatedMcpKey> createMcpKey(String orgId, String name);
+  Future<void> revokeMcpKey(String orgId, String keyId);
+  Future<bool> mcpDecideApprovals(String orgId);
+  Future<void> setMcpDecideApprovals(String orgId, bool allowed);
   // Watchers (D-116)
   Future<List<Watcher>> watchers(String botId);
   Future<void> setWatcherPaused(String id, bool paused);

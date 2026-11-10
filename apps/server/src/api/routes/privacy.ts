@@ -60,13 +60,15 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       run_event_retention_days: number;
       require_mfa: boolean;
       llm_tracing: boolean;
+      mcp_decide_approvals: boolean;
     }>(
-      sql`select run_event_retention_days, require_mfa, llm_tracing from public.organizations where id = ${orgId}::uuid`,
+      sql`select run_event_retention_days, require_mfa, llm_tracing, mcp_decide_approvals from public.organizations where id = ${orgId}::uuid`,
     );
     return {
       run_event_retention_days: o?.run_event_retention_days ?? 180,
       require_mfa: o?.require_mfa ?? false,
       llm_tracing: o?.llm_tracing ?? true,
+      mcp_decide_approvals: o?.mcp_decide_approvals ?? false,
     };
   };
 
@@ -93,8 +95,12 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (
       body.run_event_retention_days != null ||
       body.require_mfa != null ||
-      body.llm_tracing != null
+      body.llm_tracing != null ||
+      body.mcp_decide_approvals != null
     ) {
+      if (body.mcp_decide_approvals != null)
+        await db.execute(sql`
+          update public.organizations set mcp_decide_approvals = ${body.mcp_decide_approvals} where id = ${id}::uuid`);
       if (body.llm_tracing != null)
         await db.execute(sql`
           update public.organizations set llm_tracing = ${body.llm_tracing} where id = ${id}::uuid`);

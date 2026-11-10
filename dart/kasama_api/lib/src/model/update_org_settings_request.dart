@@ -24,6 +24,8 @@ class UpdateOrgSettingsRequest {
 
      this.requireMfa,
 
+     this.mcpDecideApprovals,
+
      this.llmTracing,
   });
 
@@ -54,6 +56,19 @@ class UpdateOrgSettingsRequest {
 
 
 
+      /// Allow approving or denying actions from AI apps connected over MCP (D-117)
+  @JsonKey(
+    
+    name: r'mcp_decide_approvals',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? mcpDecideApprovals;
+
+
+
       /// Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse
   @JsonKey(
     
@@ -73,12 +88,14 @@ class UpdateOrgSettingsRequest {
     bool operator ==(Object other) => identical(this, other) || other is UpdateOrgSettingsRequest &&
       other.runEventRetentionDays == runEventRetentionDays &&
       other.requireMfa == requireMfa &&
+      other.mcpDecideApprovals == mcpDecideApprovals &&
       other.llmTracing == llmTracing;
 
     @override
     int get hashCode =>
         runEventRetentionDays.hashCode +
         requireMfa.hashCode +
+        mcpDecideApprovals.hashCode +
         llmTracing.hashCode;
 
   factory UpdateOrgSettingsRequest.fromJson(Map<String, dynamic> json) => _$UpdateOrgSettingsRequestFromJson(json);

@@ -6777,6 +6777,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{not fired yet} =1{fired once} other{fired {count} times}}'**
   String firedTimes(int count);
+
+  /// No description provided for @connectAiApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect an AI app'**
+  String get connectAiApp;
+
+  /// No description provided for @connectAiAppAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'{app} wants to use Kasama'**
+  String connectAiAppAsk(String app);
+
+  /// No description provided for @connectAiAppHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'It can list your bots, ask them to do things and read results in the workspace you pick, as you. Your bots\' approvals and rules still apply. You\'ll go back to {host}.'**
+  String connectAiAppHelp(String host);
+
+  /// No description provided for @connectAiAppDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done. You can go back to the AI app.'**
+  String get connectAiAppDone;
+
+  /// No description provided for @refuse.
+  ///
+  /// In en, this message translates to:
+  /// **'Refuse'**
+  String get refuse;
+
+  /// No description provided for @allow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get allow;
+
+  /// No description provided for @connectAiApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect AI apps'**
+  String get connectAiApps;
+
+  /// No description provided for @connectAiAppsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps that support MCP connect to this address and sign in, or use an API key. They act as the person who connected them.'**
+  String get connectAiAppsHelp;
+
+  /// No description provided for @mcpApprovals.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow approvals from AI apps'**
+  String get mcpApprovals;
+
+  /// No description provided for @mcpApprovalsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected apps can approve or deny your bots\' actions. Off by default.'**
+  String get mcpApprovalsHelp;
+
+  /// No description provided for @apiKeyOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this key now; it won\'t be shown again.'**
+  String get apiKeyOnce;
+
+  /// No description provided for @newApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'New API key'**
+  String get newApiKey;
+
+  /// No description provided for @apiKeyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get apiKeyName;
 }
 
 class _AppLocalizationsDelegate

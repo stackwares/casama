@@ -11,6 +11,8 @@ abstract class _$OrgSettingsCWProxy {
 
   OrgSettings requireMfa(bool requireMfa);
 
+  OrgSettings mcpDecideApprovals(bool mcpDecideApprovals);
+
   OrgSettings llmTracing(bool llmTracing);
 
   /// Creates a new instance with the provided field values.
@@ -24,6 +26,7 @@ abstract class _$OrgSettingsCWProxy {
   OrgSettings call({
     int runEventRetentionDays,
     bool requireMfa,
+    bool mcpDecideApprovals,
     bool llmTracing,
   });
 }
@@ -43,6 +46,10 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
   OrgSettings requireMfa(bool requireMfa) => call(requireMfa: requireMfa);
 
   @override
+  OrgSettings mcpDecideApprovals(bool mcpDecideApprovals) =>
+      call(mcpDecideApprovals: mcpDecideApprovals);
+
+  @override
   OrgSettings llmTracing(bool llmTracing) => call(llmTracing: llmTracing);
 
   /// Creates a new instance with the provided field values.
@@ -57,6 +64,7 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
   OrgSettings call({
     Object? runEventRetentionDays = const $CopyWithPlaceholder(),
     Object? requireMfa = const $CopyWithPlaceholder(),
+    Object? mcpDecideApprovals = const $CopyWithPlaceholder(),
     Object? llmTracing = const $CopyWithPlaceholder(),
   }) {
     return OrgSettings(
@@ -71,6 +79,12 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
           ? _value.requireMfa
           // ignore: cast_nullable_to_non_nullable
           : requireMfa as bool,
+      mcpDecideApprovals:
+          mcpDecideApprovals == const $CopyWithPlaceholder() ||
+              mcpDecideApprovals == null
+          ? _value.mcpDecideApprovals
+          // ignore: cast_nullable_to_non_nullable
+          : mcpDecideApprovals as bool,
       llmTracing:
           llmTracing == const $CopyWithPlaceholder() || llmTracing == null
           ? _value.llmTracing
@@ -100,6 +114,7 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
       requiredKeys: const [
         'run_event_retention_days',
         'require_mfa',
+        'mcp_decide_approvals',
         'llm_tracing',
       ],
     );
@@ -109,6 +124,10 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
         (v) => (v as num).toInt(),
       ),
       requireMfa: $checkedConvert('require_mfa', (v) => v as bool),
+      mcpDecideApprovals: $checkedConvert(
+        'mcp_decide_approvals',
+        (v) => v as bool,
+      ),
       llmTracing: $checkedConvert('llm_tracing', (v) => v as bool),
     );
     return val;
@@ -116,6 +135,7 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
   fieldKeyMap: const {
     'runEventRetentionDays': 'run_event_retention_days',
     'requireMfa': 'require_mfa',
+    'mcpDecideApprovals': 'mcp_decide_approvals',
     'llmTracing': 'llm_tracing',
   },
 );
@@ -124,5 +144,6 @@ Map<String, dynamic> _$OrgSettingsToJson(OrgSettings instance) =>
     <String, dynamic>{
       'run_event_retention_days': instance.runEventRetentionDays,
       'require_mfa': instance.requireMfa,
+      'mcp_decide_approvals': instance.mcpDecideApprovals,
       'llm_tracing': instance.llmTracing,
     };

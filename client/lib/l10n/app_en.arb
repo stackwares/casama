@@ -1968,5 +1968,20 @@
   "watcherDone": "Done",
   "watcherExpired": "Expired",
   "firedTimes": "{count, plural, =0{not fired yet} =1{fired once} other{fired {count} times}}",
-  "@firedTimes": {"placeholders": {"count": {"type": "int"}}}
+  "@firedTimes": {"placeholders": {"count": {"type": "int"}}},
+  "connectAiApp": "Connect an AI app",
+  "connectAiAppAsk": "{app} wants to use Kasama",
+  "@connectAiAppAsk": {"placeholders": {"app": {"type": "String"}}},
+  "connectAiAppHelp": "It can list your bots, ask them to do things and read results in the workspace you pick, as you. Your bots' approvals and rules still apply. You'll go back to {host}.",
+  "@connectAiAppHelp": {"placeholders": {"host": {"type": "String"}}},
+  "connectAiAppDone": "Done. You can go back to the AI app.",
+  "refuse": "Refuse",
+  "allow": "Allow",
+  "connectAiApps": "Connect AI apps",
+  "connectAiAppsHelp": "Apps that support MCP connect to this address and sign in, or use an API key. They act as the person who connected them.",
+  "mcpApprovals": "Allow approvals from AI apps",
+  "mcpApprovalsHelp": "Connected apps can approve or deny your bots' actions. Off by default.",
+  "apiKeyOnce": "Copy this key now; it won't be shown again.",
+  "newApiKey": "New API key",
+  "apiKeyName": "Name"
 }
