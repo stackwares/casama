@@ -35,6 +35,8 @@ class PublicConfig {
     required  this.defaultReasoningEffort,
 
      this.wallpapersEnabled,
+
+     this.chatgptSignIn,
   });
 
   @JsonKey(
@@ -134,6 +136,18 @@ class PublicConfig {
 
 
 
+  @JsonKey(
+    
+    name: r'chatgpt_sign_in',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? chatgptSignIn;
+
+
+
 
 
     @override
@@ -145,7 +159,8 @@ class PublicConfig {
       other.billingEnabled == billingEnabled &&
       other.defaultModels == defaultModels &&
       other.defaultReasoningEffort == defaultReasoningEffort &&
-      other.wallpapersEnabled == wallpapersEnabled;
+      other.wallpapersEnabled == wallpapersEnabled &&
+      other.chatgptSignIn == chatgptSignIn;
 
     @override
     int get hashCode =>
@@ -156,7 +171,8 @@ class PublicConfig {
         billingEnabled.hashCode +
         defaultModels.hashCode +
         defaultReasoningEffort.hashCode +
-        wallpapersEnabled.hashCode;
+        wallpapersEnabled.hashCode +
+        chatgptSignIn.hashCode;
 
   factory PublicConfig.fromJson(Map<String, dynamic> json) => _$PublicConfigFromJson(json);
 

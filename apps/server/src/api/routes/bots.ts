@@ -65,7 +65,7 @@ const runOut = (r: RunRow) => ({
 });
 
 type CredRow = typeof modelCredentials.$inferSelect;
-const credOut = (c: CredRow) => ({
+export const credOut = (c: CredRow) => ({
   id: c.id,
   org_id: c.orgId,
   provider: c.provider as "openai",
@@ -74,6 +74,12 @@ const credOut = (c: CredRow) => ({
   key_hint: c.keyHint,
   last_tested_at: c.lastTestedAt ? iso(c.lastTestedAt) : null,
   last_test_ok: c.lastTestOk,
+  owner_user_id: c.ownerUserId ?? null,
+  status: c.status as "ok",
+  account:
+    c.provider === "chatgpt" ? ((c.oauth as { email?: string } | null)?.email ?? null) : null,
+  fallback_on_limit:
+    (c.settings as { fallback_on_limit?: boolean } | null)?.fallback_on_limit === true,
   created_at: iso(c.createdAt),
 });
 
@@ -393,6 +399,14 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       ),
     );
     if (!allowed) throw new ApiError(403, "forbidden", "Only owners and admins can add model keys");
+    if (body.provider === "chatgpt") {
+      throw new ApiError(
+        400,
+        "validation_failed",
+        "Connect a ChatGPT plan with ChatGPT sign-in (POST /v1/credentials/chatgpt/start)",
+        { errors: [{ path: "provider", message: "Use ChatGPT sign-in" }] },
+      );
+    }
     if (body.provider === "openai_compatible" && !body.base_url) {
       throw new ApiError(400, "validation_failed", "base_url is required for openai_compatible", {
         errors: [{ path: "base_url", message: "Required" }],
@@ -454,14 +468,90 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       tx.select().from(modelCredentials).where(eq(modelCredentials.id, id)),
     );
     if (!cred) throw new ApiError(404, "credential_not_found", "Credential not found");
+    if (cred.provider === "chatgpt") {
+      // A ChatGPT plan is personal: only the person who signed in may use or test it.
+      if (cred.ownerUserId !== claims.sub)
+        throw new ApiError(403, "forbidden", "Only the person who connected this plan can test it");
+    } else {
+      const [{ allowed } = { allowed: false }] = await withUserSession(db, claims, (tx) =>
+        tx.execute<{ allowed: boolean }>(
+          sql`select public.has_role(${cred.orgId}::uuid, 'admin') as allowed`,
+        ),
+      );
+      if (!allowed)
+        throw new ApiError(403, "forbidden", "Only owners and admins can test model keys");
+    }
+    return c.json(await deps.workflows.testCredential(id, cred.orgId, model), 200);
+  });
+
+  /** Whether the caller may change or delete a credential: admins, or the owner of a personal one. */
+  const canManage = async (claims: JwtClaims, cred: CredRow) => {
+    if (cred.ownerUserId && cred.ownerUserId === claims.sub) return true;
     const [{ allowed } = { allowed: false }] = await withUserSession(db, claims, (tx) =>
       tx.execute<{ allowed: boolean }>(
         sql`select public.has_role(${cred.orgId}::uuid, 'admin') as allowed`,
       ),
     );
-    if (!allowed)
-      throw new ApiError(403, "forbidden", "Only owners and admins can test model keys");
-    return c.json(await deps.workflows.testCredential(id, cred.orgId, model), 200);
+    return allowed;
+  };
+
+  app.openapi(routes.updateCredential, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    const [cred] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(modelCredentials).where(eq(modelCredentials.id, id)),
+    );
+    if (!cred) throw new ApiError(404, "credential_not_found", "Credential not found");
+    if (body.fallback_on_limit !== undefined && cred.ownerUserId !== claims.sub)
+      throw new ApiError(403, "forbidden", "Only the plan's owner can change this setting");
+    if (!(await canManage(claims, cred)))
+      throw new ApiError(403, "forbidden", "Only owners and admins can change model keys");
+    const settings = {
+      ...((cred.settings as Record<string, unknown> | null) ?? {}),
+      ...(body.fallback_on_limit !== undefined
+        ? { fallback_on_limit: body.fallback_on_limit }
+        : {}),
+    };
+    const [row] = await db
+      .update(modelCredentials)
+      .set({ label: body.label ?? cred.label, settings })
+      .where(eq(modelCredentials.id, id))
+      .returning();
+    if (!row) throw new ApiError(404, "credential_not_found", "Credential not found");
+    await audit(row.orgId, claims.sub, "credential.updated", "model_credential", row.id, {
+      fields: Object.keys(body),
+    });
+    return c.json(credOut(row), 200);
+  });
+
+  app.openapi(routes.deleteCredential, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const [cred] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(modelCredentials).where(eq(modelCredentials.id, id)),
+    );
+    if (!cred) throw new ApiError(404, "credential_not_found", "Credential not found");
+    if (!(await canManage(claims, cred)))
+      throw new ApiError(403, "forbidden", "Only owners and admins can delete model keys");
+    if (cred.provider === "chatgpt") {
+      // Revoke at OpenAI first; the credential is deleted even if OpenAI can't be reached.
+      const revoked = await deps.workflows.revokeCredential(id).catch((err: unknown) => ({
+        ok: false,
+        error: (err as Error).message,
+      }));
+      if (!revoked.ok)
+        deps.logger.warn("chatgpt revocation failed", { credential_id: id, error: revoked.error });
+    }
+    await db.transaction(async (tx) => {
+      await tx.delete(modelCredentials).where(eq(modelCredentials.id, id));
+      if (cred.vaultSecretId)
+        await tx.execute(sql`delete from vault.secrets where id = ${cred.vaultSecretId}::uuid`);
+    });
+    await audit(cred.orgId, claims.sub, "credential.deleted", "model_credential", cred.id, {
+      provider: cred.provider,
+    });
+    return c.body(null, 204);
   });
 
   // Model lists change rarely; a short cache keeps the picker fast and the providers unbothered.

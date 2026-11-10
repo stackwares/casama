@@ -1,5 +1,6 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import {
+  type ChatGptConfig,
   type ComputerService,
   CredentialResolver,
   collect,
@@ -9,6 +10,7 @@ import {
   mergeModelList,
   type RunDeps,
   refreshIntegration,
+  revokeToken,
   runAgent,
   safeFetch,
 } from "@kasama/agent";
@@ -28,6 +30,7 @@ export const WORKFLOWS = {
   agentRun: "agentRun",
   testCredential: "testCredential",
   listCredentialModels: "listCredentialModels",
+  revokeCredential: "revokeCredential",
   ping: "ping",
 } as const;
 
@@ -44,6 +47,8 @@ let runtime:
       telemetry?: { url: string; version: string };
       /** Fixture mode: the model picker uses Kasama's short list instead of calling providers. */
       offlineModels?: boolean;
+      /** ChatGPT plan sign-in endpoints (tests point them at a fake OpenAI). */
+      chatgpt?: ChatGptConfig;
     }
   | undefined;
 export function configureWorkflows(r: NonNullable<typeof runtime>) {
@@ -167,10 +172,26 @@ export async function testCredential(
   credentialId: string,
   orgId: string,
   model?: string,
+  credentials: CredentialResolver = new CredentialResolver(db),
 ) {
   const [cred] = await db.execute<{ provider: string }>(
     sql`select provider from public.model_credentials where id = ${credentialId}::uuid and org_id = ${orgId}::uuid`,
   );
+  if (cred?.provider === "chatgpt") {
+    // A ChatGPT plan is checked by listing its models, which spends none of the plan's allowance.
+    const started = Date.now();
+    const list = await listCredentialModels(db, credentialId, orgId, { credentials });
+    const outcome: CredentialTestOutcome = {
+      ok: list.source === "live",
+      model: list.models[0]?.id ?? "",
+      latency_ms: Date.now() - started,
+      error: list.source === "live" ? undefined : (list.error ?? "ChatGPT did not answer."),
+    };
+    await db.execute(
+      sql`update public.model_credentials set last_tested_at = now(), last_test_ok = ${outcome.ok} where id = ${credentialId}::uuid`,
+    );
+    return outcome;
+  }
   if (
     cred &&
     ["fal", "brave_search", "tavily", "deepgram", "elevenlabs", "cartesia", "fish_audio"].includes(
@@ -230,9 +251,11 @@ export async function testCredential(
 
 export const testCredentialWorkflow = DBOS.registerWorkflow(
   async (credentialId: string, orgId: string, model?: string) =>
-    DBOS.runStep(() => testCredential(rt().db, rt().gateway, credentialId, orgId, model), {
-      name: "test",
-    }),
+    DBOS.runStep(
+      () =>
+        testCredential(rt().db, rt().gateway, credentialId, orgId, model, rt().agent.credentials),
+      { name: "test" },
+    ),
   { name: WORKFLOWS.testCredential },
 );
 
@@ -241,7 +264,7 @@ export async function listCredentialModels(
   db: Database,
   credentialId: string,
   orgId: string,
-  opts: { offline?: boolean; fetch?: typeof fetch } = {},
+  opts: { offline?: boolean; fetch?: typeof fetch; credentials?: CredentialResolver } = {},
 ): Promise<ModelList> {
   const [row] = await db.execute<{
     provider: string;
@@ -254,6 +277,26 @@ export async function listCredentialModels(
     where c.id = ${credentialId}::uuid and c.org_id = ${orgId}::uuid`);
   if (!row) return { models: [], source: "featured", error: "Credential not found." };
   if (opts.offline) return { models: mergeModelList(row.provider, []), source: "featured" };
+  if (row.provider === "chatgpt") {
+    // The tokens are refreshed if needed; the access token is the bearer for the model list.
+    let resolved: Awaited<ReturnType<CredentialResolver["resolve"]>>;
+    try {
+      resolved = await (opts.credentials ?? new CredentialResolver(db)).resolve(orgId, {
+        credential_id: credentialId,
+        model: "",
+      });
+    } catch (err) {
+      return {
+        models: mergeModelList("chatgpt", []),
+        source: "featured",
+        error: (err as Error).message,
+      };
+    }
+    return listModels(
+      { provider: "chatgpt", apiKey: resolved.apiKey, baseUrl: resolved.baseUrl },
+      opts.fetch ?? rt().chatgpt?.fetch,
+    );
+  }
   // The admin chose this base URL (it may be a local Ollama), so the plain fetch is used, as in chats.
   return listModels(
     { provider: row.provider, apiKey: row.key ?? undefined, baseUrl: row.base_url ?? undefined },
@@ -264,11 +307,64 @@ export async function listCredentialModels(
 export const listCredentialModelsWorkflow = DBOS.registerWorkflow(
   async (credentialId: string, orgId: string) =>
     DBOS.runStep(
-      () => listCredentialModels(rt().db, credentialId, orgId, { offline: rt().offlineModels }),
+      () =>
+        listCredentialModels(rt().db, credentialId, orgId, {
+          offline: rt().offlineModels,
+          credentials: rt().agent.credentials,
+        }),
       { name: "list" },
     ),
   { name: WORKFLOWS.listCredentialModels },
 );
+
+/**
+ * Revokes a ChatGPT sign-in before its credential is deleted (SPEC: Disconnect). Best effort: the
+ * API deletes the credential either way, and the outcome says whether OpenAI confirmed.
+ */
+export async function revokeCredential(
+  credentials: CredentialResolver,
+  credentialId: string,
+  cfg: ChatGptConfig = {},
+): Promise<{ ok: boolean; error?: string }> {
+  const tokens = await credentials.chatGptTokens(credentialId);
+  if (!tokens) return { ok: true };
+  try {
+    await revokeToken(
+      { authUrl: cfg.authUrl, fetch: cfg.fetch },
+      { clientId: tokens.client_id, token: tokens.refresh_token },
+    );
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+export const revokeCredentialWorkflow = DBOS.registerWorkflow(
+  async (credentialId: string) =>
+    DBOS.runStep(() => revokeCredential(rt().agent.credentials, credentialId, rt().chatgpt), {
+      name: "revoke",
+    }),
+  { name: WORKFLOWS.revokeCredential },
+);
+
+/** Refresh tokens last 30 days from their last use: refresh plans idle for 20 days. */
+export async function refreshIdleChatGpt(db: Database, credentials: CredentialResolver) {
+  const rows = await db.execute<{ id: string }>(sql`
+    select id from public.model_credentials
+    where provider = 'chatgpt' and status = 'ok'
+      and coalesce(refreshed_at, created_at) < now() - interval '20 days'
+    order by coalesce(refreshed_at, created_at) limit 200`);
+  let refreshed = 0;
+  for (const r of rows) {
+    try {
+      await credentials.refreshChatGpt(r.id, { force: true });
+      refreshed++;
+    } catch {
+      // Marked needs_reconnect (owner told) or left for the next hour on a network error.
+    }
+  }
+  return refreshed;
+}
 
 /** Voice (D-065): short, keyed operations on their own queue. */
 const voiceRt = () => {
@@ -314,6 +410,9 @@ export async function cleanupIdempotencyKeys(db: Database) {
 export const maintenanceWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
     await DBOS.runStep(() => cleanupIdempotencyKeys(rt().db), { name: "idempotency-keys" });
+    await DBOS.runStep(() => refreshIdleChatGpt(rt().db, rt().agent.credentials), {
+      name: "chatgpt-refresh",
+    });
   },
   { name: "maintenance" },
 );

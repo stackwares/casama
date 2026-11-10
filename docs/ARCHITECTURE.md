@@ -107,6 +107,13 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - **Cloud Connect** (D-071): `/v1/orgs/{id}/cloud-connect/keys`, `/connect/v1/{whoami,sandbox/*,models/chat/completions}` on the cloud; the `kasama-cloud` provider on self-hosted servers. Tables: `cloud_connect_keys`, `cloud_connect_computers`.
 - Off by default (`BILLING_ENABLED=false`).
 
+## ChatGPT plan sign-in (D-091)
+
+- **API** (`routes/chatgpt.ts`): `/v1/credentials/chatgpt/start|complete` (loopback sign-in; the server exchanges the code, verifies the ID token and writes the tokens to Vault), plus `PATCH/DELETE /v1/credentials/{id}` for every key. `CHATGPT_SIGN_IN` (auto: off when billing is on), reported as `chatgpt_sign_in` in `/v1/config`.
+- **Agent** (`chatgpt-auth.ts`, `gateway/chatgpt.ts`, `credentials.ts`): OAuth helpers, the Responses adapter with OpenAI's plan-usage constraints and error codes, owner-only resolution, refresh under an advisory lock. Runs know the person they act for (`actingUserId`); plan usage is recorded at cost 0 (`usage_ledger.source = 'chatgpt_plan'`); skipped plans emit `model.fallback`.
+- **Worker:** ChatGPT key test (model list), `revokeCredential`, idle refresh in the hourly maintenance job.
+- **Clients:** `kasama_sdk/chatgpt_sign_in.dart` (loopback listener) used by `kasama credential chatgpt` and the desktop app's "Continue with ChatGPT"; Model keys shows plans with status, reconnect, the next-model setting, Manage usage and Remove.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

@@ -83,6 +83,8 @@ export interface WorkerOptions {
   cloud?: { url: string; key: string };
   /** Realtime voice model (default gpt-realtime-2.1). */
   realtimeModel?: string;
+  /** ChatGPT plan sign-in endpoints; defaults are OpenAI's (tests point them at a fake). */
+  chatgpt?: { authUrl?: string; apiUrl?: string };
 }
 
 function loadFixtures(paths: string): FixtureFile[] {
@@ -100,10 +102,12 @@ function loadFixtures(paths: string): FixtureFile[] {
 }
 
 export function buildGateway(
-  opts: Pick<WorkerOptions, "modelFixtures" | "modelRecord" | "maxOutputTokens">,
+  opts: Pick<WorkerOptions, "modelFixtures" | "modelRecord" | "maxOutputTokens"> & {
+    chatgptFetch?: typeof fetch;
+  },
 ): ModelGateway {
   if (opts.modelFixtures) return new ReplayGateway(loadFixtures(opts.modelFixtures));
-  const real = new AiSdkGateway();
+  const real = new AiSdkGateway({ chatgpt: { fetch: opts.chatgptFetch } });
   const inner = opts.modelRecord ? recordingGateway(real, opts.modelRecord) : real;
   const cap = opts.maxOutputTokens;
   if (!cap) return inner;
@@ -119,8 +123,16 @@ export async function startWorker(opts: WorkerOptions) {
     ? undefined
     : createDb(opts.databaseUrl, { max: (opts.runConcurrency ?? 20) + 5 });
   const db = opts.db ?? (handle as NonNullable<typeof handle>).db;
-  const gateway = buildGateway(opts);
-  const credentials = new CredentialResolver(db);
+  const fetchOut = createSafeFetch({ exemptCidrs: opts.egressExemptCidrs });
+  // OpenAI's public endpoints go through the safe fetch; an admin's override (a local fake in
+  // tests, or a proxy) is called directly.
+  const customChatGpt = [opts.chatgpt?.authUrl, opts.chatgpt?.apiUrl].some(
+    (u) => u && !/^https:\/\/(auth|api)\.openai\.com(\/|$)/.test(u),
+  );
+  const chatgptFetch = customChatGpt ? fetch : fetchOut;
+  const chatgpt = { ...opts.chatgpt, fetch: chatgptFetch };
+  const gateway = buildGateway({ ...opts, chatgptFetch });
+  const credentials = new CredentialResolver(db, { chatgpt });
   const mode = opts.embeddings ?? "auto";
   const embedderFor = async (orgId: string): Promise<Embedder | null> => {
     if (mode === "none") return null;
@@ -152,7 +164,6 @@ export async function startWorker(opts: WorkerOptions) {
     registerDesktopTools(tools);
   }
 
-  const fetchOut = createSafeFetch({ exemptCidrs: opts.egressExemptCidrs });
   const push =
     opts.push ??
     (opts.fcmServiceAccountJson
@@ -208,6 +219,7 @@ export async function startWorker(opts: WorkerOptions) {
     computers,
     fetch: fetchOut,
     offlineModels: !!opts.modelFixtures,
+    chatgpt,
     voice: {
       db,
       key: providerKey,

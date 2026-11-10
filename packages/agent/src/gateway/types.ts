@@ -6,7 +6,9 @@ export type ProviderId =
   | "google"
   | "xai"
   | "openrouter"
-  | "openai_compatible";
+  | "openai_compatible"
+  /** A person's ChatGPT plan (ChatGPT plan sign-in): Responses API with an OAuth access token. */
+  | "chatgpt";
 
 /** A model choice from a bot's model_policy. */
 export interface ModelChoice {
@@ -22,8 +24,10 @@ export interface ResolvedModel {
   apiKey?: string;
   baseUrl?: string;
   credentialId?: string;
-  /** Reasoning effort for reasoning models (OpenAI and OpenRouter). */
+  /** Reasoning effort for reasoning models (OpenAI, OpenRouter and ChatGPT plans). */
   reasoningEffort?: "none" | "low" | "medium" | "high" | "xhigh" | "max";
+  /** chatgpt: the owner allows moving to the next model when the plan limit is reached. */
+  fallbackOnLimit?: boolean;
 }
 
 export type ChatMessage =
@@ -52,7 +56,14 @@ export interface Usage {
 export type GatewayEvent =
   | { type: "text"; text: string }
   | { type: "tool_call"; call: ToolCall }
-  | { type: "finish"; usage: Usage; finishReason: string; model: string };
+  | {
+      type: "finish";
+      usage: Usage;
+      finishReason: string;
+      model: string;
+      /** Set by adapters whose usage is billed elsewhere (a ChatGPT plan costs Kasama nothing). */
+      provider?: ProviderId;
+    };
 
 export interface ModelRequest {
   model: ResolvedModel;
@@ -72,10 +83,25 @@ export interface ModelGateway {
 export class ModelCallError extends Error {
   readonly retryable: boolean;
   readonly status?: number;
-  constructor(message: string, opts: { retryable: boolean; status?: number; cause?: unknown }) {
+  /** A stable error code for the run's error (for example chatgpt_plan_limit). */
+  readonly code?: string;
+  /** The credential the failing call used, when the error is about that credential. */
+  readonly credentialId?: string;
+  constructor(
+    message: string,
+    opts: {
+      retryable: boolean;
+      status?: number;
+      cause?: unknown;
+      code?: string;
+      credentialId?: string;
+    },
+  ) {
     super(message, { cause: opts.cause });
     this.retryable = opts.retryable;
     this.status = opts.status;
+    this.code = opts.code;
+    this.credentialId = opts.credentialId;
   }
 }
 
@@ -86,6 +112,7 @@ export async function collect(stream: AsyncIterable<GatewayEvent>) {
   let usage: Usage = { inputTokens: 0, outputTokens: 0 };
   let finishReason = "stop";
   let model = "";
+  let provider: ProviderId | undefined;
   for await (const ev of stream) {
     if (ev.type === "text") text += ev.text;
     else if (ev.type === "tool_call") toolCalls.push(ev.call);
@@ -93,7 +120,8 @@ export async function collect(stream: AsyncIterable<GatewayEvent>) {
       usage = ev.usage;
       finishReason = ev.finishReason;
       model = ev.model;
+      provider = ev.provider;
     }
   }
-  return { text, toolCalls, usage, finishReason, model };
+  return { text, toolCalls, usage, finishReason, model, provider };
 }

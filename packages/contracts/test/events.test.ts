@@ -37,6 +37,7 @@ describe("run events", () => {
       "memory.written",
       "skill.loaded",
       "usage",
+      "model.fallback",
       "run.completed",
       "run.failed",
       "run.cancelled",

@@ -43,6 +43,8 @@ class FakeBackend implements Backend {
   @override
   String? get userEmail => 'tester@example.com';
   @override
+  String? get userId => 'me';
+  @override
   Future<void> signIn(String email, String password) async {
     signedIn = true;
     _auth.add(true);
@@ -90,8 +92,30 @@ class FakeBackend implements Backend {
   Future<List<Credential>> credentials(String orgId) async => noKeys
       ? const []
       : [
-        Credential(id: 'cred', orgId: orgId, provider: ProviderId.openrouter, label: 'Main', baseUrl: null, keyHint: '1234', lastTestedAt: null, lastTestOk: null, createdAt: DateTime(2026)),
+        Credential(id: 'cred', orgId: orgId, provider: ProviderId.openrouter, label: 'Main', baseUrl: null, keyHint: '1234', lastTestedAt: null, lastTestOk: null, ownerUserId: null, status: CredentialStatus.ok, account: null, fallbackOnLimit: false, createdAt: DateTime(2026)),
+        ...extraCredentials,
       ];
+  /// Extra keys for a test (for example a ChatGPT plan).
+  List<Credential> extraCredentials = [];
+  @override
+  bool chatGptSignIn = true;
+  @override
+  bool canConnectChatGpt = false;
+  final connectedChatGpt = <String>[];
+  @override
+  Future<Credential> connectChatGpt(String orgId, {String? credentialId}) async {
+    connectedChatGpt.add(credentialId ?? orgId);
+    return chatGptCredential(orgId);
+  }
+  final credentialUpdates = <String, bool?>{};
+  @override
+  Future<Credential> updateCredential(String credentialId, {String? label, bool? fallbackOnLimit}) async {
+    credentialUpdates[credentialId] = fallbackOnLimit;
+    return chatGptCredential('org', fallbackOnLimit: fallbackOnLimit ?? false);
+  }
+  final deletedCredentials = <String>[];
+  @override
+  Future<void> deleteCredential(String credentialId) async => deletedCredentials.add(credentialId);
   @override
   Future<Credential> addCredential(String orgId, ProviderId provider, String label, {String? apiKey, String? baseUrl}) async =>
       throw UnimplementedError();
@@ -817,3 +841,23 @@ class FakeBackend implements Backend {
   Future<(Uri, Map<String, String>)> terminal(String computerId, {int cols = 100, int rows = 30}) async =>
       (Uri.parse('ws://localhost/terminal'), <String, String>{});
 }
+
+
+/// A connected ChatGPT plan owned by [owner] (the fake's user is 'me').
+Credential chatGptCredential(String orgId,
+        {String owner = 'me', CredentialStatus status = CredentialStatus.ok, bool fallbackOnLimit = false}) =>
+    Credential(
+      id: 'plan',
+      orgId: orgId,
+      provider: ProviderId.chatgpt,
+      label: 'ChatGPT plan',
+      baseUrl: null,
+      keyHint: null,
+      lastTestedAt: null,
+      lastTestOk: null,
+      ownerUserId: owner,
+      status: status,
+      account: 'me@example.com',
+      fallbackOnLimit: fallbackOnLimit,
+      createdAt: DateTime(2026),
+    );

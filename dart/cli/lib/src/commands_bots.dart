@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
+import 'package:kasama_sdk/chatgpt_sign_in.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
 import 'runner.dart';
@@ -53,6 +54,8 @@ class CredentialCommand extends Command<int> {
     addSubcommand(CredentialAddCommand(ctx));
     addSubcommand(CredentialListCommand(ctx));
     addSubcommand(CredentialTestCommand(ctx));
+    addSubcommand(CredentialChatGptCommand(ctx));
+    addSubcommand(CredentialRemoveCommand(ctx));
   }
   @override
   String get name => 'credential';
@@ -114,6 +117,9 @@ class CredentialListCommand extends KCommand {
     final list = (await c.credentials.listCredentials(orgId: org.id)).data!;
     final lines = list.items.map((k) {
       final tested = k.lastTestOk == null ? 'untested' : (k.lastTestOk! ? 'ok' : 'failing');
+      if (k.provider == ProviderId.chatgpt) {
+        return '${k.id}\tchatgpt\t${k.label}\t${k.account ?? ''}\t${k.status.value}';
+      }
       return '${k.id}\t${k.provider.value}\t${k.label}\t…${k.keyHint ?? ''}\t$tested';
     }).join('\n');
     return ctx.emit(list.toJson(), lines.isEmpty ? 'No model keys yet. Add one with `kasama credential add`.' : lines);
@@ -141,6 +147,77 @@ class CredentialTestCommand extends KCommand {
     final code = ctx.emit(r.toJson(),
         r.ok ? 'OK: ${r.model} answered in ${r.latencyMs} ms.' : 'Failed with ${r.model}: ${r.error ?? 'unknown error'}');
     return r.ok ? code : 1;
+  }
+}
+
+/// Opens a URL in the default browser; false when no opener worked.
+Future<bool> openInBrowser(Uri url) async {
+  final (cmd, args) = Platform.isMacOS
+      ? ('open', [url.toString()])
+      : Platform.isWindows
+          ? ('rundll32', ['url.dll,FileProtocolHandler', url.toString()])
+          : ('xdg-open', [url.toString()]);
+  try {
+    final r = await Process.run(cmd, args);
+    return r.exitCode == 0;
+  } on ProcessException {
+    return false;
+  }
+}
+
+class CredentialChatGptCommand extends KCommand {
+  CredentialChatGptCommand(super.ctx) {
+    addOrgOption(this);
+    argParser
+      ..addOption('reconnect', help: 'Sign in again for this ChatGPT credential id.')
+      ..addFlag('browser', defaultsTo: true, help: 'Open the browser (otherwise only print the link).');
+  }
+  @override
+  String get name => 'chatgpt';
+  @override
+  String get description =>
+      'Connect your ChatGPT plan so your bots run on it instead of an API key (opens your browser).';
+  @override
+  Future<int> run() async {
+    final c = await ctx.authedClient();
+    final org = await orgFrom(ctx, c, argResults!['org'] as String?);
+    final Credential cred;
+    try {
+      cred = await signInWithChatGpt(
+        c.credentials,
+        orgId: org.id,
+        credentialId: argResults!['reconnect'] as String?,
+        openBrowser: (url) async {
+          ctx.err.writeln('Continue with ChatGPT in your browser:\n  $url\nWaiting for you to finish…');
+          if (argResults!['browser'] as bool) await openInBrowser(url);
+        },
+      );
+    } on ChatGptSignInException catch (e) {
+      return ctx.fail(e.code, e.message);
+    }
+    final note = switch (cred.status) {
+      CredentialStatus.ok => 'Bots you start can now use it. Only you can use this plan.',
+      CredentialStatus.planUsageOff =>
+        'Signed in, but plan usage was not allowed. Run this again and allow it, or add an API key.',
+      CredentialStatus.needsReconnect => 'Sign in again with --reconnect ${cred.id}.',
+    };
+    return ctx.emit(cred.toJson(), 'Connected ChatGPT plan${cred.account == null ? '' : ' (${cred.account})'} as ${cred.id}. $note');
+  }
+}
+
+class CredentialRemoveCommand extends KCommand {
+  CredentialRemoveCommand(super.ctx);
+  @override
+  String get name => 'remove';
+  @override
+  String get description => 'Delete a model key (a ChatGPT sign-in is revoked first).';
+  @override
+  Future<int> run() async {
+    final rest = argResults!.rest;
+    if (rest.length != 1) throw UsageException('The credential id is required.', usage);
+    final c = await ctx.authedClient();
+    await c.credentials.deleteCredential(id: rest.single);
+    return ctx.emit({'deleted': rest.single}, 'Deleted ${rest.single}.');
   }
 }
 

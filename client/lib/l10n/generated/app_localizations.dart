@@ -4863,6 +4863,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wake up and watch live'**
   String get wakeAndWatch;
+
+  /// No description provided for @chatGptPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'ChatGPT plan'**
+  String get chatGptPlan;
+
+  /// Sign-in button label required by OpenAI's branding rules
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with ChatGPT'**
+  String get continueWithChatGpt;
+
+  /// No description provided for @chatGptConnectHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Run your bots on your ChatGPT plan instead of an API key. Their model calls count toward your plan\'s limits, and only you can use it.'**
+  String get chatGptConnectHelp;
+
+  /// No description provided for @chatGptDesktopOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'To connect your ChatGPT plan, open the desktop app, or run \"kasama credential chatgpt\" in the CLI.'**
+  String get chatGptDesktopOnly;
+
+  /// No description provided for @chatGptWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish signing in with ChatGPT in your browser…'**
+  String get chatGptWaiting;
+
+  /// No description provided for @chatGptConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected your ChatGPT plan ({account}).'**
+  String chatGptConnected(String account);
+
+  /// No description provided for @chatGptPlanUsageOff.
+  ///
+  /// In en, this message translates to:
+  /// **'You signed in, but plan usage wasn\'t allowed. Reconnect and allow it, or add an API key.'**
+  String get chatGptPlanUsageOff;
+
+  /// No description provided for @orAddApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Or add an API key'**
+  String get orAddApiKey;
+
+  /// No description provided for @planOnlyYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you can use it'**
+  String get planOnlyYou;
+
+  /// No description provided for @planOtherMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Another member\'s plan'**
+  String get planOtherMember;
+
+  /// No description provided for @planConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get planConnected;
+
+  /// No description provided for @planUsageOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan usage off'**
+  String get planUsageOff;
+
+  /// No description provided for @planNeedsReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again'**
+  String get planNeedsReconnect;
+
+  /// No description provided for @useNextModelAtLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the bot\'s next model at my plan limit'**
+  String get useNextModelAtLimit;
+
+  /// No description provided for @useNextModelAtLimitHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: a run stops when your ChatGPT limit is reached. On: it continues on the bot\'s next model, which may cost money.'**
+  String get useNextModelAtLimitHelp;
+
+  /// No description provided for @manageUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage usage'**
+  String get manageUsage;
+
+  /// No description provided for @removeKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeKey;
+
+  /// No description provided for @removeKeyConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {label}? Bots that use it stop working until you give them another key.'**
+  String removeKeyConfirm(String label);
+
+  /// No description provided for @removeKeyChatGptNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ChatGPT sign-in is revoked too.'**
+  String get removeKeyChatGptNote;
+
+  /// No description provided for @modelFallbackNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to the next model: {message}'**
+  String modelFallbackNotice(String message);
 }
 
 class _AppLocalizationsDelegate

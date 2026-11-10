@@ -2792,4 +2792,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wakeAndWatch => 'Wake up and watch live';
+
+  @override
+  String get chatGptPlan => 'ChatGPT plan';
+
+  @override
+  String get continueWithChatGpt => 'Continue with ChatGPT';
+
+  @override
+  String get chatGptConnectHelp =>
+      'Run your bots on your ChatGPT plan instead of an API key. Their model calls count toward your plan\'s limits, and only you can use it.';
+
+  @override
+  String get chatGptDesktopOnly =>
+      'To connect your ChatGPT plan, open the desktop app, or run \"kasama credential chatgpt\" in the CLI.';
+
+  @override
+  String get chatGptWaiting =>
+      'Finish signing in with ChatGPT in your browser…';
+
+  @override
+  String chatGptConnected(String account) {
+    return 'Connected your ChatGPT plan ($account).';
+  }
+
+  @override
+  String get chatGptPlanUsageOff =>
+      'You signed in, but plan usage wasn\'t allowed. Reconnect and allow it, or add an API key.';
+
+  @override
+  String get orAddApiKey => 'Or add an API key';
+
+  @override
+  String get planOnlyYou => 'Only you can use it';
+
+  @override
+  String get planOtherMember => 'Another member\'s plan';
+
+  @override
+  String get planConnected => 'Connected';
+
+  @override
+  String get planUsageOff => 'Plan usage off';
+
+  @override
+  String get planNeedsReconnect => 'Sign in again';
+
+  @override
+  String get useNextModelAtLimit =>
+      'Use the bot\'s next model at my plan limit';
+
+  @override
+  String get useNextModelAtLimitHelp =>
+      'Off: a run stops when your ChatGPT limit is reached. On: it continues on the bot\'s next model, which may cost money.';
+
+  @override
+  String get manageUsage => 'Manage usage';
+
+  @override
+  String get removeKey => 'Remove';
+
+  @override
+  String removeKeyConfirm(String label) {
+    return 'Remove $label? Bots that use it stop working until you give them another key.';
+  }
+
+  @override
+  String get removeKeyChatGptNote => 'Your ChatGPT sign-in is revoked too.';
+
+  @override
+  String modelFallbackNotice(String message) {
+    return 'Switched to the next model: $message';
+  }
 }

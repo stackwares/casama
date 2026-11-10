@@ -25,6 +25,8 @@ abstract class _$PublicConfigCWProxy {
 
   PublicConfig wallpapersEnabled(bool? wallpapersEnabled);
 
+  PublicConfig chatgptSignIn(bool? chatgptSignIn);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
@@ -42,6 +44,7 @@ abstract class _$PublicConfigCWProxy {
     Map<String, String> defaultModels,
     PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort,
     bool? wallpapersEnabled,
+    bool? chatgptSignIn,
   });
 }
 
@@ -84,6 +87,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
   PublicConfig wallpapersEnabled(bool? wallpapersEnabled) =>
       call(wallpapersEnabled: wallpapersEnabled);
 
+  @override
+  PublicConfig chatgptSignIn(bool? chatgptSignIn) =>
+      call(chatgptSignIn: chatgptSignIn);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PublicConfig(...).copyWith.fieldName(value)`.
@@ -102,6 +109,7 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? defaultModels = const $CopyWithPlaceholder(),
     Object? defaultReasoningEffort = const $CopyWithPlaceholder(),
     Object? wallpapersEnabled = const $CopyWithPlaceholder(),
+    Object? chatgptSignIn = const $CopyWithPlaceholder(),
   }) {
     return PublicConfig(
       productName:
@@ -146,6 +154,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
           ? _value.wallpapersEnabled
           // ignore: cast_nullable_to_non_nullable
           : wallpapersEnabled as bool?,
+      chatgptSignIn: chatgptSignIn == const $CopyWithPlaceholder()
+          ? _value.chatgptSignIn
+          // ignore: cast_nullable_to_non_nullable
+          : chatgptSignIn as bool?,
     );
   }
 }
@@ -200,6 +212,7 @@ PublicConfig _$PublicConfigFromJson(Map<String, dynamic> json) =>
             'wallpapers_enabled',
             (v) => v as bool?,
           ),
+          chatgptSignIn: $checkedConvert('chatgpt_sign_in', (v) => v as bool?),
         );
         return val;
       },
@@ -212,6 +225,7 @@ PublicConfig _$PublicConfigFromJson(Map<String, dynamic> json) =>
         'defaultModels': 'default_models',
         'defaultReasoningEffort': 'default_reasoning_effort',
         'wallpapersEnabled': 'wallpapers_enabled',
+        'chatgptSignIn': 'chatgpt_sign_in',
       },
     );
 
@@ -227,6 +241,7 @@ Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
           _$PublicConfigDefaultReasoningEffortEnumEnumMap[instance
               .defaultReasoningEffort]!,
       'wallpapers_enabled': ?instance.wallpapersEnabled,
+      'chatgpt_sign_in': ?instance.chatgptSignIn,
     };
 
 const _$PublicConfigDefaultReasoningEffortEnumEnumMap = {

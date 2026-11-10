@@ -18,6 +18,7 @@ import { registerAppRoutes } from "./routes/apps.ts";
 import { registerAutonomyRoutes } from "./routes/autonomy.ts";
 import { billingFor, registerBillingRoutes } from "./routes/billing.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
+import { registerChatGptRoutes } from "./routes/chatgpt.ts";
 import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
@@ -140,6 +141,7 @@ export function createApp(deps: AppDeps) {
   registerSystemRoutes(app, deps);
   registerWorkspaceRoutes(app, deps);
   registerBotRoutes(app, deps);
+  registerChatGptRoutes(app, deps);
   registerComputerRoutes(app, deps);
   registerLiveRoutes(app, deps);
   registerVoiceRoutes(app, deps);

@@ -15,7 +15,9 @@ import { capabilitiesOf, costOf } from "./gateway/registry.ts";
 import {
   type ChatMessage,
   collect,
+  ModelCallError,
   type ModelGateway,
+  type ProviderId,
   type ResolvedModel,
   type ToolCall,
   type Usage,
@@ -97,6 +99,8 @@ interface RunInfo {
   botId: string;
   conversationId: string | null;
   createdBy: string | null;
+  /** The person this run acts for: its sender, the routine's creator, or a parent run's. */
+  actingUserId: string | null;
   trigger: string;
   status: string;
   perRunLimit: number | null;
@@ -237,9 +241,36 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     return redactorCache;
   };
   const bus = async () => new EventBus(db, await redactor());
+  // A ChatGPT plan serves only its owner; one that can't be used is skipped when allowed.
+  const skipped = new Set<string>();
   const chainFor = async (choices: Array<{ credential_id: string; model: string } | undefined>) => {
     const out: ResolvedModel[] = [];
-    for (const c of choices) if (c) out.push(await deps.credentials.resolve(info.orgId, c));
+    let firstError: ModelCallError | undefined;
+    for (const c of choices) {
+      if (!c) continue;
+      try {
+        out.push(
+          await deps.credentials.resolve(info.orgId, c, { actingUserId: info.actingUserId }),
+        );
+      } catch (err) {
+        if (!(err instanceof ModelCallError) || !err.code?.startsWith("chatgpt_")) throw err;
+        firstError ??= err;
+        if (!err.retryable) {
+          if (out.length) break;
+          throw err;
+        }
+        const key = `${c.credential_id}:${c.model}`;
+        if (!skipped.has(key)) {
+          skipped.add(key);
+          await (await bus()).append(info.runId, "model.fallback", {
+            from_model: c.model,
+            reason: err.code,
+            message: err.message,
+          });
+        }
+      }
+    }
+    if (!out.length && firstError) throw firstError;
     return out;
   };
 
@@ -587,6 +618,18 @@ export function failureMessage(code: string, detail: string): string {
     no_model_configured: "This bot has no model set. Pick one in its settings.",
     model_auth_failed: "The model provider rejected the key. Check it in Settings → Model keys.",
     model_rate_limited: "The model provider is rate limiting this key. Try again in a minute.",
+    chatgpt_plan_limit:
+      "Your ChatGPT plan limit is reached. Check it under Manage usage in ChatGPT (Settings → Usage), or let this bot use its next model.",
+    chatgpt_needs_reconnect:
+      "The ChatGPT sign-in stopped working. Sign in again in Settings → Model keys from the desktop app or the CLI.",
+    chatgpt_plan_usage_off:
+      "ChatGPT plan usage wasn't allowed at sign-in. Sign in again and allow it, or add an API key.",
+    chatgpt_plan_not_yours:
+      "This bot runs on someone else's ChatGPT plan, which only they can use. Connect your own plan or add a key.",
+    chatgpt_not_eligible: "This ChatGPT plan can't be used in other apps. Add an API key instead.",
+    chatgpt_unavailable: "ChatGPT plan usage is unavailable right now. Try again in a few minutes.",
+    chatgpt_forbidden: "ChatGPT refused this request.",
+    chatgpt_unsupported_request: "ChatGPT refused a request Kasama sent. This is a Kasama bug.",
   };
   const redacted = detail
     .replace(/\b(sk|pk|rk|key|tok|ghp|gho|xox[abp])[-_][A-Za-z0-9_-]{8,}/gi, "[redacted]")
@@ -600,6 +643,7 @@ export function failureMessage(code: string, detail: string): string {
 }
 
 function errorCode(err: unknown) {
+  if (err instanceof ModelCallError && err.code) return err.code;
   const msg = err instanceof Error ? err.message : "";
   if (msg === "model_credential_not_found") return "model_credential_not_found";
   if (msg === "no model configured") return "no_model_configured";
@@ -637,8 +681,22 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     routine_created_by: string | null;
     routine_name: string | null;
     voice_call: RunInfo["voiceCall"];
+    acting_user_id: string | null;
   }>(sql`
-    select r.id, r.org_id, r.bot_id, r.conversation_id, r.created_by, r.trigger, r.status, r.budget as run_budget,
+    select (
+             with recursive up as (
+               select x.id, x.parent_run_id, x.created_by, x.routine_id, 0 as depth
+               from public.runs x where x.id = r.id
+               union all
+               select p.id, p.parent_run_id, p.created_by, p.routine_id, up.depth + 1
+               from public.runs p join up on p.id = up.parent_run_id where up.depth < 8
+             )
+             select coalesce(up.created_by, urt.created_by) from up
+             left join public.routines urt on urt.id = up.routine_id
+             where coalesce(up.created_by, urt.created_by) is not null
+             order by up.depth limit 1
+           ) as acting_user_id,
+           r.id, r.org_id, r.bot_id, r.conversation_id, r.created_by, r.trigger, r.status, r.budget as run_budget,
            b.name, b.persona_md, b.autonomy, b.model_policy, b.budget as bot_budget, b.created_by as bot_owner,
            coalesce(p.timezone, po.timezone) as timezone, c.summary, c.summary_through, r.parent_run_id,
            r.routine_id, rt.notify as routine_notify, rt.created_by as routine_created_by, rt.name as routine_name, r.voice_call
@@ -692,6 +750,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     botId: row.bot_id,
     conversationId: row.conversation_id,
     createdBy: row.created_by,
+    actingUserId: row.acting_user_id,
     trigger: row.trigger,
     status: row.status,
     perRunLimit: num(row.run_budget?.per_run_usd ?? row.bot_budget?.per_run_usd),
@@ -826,27 +885,63 @@ async function recordUsage(
   model: string,
   usage: Usage,
   bus: EventBus,
+  provider?: ProviderId,
 ) {
+  // A ChatGPT plan pays for its own tokens: they are recorded at cost 0 (SPEC: Usage and billing).
+  const plan = provider === "chatgpt";
   const caps = capabilitiesOf(model);
-  const costIn = (usage.inputTokens * caps.inputPrice) / 1_000_000;
-  const costOut = (usage.outputTokens * caps.outputPrice) / 1_000_000;
+  const costIn = plan ? 0 : (usage.inputTokens * caps.inputPrice) / 1_000_000;
+  const costOut = plan ? 0 : (usage.outputTokens * caps.outputPrice) / 1_000_000;
+  const source = plan ? "chatgpt_plan" : "key";
   await db.execute(sql`
-    insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model) values
-      (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, 'tokens_in', ${usage.inputTokens}, ${costIn}, ${model}),
-      (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, 'tokens_out', ${usage.outputTokens}, ${costOut}, ${model})`);
+    insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model, source) values
+      (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, 'tokens_in', ${usage.inputTokens}, ${costIn}, ${model}, ${source}),
+      (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, 'tokens_out', ${usage.outputTokens}, ${costOut}, ${model}, ${source})`);
   const [totals] = await db.execute<{
     tokens_in: string;
     tokens_out: string;
     cost_usd: string;
   }>(sql`
     update public.runs set tokens_in = tokens_in + ${usage.inputTokens}, tokens_out = tokens_out + ${usage.outputTokens},
-      cost_usd = cost_usd + ${costOf(model, usage)}
+      cost_usd = cost_usd + ${plan ? 0 : costOf(model, usage)}
     where id = ${info.runId}::uuid returning tokens_in, tokens_out, cost_usd`);
   await bus.append(info.runId, "usage", {
     tokens_in: Number(totals?.tokens_in ?? 0),
     tokens_out: Number(totals?.tokens_out ?? 0),
     cost_usd: Number(totals?.cost_usd ?? 0),
   });
+}
+
+const providerOf = (given: ProviderId | undefined, model: string, chain: ResolvedModel[]) =>
+  given ?? chain.find((m) => m.model === model)?.provider ?? chain[0]?.provider;
+
+/**
+ * A ChatGPT plan error during a model attempt: an invalid sign-in marks the credential (its owner
+ * is told), and moving on to the next model is shown on the timeline.
+ */
+async function onChatGptError(
+  deps: RunDeps,
+  busFn: EventBus | (() => Promise<EventBus>),
+  info: RunInfo,
+  model: string,
+  err: unknown,
+  movingOn: boolean,
+) {
+  if (!(err instanceof ModelCallError) || !err.code?.startsWith("chatgpt_")) return;
+  try {
+    if (err.code === "chatgpt_needs_reconnect" && err.credentialId)
+      await deps.credentials.markNeedsReconnect(err.credentialId);
+    if (movingOn && err.retryable) {
+      const bus = typeof busFn === "function" ? await busFn() : busFn;
+      await bus.append(info.runId, "model.fallback", {
+        from_model: model,
+        reason: err.code,
+        message: err.message,
+      });
+    }
+  } catch (e) {
+    deps.logger?.warn("chatgpt error handling failed", { run_id: info.runId, error: String(e) });
+  }
 }
 
 async function modelStep(
@@ -889,17 +984,21 @@ async function modelStep(
   const toolCalls: ToolCall[] = [];
   let usage: Usage = { inputTokens: 0, outputTokens: 0 };
   let model = chain[0]?.model ?? "unknown";
+  let provider: ProviderId | undefined = chain[0]?.provider;
   try {
     const stream = withFallback(deps.gateway, chain, {
       ...deps.fallback,
-      onAttempt: (a) =>
+      onAttempt: (a) => {
         deps.logger?.info("model attempt", {
           run_id: info.runId,
           step: i,
           model: a.model,
           attempt: a.attempt,
           error: a.error,
-        }),
+          code: a.err instanceof ModelCallError ? a.err.code : undefined,
+        });
+        void onChatGptError(deps, bus, info, a.model, a.err, a.attempt < chain.length - 1);
+      },
     })({ system: req.system, messages: req.messages, tools: req.tools, abortSignal: ctrl.signal });
     let first = true;
     for await (const ev of stream) {
@@ -920,6 +1019,7 @@ async function modelStep(
       } else {
         usage = ev.usage;
         model = ev.model || model;
+        provider = ev.provider ?? chain.find((m) => m.model === model)?.provider ?? provider;
       }
     }
   } catch (err) {
@@ -933,7 +1033,7 @@ async function modelStep(
   await coalescer.drain();
   if (cancelled)
     return { cancelled: true as const, text: "", toolCalls: [] as ToolCall[], messageId };
-  await recordUsage(deps.db, info, model, usage, bus);
+  await recordUsage(deps.db, info, model, usage, bus, provider);
   return { cancelled: false as const, text: redactor.text(text), toolCalls, messageId };
 }
 
@@ -1117,7 +1217,8 @@ async function compact(
     sourceRunId: info.runId,
   });
   await bus.append(info.runId, "memory.written", { memory_id: id, kind: "episode" });
-  await recordUsage(db, info, r.model || chain[0]?.model || "unknown", r.usage, bus);
+  const usedModel = r.model || chain[0]?.model || "unknown";
+  await recordUsage(db, info, usedModel, r.usage, bus, providerOf(r.provider, usedModel, chain));
   return summary;
 }
 
@@ -1188,7 +1289,7 @@ async function extractStep(
     });
     await bus.append(info.runId, "memory.written", { memory_id: id, kind: m.kind });
   }
-  await recordUsage(deps.db, info, r.model, r.usage, bus);
+  await recordUsage(deps.db, info, r.model, r.usage, bus, providerOf(undefined, r.model, chain));
   return r.memories.length;
 }
 

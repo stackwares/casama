@@ -70,11 +70,15 @@ All settings live in `infra/compose/.env`. Common ones:
 | `SENTRY_DSN` or `POSTHOG_API_KEY`                                                    | Error reporting (off by default)                                     |
 | `TELEMETRY=on`                                                                       | Opt-in anonymous counts (see below; off by default)                  |
 | `KASAMA_CLOUD_URL`, `KASAMA_CLOUD_KEY`                                               | Cloud Connect: cloud computers and model credits                     |
+| `CHATGPT_SIGN_IN=off`                                                                | Hide ChatGPT plan sign-in (on by default when self-hosted)           |
 
 Object storage defaults to a Docker volume; `--profile s3` adds SeaweedFS, and any S3-compatible
 store (Cloudflare R2, AWS S3) works with the `OBJECT_STORE=s3` settings described in
 `.env.example`. Models: any OpenAI-compatible endpoint works, including a local Ollama
 (`kasama credential add --provider openai_compatible --base-url http://host.docker.internal:11434/v1`).
+People with a ChatGPT Go, Plus or Pro plan can use it instead of an API key: "Continue with
+ChatGPT" in the desktop app's Settings → Model keys, or `kasama credential chatgpt`. Each plan
+serves only the person who connected it.
 
 ## Two machines
 

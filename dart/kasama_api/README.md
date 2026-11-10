@@ -114,10 +114,14 @@ Class | Method | HTTP request | Description
 [*ComputersApi*](doc/ComputersApi.md) | [**takeLease**](doc/ComputersApi.md#takelease) | **POST** /v1/computers/{id}/lease | Take control (or renew it). The bot pauses screen actions; control returns after 15 minutes without renewal.
 [*ComputersApi*](doc/ComputersApi.md) | [**updateComputer**](doc/ComputersApi.md#updatecomputer) | **PATCH** /v1/computers/{id} | 
 [*ComputersApi*](doc/ComputersApi.md) | [**uploadComputerFile**](doc/ComputersApi.md#uploadcomputerfile) | **PUT** /v1/computers/{id}/files | Upload a file (request body is the raw contents, up to 100 MB)
+[*CredentialsApi*](doc/CredentialsApi.md) | [**completeChatGptSignIn**](doc/CredentialsApi.md#completechatgptsignin) | **POST** /v1/credentials/chatgpt/complete | Finish ChatGPT sign-in; the server exchanges the code and keeps the tokens in Vault
 [*CredentialsApi*](doc/CredentialsApi.md) | [**createCredential**](doc/CredentialsApi.md#createcredential) | **POST** /v1/credentials | Store a model key in Vault; returns metadata only
+[*CredentialsApi*](doc/CredentialsApi.md) | [**deleteCredential**](doc/CredentialsApi.md#deletecredential) | **DELETE** /v1/credentials/{id} | Delete a credential and its Vault secret (a ChatGPT sign-in is revoked first)
 [*CredentialsApi*](doc/CredentialsApi.md) | [**listCredentialModels**](doc/CredentialsApi.md#listcredentialmodels) | **GET** /v1/credentials/{id}/models | Models this key can use, recommended ones first
 [*CredentialsApi*](doc/CredentialsApi.md) | [**listCredentials**](doc/CredentialsApi.md#listcredentials) | **GET** /v1/credentials | 
+[*CredentialsApi*](doc/CredentialsApi.md) | [**startChatGptSignIn**](doc/CredentialsApi.md#startchatgptsignin) | **POST** /v1/credentials/chatgpt/start | Begin ChatGPT sign-in; returns the authorize URL for a loopback callback
 [*CredentialsApi*](doc/CredentialsApi.md) | [**testCredential**](doc/CredentialsApi.md#testcredential) | **POST** /v1/credentials/{id}/test | Validate a key with a 1-token call
+[*CredentialsApi*](doc/CredentialsApi.md) | [**updateCredential**](doc/CredentialsApi.md#updatecredential) | **PATCH** /v1/credentials/{id} | Rename a credential or change its settings
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**attachIntegration**](doc/IntegrationsApi.md#attachintegration) | **POST** /v1/bots/{id}/integrations | Let a bot use an integration&#39;s tools (optionally only some)
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectApp**](doc/IntegrationsApi.md#connectapp) | **POST** /v1/apps/connect | Connect a built-in app: with an API key at once, or start an OAuth sign-in
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectProviderApp**](doc/IntegrationsApi.md#connectproviderapp) | **POST** /v1/integrations/{id}/provider/connect | Add an app to a Composio or Pipedream connection and start signing in to it
@@ -200,6 +204,9 @@ Class | Method | HTTP request | Description
  - [BotList](doc/BotList.md)
  - [CatalogApp](doc/CatalogApp.md)
  - [CatalogAppApiKey](doc/CatalogAppApiKey.md)
+ - [ChatGptSignInCompleteRequest](doc/ChatGptSignInCompleteRequest.md)
+ - [ChatGptSignInStart](doc/ChatGptSignInStart.md)
+ - [ChatGptSignInStartRequest](doc/ChatGptSignInStartRequest.md)
  - [CheckoutRequest](doc/CheckoutRequest.md)
  - [Checkpoint](doc/Checkpoint.md)
  - [CheckpointCreatedEvent](doc/CheckpointCreatedEvent.md)
@@ -237,6 +244,7 @@ Class | Method | HTTP request | Description
  - [CreatedRoutine](doc/CreatedRoutine.md)
  - [Credential](doc/Credential.md)
  - [CredentialList](doc/CredentialList.md)
+ - [CredentialStatus](doc/CredentialStatus.md)
  - [CredentialTestResult](doc/CredentialTestResult.md)
  - [CreditEntry](doc/CreditEntry.md)
  - [CreditPack](doc/CreditPack.md)
@@ -274,6 +282,8 @@ Class | Method | HTTP request | Description
  - [MessageDeltaEvent](doc/MessageDeltaEvent.md)
  - [MessageDeltaEventPayload](doc/MessageDeltaEventPayload.md)
  - [ModelChoice](doc/ModelChoice.md)
+ - [ModelFallbackEvent](doc/ModelFallbackEvent.md)
+ - [ModelFallbackEventPayload](doc/ModelFallbackEventPayload.md)
  - [ModelOption](doc/ModelOption.md)
  - [ModelOptionList](doc/ModelOptionList.md)
  - [ModelPolicy](doc/ModelPolicy.md)
@@ -361,6 +371,7 @@ Class | Method | HTTP request | Description
  - [UiShownEvent](doc/UiShownEvent.md)
  - [UiShownEventPayload](doc/UiShownEventPayload.md)
  - [UpdateComputerRequest](doc/UpdateComputerRequest.md)
+ - [UpdateCredentialRequest](doc/UpdateCredentialRequest.md)
  - [UpdateIntegrationRequest](doc/UpdateIntegrationRequest.md)
  - [UpdateLocalDeviceRequest](doc/UpdateLocalDeviceRequest.md)
  - [UpdateNotice](doc/UpdateNotice.md)

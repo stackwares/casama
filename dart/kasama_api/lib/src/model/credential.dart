@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:kasama_api/src/model/credential_status.dart';
 import 'package:kasama_api/src/model/provider_id.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -36,6 +37,14 @@ class Credential {
     required  this.lastTestedAt,
 
     required  this.lastTestOk,
+
+    required  this.ownerUserId,
+
+    required  this.status,
+
+    required  this.account,
+
+    required  this.fallbackOnLimit,
 
     required  this.createdAt,
   });
@@ -137,6 +146,57 @@ class Credential {
 
 
 
+      /// Set for personal credentials (a ChatGPT plan): only the owner's runs use it
+  @JsonKey(
+    
+    name: r'owner_user_id',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? ownerUserId;
+
+
+
+  @JsonKey(
+    
+    name: r'status',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final CredentialStatus status;
+
+
+
+      /// The signed-in ChatGPT account's email (chatgpt only)
+  @JsonKey(
+    
+    name: r'account',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? account;
+
+
+
+      /// chatgpt: use the bot's next model when the plan limit is reached
+  @JsonKey(
+    
+    name: r'fallback_on_limit',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final bool fallbackOnLimit;
+
+
+
   @JsonKey(
     
     name: r'created_at',
@@ -161,6 +221,10 @@ class Credential {
       other.keyHint == keyHint &&
       other.lastTestedAt == lastTestedAt &&
       other.lastTestOk == lastTestOk &&
+      other.ownerUserId == ownerUserId &&
+      other.status == status &&
+      other.account == account &&
+      other.fallbackOnLimit == fallbackOnLimit &&
       other.createdAt == createdAt;
 
     @override
@@ -173,6 +237,10 @@ class Credential {
         (keyHint == null ? 0 : keyHint.hashCode) +
         (lastTestedAt == null ? 0 : lastTestedAt.hashCode) +
         (lastTestOk == null ? 0 : lastTestOk.hashCode) +
+        (ownerUserId == null ? 0 : ownerUserId.hashCode) +
+        status.hashCode +
+        (account == null ? 0 : account.hashCode) +
+        fallbackOnLimit.hashCode +
         createdAt.hashCode;
 
   factory Credential.fromJson(Map<String, dynamic> json) => _$CredentialFromJson(json);

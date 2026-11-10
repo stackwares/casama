@@ -5,7 +5,10 @@ import 'dart:typed_data';
 import 'package:kasama_sdk/kasama_sdk.dart' hide AuthException;
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import 'package:url_launcher/url_launcher.dart';
+
 import 'backend.dart';
+import 'chatgpt_connect.dart';
 
 const _terminal = {'run.completed', 'run.failed', 'run.cancelled'};
 
@@ -54,6 +57,9 @@ class SupabaseBackend implements Backend {
   bool get isSignedIn => supabase.auth.currentSession != null;
   @override
   String? get userEmail => supabase.auth.currentUser?.email;
+
+  @override
+  String? get userId => supabase.auth.currentUser?.id;
 
   @override
   Future<void> signIn(String email, String password) => supabase.auth.signInWithPassword(email: email, password: password);
@@ -114,6 +120,33 @@ class SupabaseBackend implements Backend {
   @override
   Future<ModelOptionList> models(String credentialId) async =>
       (await api.credentials.listCredentialModels(id: credentialId)).data!;
+
+  @override
+  Future<Credential> updateCredential(String credentialId, {String? label, bool? fallbackOnLimit}) async =>
+      (await api.credentials.updateCredential(
+        id: credentialId,
+        updateCredentialRequest: UpdateCredentialRequest(label: label, fallbackOnLimit: fallbackOnLimit),
+      ))
+          .data!;
+
+  @override
+  Future<void> deleteCredential(String credentialId) async => api.credentials.deleteCredential(id: credentialId);
+
+  @override
+  bool get chatGptSignIn => config?.chatgptSignIn ?? false;
+
+  @override
+  bool get canConnectChatGpt => chatGptLoopbackSupported;
+
+  @override
+  Future<Credential> connectChatGpt(String orgId, {String? credentialId}) => connectChatGptLoopback(
+        api.credentials,
+        orgId: orgId,
+        credentialId: credentialId,
+        openBrowser: (url) async {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        },
+      );
 
   // --- bots -----------------------------------------------------------------
 

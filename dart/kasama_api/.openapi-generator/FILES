@@ -59,6 +59,9 @@ lib/src/model/bot_budget.dart
 lib/src/model/bot_list.dart
 lib/src/model/catalog_app.dart
 lib/src/model/catalog_app_api_key.dart
+lib/src/model/chat_gpt_sign_in_complete_request.dart
+lib/src/model/chat_gpt_sign_in_start.dart
+lib/src/model/chat_gpt_sign_in_start_request.dart
 lib/src/model/checkout_request.dart
 lib/src/model/checkpoint.dart
 lib/src/model/checkpoint_created_event.dart
@@ -96,6 +99,7 @@ lib/src/model/created_local_device.dart
 lib/src/model/created_routine.dart
 lib/src/model/credential.dart
 lib/src/model/credential_list.dart
+lib/src/model/credential_status.dart
 lib/src/model/credential_test_result.dart
 lib/src/model/credit_entry.dart
 lib/src/model/credit_pack.dart
@@ -133,6 +137,8 @@ lib/src/model/message_completed_event_payload.dart
 lib/src/model/message_delta_event.dart
 lib/src/model/message_delta_event_payload.dart
 lib/src/model/model_choice.dart
+lib/src/model/model_fallback_event.dart
+lib/src/model/model_fallback_event_payload.dart
 lib/src/model/model_option.dart
 lib/src/model/model_option_list.dart
 lib/src/model/model_policy.dart
@@ -220,6 +226,7 @@ lib/src/model/ui_action_part.dart
 lib/src/model/ui_shown_event.dart
 lib/src/model/ui_shown_event_payload.dart
 lib/src/model/update_computer_request.dart
+lib/src/model/update_credential_request.dart
 lib/src/model/update_integration_request.dart
 lib/src/model/update_local_device_request.dart
 lib/src/model/update_notice.dart

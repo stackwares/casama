@@ -23,6 +23,14 @@ abstract class _$CredentialCWProxy {
 
   Credential lastTestOk(bool? lastTestOk);
 
+  Credential ownerUserId(String? ownerUserId);
+
+  Credential status(CredentialStatus status);
+
+  Credential account(String? account);
+
+  Credential fallbackOnLimit(bool fallbackOnLimit);
+
   Credential createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -42,6 +50,10 @@ abstract class _$CredentialCWProxy {
     String? keyHint,
     DateTime? lastTestedAt,
     bool? lastTestOk,
+    String? ownerUserId,
+    CredentialStatus status,
+    String? account,
+    bool fallbackOnLimit,
     DateTime createdAt,
   });
 }
@@ -79,6 +91,19 @@ class _$CredentialCWProxyImpl implements _$CredentialCWProxy {
   Credential lastTestOk(bool? lastTestOk) => call(lastTestOk: lastTestOk);
 
   @override
+  Credential ownerUserId(String? ownerUserId) => call(ownerUserId: ownerUserId);
+
+  @override
+  Credential status(CredentialStatus status) => call(status: status);
+
+  @override
+  Credential account(String? account) => call(account: account);
+
+  @override
+  Credential fallbackOnLimit(bool fallbackOnLimit) =>
+      call(fallbackOnLimit: fallbackOnLimit);
+
+  @override
   Credential createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -99,6 +124,10 @@ class _$CredentialCWProxyImpl implements _$CredentialCWProxy {
     Object? keyHint = const $CopyWithPlaceholder(),
     Object? lastTestedAt = const $CopyWithPlaceholder(),
     Object? lastTestOk = const $CopyWithPlaceholder(),
+    Object? ownerUserId = const $CopyWithPlaceholder(),
+    Object? status = const $CopyWithPlaceholder(),
+    Object? account = const $CopyWithPlaceholder(),
+    Object? fallbackOnLimit = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Credential(
@@ -134,6 +163,24 @@ class _$CredentialCWProxyImpl implements _$CredentialCWProxy {
           ? _value.lastTestOk
           // ignore: cast_nullable_to_non_nullable
           : lastTestOk as bool?,
+      ownerUserId: ownerUserId == const $CopyWithPlaceholder()
+          ? _value.ownerUserId
+          // ignore: cast_nullable_to_non_nullable
+          : ownerUserId as String?,
+      status: status == const $CopyWithPlaceholder() || status == null
+          ? _value.status
+          // ignore: cast_nullable_to_non_nullable
+          : status as CredentialStatus,
+      account: account == const $CopyWithPlaceholder()
+          ? _value.account
+          // ignore: cast_nullable_to_non_nullable
+          : account as String?,
+      fallbackOnLimit:
+          fallbackOnLimit == const $CopyWithPlaceholder() ||
+              fallbackOnLimit == null
+          ? _value.fallbackOnLimit
+          // ignore: cast_nullable_to_non_nullable
+          : fallbackOnLimit as bool,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -168,6 +215,10 @@ Credential _$CredentialFromJson(Map<String, dynamic> json) => $checkedCreate(
         'key_hint',
         'last_tested_at',
         'last_test_ok',
+        'owner_user_id',
+        'status',
+        'account',
+        'fallback_on_limit',
         'created_at',
       ],
     );
@@ -186,6 +237,13 @@ Credential _$CredentialFromJson(Map<String, dynamic> json) => $checkedCreate(
         (v) => v == null ? null : DateTime.parse(v as String),
       ),
       lastTestOk: $checkedConvert('last_test_ok', (v) => v as bool?),
+      ownerUserId: $checkedConvert('owner_user_id', (v) => v as String?),
+      status: $checkedConvert(
+        'status',
+        (v) => $enumDecode(_$CredentialStatusEnumMap, v),
+      ),
+      account: $checkedConvert('account', (v) => v as String?),
+      fallbackOnLimit: $checkedConvert('fallback_on_limit', (v) => v as bool),
       createdAt: $checkedConvert(
         'created_at',
         (v) => DateTime.parse(v as String),
@@ -199,6 +257,8 @@ Credential _$CredentialFromJson(Map<String, dynamic> json) => $checkedCreate(
     'keyHint': 'key_hint',
     'lastTestedAt': 'last_tested_at',
     'lastTestOk': 'last_test_ok',
+    'ownerUserId': 'owner_user_id',
+    'fallbackOnLimit': 'fallback_on_limit',
     'createdAt': 'created_at',
   },
 );
@@ -213,6 +273,10 @@ Map<String, dynamic> _$CredentialToJson(Credential instance) =>
       'key_hint': instance.keyHint,
       'last_tested_at': instance.lastTestedAt?.toIso8601String(),
       'last_test_ok': instance.lastTestOk,
+      'owner_user_id': instance.ownerUserId,
+      'status': _$CredentialStatusEnumMap[instance.status]!,
+      'account': instance.account,
+      'fallback_on_limit': instance.fallbackOnLimit,
       'created_at': instance.createdAt.toIso8601String(),
     };
 
@@ -230,4 +294,11 @@ const _$ProviderIdEnumMap = {
   ProviderId.elevenlabs: 'elevenlabs',
   ProviderId.cartesia: 'cartesia',
   ProviderId.fishAudio: 'fish_audio',
+  ProviderId.chatgpt: 'chatgpt',
+};
+
+const _$CredentialStatusEnumMap = {
+  CredentialStatus.ok: 'ok',
+  CredentialStatus.planUsageOff: 'plan_usage_off',
+  CredentialStatus.needsReconnect: 'needs_reconnect',
 };

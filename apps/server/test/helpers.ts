@@ -38,6 +38,7 @@ const noWorkflows: Workflows = {
   startRun: async () => {},
   testCredential: async () => ({ ok: false, model: "", latency_ms: 0, error: "no worker" }),
   listCredentialModels: async () => ({ models: [], source: "featured", error: "no worker" }),
+  revokeCredential: async () => ({ ok: false, error: "no worker" }),
   close: async () => {},
   signalRun: async () => {},
   testIntegration: async () => ({ ok: false, tools: [], error: "no worker" }),
@@ -65,6 +66,8 @@ export async function startHarness(
         deepgram?: string;
         elevenlabs?: string;
       };
+      /** ChatGPT plan sign-in endpoints (a fake OpenAI). */
+      chatgpt?: { authUrl?: string; apiUrl?: string };
     };
     workflowsClient?: boolean;
     sandbox?: SandboxStack;
@@ -122,6 +125,7 @@ export async function startHarness(
       push: opts.worker.push,
       egressExemptCidrs: opts.worker.egressExemptCidrs,
       providerBases: opts.worker.providerBases,
+      chatgpt: opts.worker.chatgpt,
       local: localOpts,
       billing: billing.enabled ? billing : undefined,
       cloud: opts.cloud,

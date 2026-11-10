@@ -182,8 +182,16 @@ export const ProviderId = z
     "elevenlabs",
     "cartesia",
     "fish_audio",
+    "chatgpt",
   ])
   .openapi("ProviderId");
+
+export const CredentialStatus = z
+  .enum(["ok", "plan_usage_off", "needs_reconnect"])
+  .openapi("CredentialStatus", {
+    description:
+      "ok; plan_usage_off: signed in to ChatGPT without granting plan usage; needs_reconnect: sign in again",
+  });
 
 export const Credential = z
   .object({
@@ -195,9 +203,62 @@ export const Credential = z
     key_hint: z.string().nullable().openapi({ description: "Last 4 characters of the key" }),
     last_tested_at: ts.nullable(),
     last_test_ok: z.boolean().nullable(),
+    owner_user_id: Uuid.nullable().openapi({
+      description: "Set for personal credentials (a ChatGPT plan): only the owner's runs use it",
+    }),
+    status: CredentialStatus,
+    account: z
+      .string()
+      .nullable()
+      .openapi({ description: "The signed-in ChatGPT account's email (chatgpt only)" }),
+    fallback_on_limit: z.boolean().openapi({
+      description: "chatgpt: use the bot's next model when the plan limit is reached",
+    }),
     created_at: ts,
   })
   .openapi("Credential");
+
+export const UpdateCredentialRequest = z
+  .object({
+    label: z.string().trim().min(1).max(80).optional(),
+    fallback_on_limit: z.boolean().optional(),
+  })
+  .openapi("UpdateCredentialRequest");
+
+export const ChatGptSignInStartRequest = z
+  .object({
+    org_id: Uuid,
+    redirect_port: z.number().int().min(1024).max(65535).openapi({
+      description:
+        "The client's loopback port; OpenAI redirects to http://127.0.0.1:<port>/auth/callback",
+    }),
+    credential_id: Uuid.optional().openapi({ description: "Reconnect this ChatGPT credential" }),
+  })
+  .openapi("ChatGptSignInStartRequest");
+
+export const ChatGptSignInStart = z
+  .object({
+    authorize_url: z.string(),
+    redirect_uri: z.string(),
+    state: z.string(),
+    expires_at: ts,
+  })
+  .openapi("ChatGptSignInStart");
+
+export const ChatGptSignInCompleteRequest = z
+  .object({
+    state: z.string().min(16).max(200),
+    code: z.string().min(1).max(4000).optional(),
+    client_id: z
+      .string()
+      .min(1)
+      .max(200)
+      .optional()
+      .openapi({ description: "The issued client id from the callback (first sign-in)" }),
+    error: z.string().max(200).optional(),
+    error_description: z.string().max(1000).optional(),
+  })
+  .openapi("ChatGptSignInCompleteRequest");
 
 export const CreateCredentialRequest = z
   .object({

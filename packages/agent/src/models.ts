@@ -63,6 +63,29 @@ export async function fetchProviderModels(
     }
     case "openai":
       return openAiStyle(f, src.baseUrl ?? "https://api.openai.com/v1", src.apiKey);
+    case "chatgpt": {
+      // ChatGPT plans list the models they may use with visibility "list" (slug, display_name).
+      const body = await getJson(
+        f,
+        `${(src.baseUrl ?? "https://api.openai.com/v1").replace(/\/$/, "")}/models`,
+        { authorization: `Bearer ${src.apiKey ?? ""}` },
+      );
+      const data =
+        ((body.data ?? body.models) as Array<{
+          id?: string;
+          slug?: string;
+          display_name?: string;
+          visibility?: string;
+          context_window?: number;
+        }>) ?? [];
+      return data
+        .filter((m) => m.visibility === undefined || m.visibility === "list")
+        .map((m) => {
+          const id = m.slug ?? m.id ?? "";
+          return { id, name: m.display_name ?? id, context_length: m.context_window };
+        })
+        .filter((m) => m.id);
+    }
     case "xai":
       return openAiStyle(f, src.baseUrl ?? "https://api.x.ai/v1", src.apiKey);
     case "openai_compatible":

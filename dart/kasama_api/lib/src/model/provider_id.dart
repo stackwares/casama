@@ -32,7 +32,9 @@ enum ProviderId {
       @JsonValue(r'cartesia')
       cartesia(r'cartesia'),
       @JsonValue(r'fish_audio')
-      fishAudio(r'fish_audio');
+      fishAudio(r'fish_audio'),
+      @JsonValue(r'chatgpt')
+      chatgpt(r'chatgpt');
 
   const ProviderId(this.value);
 

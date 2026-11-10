@@ -14,6 +14,14 @@ export const EnvSchema = z.object({
   PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
   /** Extra comma-separated origins allowed to call the API from a browser. */
   CORS_ORIGINS: z.string().default(""),
+  /**
+   * ChatGPT plan sign-in (SPEC: ChatGPT plan sign-in). auto: on for self-hosted servers, off when
+   * billing is on (Kasama Cloud needs OpenAI's approval for hosted use first).
+   */
+  CHATGPT_SIGN_IN: z.enum(["auto", "on", "off"]).default("auto"),
+  /** OpenAI's auth server and Responses API; overridable for tests and proxies. */
+  CHATGPT_AUTH_URL: z.url().default("https://auth.openai.com"),
+  CHATGPT_API_URL: z.url().default("https://api.openai.com/v1"),
   /** Optional wallpaper photo search (D-087). Unset: the app offers its own patterns and photos. */
   UNSPLASH_ACCESS_KEY: z.string().optional(),
   UNSPLASH_API_URL: z.url().default("https://api.unsplash.com"),

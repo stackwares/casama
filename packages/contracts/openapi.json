@@ -83,6 +83,9 @@
             "$ref": "#/components/schemas/UsageEvent"
           },
           {
+            "$ref": "#/components/schemas/ModelFallbackEvent"
+          },
+          {
             "$ref": "#/components/schemas/RunCompletedEvent"
           },
           {
@@ -117,6 +120,7 @@
             "memory.written": "#/components/schemas/MemoryWrittenEvent",
             "skill.loaded": "#/components/schemas/SkillLoadedEvent",
             "usage": "#/components/schemas/UsageEvent",
+            "model.fallback": "#/components/schemas/ModelFallbackEvent",
             "run.completed": "#/components/schemas/RunCompletedEvent",
             "run.failed": "#/components/schemas/RunFailedEvent",
             "run.cancelled": "#/components/schemas/RunCancelledEvent",
@@ -1326,6 +1330,66 @@
           "payload"
         ]
       },
+      "ModelFallbackEvent": {
+        "type": "object",
+        "properties": {
+          "v": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Protocol version, currently 1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seq": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "model.fallback"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "from_model": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from_model",
+              "reason",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "v",
+          "run_id",
+          "seq",
+          "ts",
+          "bot_id",
+          "type",
+          "payload"
+        ]
+      },
       "RunCompletedEvent": {
         "type": "object",
         "properties": {
@@ -1633,6 +1697,9 @@
             ]
           },
           "wallpapers_enabled": {
+            "type": "boolean"
+          },
+          "chatgpt_sign_in": {
             "type": "boolean"
           }
         },
@@ -2051,6 +2118,152 @@
           "cancelled"
         ]
       },
+      "Credential": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/ProviderId"
+          },
+          "label": {
+            "type": "string"
+          },
+          "base_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "key_hint": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Last 4 characters of the key"
+          },
+          "last_tested_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "last_test_ok": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "owner_user_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Set for personal credentials (a ChatGPT plan): only the owner's runs use it"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CredentialStatus"
+          },
+          "account": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The signed-in ChatGPT account's email (chatgpt only)"
+          },
+          "fallback_on_limit": {
+            "type": "boolean",
+            "description": "chatgpt: use the bot's next model when the plan limit is reached"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "org_id",
+          "provider",
+          "label",
+          "base_url",
+          "key_hint",
+          "last_tested_at",
+          "last_test_ok",
+          "owner_user_id",
+          "status",
+          "account",
+          "fallback_on_limit",
+          "created_at"
+        ]
+      },
+      "ProviderId": {
+        "type": "string",
+        "enum": [
+          "openai",
+          "anthropic",
+          "google",
+          "xai",
+          "openrouter",
+          "openai_compatible",
+          "fal",
+          "brave_search",
+          "tavily",
+          "deepgram",
+          "elevenlabs",
+          "cartesia",
+          "fish_audio",
+          "chatgpt"
+        ]
+      },
+      "CredentialStatus": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "plan_usage_off",
+          "needs_reconnect"
+        ],
+        "description": "ok; plan_usage_off: signed in to ChatGPT without granting plan usage; needs_reconnect: sign in again"
+      },
+      "ChatGptSignInCompleteRequest": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 200
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "client_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "The issued client id from the callback (first sign-in)"
+          },
+          "error": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "error_description": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
       "Bot": {
         "type": "object",
         "properties": {
@@ -2303,84 +2516,6 @@
         },
         "required": [
           "bot_id"
-        ]
-      },
-      "Credential": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "org_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "provider": {
-            "$ref": "#/components/schemas/ProviderId"
-          },
-          "label": {
-            "type": "string"
-          },
-          "base_url": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "key_hint": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Last 4 characters of the key"
-          },
-          "last_tested_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "last_test_ok": {
-            "type": [
-              "boolean",
-              "null"
-            ]
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "org_id",
-          "provider",
-          "label",
-          "base_url",
-          "key_hint",
-          "last_tested_at",
-          "last_test_ok",
-          "created_at"
-        ]
-      },
-      "ProviderId": {
-        "type": "string",
-        "enum": [
-          "openai",
-          "anthropic",
-          "google",
-          "xai",
-          "openrouter",
-          "openai_compatible",
-          "fal",
-          "brave_search",
-          "tavily",
-          "deepgram",
-          "elevenlabs",
-          "cartesia",
-          "fish_audio"
         ]
       },
       "CreateCredentialRequest": {
@@ -2821,6 +2956,54 @@
           "name"
         ]
       },
+      "ChatGptSignInStart": {
+        "type": "object",
+        "properties": {
+          "authorize_url": {
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "authorize_url",
+          "redirect_uri",
+          "state",
+          "expires_at"
+        ]
+      },
+      "ChatGptSignInStartRequest": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "redirect_port": {
+            "type": "integer",
+            "minimum": 1024,
+            "maximum": 65535,
+            "description": "The client's loopback port; OpenAI redirects to http://127.0.0.1:<port>/auth/callback"
+          },
+          "credential_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Reconnect this ChatGPT credential"
+          }
+        },
+        "required": [
+          "org_id",
+          "redirect_port"
+        ]
+      },
       "CredentialTestResult": {
         "type": "object",
         "properties": {
@@ -2850,6 +3033,19 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 200
+          }
+        }
+      },
+      "UpdateCredentialRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "fallback_on_limit": {
+            "type": "boolean"
           }
         }
       },
@@ -6339,6 +6535,82 @@
         }
       }
     },
+    "/v1/credentials/chatgpt/complete": {
+      "post": {
+        "operationId": "completeChatGptSignIn",
+        "tags": [
+          "credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Finish ChatGPT sign-in; the server exchanges the code and keeps the tokens in Vault",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGptSignInCompleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Credential"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/bots": {
       "post": {
         "operationId": "createBot",
@@ -6671,6 +6943,151 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/credentials/{id}": {
+      "delete": {
+        "operationId": "deleteCredential",
+        "tags": [
+          "credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete a credential and its Vault secret (a ChatGPT sign-in is revoked first)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateCredential",
+        "tags": [
+          "credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Rename a credential or change its settings",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCredentialRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Credential"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7138,6 +7555,82 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/credentials/chatgpt/start": {
+      "post": {
+        "operationId": "startChatGptSignIn",
+        "tags": [
+          "credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Begin ChatGPT sign-in; returns the authorize URL for a loopback callback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGptSignInStartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sign-in started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatGptSignInStart"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {

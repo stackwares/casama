@@ -86,7 +86,7 @@ class UiEntry extends ChatEntry {
   final List<Object?> messages;
 }
 
-enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled, userControl, botControl }
+enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled, userControl, botControl, modelFallback }
 
 class NoticeEntry extends ChatEntry {
   const NoticeEntry({required this.kind, required this.text, this.refId, this.errorCode, this.at});
@@ -340,6 +340,8 @@ class ChatController extends Notifier<ChatState> {
         entries.add(const NoticeEntry(kind: NoticeKind.memory, text: ''));
       case SkillLoadedItem(:final event):
         entries.add(NoticeEntry(kind: NoticeKind.skill, text: event.payload.name));
+      case ModelFallbackItem(:final event):
+        entries.add(NoticeEntry(kind: NoticeKind.modelFallback, text: event.payload.message));
       case CheckpointCreatedItem(:final event):
         entries.add(NoticeEntry(kind: NoticeKind.checkpoint, text: event.payload.label, refId: event.payload.checkpointId));
       case ComputerStateItem(:final event):

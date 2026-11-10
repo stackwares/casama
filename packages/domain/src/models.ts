@@ -58,6 +58,8 @@ export const FEATURED_MODELS: Readonly<Record<string, readonly ModelOption[]>> =
   ],
   google: [{ id: "gemini-3.8-flash", name: "Gemini 3.8 Flash" }],
   xai: [{ id: "grok-4.7", name: "Grok 4.7" }],
+  // ChatGPT plan sign-in: the live list (GET /v1/models, visibility "list") is the source of truth.
+  chatgpt: [{ id: "gpt-6.1-sol", name: "GPT-6.1 Sol" }],
 };
 
 /** Providers whose keys run chat models (the others are tools: search, images, voice). */
@@ -68,4 +70,5 @@ export const CHAT_PROVIDERS = [
   "google",
   "xai",
   "openai_compatible",
+  "chatgpt",
 ] as const;

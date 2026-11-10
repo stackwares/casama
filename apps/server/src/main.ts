@@ -123,6 +123,7 @@ if (env.MODE === "api") {
         ? { url: env.SUPERVISOR_URL, token: env.SUPERVISOR_TOKEN }
         : undefined,
     local: env.LOCAL_COMPUTERS ? localOpts : undefined,
+    chatgpt: { authUrl: env.CHATGPT_AUTH_URL, apiUrl: env.CHATGPT_API_URL },
   });
   stoppers.push(worker.stop);
 }

@@ -13,6 +13,7 @@ import {
   type ToolSet,
   tool,
 } from "ai";
+import { type ChatGptOptions, streamChatGpt } from "./chatgpt.ts";
 import {
   type ChatMessage,
   type GatewayEvent,
@@ -48,6 +49,9 @@ export function languageModel(m: ResolvedModel): LanguageModel {
         baseURL: m.baseUrl,
         includeUsage: true,
       })(m.model);
+    case "chatgpt":
+      // ChatGPT plans use their own adapter (gateway/chatgpt.ts), never the AI SDK.
+      throw new ModelCallError("chatgpt models go through streamChatGpt", { retryable: false });
   }
 }
 
@@ -129,7 +133,17 @@ function classify(err: unknown): ModelCallError {
 
 /** ModelGateway on the Vercel AI SDK. Tools are declared without execute: the agent loop runs them. */
 export class AiSdkGateway implements ModelGateway {
+  private readonly chatgpt: ChatGptOptions;
+  /** `chatgpt` options are for ChatGPT plans (the fetch is overridable for tests). */
+  constructor(opts: { chatgpt?: ChatGptOptions } = {}) {
+    this.chatgpt = opts.chatgpt ?? {};
+  }
+
   async *stream(req: ModelRequest): AsyncIterable<GatewayEvent> {
+    if (req.model.provider === "chatgpt") {
+      yield* streamChatGpt(req, this.chatgpt);
+      return;
+    }
     const tools: ToolSet = {};
     for (const t of req.tools ?? []) {
       tools[t.name] = tool({

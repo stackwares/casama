@@ -23,6 +23,8 @@ export interface Workflows {
   ): Promise<CredentialTestOutcome>;
   /** The model picker's list for a key (live from the provider, or Kasama's short list). */
   listCredentialModels(credentialId: string, orgId: string): Promise<ModelListOutcome>;
+  /** Revokes a ChatGPT sign-in at OpenAI before its credential is deleted (best effort). */
+  revokeCredential(credentialId: string): Promise<{ ok: boolean; error?: string }>;
   /** Wakes a run that waits for an approval (decided or cancelled). */
   signalRun(runId: string): Promise<void>;
   testIntegration(integrationId: string): Promise<{ ok: boolean; tools: string[]; error?: string }>;
@@ -98,6 +100,13 @@ export async function dbosWorkflows(databaseUrl: string): Promise<Workflows> {
         orgId,
       );
       return withTimeout(handle.getResult({ pollingIntervalMs: 200 }), 20_000, "model list");
+    },
+    async revokeCredential(credentialId) {
+      const handle = await client.enqueue<(c: string) => Promise<{ ok: boolean; error?: string }>>(
+        { queueName: "system", workflowName: "revokeCredential" },
+        credentialId,
+      );
+      return withTimeout(handle.getResult({ pollingIntervalMs: 200 }), 20_000, "revocation");
     },
     async signalRun(runId) {
       await client.send(runId, { at: Date.now() }, "signal").catch(() => {});

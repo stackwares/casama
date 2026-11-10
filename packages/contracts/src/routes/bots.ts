@@ -1,6 +1,9 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import {
   Bot,
+  ChatGptSignInCompleteRequest,
+  ChatGptSignInStart,
+  ChatGptSignInStartRequest,
   Conversation,
   CreateBotRequest,
   CreateConversationRequest,
@@ -14,6 +17,7 @@ import {
   SendMessageRequest,
   SendMessageResponse,
   TestCredentialRequest,
+  UpdateCredentialRequest,
   UsageReport,
 } from "../bots.ts";
 import { IdempotencyKeyHeader, jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
@@ -193,6 +197,73 @@ export const listCredentialModels = createRoute({
   responses: {
     200: jsonResponse("Models", ModelOptionList),
     401: e401,
+    404: e404,
+  },
+});
+
+export const updateCredential = createRoute({
+  operationId: "updateCredential",
+  method: "patch",
+  path: "/v1/credentials/{id}",
+  tags: ["credentials"],
+  security,
+  summary: "Rename a credential or change its settings",
+  request: { params: idParam, body: jsonBody(UpdateCredentialRequest) },
+  responses: {
+    200: jsonResponse("Updated", Credential),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+  },
+});
+
+export const deleteCredential = createRoute({
+  operationId: "deleteCredential",
+  method: "delete",
+  path: "/v1/credentials/{id}",
+  tags: ["credentials"],
+  security,
+  summary: "Delete a credential and its Vault secret (a ChatGPT sign-in is revoked first)",
+  request: { params: idParam },
+  responses: {
+    204: { description: "Deleted" },
+    401: e401,
+    403: e403,
+    404: e404,
+  },
+});
+
+export const startChatGptSignIn = createRoute({
+  operationId: "startChatGptSignIn",
+  method: "post",
+  path: "/v1/credentials/chatgpt/start",
+  tags: ["credentials"],
+  security,
+  summary: "Begin ChatGPT sign-in; returns the authorize URL for a loopback callback",
+  request: { body: jsonBody(ChatGptSignInStartRequest) },
+  responses: {
+    200: jsonResponse("Sign-in started", ChatGptSignInStart),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+  },
+});
+
+export const completeChatGptSignIn = createRoute({
+  operationId: "completeChatGptSignIn",
+  method: "post",
+  path: "/v1/credentials/chatgpt/complete",
+  tags: ["credentials"],
+  security,
+  summary: "Finish ChatGPT sign-in; the server exchanges the code and keeps the tokens in Vault",
+  request: { body: jsonBody(ChatGptSignInCompleteRequest) },
+  responses: {
+    200: jsonResponse("Connected", Credential),
+    400: e400,
+    401: e401,
+    403: e403,
     404: e404,
   },
 });

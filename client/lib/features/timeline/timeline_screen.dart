@@ -240,6 +240,7 @@ class TimelineTile extends StatelessWidget {
       CheckpointCreatedItem(:final event) => event.payload.label,
       ComputerStateItem(:final event) => event.payload.state.value,
       SkillLoadedItem(:final event) => event.payload.name,
+      ModelFallbackItem(:final event) => '${event.payload.fromModel}: ${event.payload.message}',
       _ => payload.isEmpty ? '' : jsonEncode(payload),
     };
     final t = item.type;
@@ -255,6 +256,7 @@ class TimelineTile extends StatelessWidget {
       _ when t.startsWith('checkpoint.') => (LucideIcons.bookmark, colors.warning),
       _ when t.startsWith('computer.') => (LucideIcons.monitor, colors.working),
       _ when t.startsWith('skill.') => (LucideIcons.bookOpen, colors.info),
+      'model.fallback' => (LucideIcons.arrowRightLeft, colors.warning),
       _ when t.startsWith('approval.') || t.startsWith('takeover.') => (LucideIcons.hand, colors.waiting),
       _ => (LucideIcons.circle, scheme.onSurfaceVariant),
     };

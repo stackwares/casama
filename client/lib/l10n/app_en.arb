@@ -1569,5 +1569,49 @@
   "computerWake": "Wake up",
   "computerGoingToSleep": "Going to sleep",
   "liveViewWakesHelp": "This computer is asleep. Opening the live view wakes it up; it goes back to sleep after a while without use.",
-  "wakeAndWatch": "Wake up and watch live"
+  "wakeAndWatch": "Wake up and watch live",
+  "chatGptPlan": "ChatGPT plan",
+  "continueWithChatGpt": "Continue with ChatGPT",
+  "@continueWithChatGpt": {
+    "description": "Sign-in button label required by OpenAI's branding rules"
+  },
+  "chatGptConnectHelp": "Run your bots on your ChatGPT plan instead of an API key. Their model calls count toward your plan's limits, and only you can use it.",
+  "chatGptDesktopOnly": "To connect your ChatGPT plan, open the desktop app, or run \"kasama credential chatgpt\" in the CLI.",
+  "chatGptWaiting": "Finish signing in with ChatGPT in your browser…",
+  "chatGptConnected": "Connected your ChatGPT plan ({account}).",
+  "@chatGptConnected": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "chatGptPlanUsageOff": "You signed in, but plan usage wasn't allowed. Reconnect and allow it, or add an API key.",
+  "orAddApiKey": "Or add an API key",
+  "planOnlyYou": "Only you can use it",
+  "planOtherMember": "Another member's plan",
+  "planConnected": "Connected",
+  "planUsageOff": "Plan usage off",
+  "planNeedsReconnect": "Sign in again",
+  "useNextModelAtLimit": "Use the bot's next model at my plan limit",
+  "useNextModelAtLimitHelp": "Off: a run stops when your ChatGPT limit is reached. On: it continues on the bot's next model, which may cost money.",
+  "manageUsage": "Manage usage",
+  "removeKey": "Remove",
+  "removeKeyConfirm": "Remove {label}? Bots that use it stop working until you give them another key.",
+  "@removeKeyConfirm": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "removeKeyChatGptNote": "Your ChatGPT sign-in is revoked too.",
+  "modelFallbackNotice": "Switched to the next model: {message}",
+  "@modelFallbackNotice": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -91,6 +91,7 @@ abstract class Backend {
   Stream<bool> get signedInChanges;
   bool get isSignedIn;
   String? get userEmail;
+  String? get userId;
   Future<void> signIn(String email, String password);
   Future<bool> signUp(String email, String password);
   Future<void> sendMagicLink(String email);
@@ -112,6 +113,17 @@ abstract class Backend {
   Future<CredentialTestResult> testCredential(String credentialId, {String? model});
   /// Models the key can use, recommended first (live from the provider, or Kasama's short list).
   Future<ModelOptionList> models(String credentialId);
+  Future<Credential> updateCredential(String credentialId, {String? label, bool? fallbackOnLimit});
+  /// Deletes a key and its Vault secret; a ChatGPT sign-in is revoked first.
+  Future<void> deleteCredential(String credentialId);
+
+  // ChatGPT plan sign-in (D-091)
+  /// Whether this server lets people connect a ChatGPT plan.
+  bool get chatGptSignIn;
+  /// Whether this device can run the sign-in (the desktop apps; phones and the web can't).
+  bool get canConnectChatGpt;
+  /// Opens the browser to sign in with ChatGPT and returns the connected plan.
+  Future<Credential> connectChatGpt(String orgId, {String? credentialId});
 
   // Bots
   Future<List<Bot>> bots(String orgId);

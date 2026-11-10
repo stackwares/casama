@@ -75,6 +75,8 @@ export const runEventPayloads = {
     tokens_out: z.number().int().nonnegative(),
     cost_usd: z.number().nonnegative(),
   }),
+  /** The run moved past a model it could not use, such as a ChatGPT plan at its limit. */
+  "model.fallback": z.object({ from_model: z.string(), reason: z.string(), message: z.string() }),
   "run.completed": z.object({ final_message_id: id.nullable() }),
   "run.failed": z.object({ error_code: z.string(), message: z.string() }),
   "run.cancelled": z.object({ cancelled_by: id.nullable() }),

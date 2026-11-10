@@ -3,6 +3,7 @@ import { API_VERSION, PRODUCT_NAME, routes } from "@kasama/contracts";
 import { DEFAULT_MODELS, defaultModelFor } from "@kasama/domain";
 import { modelOverrides } from "../../env.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
+import { chatGptSignInEnabled } from "./chatgpt.ts";
 
 export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.healthz, (c) => c.json({ status: "ok" as const }, 200));
@@ -40,6 +41,7 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         ),
         default_reasoning_effort: deps.env.DEFAULT_REASONING_EFFORT,
         wallpapers_enabled: Boolean(deps.env.UNSPLASH_ACCESS_KEY),
+        chatgpt_sign_in: chatGptSignInEnabled(deps.env),
       },
       200,
     ),

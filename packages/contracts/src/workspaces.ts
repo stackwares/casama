@@ -89,5 +89,7 @@ export const PublicConfig = z
     default_reasoning_effort: z.enum(["none", "low", "medium", "high", "xhigh", "max"]),
     /** Whether the server can search wallpaper photos (UNSPLASH_ACCESS_KEY set). */
     wallpapers_enabled: z.boolean().optional(),
+    /** Whether people can connect a ChatGPT plan here (desktop app and CLI sign-in). */
+    chatgpt_sign_in: z.boolean().optional(),
   })
   .openapi("PublicConfig");

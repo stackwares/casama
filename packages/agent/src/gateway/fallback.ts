@@ -12,7 +12,7 @@ export interface FallbackOptions {
   /** A model that sends nothing for this long is treated as timed out. */
   firstTokenTimeoutMs?: number;
   sleep?: (ms: number) => Promise<void>;
-  onAttempt?: (info: { model: string; attempt: number; error?: string }) => void;
+  onAttempt?: (info: { model: string; attempt: number; error?: string; err?: unknown }) => void;
 }
 
 /**
@@ -57,7 +57,7 @@ export function withFallback(
         if (req.abortSignal?.aborted) throw err;
         const timedOut = ctrl.signal.aborted && !req.abortSignal?.aborted;
         const retryable = timedOut || (err instanceof ModelCallError ? err.retryable : true);
-        opts.onAttempt?.({ model: model.model, attempt: i, error: (err as Error).message });
+        opts.onAttempt?.({ model: model.model, attempt: i, error: (err as Error).message, err });
         lastError = err;
         if (produced || !retryable) throw err;
       } finally {
