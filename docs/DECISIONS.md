@@ -865,3 +865,29 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Tests:**
   - API (`skill-learning.test.ts`): three similar runs leading to one proposal; one-tool and unrelated runs ignored; no repeat proposal; members can't accept; accept with a change; a correction leading to an edit with a diff; stats and history; a failure leading to an edit auto-applied under an action rule.
   - widget (`skill_proposals_test.dart`): the diff, the For you cards and the stats sheet.
+
+## D-127 Step replay
+
+- **What a replay is:** `replays` belong to a bot. Each holds parameters (name, description, default, secret) and steps. A step is a browser or desktop action (`browser.open|click|fill|type|press|scroll`, `desktop.launch|click|type|press`) with:
+  - arguments, where values that change are `{{param:name}}` and passwords are `{{secret:NAME}}`;
+  - an element target (role and label) instead of a ref;
+  - checks: the address contains…, or the screen shows…;
+  - the host its secrets may go to.
+- **Running without the model:** `executeReplay` fills the parameters and, for a step with a target, takes a fresh snapshot (`agent-browser` or `agent-desktop`) and finds the element by label and role. Matching by label keeps replays working when refs change between page loads. It then resolves secrets only for allowed hosts (the tool's own destination, else the step's host), calls the registered tool directly, and runs the checks.
+- **When a step fails:** a missing element, a failed check or a tool error stops the replay there and returns where and why, plus what was done.
+  - `replay.run` (a medium-risk tool) gives that to the bot in a normal run, and it carries on from that step.
+  - A replay run (`trigger = replay`, `runs.replay`) starts with the replay before any model call, and passes the approval gate as usual. It finishes without the model if all steps pass; otherwise the stop report joins the person's message and the model takes over, offering to update the replay with `replay.save`.
+  - Run, failure and last-failure counts are kept.
+- **Saving:**
+  - **From a run:** `replay.save` is the bot writing the steps it just did, with targets, checks and parameters. It refuses undeclared parameters and clear text typed into password-like fields.
+  - **From a teach recording:** `POST /v1/teach/{id}/replay` turns clicks into `desktop.click` at the recorded position, typing into `desktop.type` (secrets stay placeholders; other text becomes a parameter with the typed value as its default), and keys into `desktop.press`. Each recorded address becomes a check and a secret host.
+  - **Limit:** desktop clicks from recordings are positions, not elements, so they're the first thing to need the bot's help when a screen changes.
+- **API and app:**
+  - `GET /v1/replays?bot_id=`, `POST /v1/replays/{id}/run` (parameters; missing ones are refused) and `DELETE`.
+  - Bot settings → Replays: list with step counts and history, run with a parameter form that opens the run's chat, delete.
+  - The teach draft screen has "Also save as a replay".
+  - **Pending:** password-manager items in replays come with D-128.
+- **Tests:**
+  - unit (`replays.test.ts`): parameters, finding refs, refusing clear-text passwords, teach to steps, running steps with refs and checks, stopping at a failed check or a missing element.
+  - API (`replays.test.ts`): saving from a teach recording (private to its recorder), a replay run handing over to the model, delete permissions.
+  - widget (`replays_test.dart`).

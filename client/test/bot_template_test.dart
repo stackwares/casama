@@ -8,7 +8,7 @@ import 'fake_backend.dart';
 
 void main() {
   testWidgets('a bot is shared as a link, with memories only when ticked', (tester) async {
-    await setSize(tester, const Size(1000, 2400));
+    await setSize(tester, const Size(1000, 3200));
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const BotSettingsScreen(botId: botId)));
     await tester.pumpAndSettle();

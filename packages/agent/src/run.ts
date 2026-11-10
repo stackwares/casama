@@ -43,6 +43,7 @@ import {
   secretRequestState,
 } from "./secret-requests.ts";
 import { computerMcpFor } from "./plugins.ts";
+import { REPLAY_STOPPED } from "./replays.ts";
 import { learnFromRun } from "./skill-learning.ts";
 import { SETUP_GUIDE } from "./tools/setup.ts";
 import {
@@ -189,6 +190,8 @@ interface RunInfo {
   } | null;
   /** A tool call forwarded from a live voice call: run only this call (D-065). */
   voiceCall: { call_id: string; name: string; arguments: Record<string, unknown> } | null;
+  /** A replay run (D-127): the replay to run before (or instead of) the model. */
+  replay: { replay_id: string; params?: Record<string, string> } | null;
 }
 
 type StepOutcome = { ok: true } | { ok: false; code: string; message: string };
@@ -457,6 +460,38 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           await (await bus()).append(info.runId, "run.completed", { final_message_id: null });
       });
       return { status: "completed" };
+    }
+
+    // Replay runs (D-127): the steps run first without the model; if they stop, the model takes over
+    // from that step with what happened.
+    if (info.replay) {
+      const call: ToolCall = {
+        callId: `replay-${info.runId}`,
+        name: "replay.run",
+        args: { name: info.replay.replay_id, params: info.replay.params ?? {} },
+      };
+      const gate = await step("replay-gate", () => approvalGate(deps, registry, info, call, false, bus, redactor));
+      let blocked: string | null = gate.handOff ?? null;
+      if (gate.approvalId) {
+        const wait = deps.waitForApproval ?? ((id, run, ms) => pollApproval(db, id, run, ms));
+        await wait(gate.approvalId, info.runId, APPROVAL_TTL_MS);
+        const outcome = await step("replay-resolve", () => resolveApproval(db, info, gate.approvalId as string, bus));
+        if (outcome === "cancelled") {
+          await step("cancel", () => finishCancelled(db, info, bus));
+          return { status: "cancelled" };
+        }
+        if (outcome !== "approved") blocked = outcome === "denied" ? "The user denied this replay." : "The approval expired.";
+      }
+      const res = blocked
+        ? await step("replay-blocked", () => blockedStep(deps, info, call, blocked as string, bus))
+        : await step("replay-tool", () => toolStep(deps, registry, info, call, bus, redactor, secrets));
+      if (!blocked && !res.content.startsWith(REPLAY_STOPPED) && !res.content.startsWith("Error")) {
+        const done = { text: res.content, messageId: await step("replay-message-id", async () => randomUUID()) };
+        await step("finish", () => saveFinalMessage(db, info, done, bus));
+        await step("complete", () => finishCompleted(db, info, done.messageId, bus));
+        return { status: "completed" };
+      }
+      if (info.current) info.current.text = `${info.current.text}\n\n${res.content}`;
     }
 
     // Images attached to this message go to vision models as images; every model sees the file list.
@@ -854,6 +889,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     routine_name: string | null;
     routine_kind: string | null;
     voice_call: RunInfo["voiceCall"];
+    replay: RunInfo["replay"];
     acting_user_id: string | null;
     trigger_message_id: string | null;
     hop: number;
@@ -876,7 +912,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
            b.name, b.persona_md, b.autonomy, b.model_policy, b.budget as bot_budget, b.created_by as bot_owner,
            coalesce(p.timezone, po.timezone) as timezone, c.summary, c.summary_through, c.purpose,
            (select o.llm_tracing from public.organizations o where o.id = r.org_id) as llm_tracing, r.parent_run_id,
-           r.routine_id, rt.notify as routine_notify, rt.created_by as routine_created_by, rt.name as routine_name, rt.kind as routine_kind, r.voice_call,
+           r.routine_id, rt.notify as routine_notify, rt.created_by as routine_created_by, rt.name as routine_name, rt.kind as routine_kind, r.voice_call, r.replay,
            r.trigger_message_id, r.hop, c.kind as conv_kind
     from public.runs r
     join public.bots b on b.id = r.bot_id
@@ -1021,6 +1057,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
         }
       : null,
     voiceCall: row.voice_call ?? null,
+    replay: row.replay ?? null,
   };
 }
 

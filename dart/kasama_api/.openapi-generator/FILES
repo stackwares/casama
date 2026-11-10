@@ -25,6 +25,7 @@ lib/src/api/pages_api.dart
 lib/src/api/plugins_api.dart
 lib/src/api/privacy_api.dart
 lib/src/api/projects_api.dart
+lib/src/api/replays_api.dart
 lib/src/api/routines_api.dart
 lib/src/api/runs_api.dart
 lib/src/api/search_api.dart
@@ -163,6 +164,7 @@ lib/src/model/deleted_id.dart
 lib/src/model/deleted_knowledge_source.dart
 lib/src/model/deleted_page.dart
 lib/src/model/deleted_plugin.dart
+lib/src/model/deleted_replay.dart
 lib/src/model/deleted_routine.dart
 lib/src/model/deleted_rule.dart
 lib/src/model/deleted_teach.dart
@@ -279,6 +281,11 @@ lib/src/model/purchase_request.dart
 lib/src/model/reasoning_effort.dart
 lib/src/model/redirect_url.dart
 lib/src/model/release_lease_request.dart
+lib/src/model/replay.dart
+lib/src/model/replay_from_teach_request.dart
+lib/src/model/replay_list.dart
+lib/src/model/replay_param_info.dart
+lib/src/model/replay_steps_inner.dart
 lib/src/model/revert_page_request.dart
 lib/src/model/revoked_connect_key.dart
 lib/src/model/revoked_key.dart
@@ -296,6 +303,8 @@ lib/src/model/run_event_envelope.dart
 lib/src/model/run_events_page.dart
 lib/src/model/run_failed_event.dart
 lib/src/model/run_failed_event_payload.dart
+lib/src/model/run_replay_request.dart
+lib/src/model/run_replay_response.dart
 lib/src/model/run_started.dart
 lib/src/model/run_started_event.dart
 lib/src/model/run_started_event_payload.dart

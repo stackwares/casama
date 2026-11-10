@@ -28,6 +28,7 @@ import 'package:kasama_api/src/api/pages_api.dart';
 import 'package:kasama_api/src/api/plugins_api.dart';
 import 'package:kasama_api/src/api/privacy_api.dart';
 import 'package:kasama_api/src/api/projects_api.dart';
+import 'package:kasama_api/src/api/replays_api.dart';
 import 'package:kasama_api/src/api/routines_api.dart';
 import 'package:kasama_api/src/api/runs_api.dart';
 import 'package:kasama_api/src/api/search_api.dart';
@@ -217,6 +218,12 @@ class KasamaApi {
   /// by doing that all interceptors will not be executed
   ProjectsApi getProjectsApi() {
     return ProjectsApi(dio);
+  }
+
+  /// Get ReplaysApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ReplaysApi getReplaysApi() {
+    return ReplaysApi(dio);
   }
 
   /// Get RoutinesApi instance, base route and serializer can be overridden by a given but be careful,

@@ -180,6 +180,17 @@ class _TeachDraftScreenState extends ConsumerState<TeachDraftScreen> {
                 label: Text(l10n.teachSaveAndTry),
               ),
               OutlinedButton(key: const Key('teachSave'), onPressed: !valid || _busy ? null : () => _save(tryNow: false), child: Text(l10n.save)),
+              OutlinedButton.icon(
+                key: const Key('teachSaveReplay'),
+                onPressed: !valid || _busy
+                    ? null
+                    : () async {
+                        final r = await runGuarded(context, () => ref.read(backendProvider).replayFromTeach(s.id, _name.text.trim(), description: _description.text.trim()));
+                        if (r != null && context.mounted) showMessage(context, l10n.replaySaved(r.name));
+                      },
+                icon: const Icon(LucideIcons.listVideo, size: 18),
+                label: Text(l10n.saveAsReplay),
+              ),
               TextButton(key: const Key('teachDiscard'), onPressed: _busy ? null : _discard, child: Text(l10n.discard)),
             ],
           ),

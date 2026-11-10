@@ -914,6 +914,22 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<List<Replay>> replays(String botId) async => (await api.replays.listReplays(botId: botId)).data!.items;
+
+  @override
+  Future<RunReplayResponse> runReplay(String id, Map<String, String> params) async =>
+      (await api.replays.runReplay(id: id, runReplayRequest: RunReplayRequest(params: params))).data!;
+
+  @override
+  Future<void> deleteReplay(String id) async {
+    await api.replays.deleteReplay(id: id);
+  }
+
+  @override
+  Future<Replay> replayFromTeach(String teachId, String name, {String? description}) async =>
+      (await api.replays.replayFromTeach(id: teachId, replayFromTeachRequest: ReplayFromTeachRequest(name: name, description: description))).data!;
+
+  @override
   Future<List<SkillProposal>> skillProposals(String orgId, {String? botId}) async =>
       (await api.skills.listSkillProposals(orgId: orgId, botId: botId)).data!.items;
 

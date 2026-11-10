@@ -113,6 +113,7 @@ import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_knowledge_source.dart';
 import 'package:kasama_api/src/model/deleted_page.dart';
 import 'package:kasama_api/src/model/deleted_plugin.dart';
+import 'package:kasama_api/src/model/deleted_replay.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
 import 'package:kasama_api/src/model/deleted_rule.dart';
 import 'package:kasama_api/src/model/deleted_teach.dart';
@@ -223,6 +224,11 @@ import 'package:kasama_api/src/model/public_config.dart';
 import 'package:kasama_api/src/model/purchase_request.dart';
 import 'package:kasama_api/src/model/redirect_url.dart';
 import 'package:kasama_api/src/model/release_lease_request.dart';
+import 'package:kasama_api/src/model/replay.dart';
+import 'package:kasama_api/src/model/replay_from_teach_request.dart';
+import 'package:kasama_api/src/model/replay_list.dart';
+import 'package:kasama_api/src/model/replay_param_info.dart';
+import 'package:kasama_api/src/model/replay_steps_inner.dart';
 import 'package:kasama_api/src/model/revert_page_request.dart';
 import 'package:kasama_api/src/model/revoked_connect_key.dart';
 import 'package:kasama_api/src/model/revoked_key.dart';
@@ -238,6 +244,8 @@ import 'package:kasama_api/src/model/run_event_envelope.dart';
 import 'package:kasama_api/src/model/run_events_page.dart';
 import 'package:kasama_api/src/model/run_failed_event.dart';
 import 'package:kasama_api/src/model/run_failed_event_payload.dart';
+import 'package:kasama_api/src/model/run_replay_request.dart';
+import 'package:kasama_api/src/model/run_replay_response.dart';
 import 'package:kasama_api/src/model/run_started.dart';
 import 'package:kasama_api/src/model/run_started_event.dart';
 import 'package:kasama_api/src/model/run_started_event_payload.dart';
@@ -617,6 +625,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedPage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedPlugin':
           return DeletedPlugin.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedReplay':
+          return DeletedReplay.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRoutine':
           return DeletedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRule':
@@ -855,6 +865,16 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RedirectUrl.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReleaseLeaseRequest':
           return ReleaseLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Replay':
+          return Replay.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReplayFromTeachRequest':
+          return ReplayFromTeachRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReplayList':
+          return ReplayList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReplayParamInfo':
+          return ReplayParamInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReplayStepsInner':
+          return ReplayStepsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevertPageRequest':
           return RevertPageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevokedConnectKey':
@@ -891,6 +911,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RunFailedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RunFailedEventPayload':
           return RunFailedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RunReplayRequest':
+          return RunReplayRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RunReplayResponse':
+          return RunReplayResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RunStarted':
           return RunStarted.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RunStartedEvent':

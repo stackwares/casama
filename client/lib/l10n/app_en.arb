@@ -2175,5 +2175,20 @@
   "@skillStatsLine": {"placeholders": {"uses": {"type": "int"}, "rate": {"type": "int"}, "failures": {"type": "int"}, "corrections": {"type": "int"}}},
   "skillLastFailure": "Last problem: {date}",
   "@skillLastFailure": {"placeholders": {"date": {"type": "String"}}},
-  "skillHistory": "Earlier versions"
+  "skillHistory": "Earlier versions",
+  "replays": "Replays",
+  "replaysRow": "Recorded steps it runs without thinking",
+  "noReplays": "No replays yet",
+  "replaysHelp": "A replay is a recorded set of browser or desktop steps the bot runs as is, which is faster and cheaper. If a step doesn't work any more, the bot takes over from there and can update the replay. Save one from a teach recording, or ask the bot to save what it just did.",
+  "replaySteps": "{count, plural, =1{1 step} other{{count} steps}}",
+  "@replaySteps": {"placeholders": {"count": {"type": "int"}}},
+  "replayRuns": "run {runs} times, {failures} needed help",
+  "@replayRuns": {"placeholders": {"runs": {"type": "int"}, "failures": {"type": "int"}}},
+  "runReplay": "Run {name}",
+  "@runReplay": {"placeholders": {"name": {"type": "String"}}},
+  "runReplayHelp": "Check the values it fills in, then run it.",
+  "run": "Run",
+  "saveAsReplay": "Also save as a replay",
+  "replaySaved": "Saved the replay {name}",
+  "@replaySaved": {"placeholders": {"name": {"type": "String"}}}
 }

@@ -7767,6 +7767,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Earlier versions'**
   String get skillHistory;
+
+  /// No description provided for @replays.
+  ///
+  /// In en, this message translates to:
+  /// **'Replays'**
+  String get replays;
+
+  /// No description provided for @replaysRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded steps it runs without thinking'**
+  String get replaysRow;
+
+  /// No description provided for @noReplays.
+  ///
+  /// In en, this message translates to:
+  /// **'No replays yet'**
+  String get noReplays;
+
+  /// No description provided for @replaysHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A replay is a recorded set of browser or desktop steps the bot runs as is, which is faster and cheaper. If a step doesn\'t work any more, the bot takes over from there and can update the replay. Save one from a teach recording, or ask the bot to save what it just did.'**
+  String get replaysHelp;
+
+  /// No description provided for @replaySteps.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 step} other{{count} steps}}'**
+  String replaySteps(int count);
+
+  /// No description provided for @replayRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'run {runs} times, {failures} needed help'**
+  String replayRuns(int runs, int failures);
+
+  /// No description provided for @runReplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Run {name}'**
+  String runReplay(String name);
+
+  /// No description provided for @runReplayHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the values it fills in, then run it.'**
+  String get runReplayHelp;
+
+  /// No description provided for @run.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get run;
+
+  /// No description provided for @saveAsReplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Also save as a replay'**
+  String get saveAsReplay;
+
+  /// No description provided for @replaySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved the replay {name}'**
+  String replaySaved(String name);
 }
 
 class _AppLocalizationsDelegate

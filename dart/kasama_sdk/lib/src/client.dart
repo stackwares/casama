@@ -96,6 +96,7 @@ class KasamaClient {
   ImportApi get imports => api.getImportApi();
   FilesApi get files => api.getFilesApi();
   KnowledgeApi get knowledge => api.getKnowledgeApi();
+  ReplaysApi get replays => api.getReplaysApi();
   McpApi get mcp => api.getMcpApi();
 
   /// Wallpaper photo search, when the server has a photo source (D-087).

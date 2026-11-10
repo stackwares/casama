@@ -362,6 +362,11 @@ abstract class Backend {
   Future<void> revokeMcpKey(String orgId, String keyId);
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
+  // Step replay (D-127)
+  Future<List<Replay>> replays(String botId);
+  Future<RunReplayResponse> runReplay(String id, Map<String, String> params);
+  Future<void> deleteReplay(String id);
+  Future<Replay> replayFromTeach(String teachId, String name, {String? description});
   // Self-improving skills (D-126)
   Future<List<SkillProposal>> skillProposals(String orgId, {String? botId});
   Future<void> acceptSkillProposal(String id, {String? bodyMd});

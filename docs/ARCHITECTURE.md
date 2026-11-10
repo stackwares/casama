@@ -243,6 +243,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/skill-learning.ts` (`learnFromRun` from the run loop's `learn` steps, proposals, `applySkillProposal`), `run_digests`/`skill_proposals`/`skill_revisions` (with the revision trigger), `apps/server/src/api/routes/skill-learning.ts`, and the For you cards and skill stats sheet.
 
+## Step replay (D-127)
+
+- `packages/agent/src/replays.ts` (`executeReplay`, `replay.run|save`, `replayFromTeach`), the replay-run path at the start of `run.ts`, `replays` and `runs.replay`, `apps/server/src/api/routes/replays.ts`, and the bot's Replays screen.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

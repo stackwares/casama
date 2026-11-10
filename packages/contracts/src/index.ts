@@ -23,6 +23,7 @@ export * from "./voice.ts";
 export * from "./agent-import.ts";
 export * from "./knowledge.ts";
 export * from "./pages.ts";
+export * from "./replays.ts";
 export * from "./skill-learning.ts";
 export * from "./plugins.ts";
 export * from "./teach.ts";

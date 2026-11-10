@@ -569,6 +569,42 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  // Step replay (D-127)
+  final replayList = <Replay>[
+    Replay(
+      id: 'rp-1',
+      botId: botId,
+      name: 'file-expense',
+      description: 'File an expense',
+      params: [ReplayParamInfo(name: 'amount', default_: '42.50')],
+      steps: [ReplayStepsInner(tool: 'desktop.click'), ReplayStepsInner(tool: 'desktop.type')],
+      source_: ReplaySource_Enum.teach,
+      runs: 3,
+      failures: 1,
+      lastFailure: 'step 2: couldn\'t find button "Submit"',
+      lastRunAt: null,
+      updatedAt: DateTime(2026, 11, 10),
+    ),
+  ];
+  final replayActions = <String>[];
+  @override
+  Future<List<Replay>> replays(String botId) async => List.of(replayList);
+  @override
+  Future<RunReplayResponse> runReplay(String id, Map<String, String> params) async {
+    replayActions.add('run:$id:${params['amount']}');
+    return RunReplayResponse(conversationId: convId, runId: runId);
+  }
+  @override
+  Future<void> deleteReplay(String id) async {
+    replayActions.add('delete:$id');
+    replayList.removeWhere((r) => r.id == id);
+  }
+  @override
+  Future<Replay> replayFromTeach(String teachId, String name, {String? description}) async {
+    replayActions.add('fromTeach:$teachId:$name');
+    return replayList.first;
+  }
+
   // Self-improving skills (D-126)
   final proposals = <SkillProposal>[];
   final proposalActions = <String>[];

@@ -24,6 +24,7 @@ export * from "./notifications.ts";
 export * from "./pages.ts";
 export * from "./plugins.ts";
 export * from "./projects.ts";
+export * from "./replays.ts";
 export * from "./redact.ts";
 export * from "./run.ts";
 export * from "./safe-fetch.ts";

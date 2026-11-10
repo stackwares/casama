@@ -4530,4 +4530,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get skillHistory => 'Earlier versions';
+
+  @override
+  String get replays => 'Replays';
+
+  @override
+  String get replaysRow => 'Recorded steps it runs without thinking';
+
+  @override
+  String get noReplays => 'No replays yet';
+
+  @override
+  String get replaysHelp =>
+      'A replay is a recorded set of browser or desktop steps the bot runs as is, which is faster and cheaper. If a step doesn\'t work any more, the bot takes over from there and can update the replay. Save one from a teach recording, or ask the bot to save what it just did.';
+
+  @override
+  String replaySteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count steps',
+      one: '1 step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String replayRuns(int runs, int failures) {
+    return 'run $runs times, $failures needed help';
+  }
+
+  @override
+  String runReplay(String name) {
+    return 'Run $name';
+  }
+
+  @override
+  String get runReplayHelp => 'Check the values it fills in, then run it.';
+
+  @override
+  String get run => 'Run';
+
+  @override
+  String get saveAsReplay => 'Also save as a replay';
+
+  @override
+  String replaySaved(String name) {
+    return 'Saved the replay $name';
+  }
 }

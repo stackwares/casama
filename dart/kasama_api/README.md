@@ -203,6 +203,10 @@ Class | Method | HTTP request | Description
 [*ProjectsApi*](doc/ProjectsApi.md) | [**listProjects**](doc/ProjectsApi.md#listprojects) | **GET** /v1/projects | 
 [*ProjectsApi*](doc/ProjectsApi.md) | [**signOffMilestone**](doc/ProjectsApi.md#signoffmilestone) | **POST** /v1/projects/{id}/milestones/{milestone_id}/signoff | Sign off a finished milestone so the next one begins
 [*ProjectsApi*](doc/ProjectsApi.md) | [**updateProject**](doc/ProjectsApi.md#updateproject) | **PATCH** /v1/projects/{id} | Pause, resume or cancel a project, or change its budget, deadline or plan
+[*ReplaysApi*](doc/ReplaysApi.md) | [**deleteReplay**](doc/ReplaysApi.md#deletereplay) | **DELETE** /v1/replays/{id} | 
+[*ReplaysApi*](doc/ReplaysApi.md) | [**listReplays**](doc/ReplaysApi.md#listreplays) | **GET** /v1/replays | A bot&#39;s saved replays (D-127)
+[*ReplaysApi*](doc/ReplaysApi.md) | [**replayFromTeach**](doc/ReplaysApi.md#replayfromteach) | **POST** /v1/teach/{id}/replay | Save a teach recording as a replay
+[*ReplaysApi*](doc/ReplaysApi.md) | [**runReplay**](doc/ReplaysApi.md#runreplay) | **POST** /v1/replays/{id}/run | Run a replay without the model; the bot takes over if a step fails
 [*RoutinesApi*](doc/RoutinesApi.md) | [**createRoutine**](doc/RoutinesApi.md#createroutine) | **POST** /v1/routines | Schedule a routine (cron in a timezone) or create a GitHub/custom webhook trigger
 [*RoutinesApi*](doc/RoutinesApi.md) | [**deleteRoutine**](doc/RoutinesApi.md#deleteroutine) | **DELETE** /v1/routines/{id} | Delete a routine (its past runs and conversation are kept)
 [*RoutinesApi*](doc/RoutinesApi.md) | [**listRoutines**](doc/RoutinesApi.md#listroutines) | **GET** /v1/bots/{id}/routines | 
@@ -390,6 +394,7 @@ Class | Method | HTTP request | Description
  - [DeletedKnowledgeSource](doc/DeletedKnowledgeSource.md)
  - [DeletedPage](doc/DeletedPage.md)
  - [DeletedPlugin](doc/DeletedPlugin.md)
+ - [DeletedReplay](doc/DeletedReplay.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
  - [DeletedRule](doc/DeletedRule.md)
  - [DeletedTeach](doc/DeletedTeach.md)
@@ -506,6 +511,11 @@ Class | Method | HTTP request | Description
  - [ReasoningEffort](doc/ReasoningEffort.md)
  - [RedirectUrl](doc/RedirectUrl.md)
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
+ - [Replay](doc/Replay.md)
+ - [ReplayFromTeachRequest](doc/ReplayFromTeachRequest.md)
+ - [ReplayList](doc/ReplayList.md)
+ - [ReplayParamInfo](doc/ReplayParamInfo.md)
+ - [ReplayStepsInner](doc/ReplayStepsInner.md)
  - [RevertPageRequest](doc/RevertPageRequest.md)
  - [RevokedConnectKey](doc/RevokedConnectKey.md)
  - [RevokedKey](doc/RevokedKey.md)
@@ -523,6 +533,8 @@ Class | Method | HTTP request | Description
  - [RunEventsPage](doc/RunEventsPage.md)
  - [RunFailedEvent](doc/RunFailedEvent.md)
  - [RunFailedEventPayload](doc/RunFailedEventPayload.md)
+ - [RunReplayRequest](doc/RunReplayRequest.md)
+ - [RunReplayResponse](doc/RunReplayResponse.md)
  - [RunStarted](doc/RunStarted.md)
  - [RunStartedEvent](doc/RunStartedEvent.md)
  - [RunStartedEventPayload](doc/RunStartedEventPayload.md)
