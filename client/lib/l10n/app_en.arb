@@ -2211,5 +2211,11 @@
   "pmBwToken": "Access token (optional)",
   "pmForWorkspace": "For the whole workspace",
   "pmChooseVaults": "Vaults bots may use",
-  "pmChooseVaultsHelp": "Only logins in the vaults or collections you tick are available to bots."
+  "pmChooseVaultsHelp": "Only logins in the vaults or collections you tick are available to bots.",
+  "welcomeGettingReady": "Getting your space ready…",
+  "setUpManually": "Set up manually",
+  "tryAgain": "Try again",
+  "inviteLinkCopied": "Invite link copied. Send it to the people you work with.",
+  "connectManaged": "Sign in through Composio",
+  "connectManagedHelp": "Kasama reads your inbox through Composio's Google sign-in for now. You can disconnect any time."
 }

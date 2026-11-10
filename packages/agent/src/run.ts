@@ -46,6 +46,7 @@ import { computerMcpFor } from "./plugins.ts";
 import { hasLoginPlaceholders, resolveLoginPlaceholders } from "./password-managers.ts";
 import { REPLAY_STOPPED } from "./replays.ts";
 import { learnFromRun } from "./skill-learning.ts";
+import { afterWelcomeRun, WELCOME_GUIDE } from "./welcome.ts";
 import { SETUP_GUIDE } from "./tools/setup.ts";
 import {
   type ActionRule,
@@ -763,6 +764,12 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       }),
     );
     await step("complete", () => finishCompleted(db, info, finalMessage.messageId, bus));
+    // Welcome chat (D-129): the setup offer after the first value, "What I learned" after setup.
+    await step("welcome", () =>
+      afterWelcomeRun(db, { runId: info.runId, orgId: info.orgId, botId: info.botId, conversationId: info.conversationId, userId: info.createdBy }).catch((err) => {
+        log?.warn("welcome step failed", { run_id: runId, error: (err as Error).message });
+      }),
+    );
     await step("learn", () =>
       learnStep(deps, info, "completed", undefined, chainFor, bus).catch((err) => {
         log?.warn("skill learning failed", { run_id: runId, error: (err as Error).message });
@@ -1028,7 +1035,11 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     group,
     persona:
       groupNote(group, row.bot_id, current?.text) +
-      (row.purpose === "setup" ? `${row.persona_md}\n\n${SETUP_GUIDE}`.trim() : row.persona_md),
+      (row.purpose === "setup"
+        ? `${row.persona_md}\n\n${SETUP_GUIDE}`.trim()
+        : row.purpose === "welcome"
+          ? `${row.persona_md}\n\n${WELCOME_GUIDE}`.trim()
+          : row.persona_md),
     autonomy: row.autonomy,
     // Check-ins (D-114) run on the bot's cheaper model when it has one.
     policy:

@@ -7947,6 +7947,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only logins in the vaults or collections you tick are available to bots.'**
   String get pmChooseVaultsHelp;
+
+  /// No description provided for @welcomeGettingReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting your space ready…'**
+  String get welcomeGettingReady;
+
+  /// No description provided for @setUpManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up manually'**
+  String get setUpManually;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @inviteLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link copied. Send it to the people you work with.'**
+  String get inviteLinkCopied;
+
+  /// No description provided for @connectManaged.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in through Composio'**
+  String get connectManaged;
+
+  /// No description provided for @connectManagedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Kasama reads your inbox through Composio\'s Google sign-in for now. You can disconnect any time.'**
+  String get connectManagedHelp;
 }
 
 class _AppLocalizationsDelegate

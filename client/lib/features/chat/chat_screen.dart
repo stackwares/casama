@@ -24,6 +24,7 @@ import '../../ui/shell_header.dart';
 import '../files/file_preview.dart';
 import '../home/home_shell.dart';
 import 'chat_controller.dart';
+import 'local_actions.dart';
 import 'widgets/bot_ui.dart';
 import 'widgets/chat_widgets.dart';
 import 'widgets/composer.dart';
@@ -178,7 +179,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  void _onUiAction(BotUiAction action) {
+  Future<void> _onUiAction(BotUiAction action) async {
+    // Some card actions are the app's own: open a connection, a screen, an invite (D-129).
+    if (await handleLocalUiAction(context, ref, action)) return;
+    if (!mounted) return;
     final chat = ref.read(chatControllerProvider(widget.botId));
     if (chat.running || chat.answeredUi.contains(action.surfaceId)) return;
     runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).send(uiActionSummary(action), uiAction: action.toJson()));

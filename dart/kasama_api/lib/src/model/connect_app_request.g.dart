@@ -150,4 +150,5 @@ const _$ConnectAppRequestMethodEnumEnumMap = {
   ConnectAppRequestMethodEnum.oauth: 'oauth',
   ConnectAppRequestMethodEnum.apiKey: 'api_key',
   ConnectAppRequestMethodEnum.none: 'none',
+  ConnectAppRequestMethodEnum.managed: 'managed',
 };

@@ -414,3 +414,10 @@ export const UsageReport = z
     runs: z.number().int().optional(),
   })
   .openapi("UsageReport");
+
+export const StartWelcomeRequest = z
+  .object({ first_name: z.string().max(80).optional(), bot_name: z.string().min(1).max(80).optional() })
+  .openapi("StartWelcomeRequest");
+export const WelcomeChat = z
+  .object({ org_id: Uuid, bot_id: Uuid, conversation_id: Uuid, created: z.boolean() })
+  .openapi("WelcomeChat");

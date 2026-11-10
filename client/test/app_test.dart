@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kasama_sdk/kasama_sdk.dart' show WelcomeChat;
 import 'package:kasama_app/features/computer/computer_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:kasama_app/app.dart';
@@ -185,8 +188,13 @@ void main() {
 
   testWidgets('onboarding advances after creating a workspace', (tester) async {
     await setSize(tester, const Size(500, 1000));
-    final backend = FakeBackend()..hasOrg = false;
+    final backend = _NoWelcome()..hasOrg = false;
     await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(backend)], child: const KasamaApp()));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    // New people land in the welcome chat (D-129); the wizard is behind "Set up manually".
+    await tester.tap(find.byKey(const Key('setUpManually')));
     await tester.pumpAndSettle();
     expect(find.text('Set up your workspace'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('workspaceName')), 'New Org');
@@ -210,4 +218,9 @@ void main() {
     final a = tester.getTopLeft(find.textContaining('First answer')).dy;
     expect(q, lessThan(a));
   });
+}
+
+class _NoWelcome extends FakeBackend {
+  @override
+  Future<WelcomeChat> startWelcome({String? firstName}) => Completer<WelcomeChat>().future;
 }

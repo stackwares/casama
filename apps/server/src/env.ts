@@ -161,6 +161,12 @@ export const EnvSchema = z.object({
    */
   PAGES_URL: z.url().default("http://localhost:8790"),
   PAGES_PORT: z.coerce.number().int().optional(),
+  /**
+   * Kasama Cloud's Composio key (D-130): inbox reading through Composio's managed Google sign-in
+   * until Google's restricted-scope review passes. Unset: that option is hidden on Kasama Cloud.
+   */
+  COMPOSIO_API_KEY: z.string().optional(),
+  COMPOSIO_API_URL: z.url().optional(),
   /** Headless Chromium for page PDFs (unset: PDF export is off). */
   PDF_CHROMIUM_PATH: z.string().optional(),
 });

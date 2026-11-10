@@ -1,4 +1,5 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
+import { existingWelcome, handleWelcomeAction, startWelcome } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@kasama/db";
 import { parseMentions, templateById } from "@kasama/domain";
@@ -6,6 +7,7 @@ import { withSpan } from "@kasama/observability";
 import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { streamSSE } from "hono/streaming";
 import { enforceLimit } from "../../billing/limits.ts";
+import { modelOverrides } from "../../env.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -458,6 +460,23 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         ]),
         202,
       );
+    // Welcome chat (D-129): its scripted card actions are answered without a model.
+    if (ui_action?.name.startsWith("welcome.")) {
+      const [conv] = await withUserSession(db, claims, (tx) =>
+        tx.execute<{ org_id: string; bot_id: string; welcome: unknown }>(sql`select org_id, bot_id, welcome from public.conversations where id = ${id}::uuid`),
+      );
+      if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
+      if (conv.welcome) {
+        const r = await handleWelcomeAction(
+          { db, modelOverrides: modelOverrides(deps.env) },
+          { orgId: conv.org_id, botId: conv.bot_id, conversationId: id, userId: claims.sub },
+          { name: ui_action.name, surface_id: ui_action.surface_id, context: ui_action.context as Record<string, unknown> | undefined },
+          text,
+        );
+        if (r.queue) await deps.workflows.startRun(r.runId);
+        return c.json({ message_id: r.messageId, run_id: r.runId, conversation_id: id }, 202);
+      }
+    }
     return withSpan("chat.send", { conversation_id: id }, async (span) => {
       const created = await withUserSession(db, claims, async (tx) => {
         const [conv] = await tx.select().from(conversations).where(eq(conversations.id, id));
@@ -513,6 +532,34 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         202,
       );
     });
+  });
+
+  app.openapi(routes.startWelcome, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const b = c.req.valid("json");
+    const found = await existingWelcome(db, claims.sub);
+    if (found) return c.json({ org_id: found.orgId, bot_id: found.botId, conversation_id: found.conversationId, created: false }, 200);
+    const [m] = await db.execute<{ n: number }>(sql`select count(*)::int as n from public.memberships where user_id = ${claims.sub}::uuid`);
+    if ((m?.n ?? 0) > 0) throw new ApiError(409, "has_workspace", "You already have a workspace");
+    const email = typeof claims.email === "string" ? claims.email : "";
+    const first = (b.first_name ?? (claims.user_metadata as { full_name?: string } | undefined)?.full_name?.split(" ")[0] ?? email.split("@")[0] ?? "").trim();
+    const name = `${first ? `${first[0]?.toUpperCase()}${first.slice(1)}` : "My"}'s space`.slice(0, 80);
+    let orgId: string | undefined;
+    for (let attempt = 0; attempt < 5 && !orgId; attempt++) {
+      const slug = `${(first || "space").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "space"}-${Math.random().toString(36).slice(2, 8)}`;
+      try {
+        const [row] = await withUserSession(db, claims, (tx) =>
+          tx.execute<{ id: string }>(sql`select id from public.create_organization(${name}, ${slug})`),
+        );
+        orgId = row?.id;
+      } catch (err) {
+        if ((err as { code?: string }).code !== "23505" && (err as { cause?: { code?: string } }).cause?.code !== "23505") throw err;
+      }
+    }
+    if (!orgId) throw new ApiError(409, "slug_taken", "Could not create your space; try again");
+    if (deps.billing?.enabled) await deps.billing.recompute(orgId);
+    const w = await startWelcome(db, { orgId, userId: claims.sub, firstName: first, botName: b.bot_name ?? "Kasama" });
+    return c.json({ org_id: w.orgId, bot_id: w.botId, conversation_id: w.conversationId, created: true }, 200);
   });
 
   app.openapi(routes.getRun, async (c) => {

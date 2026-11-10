@@ -479,57 +479,6 @@ export const auditLog = pgTable("audit_log", {
 	check("audit_log_actor_type_check", sql`actor_type = ANY (ARRAY['user'::text, 'bot'::text, 'system'::text])`),
 ]);
 
-export const conversations = pgTable("conversations", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	botId: uuid("bot_id").notNull(),
-	channelId: uuid("channel_id"),
-	externalThreadId: text("external_thread_id"),
-	title: text(),
-	summary: text().default("").notNull(),
-	summaryThrough: timestamp("summary_through", { withTimezone: true, mode: 'string' }),
-	createdBy: uuid("created_by"),
-	lastMessageAt: timestamp("last_message_at", { withTimezone: true, mode: 'string' }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	purpose: text().default('chat').notNull(),
-	headMessageId: uuid("head_message_id"),
-	projectId: uuid("project_id"),
-	kind: text().default('direct').notNull(),
-}, (table) => [
-	index("conversations_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.lastMessageAt.desc().nullsFirst().op("timestamptz_ops")),
-	index("conversations_title_trgm").using("gin", table.title.asc().nullsLast().op("gin_trgm_ops")),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "conversations_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.botId],
-			foreignColumns: [bots.id],
-			name: "conversations_bot_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.createdBy],
-			foreignColumns: [users.id],
-			name: "conversations_created_by_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.projectId],
-			foreignColumns: [projects.id],
-			name: "conversations_project_id_fkey"
-		}).onDelete("set null"),
-	pgPolicy("conversations_insert", { as: "permissive", for: "insert", to: ["authenticated"], withCheck: sql`(can_access_bot(bot_id) AND (EXISTS ( SELECT 1
-   FROM bots b
-  WHERE ((b.id = conversations.bot_id) AND (b.org_id = conversations.org_id)))))`  }),
-	pgPolicy("conversations_update", { as: "permissive", for: "update", to: ["authenticated"] }),
-	pgPolicy("conversations_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	pgPolicy("conversations_select", { as: "permissive", for: "select", to: ["authenticated"] }),
-	check("conversations_title_check", sql`char_length(title) <= 200`),
-	check("conversations_purpose_check", sql`purpose = ANY (ARRAY['chat'::text, 'setup'::text])`),
-	check("conversations_kind_check", sql`kind = ANY (ARRAY['direct'::text, 'group'::text])`),
-]);
-
 export const messages = pgTable("messages", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -580,6 +529,58 @@ export const messages = pgTable("messages", {
 	pgPolicy("messages_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	pgPolicy("messages_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	check("messages_role_check", sql`role = ANY (ARRAY['user'::text, 'assistant'::text, 'system'::text, 'tool'::text])`),
+]);
+
+export const conversations = pgTable("conversations", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	channelId: uuid("channel_id"),
+	externalThreadId: text("external_thread_id"),
+	title: text(),
+	summary: text().default("").notNull(),
+	summaryThrough: timestamp("summary_through", { withTimezone: true, mode: 'string' }),
+	createdBy: uuid("created_by"),
+	lastMessageAt: timestamp("last_message_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	purpose: text().default('chat').notNull(),
+	headMessageId: uuid("head_message_id"),
+	projectId: uuid("project_id"),
+	kind: text().default('direct').notNull(),
+	welcome: jsonb(),
+}, (table) => [
+	index("conversations_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.lastMessageAt.desc().nullsFirst().op("timestamptz_ops")),
+	index("conversations_title_trgm").using("gin", table.title.asc().nullsLast().op("gin_trgm_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "conversations_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "conversations_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "conversations_created_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.projectId],
+			foreignColumns: [projects.id],
+			name: "conversations_project_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("conversations_insert", { as: "permissive", for: "insert", to: ["authenticated"], withCheck: sql`(can_access_bot(bot_id) AND (EXISTS ( SELECT 1
+   FROM bots b
+  WHERE ((b.id = conversations.bot_id) AND (b.org_id = conversations.org_id)))))`  }),
+	pgPolicy("conversations_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("conversations_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("conversations_select", { as: "permissive", for: "select", to: ["authenticated"] }),
+	check("conversations_title_check", sql`char_length(title) <= 200`),
+	check("conversations_kind_check", sql`kind = ANY (ARRAY['direct'::text, 'group'::text])`),
+	check("conversations_purpose_check", sql`purpose = ANY (ARRAY['chat'::text, 'setup'::text, 'welcome'::text])`),
 ]);
 
 export const computers = pgTable("computers", {

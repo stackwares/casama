@@ -33,7 +33,7 @@ import { integrationOut, isAdmin, requireClaims } from "./autonomy.ts";
 const { integrations } = schema;
 
 type OAuthClient = { client_id: string; client_secret?: string };
-const GOOGLE_APPS = new Set(["gmail", "google_calendar", "google_drive"]);
+const GOOGLE_APPS = new Set(["gmail", "gmail_inbox", "google_calendar", "google_drive"]);
 
 export interface AppsOptions {
   /** Outbound fetch (tests point vendors at local fakes). */
@@ -62,10 +62,21 @@ export function preregisteredClients(env: AppDeps["env"]): Record<string, OAuthC
   return out;
 }
 
+/** The catalog a server offers: on Kasama Cloud, inbox apps only through Composio, or not at all (D-130). */
+export function catalogFor(catalog: CatalogApp[], o: { cloud: boolean; composio: boolean }): CatalogApp[] {
+  return catalog
+    .filter((a) => !(o.cloud && a.inbox && !o.composio))
+    .map((a) => (o.cloud && a.inbox ? { ...a, auth: ["managed"], oauthClient: undefined } : a));
+}
+
 export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts: AppsOptions = {}) {
   const { db, env } = deps;
   const fetchImpl = opts.fetch ?? fetch;
-  const catalog = opts.catalog ?? APP_CATALOG;
+  const fullCatalog = opts.catalog ?? APP_CATALOG;
+  // Kasama Cloud's own Google app has no restricted scopes (D-130): inbox reading goes through
+  // Composio's managed sign-in, or isn't offered when no Composio key is configured.
+  const cloud = env.BILLING_ENABLED;
+  const catalog = catalogFor(fullCatalog, { cloud, composio: !!env.COMPOSIO_API_KEY });
   const findApp = (id: string) => catalog.find((a) => a.id === id) ?? appByIdOrNull(id);
   const clients = preregisteredClients(env);
 
@@ -213,7 +224,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     if (!a) throw new ApiError(404, "app_not_found", "No such app");
     if (!(await isAdmin(db, claims, body.org_id)))
       throw new ApiError(403, "forbidden", "Only owners and admins can connect apps");
-    if (!a.auth.includes(body.method))
+    if (!a.auth.includes(body.method) && !(body.method === "managed" && a.inbox && env.COMPOSIO_API_KEY))
       throw new ApiError(400, "validation_failed", `${a.name} can't connect that way`);
     if (body.integration_id) {
       const [own] = await db.execute<{ ok: boolean }>(
@@ -223,6 +234,38 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     }
     const name = body.integration_id ? a.id : await freeName(body.org_id, a.id);
     const config: Record<string, unknown> = { url: a.url, app: a.id, auth: body.method };
+
+    if (body.method === "managed") {
+      // Composio's managed sign-in on Kasama Cloud's own Composio account, one user per workspace.
+      if (!env.COMPOSIO_API_KEY) throw new ApiError(400, "managed_unavailable", `${a.name} isn't available on this server`);
+      const slug = a.id === "gmail_inbox" ? "gmail" : a.id;
+      let [row] = await db.execute<{ id: string }>(
+        sql`select id from public.integrations where org_id = ${body.org_id}::uuid and kind = 'composio' and config ->> 'managed' = 'true' limit 1`,
+      );
+      if (!row) {
+        const secretId = await vault(env.COMPOSIO_API_KEY, "composio managed");
+        [row] = await db.execute<{ id: string }>(sql`
+          insert into public.integrations (org_id, kind, name, config, vault_secret_id, created_by)
+          values (${body.org_id}::uuid, 'composio', ${await freeName(body.org_id, "google_inbox")},
+                  ${JSON.stringify({ managed: true, toolkits: [], ...(env.COMPOSIO_API_URL ? { base_url: env.COMPOSIO_API_URL } : {}) })}::jsonb,
+                  ${secretId}::uuid, ${claims.sub}::uuid)
+          returning id`);
+      }
+      const rec = await loadIntegration(db, row?.id as string, fetchImpl);
+      if (!rec) throw new Error("managed integration missing");
+      let out: { redirect_url: string };
+      try {
+        out = await composioDirectory(rec, fetchImpl).connect(slug, `${apiBase(c)}/oauth/done`);
+      } catch (err) {
+        throw new ApiError(400, "provider_error", (err as Error).message.slice(0, 300));
+      }
+      await db.execute(sql`
+        update public.integrations set config = jsonb_set(config, '{toolkits}', (
+          select to_jsonb(array(select distinct x from jsonb_array_elements_text(coalesce(config -> 'toolkits', '[]'::jsonb) || to_jsonb(${slug}::text)) x)))
+        ) where id = ${row?.id}::uuid`);
+      const [irow] = await db.select().from(integrations).where(eq(integrations.id, row?.id as string));
+      return c.json({ status: "authorize" as const, authorize_url: out.redirect_url, integration: integrationOut(irow!, []) }, 200);
+    }
 
     if (body.method !== "oauth") {
       if (body.method === "api_key" && !body.api_key)
@@ -301,6 +344,8 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       // Google only issues a refresh token when asked for offline access.
       if (GOOGLE_APPS.has(a.id)) {
         authorizationUrl.searchParams.set("access_type", "offline");
+        // Incremental authorization (D-130): adding the inbox later keeps the scopes already granted.
+        authorizationUrl.searchParams.set("include_granted_scopes", "true");
         authorizationUrl.searchParams.set("prompt", "consent");
       }
       const [flow] = await db.execute<{ id: string }>(sql`

@@ -127,7 +127,9 @@ oauth(r'oauth'),
 @JsonValue(r'api_key')
 apiKey(r'api_key'),
 @JsonValue(r'none')
-none(r'none');
+none(r'none'),
+@JsonValue(r'managed')
+managed(r'managed');
 
 const ConnectAppRequestMethodEnum(this.value);
 

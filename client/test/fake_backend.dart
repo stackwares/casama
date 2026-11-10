@@ -569,6 +569,15 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  // Welcome chat (D-129)
+  var welcomeCalls = 0;
+  @override
+  Future<WelcomeChat> startWelcome({String? firstName}) async {
+    welcomeCalls++;
+    hasOrg = true;
+    return WelcomeChat(orgId: orgId, botId: botId, conversationId: convId, created: true);
+  }
+
   // Password managers (D-128)
   final pmList = <PasswordManager>[];
   final pmActions = <String>[];

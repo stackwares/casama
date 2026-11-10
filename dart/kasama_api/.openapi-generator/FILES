@@ -350,6 +350,7 @@ lib/src/model/start_agent_import_request.dart
 lib/src/model/start_agent_import_request_files_inner.dart
 lib/src/model/start_setup_response.dart
 lib/src/model/start_teach_request.dart
+lib/src/model/start_welcome_request.dart
 lib/src/model/stream_mode.dart
 lib/src/model/stream_session.dart
 lib/src/model/stream_session_request.dart
@@ -431,6 +432,7 @@ lib/src/model/wallpaper_photo.dart
 lib/src/model/wallpaper_photo_list.dart
 lib/src/model/watcher.dart
 lib/src/model/watcher_list.dart
+lib/src/model/welcome_chat.dart
 lib/src/model/workspace_badge.dart
 lib/src/model/workspace_badge_list.dart
 lib/src/model/workspace_files_export.dart

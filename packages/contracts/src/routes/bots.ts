@@ -20,6 +20,8 @@ import {
   SwitchBranchRequest,
   SwitchBranchResponse,
   StartSetupResponse,
+  StartWelcomeRequest,
+  WelcomeChat,
   TestCredentialRequest,
   UpdateCredentialRequest,
   UsageReport,
@@ -357,4 +359,19 @@ export const listGroupChats = createRoute({
   summary: "Group chats in a workspace that you can see (D-118)",
   request: { query: z.object({ org_id: Uuid }) },
   responses: { 200: jsonResponse("Group chats", list("GroupChatList", Conversation)), 401: e401 },
+});
+
+export const startWelcome = createRoute({
+  operationId: "startWelcome",
+  method: "post",
+  path: "/v1/welcome",
+  tags: ["bots"],
+  security: [{ bearerAuth: [] }],
+  summary: "A new person's personal workspace, bot and welcome chat (D-129); the same chat again if it exists",
+  request: { body: jsonBody(StartWelcomeRequest) },
+  responses: {
+    200: jsonResponse("Welcome chat", WelcomeChat),
+    401: problemResponses[401],
+    409: problemResponses[409],
+  },
 });

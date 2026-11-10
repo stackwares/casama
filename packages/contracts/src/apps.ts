@@ -21,7 +21,7 @@ export const CatalogApp = z
     color: z.string().openapi({ description: "Brand color, hex without #" }),
     homepage: z.string(),
     url: z.string(),
-    auth: z.array(z.enum(["oauth", "api_key", "none"])),
+    auth: z.array(z.enum(["oauth", "api_key", "none", "managed"])),
     api_key: z
       .object({
         label: z.string(),
@@ -50,7 +50,7 @@ export const ConnectAppRequest = z
   .object({
     org_id: Uuid,
     app_id: z.string().max(64),
-    method: z.enum(["oauth", "api_key", "none"]),
+    method: z.enum(["oauth", "api_key", "none", "managed"]),
     api_key: z.string().min(1).max(10_000).optional(),
     /** Reconnect this integration instead of adding a new one. */
     integration_id: Uuid.optional(),

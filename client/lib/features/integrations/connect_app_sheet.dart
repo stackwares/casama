@@ -89,6 +89,11 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
           );
       if (!mounted) return;
       switch (r.status) {
+        // Composio's managed sign-in (D-130): no flow to poll; the connection finishes in the browser.
+        case ConnectAppResponseStatusEnum.authorize when r.flowId == null && r.integration != null:
+          _authorizeUrl = r.authorizeUrl;
+          unawaited(_openSignIn());
+          _succeed(r.integration!);
         case ConnectAppResponseStatusEnum.authorize:
           _authorizeUrl = r.authorizeUrl;
           _flowId = r.flowId;
@@ -284,11 +289,13 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
                     CatalogAppAuthEnum.oauth => LucideIcons.logIn,
                     CatalogAppAuthEnum.apiKey => LucideIcons.keyRound,
                     CatalogAppAuthEnum.none => LucideIcons.zap,
+                    CatalogAppAuthEnum.managed => LucideIcons.logIn,
                   }, size: 16),
                   label: Text(switch (m) {
                     CatalogAppAuthEnum.oauth => l10n.signInTab,
                     CatalogAppAuthEnum.apiKey => l10n.authApiKey,
                     CatalogAppAuthEnum.none => l10n.authNone,
+                    CatalogAppAuthEnum.managed => l10n.connectManaged,
                   }),
                 ),
             ],
@@ -299,6 +306,10 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
         ],
         if (_method == CatalogAppAuthEnum.apiKey) ..._keyFields(context),
         if (oauthBlocked) _adminSetup(context),
+        if (_method == CatalogAppAuthEnum.managed) ...[
+          Text(l10n.connectManagedHelp, textAlign: TextAlign.center, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+          const SizedBox(height: AppSpace.md),
+        ],
         if (_method == CatalogAppAuthEnum.none) ...[
           Text(l10n.connectNoSignIn, textAlign: TextAlign.center, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
           const SizedBox(height: AppSpace.md),
@@ -312,7 +323,9 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
           icon: busy
               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
               : Icon(_method == CatalogAppAuthEnum.oauth ? LucideIcons.arrowUpRight : LucideIcons.plug, size: 18),
-          label: Text(busy ? l10n.connectingLabel : (_method == CatalogAppAuthEnum.oauth ? l10n.continueWith(app.name) : l10n.connect)),
+          label: Text(busy
+              ? l10n.connectingLabel
+              : (_method == CatalogAppAuthEnum.oauth ? l10n.continueWith(app.name) : (_method == CatalogAppAuthEnum.managed ? l10n.connectManaged : l10n.connect))),
         ),
         const SizedBox(height: AppSpace.sm),
         Row(

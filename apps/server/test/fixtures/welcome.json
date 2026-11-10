@@ -1,0 +1,98 @@
+{
+  "name": "welcome",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "take a look at this repository"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "First I'd add tests around the parser."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Let's get you set up."
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "s1",
+            "name": "setup__apply",
+            "args": {
+              "instructions": "You are Kasama, a coding assistant for Ana. Be brief and review code carefully.",
+              "memories": [
+                "Prefers TypeScript",
+                "Reviews PRs in the morning"
+              ]
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "setup.apply"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "All set."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

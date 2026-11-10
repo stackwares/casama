@@ -4655,4 +4655,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pmChooseVaultsHelp =>
       'Only logins in the vaults or collections you tick are available to bots.';
+
+  @override
+  String get welcomeGettingReady => 'Getting your space ready…';
+
+  @override
+  String get setUpManually => 'Set up manually';
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String get inviteLinkCopied =>
+      'Invite link copied. Send it to the people you work with.';
+
+  @override
+  String get connectManaged => 'Sign in through Composio';
+
+  @override
+  String get connectManagedHelp =>
+      'Kasama reads your inbox through Composio\'s Google sign-in for now. You can disconnect any time.';
 }

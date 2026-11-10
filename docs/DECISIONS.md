@@ -910,3 +910,51 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Tests:**
   - API (`password-managers.test.ts`), against fake Connect and `bw serve` servers: token check, admin-only workspace managers, no access before vaults are chosen, `[login:Name]` without values, filling only on the item's host with redaction and a one-time code, a personal Bitwarden usable only in runs acting for its owner and invisible to others.
   - widget (`password_managers_test.dart`).
+
+## D-129 Welcome chat
+
+- **First run:** a signed-in person with no workspace now lands on `/welcome`, not the wizard. Joining by invite still skips this.
+  - `POST /v1/welcome` creates "<First name>'s space" through `create_organization`.
+  - It also creates a private personal bot named Kasama with the winky mascot, and a `welcome` conversation with the scripted opening.
+  - Calling it again returns the same chat; people who already belong to a workspace get 409.
+  - The wizard stays at `/onboarding`, reached by "Set up manually".
+- **Scripted, no model:** the opening, the two questions and the intro are ordinary bot messages with A2UI cards.
+  - **Questions:** "What should I help with first?" (up to three picks, plus free text for something else), then "Just me, my team or my business?". Both can be skipped.
+  - **How answers come back:** card actions named `welcome.*` are answered by the server (`handleWelcomeAction`). Each answer is stored as a completed run (`trigger = welcome`) with `message.completed` and `run.completed` events, so the app shows it the way it shows any reply.
+  - **What the picks change:** they become pinned memories and a "What they want help with" section in the bot's instructions, and they choose the starter bots the intro suggests.
+  - The state lives in `conversations.welcome`.
+- **Intro and connection:**
+  - The intro is written for the picks. It has one main connection card: GitHub for coding, Notion, Linear or Jira for projects, HubSpot and Calendar for sales, Google Calendar and Gmail for email and calendar.
+  - The card also has "More apps" and "Done, next".
+  - **No model yet:** with no usable key, a model card comes first, offering Continue with ChatGPT, Add a model key or Use a local model. The bot takes the workspace's first key with a default model as soon as there is one (`ensureBotModel`).
+  - "My team" and "My business" add an invite card.
+  - **App-side actions:** card actions named `app:connect`, `app:route` and `app:invite` are handled by the app. They open the connect sheet, a screen, or copy a new invite link, and never reach the server.
+- **First value:**
+  - **With Calendar or Gmail connected:** a consent card offers a catch-up of the next 14 days of calendar (plus the last 14 days of email only with inbox access). Accepting starts a model run under `WELCOME_GUIDE`: "Here's what I noticed" with 3–5 items, up to three one-tap task cards and a morning brief offer, with nothing sent or changed.
+  - **Otherwise:** the first task card for the first pick (for example "Point me at a repo") starts a normal run.
+- **Then the interview:** after that run, the run loop's `welcome` step offers the setup interview (D-105).
+  - "Let's do it" switches the chat to `setup` and runs the interview.
+  - Once `setup.apply` has finished, a "What I learned" card lists the memories saved during the welcome chat (up to 10), all ticked. Unticked ones are deleted, and an "Edit in Memory" button opens the memory screen.
+  - The chat is then an ordinary chat.
+- **Differences from SPEC:**
+  - The scripted wording lives on the server in English, not in ARB strings, because v1 is English-only and the messages are stored.
+  - Microsoft isn't in the app catalog yet, so email and calendar offer Google.
+  - "Something else" gets the first task card rather than a model-chosen connection.
+  - Kasama Cloud has no built-in starter model yet, so the model card shows whenever there's no key.
+- **Tests:**
+  - API (`welcome.test.ts`): space, bot and opening; the same chat on repeat; scripted answers with no model runs; the model, connection and invite cards; memories from the picks; key pickup and a first task run; the setup offer; the interview and "What I learned" with an unticked memory deleted; invited people refused.
+  - widget (`welcome_test.dart`): landing in the chat, "Set up manually", app-side card actions.
+  - The onboarding test now goes through "Set up manually".
+
+## D-130 Google permissions
+
+- **Kasama's own Google app asks for no restricted scopes:**
+  - Sign-in uses `openid`, `email` and `profile` (the Supabase defaults).
+  - Gmail asks only for `gmail.send`, Calendar for `calendar.events`, and Drive for `drive.file` instead of `drive.readonly`.
+  - Google sign-ins add `include_granted_scopes=true`, so adding a scope later keeps the ones already granted.
+- **Inbox reading is a separate "Gmail inbox" connection** (`gmail.modify`, catalog flag `inbox`), turned on only for inbox features.
+  - **On Kasama Cloud** (billing on), it is offered only as Composio's managed Google sign-in (`auth: managed`), and hidden when `COMPOSIO_API_KEY` isn't set.
+  - **Managed connections:** they use one Kasama-owned Composio integration per workspace (`config.managed`, Composio user = the workspace) and open Composio's sign-in page.
+  - **Self-hosted servers** keep their own Google client for it.
+  - The connect sheet shows "Sign in through Composio" with a short explanation. The catch-up only reads email when the inbox is connected.
+- **Tests:** `google-permissions.test.ts` checks the scope list, the Cloud catalog with and without a Composio key, and a managed connect against a fake Composio. The existing apps tests still pass.

@@ -13,6 +13,7 @@ import '../features/bots/watchers_screen.dart';
 import '../features/search/search_view.dart';
 import '../features/groups/group_chats.dart';
 import '../features/pages/pages_screen.dart';
+import '../features/welcome/welcome_screen.dart';
 import '../features/settings/password_managers_screen.dart';
 import '../features/teach/teach_draft_screen.dart';
 import '../features/projects/projects_screen.dart';
@@ -94,14 +95,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (orgs.isLoading) return loc == '/sign-in' ? '/bots' : null;
       final hasOrg = (orgs.value ?? const []).isNotEmpty;
       final bots = ref.read(botsProvider).value;
-      if (!hasOrg && loc != '/onboarding') return '/onboarding';
+      // New people land in the welcome chat (D-129); the wizard stays at /onboarding.
+      if (!hasOrg && loc != '/onboarding' && loc != '/welcome') return '/welcome';
       if (hasOrg && loc == '/onboarding' && (bots?.isNotEmpty ?? false)) return '/bots';
-      if (loc == '/sign-in') return hasOrg ? '/bots' : '/onboarding';
+      if (loc == '/sign-in') return hasOrg ? '/bots' : '/welcome';
       return null;
     },
     routes: [
       GoRoute(path: '/sign-in', pageBuilder: _page((_, _) => const SignInScreen())),
       GoRoute(path: '/onboarding', pageBuilder: _page((_, _) => const OnboardingScreen())),
+      GoRoute(path: '/welcome', pageBuilder: _page((_, _) => const WelcomeScreen())),
       GoRoute(path: '/two-step', pageBuilder: _page((_, _) => const TwoStepPromptScreen())),
       GoRoute(path: '/join/:token', pageBuilder: _page((_, s) => JoinScreen(token: s.pathParameters['token']!))),
       GoRoute(path: '/oauth/consent/:id', pageBuilder: _page((_, s) => McpConsentScreen(requestId: s.pathParameters['id']!))),

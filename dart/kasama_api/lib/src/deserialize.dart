@@ -287,6 +287,7 @@ import 'package:kasama_api/src/model/start_agent_import_request.dart';
 import 'package:kasama_api/src/model/start_agent_import_request_files_inner.dart';
 import 'package:kasama_api/src/model/start_setup_response.dart';
 import 'package:kasama_api/src/model/start_teach_request.dart';
+import 'package:kasama_api/src/model/start_welcome_request.dart';
 import 'package:kasama_api/src/model/stream_session.dart';
 import 'package:kasama_api/src/model/stream_session_request.dart';
 import 'package:kasama_api/src/model/subrun_completed_event.dart';
@@ -364,6 +365,7 @@ import 'package:kasama_api/src/model/wallpaper_photo.dart';
 import 'package:kasama_api/src/model/wallpaper_photo_list.dart';
 import 'package:kasama_api/src/model/watcher.dart';
 import 'package:kasama_api/src/model/watcher_list.dart';
+import 'package:kasama_api/src/model/welcome_chat.dart';
 import 'package:kasama_api/src/model/workspace_badge.dart';
 import 'package:kasama_api/src/model/workspace_badge_list.dart';
 import 'package:kasama_api/src/model/workspace_files_export.dart';
@@ -1013,6 +1015,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return StartSetupResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StartTeachRequest':
           return StartTeachRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'StartWelcomeRequest':
+          return StartWelcomeRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StreamMode':
           
           
@@ -1179,6 +1183,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Watcher.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WatcherList':
           return WatcherList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WelcomeChat':
+          return WelcomeChat.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WorkspaceBadge':
           return WorkspaceBadge.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WorkspaceBadgeList':

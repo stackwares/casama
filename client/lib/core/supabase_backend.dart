@@ -914,6 +914,10 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<WelcomeChat> startWelcome({String? firstName}) async =>
+      (await api.bots.startWelcome(startWelcomeRequest: StartWelcomeRequest(firstName: firstName))).data!;
+
+  @override
   Future<List<PasswordManager>> passwordManagers(String orgId) async =>
       (await api.passwordManagers.listPasswordManagers(orgId: orgId)).data!.items;
 

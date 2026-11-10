@@ -29,8 +29,8 @@ export const organizationsRelations = relations(organizations, ({one, many}) => 
 	memories: many(memories),
 	quotas: many(quotas),
 	auditLogs: many(auditLog),
-	conversations: many(conversations),
 	messages: many(messages),
+	conversations: many(conversations),
 	computers: many(computers),
 	checkpoints: many(checkpoints),
 	computerLeases: many(computerLeases),
@@ -98,8 +98,8 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	organizations: many(organizations),
 	runs: many(runs),
 	bots: many(bots),
-	conversations: many(conversations),
 	messages: many(messages),
+	conversations: many(conversations),
 	integrations: many(integrations),
 	approvals: many(approvals),
 	toolGrants: many(toolGrants),
@@ -257,8 +257,8 @@ export const botsRelations = relations(bots, ({one, many}) => ({
 		references: [botFolders.id]
 	}),
 	memories: many(memories),
-	conversations: many(conversations),
 	messages: many(messages),
+	conversations: many(conversations),
 	computers: many(computers),
 	approvals: many(approvals),
 	toolGrants: many(toolGrants),
@@ -376,6 +376,9 @@ export const runsRelations = relations(runs, ({one, many}) => ({
 
 export const conversationsRelations = relations(conversations, ({one, many}) => ({
 	runs: many(runs),
+	messages: many(messages, {
+		relationName: "messages_conversationId_conversations_id"
+	}),
 	organization: one(organizations, {
 		fields: [conversations.orgId],
 		references: [organizations.id]
@@ -397,9 +400,6 @@ export const conversationsRelations = relations(conversations, ({one, many}) => 
 		fields: [conversations.headMessageId],
 		references: [messages.id],
 		relationName: "conversations_headMessageId_messages_id"
-	}),
-	messages: many(messages, {
-		relationName: "messages_conversationId_conversations_id"
 	}),
 	routines: many(routines),
 	tasks: many(tasks),
@@ -489,9 +489,6 @@ export const messagesRelations = relations(messages, ({one, many}) => ({
 		relationName: "runs_triggerMessageId_messages_id"
 	}),
 	attachments: many(attachments),
-	conversations: many(conversations, {
-		relationName: "conversations_headMessageId_messages_id"
-	}),
 	organization: one(organizations, {
 		fields: [messages.orgId],
 		references: [organizations.id]
@@ -521,6 +518,9 @@ export const messagesRelations = relations(messages, ({one, many}) => ({
 	bot: one(bots, {
 		fields: [messages.botId],
 		references: [bots.id]
+	}),
+	conversations: many(conversations, {
+		relationName: "conversations_headMessageId_messages_id"
 	}),
 	ttsCaches: many(ttsCache),
 }));

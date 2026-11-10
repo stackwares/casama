@@ -99,6 +99,7 @@ Class | Method | HTTP request | Description
 [*BotsApi*](doc/BotsApi.md) | [**listBots**](doc/BotsApi.md#listbots) | **GET** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listTemplates**](doc/BotsApi.md#listtemplates) | **GET** /v1/templates | 
 [*BotsApi*](doc/BotsApi.md) | [**startBotSetup**](doc/BotsApi.md#startbotsetup) | **POST** /v1/bots/{id}/setup | Start (or rerun) the bot&#39;s setup interview in a new conversation
+[*BotsApi*](doc/BotsApi.md) | [**startWelcome**](doc/BotsApi.md#startwelcome) | **POST** /v1/welcome | A new person&#39;s personal workspace, bot and welcome chat (D-129); the same chat again if it exists
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**editMessage**](doc/ChatApi.md#editmessage) | **POST** /v1/conversations/{id}/messages/{message_id}/edit | Edit a sent message: forks the conversation there and reruns it (the old branch stays)
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
@@ -584,6 +585,7 @@ Class | Method | HTTP request | Description
  - [StartAgentImportRequestFilesInner](doc/StartAgentImportRequestFilesInner.md)
  - [StartSetupResponse](doc/StartSetupResponse.md)
  - [StartTeachRequest](doc/StartTeachRequest.md)
+ - [StartWelcomeRequest](doc/StartWelcomeRequest.md)
  - [StreamMode](doc/StreamMode.md)
  - [StreamSession](doc/StreamSession.md)
  - [StreamSessionRequest](doc/StreamSessionRequest.md)
@@ -665,6 +667,7 @@ Class | Method | HTTP request | Description
  - [WallpaperPhotoList](doc/WallpaperPhotoList.md)
  - [Watcher](doc/Watcher.md)
  - [WatcherList](doc/WatcherList.md)
+ - [WelcomeChat](doc/WelcomeChat.md)
  - [WorkspaceBadge](doc/WorkspaceBadge.md)
  - [WorkspaceBadgeList](doc/WorkspaceBadgeList.md)
  - [WorkspaceFilesExport](doc/WorkspaceFilesExport.md)

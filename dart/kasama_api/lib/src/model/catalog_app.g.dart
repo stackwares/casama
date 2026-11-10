@@ -292,4 +292,5 @@ const _$CatalogAppAuthEnumEnumMap = {
   CatalogAppAuthEnum.oauth: 'oauth',
   CatalogAppAuthEnum.apiKey: 'api_key',
   CatalogAppAuthEnum.none: 'none',
+  CatalogAppAuthEnum.managed: 'managed',
 };

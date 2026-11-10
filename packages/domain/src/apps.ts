@@ -14,7 +14,8 @@ export type AppCategory =
   | "data"
   | "automation";
 
-export type AppAuth = "oauth" | "api_key" | "none";
+/** managed: a sign-in run by a provider Kasama Cloud uses (Composio), for access its own app lacks. */
+export type AppAuth = "oauth" | "api_key" | "none" | "managed";
 
 export interface AppApiKeyHelp {
   /** Field label, e.g. "Secret key" or "Personal access token". */
@@ -54,6 +55,11 @@ export interface CatalogApp {
   /** What a bot can do with it, as short phrases for the connect sheet. */
   capabilities: string[];
   popular?: boolean;
+  /**
+   * Reads the inbox (a restricted Google scope, D-130). Kasama Cloud offers it only through
+   * Composio's managed sign-in until Google's restricted-scope review passes.
+   */
+  inbox?: boolean;
 }
 
 export const APP_CATALOG: CatalogApp[] = [
@@ -322,7 +328,7 @@ export const APP_CATALOG: CatalogApp[] = [
   {
     id: "gmail",
     name: "Gmail",
-    description: "Search, read and draft email.",
+    description: "Send email from your address. Reading your inbox is a separate step.",
     category: "google",
     color: "EA4335",
     homepage: "https://mail.google.com",
@@ -330,9 +336,24 @@ export const APP_CATALOG: CatalogApp[] = [
     auth: ["oauth"],
     oauthClient: "preregistered",
     note: "Google's MCP servers are in Developer Preview.",
-    scopes: ["https://www.googleapis.com/auth/gmail.modify"],
-    capabilities: ["Search and read email", "Draft replies", "Send email (asks first)"],
+    scopes: ["https://www.googleapis.com/auth/gmail.send"],
+    capabilities: ["Send email (asks first)"],
     popular: true,
+  },
+  {
+    id: "gmail_inbox",
+    name: "Gmail inbox",
+    description: "Search and read your email, and draft replies.",
+    category: "google",
+    color: "EA4335",
+    homepage: "https://mail.google.com",
+    url: "https://gmailmcp.googleapis.com/mcp/v1",
+    auth: ["oauth"],
+    oauthClient: "preregistered",
+    note: "Turn this on only for inbox features: catch-ups, triage, replies.",
+    scopes: ["https://www.googleapis.com/auth/gmail.modify"],
+    capabilities: ["Search and read email", "Draft replies", "Label and archive"],
+    inbox: true,
   },
   {
     id: "google_calendar",
@@ -360,8 +381,8 @@ export const APP_CATALOG: CatalogApp[] = [
     auth: ["oauth"],
     oauthClient: "preregistered",
     note: "Google's MCP servers are in Developer Preview.",
-    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
-    capabilities: ["Search files", "Read Docs and Sheets"],
+    scopes: ["https://www.googleapis.com/auth/drive.file"],
+    capabilities: ["Files you pick or that it creates", "Read and write those Docs and Sheets"],
   },
   // ------------------------------------------------------------- payments
   {
