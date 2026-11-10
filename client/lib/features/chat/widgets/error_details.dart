@@ -41,6 +41,7 @@ class ErrorDetails extends ConsumerWidget {
           _ => null,
         },
     ].whereType<String>();
+    // Intentionally not translated: this report is pasted to support, who read English.
     return [
       'Kasama run failed',
       if (e.refId != null) 'Run: ${e.refId}',

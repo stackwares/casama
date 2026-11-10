@@ -12,6 +12,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/providers.dart';
 import '../../core/router.dart';
 import '../../core/widgets.dart';
+import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 
 /// Phone-call voice (D-135): a bot rings this person. iOS shows CallKit (from a PushKit push,
@@ -265,7 +266,10 @@ class _IncomingCallBannerState extends ConsumerState<IncomingCallBanner> {
                         IconButton.filled(
                           key: const Key('answerCall'),
                           tooltip: l10n.callAnswer,
-                          style: IconButton.styleFrom(backgroundColor: Colors.green.shade600, foregroundColor: Colors.white),
+                          style: IconButton.styleFrom(
+                            backgroundColor: context.appColors.positive,
+                            foregroundColor: ThemeData.estimateBrightnessForColor(context.appColors.positive) == Brightness.dark ? Colors.white : Colors.black,
+                          ),
                           icon: const Icon(LucideIcons.phone),
                           onPressed: () => unawaited(ref.read(phoneCallsProvider).answer(IncomingCall.fromCall(call))),
                         ),

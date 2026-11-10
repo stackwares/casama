@@ -302,6 +302,7 @@ class _UpdatePluginState extends ConsumerState<_UpdatePlugin> {
               final r = await runGuarded(context, () => ref.read(backendProvider).updatePlugin(widget.plugin.id, u.toCommit, secrets: {for (final e in _secrets.entries) e.key: e.value.text}));
               if (!mounted) return;
               setState(() => _busy = false);
+              if (!context.mounted) return;
               if (r != null) Navigator.pop(context);
             },
       children: [

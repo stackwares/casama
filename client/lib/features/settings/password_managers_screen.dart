@@ -137,6 +137,7 @@ class _ConnectState extends ConsumerState<_Connect> {
               );
               if (!mounted) return;
               setState(() => _busy = false);
+              if (!context.mounted) return;
               if (pm != null) Navigator.pop(context, pm);
             },
       children: [

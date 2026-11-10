@@ -18,6 +18,9 @@ final skillProposalsProvider = FutureProvider.autoDispose<List<SkillProposal>>((
   return ref.watch(backendProvider).skillProposals(org.id);
 });
 
+/// Uses, success rate and history of one skill; held here so the sheet does not refetch on every rebuild.
+final skillStatsProvider = FutureProvider.autoDispose.family<SkillStats, String>((ref, skillId) => ref.watch(backendProvider).skillStats(skillId));
+
 /// A line diff: unchanged lines, removed ("-") and added ("+"), by longest common subsequence.
 List<(String, String)> lineDiff(String before, String after) {
   final a = before.split('\n');
@@ -139,10 +142,10 @@ class SkillStatsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return FutureBuilder<SkillStats>(
-      future: ref.read(backendProvider).skillStats(skillId),
-      builder: (context, snap) {
-        final s = snap.data;
+    final stats = ref.watch(skillStatsProvider(skillId));
+    return Builder(
+      builder: (context) {
+        final s = stats.value;
         return FormSheet(
           icon: LucideIcons.chartColumn,
           title: name,
@@ -150,7 +153,7 @@ class SkillStatsSheet extends ConsumerWidget {
           onSubmit: () async => Navigator.pop(context),
           children: [
             if (s == null)
-              const Center(child: CircularProgressIndicator())
+              AsyncView<SkillStats>(value: stats, onRetry: () => ref.invalidate(skillStatsProvider(skillId)), data: (_) => const SizedBox.shrink())
             else ...[
               Text(
                 key: const Key('skillStatsLine'),

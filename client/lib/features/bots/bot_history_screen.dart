@@ -186,7 +186,8 @@ class _ArchivedBots extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final items = ref.watch(archivedBotsProvider).value ?? const <Bot>[];
+    final archived = ref.watch(archivedBotsProvider);
+    final items = archived.value ?? const <Bot>[];
     return Padding(
       padding: const EdgeInsets.all(AppSpace.lg),
       child: Column(
@@ -212,7 +213,12 @@ class _ArchivedBots extends ConsumerWidget {
                 child: Text(l10n.unarchive),
               ),
             ),
-          if (items.isEmpty) Text(l10n.noBots),
+          if (archived.hasError)
+            InlineError(error: archived.error!, onRetry: () => ref.invalidate(archivedBotsProvider))
+          else if (archived.isLoading && !archived.hasValue)
+            const Center(child: CircularProgressIndicator())
+          else if (items.isEmpty)
+            Text(l10n.noBots),
         ],
       ),
     );

@@ -46,6 +46,11 @@ class FakeCollector implements DeviceCollector {
   }
 }
 
+class _HealthCollector extends FakeCollector {
+  @override
+  Set<DeviceKind> get supported => {DeviceKind.health};
+}
+
 class FakeTriggers implements DeviceTriggerPlatform {
   final watched = <List<String>>[];
   final notes = StreamController<({String app, String title, String text})>.broadcast();
@@ -229,6 +234,22 @@ void main() {
     await tester.tap(find.descendant(of: find.byKey(const Key('grant-$botId-calendar')), matching: find.byType(Icon)).last);
     await tester.pumpAndSettle();
     expect(backend.grants, isEmpty);
+  });
+
+  testWidgets('turning on Health on a server without encryption at rest says why', (tester) async {
+    await setSize(tester, const Size(500, 1200));
+    final backend = FakeBackend()..healthNeedsEncryption = true;
+    final collector = _HealthCollector();
+    await tester.pumpWidget(harness(backend, const DeviceConnectionsScreen(), overrides: [deviceCollectorProvider.overrideWithValue(collector), deviceTriggerPlatformProvider.overrideWithValue(FakeTriggers())]));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('deviceSwitch-health')));
+    await tester.pumpAndSettle();
+    expect(collector.asked, [DeviceKind.health]);
+    expect(find.text('Health data needs encryption at rest. Turn it on for a workspace you own, then try again.'), findsOneWidget);
+    expect(find.text('Health data is stored only with encryption at rest on.'), findsNothing);
+    expect(backend.uploadedReadings, isEmpty);
+    // Health went back off, so the switch doesn't show on with nothing shared.
+    expect(backend.deviceSourcesSaved.values.single.kinds.containsKey('health'), isFalse);
   });
 
   testWidgets('a bot asking for the calendar gets a one-tap card in chat', (tester) async {

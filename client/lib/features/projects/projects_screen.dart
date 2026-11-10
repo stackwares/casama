@@ -38,7 +38,6 @@ String projectStatusLabel(BuildContext context, ProjectStatus s) {
     ProjectStatus.blocked => l10n.projectBlocked,
     ProjectStatus.done => l10n.projectDone,
     ProjectStatus.cancelled => l10n.projectCancelled,
-    _ => s.value,
   };
 }
 

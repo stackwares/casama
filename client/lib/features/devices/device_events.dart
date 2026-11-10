@@ -96,7 +96,7 @@ Future<Backend?> backgroundBackend() async {
   }
 }
 
-/// Geofences are named "place:<name>"; entering one is "arrive", leaving it "leave".
+/// Geofences are named `"place:<name>"`; entering one is "arrive", leaving it "leave".
 @visibleForTesting
 Map<String, Object?>? geofenceEvent(String geofenceId, GeofenceEvent event, DateTime at) {
   if (!geofenceId.startsWith('place:')) return null;

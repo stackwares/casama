@@ -737,7 +737,19 @@ class _CheckpointsTabState extends ConsumerState<CheckpointsTab> {
     return FutureBuilder<List<Checkpoint>>(
       future: _items,
       builder: (context, snap) {
-        if (snap.hasError) return Center(child: Text(errorText(context, snap.error!)));
+        if (snap.hasError && snap.connectionState == ConnectionState.done) {
+          return EmptyState(
+            icon: LucideIcons.cloudOff,
+            title: context.l10n.somethingWentWrong,
+            message: errorText(context, snap.error!),
+            isError: true,
+            action: FilledButton.tonalIcon(
+              onPressed: () => setState(() => _items = ref.read(backendProvider).checkpoints(widget.computerId)),
+              icon: const Icon(LucideIcons.rotateCw, size: 18),
+              label: Text(context.l10n.retry),
+            ),
+          );
+        }
         if (!snap.hasData) return const Center(child: CircularProgressIndicator());
         final items = snap.data!;
         if (items.isEmpty) {

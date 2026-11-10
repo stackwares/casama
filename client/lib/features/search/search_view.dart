@@ -103,7 +103,6 @@ class _SearchViewState extends ConsumerState<SearchView> {
       SearchKind.skill => (LucideIcons.sparkles, l10n.skills),
       SearchKind.routine => (LucideIcons.clock, l10n.routines),
       SearchKind.ticket => (LucideIcons.squareKanban, l10n.searchTickets),
-      _ => (LucideIcons.search, k.name),
     };
   }
 
@@ -133,7 +132,9 @@ class _SearchViewState extends ConsumerState<SearchView> {
             children: [
               Icon(icon, size: 16, color: scheme.onSurfaceVariant),
               const SizedBox(width: 6),
-              Text(label, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
+              Flexible(
+                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
+              ),
             ],
           ),
         );

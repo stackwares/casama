@@ -196,11 +196,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String lastActive(String when) {
-    return 'Active $when';
-  }
-
-  @override
   String get selectBot => 'Select a bot to chat';
 
   @override
@@ -238,11 +233,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolRunning => 'Running';
-
-  @override
-  String toolDone(int ms) {
-    return 'Done in $ms ms';
-  }
 
   @override
   String get toolFailedLabel => 'Failed';
@@ -418,17 +408,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get usage => 'Usage';
 
   @override
-  String usageMonth(String cost) {
-    return 'This month: $cost';
-  }
-
-  @override
   String get language => 'Language';
-
-  @override
-  String signedInAs(String email) {
-    return 'Signed in as $email';
-  }
 
   @override
   String get inviteMember => 'Invite a member';
@@ -436,11 +416,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String inviteSent(String email) {
     return 'Invite sent to $email.';
-  }
-
-  @override
-  String inviteCodeToShare(String code) {
-    return 'Share this invite code: $code';
   }
 
   @override
@@ -583,9 +558,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botIntegrations => 'Integrations for this bot';
 
   @override
-  String get changeStatus => 'Change status';
-
-  @override
   String get composioToolkits =>
       'Toolkits (comma-separated, for example github, gmail)';
 
@@ -648,10 +620,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noApprovals => 'Nothing needs your approval right now.';
 
   @override
-  String get noIntegrations =>
-      'Connect an MCP server, an OpenAPI source, Composio or Pipedream to give bots more tools.';
-
-  @override
   String get noIntegrationsForBot =>
       'Add integrations in Settings first, then turn them on for this bot here.';
 
@@ -665,9 +633,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noSecrets =>
       'No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.';
-
-  @override
-  String get noTasks => 'No tasks yet';
 
   @override
   String get notifications => 'Notifications';
@@ -746,9 +711,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taskBlocked => 'Blocked';
-
-  @override
-  String get taskBoard => 'Tasks';
 
   @override
   String get taskDoing => 'In progress';
@@ -1632,9 +1594,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeDark => 'Dark';
 
   @override
-  String get accentColor => 'Accent color';
-
-  @override
   String get noApprovalsHelp =>
       'When a bot wants to do something risky, it asks here first.';
 
@@ -2064,10 +2023,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noNotificationsHelp =>
       'Routine results, budget alerts and requests from your bots show up here.';
-
-  @override
-  String get noTasksHelp =>
-      'Bots and people add tasks here to hand work to each other.';
 
   @override
   String get stateProvisioning => 'Setting up';
@@ -2873,16 +2828,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Ask for a code from an authenticator app whenever you sign in.';
 
   @override
-  String get twoStepIsOn => 'On';
-
-  @override
-  String get twoStepIsOff => 'Off';
-
-  @override
-  String get twoStepRequiredHere =>
-      'Required for owners and admins in this workspace';
-
-  @override
   String get twoStepSetUp => 'Set up an authenticator app';
 
   @override
@@ -3001,9 +2946,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localMcpName => 'Name';
 
   @override
-  String get localMcpKind => 'How it runs';
-
-  @override
   String get localMcpStdio => 'A command';
 
   @override
@@ -3036,11 +2978,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get localMcpBadFolder =>
       'Pick a folder inside one of the shared folders.';
-
-  @override
-  String localMcpOnDevice(String device) {
-    return 'On $device';
-  }
 
   @override
   String get codingAgents => 'Coding agents';
@@ -3179,9 +3116,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createInviteLink => 'Create a link';
-
-  @override
-  String get inviteRole => 'Joins as';
 
   @override
   String get linkExpires => 'Expires';
@@ -5421,9 +5355,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devicePrivateModelHelp => 'Only bots on a local model can read it';
 
   @override
-  String get deviceBotsWithAccess => 'Bots that can read it';
-
-  @override
   String get deviceNoBots => 'No bots yet. A bot asks when it needs this.';
 
   @override
@@ -5544,4 +5475,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lessLikeThisDone => 'Got it, fewer like this';
+
+  @override
+  String get widgetStatusWorking => 'Working…';
+
+  @override
+  String get widgetStatusOff => 'Turned off';
+
+  @override
+  String get adminNoWorkspaces => 'No workspaces yet';
+
+  @override
+  String get suspendedByInstanceOwner => 'Suspended by the instance owner';
+
+  @override
+  String get previewHi => 'Hi!';
+
+  @override
+  String get previewAsk => 'Can you tidy up my notes?';
+
+  @override
+  String get previewOnIt => 'On it';
+
+  @override
+  String get previewDone => 'Done! They are in three folders now.';
+
+  @override
+  String get previewMessage => 'Message';
+
+  @override
+  String get fontPreviewGreeting => 'Good morning';
+
+  @override
+  String get photosFromUnsplash => 'Photos from Unsplash';
 }

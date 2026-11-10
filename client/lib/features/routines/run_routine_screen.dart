@@ -8,7 +8,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
 
 /// Opened by the "Run a routine" shortcut (D-111): starts the routine now, then opens the bot's
-/// chat where its results arrive. [reference] is "<routine id>:<bot id>".
+/// chat where its results arrive. [reference] is `"<routine id>:<bot id>"`.
 class RunRoutineScreen extends ConsumerStatefulWidget {
   const RunRoutineScreen({super.key, required this.reference});
   final String reference;

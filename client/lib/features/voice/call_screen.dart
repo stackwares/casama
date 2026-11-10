@@ -87,6 +87,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           final r = await backend.voiceTool(widget.botId, session.conversationId, t.callId, t.name, t.arguments);
           call.sendToolResult(t.callId, r.output);
         } catch (e) {
+          // Intentionally not translated: this goes to the voice model, not the user.
           call.sendToolResult(t.callId, 'The tool could not run.');
         } finally {
           if (mounted) setState(() => _activeTools.remove(t.name));

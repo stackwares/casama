@@ -22,6 +22,8 @@ final adminOverviewProvider = FutureProvider<AdminOverview?>((ref) async {
 final _adminUpdatesProvider = FutureProvider<UpdateNotice>((r) => r.watch(backendProvider).adminUpdates());
 final _adminUsersProvider = FutureProvider<List<AdminUser>>((r) => r.watch(backendProvider).adminUsers());
 final _adminServicesProvider = FutureProvider<List<AdminService>>((r) => r.watch(backendProvider).adminServices());
+final _adminOrgsProvider = FutureProvider.autoDispose<List<AdminOrg>>((r) => r.watch(backendProvider).adminOrgs());
+final _adminAbuseProvider = FutureProvider.autoDispose<List<AbuseEvent>>((r) => r.watch(backendProvider).adminAbuseEvents());
 
 /// Owner admin console: overview and update notice, users, workspace quotas, services.
 class AdminScreen extends ConsumerWidget {
@@ -216,8 +218,6 @@ class _Orgs extends ConsumerStatefulWidget {
 }
 
 class _OrgsState extends ConsumerState<_Orgs> {
-  late Future<List<AdminOrg>> _orgs = ref.read(backendProvider).adminOrgs();
-
   Future<void> _edit(AdminOrg o) async {
     final limits = await showAdaptiveSheet<Map<String, num>>(
       context: context,
@@ -225,10 +225,8 @@ class _OrgsState extends ConsumerState<_Orgs> {
     );
     if (limits == null || !mounted) return;
     await runGuarded(context, () => ref.read(backendProvider).setOrgLimits(o.id, limits));
-    final next = ref.read(backendProvider).adminOrgs();
-    setState(() {
-      _orgs = next;
-    });
+    if (!mounted) return;
+    ref.invalidate(_adminOrgsProvider);
   }
 
   Future<void> _toggleSuspend(AdminOrg o) async {
@@ -254,28 +252,26 @@ class _OrgsState extends ConsumerState<_Orgs> {
         ),
       );
       if (ok != true || !mounted) return;
-      final text = reason.text.trim().isEmpty ? 'Suspended by the instance owner' : reason.text.trim();
+      final text = reason.text.trim().isEmpty ? l10n.suspendedByInstanceOwner : reason.text.trim();
       await runGuarded(context, () => backend.suspendOrg(o.id, text));
     }
     if (!mounted) return;
-    final next = backend.adminOrgs();
-    setState(() {
-      _orgs = next;
-    });
+    ref.invalidate(_adminOrgsProvider);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return FutureBuilder<List<AdminOrg>>(
-      future: _orgs,
-      builder: (context, snap) {
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+    return AsyncView<List<AdminOrg>>(
+      value: ref.watch(_adminOrgsProvider),
+      onRetry: () => ref.invalidate(_adminOrgsProvider),
+      data: (orgs) {
+        if (orgs.isEmpty) return EmptyState(icon: LucideIcons.boxes, message: l10n.adminNoWorkspaces);
         return PageColumn(
           children: [
             GroupedCard(
               children: [
-                for (final o in snap.data!)
+                for (final o in orgs)
                   GroupedTile(
                     key: Key('adminOrg-${o.id}'),
                     icon: LucideIcons.boxes,
@@ -413,11 +409,10 @@ class _Abuse extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<List<AbuseEvent>>(
-      future: ref.read(backendProvider).adminAbuseEvents(),
-      builder: (context, snap) {
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-        final items = snap.data!;
+    return AsyncView<List<AbuseEvent>>(
+      value: ref.watch(_adminAbuseProvider),
+      onRetry: () => ref.invalidate(_adminAbuseProvider),
+      data: (items) {
         return PageColumn(
           children: [
             if (items.isEmpty)

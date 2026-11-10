@@ -41,10 +41,22 @@ class DeviceConnectionsScreen extends ConsumerStatefulWidget {
 class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScreen> {
   final _busy = <DeviceKind>{};
 
+  /// Like [runGuarded], but a server without encryption at rest refusing health data gets its own message.
+  Future<bool?> _guarded(Future<bool> Function() action) async {
+    try {
+      return await action();
+    } catch (e) {
+      if (!mounted) return null;
+      if (problemOf(e)?.code != 'health_needs_encryption') return runGuarded(context, () => Future<bool>.error(e));
+      showMessage(context, context.l10n.healthNeedsEncryption);
+      return null;
+    }
+  }
+
   Future<void> _toggle(DeviceKind kind, bool on) async {
     setState(() => _busy.add(kind));
     final l10n = context.l10n;
-    final ok = await runGuarded(context, () => ref.read(deviceSyncProvider).setKind(kind, on));
+    final ok = await _guarded(() => ref.read(deviceSyncProvider).setKind(kind, on));
     if (!mounted) return;
     setState(() => _busy.remove(kind));
     if (ok == false) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.devicePermissionDenied)));
@@ -52,7 +64,8 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
   }
 
   Future<void> _settings(DeviceKind kind, DeviceKindSettings settings) async {
-    await runGuarded(context, () => ref.read(deviceSyncProvider).setKind(kind, true, settings: settings));
+    await _guarded(() => ref.read(deviceSyncProvider).setKind(kind, true, settings: settings));
+    if (!mounted) return;
     ref.invalidate(_deviceStateProvider);
   }
 

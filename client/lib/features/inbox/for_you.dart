@@ -10,7 +10,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
-import '../../ui/page.dart';
 import '../chat/widgets/chat_markdown.dart';
 import '../skills/skill_proposals.dart';
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/wallpaper.dart';
 import '../../ui/bot_avatar.dart';
@@ -17,6 +18,7 @@ class AppearancePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final scheme = context.colorScheme;
     final dark = context.isDark;
     final radius = BorderRadius.circular(compact ? 14 : 22);
@@ -60,13 +62,13 @@ class AppearancePreview extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Align(alignment: Alignment.centerRight, child: me(compact ? 'Hi!' : 'Can you tidy up my notes?')),
+                Align(alignment: Alignment.centerRight, child: me(compact ? l10n.previewHi : l10n.previewAsk)),
                 SizedBox(height: compact ? 5 : 10),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     if (!compact) ...[const BotAvatar(name: 'Kasama', size: 26), const SizedBox(width: 8)],
-                    Flexible(child: bot(compact ? 'On it' : 'Done! They are in three folders now.')),
+                    Flexible(child: bot(compact ? l10n.previewOnIt : l10n.previewDone)),
                   ],
                 ),
                 if (!compact) ...[
@@ -83,7 +85,7 @@ class AppearancePreview extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: context.appColors.hairline),
                           ),
-                          child: Text('Message', style: bubble.copyWith(color: scheme.onSurfaceVariant)),
+                          child: Text(l10n.previewMessage, style: bubble.copyWith(color: scheme.onSurfaceVariant)),
                         ),
                       ),
                       const SizedBox(width: 8),

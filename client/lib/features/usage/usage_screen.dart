@@ -340,8 +340,9 @@ class _ModelBreakdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    // The scheme's accent first, then fixed hues that stay apart whatever the scheme.
-    final palette = [scheme.primary, const Color(0xFFF59E0B), const Color(0xFF14B8A6), const Color(0xFFEC4899), const Color(0xFF6366F1), const Color(0xFF84CC16)];
+    // The scheme's accent first, then theme hues that keep their contrast in light and dark.
+    final colors = context.appColors;
+    final palette = [scheme.primary, colors.warning, scheme.tertiary, colors.positive, colors.info, scheme.secondary];
     final total = models.fold<double>(0, (n, m) => n + m.costUsd.toDouble());
     final legend = Column(
       crossAxisAlignment: CrossAxisAlignment.start,

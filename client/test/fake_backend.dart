@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:dio/dio.dart' show DioException, RequestOptions, Response;
 
 import 'package:kasama_app/core/backend.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
@@ -540,6 +541,9 @@ class FakeBackend implements Backend {
   // Device connections (D-149).
   final deviceSourcesSaved = <String, DeviceSource>{};
   final uploadedReadings = <(String, DeviceReadingInput, String?)>[];
+
+  /// Health uploads are refused with 409 health_needs_encryption, like a server where no owned workspace has encryption on.
+  bool healthNeedsEncryption = false;
   final pendingDeviceRequests = <DeviceRequest>[];
   final deviceAnswers = <(String, bool, Map<String, Object?>?)>[];
   final grants = <DeviceGrant>[];
@@ -562,6 +566,17 @@ class FakeBackend implements Backend {
   Future<void> deleteDeviceSource(String key) async => deviceSourcesSaved.remove(key);
   @override
   Future<int> uploadDeviceReadings(String key, List<DeviceReadingInput> readings, {String? requestId}) async {
+    if (healthNeedsEncryption && readings.any((r) => r.kind == DeviceKind.health)) {
+      final req = RequestOptions(path: '/v1/devices/$key/readings');
+      throw DioException(
+        requestOptions: req,
+        response: Response(
+          requestOptions: req,
+          statusCode: 409,
+          data: {'type': 'about:blank', 'title': 'Conflict', 'status': 409, 'code': 'health_needs_encryption', 'detail': 'Health data is stored only with encryption at rest on.'},
+        ),
+      );
+    }
     for (final r in readings) {
       uploadedReadings.add((key, r, requestId));
     }
@@ -1101,7 +1116,7 @@ class FakeBackend implements Backend {
     channelActions.add(['update:$id', if (allowedSenders != null) 'senders:${allowedSenders.join(',')}', if (enabled != null) 'enabled:$enabled'].join(' '));
     final i = channelList.indexWhere((c) => c.id == id);
     final c = channelList[i];
-    channelList[i] = Channel.fromJson({...c.toJson(), if (allowedSenders != null) 'allowed_senders': allowedSenders, if (enabled != null) 'enabled': enabled});
+    channelList[i] = Channel.fromJson({...c.toJson(), 'allowed_senders': ?allowedSenders, 'enabled': ?enabled});
     return channelList[i];
   }
 

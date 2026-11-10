@@ -59,6 +59,28 @@ class AsyncView<T> extends StatelessWidget {
   }
 }
 
+/// A one-line load failure with a retry, for lists inside sheets and forms where a full [AsyncView] would not fit.
+class InlineError extends StatelessWidget {
+  const InlineError({super.key, required this.error, this.onRetry});
+  final Object error;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(LucideIcons.cloudOff, size: 16, color: scheme.error),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(errorText(context, error), style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.error, height: 1.35)),
+        ),
+        if (onRetry != null) TextButton(onPressed: onRetry, child: Text(context.l10n.retry)),
+      ],
+    );
+  }
+}
+
 /// Centered empty or error state: a soft circle with the icon, a title, a muted line and an action.
 class EmptyState extends StatelessWidget {
   const EmptyState({super.key, required this.icon, required this.message, this.title, this.action, this.isError = false});

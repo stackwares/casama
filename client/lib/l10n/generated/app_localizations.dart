@@ -448,12 +448,6 @@ abstract class AppLocalizations {
   /// **'{cost} today'**
   String costToday(String cost);
 
-  /// No description provided for @lastActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Active {when}'**
-  String lastActive(String when);
-
   /// No description provided for @selectBot.
   ///
   /// In en, this message translates to:
@@ -519,12 +513,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Running'**
   String get toolRunning;
-
-  /// No description provided for @toolDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Done in {ms} ms'**
-  String toolDone(int ms);
 
   /// No description provided for @toolFailedLabel.
   ///
@@ -844,23 +832,11 @@ abstract class AppLocalizations {
   /// **'Usage'**
   String get usage;
 
-  /// No description provided for @usageMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'This month: {cost}'**
-  String usageMonth(String cost);
-
   /// No description provided for @language.
   ///
   /// In en, this message translates to:
   /// **'Language'**
   String get language;
-
-  /// No description provided for @signedInAs.
-  ///
-  /// In en, this message translates to:
-  /// **'Signed in as {email}'**
-  String signedInAs(String email);
 
   /// No description provided for @inviteMember.
   ///
@@ -873,12 +849,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invite sent to {email}.'**
   String inviteSent(String email);
-
-  /// No description provided for @inviteCodeToShare.
-  ///
-  /// In en, this message translates to:
-  /// **'Share this invite code: {code}'**
-  String inviteCodeToShare(String code);
 
   /// No description provided for @botSettings.
   ///
@@ -1096,12 +1066,6 @@ abstract class AppLocalizations {
   /// **'Integrations for this bot'**
   String get botIntegrations;
 
-  /// No description provided for @changeStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Change status'**
-  String get changeStatus;
-
   /// No description provided for @composioToolkits.
   ///
   /// In en, this message translates to:
@@ -1222,12 +1186,6 @@ abstract class AppLocalizations {
   /// **'Nothing needs your approval right now.'**
   String get noApprovals;
 
-  /// No description provided for @noIntegrations.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect an MCP server, an OpenAPI source, Composio or Pipedream to give bots more tools.'**
-  String get noIntegrations;
-
   /// No description provided for @noIntegrationsForBot.
   ///
   /// In en, this message translates to:
@@ -1251,12 +1209,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.'**
   String get noSecrets;
-
-  /// No description provided for @noTasks.
-  ///
-  /// In en, this message translates to:
-  /// **'No tasks yet'**
-  String get noTasks;
 
   /// No description provided for @notifications.
   ///
@@ -1413,12 +1365,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Blocked'**
   String get taskBlocked;
-
-  /// No description provided for @taskBoard.
-  ///
-  /// In en, this message translates to:
-  /// **'Tasks'**
-  String get taskBoard;
 
   /// No description provided for @taskDoing.
   ///
@@ -2836,12 +2782,6 @@ abstract class AppLocalizations {
   /// **'Dark'**
   String get themeDark;
 
-  /// No description provided for @accentColor.
-  ///
-  /// In en, this message translates to:
-  /// **'Accent color'**
-  String get accentColor;
-
   /// No description provided for @noApprovalsHelp.
   ///
   /// In en, this message translates to:
@@ -3573,12 +3513,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Routine results, budget alerts and requests from your bots show up here.'**
   String get noNotificationsHelp;
-
-  /// No description provided for @noTasksHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Bots and people add tasks here to hand work to each other.'**
-  String get noTasksHelp;
 
   /// No description provided for @stateProvisioning.
   ///
@@ -4996,24 +4930,6 @@ abstract class AppLocalizations {
   /// **'Ask for a code from an authenticator app whenever you sign in.'**
   String get twoStepHelp;
 
-  /// No description provided for @twoStepIsOn.
-  ///
-  /// In en, this message translates to:
-  /// **'On'**
-  String get twoStepIsOn;
-
-  /// No description provided for @twoStepIsOff.
-  ///
-  /// In en, this message translates to:
-  /// **'Off'**
-  String get twoStepIsOff;
-
-  /// No description provided for @twoStepRequiredHere.
-  ///
-  /// In en, this message translates to:
-  /// **'Required for owners and admins in this workspace'**
-  String get twoStepRequiredHere;
-
   /// No description provided for @twoStepSetUp.
   ///
   /// In en, this message translates to:
@@ -5230,12 +5146,6 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get localMcpName;
 
-  /// No description provided for @localMcpKind.
-  ///
-  /// In en, this message translates to:
-  /// **'How it runs'**
-  String get localMcpKind;
-
   /// No description provided for @localMcpStdio.
   ///
   /// In en, this message translates to:
@@ -5295,12 +5205,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick a folder inside one of the shared folders.'**
   String get localMcpBadFolder;
-
-  /// No description provided for @localMcpOnDevice.
-  ///
-  /// In en, this message translates to:
-  /// **'On {device}'**
-  String localMcpOnDevice(String device);
 
   /// No description provided for @codingAgents.
   ///
@@ -5565,12 +5469,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create a link'**
   String get createInviteLink;
-
-  /// No description provided for @inviteRole.
-  ///
-  /// In en, this message translates to:
-  /// **'Joins as'**
-  String get inviteRole;
 
   /// No description provided for @linkExpires.
   ///
@@ -9274,12 +9172,6 @@ abstract class AppLocalizations {
   /// **'Only bots on a local model can read it'**
   String get devicePrivateModelHelp;
 
-  /// No description provided for @deviceBotsWithAccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Bots that can read it'**
-  String get deviceBotsWithAccess;
-
   /// No description provided for @deviceNoBots.
   ///
   /// In en, this message translates to:
@@ -9483,6 +9375,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Got it, fewer like this'**
   String get lessLikeThisDone;
+
+  /// No description provided for @widgetStatusWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get widgetStatusWorking;
+
+  /// No description provided for @widgetStatusOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned off'**
+  String get widgetStatusOff;
+
+  /// No description provided for @adminNoWorkspaces.
+  ///
+  /// In en, this message translates to:
+  /// **'No workspaces yet'**
+  String get adminNoWorkspaces;
+
+  /// No description provided for @suspendedByInstanceOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended by the instance owner'**
+  String get suspendedByInstanceOwner;
+
+  /// No description provided for @previewHi.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi!'**
+  String get previewHi;
+
+  /// No description provided for @previewAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Can you tidy up my notes?'**
+  String get previewAsk;
+
+  /// No description provided for @previewOnIt.
+  ///
+  /// In en, this message translates to:
+  /// **'On it'**
+  String get previewOnIt;
+
+  /// No description provided for @previewDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done! They are in three folders now.'**
+  String get previewDone;
+
+  /// No description provided for @previewMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get previewMessage;
+
+  /// No description provided for @fontPreviewGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get fontPreviewGreeting;
+
+  /// No description provided for @photosFromUnsplash.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos from Unsplash'**
+  String get photosFromUnsplash;
 }
 
 class _AppLocalizationsDelegate

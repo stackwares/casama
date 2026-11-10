@@ -132,7 +132,9 @@ class BotTurnHeader extends StatelessWidget {
         children: [
           BotAvatar(name: name, avatar: avatar, size: 24),
           const SizedBox(width: AppSpace.xs),
-          Text(name, style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
+          Flexible(
+            child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
+          ),
         ],
       ),
     );
@@ -990,7 +992,7 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
   }
 }
 
-/// "Allow <bot> to use your calendar?" (D-149): one tap grants or skips; revoke in Settings.
+/// "Allow `<bot>` to use your calendar?" (D-149): one tap grants or skips; revoke in Settings.
 class DeviceAccessPrompt extends ConsumerStatefulWidget {
   const DeviceAccessPrompt({super.key, required this.entry, required this.botName});
   final DeviceAccessEntry entry;
@@ -1076,9 +1078,13 @@ class _Outcome extends StatelessWidget {
     children: [
       Icon(icon, size: 18, color: color),
       const SizedBox(width: 6),
-      Text(
-        text,
-        style: context.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.w700),
+      Flexible(
+        child: Text(
+          text,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: context.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.w700),
+        ),
       ),
     ],
   ).appCardEntrance();

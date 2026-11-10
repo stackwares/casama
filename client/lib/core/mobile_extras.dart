@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
 import 'router.dart';
 
@@ -24,16 +26,18 @@ final homeWidgetSyncProvider = Provider<void>((ref) {
   if (bots == null || bots.isEmpty) return;
   final bot = bots.first;
   final cost = usage?.byBot.where((b) => b.botId == bot.id).firstOrNull?.costUsd ?? 0;
+  // No BuildContext here: resolve the device locale against the app's supported ones.
+  final l10n = lookupAppLocalizations(basicLocaleListResolution(PlatformDispatcher.instance.locales, AppLocalizations.supportedLocales));
   unawaited(() async {
     try {
       await HomeWidget.saveWidgetData('bot_name', bot.name);
       await HomeWidget.saveWidgetData('bot_status', switch (bot.status.value) {
-        'working' => 'Working…',
-        'waiting' => 'Waiting for you',
-        'disabled' => 'Turned off',
-        _ => 'Idle',
+        'working' => l10n.widgetStatusWorking,
+        'waiting' => l10n.botStatusWaiting,
+        'disabled' => l10n.widgetStatusOff,
+        _ => l10n.botStatusIdle,
       });
-      await HomeWidget.saveWidgetData('bot_cost', '${formatUsd(cost)} today');
+      await HomeWidget.saveWidgetData('bot_cost', l10n.costToday(formatUsd(cost)));
       await HomeWidget.updateWidget(androidName: 'BotStatusWidget', iOSName: 'BotStatusWidget');
     } catch (e) {
       debugPrint('home widget update failed: $e');

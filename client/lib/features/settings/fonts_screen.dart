@@ -60,7 +60,7 @@ class _FontsScreenState extends ConsumerState<FontsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Good morning', style: context.textTheme.headlineMedium),
+              Text(l10n.fontPreviewGreeting, style: context.textTheme.headlineMedium),
               const SizedBox(height: AppSpace.xs),
               Text(l10n.fontSample, style: context.textTheme.bodyLarge),
               const SizedBox(height: AppSpace.xxs),

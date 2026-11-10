@@ -30,7 +30,7 @@ class WorkspaceFilesSection extends ConsumerWidget {
     Future<void> export() async {
       final zip = await runGuarded(context, () => backend.exportWorkspaceFiles(orgId));
       if (zip == null) return;
-      await (saveZip ?? (b) => FilePicker.saveFile(fileName: 'kasama-routines-and-skills.zip', bytes: b, type: FileType.custom, allowedExtensions: const ['zip']))(zip);
+      await (saveZip ?? (b) => FilePicker.saveFile(fileName: 'kasama-routines-and-skills.zip', bytes: b))(zip);
     }
 
     Future<void> import() async {

@@ -18,6 +18,12 @@ import '../../ui/page.dart';
 /// Chat apps (D-134): Telegram, email, SMS, Slack, WhatsApp, Messenger, Feishu and iMessage. Only
 /// allowed senders get answers; everyone else is logged in the activity list.
 final channelsProvider = FutureProvider.autoDispose.family<List<Channel>, String>((ref, botId) => ref.watch(backendProvider).channels(botId));
+
+/// The workspace's paired devices, for picking the Mac that runs iMessage; held here so the form does not refetch on every keystroke.
+final _localDevicesProvider = FutureProvider.autoDispose<List<LocalDevice>>((ref) {
+  final org = ref.watch(currentOrgProvider);
+  return org == null ? Future.value(const <LocalDevice>[]) : ref.watch(backendProvider).localDevices(org.id);
+});
 final channelEventsProvider = FutureProvider.autoDispose.family<List<ChannelEvent>, String>((ref, id) => ref.watch(backendProvider).channelEvents(id));
 
 String channelKindName(ChannelKind k) => switch (k) {
@@ -185,7 +191,6 @@ class _AddChannelState extends ConsumerState<_AddChannel> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final org = ref.watch(currentOrgProvider);
     return FormSheet(
       icon: LucideIcons.messagesSquare,
       title: l10n.chatAppsAdd,
@@ -219,11 +224,12 @@ class _AddChannelState extends ConsumerState<_AddChannel> {
             decoration: InputDecoration(labelText: f.$3(l10n)),
           ),
         if (_kind == ChannelKind.imessage)
-          FutureBuilder<List<LocalDevice>>(
-            future: org == null ? Future.value(const []) : ref.read(backendProvider).localDevices(org.id),
-            builder: (context, snap) {
-              final macs = (snap.data ?? const <LocalDevice>[]).where((d) => d.platform == LocalDevicePlatformEnum.macos && d.computerId != null).toList();
-              if (snap.connectionState == ConnectionState.done && macs.isEmpty) return FormNote(l10n.chatAppsNoMac);
+          Builder(
+            builder: (context) {
+              final devices = ref.watch(_localDevicesProvider);
+              if (devices.hasError) return FormNote(errorText(context, devices.error!), icon: LucideIcons.cloudOff, color: Theme.of(context).colorScheme.error);
+              final macs = (devices.value ?? const <LocalDevice>[]).where((d) => d.platform == LocalDevicePlatformEnum.macos && d.computerId != null).toList();
+              if (devices.hasValue && macs.isEmpty) return FormNote(l10n.chatAppsNoMac);
               return DropdownButtonFormField<String>(
                 key: const Key('channelMac'),
                 initialValue: _mac,

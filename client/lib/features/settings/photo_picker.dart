@@ -146,7 +146,7 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
-            child: Text('Photos from Unsplash', textAlign: TextAlign.center, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+            child: Text(l10n.photosFromUnsplash, textAlign: TextAlign.center, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
           ),
         ],
       ),

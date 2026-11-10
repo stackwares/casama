@@ -190,7 +190,8 @@ class _LinkSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final ex = ref.watch(linkExchangesProvider(link.id)).value ?? const <LinkExchange>[];
+    final exchanges = ref.watch(linkExchangesProvider(link.id));
+    final ex = exchanges.value ?? const <LinkExchange>[];
     return FormSheet(
       icon: LucideIcons.link,
       title: link.name,
@@ -199,7 +200,10 @@ class _LinkSheet extends ConsumerWidget {
       onSubmit: () => Navigator.pop(context),
       children: [
         SectionHeader(title: l10n.linksExchanges),
-        if (ex.isEmpty) FormNote(l10n.linksNoExchanges),
+        if (exchanges.hasError)
+          InlineError(error: exchanges.error!, onRetry: () => ref.invalidate(linkExchangesProvider(link.id)))
+        else if (exchanges.hasValue && ex.isEmpty)
+          FormNote(l10n.linksNoExchanges),
         for (final e in ex)
           ListTile(
             key: Key('exchange-${e.id}'),

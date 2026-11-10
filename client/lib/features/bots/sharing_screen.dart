@@ -87,7 +87,8 @@ class _SharingScreenState extends ConsumerState<SharingScreen> {
     final canAdmin = a?.canAdmin ?? false;
     String accessLabel(String v) => switch (v) { 'admin' => l10n.accessAdmin, 'edit' => l10n.accessEdit, _ => l10n.accessChat };
     final listed = _entries.map((e) => e.userId).toSet();
-    final members = ref.watch(_membersProvider).value ?? const <WorkspaceMember>[];
+    final membersValue = ref.watch(_membersProvider);
+    final members = membersValue.value ?? const <WorkspaceMember>[];
     final addable = members.where((m) => !listed.contains(m.userId) && m.userId != a?.createdBy).toList();
     return SubPage(
       title: l10n.sharing,
@@ -143,6 +144,10 @@ class _SharingScreenState extends ConsumerState<SharingScreen> {
                     ),
                   if (_entries.isEmpty) ListTile(title: Text(_private ? l10n.sharingOnlyCreator : l10n.sharingEveryoneChats)),
                 ]),
+                if (canAdmin && membersValue.hasError) ...[
+                  const SizedBox(height: AppSpace.sm),
+                  InlineError(error: membersValue.error!, onRetry: () => ref.invalidate(_membersProvider)),
+                ],
                 if (canAdmin && addable.isNotEmpty) ...[
                   const SizedBox(height: AppSpace.sm),
                   Wrap(spacing: AppSpace.sm, children: [

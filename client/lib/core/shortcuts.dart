@@ -19,7 +19,7 @@ bool get _android => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 const _channel = MethodChannel('kasama/shortcuts');
 
-/// The paths shortcuts open: /quick-ask?bot=…&text=… and /run-routine/<routine>:<bot>.
+/// The paths shortcuts open: `/quick-ask?bot=…&text=…` and `/run-routine/<routine>:<bot>`.
 String askPath({String? botId, String text = ''}) =>
     Uri(path: '/quick-ask', queryParameters: {'text': text, 'bot': ?botId}).toString();
 String routinePath(String routineId, String botId) => '/run-routine/$routineId:$botId';

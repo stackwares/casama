@@ -98,7 +98,17 @@ class DeviceSync {
     } else if (kind == DeviceKind.activity) {
       on ? activity?.start(key) : activity?.stop();
     } else if (on) {
-      await _upload(key, kind, settings: kinds[kind.value]);
+      try {
+        await _upload(key, kind, settings: kinds[kind.value]);
+      } catch (_) {
+        // The first upload failed (for example, health needs encryption at rest): the kind goes
+        // back off so the switch doesn't show on with nothing shared.
+        kinds.remove(kind.value);
+        try {
+          await backend.saveDeviceSource(key, name: s?.name ?? defaultName, platform: platform, kinds: kinds);
+        } catch (_) {}
+        rethrow;
+      }
     }
     return true;
   }

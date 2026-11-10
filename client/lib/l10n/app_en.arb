@@ -83,14 +83,6 @@
       }
     }
   },
-  "lastActive": "Active {when}",
-  "@lastActive": {
-    "placeholders": {
-      "when": {
-        "type": "String"
-      }
-    }
-  },
   "selectBot": "Select a bot to chat",
   "newChat": "New chat",
   "conversations": "Conversations",
@@ -123,14 +115,6 @@
     }
   },
   "toolRunning": "Running",
-  "toolDone": "Done in {ms} ms",
-  "@toolDone": {
-    "placeholders": {
-      "ms": {
-        "type": "int"
-      }
-    }
-  },
   "toolFailedLabel": "Failed",
   "toolOutput": "Output",
   "remembered": "Remembered something",
@@ -215,36 +199,12 @@
   "noKeys": "No model keys yet.",
   "addKey": "Add key",
   "usage": "Usage",
-  "usageMonth": "This month: {cost}",
-  "@usageMonth": {
-    "placeholders": {
-      "cost": {
-        "type": "String"
-      }
-    }
-  },
   "language": "Language",
-  "signedInAs": "Signed in as {email}",
-  "@signedInAs": {
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
   "inviteMember": "Invite a member",
   "inviteSent": "Invite sent to {email}.",
   "@inviteSent": {
     "placeholders": {
       "email": {
-        "type": "String"
-      }
-    }
-  },
-  "inviteCodeToShare": "Share this invite code: {code}",
-  "@inviteCodeToShare": {
-    "placeholders": {
-      "code": {
         "type": "String"
       }
     }
@@ -320,7 +280,6 @@
   "noModelsFound": "No models match.",
   "addModelKeyFirst": "Add a model key first. Your bot uses it to think; it's stored encrypted and never shown again.",
   "botIntegrations": "Integrations for this bot",
-  "changeStatus": "Change status",
   "composioToolkits": "Toolkits (comma-separated, for example github, gmail)",
   "copySecret": "Copy secret",
   "cronExpression": "Cron expression",
@@ -341,12 +300,10 @@
   "mondaysAt9": "Mondays at 9:00",
   "newRoutine": "New routine",
   "noApprovals": "Nothing needs your approval right now.",
-  "noIntegrations": "Connect an MCP server, an OpenAPI source, Composio or Pipedream to give bots more tools.",
   "noIntegrationsForBot": "Add integrations in Settings first, then turn them on for this bot here.",
   "noNotifications": "No notifications yet",
   "noRoutines": "No routines yet. Routines run this bot on a schedule or when a webhook arrives.",
   "noSecrets": "No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.",
-  "noTasks": "No tasks yet",
   "notifications": "Notifications",
   "openInbox": "Open inbox",
   "pipedreamApps": "Apps (comma-separated)",
@@ -373,7 +330,6 @@
   "startFrom": "Persona",
   "storedEncrypted": "Stored encrypted; never shown again",
   "taskBlocked": "Blocked",
-  "taskBoard": "Tasks",
   "taskDoing": "In progress",
   "taskDone": "Done",
   "taskTodo": "To do",
@@ -954,7 +910,6 @@
   "themeLight": "Light",
   "themeSystem": "System",
   "themeDark": "Dark",
-  "accentColor": "Accent color",
   "noApprovalsHelp": "When a bot wants to do something risky, it asks here first.",
   "createWorkspaceBody": "A workspace holds your bots, their computers and the people you work with.",
   "workspaceNameHint": "My team",
@@ -1192,7 +1147,6 @@
     }
   },
   "noNotificationsHelp": "Routine results, budget alerts and requests from your bots show up here.",
-  "noTasksHelp": "Bots and people add tasks here to hand work to each other.",
   "stateProvisioning": "Setting up",
   "stateStarting": "Starting",
   "stateRunning": "Running",
@@ -1616,9 +1570,6 @@
   },
   "twoStepSignIn": "Two-step sign-in",
   "twoStepHelp": "Ask for a code from an authenticator app whenever you sign in.",
-  "twoStepIsOn": "On",
-  "twoStepIsOff": "Off",
-  "twoStepRequiredHere": "Required for owners and admins in this workspace",
   "twoStepSetUp": "Set up an authenticator app",
   "twoStepAddAnother": "Add another authenticator",
   "twoStepScan": "Scan this code with an authenticator app (such as 1Password, Google Authenticator or Authy), or type in the setup key, then enter the 6-digit code it shows.",
@@ -1662,7 +1613,6 @@
   "localMcpAdd": "Add a local MCP server",
   "localMcpEmpty": "No local MCP servers yet.",
   "localMcpName": "Name",
-  "localMcpKind": "How it runs",
   "localMcpStdio": "A command",
   "localMcpLoopback": "An address on this computer",
   "localMcpCommand": "Command",
@@ -1673,14 +1623,6 @@
   "localMcpNeedsCapability": "Turn on Local tools (MCP) above so bots can use these.",
   "localMcpBadUrl": "Use an address on this computer, like http://127.0.0.1:3845/mcp.",
   "localMcpBadFolder": "Pick a folder inside one of the shared folders.",
-  "localMcpOnDevice": "On {device}",
-  "@localMcpOnDevice": {
-    "placeholders": {
-      "device": {
-        "type": "String"
-      }
-    }
-  },
   "codingAgents": "Coding agents",
   "codingAgentsHelp": "Bots can hand coding tasks to these agents on this computer. They use your own sign-ins and work in the folders you share.",
   "codingAgentsNone": "No coding agents found. Install Claude Code, Codex or Cursor's command-line agent to hand them coding tasks.",
@@ -1725,7 +1667,6 @@
   "inviteLinks": "Invite links",
   "inviteLinksHelp": "Anyone with a link can join after signing in, until it expires, runs out of uses or you revoke it.",
   "createInviteLink": "Create a link",
-  "inviteRole": "Joins as",
   "linkExpires": "Expires",
   "linkNever": "Never",
   "linkDays": "In {days} days",
@@ -3006,7 +2947,6 @@
   },
   "devicePrivateModel": "Private models only",
   "devicePrivateModelHelp": "Only bots on a local model can read it",
-  "deviceBotsWithAccess": "Bots that can read it",
   "deviceNoBots": "No bots yet. A bot asks when it needs this.",
   "devicePermissionDenied": "Kasama doesn't have permission. Allow it in the system settings, then try again.",
   "deviceOtherDevices": "Your other devices",
@@ -3064,5 +3004,16 @@
   "heldCap": "The bot had already sent 5 messages today, so this one waited for your brief.",
   "heldLow": "It wasn't urgent, so it waited for your brief instead of buzzing your phone.",
   "lessLikeThis": "Less like this",
-  "lessLikeThisDone": "Got it, fewer like this"
+  "lessLikeThisDone": "Got it, fewer like this",
+  "widgetStatusWorking": "Working…",
+  "widgetStatusOff": "Turned off",
+  "adminNoWorkspaces": "No workspaces yet",
+  "suspendedByInstanceOwner": "Suspended by the instance owner",
+  "previewHi": "Hi!",
+  "previewAsk": "Can you tidy up my notes?",
+  "previewOnIt": "On it",
+  "previewDone": "Done! They are in three folders now.",
+  "previewMessage": "Message",
+  "fontPreviewGreeting": "Good morning",
+  "photosFromUnsplash": "Photos from Unsplash"
 }

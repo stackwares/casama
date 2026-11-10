@@ -57,6 +57,7 @@ class _WakeWordSheetState extends ConsumerState<WakeWordSheet> {
               );
               if (!mounted) return;
               setState(() => _busy = false);
+              if (!context.mounted) return;
               if (r == true) Navigator.pop(context);
             },
       children: [

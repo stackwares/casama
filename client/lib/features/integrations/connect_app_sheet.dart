@@ -321,7 +321,7 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
           ),
           onPressed: busy || oauthBlocked || !keyOk ? null : _connect,
           icon: busy
-              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.onSurfaceVariant))
               : Icon(_method == CatalogAppAuthEnum.oauth ? LucideIcons.arrowUpRight : LucideIcons.plug, size: 18),
           label: Text(busy
               ? l10n.connectingLabel

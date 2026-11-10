@@ -928,6 +928,7 @@ class _PhoneCallsSheetState extends ConsumerState<_PhoneCallsSheet> {
               );
               if (!mounted) return;
               setState(() => _busy = false);
+              if (!context.mounted) return;
               if (r != null) Navigator.pop(context, true);
             },
       children: [
@@ -1086,6 +1087,7 @@ class _PaymentsSheetState extends ConsumerState<_PaymentsSheet> {
               );
               if (!mounted) return;
               setState(() => _busy = false);
+              if (!context.mounted) return;
               if (r != null) Navigator.pop(context, true);
             },
       children: [
@@ -1203,6 +1205,7 @@ class _SecretStoreSheetState extends ConsumerState<_SecretStoreSheet> {
               );
               if (!mounted) return;
               setState(() => _busy = false);
+              if (!context.mounted) return;
               if (r != null) Navigator.pop(context, true);
             },
       children: [

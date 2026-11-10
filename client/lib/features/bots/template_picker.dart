@@ -80,7 +80,9 @@ class TemplatePicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final templates = ref.watch(templatesProvider).value ?? const <Template>[];
+    final templatesValue = ref.watch(templatesProvider);
+    if (templatesValue.hasError && !templatesValue.hasValue) return InlineError(error: templatesValue.error!, onRetry: () => ref.invalidate(templatesProvider));
+    final templates = templatesValue.value ?? const <Template>[];
     if (templates.isEmpty) return const SizedBox.shrink();
     Template? current;
     for (final t in templates) {
