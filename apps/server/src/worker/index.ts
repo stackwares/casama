@@ -29,6 +29,7 @@ import {
   registerSecretRequestTool,
   registerSetupTools,
   registerSkillTools,
+  registerToolsLoad,
   TavilySearchProvider,
 } from "@kasama/agent";
 import { createDb, type Database } from "@kasama/db";
@@ -49,6 +50,8 @@ import {
 
 export interface WorkerOptions {
   databaseUrl: string;
+  /** Bots with more tools start with core tools and load the rest (D-106); 0 = off, default 30. */
+  lazyToolsThreshold?: number;
   logger: Logger;
   logLevel?: string;
   /** Comma-separated fixture files: replay recorded model responses instead of calling providers. */
@@ -177,6 +180,7 @@ export async function startWorker(opts: WorkerOptions) {
   registerSecretRequestTool(tools);
   registerSkillTools(tools, { db });
   registerSetupTools(tools, { db });
+  registerToolsLoad(tools);
   // Coding agents (D-097): on the bot's computer, the user's own computer, or Cursor's cloud.
   registerCodingTools(tools, {
     db,
@@ -268,6 +272,7 @@ export async function startWorker(opts: WorkerOptions) {
       fetch: fetchOut,
       logger: opts.logger,
       local: opts.local,
+      lazyToolsThreshold: opts.lazyToolsThreshold,
     },
   });
 

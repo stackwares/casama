@@ -108,6 +108,8 @@ export const EnvSchema = z.object({
   /** Worker: cap on output tokens per model call (live checks use a small cap). */
   KASAMA_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().optional(),
   RUN_CONCURRENCY: z.coerce.number().int().positive().default(20),
+  /** Lazy tool loading (D-106): bots with more tools than this load the rest on demand; 0 = off. */
+  LAZY_TOOLS_THRESHOLD: z.coerce.number().int().min(0).default(30),
   /** Sandbox supervisor (computers). Both unset: bots have no computers. */
   SUPERVISOR_URL: z.url().optional(),
   SUPERVISOR_TOKEN: z.string().min(16).optional(),

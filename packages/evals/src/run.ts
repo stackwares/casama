@@ -26,6 +26,7 @@ const { values: a } = parseArgs({
     baseline: { type: "string", default: "packages/evals/baseline.json" },
     "update-baseline": { type: "boolean", default: false },
     "max-output-tokens": { type: "string" },
+    label: { type: "string" },
   },
 });
 
@@ -131,7 +132,10 @@ async function runTask(t: EvalTask): Promise<TaskResult> {
     method: "POST",
     json: { text: `[eval:${t.id}] ${t.prompt}` },
   });
-  let run: { status: string; cost_usd: number } = { status: "queued", cost_usd: 0 };
+  let run: { status: string; cost_usd: number; tokens_in?: number; tokens_out?: number } = {
+    status: "queued",
+    cost_usd: 0,
+  };
   const deadline = Date.now() + 240_000;
   while (
     !["completed", "failed", "cancelled", "waiting_approval"].includes(run.status) &&
@@ -172,6 +176,8 @@ async function runTask(t: EvalTask): Promise<TaskResult> {
     why: verdict.pass ? undefined : verdict.why,
     status: run.status,
     cost_usd: run.cost_usd,
+    tokens_in: run.tokens_in ?? 0,
+    tokens_out: run.tokens_out ?? 0,
     steps: events.filter((e) => e.type === "tool.started").length + 1,
     seconds: Math.round((Date.now() - t0) / 100) / 10,
   };
@@ -209,6 +215,9 @@ const report: EvalReport = {
   tasks: results,
   success_rate: ran.length ? ran.filter((r) => r.pass).length / ran.length : 0,
   cost_usd: ran.reduce((s, r) => s + r.cost_usd, 0),
+  ...(a.label ? { label: a.label } : {}),
+  tokens_in: ran.reduce((s, r) => s + (r.tokens_in ?? 0), 0),
+  tokens_out: ran.reduce((s, r) => s + (r.tokens_out ?? 0), 0),
   avg_steps: ran.length ? ran.reduce((s, r) => s + r.steps, 0) / ran.length : 0,
   avg_seconds: ran.length ? ran.reduce((s, r) => s + r.seconds, 0) / ran.length : 0,
 };

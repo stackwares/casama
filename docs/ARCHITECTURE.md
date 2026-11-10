@@ -163,6 +163,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `bots.setup_status`, `conversations.purpose`, `POST /v1/bots/{id}/setup`, agent `tools/setup.ts` (`SETUP_GUIDE`, `setup.apply`), the chat's setup card, and six more templates in `packages/domain/src/templates.ts`.
 
+## Lazy tool loading (D-106)
+
+- `packages/agent/src/lazy-tools.ts` (`planLazyTools`, `tools.load`), handled in the run loop; `LAZY_TOOLS_THRESHOLD`; `ToolSpec.deferred` and `ModelCapabilities.deferredTools` for native support; `packages/evals/src/compare.ts`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

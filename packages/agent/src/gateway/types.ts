@@ -46,6 +46,8 @@ export interface ToolSpec {
   description: string;
   /** JSON Schema of the arguments object. */
   inputSchema: Record<string, unknown>;
+  /** The provider may load this tool on demand (native deferred tools; D-106). */
+  deferred?: boolean;
 }
 
 export interface Usage {

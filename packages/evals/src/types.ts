@@ -46,6 +46,9 @@ export interface TaskResult {
   skipped?: string;
   status: string;
   cost_usd: number;
+  /** Input and output tokens of the run (D-106 compares lazy tool loading on and off). */
+  tokens_in?: number;
+  tokens_out?: number;
   steps: number;
   seconds: number;
 }
@@ -58,6 +61,10 @@ export interface EvalReport {
   tasks: TaskResult[];
   success_rate: number;
   cost_usd: number;
+  /** A free-form label for comparisons, e.g. "lazy-on". */
+  label?: string;
+  tokens_in?: number;
+  tokens_out?: number;
   avg_steps: number;
   avg_seconds: number;
 }

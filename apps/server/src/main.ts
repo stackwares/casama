@@ -121,6 +121,7 @@ if (env.MODE === "api") {
     maxOutputTokens: env.KASAMA_MAX_OUTPUT_TOKENS,
     embeddings: env.EMBEDDINGS,
     runConcurrency: env.RUN_CONCURRENCY,
+    lazyToolsThreshold: env.LAZY_TOOLS_THRESHOLD,
     supervisor:
       env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN
         ? { url: env.SUPERVISOR_URL, token: env.SUPERVISOR_TOKEN }

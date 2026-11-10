@@ -44,6 +44,14 @@ import {
 } from "./secret-requests.ts";
 import { SETUP_GUIDE } from "./tools/setup.ts";
 import {
+  DEFAULT_LAZY_THRESHOLD,
+  isCoreTool,
+  planLazyTools,
+  resolveToolsLoad,
+  TOOLS_LOAD,
+  ToolsLoadArgs,
+} from "./lazy-tools.ts";
+import {
   hasPlaceholders,
   loadSecrets,
   type NamedSecret,
@@ -80,6 +88,8 @@ export interface RunDeps {
   step: StepRunner;
   logger?: Logger;
   limits?: { maxSteps?: number; wallTimeMs?: number };
+  /** Bots with more tools than this start with core tools and load the rest (D-106); 0 = off. */
+  lazyToolsThreshold?: number;
   fallback?: FallbackOptions;
   deltaIntervalMs?: number;
   cancelPollMs?: number;
@@ -337,7 +347,25 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       { computer: !!deps.computers, desktop, vision: caps.vision },
       allowed ? (name) => allowed.some((a) => name === a || name.startsWith(`${a}.`)) : undefined,
     );
-    const toolSpecs = registry.specs(available);
+    // Lazy tool loading (D-106): many tools → core tools, tools.load and an index of the rest.
+    const threshold = deps.lazyToolsThreshold ?? DEFAULT_LAZY_THRESHOLD;
+    const canLoad = !!registry.get(TOOLS_LOAD);
+    const native = !!caps.deferredTools && threshold > 0 && available.length > threshold;
+    const lazy = canLoad && !native ? planLazyTools(available, threshold) : null;
+    const offered = canLoad && !lazy ? available.filter((t) => t.name !== TOOLS_LOAD) : available;
+    const loaded: ToolDefinition[] = [];
+    const specsNow = () =>
+      lazy
+        ? registry.specs([...lazy.core, ...loaded])
+        : native
+          ? registry
+              .specs(offered)
+              .map((spec, k) => ({
+                ...spec,
+                deferred: !isCoreTool((offered[k] as ToolDefinition).name),
+              }))
+          : registry.specs(offered);
+    const toolSpecs = specsNow();
 
     // Voice calls: the realtime model chose the tool; run just that call with the same approvals.
     if (info.voiceCall) {
@@ -454,7 +482,11 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           deps,
           info,
           i,
-          { system: ctx.system, messages: [...ctx.messages, ...turn], tools: toolSpecs },
+          {
+            system: lazy ? [...ctx.system, lazy.index] : ctx.system,
+            messages: [...ctx.messages, ...turn],
+            tools: lazy ? specsNow() : toolSpecs,
+          },
           chainFor,
           bus,
           redactor,
@@ -493,6 +525,27 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           }
         }
         const waitUntil = deps.waitUntil ?? pollUntil;
+        // tools.load adds definitions for the rest of the run (D-106).
+        if (!blocked && call.name === TOOLS_LOAD && lazy) {
+          const names = await step(`tools-load-${i}-${call.callId}`, async () => {
+            const parsed = ToolsLoadArgs.safeParse(call.args);
+            const r = resolveToolsLoad(lazy, parsed.success ? parsed.data : {});
+            return { names: r.tools.map((t) => t.name), unknown: r.unknown };
+          });
+          for (const n of names.names) {
+            const def = registry.get(n);
+            if (def && !loaded.some((t) => t.name === n)) loaded.push(def);
+          }
+          const content = await step(`tools-load-done-${i}-${call.callId}`, async () => {
+            const text = names.names.length
+              ? `Loaded ${names.names.length} tools: ${names.names.join(", ")}.${names.unknown.length ? ` Not found: ${names.unknown.join(", ")}.` : ""}`
+              : `Nothing loaded. Not found: ${names.unknown.join(", ") || "(none given)"}. Use groups from the index.`;
+            await completeToolEvent(deps, info, call, text, bus);
+            return text;
+          });
+          turn.push({ role: "tool", callId: call.callId, name: call.name, content });
+          continue;
+        }
         // A bot asking for a secret waits here, durably; it only learns that the value was saved.
         if (!blocked && call.name === SECRET_REQUEST_TOOL) {
           const parsed = SecretRequestArgs.safeParse(call.args);

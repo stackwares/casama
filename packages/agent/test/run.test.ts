@@ -1,6 +1,8 @@
 import { createDb, type DbHandle } from "@kasama/db";
 import { createAuthUser, startTestDatabase, type TestDatabase } from "@kasama/db/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { z } from "zod";
+import { planLazyTools, registerToolsLoad, toolGroup } from "../src/lazy-tools.ts";
 import {
   builtinTools,
   CredentialResolver,
@@ -391,5 +393,119 @@ describe("memory search", () => {
       { n: string }[]
     >`select count(*) as n from public.memories where bot_id = ${botId}`;
     expect(Number(n)).toBe(2);
+  });
+});
+
+describe("lazy tool loading (D-106)", () => {
+  const manyTools = () => {
+    const tools = builtinTools({
+      db: h.db,
+      memory: async () => new MemoryService(h.db, hashEmbedder()),
+    });
+    registerToolsLoad(tools);
+    for (const g of ["crm", "sheets", "mail"])
+      for (let k = 0; k < 4; k++)
+        tools.register({
+          name: `${g}.action_${k}`,
+          description:
+            `${g} action ${k}, with a fairly long description that costs tokens every turn.`.repeat(
+              3,
+            ),
+          risk: "low",
+          readOnly: true,
+          schema: z.object({ id: z.string().optional() }),
+          async execute() {
+            return { content: `${g} ${k} done` };
+          },
+        });
+    return tools;
+  };
+
+  it("groups tools and keeps the index byte-stable", () => {
+    expect(toolGroup("mcp.github.create_issue")).toBe("mcp.github");
+    expect(toolGroup("browser.open")).toBe("browser");
+    const tools = manyTools();
+    const all = tools.available({ computer: false, desktop: false, vision: false });
+    const a = planLazyTools(all, 5);
+    const b = planLazyTools([...all].reverse(), 5);
+    expect(a?.index).toBe(b?.index);
+    expect(a?.core.map((t) => t.name)).toContain("tools.load");
+    expect(a?.core.map((t) => t.name)).toContain("memory.write");
+    expect(planLazyTools(all, 0)).toBeNull();
+    expect(planLazyTools(all, 500)).toBeNull();
+  });
+
+  it("starts with core tools and the index, then loads a group for the rest of the run", async () => {
+    const lazyFixtures: FixtureFile[] = [
+      fixtures[0] as FixtureFile,
+      {
+        name: "lazy",
+        turns: [
+          {
+            when: { lastRole: "user", lastUserIncludes: "update the crm" },
+            events: [
+              {
+                type: "tool_call",
+                call: { callId: "l1", name: "tools__load", args: { groups: ["crm"] } },
+              },
+              finish(1),
+            ],
+          },
+          {
+            when: { lastRole: "tool", lastToolName: "tools.load" },
+            events: [
+              { type: "tool_call", call: { callId: "l2", name: "crm__action_1", args: {} } },
+              finish(1),
+            ],
+          },
+          {
+            when: { lastRole: "tool", lastToolName: "crm.action_1" },
+            events: [{ type: "text", text: "CRM updated." }, finish(1)],
+          },
+        ],
+      },
+    ];
+    const gateway = new ReplayGateway(lazyFixtures);
+    const botId = await makeBot();
+    const { runId } = await startRun(botId, "Please update the crm");
+    expect(
+      await runAgent(runId, deps(gateway, { tools: manyTools(), lazyToolsThreshold: 5 })),
+    ).toEqual({ status: "completed" });
+    const chat = gateway.requests.filter(
+      (r) => !r.system.join("").includes("extract lasting memories"),
+    );
+    const first = chat[0]!;
+    expect(first.tools?.some((t) => t.name === "crm__action_1")).toBe(false);
+    expect(first.tools?.some((t) => t.name === "tools__load")).toBe(true);
+    expect(first.system.at(-1)).toContain("- crm (4): action_0, action_1, action_2, action_3");
+    const second = chat[1]!;
+    expect(second.tools?.map((t) => t.name).slice(-4)).toEqual([
+      "crm__action_0",
+      "crm__action_1",
+      "crm__action_2",
+      "crm__action_3",
+    ]);
+    expect(second.tools?.slice(0, first.tools?.length).map((t) => t.name)).toEqual(
+      first.tools?.map((t) => t.name),
+    );
+    expect(JSON.stringify(first.tools).length).toBeLessThan(
+      JSON.stringify(
+        manyTools().specs(
+          manyTools().available({ computer: false, desktop: false, vision: false }),
+        ),
+      ).length * 0.7,
+    );
+  });
+
+  it("sends every tool when the bot has few", async () => {
+    const gateway = new ReplayGateway(fixtures);
+    const botId = await makeBot();
+    const { runId } = await startRun(botId, "Hey, what is my favorite color?");
+    await runAgent(runId, deps(gateway, { tools: manyTools(), lazyToolsThreshold: 0 }));
+    const req = gateway.requests.find((r) =>
+      r.messages.at(-1)?.content.includes("what is my favorite color"),
+    );
+    expect(req?.tools?.some((t) => t.name === "crm__action_1")).toBe(true);
+    expect(req?.tools?.some((t) => t.name === "tools__load")).toBe(false);
   });
 });

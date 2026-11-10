@@ -4,6 +4,8 @@ export interface ModelCapabilities {
   tools: boolean;
   vision: boolean;
   caching: boolean;
+  /** The provider can load tools on demand itself (then lazy loading uses that, D-106). */
+  deferredTools?: boolean;
   /** USD per million tokens. */
   inputPrice: number;
   outputPrice: number;
