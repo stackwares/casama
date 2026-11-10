@@ -81,6 +81,7 @@ import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
+import 'package:kasama_api/src/model/file_search_result.dart';
 import 'package:kasama_api/src/model/fulfill_secret_request_body.dart';
 import 'package:kasama_api/src/model/health.dart';
 import 'package:kasama_api/src/model/ice_server.dart';
@@ -154,6 +155,8 @@ import 'package:kasama_api/src/model/run_started.dart';
 import 'package:kasama_api/src/model/run_started_event.dart';
 import 'package:kasama_api/src/model/run_started_event_payload.dart';
 import 'package:kasama_api/src/model/saved_count.dart';
+import 'package:kasama_api/src/model/search_response.dart';
+import 'package:kasama_api/src/model/search_result.dart';
 import 'package:kasama_api/src/model/secret.dart';
 import 'package:kasama_api/src/model/secret_list.dart';
 import 'package:kasama_api/src/model/secret_requested_event.dart';
@@ -427,6 +430,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedId.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRoutine':
           return DeletedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'FileSearchResult':
+          return FileSearchResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'FulfillSecretRequestBody':
           return FulfillSecretRequestBody.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
@@ -597,6 +602,13 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           
         case 'SavedCount':
           return SavedCount.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SearchKind':
+          
+          
+        case 'SearchResponse':
+          return SearchResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SearchResult':
+          return SearchResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Secret':
           return Secret.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SecretKind':

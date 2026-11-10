@@ -204,6 +204,28 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  final searches = <String>[];
+  @override
+  Future<SearchResponse> search(String orgId, String query) async {
+    searches.add(query);
+    return SearchResponse(
+      query: query,
+      items: [
+        SearchResult(
+          kind: SearchKind.message,
+          id: 'msg-1',
+          title: 'Invoices',
+          snippet: 'Please draft the «invoice» for Northwind',
+          botId: botId,
+          conversationId: convId,
+          createdAt: DateTime(2026, 11, 9),
+        ),
+        SearchResult(kind: SearchKind.ticket, id: 't1', title: 'Send invoice', snippet: '', botId: null, conversationId: null, createdAt: DateTime(2026, 11, 9)),
+      ],
+      files: [FileSearchResult(computerId: 'comp-1', computerName: 'Team computer', path: 'docs/invoice.md', match: FileSearchResultMatchEnum.name)],
+      filesSearched: 1,
+    );
+  }
   final secretAnswers = <(String, String?)>[];
   @override
   Future<void> fulfillSecretRequest(String requestId, String value) async => secretAnswers.add((requestId, value));

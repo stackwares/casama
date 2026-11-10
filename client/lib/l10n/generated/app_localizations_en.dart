@@ -3362,4 +3362,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String totpRequestTitle(String bot, String service) {
     return '$bot needs a $service sign-in code';
   }
+
+  @override
+  String get search => 'Search';
+
+  @override
+  String get searchHint => 'Search chats, memories, skills, tickets and files';
+
+  @override
+  String get searchEmptyPrompt => 'Type at least 2 characters.';
+
+  @override
+  String searchNoResults(String query) {
+    return 'Nothing found for “$query”.';
+  }
+
+  @override
+  String get searchMessages => 'Messages';
+
+  @override
+  String get searchChats => 'Chats';
+
+  @override
+  String get searchTickets => 'Tickets';
+
+  @override
+  String get searchFiles => 'Files';
+
+  @override
+  String get searchFilesAsleep =>
+      'Files on sleeping computers aren\'t searched. Start a computer to include its files.';
 }

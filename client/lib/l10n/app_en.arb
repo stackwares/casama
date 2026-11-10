@@ -1805,5 +1805,15 @@
   "totpSeedHelp": "From the site's two-step setup. Bots only ever get the current code, never the key.",
   "scanQrCode": "Scan QR code",
   "totpRequestTitle": "{bot} needs a {service} sign-in code",
-  "@totpRequestTitle": {"placeholders": {"bot": {"type": "String"}, "service": {"type": "String"}}}
+  "@totpRequestTitle": {"placeholders": {"bot": {"type": "String"}, "service": {"type": "String"}}},
+  "search": "Search",
+  "searchHint": "Search chats, memories, skills, tickets and files",
+  "searchEmptyPrompt": "Type at least 2 characters.",
+  "searchNoResults": "Nothing found for “{query}”.",
+  "@searchNoResults": {"placeholders": {"query": {"type": "String"}}},
+  "searchMessages": "Messages",
+  "searchChats": "Chats",
+  "searchTickets": "Tickets",
+  "searchFiles": "Files",
+  "searchFilesAsleep": "Files on sleeping computers aren't searched. Start a computer to include its files."
 }

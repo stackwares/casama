@@ -202,6 +202,9 @@ class SupabaseBackend implements Backend {
   Future<List<Template>> templates() async => (await api.bots.listTemplates()).data!.items;
 
   @override
+  Future<SearchResponse> search(String orgId, String query) async => (await api.search.search(orgId: orgId, q: query)).data!;
+
+  @override
   Future<List<BotFolder>> botFolders(String orgId) async {
     final rows = await supabase.from('bot_folders').select('id, name, sort_key').eq('org_id', orgId).order('sort_key').order('name');
     return [

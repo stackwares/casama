@@ -176,6 +176,8 @@ abstract class Backend {
   /// [avatarUrl]: `mascot:<name>` for a cloud bot, '' to go back to initials, null to leave it.
   Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy, String? avatarUrl});
   Future<UsageReport> usage(String orgId, {String period});
+  /// Workspace search (D-103), including files on awake computers.
+  Future<SearchResponse> search(String orgId, String query);
 
   // Bot folders, archive and settings history (D-100)
   Future<List<BotFolder>> botFolders(String orgId);

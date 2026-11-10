@@ -198,6 +198,7 @@ export const conversations = pgTable("conversations", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	index("conversations_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.lastMessageAt.desc().nullsFirst().op("timestamptz_ops")),
+	index("conversations_title_trgm").using("gin", table.title.asc().nullsLast().op("gin_trgm_ops")),
 	foreignKey({
 			columns: [table.orgId],
 			foreignColumns: [organizations.id],
@@ -219,45 +220,6 @@ export const conversations = pgTable("conversations", {
 	pgPolicy("conversations_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("conversations_title_check", sql`char_length(title) <= 200`),
-]);
-
-export const messages = pgTable("messages", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	conversationId: uuid("conversation_id").notNull(),
-	role: text().notNull(),
-	authorUserId: uuid("author_user_id"),
-	content: jsonb().default([]).notNull(),
-	runId: uuid("run_id"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("messages_conversation_idx").using("btree", table.conversationId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.asc().nullsLast().op("timestamptz_ops")),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "messages_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.conversationId],
-			foreignColumns: [conversations.id],
-			name: "messages_conversation_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.authorUserId],
-			foreignColumns: [users.id],
-			name: "messages_author_user_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.runId],
-			foreignColumns: [runs.id],
-			name: "messages_run_id_fkey"
-		}).onDelete("set null"),
-	pgPolicy("messages_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
-   FROM conversations c
-  WHERE ((c.id = messages.conversation_id) AND can_access_bot(c.bot_id))))` }),
-	pgPolicy("messages_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("messages_role_check", sql`role = ANY (ARRAY['user'::text, 'assistant'::text, 'system'::text, 'tool'::text])`),
 ]);
 
 export const attachments = pgTable("attachments", {
@@ -341,6 +303,7 @@ export const skills = pgTable("skills", {
 	enabled: boolean().default(true).notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
+	index("skills_name_trgm").using("gin", table.name.asc().nullsLast().op("gin_trgm_ops")),
 	uniqueIndex("skills_name_uniq").using("btree", sql`org_id`, sql`COALESCE(bot_id, '00000000-0000-0000-0000-000000000000'::uuid)`, sql`name`),
 	foreignKey({
 			columns: [table.orgId],
@@ -517,6 +480,47 @@ export const runs = pgTable("runs", {
 	pgPolicy("runs_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("runs_status_check", sql`status = ANY (ARRAY['queued'::text, 'running'::text, 'waiting_approval'::text, 'waiting_takeover'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])`),
+]);
+
+export const messages = pgTable("messages", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	conversationId: uuid("conversation_id").notNull(),
+	role: text().notNull(),
+	authorUserId: uuid("author_user_id"),
+	content: jsonb().default([]).notNull(),
+	runId: uuid("run_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	tsv: tsvector("tsv").generatedAlwaysAs(sql`to_tsvector('simple'::regconfig, "left"(message_plain_text(content), 100000))`),
+}, (table) => [
+	index("messages_conversation_idx").using("btree", table.conversationId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.asc().nullsLast().op("timestamptz_ops")),
+	index("messages_tsv_idx").using("gin", table.tsv.asc().nullsLast().op("tsvector_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "messages_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.conversationId],
+			foreignColumns: [conversations.id],
+			name: "messages_conversation_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.authorUserId],
+			foreignColumns: [users.id],
+			name: "messages_author_user_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "messages_run_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("messages_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
+   FROM conversations c
+  WHERE ((c.id = messages.conversation_id) AND can_access_bot(c.bot_id))))` }),
+	pgPolicy("messages_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("messages_role_check", sql`role = ANY (ARRAY['user'::text, 'assistant'::text, 'system'::text, 'tool'::text])`),
 ]);
 
 export const computers = pgTable("computers", {
@@ -749,6 +753,7 @@ export const routines = pgTable("routines", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	index("routines_due_idx").using("btree", table.enabled.asc().nullsLast().op("timestamptz_ops"), table.nextRunAt.asc().nullsLast().op("timestamptz_ops")),
+	index("routines_name_trgm").using("gin", table.name.asc().nullsLast().op("gin_trgm_ops")),
 	foreignKey({
 			columns: [table.orgId],
 			foreignColumns: [organizations.id],
@@ -1307,7 +1312,8 @@ export const tasks = pgTable("tasks", {
 	reviewRequired: boolean("review_required").default(false).notNull(),
 }, (table) => [
 	index("tasks_conversation_idx").using("btree", table.conversationId.asc().nullsLast().op("uuid_ops")).where(sql`(conversation_id IS NOT NULL)`),
-	index("tasks_org_idx").using("btree", table.orgId.asc().nullsLast().op("text_ops"), table.status.asc().nullsLast().op("timestamptz_ops"), table.updatedAt.desc().nullsFirst().op("text_ops")),
+	index("tasks_org_idx").using("btree", table.orgId.asc().nullsLast().op("text_ops"), table.status.asc().nullsLast().op("text_ops"), table.updatedAt.desc().nullsFirst().op("text_ops")),
+	index("tasks_title_trgm").using("gin", table.title.asc().nullsLast().op("gin_trgm_ops")),
 	foreignKey({
 			columns: [table.orgId],
 			foreignColumns: [organizations.id],

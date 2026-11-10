@@ -11,6 +11,7 @@ export * from "./events.ts";
 export * from "./local.ts";
 export * from "./openapi.ts";
 export * from "./privacy.ts";
+export * from "./search.ts";
 export { routes } from "./routes/index.ts";
 export * from "./voice.ts";
 export * from "./workspaces.ts";

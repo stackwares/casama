@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
@@ -6,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/backend.dart';
+import '../search/search_view.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -91,6 +93,7 @@ class HomeShell extends ConsumerWidget {
     if (location.startsWith('/tasks')) return 2;
     if (location.startsWith('/computer')) return 3;
     if (location.startsWith('/settings')) return 4;
+    if (location.startsWith('/search')) return 5;
     return 0;
   }
 
@@ -104,7 +107,7 @@ class HomeShell extends ConsumerWidget {
       location.startsWith('/approvals/') ||
       location.startsWith('/quick-ask');
 
-  List<_Dest> _destinations(BuildContext context) {
+  List<_Dest> _destinations(BuildContext context, {bool phone = false}) {
     final l10n = context.l10n;
     return [
       _Dest('/bots', LucideIcons.messagesSquare, LucideIcons.messagesSquare, l10n.navBots),
@@ -112,6 +115,8 @@ class HomeShell extends ConsumerWidget {
       _Dest('/tasks', LucideIcons.squareKanban, LucideIcons.squareKanban, l10n.navBoard),
       _Dest('/computer', LucideIcons.monitor, LucideIcons.monitor, l10n.navComputer),
       _Dest('/settings', LucideIcons.settings, LucideIcons.settings, l10n.navSettings),
+      // Phones get search as a tab; larger windows use Cmd/Ctrl+K and the sidebar button (D-103).
+      if (phone) _Dest('/search', LucideIcons.search, LucideIcons.search, l10n.search),
     ];
   }
 
@@ -120,8 +125,20 @@ class HomeShell extends ConsumerWidget {
     final size = layoutFor(MediaQuery.sizeOf(context).width);
     final badge = ref.watch(inboxBadgeProvider);
     final child = ref.watch(currentOrgProvider)?.suspended == true ? _SuspendedBanner(child: this.child) : this.child;
-    final dests = _destinations(context);
+    final dests = _destinations(context, phone: size == LayoutSize.phone);
     void go(int i) => context.go(dests[i].path);
+    final shell = _buildShell(context, ref, size, badge, child, dests, go);
+    if (size == LayoutSize.phone) return shell;
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyK, meta: true): () => showWorkspaceSearch(context),
+        const SingleActivator(LogicalKeyboardKey.keyK, control: true): () => showWorkspaceSearch(context),
+      },
+      child: Focus(autofocus: true, skipTraversal: true, child: shell),
+    );
+  }
+
+  Widget _buildShell(BuildContext context, WidgetRef ref, LayoutSize size, int badge, Widget child, List<_Dest> dests, void Function(int) go) {
 
     if (size == LayoutSize.phone) {
       final showBar = !_isDetail;
@@ -308,6 +325,14 @@ class _Sidebar extends ConsumerWidget {
                       l10n.bots,
                       style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700, letterSpacing: 0.2),
                     ),
+                  ),
+                  IconButton(
+                    key: const Key('openSearch'),
+                    tooltip: '${l10n.search} (⌘K)',
+                    visualDensity: VisualDensity.compact,
+                    iconSize: 20,
+                    icon: const Icon(LucideIcons.search),
+                    onPressed: () => showWorkspaceSearch(context),
                   ),
                   IconButton(
                     tooltip: l10n.newBot,

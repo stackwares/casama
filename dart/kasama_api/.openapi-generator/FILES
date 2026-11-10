@@ -18,6 +18,7 @@ lib/src/api/memory_api.dart
 lib/src/api/privacy_api.dart
 lib/src/api/routines_api.dart
 lib/src/api/runs_api.dart
+lib/src/api/search_api.dart
 lib/src/api/secrets_api.dart
 lib/src/api/system_api.dart
 lib/src/api/tasks_api.dart
@@ -118,6 +119,7 @@ lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
 lib/src/model/deleted_routine.dart
+lib/src/model/file_search_result.dart
 lib/src/model/fulfill_secret_request_body.dart
 lib/src/model/health.dart
 lib/src/model/ice_server.dart
@@ -199,6 +201,9 @@ lib/src/model/run_started_event.dart
 lib/src/model/run_started_event_payload.dart
 lib/src/model/run_status.dart
 lib/src/model/saved_count.dart
+lib/src/model/search_kind.dart
+lib/src/model/search_response.dart
+lib/src/model/search_result.dart
 lib/src/model/secret.dart
 lib/src/model/secret_kind.dart
 lib/src/model/secret_list.dart

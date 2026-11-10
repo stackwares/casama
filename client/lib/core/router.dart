@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/bots/bot_history_screen.dart';
+import '../features/search/search_view.dart';
 import '../features/auth/sign_in_screen.dart';
 import '../features/bots/bots_screen.dart';
 import '../features/chat/chat_screen.dart';
@@ -104,7 +105,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: ':botId/chat',
-                pageBuilder: _page((_, s) => ChatScreen(botId: s.pathParameters['botId']!, conversationId: s.uri.queryParameters['c'])),
+                pageBuilder: _page((_, s) => ChatScreen(botId: s.pathParameters['botId']!, conversationId: s.uri.queryParameters['c'], focusMessageId: s.uri.queryParameters['m'])),
               ),
               GoRoute(
                 path: ':botId/activity',
@@ -151,6 +152,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: _page((_, s) => InboxScreen(initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? 0)),
           ),
           GoRoute(path: '/tasks', pageBuilder: _page((_, _) => const BoardScreen())),
+          GoRoute(path: '/search', pageBuilder: _page((_, _) => const SearchScreen())),
           GoRoute(
             path: '/approvals/:id',
             pageBuilder: _page((_, s) => ApprovalScreen(approvalId: s.pathParameters['id']!)),

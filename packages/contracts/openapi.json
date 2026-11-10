@@ -7033,6 +7033,121 @@
             }
           }
         }
+      },
+      "SearchResponse": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchResult"
+            }
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileSearchResult"
+            }
+          },
+          "files_searched": {
+            "type": "integer",
+            "description": "How many awake computers had their files searched"
+          }
+        },
+        "required": [
+          "query",
+          "items",
+          "files",
+          "files_searched"
+        ]
+      },
+      "SearchResult": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SearchKind"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "snippet": {
+            "type": "string",
+            "description": "Matching text; matches are wrapped in « »"
+          },
+          "bot_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "conversation_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "title",
+          "snippet",
+          "bot_id",
+          "conversation_id",
+          "created_at"
+        ]
+      },
+      "SearchKind": {
+        "type": "string",
+        "enum": [
+          "message",
+          "chat",
+          "memory",
+          "skill",
+          "routine",
+          "ticket"
+        ]
+      },
+      "FileSearchResult": {
+        "type": "object",
+        "properties": {
+          "computer_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "computer_name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "match": {
+            "type": "string",
+            "enum": [
+              "name",
+              "content"
+            ]
+          }
+        },
+        "required": [
+          "computer_id",
+          "computer_name",
+          "path",
+          "match"
+        ]
       }
     },
     "parameters": {}
@@ -15100,6 +15215,87 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/search": {
+      "get": {
+        "operationId": "search",
+        "tags": [
+          "search"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Search messages, chats, memories, skills, routines, tickets and files in a workspace",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "org_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Also search file names and contents on awake computers (default true)"
+            },
+            "required": false,
+            "description": "Also search file names and contents on awake computers (default true)",
+            "name": "files",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results grouped by kind",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
             "content": {
               "application/problem+json": {
                 "schema": {

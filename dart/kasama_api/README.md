@@ -156,6 +156,7 @@ Class | Method | HTTP request | Description
 [*RunsApi*](doc/RunsApi.md) | [**cancelRun**](doc/RunsApi.md#cancelrun) | **POST** /v1/runs/{id}/cancel | Cancel a run and its subruns
 [*RunsApi*](doc/RunsApi.md) | [**getRun**](doc/RunsApi.md#getrun) | **GET** /v1/runs/{id} | 
 [*RunsApi*](doc/RunsApi.md) | [**listRunEvents**](doc/RunsApi.md#listrunevents) | **GET** /v1/runs/{id}/events | Events after a seq. Send Accept: text/event-stream to keep streaming live events (SSE).
+[*SearchApi*](doc/SearchApi.md) | [**search**](doc/SearchApi.md#search) | **GET** /v1/search | Search messages, chats, memories, skills, routines, tickets and files in a workspace
 [*SecretsApi*](doc/SecretsApi.md) | [**createSecret**](doc/SecretsApi.md#createsecret) | **POST** /v1/secrets | Create a named secret with allowed hosts (value stored in Vault)
 [*SecretsApi*](doc/SecretsApi.md) | [**declineSecretRequest**](doc/SecretsApi.md#declinesecretrequest) | **POST** /v1/secrets/requests/{id}/decline | Decline a bot&#39;s request for a secret; the bot continues without it
 [*SecretsApi*](doc/SecretsApi.md) | [**deleteSecret**](doc/SecretsApi.md#deletesecret) | **DELETE** /v1/secrets/{id} | 
@@ -282,6 +283,7 @@ Class | Method | HTTP request | Description
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
+ - [FileSearchResult](doc/FileSearchResult.md)
  - [FulfillSecretRequestBody](doc/FulfillSecretRequestBody.md)
  - [Health](doc/Health.md)
  - [IceServer](doc/IceServer.md)
@@ -363,6 +365,9 @@ Class | Method | HTTP request | Description
  - [RunStartedEventPayload](doc/RunStartedEventPayload.md)
  - [RunStatus](doc/RunStatus.md)
  - [SavedCount](doc/SavedCount.md)
+ - [SearchKind](doc/SearchKind.md)
+ - [SearchResponse](doc/SearchResponse.md)
+ - [SearchResult](doc/SearchResult.md)
  - [Secret](doc/Secret.md)
  - [SecretKind](doc/SecretKind.md)
  - [SecretList](doc/SecretList.md)

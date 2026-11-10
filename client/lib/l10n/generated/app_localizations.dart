@@ -5877,6 +5877,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{bot} needs a {service} sign-in code'**
   String totpRequestTitle(String bot, String service);
+
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats, memories, skills, tickets and files'**
+  String get searchHint;
+
+  /// No description provided for @searchEmptyPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least 2 characters.'**
+  String get searchEmptyPrompt;
+
+  /// No description provided for @searchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing found for “{query}”.'**
+  String searchNoResults(String query);
+
+  /// No description provided for @searchMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get searchMessages;
+
+  /// No description provided for @searchChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get searchChats;
+
+  /// No description provided for @searchTickets.
+  ///
+  /// In en, this message translates to:
+  /// **'Tickets'**
+  String get searchTickets;
+
+  /// No description provided for @searchFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get searchFiles;
+
+  /// No description provided for @searchFilesAsleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Files on sleeping computers aren\'t searched. Start a computer to include its files.'**
+  String get searchFilesAsleep;
 }
 
 class _AppLocalizationsDelegate

@@ -541,3 +541,10 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Generator:** `--enum-name-mappings=value=plain` stops an enum member named `value` from clashing with the generated enum's own `value` field (Dart `SecretKind.plain` is `"value"` on the wire).
 - **Tests:** RFC 6238 vectors (`totp.test.ts`), placeholder rules (`totp-placeholders.test.ts`), API (seed validation, totp request in `secret-requests.test.ts`), widget test (sign-in code form).
 
+## D-103 Search
+
+- **Database:** `pg_trgm`; `messages.tsv` (a stored `to_tsvector('simple', …)` of the text parts only, via immutable `public.message_plain_text`) with a GIN index; trigram indexes on chat titles, skill, routine and ticket names. `public.search_workspace(org, q, limit)` is **security invoker**, so RLS decides what each caller sees; results never cross workspaces or bots they can't access. It returns up to 8 per kind (message, chat, memory, skill, routine, ticket) with `ts_headline` snippets (matches between « »). `websearch_to_tsquery('simple')` keeps it language-neutral; `ilike` patterns escape `%`, `_` and `\`.
+- **Files:** `GET /v1/search` also searches up to 3 awake computers (`running`/`idle`, not local devices) the caller can see: one shell command for names (`find -iname`, literal pattern) and contents (`grep -rIlis -F`) under `~/workspace`, skipping `node_modules` and `.git`, 4 s each. Sleeping computers are never woken; the app says so. Pages join when they exist (Wave 2); with encryption at rest (Wave 3) search will cover names and titles only.
+- **App:** Cmd/Ctrl+K and a search button in the sidebar open the search panel on desktop and web; phones get a Search tab. Results are grouped by type; a message opens its chat scrolled to it and highlighted (`ChatScreen.focusMessageId`, `?m=`), chats open the chat, memories, routines, skills and tickets open their screens, files open the file preview.
+- **Tests:** pgTAP (`search_rls.test.sql`), API (`search.test.ts`: grouping, isolation, wildcards, the file command on a real folder including a quoting attack), widget tests (`search_test.dart`).
+

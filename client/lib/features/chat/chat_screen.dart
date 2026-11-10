@@ -61,9 +61,12 @@ List<(String, String)> _suggestions(BuildContext context) {
 }
 
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({super.key, required this.botId, this.conversationId});
+  const ChatScreen({super.key, required this.botId, this.conversationId, this.focusMessageId});
   final String botId;
   final String? conversationId;
+
+  /// A message to scroll to and highlight once the conversation loads (from search; D-103).
+  final String? focusMessageId;
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -80,6 +83,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   var _recording = false;
   var _transcribing = false;
   var _stickToBottom = true;
+  late String? _focusPending = widget.focusMessageId;
+  String? _highlight;
+  final _focusKey = GlobalKey();
   final _pending = <_Pending>[];
   var _dragging = false;
 
@@ -154,8 +160,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void didUpdateWidget(ChatScreen old) {
     super.didUpdateWidget(old);
-    if (old.botId != widget.botId || old.conversationId != widget.conversationId) {
+    if (old.botId != widget.botId || old.conversationId != widget.conversationId || old.focusMessageId != widget.focusMessageId) {
       _stickToBottom = true;
+      _focusPending = widget.focusMessageId;
       Future.microtask(() => ref.read(chatControllerProvider(widget.botId).notifier).open(widget.conversationId));
     }
   }
@@ -183,7 +190,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _showJump.value = distance > 400;
   }
 
+  /// Scrolls to the searched message: exactly when its row is built, else a rough jump first so
+  /// the lazy list builds it, then exactly. It stays highlighted for a moment.
+  void _scrollToFocus(String id, int index, int count) {
+    _focusPending = null;
+    _highlight = id;
+    void exact([int tries = 3]) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final ctx = _focusKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(ctx, alignment: 0.3);
+        } else if (tries > 0 && _scroll.hasClients) {
+          _scroll.jumpTo(_scroll.position.maxScrollExtent * (count <= 1 ? 0 : index / (count - 1)));
+          exact(tries - 1);
+        }
+      });
+    }
+
+    _stickToBottom = false;
+    exact();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && _highlight == id) setState(() => _highlight = null);
+    });
+  }
+
   void _followIfAtBottom({bool force = false}) {
+    if (_focusPending != null) return;
     if (!force && !_stickToBottom) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.maxScrollExtent);
@@ -336,16 +369,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               thread = _EmptyThread(name: name, avatar: bot?.avatarUrl, side: side, onAsk: _send);
             } else {
               final rows = _buildRows(context, chat, name, computer, bot?.avatarUrl);
+              final focusId = _focusPending ?? _highlight;
+              final focusIndex = focusId == null ? -1 : rows.indexWhere((r) => r.key == ValueKey(focusId));
+              if (_focusPending != null && focusIndex >= 0) _scrollToFocus(_focusPending!, focusIndex, rows.length);
               thread = ListView.builder(
                 controller: _scroll,
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: EdgeInsets.fromLTRB(side, AppSpace.md, side, AppSpace.xl),
                 itemCount: rows.length,
-                itemBuilder: (context, i) => Padding(
-                  key: rows[i].key,
-                  padding: EdgeInsets.only(top: i == 0 ? 0 : rows[i].gap),
-                  child: rows[i].fresh ? rows[i].build().appMessageEntrance() : rows[i].build(),
-                ),
+                itemBuilder: (context, i) {
+                  final child = rows[i].fresh ? rows[i].build().appMessageEntrance() : rows[i].build();
+                  final focused = i == focusIndex;
+                  return Padding(
+                    key: focused ? _focusKey : rows[i].key,
+                    padding: EdgeInsets.only(top: i == 0 ? 0 : rows[i].gap),
+                    child: !focused
+                        ? child
+                        : AnimatedContainer(
+                            key: const Key('focusedMessage'),
+                            duration: const Duration(milliseconds: 400),
+                            decoration: BoxDecoration(
+                              color: _highlight == focusId ? context.colorScheme.primary.withValues(alpha: 0.10) : Colors.transparent,
+                              borderRadius: AppRadius.cardAll,
+                            ),
+                            child: child,
+                          ),
+                  );
+                },
               );
             }
             return Column(

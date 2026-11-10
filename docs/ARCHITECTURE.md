@@ -151,6 +151,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - `packages/agent/src/secret-requests.ts` (`secrets.request`, handled in the run loop like takeovers), `secret_requests`, `/v1/secrets/requests` (list, fulfill, decline), events `secret.requested`/`secret.resolved`, and the chat's protected `SecretPrompt` card.
 - Sign-in codes (D-102): `secrets.kind = totp`, `{{totp:NAME}}` resolved by `resolvePlaceholders` with `@kasama/domain` `totp.ts`; QR scanning in `client/lib/features/settings/totp_scan.dart`.
 
+## Search (D-103)
+
+- `public.search_workspace` (security invoker; `messages.tsv`, trigram indexes), `GET /v1/search` (`apps/server/src/api/routes/search.ts`, plus file search on awake computers), and `client/lib/features/search/search_view.dart` (Cmd/Ctrl+K, phone tab, jump to message).
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).
