@@ -3,6 +3,7 @@ export * from "./appearance.ts";
 export * from "./apps.ts";
 export * from "./autonomy.ts";
 export * from "./billing.ts";
+export * from "./bot-template.ts";
 export * from "./bots.ts";
 export * from "./brand.ts";
 export * from "./common.ts";

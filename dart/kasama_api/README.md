@@ -88,6 +88,10 @@ Class | Method | HTTP request | Description
 [*BillingApi*](doc/BillingApi.md) | [**revokeConnectKey**](doc/BillingApi.md#revokeconnectkey) | **DELETE** /v1/orgs/{id}/cloud-connect/keys/{key_id} | 
 [*BillingApi*](doc/BillingApi.md) | [**verifyPurchase**](doc/BillingApi.md#verifypurchase) | **POST** /v1/orgs/{id}/billing/purchases | Verify an App Store or Google Play purchase (also used by Restore Purchases)
 [*BotsApi*](doc/BotsApi.md) | [**createBot**](doc/BotsApi.md#createbot) | **POST** /v1/bots | 
+[*BotsApi*](doc/BotsApi.md) | [**createBotShare**](doc/BotsApi.md#createbotshare) | **POST** /v1/bots/{id}/share | Make a share link for a bot template (a snapshot; anyone signed in with the link can import it)
+[*BotsApi*](doc/BotsApi.md) | [**exportBot**](doc/BotsApi.md#exportbot) | **GET** /v1/bots/{id}/export | A bot as a shareable template file (no secrets; memories only when asked)
+[*BotsApi*](doc/BotsApi.md) | [**getBotShare**](doc/BotsApi.md#getbotshare) | **GET** /v1/bot-shares/{token} | Read a shared bot template, to preview before importing
+[*BotsApi*](doc/BotsApi.md) | [**importBot**](doc/BotsApi.md#importbot) | **POST** /v1/bots/import | Create a bot from a template file
 [*BotsApi*](doc/BotsApi.md) | [**listBots**](doc/BotsApi.md#listbots) | **GET** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listTemplates**](doc/BotsApi.md#listtemplates) | **GET** /v1/templates | 
 [*BotsApi*](doc/BotsApi.md) | [**startBotSetup**](doc/BotsApi.md#startbotsetup) | **POST** /v1/bots/{id}/setup | Start (or rerun) the bot&#39;s setup interview in a new conversation
@@ -236,6 +240,13 @@ Class | Method | HTTP request | Description
  - [BotList](doc/BotList.md)
  - [BotSecretRequest](doc/BotSecretRequest.md)
  - [BotSecretRequestList](doc/BotSecretRequestList.md)
+ - [BotShareLink](doc/BotShareLink.md)
+ - [BotTemplateFile](doc/BotTemplateFile.md)
+ - [BotTemplateFileConnectionsInner](doc/BotTemplateFileConnectionsInner.md)
+ - [BotTemplateFileMemoriesInner](doc/BotTemplateFileMemoriesInner.md)
+ - [BotTemplateFileRoutinesInner](doc/BotTemplateFileRoutinesInner.md)
+ - [BotTemplateFileSkillsInner](doc/BotTemplateFileSkillsInner.md)
+ - [BotTemplateFileSkillsInnerFilesInner](doc/BotTemplateFileSkillsInnerFilesInner.md)
  - [CatalogApp](doc/CatalogApp.md)
  - [CatalogAppApiKey](doc/CatalogAppApiKey.md)
  - [CatalogSkill](doc/CatalogSkill.md)
@@ -263,6 +274,7 @@ Class | Method | HTTP request | Description
  - [Conversation](doc/Conversation.md)
  - [ConversationList](doc/ConversationList.md)
  - [CreateBotRequest](doc/CreateBotRequest.md)
+ - [CreateBotShareRequest](doc/CreateBotShareRequest.md)
  - [CreateCheckpointRequest](doc/CreateCheckpointRequest.md)
  - [CreateComputerRequest](doc/CreateComputerRequest.md)
  - [CreateConnectKeyRequest](doc/CreateConnectKeyRequest.md)
@@ -301,6 +313,9 @@ Class | Method | HTTP request | Description
  - [GitHubSkillPreviewRequest](doc/GitHubSkillPreviewRequest.md)
  - [Health](doc/Health.md)
  - [IceServer](doc/IceServer.md)
+ - [ImportBotRequest](doc/ImportBotRequest.md)
+ - [ImportBotResponse](doc/ImportBotResponse.md)
+ - [ImportBotResponseConnectionsToAddInner](doc/ImportBotResponseConnectionsToAddInner.md)
  - [InstallCatalogSkillRequest](doc/InstallCatalogSkillRequest.md)
  - [InstallGitHubSkillRequest](doc/InstallGitHubSkillRequest.md)
  - [InstalledSkill](doc/InstalledSkill.md)

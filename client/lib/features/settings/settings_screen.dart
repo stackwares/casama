@@ -18,6 +18,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../bots/template_picker.dart';
+import '../bots/bot_template.dart';
 import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../bots/model_picker.dart';
@@ -747,6 +748,13 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                 ref.invalidate(botsProvider);
                 GoRouter.maybeOf(context)?.go('/bots/${bot.id}/chat?c=$conv');
               },
+            ),
+            GroupedTile(
+              key: const Key('shareBot'),
+              icon: LucideIcons.share2,
+              title: l10n.shareAsTemplate,
+              subtitle: l10n.shareAsTemplateRow,
+              onTap: () => showShareBot(context, bot),
             ),
             GroupedTile(
               key: const Key('botHistory'),

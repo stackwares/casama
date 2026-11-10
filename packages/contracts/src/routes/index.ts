@@ -2,6 +2,7 @@ import * as admin from "./admin.ts";
 import * as appearance from "./appearance.ts";
 import * as apps from "./apps.ts";
 import * as autonomy from "./autonomy.ts";
+import * as botTemplate from "./bot-template.ts";
 import * as billing from "./billing.ts";
 import * as bots from "./bots.ts";
 import * as computers from "./computers.ts";
@@ -28,12 +29,14 @@ export const routes = {
   ...apps,
   ...search,
   ...skills,
+  ...botTemplate,
 };
 export {
   admin,
   appearance,
   autonomy,
   billing,
+  botTemplate,
   bots,
   computers,
   local,

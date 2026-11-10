@@ -6219,6 +6219,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Until'**
   String get until;
+
+  /// No description provided for @shareAsTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as template'**
+  String get shareAsTemplate;
+
+  /// No description provided for @shareAsTemplateRow.
+  ///
+  /// In en, this message translates to:
+  /// **'A file or link with its instructions, skills and routines'**
+  String get shareAsTemplateRow;
+
+  /// No description provided for @shareAsTemplateHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes instructions, skills, routines and the services it uses. Never keys or secrets.'**
+  String get shareAsTemplateHelp;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get copyLink;
+
+  /// No description provided for @includeMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'Include memories'**
+  String get includeMemories;
+
+  /// No description provided for @includeMemoriesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'What it has learned about you and your work. Leave off unless you trust who you share with.'**
+  String get includeMemoriesHelp;
+
+  /// No description provided for @saveAsFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as file'**
+  String get saveAsFile;
+
+  /// No description provided for @notABotTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'That file isn\'t a Kasama bot template.'**
+  String get notABotTemplate;
+
+  /// No description provided for @importBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a bot'**
+  String get importBot;
+
+  /// No description provided for @botImported.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is ready.'**
+  String botImported(String name);
+
+  /// No description provided for @botImportedConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is ready. Connect {services} in Integrations so it can use them.'**
+  String botImportedConnect(String name, String services);
+
+  /// No description provided for @whatComesWithIt.
+  ///
+  /// In en, this message translates to:
+  /// **'What comes with it'**
+  String get whatComesWithIt;
+
+  /// No description provided for @connectAfterImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect after importing'**
+  String get connectAfterImport;
+
+  /// No description provided for @importRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule its routines'**
+  String get importRoutines;
+
+  /// No description provided for @importMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Keep its 1 memory} other{Keep its {count} memories}}'**
+  String importMemories(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -3559,4 +3559,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get until => 'Until';
+
+  @override
+  String get shareAsTemplate => 'Share as template';
+
+  @override
+  String get shareAsTemplateRow =>
+      'A file or link with its instructions, skills and routines';
+
+  @override
+  String get shareAsTemplateHelp =>
+      'Includes instructions, skills, routines and the services it uses. Never keys or secrets.';
+
+  @override
+  String get copyLink => 'Copy link';
+
+  @override
+  String get includeMemories => 'Include memories';
+
+  @override
+  String get includeMemoriesHelp =>
+      'What it has learned about you and your work. Leave off unless you trust who you share with.';
+
+  @override
+  String get saveAsFile => 'Save as file';
+
+  @override
+  String get notABotTemplate => 'That file isn\'t a Kasama bot template.';
+
+  @override
+  String get importBot => 'Import a bot';
+
+  @override
+  String botImported(String name) {
+    return '$name is ready.';
+  }
+
+  @override
+  String botImportedConnect(String name, String services) {
+    return '$name is ready. Connect $services in Integrations so it can use them.';
+  }
+
+  @override
+  String get whatComesWithIt => 'What comes with it';
+
+  @override
+  String get connectAfterImport => 'Connect after importing';
+
+  @override
+  String get importRoutines => 'Schedule its routines';
+
+  @override
+  String importMemories(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Keep its $count memories',
+      one: 'Keep its 1 memory',
+    );
+    return '$_temp0';
+  }
 }

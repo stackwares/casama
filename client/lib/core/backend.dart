@@ -218,6 +218,12 @@ abstract class Backend {
   /// Starts (or reruns) the setup interview; returns its conversation (D-105).
   Future<String> startBotSetup(String botId);
   Future<void> skipBotSetup(String botId);
+  // Share a bot as a template (D-110)
+  Future<BotTemplateFile> exportBot(String botId, {bool memories = false});
+  Future<BotShareLink> createBotShare(String botId, {bool memories = false});
+  Future<BotTemplateFile> getBotShare(String token);
+  Future<ImportBotResponse> importBot(String orgId, BotTemplateFile template,
+      {required String credentialId, required String model, bool memories = true, bool routines = true});
   // Quiet hours (D-109)
   Future<QuietHoursView> quietHours();
   Future<void> setQuietHours(QuietHoursView hours);

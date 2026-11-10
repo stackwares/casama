@@ -64,6 +64,13 @@ lib/src/model/bot_budget.dart
 lib/src/model/bot_list.dart
 lib/src/model/bot_secret_request.dart
 lib/src/model/bot_secret_request_list.dart
+lib/src/model/bot_share_link.dart
+lib/src/model/bot_template_file.dart
+lib/src/model/bot_template_file_connections_inner.dart
+lib/src/model/bot_template_file_memories_inner.dart
+lib/src/model/bot_template_file_routines_inner.dart
+lib/src/model/bot_template_file_skills_inner.dart
+lib/src/model/bot_template_file_skills_inner_files_inner.dart
 lib/src/model/catalog_app.dart
 lib/src/model/catalog_app_api_key.dart
 lib/src/model/catalog_skill.dart
@@ -91,6 +98,7 @@ lib/src/model/connect_key_list.dart
 lib/src/model/conversation.dart
 lib/src/model/conversation_list.dart
 lib/src/model/create_bot_request.dart
+lib/src/model/create_bot_share_request.dart
 lib/src/model/create_checkpoint_request.dart
 lib/src/model/create_computer_request.dart
 lib/src/model/create_connect_key_request.dart
@@ -129,6 +137,9 @@ lib/src/model/git_hub_skill_preview.dart
 lib/src/model/git_hub_skill_preview_request.dart
 lib/src/model/health.dart
 lib/src/model/ice_server.dart
+lib/src/model/import_bot_request.dart
+lib/src/model/import_bot_response.dart
+lib/src/model/import_bot_response_connections_to_add_inner.dart
 lib/src/model/install_catalog_skill_request.dart
 lib/src/model/install_git_hub_skill_request.dart
 lib/src/model/installed_skill.dart

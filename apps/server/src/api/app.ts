@@ -19,6 +19,7 @@ import { registerAppearanceRoutes } from "./routes/appearance.ts";
 import { registerAppRoutes } from "./routes/apps.ts";
 import { registerAutonomyRoutes } from "./routes/autonomy.ts";
 import { billingFor, registerBillingRoutes } from "./routes/billing.ts";
+import { registerBotTemplateRoutes } from "./routes/bot-template.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
 import { registerChatGptRoutes } from "./routes/chatgpt.ts";
 import { registerComputerRoutes } from "./routes/computers.ts";
@@ -203,6 +204,7 @@ export function createApp(deps: AppDeps) {
   registerAppRoutes(app, deps, deps.apps);
   registerSearchRoutes(app, deps);
   registerSkillRoutes(app, deps);
+  registerBotTemplateRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {
     db: deps.db,

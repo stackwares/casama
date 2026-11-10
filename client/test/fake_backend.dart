@@ -205,6 +205,34 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  final shares = <bool>[];
+  ({String credentialId, String model, bool memories, bool routines})? imported;
+  BotTemplateFile template() => BotTemplateFile(
+        format: BotTemplateFileFormatEnum.kasamaPeriodBot,
+        version: 1,
+        name: 'Invoicer',
+        personaMd: 'You chase unpaid invoices politely.',
+        autonomy: BotTemplateFileAutonomyEnum.askRisky,
+        skills: [BotTemplateFileSkillsInner(name: 'dunning', description: 'Follow-up cadence', bodyMd: '1. Day 7')],
+        routines: [BotTemplateFileRoutinesInner(name: 'Weekly chase', instructionsMd: 'Chase.', scheduleCron: '0 9 * * 1')],
+        connections: [BotTemplateFileConnectionsInner(kind: 'composio', name: 'Gmail')],
+        memories: [BotTemplateFileMemoriesInner(kind: BotTemplateFileMemoriesInnerKindEnum.fact, content: 'Acme pays late')],
+      );
+  @override
+  Future<BotTemplateFile> exportBot(String botId, {bool memories = false}) async => template();
+  @override
+  Future<BotShareLink> createBotShare(String botId, {bool memories = false}) async {
+    shares.add(memories);
+    return BotShareLink(token: 't0k3n', url: 'https://app.example/import/t0k3n', expiresAt: null);
+  }
+  @override
+  Future<BotTemplateFile> getBotShare(String token) async => template();
+  @override
+  Future<ImportBotResponse> importBot(String orgId, BotTemplateFile template,
+      {required String credentialId, required String model, bool memories = true, bool routines = true}) async {
+    imported = (credentialId: credentialId, model: model, memories: memories, routines: routines);
+    return ImportBotResponse(botId: 'bot-new', skills: 1, routines: routines ? 1 : 0, memories: memories ? 1 : 0, connectionsToAdd: [for (final c in template.connections ?? const <BotTemplateFileConnectionsInner>[]) ImportBotResponseConnectionsToAddInner(kind: c.kind, name: c.name)]);
+  }
   QuietHoursView quiet = const QuietHoursView(enabled: false, start: '22:00', end: '07:00');
   final botQuiets = <String, BotQuietView>{};
   @override

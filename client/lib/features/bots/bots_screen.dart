@@ -1,4 +1,5 @@
 import 'bot_history_screen.dart';
+import 'bot_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -54,6 +55,12 @@ class BotsList extends ConsumerWidget {
                 spacing: AppSpace.sm,
                 children: [
                   GlowButton.icon(onPressed: () => showCreateBot(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
+                  TextButton.icon(
+                    key: const Key('importBotFile'),
+                    icon: const Icon(LucideIcons.fileDown, size: 18),
+                    label: Text(l10n.importBot),
+                    onPressed: () => importBotFromFile(context),
+                  ),
                   if (archived.isNotEmpty)
                     TextButton.icon(
                       key: const Key('archivedBots'),
@@ -74,16 +81,26 @@ class BotsList extends ConsumerWidget {
                   final side = pageSide(constraints.maxWidth);
                   return ListView.separated(
                     padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
-                    itemCount: items.length + (archived.isEmpty ? 0 : 1),
+                    itemCount: items.length + 1,
                     separatorBuilder: (_, _) => const SizedBox(height: AppSpace.xs),
                     itemBuilder: (context, i) => i == items.length
-                        ? Align(
-                            child: TextButton.icon(
-                              key: const Key('archivedBots'),
-                              icon: const Icon(LucideIcons.archive, size: 18),
-                              label: Text('${l10n.archivedBots} (${archived.length})'),
-                              onPressed: () => showArchivedBots(context),
-                            ),
+                        ? Wrap(
+                            alignment: WrapAlignment.center,
+                            children: [
+                              TextButton.icon(
+                                key: const Key('importBotFile'),
+                                icon: const Icon(LucideIcons.fileDown, size: 18),
+                                label: Text(l10n.importBot),
+                                onPressed: () => importBotFromFile(context),
+                              ),
+                              if (archived.isNotEmpty)
+                                TextButton.icon(
+                                  key: const Key('archivedBots'),
+                                  icon: const Icon(LucideIcons.archive, size: 18),
+                                  label: Text('${l10n.archivedBots} (${archived.length})'),
+                                  onPressed: () => showArchivedBots(context),
+                                ),
+                            ],
                           )
                         : _BotCard(
                       key: Key('bot-${items[i].id}'),

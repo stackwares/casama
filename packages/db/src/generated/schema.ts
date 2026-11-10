@@ -1608,6 +1608,37 @@ export const skillFiles = pgTable("skill_files", {
 	check("skill_files_content_check", sql`octet_length(content) <= 1048576`),
 ]);
 
+export const botShares = pgTable("bot_shares", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id"),
+	tokenHash: text("token_hash").notNull(),
+	snapshot: jsonb().notNull(),
+	createdBy: uuid("created_by"),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }),
+	revokedAt: timestamp("revoked_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "bot_shares_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "bot_shares_bot_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "bot_shares_created_by_fkey"
+		}).onDelete("set null"),
+	unique("bot_shares_token_hash_key").on(table.tokenHash),
+	pgPolicy("bot_shares_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+]);
+
 export const ttsCache = pgTable("tts_cache", {
 	messageId: uuid("message_id").notNull(),
 	voiceKey: text("voice_key").notNull(),

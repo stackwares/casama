@@ -272,6 +272,31 @@ class SupabaseBackend implements Backend {
   String get _uid => supabase.auth.currentUser!.id;
 
   @override
+  Future<BotTemplateFile> exportBot(String botId, {bool memories = false}) async =>
+      (await api.bots.exportBot(id: botId, memories: memories ? 'true' : null)).data!;
+
+  @override
+  Future<BotShareLink> createBotShare(String botId, {bool memories = false}) async =>
+      (await api.bots.createBotShare(id: botId, createBotShareRequest: CreateBotShareRequest(includeMemories: memories))).data!;
+
+  @override
+  Future<BotTemplateFile> getBotShare(String token) async => (await api.bots.getBotShare(token: token)).data!;
+
+  @override
+  Future<ImportBotResponse> importBot(String orgId, BotTemplateFile template,
+          {required String credentialId, required String model, bool memories = true, bool routines = true}) async =>
+      (await api.bots.importBot(
+        importBotRequest: ImportBotRequest(
+          orgId: orgId,
+          template: template,
+          credentialId: credentialId,
+          model: model,
+          includeMemories: memories,
+          includeRoutines: routines,
+        ),
+      )).data!;
+
+  @override
   Future<QuietHoursView> quietHours() async {
     final r = await supabase.from('profiles').select('quiet_hours').eq('user_id', _uid).maybeSingle();
     return QuietHoursView.fromJson(r?['quiet_hours']) ?? const QuietHoursView(enabled: false, start: '22:00', end: '07:00');

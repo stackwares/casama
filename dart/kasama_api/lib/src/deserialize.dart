@@ -27,6 +27,13 @@ import 'package:kasama_api/src/model/bot_budget.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
 import 'package:kasama_api/src/model/bot_secret_request.dart';
 import 'package:kasama_api/src/model/bot_secret_request_list.dart';
+import 'package:kasama_api/src/model/bot_share_link.dart';
+import 'package:kasama_api/src/model/bot_template_file.dart';
+import 'package:kasama_api/src/model/bot_template_file_connections_inner.dart';
+import 'package:kasama_api/src/model/bot_template_file_memories_inner.dart';
+import 'package:kasama_api/src/model/bot_template_file_routines_inner.dart';
+import 'package:kasama_api/src/model/bot_template_file_skills_inner.dart';
+import 'package:kasama_api/src/model/bot_template_file_skills_inner_files_inner.dart';
 import 'package:kasama_api/src/model/catalog_app.dart';
 import 'package:kasama_api/src/model/catalog_app_api_key.dart';
 import 'package:kasama_api/src/model/catalog_skill.dart';
@@ -53,6 +60,7 @@ import 'package:kasama_api/src/model/connect_key_list.dart';
 import 'package:kasama_api/src/model/conversation.dart';
 import 'package:kasama_api/src/model/conversation_list.dart';
 import 'package:kasama_api/src/model/create_bot_request.dart';
+import 'package:kasama_api/src/model/create_bot_share_request.dart';
 import 'package:kasama_api/src/model/create_checkpoint_request.dart';
 import 'package:kasama_api/src/model/create_computer_request.dart';
 import 'package:kasama_api/src/model/create_connect_key_request.dart';
@@ -90,6 +98,9 @@ import 'package:kasama_api/src/model/git_hub_skill_preview.dart';
 import 'package:kasama_api/src/model/git_hub_skill_preview_request.dart';
 import 'package:kasama_api/src/model/health.dart';
 import 'package:kasama_api/src/model/ice_server.dart';
+import 'package:kasama_api/src/model/import_bot_request.dart';
+import 'package:kasama_api/src/model/import_bot_response.dart';
+import 'package:kasama_api/src/model/import_bot_response_connections_to_add_inner.dart';
 import 'package:kasama_api/src/model/install_catalog_skill_request.dart';
 import 'package:kasama_api/src/model/install_git_hub_skill_request.dart';
 import 'package:kasama_api/src/model/installed_skill.dart';
@@ -330,6 +341,20 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BotSecretRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotSecretRequestList':
           return BotSecretRequestList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotShareLink':
+          return BotShareLink.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotTemplateFile':
+          return BotTemplateFile.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotTemplateFileConnectionsInner':
+          return BotTemplateFileConnectionsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotTemplateFileMemoriesInner':
+          return BotTemplateFileMemoriesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotTemplateFileRoutinesInner':
+          return BotTemplateFileRoutinesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotTemplateFileSkillsInner':
+          return BotTemplateFileSkillsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotTemplateFileSkillsInnerFilesInner':
+          return BotTemplateFileSkillsInnerFilesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogApp':
           return CatalogApp.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogAppApiKey':
@@ -385,6 +410,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ConversationList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateBotRequest':
           return CreateBotRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateBotShareRequest':
+          return CreateBotShareRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateCheckpointRequest':
           return CreateCheckpointRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateComputerRequest':
@@ -462,6 +489,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Health.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'IceServer':
           return IceServer.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ImportBotRequest':
+          return ImportBotRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ImportBotResponse':
+          return ImportBotResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ImportBotResponseConnectionsToAddInner':
+          return ImportBotResponseConnectionsToAddInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InstallCatalogSkillRequest':
           return InstallCatalogSkillRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InstallGitHubSkillRequest':

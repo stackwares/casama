@@ -604,3 +604,13 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **App:** Settings → Quiet hours (switch, start and end); bot settings → Notifications from this bot (follow my quiet hours, always notify me, its own quiet hours).
 - **Tests:** domain (`quiet-hours.test.ts`), service against Postgres (`quiet-hours.test.ts`: deferral, urgent, per-bot always, delayed send skipping read ones), pgTAP (`quiet_hours_rls.test.sql`), widget tests (`quiet_hours_test.dart`).
 
+## D-110 Share a bot as a template
+
+- **Format:** `kasama.bot` version 1 (`docs/BOT-TEMPLATE-FORMAT.md`, `BotTemplateFile` in contracts): name, description, instructions, autonomy, a built-in mascot, the bot's own skills with files (base64), repeating routines, connections by name, and memories only when chosen. Never keys, secrets, OAuth tokens or the model choice. It's the file the community template repository accepts.
+- **Export:** `GET /v1/bots/{id}/export` (anyone who can see the bot; `memories=true` only counts for people who manage it).
+- **Links:** `POST /v1/bots/{id}/share` (managers) stores a snapshot in `bot_shares` with a hashed token (default 30-day expiry) and returns `<PUBLIC_APP_URL>/import/<token>`; `GET /v1/bot-shares/{token}` returns it to anyone signed in, in any workspace, for the preview. Sharing is audited.
+- **Import:** `POST /v1/bots/import` with the template, a model key from the importing workspace and a model; it checks skill file limits and cron schedules, respects `max_bots`, and creates the bot (owned by the importer), its skills and files, routines (optional, in the importer's timezone) and memories (optional). Connections come back as `connections_to_add` for the person to connect themselves.
+- **App:** bot settings → Share as template (include memories, Save as file, Copy link); Bots → Import a bot (a file) and `/import/<token>` links open an import screen that previews instructions, skills, routines, connections and memory count, with switches for routines and memories and the key and model (prefilled with the key's default) before importing.
+- **Generator notes:** enum and array defaults and numeric literals break the Dart generator, so the template's optional lists are optional (empty when missing) and `version` is a bounded integer.
+- **Tests:** API (`bot-template.test.ts`: export without secrets, memories on request, cross-workspace link preview and import with files, bad schedules and foreign keys refused), widget tests (`bot_template_test.dart`).
+

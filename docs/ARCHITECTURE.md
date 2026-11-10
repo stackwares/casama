@@ -179,6 +179,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `profiles.quiet_hours`, `user_bot_settings`, `notifications.push_status`/`push_after`, `NotificationService.quietUntil`/`sendDeferred` (worker minute tick), `@kasama/domain` `quiet-hours.ts`, and the app's `features/notifications/quiet_hours.dart`.
 
+## Bot templates (D-110)
+
+- `BotTemplateFile` (contracts), `apps/server/src/api/routes/bot-template.ts` (export, share links in `bot_shares`, import), `docs/BOT-TEMPLATE-FORMAT.md`, and the app's `features/bots/bot_template.dart` (share sheet, import preview, `/import/<token>`).
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).
