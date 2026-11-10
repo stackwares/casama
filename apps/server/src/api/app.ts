@@ -45,7 +45,7 @@ export function createApp(deps: AppDeps) {
 
   app.onError(async (err, c) => {
     if (err instanceof ApiError) {
-      // An owner or admin held back only by a missing second step gets a clear answer (D-092).
+      // An owner or admin held back only by a missing second step gets a clear answer (D-093).
       const claims = c.get("claims");
       if (
         err.status === 403 &&

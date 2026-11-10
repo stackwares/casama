@@ -62,7 +62,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (signedIn.isLoading) return null;
       final loc = state.matchedLocation;
       if (signedIn.value != true) return loc == '/sign-in' ? null : '/sign-in';
-      // Two-step sign-in (D-092): the code comes before anything else.
+      // Two-step sign-in (D-093): the code comes before anything else.
       final codeNeeded = ref.read(backendProvider).twoStepCodeNeeded;
       if (codeNeeded) return loc == '/two-step' ? null : '/two-step';
       if (loc == '/two-step') return '/bots';

@@ -459,7 +459,7 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Private and workspace pages:** the system browser has no Kasama session, so the app requests a single-use view link (60 s, bound to page and viewer); the pages origin exchanges it for a short page-scoped cookie. Public links keep their revocable token, optional expiry and `noindex`.
 - **Trade-offs accepted:** pages don't inherit the user's Kasama theme beyond CSS variables the bot is asked to use, and buttons on a page can't call Kasama actions (no JS bridge). Actions stay in chat.
 
-## D-092 Two-step sign-in
+## D-093 Two-step sign-in
 
 - **What:** authenticator-app codes (TOTP) through Supabase Auth's MFA on every platform. Settings → Two-step sign-in sets up one or more authenticator apps (QR code or setup key, then a code), lists them and removes them. After the password step, an account with an authenticator goes to a code screen (`/two-step`) before anything else. `kasama login` asks for the code (or `--code`, `KASAMA_2FA_CODE`). Passkeys wait until Supabase Auth supports them.
 - **Workspace requirement:** `organizations.require_mfa`, set in the same screen by owners and admins (`PATCH /v1/orgs/{id}/settings`), and reported on each workspace in `/v1/orgs`. Turning it on needs an aal2 session, so nobody locks themselves out. When it is on, `public.has_role` grants owner and admin powers only to aal2 sessions; members are unaffected and owners keep member access. Because every RLS policy and API admin check goes through `has_role`, one change covers them all. The API turns the resulting "Only owners and admins…" refusals into `mfa_required` with a clear message, and Settings tells an affected admin what to do.

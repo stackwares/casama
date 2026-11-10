@@ -84,7 +84,7 @@ class RunSummary {
   final double costUsd;
 }
 
-/// An authenticator app registered for two-step sign-in (D-092).
+/// An authenticator app registered for two-step sign-in (D-093).
 class TwoStepFactor {
   const TwoStepFactor({required this.id, required this.name, required this.createdAt});
   final String id;
@@ -231,7 +231,7 @@ abstract class Backend {
   // Privacy and SSO (Phase 8)
   Future<Uint8List> exportMyData();
   Future<AccountDeletion> deleteAccount(String confirmEmail);
-  // Two-step sign-in (D-092)
+  // Two-step sign-in (D-093)
   Future<List<TwoStepFactor>> twoStepFactors();
   /// The account has two-step sign-in but this session hasn't passed the second step yet.
   bool get twoStepCodeNeeded;

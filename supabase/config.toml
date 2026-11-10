@@ -304,7 +304,7 @@ max_enrolled_factors = 10
 
 # Control MFA via App Authenticator (TOTP)
 [auth.mfa.totp]
-# Two-step sign-in with authenticator apps (D-092).
+# Two-step sign-in with authenticator apps (D-093).
 enroll_enabled = true
 verify_enabled = true
 

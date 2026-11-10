@@ -704,7 +704,7 @@ class SupabaseBackend implements Backend {
     return r;
   }
 
-  // --- two-step sign-in (D-092) ---------------------------------------------
+  // --- two-step sign-in (D-093) ---------------------------------------------
 
   @override
   Future<List<TwoStepFactor>> twoStepFactors() async => [

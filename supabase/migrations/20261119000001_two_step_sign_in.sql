@@ -1,4 +1,4 @@
--- Two-step sign-in (SPEC: Phase 8 launch items; D-092).
+-- Two-step sign-in (SPEC: Phase 8 launch items; D-093).
 -- A workspace can require it: then owner and admin powers need a session that passed the second
 -- step (Supabase Auth's `aal2`). Members are unaffected. Enforced in has_role, so every RLS
 -- policy and every API check that asks "is this person an admin here?" follows it.

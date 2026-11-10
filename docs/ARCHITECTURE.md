@@ -114,7 +114,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - **Worker:** ChatGPT key test (model list), `revokeCredential`, idle refresh in the hourly maintenance job.
 - **Clients:** `kasama_sdk/chatgpt_sign_in.dart` (loopback listener) used by `kasama credential chatgpt` and the desktop app's "Continue with ChatGPT"; Model keys shows plans with status, reconnect, the next-model setting, Manage usage and Remove.
 
-## Two-step sign-in (D-092)
+## Two-step sign-in (D-093)
 
 - Supabase Auth TOTP; `organizations.require_mfa`; `has_role` requires aal2 for owner and admin powers when it is on; `mfa_required` errors from the API. App: Settings → Two-step sign-in and the `/two-step` code screen. CLI: `kasama login --code`.
 

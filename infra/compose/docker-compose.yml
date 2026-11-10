@@ -92,7 +92,7 @@ services:
       GOTRUE_SITE_URL: ${KASAMA_PUBLIC_URL}
       GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-}
       GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
-      # Two-step sign-in with authenticator apps (D-092).
+      # Two-step sign-in with authenticator apps (D-093).
       GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
       GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true"
       GOTRUE_JWT_ADMIN_ROLES: service_role

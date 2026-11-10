@@ -1,4 +1,4 @@
-/** Two-step sign-in required by a workspace (D-092): owner and admin powers need an aal2 session. */
+/** Two-step sign-in required by a workspace (D-093): owner and admin powers need an aal2 session. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

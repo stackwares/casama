@@ -208,7 +208,7 @@ class LoginCommand extends _CredentialsCommand {
     } else {
       session = await c.signIn(email, password);
     }
-    // Two-step sign-in (D-092): pass the second step when the account has an authenticator app.
+    // Two-step sign-in (D-093): pass the second step when the account has an authenticator app.
     final factors = await c.auth.verifiedTotpFactors(session.accessToken);
     if (factors.isNotEmpty) {
       final code = (argResults!['code'] as String?) ??
