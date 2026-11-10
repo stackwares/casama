@@ -4,6 +4,7 @@ import 'package:args/command_runner.dart';
 import 'package:kasama_api/kasama_api.dart';
 import 'package:path/path.dart' as p;
 
+import 'backups.dart';
 import 'runner.dart';
 
 /// `kasama selfhost …`: install and operate a self-hosted stack (Phase 8, D-076). Wraps
@@ -41,13 +42,7 @@ Directory _dir(Command<int> c) {
   return d;
 }
 
-List<String> _composeArgs(Directory d) => [
-      'compose',
-      '-f',
-      p.join(d.path, 'infra', 'compose', 'docker-compose.yml'),
-      '--env-file',
-      p.join(d.path, 'infra', 'compose', '.env'),
-    ];
+List<String> _composeArgs(Directory d) => ['compose', '-f', p.join(d.path, 'infra', 'compose', 'docker-compose.yml'), '--env-file', p.join(d.path, 'infra', 'compose', '.env')];
 
 Future<int> _run(String exe, List<String> args, {String? cwd}) async {
   final proc = await Process.start(exe, args, workingDirectory: cwd, mode: ProcessStartMode.inheritStdio);
@@ -130,7 +125,12 @@ class _Upgrade extends KCommand {
 
 class _Backup extends KCommand {
   _Backup(super.ctx) {
-    argParser.addOption('out', defaultsTo: 'kasama-backups', help: 'Folder for the backup files.');
+    argParser
+      ..addOption('out', defaultsTo: 'kasama-backups', help: 'Folder for the backup files.')
+      ..addFlag('encrypt', negatable: false, help: 'Encrypt the backup with age (needs --recipient or KASAMA_BACKUP_RECIPIENTS).')
+      ..addMultiOption('recipient', help: 'An age public key (age1…) or ssh public key to encrypt to; repeat for more.')
+      ..addOption('keep', help: 'Keep only this many newest backups in --out.')
+      ..addOption('keep-days', help: 'Remove backups older than this many days (with --keep, a backup goes when outside both).');
   }
   @override
   String get name => 'backup';
@@ -148,13 +148,38 @@ class _Backup extends KCommand {
     if (await proc.exitCode != 0) throw CliError('backup_failed', 'pg_dump failed');
     final objects = await _run('docker', [
       ..._composeArgs(d),
-      'run', '--rm', '--no-deps', '-v', '${p.absolute(out.path)}:/backup', '--entrypoint', 'tar', 'supervisor',
-      'czf', '/backup/objects.tar.gz', '-C', '/data/objects', '.',
+      'run',
+      '--rm',
+      '--no-deps',
+      '-v',
+      '${p.absolute(out.path)}:/backup',
+      '--entrypoint',
+      'tar',
+      'supervisor',
+      'czf',
+      '/backup/objects.tar.gz',
+      '-C',
+      '/data/objects',
+      '.',
     ]);
     if (objects != 0) throw CliError('backup_failed', 'could not archive computer snapshots');
     File(p.join(d.path, 'infra', 'compose', '.env')).copySync(p.join(out.path, 'env'));
     await File(p.join(out.path, 'env')).setLastModified(DateTime.now());
-    return ctx.emit({'path': out.path}, 'Backup written to ${out.path} (database, computer archives, .env). Keep it private.');
+    var encrypted = false;
+    if (argResults!['encrypt'] as bool) {
+      final recipients = [...(argResults!['recipient'] as List<String>), ...(Platform.environment['KASAMA_BACKUP_RECIPIENTS'] ?? '').split(',').map((r) => r.trim()).where((r) => r.isNotEmpty)];
+      try {
+        await encryptFolder(out, recipients);
+      } on BackupError catch (e) {
+        throw CliError('backup_failed', e.message);
+      }
+      encrypted = true;
+    }
+    final removed = pruneBackups(Directory(argResults!['out'] as String), keep: int.tryParse(argResults!['keep'] as String? ?? ''), keepDays: int.tryParse(argResults!['keep-days'] as String? ?? ''));
+    return ctx.emit(
+      {'path': out.path, 'encrypted': encrypted, 'removed': removed},
+      'Backup written to ${out.path} (database, computer archives, .env)${encrypted ? ', encrypted with age' : '. Keep it private'}.${removed.isEmpty ? '' : ' Removed ${removed.length} older backup(s).'}',
+    );
   }
 }
 
@@ -164,27 +189,49 @@ class _Restore extends KCommand {
   @override
   String get description => 'Restore a backup folder made by `selfhost backup` (replaces current data).';
   @override
-  String get invocation => 'kasama selfhost restore <backup-folder>';
-  _Restore(super.ctx);
+  String get invocation => 'kasama selfhost restore <backup-folder> [--identity key.txt]';
+  _Restore(super.ctx) {
+    argParser.addOption('identity', help: 'The age identity file for an encrypted backup.');
+  }
   @override
   Future<int> run() async {
     final d = _dir(this);
     if (argResults!.rest.length != 1) throw UsageException('Give the backup folder.', usage);
-    final from = Directory(argResults!.rest.first);
+    var from = Directory(argResults!.rest.first);
+    // An encrypted backup is decrypted into a private temporary folder first.
+    if (File(p.join(from.path, 'postgres.dump.age')).existsSync()) {
+      final identity = argResults!['identity'] as String?;
+      if (identity == null) throw CliError('identity_required', 'This backup is encrypted; pass --identity with your age key file.');
+      final tmp = Directory.systemTemp.createTempSync('kasama-restore');
+      try {
+        await decryptFolder(from, tmp, identity);
+      } on BackupError catch (e) {
+        throw CliError('restore_failed', e.message);
+      }
+      from = tmp;
+    }
     final dump = File(p.join(from.path, 'postgres.dump'));
     if (!dump.existsSync()) throw CliError('not_a_backup', 'No postgres.dump in ${from.path}');
     await _run('docker', [..._composeArgs(d), 'stop', 'api', 'worker']);
-    final proc = await Process.start('docker', [
-      ..._composeArgs(d), 'exec', '-T', 'db', 'pg_restore', '-U', 'postgres', '-d', 'postgres', '--clean', '--if-exists', '--no-owner',
-    ]);
+    final proc = await Process.start('docker', [..._composeArgs(d), 'exec', '-T', 'db', 'pg_restore', '-U', 'postgres', '-d', 'postgres', '--clean', '--if-exists', '--no-owner']);
     await Future.wait([dump.openRead().pipe(proc.stdin), stderr.addStream(proc.stderr), stdout.addStream(proc.stdout)]);
     await proc.exitCode; // pg_restore warns about Supabase-owned objects; the data is restored.
     final tar = File(p.join(from.path, 'objects.tar.gz'));
     if (tar.existsSync()) {
       await _run('docker', [
         ..._composeArgs(d),
-        'run', '--rm', '--no-deps', '-v', '${p.absolute(from.path)}:/backup', '--entrypoint', 'tar', 'supervisor',
-        'xzf', '/backup/objects.tar.gz', '-C', '/data/objects',
+        'run',
+        '--rm',
+        '--no-deps',
+        '-v',
+        '${p.absolute(from.path)}:/backup',
+        '--entrypoint',
+        'tar',
+        'supervisor',
+        'xzf',
+        '/backup/objects.tar.gz',
+        '-C',
+        '/data/objects',
       ]);
     }
     await _run('docker', [..._composeArgs(d), 'up', '-d']);
@@ -233,7 +280,8 @@ class _Delete extends KCommand {
   @override
   Future<int> run() async {
     final c = await ctx.authedClient();
-    final email = argResults!['confirm'] as String? ??
+    final email =
+        argResults!['confirm'] as String? ??
         (() {
           stderr.write('This deletes your account. Type your email to confirm: ');
           return stdin.readLineSync() ?? '';

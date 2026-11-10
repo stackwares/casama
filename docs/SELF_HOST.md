@@ -54,6 +54,32 @@ Run the backup daily (cron) and copy it off the machine. Migrations are backward
 release, so the API and worker can be upgraded without downtime. `selfhost down` keeps bot computers
 that are running; they are archived and stopped by the idle timer.
 
+### Encrypted backups and retention
+
+Install [age](https://age-encryption.org) and make a key pair (`age-keygen -o backup.key`). Keep
+the key file off the server. Then:
+
+```sh
+kasama selfhost backup --out /backups --encrypt --recipient age1... --keep 14 --keep-days 30
+kasama selfhost restore /backups/<timestamp> --identity backup.key
+```
+
+`KASAMA_BACKUP_RECIPIENTS` (comma-separated) can stand in for `--recipient`. Each file in the backup is
+encrypted separately. Retention only removes backup folders the CLI wrote; with both limits, a
+backup goes when it's outside both.
+
+## Kubernetes (Helm)
+
+`infra/helm/kasama` runs the API, worker, supervisor and web app on a cluster, against your own
+Postgres and Supabase. Computers run as pods through the Kubernetes provider. See
+`infra/helm/kasama/README.md` for the values; `scripts/check-helm.sh` lints and renders it.
+
+## On your own computer
+
+The desktop app can do all of this for you: on the sign-in screen, choose **Run Kasama on this
+computer**. It needs Docker Desktop running, sets up the stack with `install.sh --local`, and
+connects to `http://localhost:8080`.
+
 ## Settings
 
 All settings live in `infra/compose/.env`. Common ones:

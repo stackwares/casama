@@ -315,6 +315,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - D-145: the sign-up allowlist in `routes/abuse.ts` (compose wires the hook); `AiGatewayConfig` in `CredentialResolver`; `packages/agent/src/secret-store.ts` (`SecretStore`, Vault and Infisical), `org_secret_stores`, `secrets.store`, `routes/secret-store.ts`, and "Where secrets are kept" in workspace settings.
 - D-146: `ee/server/audit-forward.ts` (webhook, OTLP and S3 senders and the cursor pass), `audit_forwarders`, the forwarder routes in `ee/server/index.ts`, and the worker's minute tick.
+- D-147: `dart/cli/lib/src/backups.dart` (age encryption and retention) and the backup and restore flags in `commands_selfhost.dart`; `infra/helm/kasama` and `scripts/check-helm.sh`; `DEFAULT_PROVIDER` in `apps/supervisor/src/main.ts`; `client/lib/features/selfhost/` (`LocalServerManager` and the sign-in sheet).
 
 ## Production and launch (Phase 8)
 

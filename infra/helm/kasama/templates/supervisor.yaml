@@ -1,0 +1,96 @@
+{{- if .Values.supervisor.enabled }}
+{{- $ns := .Values.computers.namespace }}
+{{- if .Values.computers.create }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $ns }}
+  labels: {{- include "kasama.labels" . | nindent 4 }}
+---
+{{- end }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-supervisor
+  labels: {{- include "kasama.labels" . | nindent 4 }}
+---
+# The supervisor creates, finds, proxies and deletes computer pods, only in the computers namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-computers
+  namespace: {{ $ns }}
+  labels: {{- include "kasama.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [create, get, list, delete]
+  - apiGroups: [""]
+    resources: [pods/proxy]
+    verbs: [get, create, update, patch, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-computers
+  namespace: {{ $ns }}
+  labels: {{- include "kasama.labels" . | nindent 4 }}
+subjects: [{ kind: ServiceAccount, name: {{ .Release.Name }}-supervisor, namespace: {{ .Release.Namespace }} }]
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: Role, name: {{ .Release.Name }}-computers }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-supervisor
+  labels: {{- include "kasama.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: supervisor } }
+  template:
+    metadata: { labels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: supervisor } }
+    spec:
+      serviceAccountName: {{ .Release.Name }}-supervisor
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: supervisor
+          image: {{ include "kasama.image" (dict "root" . "name" "supervisor") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            # Computers are pods (D-139); "docker" requests go to the Kubernetes provider (D-147).
+            - { name: DEFAULT_PROVIDER, value: kubernetes }
+            - { name: K8S_NAMESPACE, value: {{ $ns | quote }} }
+            - { name: K8S_RUNTIME_CLASS, value: {{ .Values.computers.runtimeClass | quote }} }
+            - { name: COMPUTER_MEMORY_MB, value: {{ .Values.computers.memoryMb | quote }} }
+            - { name: HOSTED_IMAGE_HEADLESS, value: {{ include "kasama.image" (dict "root" . "name" "computer-headless") }} }
+            - { name: HOSTED_IMAGE_DESKTOP, value: {{ include "kasama.image" (dict "root" . "name" "computer-desktop") }} }
+            - { name: OBJECT_STORE_DIR, value: /data/objects }
+            - { name: SUPERVISOR_TOKEN, valueFrom: { secretKeyRef: { name: {{ include "kasama.secretName" . }}, key: SUPERVISOR_TOKEN } } }
+            - { name: COMPUTER_TOKEN_SECRET, valueFrom: { secretKeyRef: { name: {{ include "kasama.secretName" . }}, key: COMPUTER_TOKEN_SECRET } } }
+          ports: [{ name: http, containerPort: 8788 }]
+          readinessProbe: { httpGet: { path: /healthz, port: http }, periodSeconds: 10 }
+          volumeMounts: [{ name: objects, mountPath: /data/objects }]
+          resources: {{- toYaml .Values.supervisor.resources | nindent 12 }}
+      volumes:
+        - name: objects
+          persistentVolumeClaim: { claimName: {{ .Release.Name }}-objects }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-objects
+  labels: {{- include "kasama.labels" . | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 20Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-supervisor
+  labels: {{- include "kasama.labels" . | nindent 4 }}
+spec:
+  selector: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: supervisor }
+  ports: [{ name: http, port: 8788, targetPort: http }]
+{{- end }}

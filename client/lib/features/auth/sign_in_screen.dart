@@ -13,6 +13,8 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/kasama_mark.dart';
 import '../../ui/glow_button.dart';
+import '../selfhost/local_server.dart';
+import '../selfhost/local_server_sheet.dart';
 
 /// Email and password, magic link, Google and Apple sign-in.
 class SignInScreen extends ConsumerStatefulWidget {
@@ -95,9 +97,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Center(
-                        child: const KasamaMark(size: 64),
-                      ).appCardEntrance(),
+                      Center(child: const KasamaMark(size: 64)).appCardEntrance(),
                       const SizedBox(height: AppSpace.xl),
                       AnimatedSwitcher(
                         duration: AppMotion.of(context, AppMotion.fast),
@@ -145,11 +145,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpace.xxs),
-                      TextButton(
-                        key: const Key('toggleMode'),
-                        onPressed: _busy ? null : () => setState(() => _signUp = !_signUp),
-                        child: Text(_signUp ? l10n.haveAccount : l10n.needAccount),
-                      ),
+                      TextButton(key: const Key('toggleMode'), onPressed: _busy ? null : () => setState(() => _signUp = !_signUp), child: Text(_signUp ? l10n.haveAccount : l10n.needAccount)),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: AppSpace.md),
                         child: Row(
@@ -185,15 +181,20 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         alignment: WrapAlignment.center,
                         children: [
                           TextButton.icon(onPressed: _busy ? null : _magicLink, icon: const Icon(LucideIcons.mail, size: 18), label: Text(l10n.magicLink)),
-                          TextButton.icon(
-                            key: const Key('ssoSignIn'),
-                            onPressed: _busy ? null : _sso,
-                            icon: const Icon(LucideIcons.building2, size: 18),
-                            label: Text(l10n.continueWithSso),
-                          ),
+                          TextButton.icon(key: const Key('ssoSignIn'), onPressed: _busy ? null : _sso, icon: const Icon(LucideIcons.building2, size: 18), label: Text(l10n.continueWithSso)),
                         ],
                       ),
                       const SizedBox(height: AppSpace.lg),
+                      // A server on this computer, in one click (D-147).
+                      if (localServerSupported)
+                        Center(
+                          child: TextButton.icon(
+                            key: const Key('runLocalServer'),
+                            onPressed: _busy ? null : () => showAdaptiveSheet<void>(context: context, builder: (_) => const LocalServerSheet()),
+                            icon: const Icon(LucideIcons.serverCog, size: 16),
+                            label: Text(l10n.localServer),
+                          ),
+                        ),
                       // Self-hosted servers: point the app at your own Kasama (D-076).
                       Center(
                         child: ActionChip(
@@ -268,12 +269,7 @@ class _SsoFormState extends State<_SsoForm> {
           autocorrect: false,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
-          decoration: InputDecoration(
-            labelText: l10n.workEmail,
-            hintText: 'you@company.com',
-            prefixIcon: const Icon(LucideIcons.atSign, size: 20),
-            errorText: _invalid ? l10n.invalidEmail : null,
-          ),
+          decoration: InputDecoration(labelText: l10n.workEmail, hintText: 'you@company.com', prefixIcon: const Icon(LucideIcons.atSign, size: 20), errorText: _invalid ? l10n.invalidEmail : null),
           onChanged: (_) {
             if (_invalid) setState(() => _invalid = false);
           },

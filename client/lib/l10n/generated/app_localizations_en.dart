@@ -5294,4 +5294,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get secretStoreBack => 'Use this server\'s vault again';
+
+  @override
+  String get localServer => 'Run Kasama on this computer';
+
+  @override
+  String get localServerHelp =>
+      'Starts your own Kasama server here with Docker and connects to it. Only this computer can reach it.';
+
+  @override
+  String get localServerIntro =>
+      'Needs Docker Desktop running and a few GB of disk. The first start takes several minutes.';
+
+  @override
+  String get localServerChecking => 'Checking Docker…';
+
+  @override
+  String get localServerDownloading => 'Downloading the server…';
+
+  @override
+  String get localServerInstalling => 'Setting up the server…';
+
+  @override
+  String get localServerStarting => 'Waiting for the server to answer…';
+
+  @override
+  String get localServerReady => 'Ready. Connecting…';
+
+  @override
+  String get localServerFailed => 'Something went wrong.';
+
+  @override
+  String get localServerStart => 'Start the server';
 }

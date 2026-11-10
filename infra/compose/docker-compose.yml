@@ -44,6 +44,13 @@ x-kasama: &kasama
     ABUSE_CONTROLS: ${ABUSE_CONTROLS:-auto}
     SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
     BILLING_ENABLED: "false"
+    # Shared by the API and the worker: encryption at rest (D-136) and the sign-up hook (D-145).
+    CONTENT_ENCRYPTION_KEY: ${CONTENT_ENCRYPTION_KEY:-}
+    CONTENT_ENCRYPTION_KEY_PREVIOUS: ${CONTENT_ENCRYPTION_KEY_PREVIOUS:-}
+    CONTENT_KMS_KEY_ID: ${CONTENT_KMS_KEY_ID:-}
+    CONTENT_KMS_REGION: ${CONTENT_KMS_REGION:-}
+    SIGNUP_ALLOWED_EMAILS: ${SIGNUP_ALLOWED_EMAILS:-}
+    AUTH_HOOK_SECRET: ${AUTH_HOOK_SECRET:-}
 
 services:
   # ---------------------------------------------------------------- Supabase
@@ -211,14 +218,8 @@ services:
       APNS_KEY_P8: ${APNS_KEY_P8:-}
       APNS_KEY_ID: ${APNS_KEY_ID:-}
       APNS_TEAM_ID: ${APNS_TEAM_ID:-}
-      CONTENT_ENCRYPTION_KEY: ${CONTENT_ENCRYPTION_KEY:-}
-      SIGNUP_ALLOWED_EMAILS: ${SIGNUP_ALLOWED_EMAILS:-}
-      AUTH_HOOK_SECRET: ${AUTH_HOOK_SECRET:-}
       AI_GATEWAY_URL: ${AI_GATEWAY_URL:-}
       AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:-}
-      CONTENT_ENCRYPTION_KEY_PREVIOUS: ${CONTENT_ENCRYPTION_KEY_PREVIOUS:-}
-      CONTENT_KMS_KEY_ID: ${CONTENT_KMS_KEY_ID:-}
-      CONTENT_KMS_REGION: ${CONTENT_KMS_REGION:-}
     depends_on: { migrate: { condition: service_completed_successfully } }
 
   # The only service with Docker access. It joins each computer's private network to reach computerd.

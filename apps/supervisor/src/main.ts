@@ -40,7 +40,10 @@ const store =
 
 if (store instanceof S3ObjectStore && env.S3_CREATE_BUCKET === "true") await store.ensureBucket();
 
-const provider = new DockerProvider({
+// DEFAULT_PROVIDER (D-147): computers that ask for the default ("docker") run on this provider
+// instead, for example kubernetes when the supervisor runs in a cluster without a Docker socket.
+const defaultName = env.DEFAULT_PROVIDER || "docker";
+const provider: SandboxProvider | undefined = defaultName !== "docker" ? undefined : new DockerProvider({
   docker: new DockerApi(env.DOCKER_SOCKET ?? "/var/run/docker.sock"),
   store,
   images: {
@@ -119,8 +122,8 @@ if (env.NOVITA_API_KEY)
     hostedOpts,
   );
 const images = {
-  headless: env.HOSTED_IMAGE_HEADLESS ?? "ghcr.io/kasama-ai/computer-headless:latest",
-  desktop: env.HOSTED_IMAGE_DESKTOP ?? "ghcr.io/kasama-ai/computer-desktop:latest",
+  headless: env.HOSTED_IMAGE_HEADLESS ?? "ghcr.io/kasama-dev/computer-headless:latest",
+  desktop: env.HOSTED_IMAGE_DESKTOP ?? "ghcr.io/kasama-dev/computer-desktop:latest",
 };
 if (env.K8S_NAMESPACE) {
   // In a cluster: the pod's service account and CA; outside: K8S_API_URL, K8S_TOKEN and K8S_CA_FILE.
@@ -176,12 +179,15 @@ if (env.RAILWAY_TOKEN && env.RAILWAY_PROJECT_ID && env.RAILWAY_ENVIRONMENT_ID)
   );
 
 const port = Number(env.PORT ?? 8788);
-startSupervisor(provider, token, port, hosted);
+const main = provider ?? hosted[defaultName];
+if (!main) throw new Error(`DEFAULT_PROVIDER=${defaultName} isn't configured on this supervisor`);
+startSupervisor(main, token, port, hosted);
 console.log(
   JSON.stringify({
     msg: "supervisor listening",
     port,
     runtime: env.SANDBOX_RUNTIME || "default",
+    default_provider: defaultName,
     hosted: Object.keys(hosted),
   }),
 );

@@ -2941,5 +2941,15 @@
   "secretStoreClientId": "Machine identity client ID",
   "secretStoreClientSecret": "Client secret",
   "secretStoreMove": "Move current secrets into Infisical",
-  "secretStoreBack": "Use this server's vault again"
+  "secretStoreBack": "Use this server's vault again",
+  "localServer": "Run Kasama on this computer",
+  "localServerHelp": "Starts your own Kasama server here with Docker and connects to it. Only this computer can reach it.",
+  "localServerIntro": "Needs Docker Desktop running and a few GB of disk. The first start takes several minutes.",
+  "localServerChecking": "Checking Docker…",
+  "localServerDownloading": "Downloading the server…",
+  "localServerInstalling": "Setting up the server…",
+  "localServerStarting": "Waiting for the server to answer…",
+  "localServerReady": "Ready. Connecting…",
+  "localServerFailed": "Something went wrong.",
+  "localServerStart": "Start the server"
 }

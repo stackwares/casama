@@ -1469,3 +1469,28 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - The webhook signature, the OTLP header and records, and the S3 signature header and JSON Lines body.
     - A pass with nothing new sends nothing.
   - Without the license: 402.
+
+## D-147 Encrypted backups, the Helm chart, and a one-click local server
+
+- **Encrypted backups (`kasama selfhost backup`):**
+  - `--encrypt` encrypts each file in the finished backup folder with [age](https://age-encryption.org) to one or more public keys (`--recipient`, repeatable, or `KASAMA_BACKUP_RECIPIENTS`, comma-separated; age1… or ssh keys). Each file becomes `<name>.age` and the plaintext is removed.
+  - age is used as an external binary, not reimplemented, so the format is standard and the files open with any age tool. The CLI says how to install it when it's missing.
+  - `restore --identity <key file>` decrypts into a temporary folder and restores from there.
+  - Retention: `--keep N` keeps the newest N backups, `--keep-days D` drops ones older than D days. With both, a backup goes only when it's outside both limits. Only the timestamp folders the CLI itself writes are touched.
+- **Compose fix:** the content-encryption keys (D-136), the sign-up allowlist and the auth hook secret (D-145) moved into the shared environment block, because the API needs them as well as the worker.
+- **Helm chart (`infra/helm/kasama`):**
+  - For self-hosters on Kubernetes. It runs the API, worker, supervisor and (optionally) the web app. It does not run Postgres or Supabase: you point it at a database and a Supabase project (hosted, or the Supabase chart).
+  - Migrations run as a pre-install and pre-upgrade Job. The migration files are copied out of the server image, so the chart and the image can't drift apart.
+  - Generated secrets (the computer and service tokens) are kept across upgrades: a value you set wins, then the existing Secret (looked up), then a new random one. The Secret is kept on uninstall.
+  - The supervisor uses the Kubernetes sandbox provider (D-139) in its own namespace, with a Role limited to pods and pod proxying there.
+  - `scripts/check-helm.sh` lints and renders the chart with the Helm Docker image, so nothing is installed on the machine.
+- **Supervisor default provider:** `DEFAULT_PROVIDER` (for example `kubernetes`) picks the provider for new computers. Docker is only set up when it's the default, so a cluster install needs no Docker socket. The hosted image default now points at the published image name.
+- **One-click local server (desktop app):**
+  - On macOS, Linux and Windows, the sign-in screen offers "Run Kasama on this computer".
+  - It checks that Docker and Compose v2 are running (and says what to do when they're not), downloads the self-host bundle (`KASAMA_SELFHOST_BUNDLE` at build time) into the app's support folder once, runs `install.sh --local --http-port 8080`, shows the installer's latest lines, waits for `/readyz`, saves `http://localhost:8080` as the server and reconnects.
+  - If a server already answers there, it just reconnects. Re-running the installer keeps the existing `.env`.
+- **Tests:**
+  - CLI (`backups_test.dart`, with a fake age): encrypting every file to the recipients and decrypting back; a missing recipient refused and a missing age explained; retention by count and by age that leaves other folders alone.
+  - Supervisor: the provider tests pass with the new main-provider shape.
+  - Helm: lint plus a full render.
+  - App (`local_server_test.dart`): the whole flow with a fake process runner and HTTP (Docker check, bundle unpacked, installer flags, ready); Docker missing; a server already running; a failed installer; the sheet saving the address and reconnecting.

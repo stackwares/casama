@@ -9075,6 +9075,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use this server\'s vault again'**
   String get secretStoreBack;
+
+  /// No description provided for @localServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Run Kasama on this computer'**
+  String get localServer;
+
+  /// No description provided for @localServerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts your own Kasama server here with Docker and connects to it. Only this computer can reach it.'**
+  String get localServerHelp;
+
+  /// No description provided for @localServerIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs Docker Desktop running and a few GB of disk. The first start takes several minutes.'**
+  String get localServerIntro;
+
+  /// No description provided for @localServerChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking Docker…'**
+  String get localServerChecking;
+
+  /// No description provided for @localServerDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading the server…'**
+  String get localServerDownloading;
+
+  /// No description provided for @localServerInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up the server…'**
+  String get localServerInstalling;
+
+  /// No description provided for @localServerStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the server to answer…'**
+  String get localServerStarting;
+
+  /// No description provided for @localServerReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready. Connecting…'**
+  String get localServerReady;
+
+  /// No description provided for @localServerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong.'**
+  String get localServerFailed;
+
+  /// No description provided for @localServerStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the server'**
+  String get localServerStart;
 }
 
 class _AppLocalizationsDelegate

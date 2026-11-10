@@ -13,11 +13,20 @@ import { stream } from "hono/streaming";
 import { WebSocket, WebSocketServer } from "ws";
 
 /**
+ * The default provider: Docker normally, or a hosted one (kubernetes in a cluster) with
+ * DEFAULT_PROVIDER (D-147). Docker adds a ping for health and a list of running computers.
+ */
+export type MainProvider = SandboxProvider & {
+  list?: () => Promise<unknown>;
+  opts?: { docker?: { ping(): Promise<unknown> }; store?: { delete(key: string): Promise<void> } };
+};
+
+/**
  * Supervisor HTTP API: the only service with Docker access. The API and worker call it with
  * a bearer token; computers never receive that token.
  */
 export function createSupervisorApp(
-  provider: DockerProvider,
+  provider: MainProvider,
   token: string,
   hosted: Record<string, SandboxProvider> = {},
 ) {
@@ -45,7 +54,7 @@ export function createSupervisorApp(
   });
 
   app.get("/healthz", async (c) =>
-    c.json({ ok: await provider.opts.docker.ping().catch(() => false) }),
+    c.json({ ok: provider.opts?.docker ? await provider.opts.docker.ping().catch(() => false) : true }),
   );
 
   app.use("/computers/*", async (c, next) => {
@@ -68,7 +77,7 @@ export function createSupervisorApp(
     return h;
   };
 
-  app.get("/computers", async (c) => c.json({ running: await provider.list() }));
+  app.get("/computers", async (c) => c.json({ running: (await provider.list?.()) ?? [] }));
 
   app.post("/computers", async (c) => {
     const spec = (await c.req.json()) as ComputerSpec;
@@ -176,7 +185,7 @@ export function createSupervisorApp(
     if (c.req.header("authorization") !== `Bearer ${token}`)
       return c.json({ code: "unauthorized" }, 401);
     const { keys } = (await c.req.json()) as { keys: string[] };
-    for (const k of keys) await provider.opts.store.delete(k);
+    for (const k of keys) await provider.opts?.store?.delete(k);
     return c.json({ ok: true });
   });
 
@@ -237,7 +246,7 @@ const VIEW_BLOCKED = /^(control|clipboard|keyboard|screen\/set|send)\//;
  */
 export function attachStreamProxy(
   _server: Server,
-  provider: DockerProvider,
+  provider: MainProvider,
   token: string,
   opts: { idleStopMs?: number; hosted?: Record<string, SandboxProvider> } = {},
 ) {
@@ -324,7 +333,7 @@ export function attachStreamProxy(
 /** Proxies terminal WebSockets: client <-> supervisor <-> computerd. */
 export function attachTerminalProxy(
   server: Server,
-  provider: DockerProvider,
+  provider: MainProvider,
   token: string,
   hosted: Record<string, SandboxProvider> = {},
 ) {
@@ -382,7 +391,7 @@ export function attachTerminalProxy(
 }
 
 export function startSupervisor(
-  provider: DockerProvider,
+  provider: MainProvider,
   token: string,
   port: number,
   hosted: Record<string, SandboxProvider> = {},

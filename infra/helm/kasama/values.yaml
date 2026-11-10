@@ -1,0 +1,78 @@
+# Kasama on Kubernetes (D-147). Supabase (Postgres, Auth, Realtime) runs elsewhere: Supabase Cloud,
+# or the Supabase Helm chart. Computers run as pods in `computers.namespace` through the
+# supervisor's Kubernetes provider (D-139).
+
+image:
+  registry: ghcr.io/kasama-dev
+  tag: latest
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# The public address of the API (and Supabase Auth redirect target).
+publicUrl: https://kasama.example.com
+# Pages (D-119) are served from their own origin.
+pagesUrl: https://pages.kasama.example.com
+
+supabase:
+  url: https://your-project.supabase.co
+  anonKey: ""
+  serviceRoleKey: ""
+  jwtSecret: ""
+
+database:
+  # Full-access URL for the API and migrations.
+  url: ""
+  # Optional least-privilege URL for the worker (D-095).
+  workerUrl: ""
+  # Superuser-ish URL migrations run with (supabase_admin on self-hosted Supabase); defaults to url.
+  adminUrl: ""
+
+# Generated secrets. Leave empty and set `existingSecret` to use your own Secret with these keys:
+# INTERNAL_TOKEN, SUPERVISOR_TOKEN, COMPUTER_TOKEN_SECRET, METRICS_TOKEN, CONTENT_ENCRYPTION_KEY.
+existingSecret: ""
+secrets:
+  internalToken: ""
+  supervisorToken: ""
+  computerTokenSecret: ""
+  metricsToken: ""
+  contentEncryptionKey: ""
+
+# Extra environment for the API and worker (see .env.example), for example RESEND_API_KEY.
+extraEnv: {}
+
+api:
+  replicas: 2
+  resources: { requests: { cpu: 250m, memory: 512Mi }, limits: { memory: 1Gi } }
+
+worker:
+  replicas: 1
+  runConcurrency: 20
+  resources: { requests: { cpu: 500m, memory: 1Gi }, limits: { memory: 2Gi } }
+
+supervisor:
+  enabled: true
+  resources: { requests: { cpu: 100m, memory: 256Mi }, limits: { memory: 512Mi } }
+
+computers:
+  # Where computer pods run (created if `create` is true).
+  namespace: kasama-computers
+  create: true
+  # A sandboxed runtime class (gVisor, Kata) if the cluster has one.
+  runtimeClass: ""
+  memoryMb: 2048
+
+web:
+  enabled: false
+
+migrations:
+  enabled: true
+  postgresImage: public.ecr.aws/supabase/postgres:17.11.0.011
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  # Hosts for the API and Pages; the web app shares the API host under / when enabled.
+  apiHost: kasama.example.com
+  pagesHost: pages.kasama.example.com
+  tls: []
