@@ -2,6 +2,8 @@
 
 Everything below is built and tested against mocks, fixtures or local stand-ins. Each item says what is needed to use the real thing and where it plugs in. Newest items are added at the end of each section.
 
+**Accounts Oliver already has (2026-11-10):** Apple App Store Connect, Google Play Console, Dodo Payments, pub.dev, and Cloudflare (planned for hosting). What's still needed from each is the configuration in the rows below (keys, products, signing), not the account. The domain is still being chosen, and it blocks `PUBLIC_API_URL`, OAuth redirects, store support and privacy URLs, email sending and a verified pub.dev publisher. Decide the app ids before creating store listings, because they can't be changed afterwards (today `dev.kasama.kasamaApp` on Apple and `dev.kasama.kasama_app` on Android).
+
 ## Keys and accounts
 
 | Item                                                                        | Needed for                                                     | Where it plugs in                                                         | Status                                                                                                                                                                                                                              |
