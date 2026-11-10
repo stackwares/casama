@@ -183,6 +183,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `BotTemplateFile` (contracts), `apps/server/src/api/routes/bot-template.ts` (export, share links in `bot_shares`, import), `docs/BOT-TEMPLATE-FORMAT.md`, and the app's `features/bots/bot_template.dart` (share sheet, import preview, `/import/<token>`).
 
+## Shortcuts (D-111)
+
+- App Intents and `ShortcutBridge` in `client/ios/Runner/AppDelegate.swift` and `client/macos/Runner/AppDelegate.swift`, `client/lib/core/shortcuts.dart` (list sync, `kasama/shortcuts` channel, Android `quick_actions`), `/run-routine/<ref>`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

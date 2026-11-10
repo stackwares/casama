@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/shortcuts.dart';
 import 'core/widgets.dart';
 import 'features/billing/billing_screen.dart';
 
@@ -28,6 +29,8 @@ class KasamaApp extends ConsumerWidget {
     // Mobile: home-screen widget data and share to bot.
     ref.watch(homeWidgetSyncProvider);
     ref.watch(shareToBotProvider);
+    // Siri, Spotlight and Shortcuts (iOS, macOS) and Android app shortcuts (D-111).
+    ref.watch(shortcutsProvider);
     final appearance = ref.watch(appearanceProvider);
     return MaterialApp.router(
       onGenerateTitle: (c) => AppLocalizations.of(c).appTitle,

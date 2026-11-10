@@ -614,3 +614,11 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Generator notes:** enum and array defaults and numeric literals break the Dart generator, so the template's optional lists are optional (empty when missing) and `version` is a bounded integer.
 - **Tests:** API (`bot-template.test.ts`: export without secrets, memories on request, cross-workspace link preview and import with files, bad schedules and foreign keys refused), widget tests (`bot_template_test.dart`).
 
+## D-111 Shortcuts
+
+- **iOS and macOS:** App Intents in each Runner's `AppDelegate.swift` (no extra target or Xcode project edits): `AskBotIntent` (bot, question) and `RunRoutineIntent` (routine), with `BotEntity`/`RoutineEntity` queries and a `KasamaShortcuts` provider, so they show up in Siri, Spotlight and the Shortcuts app ("Ask Kasama", "Run a routine in Kasama"). They need iOS 16 / macOS 13 (`@available`); older systems simply don't offer them.
+- **Data:** the app writes its bots and routines (ids and names only) to shared preferences (`flutter.kasama.shortcuts`), which the intents read in-process. Intents open the app (`openAppWhenRun`) and hand a path to Flutter over the `kasama/shortcuts` method channel, queued until Flutter asks for it on start: `/quick-ask?bot=…&text=…` or `/run-routine/<routine>:<bot>`.
+- **Android:** app shortcuts through `quick_actions`: Quick ask, Ask <bot> for the first two bots, and Run <routine> for the first routine, refreshed when the bot list changes.
+- **Flutter:** `core/shortcuts.dart` keeps the list in sync and routes the paths; Quick ask takes a preselected bot; `/run-routine/<ref>` starts the routine and opens the bot's chat where results arrive.
+- **Verified:** `flutter build macos --debug` and `flutter build ios --simulator --debug` compile the intents; tests cover the paths, the list the intents read, and Quick ask with a preselected bot. Siri phrases themselves need a device to try.
+

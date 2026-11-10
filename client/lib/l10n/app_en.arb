@@ -1886,5 +1886,6 @@
   "connectAfterImport": "Connect after importing",
   "importRoutines": "Schedule its routines",
   "importMemories": "{count, plural, =1{Keep its 1 memory} other{Keep its {count} memories}}",
-  "@importMemories": {"placeholders": {"count": {"type": "int"}}}
+  "@importMemories": {"placeholders": {"count": {"type": "int"}}},
+  "startingRoutine": "Starting the routine…"
 }

@@ -15,8 +15,11 @@ import '../../ui/glow_button.dart';
 
 /// Quick ask (global shortcut, share-to-bot target): pick a bot, type, send; opens the chat.
 class QuickAskScreen extends ConsumerStatefulWidget {
-  const QuickAskScreen({super.key, this.initialText = '', this.fromShareExtension = false});
+  const QuickAskScreen({super.key, this.initialText = '', this.fromShareExtension = false, this.initialBotId});
   final String initialText;
+
+  /// Picked by a shortcut ("Ask a bot", D-111).
+  final String? initialBotId;
 
   /// Opened by the iOS share extension: the shared text waits in the App Group.
   final bool fromShareExtension;
@@ -27,7 +30,7 @@ class QuickAskScreen extends ConsumerStatefulWidget {
 
 class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
   late final _text = TextEditingController(text: widget.initialText);
-  String? _botId;
+  late String? _botId = widget.initialBotId;
   var _busy = false;
 
   @override
@@ -66,6 +69,7 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    if (_botId != null && bots.isNotEmpty && !bots.any((b) => b.id == _botId)) _botId = null;
     _botId ??= bots.isEmpty ? null : bots.first.id;
     final ready = _botId != null && _text.text.trim().isNotEmpty;
     return SubPage(

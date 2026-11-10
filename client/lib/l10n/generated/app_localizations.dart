@@ -6309,6 +6309,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{Keep its 1 memory} other{Keep its {count} memories}}'**
   String importMemories(int count);
+
+  /// No description provided for @startingRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the routine…'**
+  String get startingRoutine;
 }
 
 class _AppLocalizationsDelegate
