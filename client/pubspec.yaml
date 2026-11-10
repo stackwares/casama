@@ -70,6 +70,7 @@ flutter:
   assets:
     - assets/tray_icon.png
     - assets/branding/kasama_mascot_icon.png
+    - assets/mascots/
   # Type (D-087): Google Sans and Noto Serif by default; Figtree and Fraunces as offline options;
   # JetBrains Mono for code. All SIL Open Font License 1.1 (assets/fonts/*-OFL.txt). Other Google
   # Fonts download on demand when picked in Settings.

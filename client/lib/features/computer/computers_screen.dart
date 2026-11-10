@@ -118,7 +118,7 @@ class _ComputerCard extends ConsumerWidget {
                 Positioned(
                   right: -6,
                   bottom: -6,
-                  child: BotAvatar(name: ownerBot.name, size: 22, ringColor: scheme.surfaceContainerLow),
+                  child: BotAvatar(name: ownerBot.name, avatar: ownerBot.avatarUrl, size: 22, ringColor: scheme.surfaceContainerLow),
                 ),
             ],
           ),

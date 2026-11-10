@@ -122,7 +122,7 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<Bot> createBot(String orgId,
-          {required String name, required String credentialId, required String model, String persona = '', String? templateId}) async =>
+          {required String name, required String credentialId, required String model, String persona = '', String? templateId, String? avatarUrl}) async =>
       (await api.bots.createBot(
         createBotRequest: CreateBotRequest(
           orgId: orgId,
@@ -130,6 +130,7 @@ class SupabaseBackend implements Backend {
           personaMd: persona,
           modelPolicy: ModelPolicy(primary: ModelChoice(credentialId: credentialId, model: model)),
           templateId: templateId,
+          avatarUrl: avatarUrl,
         ),
       ))
           .data!;
@@ -138,8 +139,9 @@ class SupabaseBackend implements Backend {
   Future<List<Template>> templates() async => (await api.bots.listTemplates()).data!.items;
 
   @override
-  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy}) async {
+  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy, String? avatarUrl}) async {
     await supabase.from('bots').update({
+      if (avatarUrl != null) 'avatar_url': avatarUrl.isEmpty ? null : avatarUrl,
       'name': ?name,
       'persona_md': ?persona,
       'autonomy': ?autonomy,
@@ -149,8 +151,6 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<UsageReport> usage(String orgId, {String period = 'day'}) async => (await api.usage.getUsage(orgId: orgId, period: period)).data!;
-
-  // --- chat -----------------------------------------------------------------
 
   @override
   bool get wallpapersEnabled => config?.wallpapersEnabled ?? false;
@@ -162,6 +162,8 @@ class SupabaseBackend implements Backend {
   @override
   Future<void> trackWallpaperDownload(String downloadLocation) async =>
       api.appearance.trackWallpaperDownload(wallpaperDownloadRequest: WallpaperDownloadRequest(downloadLocation: downloadLocation));
+
+  // --- chat -----------------------------------------------------------------
 
   @override
   Future<List<Conversation>> conversations(String botId) async => (await api.chat.listConversations(id: botId)).data!.items;

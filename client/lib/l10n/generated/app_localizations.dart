@@ -3862,6 +3862,18 @@ abstract class AppLocalizations {
   /// **'Sent'**
   String get botUiSent;
 
+  /// Label above the picker for a bot's avatar (initials or a cloud mascot)
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get botIcon;
+
+  /// Avatar choice that shows the bot's initials instead of a mascot
+  ///
+  /// In en, this message translates to:
+  /// **'Initials'**
+  String get botIconInitials;
+
   /// No description provided for @errorDetailsTitle.
   ///
   /// In en, this message translates to:

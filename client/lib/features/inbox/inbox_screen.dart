@@ -155,7 +155,7 @@ class _ApprovalCardState extends ConsumerState<ApprovalCard> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              BotAvatar(name: bot?.name ?? '?', size: 36),
+              BotAvatar(name: bot?.name ?? '?', avatar: bot?.avatarUrl, size: 36),
               const SizedBox(width: AppSpace.sm),
               Expanded(
                 child: Column(
@@ -496,7 +496,7 @@ class TakeoverCard extends ConsumerWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  BotAvatar(name: bot?.name ?? '?', size: 36),
+                  BotAvatar(name: bot?.name ?? '?', avatar: bot?.avatarUrl, size: 36),
                   Positioned(
                     right: -4,
                     bottom: -4,

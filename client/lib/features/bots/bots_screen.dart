@@ -11,13 +11,14 @@ import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
+import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../settings/model_keys_screen.dart';
 import 'model_picker.dart';
 import 'template_picker.dart';
-
 import '../../ui/glow_button.dart';
+
 String botStatusLabel(BuildContext context, BotStatusEnum s) => switch (s) {
   BotStatusEnum.working => context.l10n.botStatusWorking,
   BotStatusEnum.waiting => context.l10n.botStatusWaiting,
@@ -96,7 +97,7 @@ class _BotCard extends StatelessWidget {
       borderColor: selected ? scheme.primary.withValues(alpha: 0.5) : null,
       child: Row(
         children: [
-          BotAvatar(name: bot.name, size: 46, status: bot.status, ringColor: scheme.surfaceContainerLow),
+          BotAvatar(name: bot.name, avatar: bot.avatarUrl, size: 46, status: bot.status, ringColor: scheme.surfaceContainerLow),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -172,6 +173,9 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
   String? _autoName;
   String? _credentialId;
   String? _templateId;
+
+  /// New bots start as a random cloud bot; the picker can change it or go back to initials.
+  String? _avatar = Mascot.random().avatarValue;
   var _busy = false;
 
   /// Keys that run chat models; search, image and voice keys can't drive a bot.
@@ -228,7 +232,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
               children: [
                 AnimatedSwitcher(
                   duration: AppMotion.of(context, AppMotion.fast),
-                  child: BotAvatar(key: ValueKey(_finalName(context)), name: _finalName(context), size: 52),
+                  child: BotAvatar(key: ValueKey('${_finalName(context)}|$_avatar'), name: _finalName(context), avatar: _avatar, size: 52),
                 ),
                 const SizedBox(width: AppSpace.md),
                 Expanded(
@@ -256,7 +260,16 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
             decoration: InputDecoration(labelText: l10n.botName, hintText: l10n.defaultBotName),
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.sm),
+          Text(l10n.botIcon, style: context.textTheme.labelLarge?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: AppSpace.xs),
+          MascotPicker(
+            value: _avatar,
+            initials: botInitials(_finalName(context)),
+            initialsLabel: l10n.botIconInitials,
+            onChanged: (v) => setState(() => _avatar = v),
+          ),
+          const SizedBox(height: AppSpace.sm),
           if (keysAsync.hasValue && keys.isEmpty) ...[
             Text(l10n.addModelKeyFirst, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 8),
@@ -309,6 +322,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                             model: _model,
                             persona: _persona.text.trim(),
                             templateId: _templateId,
+                            avatarUrl: _avatar,
                           ),
                     );
                     if (!context.mounted) return;

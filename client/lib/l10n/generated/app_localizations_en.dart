@@ -2223,6 +2223,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botUiSent => 'Sent';
 
   @override
+  String get botIcon => 'Icon';
+
+  @override
+  String get botIconInitials => 'Initials';
+
+  @override
   String get errorDetailsTitle => 'What went wrong';
 
   @override

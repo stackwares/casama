@@ -1254,6 +1254,14 @@
   "messageCopied": "Copied",
   "botUiBroken": "This part of the reply couldn't be shown.",
   "botUiSent": "Sent",
+  "botIcon": "Icon",
+  "@botIcon": {
+    "description": "Label above the picker for a bot's avatar (initials or a cloud mascot)"
+  },
+  "botIconInitials": "Initials",
+  "@botIconInitials": {
+    "description": "Avatar choice that shows the bot's initials instead of a mascot"
+  },
   "errorDetailsTitle": "What went wrong",
   "exportLabel": "Export",
   "openTimeline": "Open run timeline",

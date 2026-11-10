@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="kcTitle">
+  <title id="kcTitle">Kasama Lovey</title>
+  <defs>
+    <linearGradient id="kcBody" gradientUnits="userSpaceOnUse" x1="96" y1="62" x2="150" y2="226">
+      <stop offset="0" stop-color="#FFFCF8"/><stop offset=".46" stop-color="#F7EEFB"/><stop offset=".8" stop-color="#E2D2F6"/><stop offset="1" stop-color="#C9B1EC"/>
+    </linearGradient>
+    <radialGradient id="kcShade" gradientUnits="userSpaceOnUse" cx="226" cy="214" r="120">
+      <stop offset="0" stop-color="#A88BDB" stop-opacity=".5"/><stop offset="1" stop-color="#A88BDB" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="kcSheen" gradientUnits="userSpaceOnUse" cx="92" cy="92" r="62">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="kcGround"><stop offset="0" stop-color="#2B0E42" stop-opacity=".2"/><stop offset="1" stop-color="#2B0E42" stop-opacity="0"/></radialGradient>
+    <radialGradient id="kcCheek"><stop offset="0" stop-color="#FF8F9E" stop-opacity=".75"/><stop offset=".6" stop-color="#FF9AA6" stop-opacity=".35"/><stop offset="1" stop-color="#FF9AA6" stop-opacity="0"/></radialGradient>
+    <linearGradient id="kcSclera" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9DDF6"/><stop offset=".38" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFFDFB"/></linearGradient>
+    <radialGradient id="kcIris" cx=".5" cy=".78" r=".78"><stop offset="0" stop-color="#B07AF0"/><stop offset=".45" stop-color="#6A2BA8"/><stop offset="1" stop-color="#2A0C40"/></radialGradient>
+    <linearGradient id="kcTail" gradientUnits="userSpaceOnUse" x1="40" y1="112" x2="190" y2="44">
+      <stop offset="0" stop-color="#FF6FAE"/><stop offset=".5" stop-color="#FF9CC9"/><stop offset="1" stop-color="#FFC9E1"/>
+    </linearGradient>
+    <radialGradient id="kcOrb" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#FFF0F6"/><stop offset=".22" stop-color="#FF9CC9"/><stop offset=".62" stop-color="#FF5C9E"/><stop offset="1" stop-color="#E0367A"/></radialGradient>
+    <radialGradient id="kcGlow"><stop offset="0" stop-color="#FF9CC9" stop-opacity=".9"/><stop offset=".45" stop-color="#FF9CC9" stop-opacity=".35"/><stop offset="1" stop-color="#FF9CC9" stop-opacity="0"/></radialGradient>
+    <filter id="kcLift" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#2B0E42" flood-opacity=".2"/></filter>
+    <filter id="kcPuff" x="-5%" y="-5%" width="110%" height="110%">
+      <feOffset in="SourceAlpha" dy="-7" result="up"/><feGaussianBlur in="up" stdDeviation="5" result="upBlur"/>
+      <feComposite in="SourceAlpha" in2="upBlur" operator="out" result="rim"/>
+      <feFlood flood-color="#9C7DD6" flood-opacity=".5"/><feComposite in2="rim" operator="in" result="shade"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/></feMerge>
+    </filter>
+    <filter id="kcEdge" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="1.2" stdDeviation="1.2" flood-color="#2B0E42" flood-opacity=".3"/></filter>
+    <filter id="kcSoft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6"/></filter>
+    <clipPath id="kcCloud"><circle cx="110" cy="112" r="50"/><circle cx="176" cy="130" r="36"/><circle cx="205" cy="163" r="27"/><circle cx="178" cy="190" r="29"/><circle cx="128" cy="197" r="28"/><circle cx="80" cy="189" r="29"/><circle cx="50" cy="158" r="28"/><circle cx="68" cy="130" r="23"/><ellipse cx="128" cy="158" rx="84" ry="44"/></clipPath>
+    <clipPath id="kcEyeL"><ellipse cx="97" cy="142" rx="21" ry="23"/></clipPath>
+    <clipPath id="kcEyeR"><ellipse cx="163" cy="138" rx="17.5" ry="19.5"/></clipPath>
+    <clipPath id="kcMouth"><path d="M116 160Q130 164 144 160Q143.5 180 130 180Q116.5 180 116 160Z"/></clipPath>
+    <linearGradient id="kcHeartEye" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF7EB3"/><stop offset="1" stop-color="#E5306E"/></linearGradient>
+  </defs>
+  <ellipse cx="128" cy="238" rx="66" ry="8" fill="url(#kcGround)"/>
+  <path d="M82.8 104.8C44.8 99.2 27.9 79.4 51.6 59.1C75.2 38.6 134.9 32.5 183.1 53.9L184.9 50.1C137.1 27.5 70.8 33.4 46.4 52.9C22.1 72.6 43.2 108.8 81.2 115.2Z" fill="url(#kcTail)" filter="url(#kcEdge)"/><circle cx="184" cy="52" r="36" fill="url(#kcGlow)"/><g><path d="M184 67C170.7 58.6 166.4 50.9 169.7 44.9C172.8 38.7 181.5 38.3 184 45.3C186.5 38.3 195.2 38.7 198.3 44.9C201.6 50.9 197.3 58.6 184 67Z" fill="url(#kcOrb)"/><ellipse cx="178.5" cy="46" rx="5.5" ry="3.6" fill="#FFFFFF" opacity=".92" transform="rotate(-25 178.5 46)"/></g>
+  <g filter="url(#kcLift)"><g filter="url(#kcPuff)">
+      <g clip-path="url(#kcCloud)">
+        <rect x="10" y="50" width="236" height="190" fill="url(#kcBody)"/>
+        <rect x="10" y="50" width="236" height="190" fill="url(#kcShade)"/>
+        <ellipse cx="94" cy="94" rx="58" ry="40" fill="url(#kcSheen)"/>
+        <path d="M66 112A46 46 0 0 1 96 70" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity=".7" filter="url(#kcSoft)"/>
+      </g>
+    </g></g>
+  <ellipse class="cheekL" cx="73" cy="165" rx="16.2" ry="10" fill="url(#kcCheek)"/><ellipse class="cheekR" cx="186" cy="159" rx="13.8" ry="8.8" fill="url(#kcCheek)"/><g class="heartL"><path d="M97 158.5C82.2 149.2 77.6 140.7 81.1 134C84.6 127.1 94.2 126.7 97 134.5C99.8 126.7 109.4 127.1 112.9 134C116.4 140.7 111.8 149.2 97 158.5Z" fill="url(#kcHeartEye)"/><ellipse cx="89.2" cy="135.8" rx="3.4" ry="2.3" fill="#FFFFFF" opacity=".9" transform="rotate(-30 89.2 135.8)"/></g><g class="heartR"><path d="M163 151.9C150.7 144.2 146.8 137.1 149.8 131.5C152.6 125.8 160.7 125.4 163 131.9C165.3 125.4 173.4 125.8 176.2 131.5C179.2 137.1 175.3 144.2 163 151.9Z" fill="url(#kcHeartEye)"/><ellipse cx="156.5" cy="132.8" rx="2.8" ry="1.9" fill="#FFFFFF" opacity=".9" transform="rotate(-30 156.5 132.8)"/></g><path class="smile" d="M121 159Q130 169 139 159" fill="none" stroke="#F0676B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <g><path d="M22 102.5C15.8 98.6 13.9 95 15.4 92.2C16.8 89.4 20.8 89.2 22 92.4C23.2 89.2 27.2 89.4 28.6 92.2C30.1 95 28.2 98.6 22 102.5Z" fill="#FF6FA5" stroke="#FFFFFF" stroke-width="2"/><path d="M234 97.5C228.8 94.2 227.1 91.2 228.4 88.8C229.6 86.4 233 86.2 234 89C235 86.2 238.4 86.4 239.6 88.8C240.9 91.2 239.2 94.2 234 97.5Z" fill="#FF6FA5" stroke="#FFFFFF" stroke-width="2"/></g>
+</svg>

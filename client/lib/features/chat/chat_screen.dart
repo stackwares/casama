@@ -296,7 +296,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               )
             : null,
-        titleLeading: BotAvatar(name: name.isEmpty ? '?' : name, size: 36, status: chat.running ? BotStatusEnum.working : bot?.status),
+        titleLeading: BotAvatar(name: name.isEmpty ? '?' : name, avatar: bot?.avatarUrl, size: 36, status: chat.running ? BotStatusEnum.working : bot?.status),
         onTitleTap: () => context.push('/bots/${widget.botId}/settings'),
         actions: [
           // Phones keep the header light: new chat lives in the conversations sheet there.
@@ -331,9 +331,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)),
               );
             } else if (chat.entries.isEmpty) {
-              thread = _EmptyThread(name: name, side: side, onAsk: _send);
+              thread = _EmptyThread(name: name, avatar: bot?.avatarUrl, side: side, onAsk: _send);
             } else {
-              final rows = _buildRows(context, chat, name, computer);
+              final rows = _buildRows(context, chat, name, computer, bot?.avatarUrl);
               thread = ListView.builder(
                 controller: _scroll,
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -519,7 +519,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   /// Turns the chat into rows: one bot header per turn, consecutive tool steps grouped in a card,
   /// and a working indicator while the bot thinks between steps.
-  List<_Row> _buildRows(BuildContext context, ChatState chat, String name, Computer? computer) {
+  List<_Row> _buildRows(BuildContext context, ChatState chat, String name, Computer? computer, String? avatar) {
     final rows = <_Row>[];
     final entries = chat.entries;
     var lastSide = '';
@@ -527,7 +527,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     void botSide(String key) {
       if (lastSide != 'bot') {
-        rows.add(_Row(ValueKey('hdr-$key'), lastSide.isEmpty ? 0 : AppSpace.xl, () => BotTurnHeader(name: name), header: true));
+        rows.add(_Row(ValueKey('hdr-$key'), lastSide.isEmpty ? 0 : AppSpace.xl, () => BotTurnHeader(name: name, avatar: avatar), header: true));
       }
       lastSide = 'bot';
     }
@@ -816,8 +816,9 @@ class _Row {
 /// The first open: the bot's mark and one line of what it can do, centered above starter requests
 /// parked by the composer.
 class _EmptyThread extends StatelessWidget {
-  const _EmptyThread({required this.name, required this.side, required this.onAsk});
+  const _EmptyThread({required this.name, this.avatar, required this.side, required this.onAsk});
   final String name;
+  final String? avatar;
   final double side;
   final ValueChanged<String> onAsk;
 
@@ -840,7 +841,7 @@ class _EmptyThread extends StatelessWidget {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _HeroMark(name: name).appCardEntrance(),
+                    _HeroMark(name: name, avatar: avatar).appCardEntrance(),
                     const SizedBox(height: AppSpace.lg),
                     Text(
                       l10n.emptyChat(name),
@@ -889,8 +890,9 @@ class _EmptyThread extends StatelessWidget {
 }
 
 class _HeroMark extends StatelessWidget {
-  const _HeroMark({required this.name});
+  const _HeroMark({required this.name, this.avatar});
   final String name;
+  final String? avatar;
 
   @override
   Widget build(BuildContext context) {
@@ -903,7 +905,7 @@ class _HeroMark extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          BotAvatar(name: name.isEmpty ? '?' : name, size: size),
+          BotAvatar(name: name.isEmpty ? '?' : name, avatar: avatar, size: size),
           Positioned(
             right: 0,
             bottom: 0,

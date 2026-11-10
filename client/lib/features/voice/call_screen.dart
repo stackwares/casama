@@ -152,7 +152,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                           decoration: BoxDecoration(shape: BoxShape.circle, color: scheme.errorContainer),
                           child: Icon(LucideIcons.phoneOff, size: 40, color: scheme.error),
                         )
-                      : BotAvatar(name: name.isEmpty ? '?' : name, size: 96),
+                      : BotAvatar(name: name.isEmpty ? '?' : name, avatar: bot?.avatarUrl, size: 96),
                 ),
               ),
               const SizedBox(height: AppSpace.md),

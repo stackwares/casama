@@ -115,13 +115,13 @@ abstract class Backend {
 
   // Bots
   Future<List<Bot>> bots(String orgId);
-  Future<Bot> createBot(String orgId, {required String name, required String credentialId, required String model, String persona, String? templateId});
+  Future<Bot> createBot(String orgId,
+      {required String name, required String credentialId, required String model, String persona, String? templateId, String? avatarUrl});
   Future<List<Template>> templates();
-  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy});
+  /// [avatarUrl]: `mascot:<name>` for a cloud bot, '' to go back to initials, null to leave it.
+  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy, String? avatarUrl});
   Future<UsageReport> usage(String orgId, {String period});
 
-  // Chat
-  Future<List<Conversation>> conversations(String botId);
   // Appearance
   /// Whether the server can search wallpaper photos (Unsplash; D-087).
   bool get wallpapersEnabled;
@@ -129,6 +129,8 @@ abstract class Backend {
   /// Tells the photo source a photo was chosen.
   Future<void> trackWallpaperDownload(String downloadLocation);
 
+  // Chat
+  Future<List<Conversation>> conversations(String botId);
   Future<Conversation> createConversation(String botId);
   Future<List<ChatMessageView>> messages(String conversationId);
   Future<String?> activeRun(String conversationId);

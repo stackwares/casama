@@ -83,8 +83,9 @@ class UserBubble extends StatelessWidget {
 
 /// The bot's name and mark, once at the start of each of its turns.
 class BotTurnHeader extends StatelessWidget {
-  const BotTurnHeader({super.key, required this.name});
+  const BotTurnHeader({super.key, required this.name, this.avatar});
   final String name;
+  final String? avatar;
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +93,7 @@ class BotTurnHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpace.xs),
       child: Row(
         children: [
-          BotAvatar(name: name, size: 24),
+          BotAvatar(name: name, avatar: avatar, size: 24),
           const SizedBox(width: AppSpace.xs),
           Text(name, style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
         ],

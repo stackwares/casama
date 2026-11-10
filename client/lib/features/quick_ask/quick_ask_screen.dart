@@ -86,7 +86,7 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
                 return ChoiceChip(
                   selected: b.id == _botId,
                   showCheckmark: false,
-                  avatar: BotAvatar(name: b.name, size: 22),
+                  avatar: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 22),
                   label: Text(b.name),
                   onSelected: (_) => setState(() => _botId = b.id),
                 );

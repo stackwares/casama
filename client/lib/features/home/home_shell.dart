@@ -302,7 +302,7 @@ class _Sidebar extends ConsumerWidget {
                     _SidebarItem(
                       key: Key('sidebar-bot-${b.id}'),
                       height: 48,
-                      leading: BotAvatar(name: b.name, size: 30, status: b.status, ringColor: scheme.surfaceContainerLow),
+                      leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 30, status: b.status, ringColor: scheme.surfaceContainerLow),
                       label: b.name,
                       subtitle: b.status == BotStatusEnum.idle ? null : botStatusLabel(context, b.status),
                       selected: b.id == selectedBotId,

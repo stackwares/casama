@@ -16,6 +16,7 @@ import '../../theme/wallpaper.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../bots/model_picker.dart';
 import 'model_keys_screen.dart';
@@ -381,6 +382,8 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
   String? _autonomy;
   String? _credentialId;
   String? _model;
+  String? _avatar;
+  var _avatarLoaded = false;
   var _busy = false;
 
   @override
@@ -395,7 +398,8 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
       _persona!.text != bot.personaMd ||
       _autonomy != bot.autonomy.value ||
       _credentialId != bot.modelPolicy.primary?.credentialId ||
-      _model != bot.modelPolicy.primary?.model;
+      _model != bot.modelPolicy.primary?.model ||
+      _avatar != bot.avatarUrl;
 
   Future<void> _save(Bot bot) async {
     final l10n = context.l10n;
@@ -408,7 +412,14 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
           }
         : null;
     final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).updateBot(bot.id, name: _name!.text.trim(), persona: _persona!.text, autonomy: _autonomy, modelPolicy: policy);
+      await ref.read(backendProvider).updateBot(
+        bot.id,
+        name: _name!.text.trim(),
+        persona: _persona!.text,
+        autonomy: _autonomy,
+        modelPolicy: policy,
+        avatarUrl: _avatar == bot.avatarUrl ? null : (_avatar ?? ''),
+      );
       return true;
     });
     if (!mounted) return;
@@ -430,6 +441,10 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
     _autonomy ??= bot.autonomy.value;
     _credentialId ??= bot.modelPolicy.primary?.credentialId;
     _model ??= bot.modelPolicy.primary?.model;
+    if (!_avatarLoaded) {
+      _avatar = bot.avatarUrl;
+      _avatarLoaded = true;
+    }
     final keys = (ref.watch(credentialsProvider).value ?? const <Credential>[])
         .where(
           (k) => const {
@@ -470,7 +485,7 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
             children: [
               Row(
                 children: [
-                  BotAvatar(name: name, size: 64, status: bot.status),
+                  BotAvatar(name: name, avatar: _avatar, size: 64, status: bot.status),
                   const SizedBox(width: AppSpace.md),
                   Expanded(
                     child: TextField(
@@ -478,6 +493,19 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
                       decoration: InputDecoration(labelText: l10n.botName),
                       onChanged: (_) => setState(() {}),
                     ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: AppSpace.sm,
+                children: [
+                  Text(l10n.botIcon, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
+                  MascotPicker(
+                    value: _avatar,
+                    initials: botInitials(name),
+                    initialsLabel: l10n.botIconInitials,
+                    onChanged: (v) => setState(() => _avatar = v),
                   ),
                 ],
               ),

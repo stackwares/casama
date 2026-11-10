@@ -129,13 +129,15 @@ class FakeBackend implements Backend {
   Future<List<Bot>> bots(String orgId) async => [bot()];
   @override
   Future<Bot> createBot(String orgId,
-      {required String name, required String credentialId, required String model, String persona = '', String? templateId}) async {
+      {required String name, required String credentialId, required String model, String persona = '', String? templateId, String? avatarUrl}) async {
     createdBotTemplate = templateId;
+    createdBotAvatar = avatarUrl;
     createdBot = (name: name, model: model);
     return bot();
   }
 
   String? createdBotTemplate;
+  String? createdBotAvatar;
   ({String name, String model})? createdBot;
   /// Set to true to simulate a workspace without model keys.
   bool noKeys = false;
@@ -160,7 +162,7 @@ class FakeBackend implements Backend {
         ),
       ];
   @override
-  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy}) async {}
+  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy, String? avatarUrl}) async {}
   @override
   bool wallpapersEnabled = false;
   @override

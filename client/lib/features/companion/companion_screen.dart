@@ -158,7 +158,7 @@ class CompanionScreen extends ConsumerWidget {
                             for (final b in bots)
                               CheckboxListTile(
                                 key: Key('allowBot-${b.id}'),
-                                secondary: BotAvatar(name: b.name, size: 32),
+                                secondary: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 32),
                                 title: Text(b.name, style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
                                 value: device.allowedBotIds.contains(b.id),
                                 onChanged: (v) async {
