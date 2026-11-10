@@ -914,6 +914,24 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<List<KnowledgeSource>> knowledgeSources(String orgId, {String? botId}) async =>
+      (await api.knowledge.listKnowledgeSources(orgId: orgId, botId: botId)).data!.items;
+
+  @override
+  Future<KnowledgeSource> addKnowledgeSource(CreateKnowledgeSourceRequest request) async =>
+      (await api.knowledge.createKnowledgeSource(createKnowledgeSourceRequest: request)).data!;
+
+  @override
+  Future<void> resyncKnowledgeSource(String id) async {
+    await api.knowledge.resyncKnowledgeSource(id: id);
+  }
+
+  @override
+  Future<void> deleteKnowledgeSource(String id) async {
+    await api.knowledge.deleteKnowledgeSource(id: id);
+  }
+
+  @override
   Future<Uint8List> exportWorkspaceFiles(String orgId) async => base64Decode((await api.files.exportWorkspaceFiles(id: orgId)).data!.zipBase64);
 
   @override

@@ -165,6 +165,10 @@ Class | Method | HTTP request | Description
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**listProviderApps**](doc/IntegrationsApi.md#listproviderapps) | **GET** /v1/integrations/{id}/provider/apps | Search a Composio or Pipedream connection&#39;s app directory
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**testIntegration**](doc/IntegrationsApi.md#testintegration) | **POST** /v1/integrations/{id}/test | List tools to prove the connection works (refreshes the tool cache)
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**updateIntegration**](doc/IntegrationsApi.md#updateintegration) | **PATCH** /v1/integrations/{id} | 
+[*KnowledgeApi*](doc/KnowledgeApi.md) | [**createKnowledgeSource**](doc/KnowledgeApi.md#createknowledgesource) | **POST** /v1/knowledge-sources | Add files, a website, a GitHub repository or documents from a connection; the worker reads it within a minute
+[*KnowledgeApi*](doc/KnowledgeApi.md) | [**deleteKnowledgeSource**](doc/KnowledgeApi.md#deleteknowledgesource) | **DELETE** /v1/knowledge-sources/{id} | 
+[*KnowledgeApi*](doc/KnowledgeApi.md) | [**listKnowledgeSources**](doc/KnowledgeApi.md#listknowledgesources) | **GET** /v1/knowledge-sources | A bot&#39;s knowledge sources and the workspace&#39;s shared ones (D-125)
+[*KnowledgeApi*](doc/KnowledgeApi.md) | [**resyncKnowledgeSource**](doc/KnowledgeApi.md#resyncknowledgesource) | **POST** /v1/knowledge-sources/{id}/sync | 
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**createLocalDevice**](doc/LocalComputerApi.md#createlocaldevice) | **POST** /v1/local-devices | Pair this machine as a bot computer (desktop companion); returns a device token once
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**deleteLocalDevice**](doc/LocalComputerApi.md#deletelocaldevice) | **DELETE** /v1/local-devices/{id} | 
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**listLocalDevices**](doc/LocalComputerApi.md#listlocaldevices) | **GET** /v1/local-devices | 
@@ -350,6 +354,9 @@ Class | Method | HTTP request | Description
  - [CreateIntegrationRequest](doc/CreateIntegrationRequest.md)
  - [CreateInviteLinkRequest](doc/CreateInviteLinkRequest.md)
  - [CreateInviteRequest](doc/CreateInviteRequest.md)
+ - [CreateKnowledgeSourceRequest](doc/CreateKnowledgeSourceRequest.md)
+ - [CreateKnowledgeSourceRequestDocumentsInner](doc/CreateKnowledgeSourceRequestDocumentsInner.md)
+ - [CreateKnowledgeSourceRequestFilesInner](doc/CreateKnowledgeSourceRequestFilesInner.md)
  - [CreateLocalDeviceRequest](doc/CreateLocalDeviceRequest.md)
  - [CreateMcpKeyRequest](doc/CreateMcpKeyRequest.md)
  - [CreateOrganizationRequest](doc/CreateOrganizationRequest.md)
@@ -375,6 +382,7 @@ Class | Method | HTTP request | Description
  - [DeletedComputer](doc/DeletedComputer.md)
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
+ - [DeletedKnowledgeSource](doc/DeletedKnowledgeSource.md)
  - [DeletedPage](doc/DeletedPage.md)
  - [DeletedPlugin](doc/DeletedPlugin.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
@@ -415,6 +423,8 @@ Class | Method | HTTP request | Description
  - [InviteLink](doc/InviteLink.md)
  - [InviteLinkList](doc/InviteLinkList.md)
  - [InviteRole](doc/InviteRole.md)
+ - [KnowledgeSource](doc/KnowledgeSource.md)
+ - [KnowledgeSourceList](doc/KnowledgeSourceList.md)
  - [Lease](doc/Lease.md)
  - [LeaseChangedEvent](doc/LeaseChangedEvent.md)
  - [LeaseChangedEventPayload](doc/LeaseChangedEventPayload.md)

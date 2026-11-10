@@ -5,6 +5,7 @@ import {
   CredentialResolver,
   checkWatchers,
   gitSyncTick,
+  knowledgeTick,
   collect,
   listModels,
   type ModelGateway,
@@ -137,6 +138,17 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       { name: "watchers" },
     );
     runIds.push(...fired);
+    // Knowledge sources (D-125): new, resynced and daily-due sources.
+    await DBOS.runStep(
+      () =>
+        knowledgeTick({
+          db: rt().db,
+          fetch: rt().agent.fetch ?? fetch,
+          embedderFor: rt().agent.embedderFor,
+          githubApiUrl: process.env.GITHUB_API_URL,
+        }).catch(() => []),
+      { name: "knowledge" },
+    );
     // Git sync of routines and skills (D-124): changed workspaces, and a check every 10 minutes.
     await DBOS.runStep(
       () =>

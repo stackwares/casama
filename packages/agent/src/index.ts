@@ -13,6 +13,8 @@ export * from "./gateway/registry.ts";
 export * from "./gateway/replay.ts";
 export * from "./gateway/types.ts";
 export * from "./integrations.ts";
+export * from "./knowledge.ts";
+export * from "./knowledge-parse.ts";
 export * from "./langfuse.ts";
 export * from "./lazy-tools.ts";
 export * from "./media.ts";

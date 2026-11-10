@@ -82,6 +82,9 @@ import 'package:kasama_api/src/model/create_credential_request.dart';
 import 'package:kasama_api/src/model/create_integration_request.dart';
 import 'package:kasama_api/src/model/create_invite_link_request.dart';
 import 'package:kasama_api/src/model/create_invite_request.dart';
+import 'package:kasama_api/src/model/create_knowledge_source_request.dart';
+import 'package:kasama_api/src/model/create_knowledge_source_request_documents_inner.dart';
+import 'package:kasama_api/src/model/create_knowledge_source_request_files_inner.dart';
 import 'package:kasama_api/src/model/create_local_device_request.dart';
 import 'package:kasama_api/src/model/create_mcp_key_request.dart';
 import 'package:kasama_api/src/model/create_organization_request.dart';
@@ -106,6 +109,7 @@ import 'package:kasama_api/src/model/delete_result.dart';
 import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
 import 'package:kasama_api/src/model/deleted_id.dart';
+import 'package:kasama_api/src/model/deleted_knowledge_source.dart';
 import 'package:kasama_api/src/model/deleted_page.dart';
 import 'package:kasama_api/src/model/deleted_plugin.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
@@ -144,6 +148,8 @@ import 'package:kasama_api/src/model/integration_tools_inner.dart';
 import 'package:kasama_api/src/model/invite.dart';
 import 'package:kasama_api/src/model/invite_link.dart';
 import 'package:kasama_api/src/model/invite_link_list.dart';
+import 'package:kasama_api/src/model/knowledge_source.dart';
+import 'package:kasama_api/src/model/knowledge_source_list.dart';
 import 'package:kasama_api/src/model/lease.dart';
 import 'package:kasama_api/src/model/lease_changed_event.dart';
 import 'package:kasama_api/src/model/lease_changed_event_payload.dart';
@@ -541,6 +547,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateInviteLinkRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateInviteRequest':
           return CreateInviteRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateKnowledgeSourceRequest':
+          return CreateKnowledgeSourceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateKnowledgeSourceRequestDocumentsInner':
+          return CreateKnowledgeSourceRequestDocumentsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateKnowledgeSourceRequestFilesInner':
+          return CreateKnowledgeSourceRequestFilesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateLocalDeviceRequest':
           return CreateLocalDeviceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateMcpKeyRequest':
@@ -592,6 +604,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedId':
           return DeletedId.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedKnowledgeSource':
+          return DeletedKnowledgeSource.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedPage':
           return DeletedPage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedPlugin':
@@ -674,6 +688,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'InviteRole':
           
           
+        case 'KnowledgeSource':
+          return KnowledgeSource.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'KnowledgeSourceList':
+          return KnowledgeSourceList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Lease':
           return Lease.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LeaseChangedEvent':

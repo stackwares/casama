@@ -17,6 +17,7 @@ lib/src/api/credentials_api.dart
 lib/src/api/files_api.dart
 lib/src/api/import_api.dart
 lib/src/api/integrations_api.dart
+lib/src/api/knowledge_api.dart
 lib/src/api/local_computer_api.dart
 lib/src/api/mcp_api.dart
 lib/src/api/memory_api.dart
@@ -130,6 +131,9 @@ lib/src/model/create_credential_request.dart
 lib/src/model/create_integration_request.dart
 lib/src/model/create_invite_link_request.dart
 lib/src/model/create_invite_request.dart
+lib/src/model/create_knowledge_source_request.dart
+lib/src/model/create_knowledge_source_request_documents_inner.dart
+lib/src/model/create_knowledge_source_request_files_inner.dart
 lib/src/model/create_local_device_request.dart
 lib/src/model/create_mcp_key_request.dart
 lib/src/model/create_organization_request.dart
@@ -155,6 +159,7 @@ lib/src/model/delete_result.dart
 lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
 lib/src/model/deleted_id.dart
+lib/src/model/deleted_knowledge_source.dart
 lib/src/model/deleted_page.dart
 lib/src/model/deleted_plugin.dart
 lib/src/model/deleted_routine.dart
@@ -195,6 +200,8 @@ lib/src/model/invite.dart
 lib/src/model/invite_link.dart
 lib/src/model/invite_link_list.dart
 lib/src/model/invite_role.dart
+lib/src/model/knowledge_source.dart
+lib/src/model/knowledge_source_list.dart
 lib/src/model/lease.dart
 lib/src/model/lease_changed_event.dart
 lib/src/model/lease_changed_event_payload.dart

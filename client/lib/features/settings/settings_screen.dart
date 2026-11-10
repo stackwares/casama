@@ -728,6 +728,13 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
               },
             ),
             GroupedTile(
+              key: const Key('botKnowledge'),
+              icon: LucideIcons.library,
+              title: l10n.knowledge,
+              subtitle: l10n.knowledgeRow,
+              onTap: () => context.push('/bots/${bot.id}/knowledge'),
+            ),
+            GroupedTile(
               key: const Key('botPlugins'),
               icon: LucideIcons.puzzle,
               title: l10n.plugins,

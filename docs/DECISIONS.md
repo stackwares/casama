@@ -822,3 +822,28 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - API (`workspace-files.test.ts`), with an in-memory GitHub: export, a dry run then an import with bad files reported, the first push, the webhook signature, a repo edit applied, an app edit pushed, a conflict keeping Kasama's version with one pull request, a repo deletion, and a bad repo file left alone
   - widget (`workspace_files_test.dart`)
   - the CLI suite
+
+## D-125 Knowledge sources
+
+- **Data:** `knowledge_sources` belong to a bot, or to the whole workspace when `bot_id` is null. Their kinds are upload, website, github and connection; each has a status, a document count, a passage count and a next sync time. `knowledge_uploads` keeps uploaded files so they can be read again. `knowledge_chunks` holds the document reference and title, a location (a heading, "page 3" or "rows 2–21"), a link, the text, an embedding and a full-text vector. Visibility follows the bot, or workspace membership for shared sources. Changes need the bot's managers, or an admin for shared sources.
+- **Parsing without extra libraries** (`knowledge-parse.ts`):
+  - Markdown and text are split by heading. HTML is split by heading, with the head, scripts, styles, navigation and footer dropped.
+  - CSV is read in groups of 20 rows, each value labelled with its header.
+  - DOCX is read from `word/document.xml`, with heading styles kept.
+  - **PDF limits:** PDFs are read from their Flate-compressed or plain content streams (`Tj` and `TJ` text, page by page). Scanned PDFs and PDFs with custom font encodings yield little or no text, and that file shows the error.
+  - Passages are about 1,500 characters, split on paragraph and sentence ends.
+- **Reading sources** (the worker's minute tick, `knowledgeTick`, five sources at a time; new and resynced sources are read within a minute):
+  - Uploads are read once.
+  - Websites are crawled within the start address's origin, up to 50 pages by default (at most 200). The crawler follows `robots.txt` (the group for "kasama", else `*`; the longest matching rule wins), sends a `KasamaBot` user agent and uses the worker's guarded fetch.
+  - GitHub sources read a repository's Markdown, text, HTML and CSV files (up to 300), using the workspace's `GITHUB_TOKEN` when there is one.
+  - Connection sources call the given tools of an app connection (for example a Notion or Drive fetch) and index what they return.
+  - Websites, repositories and connections refresh daily. A failure retries in 6 hours, and an unreadable file is reported without stopping the rest.
+- **Search:** `knowledge.search` runs `search_knowledge`, the same rank-fused hybrid as memory (vector, phrase, any word), over the bot's sources and the workspace's shared ones. It returns `[n] Title (location) link` with the snippet and asks the bot to cite them. The tool step's preview names the sources (`Sources: Returns, Shipping`), which is how the chat shows them for now. Without an embedding key, search is full-text only (D-017).
+- **App:** bot settings → Knowledge. It lists sources with their status and counts, and has resync and delete. Adding takes files, a website or a GitHub link, and admins can share a source with the whole workspace.
+- **Not yet:**
+  - Connection sources are API-only (`POST /v1/knowledge-sources` with `kind: connection`).
+  - Change notices from connected apps aren't used; the daily refresh covers changes.
+- **Tests:**
+  - parsers, chunking and `robots.txt` (`knowledge-parse.test.ts`)
+  - API (`knowledge.test.ts`): uploads with an unsupported file reported, cited search, a website crawl that skips a disallowed page, a GitHub source shared with the workspace, full-text-only search, and permissions with resync and delete
+  - widget (`knowledge_test.dart`)

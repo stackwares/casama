@@ -235,6 +235,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/domain/src/workspace-files.ts` (file formats), `packages/agent/src/workspace-files.ts` (export, apply) and `git-sync.ts` (`syncWorkspaceRepo`, `gitSyncTick` in the worker's minute tick), `org_git_sync` with change triggers, `apps/server/src/api/routes/workspace-files.ts` (export, import, git sync setup, `/hooks/git-sync/<org>`), `kasama files export|import`, and the workspace settings section.
 
+## Knowledge sources (D-125)
+
+- `packages/agent/src/knowledge-parse.ts` (PDF, DOCX, Markdown, HTML, CSV, chunking), `packages/agent/src/knowledge.ts` (website crawl with robots.txt, GitHub, connections, `knowledgeTick` in the minute tick, `knowledge.search`), `knowledge_sources`/`knowledge_uploads`/`knowledge_chunks` and `search_knowledge`, `apps/server/src/api/routes/knowledge.ts`, and the bot's Knowledge screen.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

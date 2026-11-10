@@ -26,6 +26,7 @@
     "@modelcontextprotocol/sdk": "^1.32.2",
     "ai": "^7.0.165",
     "drizzle-orm": "^0.45.4",
+    "fflate": "^0.8.3",
     "undici": "^8.12.4",
     "zod": "^4.6.7"
   },

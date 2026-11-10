@@ -7581,6 +7581,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Secret'**
   String get gitWebhookSecret;
+
+  /// No description provided for @knowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge'**
+  String get knowledge;
+
+  /// No description provided for @knowledgeRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents it can search and cite'**
+  String get knowledgeRow;
+
+  /// No description provided for @noKnowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'No knowledge yet'**
+  String get noKnowledge;
+
+  /// No description provided for @knowledgeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Give it files, a website or a GitHub repository. It searches them when they\'re relevant and tells you which document an answer came from.'**
+  String get knowledgeHelp;
+
+  /// No description provided for @addKnowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Add knowledge'**
+  String get addKnowledge;
+
+  /// No description provided for @addKnowledgeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF, Word, Markdown, HTML, CSV or text files; a website (one domain, following its robots.txt); or a repository\'s documents. Websites and repositories refresh daily.'**
+  String get addKnowledgeHelp;
+
+  /// No description provided for @knowledgeFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get knowledgeFiles;
+
+  /// No description provided for @knowledgeWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get knowledgeWebsite;
+
+  /// No description provided for @knowledgePickFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose files'**
+  String get knowledgePickFiles;
+
+  /// No description provided for @knowledgeWebsiteUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Website address'**
+  String get knowledgeWebsiteUrl;
+
+  /// No description provided for @knowledgeRepoUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub link'**
+  String get knowledgeRepoUrl;
+
+  /// No description provided for @knowledgeShareAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with every bot in the workspace'**
+  String get knowledgeShareAll;
+
+  /// No description provided for @knowledgeShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole workspace'**
+  String get knowledgeShared;
+
+  /// No description provided for @knowledgeReady.
+  ///
+  /// In en, this message translates to:
+  /// **'{docs, plural, =1{1 document} other{{docs} documents}}, {chunks} passages'**
+  String knowledgeReady(int docs, int chunks);
+
+  /// No description provided for @knowledgeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read it'**
+  String get knowledgeError;
+
+  /// No description provided for @knowledgeSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading…'**
+  String get knowledgeSyncing;
+
+  /// No description provided for @knowledgePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to be read'**
+  String get knowledgePending;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
 }
 
 class _AppLocalizationsDelegate

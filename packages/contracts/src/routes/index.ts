@@ -17,6 +17,7 @@ import * as skills from "./skills.ts";
 import * as system from "./system.ts";
 import * as voice from "./voice.ts";
 import * as agentImport from "./agent-import.ts";
+import * as knowledge from "./knowledge.ts";
 import * as pages from "./pages.ts";
 import * as plugins from "./plugins.ts";
 import * as teach from "./teach.ts";
@@ -44,6 +45,7 @@ export const routes = {
   ...checkins,
   ...actionRules,
   ...agentImport,
+  ...knowledge,
   ...pages,
   ...plugins,
   ...teach,
@@ -70,6 +72,7 @@ export {
   system,
   voice,
   agentImport,
+  knowledge,
   pages,
   plugins,
   teach,

@@ -20,6 +20,7 @@ import 'package:kasama_api/src/api/credentials_api.dart';
 import 'package:kasama_api/src/api/files_api.dart';
 import 'package:kasama_api/src/api/import_api.dart';
 import 'package:kasama_api/src/api/integrations_api.dart';
+import 'package:kasama_api/src/api/knowledge_api.dart';
 import 'package:kasama_api/src/api/local_computer_api.dart';
 import 'package:kasama_api/src/api/mcp_api.dart';
 import 'package:kasama_api/src/api/memory_api.dart';
@@ -168,6 +169,12 @@ class KasamaApi {
   /// by doing that all interceptors will not be executed
   IntegrationsApi getIntegrationsApi() {
     return IntegrationsApi(dio);
+  }
+
+  /// Get KnowledgeApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  KnowledgeApi getKnowledgeApi() {
+    return KnowledgeApi(dio);
   }
 
   /// Get LocalComputerApi instance, base route and serializer can be overridden by a given but be careful,

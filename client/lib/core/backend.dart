@@ -362,6 +362,11 @@ abstract class Backend {
   Future<void> revokeMcpKey(String orgId, String keyId);
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
+  // Knowledge sources (D-125)
+  Future<List<KnowledgeSource>> knowledgeSources(String orgId, {String? botId});
+  Future<KnowledgeSource> addKnowledgeSource(CreateKnowledgeSourceRequest request);
+  Future<void> resyncKnowledgeSource(String id);
+  Future<void> deleteKnowledgeSource(String id);
   // Routines and skills as files (D-124)
   Future<Uint8List> exportWorkspaceFiles(String orgId);
   Future<WorkspaceFilesResult> importWorkspaceFiles(String orgId, Uint8List zip, {bool dryRun = false});

@@ -569,6 +569,39 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  // Knowledge sources (D-125)
+  final knowledgeList = <KnowledgeSource>[];
+  final knowledgeActions = <String>[];
+  CreateKnowledgeSourceRequest? addedKnowledge;
+  @override
+  Future<List<KnowledgeSource>> knowledgeSources(String orgId, {String? botId}) async => List.of(knowledgeList);
+  @override
+  Future<KnowledgeSource> addKnowledgeSource(CreateKnowledgeSourceRequest request) async {
+    addedKnowledge = request;
+    final k = KnowledgeSource(
+      id: 'ks-${knowledgeList.length + 1}',
+      botId: request.botId,
+      kind: KnowledgeSourceKindEnum.values.byName(request.kind.name),
+      name: request.name,
+      config: const {},
+      status: KnowledgeSourceStatusEnum.ready,
+      error: null,
+      documents: request.files?.length ?? 3,
+      chunks: 12,
+      lastSyncedAt: null,
+      createdAt: DateTime(2026, 11, 10),
+    );
+    knowledgeList.add(k);
+    return k;
+  }
+  @override
+  Future<void> resyncKnowledgeSource(String id) async => knowledgeActions.add('sync:$id');
+  @override
+  Future<void> deleteKnowledgeSource(String id) async {
+    knowledgeActions.add('delete:$id');
+    knowledgeList.removeWhere((k) => k.id == id);
+  }
+
   // Routines and skills as files (D-124)
   final fileActions = <String>[];
   GitSyncStatus gitStatus = GitSyncStatus(

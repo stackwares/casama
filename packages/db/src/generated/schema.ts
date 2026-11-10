@@ -2249,6 +2249,74 @@ export const agentImports = pgTable("agent_imports", {
 	check("agent_imports_kind_check", sql`kind = ANY (ARRAY['openclaw'::text, 'hermes'::text])`),
 ]);
 
+export const knowledgeSources = pgTable("knowledge_sources", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id"),
+	kind: text().notNull(),
+	name: text().notNull(),
+	config: jsonb().default({}).notNull(),
+	status: text().default('pending').notNull(),
+	error: text(),
+	documents: integer().default(0).notNull(),
+	chunks: integer().default(0).notNull(),
+	lastSyncedAt: timestamp("last_synced_at", { withTimezone: true, mode: 'string' }),
+	nextSyncAt: timestamp("next_sync_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	createdBy: uuid("created_by"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("knowledge_sources_due_idx").using("btree", table.nextSyncAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(status <> 'syncing'::text)`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "knowledge_sources_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "knowledge_sources_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "knowledge_sources_created_by_fkey"
+		}).onDelete("set null"),
+	pgPolicy("knowledge_sources_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`
+CASE
+    WHEN (bot_id IS NULL) THEN is_member(org_id)
+    ELSE can_access_bot(bot_id)
+END` }),
+	pgPolicy("knowledge_sources_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("knowledge_sources_kind_check", sql`kind = ANY (ARRAY['upload'::text, 'website'::text, 'github'::text, 'connection'::text])`),
+	check("knowledge_sources_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 200)`),
+	check("knowledge_sources_status_check", sql`status = ANY (ARRAY['pending'::text, 'syncing'::text, 'ready'::text, 'error'::text])`),
+]);
+
+export const knowledgeUploads = pgTable("knowledge_uploads", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	sourceId: uuid("source_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	name: text().notNull(),
+	// TODO: failed to parse database type 'bytea'
+	content: text("content").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.sourceId],
+			foreignColumns: [knowledgeSources.id],
+			name: "knowledge_uploads_source_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "knowledge_uploads_org_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("knowledge_uploads_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 300)`),
+	check("knowledge_uploads_content_check", sql`octet_length(content) <= 25000000`),
+]);
+
 export const orgGitSync = pgTable("org_git_sync", {
 	orgId: uuid("org_id").primaryKey().notNull(),
 	repo: text().notNull(),
@@ -2281,6 +2349,37 @@ export const orgGitSync = pgTable("org_git_sync", {
 	check("org_git_sync_repo_check", sql`repo ~ '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'::text`),
 	check("org_git_sync_branch_check", sql`(char_length(branch) >= 1) AND (char_length(branch) <= 200)`),
 	check("org_git_sync_path_check", sql`char_length(path) <= 200`),
+]);
+
+export const knowledgeChunks = pgTable("knowledge_chunks", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	sourceId: uuid("source_id").notNull(),
+	docRef: text("doc_ref").notNull(),
+	docTitle: text("doc_title").notNull(),
+	location: text(),
+	url: text(),
+	position: integer().default(0).notNull(),
+	text: text().notNull(),
+	embedding: vector("embedding", { dimensions: 1536 }),
+	tsv: tsvector("tsv").generatedAlwaysAs(sql`to_tsvector('simple'::regconfig, ((((doc_title || ' '::text) || COALESCE(location, ''::text)) || ' '::text) || text))`),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("knowledge_chunks_source_idx").using("btree", table.sourceId.asc().nullsLast().op("uuid_ops")),
+	index("knowledge_chunks_tsv_idx").using("gin", table.tsv.asc().nullsLast().op("tsvector_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "knowledge_chunks_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.sourceId],
+			foreignColumns: [knowledgeSources.id],
+			name: "knowledge_chunks_source_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("knowledge_chunks_select", { as: "permissive", for: "select", to: ["authenticated"] }),
+	check("knowledge_chunks_text_check", sql`(char_length(text) >= 1) AND (char_length(text) <= 8000)`),
 ]);
 
 export const agentImportFiles = pgTable("agent_import_files", {

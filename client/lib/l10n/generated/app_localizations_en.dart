@@ -4413,4 +4413,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gitWebhookSecret => 'Secret';
+
+  @override
+  String get knowledge => 'Knowledge';
+
+  @override
+  String get knowledgeRow => 'Documents it can search and cite';
+
+  @override
+  String get noKnowledge => 'No knowledge yet';
+
+  @override
+  String get knowledgeHelp =>
+      'Give it files, a website or a GitHub repository. It searches them when they\'re relevant and tells you which document an answer came from.';
+
+  @override
+  String get addKnowledge => 'Add knowledge';
+
+  @override
+  String get addKnowledgeHelp =>
+      'PDF, Word, Markdown, HTML, CSV or text files; a website (one domain, following its robots.txt); or a repository\'s documents. Websites and repositories refresh daily.';
+
+  @override
+  String get knowledgeFiles => 'Files';
+
+  @override
+  String get knowledgeWebsite => 'Website';
+
+  @override
+  String get knowledgePickFiles => 'Choose files';
+
+  @override
+  String get knowledgeWebsiteUrl => 'Website address';
+
+  @override
+  String get knowledgeRepoUrl => 'GitHub link';
+
+  @override
+  String get knowledgeShareAll => 'Share with every bot in the workspace';
+
+  @override
+  String get knowledgeShared => 'Whole workspace';
+
+  @override
+  String knowledgeReady(int docs, int chunks) {
+    String _temp0 = intl.Intl.pluralLogic(
+      docs,
+      locale: localeName,
+      other: '$docs documents',
+      one: '1 document',
+    );
+    return '$_temp0, $chunks passages';
+  }
+
+  @override
+  String get knowledgeError => 'Couldn\'t read it';
+
+  @override
+  String get knowledgeSyncing => 'Reading…';
+
+  @override
+  String get knowledgePending => 'Waiting to be read';
+
+  @override
+  String get add => 'Add';
 }
