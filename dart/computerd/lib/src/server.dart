@@ -27,6 +27,7 @@ class ComputerdConfig {
 
   /// iMessage chat apps (D-134): the Messages database to read (default ~/Library/Messages/chat.db).
   final String? imessageDb;
+
   /// iMessage: a command run with the recipient and text as its last two arguments, instead of
   /// AppleScript (tests).
   final List<String>? imessageSendCommand;
@@ -35,14 +36,18 @@ class ComputerdConfig {
   final Map<String, LocalMcpServer> mcpServers;
 
   final String home;
+
   /// Companion mode (D-066): file paths and working directories must stay inside these folders.
   /// Null inside a bot computer (the whole container is the bot's).
   final List<String>? allowedRoots;
+
   /// Companion mode: which tool families the user approved (shell, files, browser, desktop).
   /// Null inside a bot computer (everything allowed).
   final Set<String>? capabilities;
+
   /// Extra PATH entries (for example Homebrew on macOS, where apps start with a minimal PATH).
   final List<String> extraPath;
+
   /// Added to every command's environment (the companion isolates agent-browser with its own
   /// namespace and session so it never touches the user's other browser sessions).
   final Map<String, String> extraEnv;
@@ -136,7 +141,9 @@ class Computerd {
     try {
       if (req.uri.path == '/health') return await _health(req);
       final auth = req.headers.value('authorization') ?? '';
-      if (auth != 'Bearer ${config.token}') throw _ApiError(401, 'unauthorized', 'Invalid computerd token');
+      // Behind a proxy that uses Authorization itself (Kubernetes pod proxy, D-139), the token comes in X-Computerd-Token.
+      final alt = req.headers.value('x-computerd-token');
+      if (auth != 'Bearer ${config.token}' && alt != config.token) throw _ApiError(401, 'unauthorized', 'Invalid computerd token');
       _lastActivity = DateTime.now();
       final segments = req.uri.pathSegments;
       switch ((req.method, segments)) {
@@ -232,12 +239,11 @@ class Computerd {
     final latest = await query('select coalesce(max(ROWID), 0) as latest from message');
     final rows = since <= 0
         ? const []
-        : await query('select m.ROWID as rowid, h.id as handle, m.text as text from message m join handle h on h.ROWID = m.handle_id '
-            'where m.is_from_me = 0 and m.ROWID > $since and m.text is not null and m.text != \'\' order by m.ROWID limit 50');
-    await _json(req.response, 200, {
-      'latest': (latest.isEmpty ? 0 : (latest.first as Map)['latest']) ?? 0,
-      'messages': rows,
-    });
+        : await query(
+            'select m.ROWID as rowid, h.id as handle, m.text as text from message m join handle h on h.ROWID = m.handle_id '
+            'where m.is_from_me = 0 and m.ROWID > $since and m.text is not null and m.text != \'\' order by m.ROWID limit 50',
+          );
+    await _json(req.response, 200, {'latest': (latest.isEmpty ? 0 : (latest.first as Map)['latest']) ?? 0, 'messages': rows});
   }
 
   Future<void> _imessageSend(HttpRequest req) async {
@@ -245,12 +251,16 @@ class Computerd {
     final to = body['to'] as String? ?? '';
     final text = body['text'] as String? ?? '';
     if (to.isEmpty || text.isEmpty) throw _ApiError(400, 'invalid_request', 'Need to and text');
-    final cmd = config.imessageSendCommand ??
+    final cmd =
+        config.imessageSendCommand ??
         [
           'osascript',
-          '-e', 'on run argv',
-          '-e', 'tell application "Messages" to send (item 2 of argv) to participant (item 1 of argv) of (1st account whose service type = iMessage)',
-          '-e', 'end run',
+          '-e',
+          'on run argv',
+          '-e',
+          'tell application "Messages" to send (item 2 of argv) to participant (item 1 of argv) of (1st account whose service type = iMessage)',
+          '-e',
+          'end run',
         ];
     final r = await Process.run(cmd.first, [...cmd.skip(1), to, text]);
     if (r.exitCode != 0) throw _ApiError(502, 'send_failed', 'Messages could not send: ${(r.stderr as String).trim()}');
@@ -346,8 +356,7 @@ class Computerd {
   /// Starts a command as the leader of a new process group (setsid on Linux; perl setpgrp elsewhere).
   Future<Process> _startGroup(List<String> argv, {required String cwd, required Map<String, String> env}) => Platform.isLinux
       ? Process.start('setsid', argv, workingDirectory: cwd, environment: env, includeParentEnvironment: false)
-      : Process.start('perl', ['-e', 'setpgrp(0,0); exec @ARGV or die', ...argv],
-          workingDirectory: cwd, environment: env, includeParentEnvironment: false);
+      : Process.start('perl', ['-e', 'setpgrp(0,0); exec @ARGV or die', ...argv], workingDirectory: cwd, environment: env, includeParentEnvironment: false);
 
   /// POST /exec {cmd, cwd?, env?, timeout_ms?, stdin?}. Streams NDJSON lines:
   /// {"type":"start","exec_id"} {"type":"stdout"|"stderr","data"} ... {"type":"exit","code","timed_out","truncated"}
@@ -357,9 +366,7 @@ class Computerd {
     if (cmd is! String || cmd.isEmpty) throw _ApiError(400, 'bad_request', 'cmd is required');
     if (config.companion) _need(_capabilityFor(cmd));
     // A companion with no shared folders (browser or desktop only) runs commands in a temp folder.
-    final cwd = config.companion && config.allowedRoots!.isEmpty && body['cwd'] == null
-        ? Directory.systemTemp.path
-        : _resolve(body['cwd'] as String?);
+    final cwd = config.companion && config.allowedRoots!.isEmpty && body['cwd'] == null ? Directory.systemTemp.path : _resolve(body['cwd'] as String?);
     if (!Directory(cwd).existsSync()) throw _ApiError(400, 'bad_cwd', 'Working directory does not exist: $cwd');
     final path = [...config.extraPath, Platform.environment['PATH'] ?? '/usr/bin:/bin'].join(':');
     final env = <String, String>{
@@ -391,17 +398,16 @@ class Computerd {
 
     var bytes = 0;
     var truncated = false;
-    Future<void> pump(Stream<List<int>> s, String type) =>
-        s.transform(const Utf8Decoder(allowMalformed: true)).forEach((chunk) {
-          if (truncated) return;
-          bytes += chunk.length;
-          if (bytes > config.maxOutputBytes) {
-            truncated = true;
-            line({'type': type, 'data': '\n[output truncated at ${config.maxOutputBytes} bytes]\n'});
-            return;
-          }
-          line({'type': type, 'data': chunk});
-        });
+    Future<void> pump(Stream<List<int>> s, String type) => s.transform(const Utf8Decoder(allowMalformed: true)).forEach((chunk) {
+      if (truncated) return;
+      bytes += chunk.length;
+      if (bytes > config.maxOutputBytes) {
+        truncated = true;
+        line({'type': type, 'data': '\n[output truncated at ${config.maxOutputBytes} bytes]\n'});
+        return;
+      }
+      line({'type': type, 'data': chunk});
+    });
 
     var timedOut = false;
     final timer = Timer(timeout, () {
@@ -509,18 +515,8 @@ class Computerd {
   Future<void> _archive(HttpRequest req) async {
     final body = await _body(req);
     final path = _resolve((body['path'] as String?) ?? config.home);
-    final excludes = <String>[
-      ...((body['exclude'] as List?)?.cast<String>() ?? const []),
-      '.cache/ms-playwright',
-      '.npm/_cacache',
-      '.cache/pip',
-      '.kasama-restore-*',
-    ];
-    final process = await Process.start('tar', [
-      '-czf', '-',
-      for (final e in excludes) '--exclude=./$e',
-      '-C', path, '.',
-    ]);
+    final excludes = <String>[...((body['exclude'] as List?)?.cast<String>() ?? const []), '.cache/ms-playwright', '.npm/_cacache', '.cache/pip', '.kasama-restore-*'];
+    final process = await Process.start('tar', ['-czf', '-', for (final e in excludes) '--exclude=./$e', '-C', path, '.']);
     final res = req.response;
     res.headers.contentType = ContentType('application', 'gzip');
     res.bufferOutput = false;
@@ -606,8 +602,7 @@ class Computerd {
     final cols = int.tryParse(req.uri.queryParameters['cols'] ?? '') ?? 120;
     final rows = int.tryParse(req.uri.queryParameters['rows'] ?? '') ?? 32;
     final ws = await WebSocketTransformer.upgrade(req);
-    final env = <String, String>{...Platform.environment, 'HOME': config.home, 'TERM': 'xterm-256color', 'COLUMNS': '$cols', 'LINES': '$rows'}
-      ..remove('COMPUTERD_TOKEN');
+    final env = <String, String>{...Platform.environment, 'HOME': config.home, 'TERM': 'xterm-256color', 'COLUMNS': '$cols', 'LINES': '$rows'}..remove('COMPUTERD_TOKEN');
     // `script` allocates a pseudo-terminal for an interactive login shell.
     final process = Platform.isLinux
         ? await _startGroup(['script', '-qfc', 'stty cols $cols rows $rows; exec bash -l', '/dev/null'], cwd: config.workspace, env: env)
@@ -701,17 +696,17 @@ class Computerd {
       // Multiuser: every login is its own session, so several people can watch at once.
       // "Admin" here only means the controller password; neither profile is a Neko admin.
       Map<String, Object?> profile({required bool host}) => {
-            'name': host ? 'User' : 'Viewer',
-            'is_admin': false,
-            'can_login': true,
-            'can_connect': true,
-            'can_watch': true,
-            'can_host': host,
-            'can_access_clipboard': host,
-            'can_share_media': false,
-            'sends_inactive_cursor': false,
-            'can_see_inactive_cursors': false,
-          };
+        'name': host ? 'User' : 'Viewer',
+        'is_admin': false,
+        'can_login': true,
+        'can_connect': true,
+        'can_watch': true,
+        'can_host': host,
+        'can_access_clipboard': host,
+        'can_share_media': false,
+        'sends_inactive_cursor': false,
+        'can_see_inactive_cursors': false,
+      };
       final address = await _ownAddress();
       final env = {
         ...Platform.environment,
@@ -742,12 +737,14 @@ class Computerd {
       unawaited(process.exitCode.then((_) => log.close()).catchError((_) => null));
       _streamer = process;
       _streamUsers = {'viewer': viewer, 'controller': controller};
-      unawaited(process.exitCode.then((_) {
-        if (identical(_streamer, process)) {
-          _streamer = null;
-          _streamUsers = null;
-        }
-      }));
+      unawaited(
+        process.exitCode.then((_) {
+          if (identical(_streamer, process)) {
+            _streamer = null;
+            _streamUsers = null;
+          }
+        }),
+      );
       final client = HttpClient();
       final deadline = DateTime.now().add(const Duration(seconds: 20));
       var ready = false;
@@ -777,9 +774,12 @@ class Computerd {
     _streamUsers = null;
     if (s == null) return;
     s.kill(ProcessSignal.sigint);
-    await s.exitCode.timeout(const Duration(seconds: 3), onTimeout: () {
-      s.kill(ProcessSignal.sigkill);
-      return -1;
-    });
+    await s.exitCode.timeout(
+      const Duration(seconds: 3),
+      onTimeout: () {
+        s.kill(ProcessSignal.sigkill);
+        return -1;
+      },
+    );
   }
 }

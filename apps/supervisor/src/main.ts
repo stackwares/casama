@@ -1,8 +1,15 @@
+import { existsSync, readFileSync } from "node:fs";
 import {
   DockerApi,
   DockerProvider,
   daytonaProvider,
   e2bProvider,
+  boatProvider,
+  incusProvider,
+  railwayProvider,
+  kubernetesProvider,
+  novitaProvider,
+  tlsFetch,
   egressControl,
   FsObjectStore,
   S3ObjectStore,
@@ -97,6 +104,73 @@ if (env.DAYTONA_API_KEY)
         headless: env.DAYTONA_SNAPSHOT_HEADLESS ?? "kasama-computer-headless",
         desktop: env.DAYTONA_SNAPSHOT_DESKTOP ?? "kasama-computer-desktop",
       },
+    },
+    hostedOpts,
+  );
+
+// More hosted providers (D-139).
+if (env.NOVITA_API_KEY)
+  hosted.novita = novitaProvider(
+    {
+      apiKey: env.NOVITA_API_KEY,
+      apiUrl: env.NOVITA_API_URL,
+      templates: { headless: env.NOVITA_TEMPLATE_HEADLESS ?? "kasama-computer-headless", desktop: env.NOVITA_TEMPLATE_DESKTOP ?? "kasama-computer-desktop" },
+    },
+    hostedOpts,
+  );
+const images = {
+  headless: env.HOSTED_IMAGE_HEADLESS ?? "ghcr.io/kasama-ai/computer-headless:latest",
+  desktop: env.HOSTED_IMAGE_DESKTOP ?? "ghcr.io/kasama-ai/computer-desktop:latest",
+};
+if (env.K8S_NAMESPACE) {
+  // In a cluster: the pod's service account and CA; outside: K8S_API_URL, K8S_TOKEN and K8S_CA_FILE.
+  const sa = "/var/run/secrets/kubernetes.io/serviceaccount";
+  const inCluster = !!env.KUBERNETES_SERVICE_HOST && existsSync(`${sa}/token`);
+  const caFile = env.K8S_CA_FILE ?? (inCluster ? `${sa}/ca.crt` : undefined);
+  hosted.kubernetes = kubernetesProvider(
+    {
+      apiUrl: env.K8S_API_URL ?? `https://${env.KUBERNETES_SERVICE_HOST}:${env.KUBERNETES_SERVICE_PORT ?? 443}`,
+      token: env.K8S_TOKEN ?? readFileSync(`${sa}/token`, "utf8").trim(),
+      namespace: env.K8S_NAMESPACE,
+      images,
+      direct: inCluster,
+      imagePullSecret: env.K8S_IMAGE_PULL_SECRET,
+      runtimeClassName: env.K8S_RUNTIME_CLASS,
+      fetch: caFile ? await tlsFetch({ ca: readFileSync(caFile, "utf8") }) : undefined,
+    },
+    hostedOpts,
+  );
+}
+if (env.INCUS_URL)
+  hosted.incus = incusProvider(
+    {
+      apiUrl: env.INCUS_URL,
+      token: env.INCUS_TOKEN,
+      registry: env.INCUS_REGISTRY ?? "https://ghcr.io",
+      images: { headless: images.headless.replace(/^ghcr\.io\//, ""), desktop: images.desktop.replace(/^ghcr\.io\//, "") },
+      project: env.INCUS_PROJECT,
+      fetch:
+        env.INCUS_CLIENT_CERT_FILE || env.INCUS_CA_FILE
+          ? await tlsFetch({
+              cert: env.INCUS_CLIENT_CERT_FILE ? readFileSync(env.INCUS_CLIENT_CERT_FILE, "utf8") : undefined,
+              key: env.INCUS_CLIENT_KEY_FILE ? readFileSync(env.INCUS_CLIENT_KEY_FILE, "utf8") : undefined,
+              ca: env.INCUS_CA_FILE ? readFileSync(env.INCUS_CA_FILE, "utf8") : undefined,
+            })
+          : undefined,
+    },
+    hostedOpts,
+  );
+
+if (env.BOAT_API_KEY)
+  hosted.boat = boatProvider({ apiKey: env.BOAT_API_KEY, apiUrl: env.BOAT_API_URL, images, type: env.BOAT_SANDBOX_TYPE }, hostedOpts);
+if (env.RAILWAY_TOKEN && env.RAILWAY_PROJECT_ID && env.RAILWAY_ENVIRONMENT_ID)
+  hosted.railway = railwayProvider(
+    {
+      token: env.RAILWAY_TOKEN,
+      projectToken: env.RAILWAY_TOKEN_KIND === "project",
+      projectId: env.RAILWAY_PROJECT_ID,
+      environmentId: env.RAILWAY_ENVIRONMENT_ID,
+      images,
     },
     hostedOpts,
   );

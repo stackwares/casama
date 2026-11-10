@@ -1218,3 +1218,30 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - Resale prices and charges include the 20% and are billable.
     - Insufficient balance is explained.
     - With no key, the tool says to add one.
+
+## D-139 More sandbox providers
+
+- **The pattern:** every hosted provider is a `HostedControlPlane` (`packages/sandbox/src/hosted-more.ts`). It starts Kasama's own computer image with computerd inside, finds it again by the computer's ref, deletes it, and says how to reach computerd's port. `HostedProvider` then supplies the rest, as on E2B and Daytona (D-057): exec, files, checkpoints, sleep to Kasama's object store and resume, and live view.
+- **Testing:** each provider passes the shared `SandboxProvider` contract suite (`hosted.test.ts`, 50 tests). It runs against a local stand-in (`testing-hosted.ts`) that speaks the provider's API and runs the real computer image in Docker.
+- **API shapes:** come from each provider's public docs; nothing was run against a real account.
+- **Built:**
+  - **Novita Agent Sandbox:** E2B-compatible. It reuses the E2B control plane on `api.sandbox.novita.ai`, with port URLs on `sandbox.novita.ai`, from templates built from the image.
+  - **Kubernetes:** one Pod per computer (labels `app=kasama-computer`, `kasama_ref`), created through the core API.
+    - **Reaching it:** through the API server's pod proxy (`/pods/<name>:7070/proxy`) with the service account token, or by pod IP when the supervisor runs in the cluster.
+    - **The token clash:** the proxy needs `Authorization` for itself, so the computerd client sends computerd's token in `X-Computerd-Token` whenever the route already uses `Authorization`, and computerd accepts either header.
+    - **Options:** an optional image pull secret and runtime class (gVisor or Kata, say). Private CAs work through `K8S_CA_FILE`.
+  - **Incus:** a container from the computer image pulled from an OCI registry (`source.protocol = oci`), with environment variables as `environment.*`, the ref in `user.kasama_ref`, and asynchronous operations waited on.
+    - **Reaching it:** on the instance's global IPv4 address.
+    - **Auth:** a bearer token, or a client certificate through `tlsFetch` (undici, added to the sandbox package).
+  - **Boat:** a VM per computer. Boat doesn't run OCI images, so the setup script runs the computer image with Docker inside the VM.
+    - **Ports:** hosted publicly through `/sandboxes/{id}/host`. computerd still checks its own per-computer token on every call. Boat's private-port token only goes in a query string, which the computerd client can't carry.
+  - **Railway:** a service per computer in one project and environment (GraphQL), deployed from the image, with a Railway domain per port Kasama uses. Found again by service name, since Railway has no labels.
+- **Configuration:** all of these are set up on the supervisor (`NOVITA_*`, `K8S_*`, `INCUS_*`, `BOAT_*`, `RAILWAY_*`; image-based providers run `HOSTED_IMAGE_HEADLESS`/`HOSTED_IMAGE_DESKTOP`). The new ids are allowed for `computers.provider` and the create-computer API.
+- **Not built, and why:**
+  - **boxd:** only a gRPC API (no public REST or HTTP API to write an adapter against).
+  - **CreateOS:** publishes operation names but not its REST paths.
+  - **Alibaba Wuying AgentBay:** the raw HTTP API isn't documented (only SDKs). Images must be built and enabled in AgentBay first, and links only open ports 30100–30199, while computerd listens on 7070.
+  - These wait for public HTTP docs, or a decision to wrap the providers' SDKs. They're in NEEDS-FROM-OLIVER.
+- **Tests:**
+  - The contract suite for Novita, Kubernetes (asserting computerd was reached through the pod proxy), Incus, Boat and Railway.
+  - A computerd test for `X-Computerd-Token`.

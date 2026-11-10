@@ -27,6 +27,10 @@ export class ComputerdClient {
   }
 
   get authHeaders(): Record<string, string> {
+    // When the route to computerd needs Authorization for itself (the Kubernetes API server's pod
+    // proxy, D-139), computerd's token goes in its own header.
+    if (Object.keys(this.extraHeaders).some((k) => k.toLowerCase() === "authorization"))
+      return { ...this.extraHeaders, "x-computerd-token": this.token };
     return { ...this.extraHeaders, authorization: `Bearer ${this.token}` };
   }
 

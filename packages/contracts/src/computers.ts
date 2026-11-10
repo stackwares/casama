@@ -61,7 +61,10 @@ export const CreateComputerRequest = z
     kind: z.enum(["team", "private"]),
     owner_bot_id: Uuid.optional().openapi({ description: "Required for private computers" }),
     profile: z.enum(["headless", "desktop"]).optional(),
-    provider: z.enum(["docker", "e2b", "daytona", "kasama-cloud"]).optional(),
+    provider: z
+      .enum(["docker", "e2b", "daytona", "kasama-cloud", "novita", "kubernetes", "incus", "boat", "railway"])
+      .optional()
+      .openapi({ description: "Hosted providers must be configured on the supervisor (D-057, D-139)" }),
   })
   .openapi("CreateComputerRequest");
 

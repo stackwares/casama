@@ -7,3 +7,4 @@ export * from "./object-store.ts";
 export * from "./supervisor-client.ts";
 export * from "./turn.ts";
 export * from "./types.ts";
+export * from "./hosted-more.ts";

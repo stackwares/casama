@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { sandboxContract } from "../src/contract.ts";
 import { daytonaProvider, e2bProvider, type HostedProvider } from "../src/hosted.ts";
+import { boatProvider, incusProvider, kubernetesProvider, novitaProvider, railwayProvider } from "../src/hosted-more.ts";
 import { FsObjectStore } from "../src/object-store.ts";
 import {
   dockerAvailable,
@@ -84,6 +85,66 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
         expect(plane.requests.some((r) => r.path.endsWith("/preview-url"))).toBe(true);
       },
     };
+  });
+
+  // More providers (D-139), each against a stand-in that speaks its API.
+  sandboxContract("novita", async () => {
+    const plane = await startMockControlPlane({ kind: "e2b", images, network: `${stack.prefix}-control` });
+    planes.push(plane);
+    const provider = novitaProvider(
+      { apiKey: plane.apiKey, apiUrl: plane.url, templates: { headless: "kasama-headless", desktop: "kasama-desktop" }, portUrl: (id, port) => plane.portUrl(id, port) },
+      hostedOpts(),
+    );
+    return { provider };
+  });
+
+  sandboxContract("kubernetes", async () => {
+    const plane = await startMockControlPlane({ kind: "kubernetes", images, network: `${stack.prefix}-control` });
+    planes.push(plane);
+    const provider = kubernetesProvider(
+      { apiUrl: plane.url, token: plane.apiKey, namespace: "kasama", images: { headless: "kasama-headless", desktop: "kasama-desktop" } },
+      hostedOpts(),
+    );
+    return {
+      provider,
+      cleanup: async () => {
+        // computerd was reached through the API server's pod proxy, with the service account token.
+        expect(plane.requests.some((r) => /\/pods\/[^/]+:7070\/proxy\//.test(r.path))).toBe(true);
+      },
+    };
+  });
+
+  sandboxContract("incus", async () => {
+    const plane = await startMockControlPlane({ kind: "incus", images, network: `${stack.prefix}-control` });
+    planes.push(plane);
+    const provider = incusProvider(
+      {
+        apiUrl: plane.url,
+        token: plane.apiKey,
+        registry: "https://ghcr.io",
+        images: { headless: "kasama-headless", desktop: "kasama-desktop" },
+        portUrl: (id, port) => plane.portUrl(id, port),
+      },
+      hostedOpts(),
+    );
+    return { provider };
+  });
+
+  sandboxContract("boat", async () => {
+    const plane = await startMockControlPlane({ kind: "boat", images, network: `${stack.prefix}-control` });
+    planes.push(plane);
+    const provider = boatProvider({ apiKey: plane.apiKey, apiUrl: plane.url, images: { headless: "kasama-headless", desktop: "kasama-desktop" } }, hostedOpts());
+    return { provider };
+  });
+
+  sandboxContract("railway", async () => {
+    const plane = await startMockControlPlane({ kind: "railway", images, network: `${stack.prefix}-control` });
+    planes.push(plane);
+    const provider = railwayProvider(
+      { token: plane.apiKey, projectId: "proj_1", environmentId: "env_1", apiUrl: plane.url, images: { headless: "kasama-headless", desktop: "kasama-desktop" }, domainScheme: "http" },
+      hostedOpts(),
+    );
+    return { provider };
   });
 
   describe("live view and take control on E2B", () => {

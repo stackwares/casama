@@ -105,3 +105,7 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 | Decision                      | Default used                                                                |
 | ----------------------------- | --------------------------------------------------------------------------- |
 | Final product name and domain | "Kasama", placeholder addresses `security@kasama.dev`, `conduct@kasama.dev` |
+
+## Sandbox providers without a public HTTP API (D-139)
+
+- boxd (gRPC only), CreateOS (REST paths unpublished) and Alibaba Wuying AgentBay (SDK-only, port range 30100–30199) aren't built. Options: wait for public HTTP docs, wrap their SDKs in the supervisor, or drop them from the roadmap.

@@ -92,9 +92,7 @@ void main() {
     expect(get.body, 'Line one\nThe Teal line\n');
     final list = jsonDecode((await http.get(base.resolve('/files/list?path=notes'), headers: auth)).body);
     expect((list['entries'] as List).single['name'], 'a.txt');
-    final search = jsonDecode((await http.post(base.resolve('/files/search'),
-            headers: {...auth, 'content-type': 'application/json'}, body: jsonEncode({'query': 'teal'})))
-        .body);
+    final search = jsonDecode((await http.post(base.resolve('/files/search'), headers: {...auth, 'content-type': 'application/json'}, body: jsonEncode({'query': 'teal'}))).body);
     expect((search['matches'] as List).single['line'], 2);
     expect((await http.delete(base.resolve('/files?path=notes'), headers: auth)).statusCode, 200);
     expect((await http.get(base.resolve('/files?path=notes/a.txt'), headers: auth)).statusCode, 404);
@@ -147,5 +145,18 @@ void main() {
   test('desktop endpoints say when there is no display', () async {
     if (Platform.environment['DISPLAY'] != null) return;
     expect((await http.get(base.resolve('/screenshot'), headers: auth)).statusCode, 501);
+  });
+
+  test('accepts the token in X-Computerd-Token behind a proxy that uses Authorization (D-139)', () async {
+    final ok = await http.get(
+      base.replace(path: '/files/list', queryParameters: {'path': '.'}),
+      headers: {'authorization': 'Bearer cluster-token', 'x-computerd-token': token},
+    );
+    expect(ok.statusCode, 200, reason: ok.body);
+    final bad = await http.get(
+      base.replace(path: '/files/list', queryParameters: {'path': '.'}),
+      headers: {'authorization': 'Bearer cluster-token', 'x-computerd-token': 'nope'},
+    );
+    expect(bad.statusCode, 401);
   });
 }

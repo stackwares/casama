@@ -3996,8 +3996,14 @@
               "docker",
               "e2b",
               "daytona",
-              "kasama-cloud"
-            ]
+              "kasama-cloud",
+              "novita",
+              "kubernetes",
+              "incus",
+              "boat",
+              "railway"
+            ],
+            "description": "Hosted providers must be configured on the supervisor (D-057, D-139)"
           }
         },
         "required": [

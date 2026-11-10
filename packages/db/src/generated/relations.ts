@@ -31,9 +31,9 @@ export const organizationsRelations = relations(organizations, ({one, many}) => 
 	messages: many(messages),
 	memories: many(memories),
 	conversations: many(conversations),
-	computers: many(computers),
 	checkpoints: many(checkpoints),
 	computerLeases: many(computerLeases),
+	computers: many(computers),
 	integrations: many(integrations),
 	approvals: many(approvals),
 	toolGrants: many(toolGrants),
@@ -493,6 +493,8 @@ export const projectsRelations = relations(projects, ({one, many}) => ({
 
 export const computersRelations = relations(computers, ({one, many}) => ({
 	runs: many(runs),
+	checkpoints: many(checkpoints),
+	computerLeases: many(computerLeases),
 	organization: one(organizations, {
 		fields: [computers.orgId],
 		references: [organizations.id]
@@ -501,8 +503,6 @@ export const computersRelations = relations(computers, ({one, many}) => ({
 		fields: [computers.ownerBotId],
 		references: [bots.id]
 	}),
-	checkpoints: many(checkpoints),
-	computerLeases: many(computerLeases),
 	takeoverRequests: many(takeoverRequests),
 	localDevices: many(localDevices),
 	abuseEvents: many(abuseEvents),

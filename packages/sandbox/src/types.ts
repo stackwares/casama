@@ -1,6 +1,17 @@
 /** The interface every computer provider implements (Docker, E2B, Daytona, local, cloud). */
 
-export type ProviderId = "docker" | "e2b" | "daytona" | "local" | "kasama-cloud";
+export type ProviderId =
+  | "docker"
+  | "e2b"
+  | "daytona"
+  | "local"
+  | "kasama-cloud"
+  // More hosted providers (D-139).
+  | "novita"
+  | "kubernetes"
+  | "incus"
+  | "railway"
+  | "boat";
 
 export interface ComputerSpec {
   /** Stable id for the computer (the computers.id uuid). */

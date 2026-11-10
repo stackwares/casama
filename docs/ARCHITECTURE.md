@@ -287,6 +287,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/agent/src/data.ts` (`DataProvider`, `TregProvider`, `data.search`, `data.call`, `DATA_MARKUP`), registered in the worker with the workspace's `treg` key or Kasama's resale key (`TREG_RESALE`); `usage_ledger.kind = data_calls`; the price in approval summaries in `run.ts`.
 
+## More sandbox providers (D-139)
+
+- `packages/sandbox/src/hosted-more.ts` (Novita, Kubernetes, Incus, Boat, Railway control planes and `tlsFetch`), their stand-ins in `testing-hosted.ts` and the contract runs in `hosted.test.ts`; supervisor configuration in `apps/supervisor/src/main.ts`; `X-Computerd-Token` in computerd and `ComputerdClient`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

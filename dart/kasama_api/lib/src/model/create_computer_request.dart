@@ -94,6 +94,7 @@ class CreateComputerRequest {
 
 
 
+      /// Hosted providers must be configured on the supervisor (D-057, D-139)
   @JsonKey(
     
     name: r'provider',
@@ -169,16 +170,35 @@ String toString() => value;
 }
 
 
-
+/// Hosted providers must be configured on the supervisor (D-057, D-139)
 enum CreateComputerRequestProviderEnum {
+    /// Hosted providers must be configured on the supervisor (D-057, D-139)
 @JsonValue(r'docker')
 docker(r'docker'),
+    /// Hosted providers must be configured on the supervisor (D-057, D-139)
 @JsonValue(r'e2b')
 e2b(r'e2b'),
+    /// Hosted providers must be configured on the supervisor (D-057, D-139)
 @JsonValue(r'daytona')
 daytona(r'daytona'),
+    /// Hosted providers must be configured on the supervisor (D-057, D-139)
 @JsonValue(r'kasama-cloud')
-kasamaCloud(r'kasama-cloud');
+kasamaCloud(r'kasama-cloud'),
+    /// Hosted providers must be configured on the supervisor (D-057, D-139)
+@JsonValue(r'novita')
+novita(r'novita'),
+    /// Hosted providers must be configured on the supervisor (D-057, D-139)
+@JsonValue(r'kubernetes')
+kubernetes(r'kubernetes'),
+    /// Hosted providers must be configured on the supervisor (D-057, D-139)
+@JsonValue(r'incus')
+incus(r'incus'),
+    /// Hosted providers must be configured on the supervisor (D-057, D-139)
+@JsonValue(r'boat')
+boat(r'boat'),
+    /// Hosted providers must be configured on the supervisor (D-057, D-139)
+@JsonValue(r'railway')
+railway(r'railway');
 
 const CreateComputerRequestProviderEnum(this.value);
 

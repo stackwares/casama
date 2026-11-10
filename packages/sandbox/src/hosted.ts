@@ -44,14 +44,14 @@ export interface HostedProviderOptions {
   turn?: { host: string; port: number; secret: string };
 }
 
-async function call<T>(
+export async function call<T>(
   url: string,
-  init: RequestInit & { expect?: number[] },
+  init: RequestInit & { expect?: number[]; fetch?: typeof fetch },
   label: string,
 ): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(url, init);
+    res = await (init.fetch ?? fetch)(url, init);
   } catch (err) {
     throw new SandboxError(
       `${label}_unreachable`,

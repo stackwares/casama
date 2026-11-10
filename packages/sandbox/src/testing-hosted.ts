@@ -5,7 +5,7 @@
  */
 import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { createServer, type IncomingMessage, type Server } from "node:http";
+import { createServer, type IncomingMessage, request, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { promisify } from "node:util";
 
@@ -21,13 +21,16 @@ interface MockSandbox {
 
 export interface MockControlPlane {
   url: string;
-  kind: "e2b" | "daytona";
+  kind: MockKind;
   apiKey: string;
   requests: Array<{ method: string; path: string; headers: IncomingMessage["headers"] }>;
   /** Where a sandbox port is reachable from this machine. */
   portUrl(id: string, port: number): Promise<string>;
   stop(): Promise<void>;
 }
+
+/** Control planes the stand-in speaks (D-057, D-139). */
+export type MockKind = "e2b" | "daytona" | "kubernetes" | "incus" | "boat" | "railway";
 
 const body = async (req: IncomingMessage) => {
   let s = "";
@@ -36,7 +39,7 @@ const body = async (req: IncomingMessage) => {
 };
 
 export async function startMockControlPlane(opts: {
-  kind: "e2b" | "daytona";
+  kind: MockKind;
   images: { headless: string; desktop: string };
   /** Docker network the sandboxes join (to reach the test TURN relay). */
   network?: string;
@@ -59,8 +62,9 @@ export async function startMockControlPlane(opts: {
     template: string,
     env: Record<string, string>,
     labels: Record<string, string>,
+    fixedId?: string,
   ) => {
-    const id = `sb${randomBytes(6).toString("hex")}`;
+    const id = fixedId ?? `sb${randomBytes(6).toString("hex")}`;
     const container = `${prefix}-${id}`;
     const image = template.includes("desktop") ? opts.images.desktop : opts.images.headless;
     await docker(
@@ -105,6 +109,108 @@ export async function startMockControlPlane(opts: {
     if (!authed) return json(401, { message: "unauthorized" });
     try {
       const seg = url.pathname.split("/").filter(Boolean);
+      if (opts.kind === "kubernetes") {
+        // /api/v1/namespaces/{ns}/pods[/{name}[:{port}/proxy/...]]
+        const [, , , ns, kind, name, ...rest] = seg;
+        if (seg[0] !== "api" || kind !== "pods" || !ns) return json(404, { message: "no route" });
+        if (req.method === "POST" && !name) {
+          const b = await body(req);
+          const meta = b.metadata as { name: string; labels: Record<string, string> };
+          const c = ((b.spec as { containers: Array<{ image: string; env: Array<{ name: string; value: string }> }> }).containers)[0]!;
+          const sb = await start(c.image, Object.fromEntries(c.env.map((e) => [e.name, e.value])), meta.labels, meta.name);
+          return json(201, { metadata: { name: sb.id, labels: sb.labels }, status: { phase: "Pending" } });
+        }
+        if (req.method === "GET" && !name) {
+          const [k, v] = (url.searchParams.get("labelSelector") ?? "").split("=");
+          return json(200, {
+            items: [...sandboxes.values()]
+              .filter((s) => !k || s.labels[k] === v)
+              .map((s) => ({ metadata: { name: s.id, labels: s.labels }, status: { phase: "Running", podIP: "10.0.0.9" } })),
+          });
+        }
+        const [podName, port] = (name ?? "").split(":");
+        if (port && rest[0] === "proxy") {
+          // The API server's pod proxy: forward the request (streaming) to the pod's port.
+          const target = new URL(await portUrl(podName ?? "", Number(port)));
+          const path = `/${rest.slice(1).join("/")}${url.search}`;
+          const headers = { ...req.headers, host: target.host };
+          delete headers.authorization;
+          const up = request({ host: target.hostname, port: target.port, method: req.method, path, headers }, (r) => {
+            res.writeHead(r.statusCode ?? 502, r.headers);
+            r.pipe(res);
+          });
+          up.on("error", (e) => json(502, { message: e.message }));
+          req.pipe(up);
+          return;
+        }
+        if (req.method === "GET" && podName) {
+          const sb = sandboxes.get(podName);
+          return sb ? json(200, { metadata: { name: sb.id, labels: sb.labels }, status: { phase: "Running", podIP: "10.0.0.9" } }) : json(404, { message: "not found" });
+        }
+        if (req.method === "DELETE" && podName) return json((await kill(podName)) ? 200 : 404, {});
+      }
+      if (opts.kind === "incus") {
+        // /1.0/instances[/{name}[/state]] and /1.0/operations/{id}/wait
+        if (seg[0] === "1.0" && seg[1] === "operations") return json(200, { type: "sync", metadata: { status: "Success" } });
+        if (seg[0] !== "1.0" || seg[1] !== "instances") return json(404, { message: "no route" });
+        const name = seg[2];
+        const op = () => json(202, { type: "async", operation: `/1.0/operations/op${randomBytes(4).toString("hex")}` });
+        if (req.method === "POST" && !name) {
+          const b = await body(req);
+          const config = b.config as Record<string, string>;
+          const env = Object.fromEntries(Object.entries(config).filter(([k]) => k.startsWith("environment.")).map(([k, v]) => [k.slice(12), v]));
+          const src = b.source as { alias: string; protocol: string };
+          if (src.protocol !== "oci") return json(400, { error: "only OCI images in this stand-in" });
+          await start(src.alias, env, { "user.kasama_ref": config["user.kasama_ref"] ?? "" }, String(b.name));
+          return op();
+        }
+        if (req.method === "GET" && !name)
+          return json(200, {
+            type: "sync",
+            metadata: [...sandboxes.values()].map((s) => ({ name: s.id, status: "Running", config: s.labels })),
+          });
+        if (req.method === "PUT" && seg[3] === "state") return sandboxes.has(name ?? "") ? op() : json(404, { error: "not found" });
+        if (req.method === "DELETE" && name) return (await kill(name)) ? op() : json(404, { error: "not found" });
+      }
+      if (opts.kind === "boat") {
+        if (req.method === "POST" && url.pathname === "/sandboxes") {
+          const b = await body(req);
+          // Boat runs the computer image with Docker inside its VM, from the setup script.
+          const image = /docker pull '([^']+)'/.exec(String(b.setupScript))?.[1] ?? "";
+          if (!image) return json(400, { error: "setup script doesn't pull an image" });
+          const sb = await start(image, (b.env ?? {}) as Record<string, string>, (b.labels ?? {}) as Record<string, string>, `bx_${randomBytes(4).toString("hex")}`);
+          return json(202, { sandbox: { id: sb.id, state: "starting", labels: sb.labels } });
+        }
+        if (req.method === "GET" && url.pathname === "/sandboxes") {
+          const [k, v] = (url.searchParams.get("label") ?? "").split("=");
+          return json(200, { sandboxes: [...sandboxes.values()].filter((s) => !k || s.labels[k] === v).map((s) => ({ id: s.id, state: "running", labels: s.labels })) });
+        }
+        if (req.method === "POST" && seg[0] === "sandboxes" && seg[2] === "host") {
+          const b = await body(req);
+          return json(200, { url: await portUrl(seg[1] ?? "", Number(b.port)), isProtected: !b.public });
+        }
+        if (req.method === "DELETE" && seg[0] === "sandboxes" && seg[1])
+          return (await kill(seg[1])) ? json(202, { operation: { id: "bdop_1" } }) : json(404, { error: "not found" });
+      }
+      if (opts.kind === "railway") {
+        const b = await body(req);
+        const q = String(b.query);
+        const v = (b.variables ?? {}) as Record<string, unknown>;
+        if (q.includes("serviceCreate")) {
+          const input = v.input as { name: string; source: { image: string }; variables: Record<string, string> };
+          const sb = await start(input.source.image, input.variables, { name: input.name });
+          return json(200, { data: { serviceCreate: { id: sb.id, name: input.name } } });
+        }
+        if (q.includes("serviceInstanceDeployV2")) return json(200, { data: { serviceInstanceDeployV2: "dep_1" } });
+        if (q.includes("project(id"))
+          return json(200, { data: { project: { services: { edges: [...sandboxes.values()].map((s) => ({ node: { id: s.id, name: s.labels.name } })) } } } });
+        if (q.includes("serviceDomainCreate")) {
+          const input = v.input as { serviceId: string; targetPort: number };
+          return json(200, { data: { serviceDomainCreate: { id: "dom_1", domain: (await portUrl(input.serviceId, input.targetPort)).replace(/^http:\/\//, "") } } });
+        }
+        if (q.includes("serviceDelete")) return (await kill(String(v.id))) ? json(200, { data: { serviceDelete: true } }) : json(200, { errors: [{ message: "Service not found" }] });
+        return json(200, { errors: [{ message: "unknown operation" }] });
+      }
       if (opts.kind === "e2b") {
         if (req.method === "POST" && url.pathname === "/sandboxes") {
           const b = await body(req);

@@ -586,46 +586,6 @@ export const conversations = pgTable("conversations", {
 	check("conversations_purpose_check", sql`purpose = ANY (ARRAY['chat'::text, 'setup'::text, 'welcome'::text])`),
 ]);
 
-export const computers = pgTable("computers", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	kind: text().default('team').notNull(),
-	ownerBotId: uuid("owner_bot_id"),
-	name: text().default('Team computer').notNull(),
-	provider: text().default('docker').notNull(),
-	providerRef: text("provider_ref"),
-	profile: text().default('headless').notNull(),
-	state: text().default('stopped').notNull(),
-	size: jsonb().default({"cpus":1,"disk_gb":10,"memory_mb":1024}).notNull(),
-	imageVersion: text("image_version"),
-	lastActiveAt: timestamp("last_active_at", { withTimezone: true, mode: 'string' }),
-	runningSince: timestamp("running_since", { withTimezone: true, mode: 'string' }),
-	snapshotRef: jsonb("snapshot_ref"),
-	error: text(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	uniqueIndex("computers_one_team_per_org").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(kind = 'team'::text)`),
-	index("computers_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
-	index("computers_state_idx").using("btree", table.state.asc().nullsLast().op("timestamptz_ops"), table.lastActiveAt.asc().nullsLast().op("timestamptz_ops")),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "computers_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.ownerBotId],
-			foreignColumns: [bots.id],
-			name: "computers_owner_bot_id_fkey"
-		}).onDelete("cascade"),
-	pgPolicy("computers_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(is_member(org_id) AND ((owner_bot_id IS NULL) OR can_access_bot(owner_bot_id)))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("computers_kind_check", sql`kind = ANY (ARRAY['private'::text, 'team'::text, 'local'::text])`),
-	check("computers_provider_check", sql`provider = ANY (ARRAY['docker'::text, 'e2b'::text, 'daytona'::text, 'local'::text, 'kasama-cloud'::text])`),
-	check("computers_profile_check", sql`profile = ANY (ARRAY['headless'::text, 'desktop'::text])`),
-	check("computers_state_check", sql`state = ANY (ARRAY['provisioning'::text, 'starting'::text, 'running'::text, 'idle'::text, 'sleeping'::text, 'stopped'::text, 'error'::text])`),
-	check("computers_check", sql`((kind = 'private'::text) = (owner_bot_id IS NOT NULL)) OR (kind = 'local'::text)`),
-]);
-
 export const checkpoints = pgTable("checkpoints", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -686,6 +646,46 @@ export const computerLeases = pgTable("computer_leases", {
 	check("computer_leases_mode_check", sql`mode = ANY (ARRAY['view'::text, 'control'::text])`),
 	check("computer_leases_holder_type_check", sql`holder_type = ANY (ARRAY['bot'::text, 'user'::text])`),
 	check("computer_leases_note_check", sql`char_length(note) <= 2000`),
+]);
+
+export const computers = pgTable("computers", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	kind: text().default('team').notNull(),
+	ownerBotId: uuid("owner_bot_id"),
+	name: text().default('Team computer').notNull(),
+	provider: text().default('docker').notNull(),
+	providerRef: text("provider_ref"),
+	profile: text().default('headless').notNull(),
+	state: text().default('stopped').notNull(),
+	size: jsonb().default({"cpus":1,"disk_gb":10,"memory_mb":1024}).notNull(),
+	imageVersion: text("image_version"),
+	lastActiveAt: timestamp("last_active_at", { withTimezone: true, mode: 'string' }),
+	runningSince: timestamp("running_since", { withTimezone: true, mode: 'string' }),
+	snapshotRef: jsonb("snapshot_ref"),
+	error: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	uniqueIndex("computers_one_team_per_org").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(kind = 'team'::text)`),
+	index("computers_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
+	index("computers_state_idx").using("btree", table.state.asc().nullsLast().op("timestamptz_ops"), table.lastActiveAt.asc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "computers_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.ownerBotId],
+			foreignColumns: [bots.id],
+			name: "computers_owner_bot_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("computers_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(is_member(org_id) AND ((owner_bot_id IS NULL) OR can_access_bot(owner_bot_id)))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("computers_kind_check", sql`kind = ANY (ARRAY['private'::text, 'team'::text, 'local'::text])`),
+	check("computers_profile_check", sql`profile = ANY (ARRAY['headless'::text, 'desktop'::text])`),
+	check("computers_state_check", sql`state = ANY (ARRAY['provisioning'::text, 'starting'::text, 'running'::text, 'idle'::text, 'sleeping'::text, 'stopped'::text, 'error'::text])`),
+	check("computers_check", sql`((kind = 'private'::text) = (owner_bot_id IS NOT NULL)) OR (kind = 'local'::text)`),
+	check("computers_provider_check", sql`provider = ANY (ARRAY['docker'::text, 'e2b'::text, 'daytona'::text, 'local'::text, 'kasama-cloud'::text, 'novita'::text, 'kubernetes'::text, 'incus'::text, 'boat'::text, 'railway'::text])`),
 ]);
 
 export const integrations = pgTable("integrations", {
