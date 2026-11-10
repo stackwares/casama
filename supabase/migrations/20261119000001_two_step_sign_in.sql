@@ -22,7 +22,7 @@ as $$
       and (
         p_role = 'member'
         or not o.require_mfa
-        or coalesce((select auth.jwt()) ->> 'aal', 'aal1') = 'aal2'
+        or coalesce((select nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'aal'), 'aal1') = 'aal2'
       )
   );
 $$;
@@ -37,7 +37,7 @@ as $$
     join public.organizations o on o.id = m.org_id
     where m.org_id = p_org_id and m.user_id = (select auth.uid())
       and m.role in ('owner', 'admin') and o.require_mfa
-      and coalesce((select auth.jwt()) ->> 'aal', 'aal1') <> 'aal2'
+      and coalesce((select nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'aal'), 'aal1') <> 'aal2'
   );
 $$;
 grant execute on function public.mfa_blocks_admin(uuid) to authenticated;
