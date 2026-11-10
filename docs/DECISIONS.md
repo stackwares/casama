@@ -74,7 +74,7 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 
 - **Decision**: `POST /v1/credentials` writes the key to Vault with the server role after checking `has_role(org, 'admin')` under the user's session. `POST /v1/credentials/{id}/test` enqueues a `testCredential` workflow, because only the worker reads `vault.decrypted_secrets`. Keys are resolved inside each step and never appear in step outputs, which DBOS persists.
 
-## D-016 Worker database role (deferred)
+## D-016 Worker database role (deferred; built in D-095)
 
 - **Context**: The spec calls for a dedicated role for system jobs, scoped by explicit org ids.
 - **Decision**: In Phase 1 the worker uses the server connection and scopes every query by run, bot and org ids. A least-privilege `kasama_worker` role (execute on the event functions, Vault read, table grants without bypass) is scheduled for the Phase 8 security review.
@@ -168,7 +168,7 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 
 - **Decision**: with Docker available, migrations and pgTAP tests also run on the real Supabase Postgres image (`supabase db start` + `supabase test db`). This caught that Supabase owns `realtime.messages` and already enables its RLS, so the migration no longer alters it.
 
-## D-038 v1 product scope (English-only clients, deferred channels)
+## D-038 v1 product scope (English-only clients, deferred channels; channels built in D-134)
 
 - **Context**: the product should stay region-neutral. v1 should not ship external messaging adapters; integrations should include Composio, Pipedream and media generation like comparable open-source agent platforms.
 - **Decision**: Phases 0–8 cover Kasama's own Flutter and CLI clients only. External `ChannelAdapter` implementations (Telegram, email inbox, SMS, Slack, WhatsApp, Messenger) and extra sandbox vendors are specified under **Post-v1** in `SPEC.md`. Phase 4 ships Composio, Pipedream Connect and a `MediaProvider` (fal.ai first). Launch locale is English only; ARB files stay the source for UI strings.
@@ -192,7 +192,7 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Context**: the spec's client architecture lists a drift cache for conversations, messages and bots.
 - **Decision**: deferred past the MVP app. Data loads from Supabase and the API on demand. Add drift (including its web/wasm setup) when offline or instant-open becomes a priority.
 
-## D-043 Chat attachments deferred
+## D-043 Chat attachments deferred (built in D-082)
 
 - **Decision**: the `attachments` table exists, but the chat composer has no attachment picker yet; files reach bots through the computer's file browser (upload) in the meantime.
 
@@ -379,7 +379,7 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - **Above the shell.** Adaptive sheets and dialogs open on the root navigator, so a phone sheet covers the floating tab bar rather than sliding under it.
   - **Labels, not raw values.** Computer states and run statuses show words ("Asleep", "Done"), never API values. Settings rows each carry a one-line description. Accents grew to 17, laid out in balanced rows.
 
-## D-084 Type: Fraunces, Figtree, JetBrains Mono
+## D-084 Type: Fraunces, Figtree, JetBrains Mono (defaults superseded by D-087)
 
 - **Decision**: Three bundled typefaces, all SIL OFL 1.1 (`client/assets/fonts/*-OFL.txt`), and none fetched at runtime:
   - **Fraunces** (72pt optical size, the soft cut, SemiBold and Bold) for display, headline and large title styles: page and sheet titles, greetings, Markdown headings and avatar initials. A warm serif suits the cloud mascot and sets the app apart from the sans-only AI chat apps.
@@ -1126,7 +1126,7 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - Turning it off sets `decrypting`; the sweep opens every row, then sets `off` and deletes the key.
   - A trigger stops app sessions from changing the mode directly, so it only changes through the API, after the key exists.
 - **Rotation:** `POST /v1/orgs/{id}/encryption/rotate` rewraps the data key with the server's current key. Rows aren't rewritten.
-  - To change the server key, set the new key in `CONTENT_ENCRYPTION_KEY` and the old one in `CONTENT_ENCRYPTION_KEY_PREVIOUS`, rotate (or call `rewrapAllKeys`), then drop the old key.
+  - To change the server key, set the new key in `CONTENT_ENCRYPTION_KEY` and the old one in `CONTENT_ENCRYPTION_KEY_PREVIOUS`, and restart. The worker's hourly maintenance rewraps every data key still on the old key (`rewrapAllKeys`, wired up in the 2026-11 audit). After an hour, drop the old key.
 - **The app:**
   - Postgres no longer has plaintext, so the app reads through the API:
     - **Threads:** when a thread from Supabase has sealed content, the app loads `GET /v1/conversations/{id}/thread` instead.
@@ -1720,3 +1720,45 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - A normal suggestion during a meeting doesn't push and shows up in the next brief's instructions with "you were in a meeting". Nothing stays held afterwards.
     - "Less like this" saves a pinned preference, and only the owner can send it.
   - App: the why sheet (rule, data, why it waited) and "Less like this".
+
+## D-154 Audit fixes (November 2026)
+
+The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
+
+- **Personal data:**
+  - **Linked bots' requests act for nobody** (`trigger = 'link'`, D-143). The run is recorded under the owner, but `actingUserOf` and the run loader return no acting person for it or its sub-runs, so device data, personal logins and personal computers stay out of reach. The peer's text arrives wrapped as untrusted, and `links.ask` answers come back wrapped too.
+  - **Conversations become private when personal device data enters them.** `device.read` marks the conversation `private`. From then on its messages, run events and live stream are only for the person who started it (`conversations_select`, `can_access_conversation`, `run_visible`, `can_access_run`, and the API's run check). Team chats without personal data stay shared, as before.
+  - **Deleting a conversation** is for its starter or the bot's managers.
+  - **Memory extraction skips runs whose model saw device data**, because a bot's memory is shared by everyone who uses it (D-091).
+  - **Replays stay shared** with the bot's users. A teach recording is private, but saving it as a replay is the owner's explicit choice to share it, and its secrets are placeholders. A reviewer's suggestion to restrict them was declined.
+  - **"Less like this"** (D-153) saves a generic, unpinned preference (the kind and title only, not the why, which names places and apps).
+  - **A brief bundles only its own workspace's held messages** (D-153).
+  - **Device answers** (`locate`, live reads) are sealed and size-limited like readings.
+- **Inbound and outbound:**
+  - **Message routines without their own sender filter** only hear the channel's allowed senders (D-134). `sender: "*"` explicitly accepts anyone.
+  - **Outbound calls from the API** (password managers, Infisical, invites, memory backends) go through the SSRF-guarded fetch, as the worker's already did. `OUTBOUND_ALLOW_CIDRS` lets both reach services on a LAN.
+  - **SSO domains must be proven** with a DNS TXT record `kasama-verification=<code>` tied to the workspace (code from `GET /v1/orgs/{id}/sso/verification`). A domain another workspace already uses is refused.
+  - **Hosted MCP** (D-117) validates conversation, run and approval ids as UUIDs. A workspace-scoped token can only reach conversations and runs of that workspace's bots.
+  - **Tools returning outside content** are marked untrusted, so later risky calls ask first: `knowledge.search`, `files.read`, `replay.run`, `data.search`, `memory.search`, `links.ask`.
+  - **Redaction:** values added during a run (logins, cards, codes) stay redacted after a secret request rebuilds the redactor. The run-failure log is redacted.
+- **Worker:**
+  - Every minute-tick step catches its own errors.
+  - Each due routine runs in its own savepoint. A broken one moves its schedule on (or switches off) instead of rolling back the whole batch.
+  - **A sweeper starts runs left queued for 2 minutes** (made by a step that failed partway, or by the API when starting failed). The workflow id is the run id, so starting twice is harmless.
+  - **The project heartbeat and iMessage polling hold advisory locks**, so overlapping ticks never double-start or double-reply.
+  - **Calendar fires older than 10 minutes don't run.** Fires for cancelled or changed events are dropped at the next check.
+  - **Device-data retention runs hourly** (keyed on the scheduled time, so recovery replays the same steps). "Where am I now" answers are still cleared within 10 minutes. Read notifications go after 180 days.
+  - **The encryption sweep** re-checks fully sealed workspaces every 15 minutes instead of every minute. **Data keys on a previous server key are rewrapped automatically** (hourly maintenance).
+  - **Leave-now** caches travel times for 10 minutes per event and only looks 2 hours ahead.
+  - Indexes added for these queries and the unread badge.
+  - A brief skips its scheduled time only when the last run was a wake-up brief, so twice-daily briefs keep both runs.
+  - Sub-run messages and schedules belong to the person who started the work (`personForRun`), not the bot's creator.
+- **Self-host install:**
+  - The SAML key is written as PKCS#1, and existing PKCS#8 keys are converted.
+  - The sign-up hook URL is https-only through the public address (an http URL stopped Auth from starting).
+  - The server image includes `@kasama/mcp` and the MCP SDK.
+  - Kong's config version is single-quoted.
+  - Caddy's 502 note covers only `/`, so health checks see real errors.
+  - Image pulls retry with limited parallelism.
+  - The web image clones Flutter at the pinned, commit-checked tag (works on arm64 and x64), with its own `.dockerignore`.
+- **Self-improving skills:** the detailed SPEC rule ("matches two or more earlier runs", which is the third time) governs, as D-126 built it. The SPEC table's "twice" was reworded to match.

@@ -53,7 +53,7 @@ Kasama is an open-source, self-hostable platform for persistent AI teammates. Ea
 - GPU sandboxes.
 - A paid plugin marketplace.
 - Enterprise SSO/SAML (the schema allows it; build it later).
-- External messaging channels (adapters stay specified; implementation is post-v1).
+- External messaging channels were post-v1 here; they shipped in Wave 3 (D-134).
 
 ## Features and acceptance criteria
 
@@ -88,7 +88,7 @@ The full product is 40 features across 9 phases, built backend-first: Phases 0 t
 | Take control            | Control lease, bot-initiated takeover requests, hand back                                            | Bot pauses while the user controls and resumes after hand-back                                  | 5       |
 | Desktop control         | agent-desktop (accessibility tree) with screenshot fallback                                          | Bot operates a Linux desktop app                                                                | 5       |
 | Providers               | Docker with gVisor, E2B, Daytona (more providers specified post-v1)                                  | The same computer test suite passes on Docker, E2B and Daytona                                  | 5       |
-| Channels                | Bot email inbox, SMS, Telegram, Slack, WhatsApp, Messenger (post-v1 build)                           | Specified in Channels; not implemented in v1. Users use Kasama clients instead                  | post-v1 |
+| Channels                | Bot email inbox, SMS, Telegram, Slack, WhatsApp, Messenger (post-v1 build)                           | Specified in Channels; built in Wave 3 (D-134)                                                  | post-v1 |
 | Voice                   | Dictation, text-to-speech (BYO ElevenLabs, OpenAI, Cartesia, Fish Audio), live calls                 | Live-call reply starts within 1 s                                                               | 6       |
 | Local computer          | Flutter desktop companion runs tools on the user's own machine                                       | Bot opens an app on the user's Mac behind a visible consent overlay                             | 6       |
 | Flutter extras          | Home-screen widgets, iOS Live Activities, share to bot, desktop hotkey and tray, owner admin console | Each works on its platforms in the release build                                                | 6       |
@@ -552,7 +552,7 @@ Users watch a bot's desktop live over WebRTC and can take control at any time; t
 
 ### Streaming
 
-- The desktop image runs an open-source WebRTC desktop streamer (evaluate Selkies and Neko in Phase 5, record the choice as a decision). The stream starts only when a viewer joins and stops 60 s after the last viewer leaves.
+- The desktop image runs an open-source WebRTC desktop streamer (Neko, chosen in D-054). The stream starts only when a viewer joins and stops 60 s after the last viewer leaves.
 - `POST /v1/computers/{id}/stream-session` returns a signaling URL, a 5-minute token bound to the user, computer and mode (`view` or `control`), and short-lived coturn credentials.
 - Signaling is proxied by the API; the computer's streamer is never reachable directly from the internet.
 - The Flutter app uses `flutter_webrtc` on every platform. Mouse, touch and keyboard input travel on a WebRTC data channel and are accepted only with a `control` token.
@@ -586,7 +586,7 @@ MCP is the one integration standard for v1. External messaging channels are spec
 - Integration credentials live only in Vault and are never returned by the API.
 - MCP servers on the user's own computer (a local command or a `127.0.0.1` address) cannot be reached from the server; they connect through the desktop companion (Post-v1 roadmap: Local MCP servers).
 
-### Channels (post-v1 — specified, not built in Phases 0–8)
+### Channels (post-v1; built in Wave 3, D-134)
 
 | Channel   | Inbound                                         | Outbound       | Notes                                                |
 | --------- | ----------------------------------------------- | -------------- | ---------------------------------------------------- |
@@ -660,7 +660,7 @@ One Flutter app ships to web, iOS, Android, macOS, Windows and Linux, organized 
 4. **Activity timeline:** every run event with filters; checkpoints with Restore.
 5. **Computer:** live view, take control and hand back, terminal, file browser, sleep and wake, size.
 6. **Approvals inbox:** pending approvals across bots, with approve, deny and "always allow".
-7. **Bot settings:** persona, model and fallbacks, autonomy, budget, memory, skills, routines, integrations (channels UI post-v1).
+7. **Bot settings:** persona, model and fallbacks, autonomy, budget, memory, skills, routines, integrations, chat apps (D-134).
 8. **Workspace settings:** members and roles, model keys, secrets, integrations, quotas and usage, language, data export, delete account.
 9. **Templates gallery:** starter bots with one-tap create.
 10. **Companion settings** (desktop only): local computer pairing and permissions.
@@ -893,7 +893,7 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 | Import an agent        | Import OpenClaw or Hermes Agent folders, and ChatGPT or Claude memory                                                                                              | An imported folder becomes a bot with its persona, skills, routines and memories after a review step                                | 2    |
 | Routines as files      | Routines and skills as Markdown files, synced with a git repo                                                                                                      | Editing a routine file in the repo changes the routine; editing it in the app updates the file                                      | 2    |
 | Knowledge sources      | Uploaded documents, Drive folders, Notion pages and websites, indexed for bots to search with citations                                                            | A bot answers a question from an uploaded PDF and cites the page; a Drive change shows up after the next sync                       | 2    |
-| Self-improving skills  | Bots propose a skill after repeating a task and propose fixes when a skill fails                                                                                   | After the same kind of task twice the bot offers a skill; a failure produces a proposed fix shown as a diff                         | 2    |
+| Self-improving skills  | Bots propose a skill after repeating a task and propose fixes when a skill fails                                                                                   | When a task matches two earlier runs the bot offers a skill; a failure produces a proposed fix shown as a diff                         | 2    |
 | Step replay            | Replay recorded browser and desktop steps without model calls; the bot takes over when a step breaks                                                              | A recorded form fill replays with new values at zero model tokens, and recovers after the page layout changes                       | 2    |
 | Password managers      | 1Password and Bitwarden logins filled into the bot's browser without the model seeing them                                                                        | A bot signs in with a vault item; the password never appears in events, logs or model input; other sites are refused                | 2    |
 | Welcome chat           | New users land in a chat with a ready personal bot that asks what to focus on, then shows a matching intro, one relevant connection and a first task; the form wizard becomes "Set up manually" | A new user goes from sign-in to a first suggested task without a form; picking Coding offers GitHub, not Google; with no model, the scripted questions and the model card still show | 2    |
@@ -1004,7 +1004,7 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - **Bot settings history:** `bot_revisions` records every change to instructions, model policy, autonomy, budget and computer, with who made it. Any revision can be restored.
 - **Share a bot as a template:** export a bot's instructions, skills, routines and suggested connections (never secrets; memories only if chosen) as a file or link. Importing shows a preview first. This feeds the community template repo.
 - **Shortcuts:** App Intents for Siri and Shortcuts on iOS and macOS, and app shortcuts on Android, for "Ask a bot" and "Run a routine".
-- **Offline cache** (D-042): a drift cache of bots, conversations and recent messages, so chats open instantly and can be read offline.
+- **Offline cache** (D-112): a drift cache of bots, conversations and recent messages, so chats open instantly and can be read offline.
 
 ### Projects
 
@@ -1258,133 +1258,135 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 
 ### Phase 0: Backend foundations
 
-- [ ] Monorepo with pnpm, Turborepo and Biome, plus a Dart workspace for `dart/`; CI running lint, typecheck and tests
-- [ ] Open-source basics: Apache-2.0 LICENSE, README, CONTRIBUTING with DCO sign-off, CODE\_OF\_CONDUCT, SECURITY.md, issue templates
-- [ ] Supabase migrations for organizations, memberships, profiles, invites, with RLS and pgTAP tests
-- [ ] Billing-ready stubs: `plans` and `entitlements` tables with one default self-host plan
-- [ ] Server skeleton: Hono with zod-openapi, `MODE=api` and `MODE=worker`, JWT middleware, `withUserSession`, problem-JSON errors, health checks, interactive API reference at `/docs`
-- [ ] `packages/contracts`: OpenAPI generation and run event schema; generator for `dart/kasama_sdk`
-- [ ] DBOS wired into the worker with one test workflow
-- [ ] Observability package: OpenTelemetry and Sentry
-- [ ] Docker Compose stack for local development
-- [ ] `kasama` CLI v0: `login`, `whoami`, `org create`, `org invite`
+> Checkboxes updated in the November 2026 audit from docs/DECISIONS.md. The unticked items need Oliver: accounts, store review, publishing or the launch itself (docs/NEEDS-FROM-OLIVER.md).
+
+- [x] Monorepo with pnpm, Turborepo and Biome, plus a Dart workspace for `dart/`; CI running lint, typecheck and tests
+- [x] Open-source basics: Apache-2.0 LICENSE, README, CONTRIBUTING with DCO sign-off, CODE\_OF\_CONDUCT, SECURITY.md, issue templates
+- [x] Supabase migrations for organizations, memberships, profiles, invites, with RLS and pgTAP tests
+- [x] Billing-ready stubs: `plans` and `entitlements` tables with one default self-host plan
+- [x] Server skeleton: Hono with zod-openapi, `MODE=api` and `MODE=worker`, JWT middleware, `withUserSession`, problem-JSON errors, health checks, interactive API reference at `/docs`
+- [x] `packages/contracts`: OpenAPI generation and run event schema; generator for `dart/kasama_sdk`
+- [x] DBOS wired into the worker with one test workflow
+- [x] Observability package: OpenTelemetry and Sentry
+- [x] Docker Compose stack for local development
+- [x] `kasama` CLI v0: `login`, `whoami`, `org create`, `org invite`
 
 **Gate:** a developer signs up and logs in from the CLI, creates a workspace and invites a member; the cross-org RLS test passes; CI is green.
 
 ### Phase 1: Backend MVP (bots and chat)
 
-- [ ] Migrations: bots, conversations, messages, attachments, runs, run\_events, memories, skills, model\_credentials, usage\_ledger, quotas, audit\_log
-- [ ] Model keys in Vault with a test endpoint (OpenRouter plus one direct provider first)
-- [ ] `ModelGateway` with fallback chain and capability registry
-- [ ] `agentRun` workflow: loop, streaming, cancel, step and time limits, usage recording
-- [ ] Event bus: write to Postgres, broadcast on Realtime, catch-up endpoint
-- [ ] Context builder with compaction and large-output offload
-- [ ] Memory service: extraction and hybrid search
-- [ ] Skills: create, edit, `skills.load`
-- [ ] CLI: `bot create`, `chat` (streams tokens and tool steps), `runs watch`, `memory list`
-- [ ] Recorded model fixtures; crash-and-resume integration test
+- [x] Migrations: bots, conversations, messages, attachments, runs, run\_events, memories, skills, model\_credentials, usage\_ledger, quotas, audit\_log
+- [x] Model keys in Vault with a test endpoint (OpenRouter plus one direct provider first)
+- [x] `ModelGateway` with fallback chain and capability registry
+- [x] `agentRun` workflow: loop, streaming, cancel, step and time limits, usage recording
+- [x] Event bus: write to Postgres, broadcast on Realtime, catch-up endpoint
+- [x] Context builder with compaction and large-output offload
+- [x] Memory service: extraction and hybrid search
+- [x] Skills: create, edit, `skills.load`
+- [x] CLI: `bot create`, `chat` (streams tokens and tool steps), `runs watch`, `memory list`
+- [x] Recorded model fixtures; crash-and-resume integration test
 
 **Gate:** chat from the CLI streams replies; killing the worker mid-run resumes the run; a fact from one chat is recalled in another; no API response ever contains a key.
 
 ### Phase 2: Computers (backend)
 
-- [ ] `SandboxProvider` interface and contract test suite
-- [ ] `computerd` in Dart, compiled to a single binary
-- [ ] Headless and desktop images for amd64 and arm64
-- [ ] Supervisor: Docker with gVisor, per-computer networks, limits, warm pool
-- [ ] Egress proxy with private-range blocking
-- [ ] Sleep and restore through object storage; checkpoints and restore
-- [ ] Tools: shell, files, browser (agent-browser), checkpoint
-- [ ] CLI: `computer status`, `computer shell` (interactive terminal), `computer files`
+- [x] `SandboxProvider` interface and contract test suite
+- [x] `computerd` in Dart, compiled to a single binary
+- [x] Headless and desktop images for amd64 and arm64
+- [x] Supervisor: Docker with gVisor, per-computer networks, limits, warm pool (warm pool deferred in D-033, built in D-148)
+- [x] Egress proxy with private-range blocking
+- [x] Sleep and restore through object storage; checkpoints and restore
+- [x] Tools: shell, files, browser (agent-browser), checkpoint
+- [x] CLI: `computer status`, `computer shell` (interactive terminal), `computer files`
 
 **Gate:** from the CLI, a bot researches a topic on the web and writes a report file; sleep and restore keep files and browser logins; restoring a checkpoint reverts files; requests to 169.254.169.254 and the internal network are blocked.
 
 ### Phase 3: MVP app (Flutter)
 
-- [ ] App shell: theme, go\_router, l10n, adaptive layout, wired to `kasama_sdk`
-- [ ] Auth screens (email, magic link, Google, Apple), create and join workspace, add a model key
-- [ ] Bots list, streaming chat with tool cards, activity timeline
-- [ ] Computer tab: screenshot view, terminal, file browser, checkpoint Restore
-- [ ] Memory and skills screens; cost meter
+- [x] App shell: theme, go\_router, l10n, adaptive layout, wired to `kasama_sdk`
+- [x] Auth screens (email, magic link, Google, Apple), create and join workspace, add a model key
+- [x] Bots list, streaming chat with tool cards, activity timeline
+- [x] Computer tab: screenshot view, terminal, file browser, checkpoint Restore
+- [x] Memory and skills screens; cost meter
 - [ ] Tester builds: TestFlight, Google Play internal testing, web preview
 
 **Gate (MVP complete):** 10 testers use the app on Android, iOS and web for one week, and at least 80% of their runs finish without errors.
 
 ### Phase 4: Autonomy
 
-- [ ] Approvals, autonomy levels and approvals inbox
-- [ ] Secret placeholders, host allowlists and redaction tests
-- [ ] Routine scheduler with timezones; webhook and GitHub triggers
-- [ ] `subagent.spawn`, `bots.delegate` and the task board
-- [ ] MCP and OpenAPI integrations; Composio and Pipedream Connect adapters
-- [ ] `MediaProvider` and fal.ai adapter; tools `media.image.generate` and `media.video.generate`
-- [ ] Push notifications (devices table, FCM fan-out), in-app inbox, deep links
-- [ ] Templates gallery with 5 starter bots
-- [ ] Tools: `web.search`, `http.request`, `notify.user`
+- [x] Approvals, autonomy levels and approvals inbox
+- [x] Secret placeholders, host allowlists and redaction tests
+- [x] Routine scheduler with timezones; webhook and GitHub triggers
+- [x] `subagent.spawn`, `bots.delegate` and the task board
+- [x] MCP and OpenAPI integrations; Composio and Pipedream Connect adapters
+- [x] `MediaProvider` and fal.ai adapter; tools `media.image.generate` and `media.video.generate`
+- [x] Push notifications (devices table, FCM fan-out), in-app inbox, deep links
+- [x] Templates gallery with 5 starter bots
+- [x] Tools: `web.search`, `http.request`, `notify.user`
 
 **Gate:** a daily 08:00 routine in the owner's timezone runs and pushes its result; a high-risk tool waits for approval; a subagent stops at its budget; MCP, Composio and Pipedream tools work when configured; image generation succeeds with a test provider key; a test proves secrets never reach model input.
 
 ### Phase 5: Live computer
 
-- [ ] Evaluate and integrate the WebRTC streamer in the desktop image; deploy coturn
-- [ ] Stream-session endpoint and signaling proxy
-- [ ] Flutter live view with `flutter_webrtc`, input data channel, touch gestures and zoom
-- [ ] Control lease, `request_takeover`, push deep link, privacy during takeover
-- [ ] Desktop tools: agent-desktop with screenshot fallback
-- [ ] E2B and Daytona adapters passing the contract suite
-- [ ] Team and private computer management in the app
+- [x] Evaluate and integrate the WebRTC streamer in the desktop image; deploy coturn
+- [x] Stream-session endpoint and signaling proxy
+- [x] Flutter live view with `flutter_webrtc`, input data channel, touch gestures and zoom
+- [x] Control lease, `request_takeover`, push deep link, privacy during takeover
+- [x] Desktop tools: agent-desktop with screenshot fallback
+- [x] E2B and Daytona adapters passing the contract suite
+- [x] Team and private computer management in the app
 
 **Gate:** live view under 500 ms on 4G; take control and hand back works mid-run; the same flow works on E2B; a bot completes a task in a Linux desktop app.
 
 ### Phase 6: Reach and Flutter extras
 
-- [ ] Voice: dictation, read aloud, live calls with tool forwarding
-- [ ] Local computer companion on macOS, Windows and Linux
-- [ ] Home-screen widgets, iOS Live Activities, share to bot, desktop hotkey and tray, owner admin console
+- [x] Voice: dictation, read aloud, live calls with tool forwarding
+- [x] Local computer companion on macOS, Windows and Linux
+- [x] Home-screen widgets, iOS Live Activities, share to bot, desktop hotkey and tray, owner admin console
 - [ ] Publish `kasama_sdk` to pub.dev; CLI release binaries and Homebrew tap
 
 **Gate:** a live call reply starts within 1 s; the companion completes a browser task on the user's Mac; an external sample app streams a run with the published SDK.
 
 ### Phase 7: Monetization (Dodo Payments)
 
-- [ ] Billing tables: plans, subscriptions, entitlements, credit\_ledger, billing\_events, cloud\_connect\_keys
-- [ ] `BillingProvider` interface and Dodo adapter: checkout, customer portal, Standard Webhooks verification, subscription lifecycle, usage events
-- [ ] App Store adapter: `in_app_purchase`, App Store Server API verification, Server Notifications V2
-- [ ] Google Play adapter: `in_app_purchase`, Play Developer API verification, real-time developer notifications
-- [ ] Entitlement service feeding quotas; credit deductions from `usage_ledger`
-- [ ] Plans, paywall and Restore Purchases screens; iOS shows in-app purchase only outside the US storefront
-- [ ] Cloud Connect: API keys, `kasama-cloud` sandbox provider and model credit proxy for self-hosted instances
-- [ ] `BILLING_ENABLED=false` by default in self-host builds
+- [x] Billing tables: plans, subscriptions, entitlements, credit\_ledger, billing\_events, cloud\_connect\_keys
+- [x] `BillingProvider` interface and Dodo adapter: checkout, customer portal, Standard Webhooks verification, subscription lifecycle, usage events
+- [x] App Store adapter: `in_app_purchase`, App Store Server API verification, Server Notifications V2
+- [x] Google Play adapter: `in_app_purchase`, Play Developer API verification, real-time developer notifications
+- [x] Entitlement service feeding quotas; credit deductions from `usage_ledger`
+- [x] Plans, paywall and Restore Purchases screens; iOS shows in-app purchase only outside the US storefront
+- [x] Cloud Connect: API keys, `kasama-cloud` sandbox provider and model credit proxy for self-hosted instances
+- [x] `BILLING_ENABLED=false` by default in self-host builds
 
 **Gate:** a Dodo purchase on web unlocks iOS and Android; an App Store purchase unlocks web; cancel and refund webhooks remove access; a self-hosted instance runs a bot on a cloud computer and the usage shows on its cloud bill.
 
 ### Phase 8: Production and open-source launch
 
-- [ ] Dashboards and alerts; nightly evals with a stored baseline
-- [ ] k6 load test: 200 bots waking at once, 100 concurrent chat streams
-- [ ] Security review against the threat table; penetration test of sandbox isolation and RLS
-- [ ] Data export, account deletion, retention settings
-- [ ] Self-host installer, CLI `selfhost` commands, one-click deploy templates, docs site
-- [ ] `ee/` features under the commercial license; opt-in telemetry; Kasama MCP server
+- [x] Dashboards and alerts; nightly evals with a stored baseline
+- [x] k6 load test: 200 bots waking at once, 100 concurrent chat streams
+- [x] Security review against the threat table; penetration test of sandbox isolation and RLS
+- [x] Data export, account deletion, retention settings
+- [x] Self-host installer, CLI `selfhost` commands, one-click deploy templates, docs site
+- [x] `ee/` features under the commercial license; opt-in telemetry; Kasama MCP server
 - [ ] Marketing site, demo video, app store listings, signed desktop installers, Shorebird release flow
-- [ ] ChatGPT plan sign-in (see Model gateway): desktop and CLI sign-in, the `chatgpt` gateway adapter, limit and reconnect handling, and the fake OpenAI test server; cloud stays off until OpenAI approves hosted use
-- [ ] Two-step sign-in: TOTP through Supabase Auth on every platform, more than one factor allowed as backup, and a workspace setting that requires it for owners and admins (sensitive routes then need `aal2`); passkeys once Supabase Auth supports them
-- [ ] Kasama Cloud abuse controls: a sign-up check on new email accounts (Supabase Auth's before-user-created hook accepts a Firebase App Check token, which needs no visible widget, or a solved proof-of-work puzzle on platforms without App Check), a verified email before a free-tier computer starts, outbound mail ports blocked, per-computer egress and CPU limits, crypto-mining and flood detection in the egress proxy that stops the computer and suspends the workspace, and Suspend in the owner console (stops computers and runs, keeps data, writes `audit_log`); self-hosted servers keep all of this off (D-094)
-- [ ] Least-privilege `kasama_worker` database role for the worker and system jobs (D-016)
+- [x] ChatGPT plan sign-in (see Model gateway): desktop and CLI sign-in, the `chatgpt` gateway adapter, limit and reconnect handling, and the fake OpenAI test server; cloud stays off until OpenAI approves hosted use
+- [x] Two-step sign-in: TOTP through Supabase Auth on every platform, more than one factor allowed as backup, and a workspace setting that requires it for owners and admins (sensitive routes then need `aal2`); passkeys once Supabase Auth supports them
+- [x] Kasama Cloud abuse controls: a sign-up check on new email accounts (Supabase Auth's before-user-created hook accepts a Firebase App Check token, which needs no visible widget, or a solved proof-of-work puzzle on platforms without App Check), a verified email before a free-tier computer starts, outbound mail ports blocked, per-computer egress and CPU limits, crypto-mining and flood detection in the egress proxy that stops the computer and suspends the workspace, and Suspend in the owner console (stops computers and runs, keeps data, writes `audit_log`); self-hosted servers keep all of this off (D-094)
+- [x] Least-privilege `kasama_worker` database role for the worker and system jobs (D-016)
 - [ ] Public launch: Show HN, Product Hunt, r/selfhosted, r/LocalLLaMA
 
 **Gate:** load test p95 time to first token under 3 s; evals at or above baseline; security checklist closed; fresh VPS install under 15 minutes; a self-hosted bot replies on a ChatGPT plan; two-step sign-in works on all six platforms; a scripted sign-up without a sign-up proof fails on Kasama Cloud; apps approved in both stores; public launch done.
 
 ### Post-v1 (specified, not part of Phases 0–8)
 
-Build these only after v1 launch unless the product owner reprioritizes. Designs and acceptance criteria are in the Post-v1 roadmap; each wave's gate is that every acceptance criterion in its rows passes.
+Build these only after v1 launch unless the product owner reprioritizes. (Reprioritized: Waves 1–4 were built before launch, D-096 to D-153.) Designs and acceptance criteria are in the Post-v1 roadmap; each wave's gate is that every acceptance criterion in its rows passes.
 
-- [ ] Wave 1: local MCP servers, coding agents, ticket board, spaces, bots that manage bots, ask for a secret, sign-in codes for bots, search, skills library, setup interview and starter bots, lazy tool loading, run tracing, app polish, projects, check-ins, action rules, watchers, hosted MCP endpoint
-- [ ] Wave 2: group chats, pages, teach by showing, plugins, import an agent, routines and skills as files, knowledge sources, self-improving skills, step replay, password managers, welcome chat, bot sharing, calendar triggers, bot-to-bot switch
-- [ ] Wave 3: channel adapters in this order: Telegram, email (Resend), SMS (Twilio), Slack, WhatsApp, Messenger, iMessage, Feishu, each with sender allowlists, plus email and chat triggers for routines
-- [ ] Channel gate: a Telegram message and an email each get replies in the same thread; unknown senders are ignored
-- [ ] Wave 3: phone-call voice, encryption at rest, memory backends, paid data services, additional `SandboxProvider` adapters (Boat, boxd, CreateOS, Novita, Railway-backed runners, Kubernetes, Incus, Alibaba Wuying) passing the contract suite, agent-to-agent (A2A), calls for you, payments, linked agents, voice upgrades, and the ops extras
-- [ ] Wave 4: device connections, health data, device triggers, desktop context, attention rules
+- [x] Wave 1: local MCP servers, coding agents, ticket board, spaces, bots that manage bots, ask for a secret, sign-in codes for bots, search, skills library, setup interview and starter bots, lazy tool loading, run tracing, app polish, projects, check-ins, action rules, watchers, hosted MCP endpoint
+- [x] Wave 2: group chats, pages, teach by showing, plugins, import an agent, routines and skills as files, knowledge sources, self-improving skills, step replay, password managers, welcome chat, bot sharing, calendar triggers, bot-to-bot switch
+- [x] Wave 3: channel adapters in this order: Telegram, email (Resend), SMS (Twilio), Slack, WhatsApp, Messenger, iMessage, Feishu, each with sender allowlists, plus email and chat triggers for routines
+- [x] Channel gate: a Telegram message and an email each get replies in the same thread; unknown senders are ignored
+- [x] Wave 3: phone-call voice, encryption at rest, memory backends, paid data services, additional `SandboxProvider` adapters (Boat, boxd, CreateOS, Novita, Railway-backed runners, Kubernetes, Incus, Alibaba Wuying) passing the contract suite, agent-to-agent (A2A), calls for you, payments, linked agents, voice upgrades, and the ops extras (boxd, CreateOS and Alibaba Wuying deferred for lack of public APIs, D-139)
+- [x] Wave 4: device connections, health data, device triggers, desktop context, attention rules
 
 ## Open decisions and risks
 
@@ -1396,7 +1398,7 @@ Eleven decisions have defaults the coding agent can build on now; confirm each b
 | Who pays for model usage      | Bring-your-own model keys at launch; included credits later via Dodo Payments     | Phase 7    |
 | Supabase hosting              | Supabase Cloud in your chosen region for hosted; self-hosted Supabase in Compose  | Phase 0    |
 | Media generation provider     | fal.ai first; additional `MediaProvider` adapters as needed                       | Phase 4    |
-| WebRTC streamer               | Evaluate Selkies and Neko; pick by latency, license and mobile support            | Phase 5    |
+| WebRTC streamer               | Decided: Neko (D-054)                                                             | Phase 5    |
 | Hosted ChatGPT plan usage     | Off on Kasama Cloud until OpenAI approves it through its interest form            | Cloud launch |
 | Name for workspaces in the UI | Keep "workspace"; switch to "space" if the product owner prefers                  | Post-v1 Wave 1 |
 | Page format                   | Self-contained HTML on a separate origin; A2UI stays for chat cards               | Post-v1 Wave 2 |
@@ -1415,5 +1417,5 @@ Eleven decisions have defaults the coding agent can build on now; confirm each b
 | Prompt injection leads to harmful actions                                                | Trust and legal exposure                   | Untrusted-content labeling, approvals after untrusted input, secret placeholders, evals with injection tasks               |
 | Google limits or delays Gmail inbox access                                               | Weaker catch-up and inbox features         | Calendar, send and Drive use scopes with free review only; inbox through Composio until verified; Microsoft and forwarding as alternatives |
 | Health and location data raise store-review and privacy problems                         | App rejection or lost trust                | Off by default, per-bot access, summaries only, no GPS trail, encryption required on Cloud, precise purpose strings |
-| Meta app review delays for WhatsApp and Messenger                                        | Post-v1 channels ship late                 | Channels are post-v1; start Meta verification only when channel work begins                                                |
+| Meta app review delays for WhatsApp and Messenger                                        | Post-v1 channels ship late                 | Channels are built (D-134); Meta business verification is still needed before WhatsApp and Messenger go live              |
 | Scope is large for one team                                                              | Slow launch                                | Strict phase gates; every phase ships a usable product                                                                     |

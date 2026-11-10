@@ -2,7 +2,7 @@
 
 **Persistent AI teammates you can self-host.** Each bot has its own chats, memory, routines and a sandboxed computer. You reach it from Kasama's own apps (web, iOS, Android, desktop) and the terminal, and it runs on your own model keys.
 
-> Status: v1 feature-complete (Phases 0 to 8 built), public launch pending. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what exists and [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md) for the launch gate.
+> Status: v1 feature-complete (Phases 0 to 8 built) plus the post-v1 roadmap (Waves 1 to 4), public launch pending. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what exists and [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md) for the launch gate.
 
 ## Self-host in about 15 minutes
 
@@ -20,6 +20,9 @@ Then open the app, choose **Use a different server**, and create the first accou
 - **Real computers**: every bot gets an isolated Linux computer that sleeps when idle; watch it live and take control, or lend your own machine through the desktop app.
 - **You stay in charge**: autonomy levels, approvals for risky steps, checkpoints, budgets and a full run timeline.
 - **Everywhere**: apps for iOS, Android, macOS, Windows, Linux and web, a CLI, a Dart SDK and an MCP server for coding tools.
+- **Works where you do**: chat apps (Telegram, email, SMS, Slack, WhatsApp, iMessage and more), group chats with several bots, pages, voice and phone calls.
+- **Knows your day, if you let it**: device connections share calendar, contacts, places and health summaries per bot, only in your own chats; routines start when you wake up, arrive somewhere or a file lands in a folder.
+- **Grows with you**: skills that improve themselves, teach-by-showing replays, plugins, linked bots between people, agent-to-agent (A2A) and payments with approval.
 - **No paywall when self-hosted**; Kasama Cloud and Cloud Connect are optional.
 
 ## Repository layout
