@@ -1,5 +1,7 @@
 import type { Database } from "@kasama/db";
+import { refreshAuthorization } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { sql } from "drizzle-orm";
 import { wrapUntrusted } from "./context.ts";
@@ -57,12 +59,14 @@ export class McpAdapter implements IntegrationAdapter {
     if (!url) throw new Error("MCP integration needs a url");
     this.url = url;
     const header = str(rec.config.auth_header) ?? "authorization";
-    this.headers = rec.secret
+    const oauth = parseOAuthSecret(rec.secret);
+    const value = oauth ? oauth.access_token : rec.secret;
+    this.headers = value
       ? {
-          [header]:
-            header.toLowerCase() === "authorization" && !/^\w+ /.test(rec.secret)
-              ? `Bearer ${rec.secret}`
-              : rec.secret,
+          [oauth ? "authorization" : header]:
+            (oauth || header.toLowerCase() === "authorization") && !/^\w+ /.test(value)
+              ? `Bearer ${value}`
+              : value,
         }
       : {};
     this.fetchImpl = ctx.fetch;
@@ -71,10 +75,12 @@ export class McpAdapter implements IntegrationAdapter {
   private async connect() {
     if (this.client) return this.client;
     const client = new Client({ name: "kasama", version: "0.1.0" });
-    const transport = new StreamableHTTPClientTransport(new URL(this.url), {
-      requestInit: { headers: this.headers },
-      fetch: this.fetchImpl as never,
-    });
+    const url = new URL(this.url);
+    const opts = { requestInit: { headers: this.headers }, fetch: this.fetchImpl as never };
+    // Legacy SSE servers still exist; their endpoint ends in /sse.
+    const transport = url.pathname.endsWith("/sse")
+      ? new SSEClientTransport(url, opts)
+      : new StreamableHTTPClientTransport(url, opts);
     await client.connect(transport);
     this.client = client;
     return client;
@@ -364,6 +370,11 @@ export class PipedreamAdapter implements IntegrationAdapter {
     this.fetchImpl = ctx.fetch;
   }
 
+  /** The Connect API token, for the guided-connection calls. */
+  token_() {
+    return this.accessToken();
+  }
+
   private async accessToken() {
     if (this.token && this.token.expires > Date.now() + 60_000) return this.token.value;
     const res = await this.fetchImpl(`${this.base}/v1/oauth/token`, {
@@ -463,18 +474,90 @@ export function createAdapter(rec: IntegrationRecord, ctx: AdapterContext): Inte
 export const integrationToolName = (rec: Pick<IntegrationRecord, "kind" | "name">, tool: string) =>
   `${rec.kind}.${rec.name}.${tool.replace(/[^a-zA-Z0-9_-]/g, "_")}`.slice(0, 120);
 
-/** Loads integrations with their credential (worker only: reads Vault). */
-export async function loadIntegration(db: Database, id: string): Promise<IntegrationRecord | null> {
-  const [row] = await db.execute<IntegrationRecord & { [k: string]: unknown }>(sql`
-    select i.id, i.org_id, i.kind, i.name, i.config, v.decrypted_secret as secret
+/**
+ * An OAuth connection's credential, kept as JSON in Vault (D-089): the tokens, plus what is
+ * needed to refresh them (the authorization server, its metadata, and the client).
+ */
+export interface OAuthSecret {
+  type: "oauth";
+  access_token: string;
+  refresh_token?: string;
+  /** Epoch milliseconds. */
+  expires_at?: number;
+  auth_server: string;
+  metadata?: Record<string, unknown>;
+  client: { client_id: string; client_secret?: string; [k: string]: unknown };
+  resource?: string;
+}
+
+export function parseOAuthSecret(secret: string | null | undefined): OAuthSecret | null {
+  if (!secret?.startsWith("{")) return null;
+  try {
+    const v = JSON.parse(secret) as Partial<OAuthSecret>;
+    return v.type === "oauth" && typeof v.access_token === "string" ? (v as OAuthSecret) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Builds the stored credential from a token response. */
+export function oauthSecretFrom(
+  tokens: { access_token: string; refresh_token?: string; expires_in?: number },
+  ctx: Omit<OAuthSecret, "type" | "access_token" | "refresh_token" | "expires_at">,
+  previous?: OAuthSecret | null,
+): OAuthSecret {
+  return {
+    type: "oauth",
+    access_token: tokens.access_token,
+    // Some servers only send a refresh token the first time.
+    refresh_token: tokens.refresh_token ?? previous?.refresh_token,
+    expires_at: tokens.expires_in ? Date.now() + tokens.expires_in * 1000 : undefined,
+    ...ctx,
+  };
+}
+
+/** Loads integrations with their credential (worker and API service role: reads Vault). OAuth
+ * tokens that expire within two minutes are refreshed first and saved back to Vault. */
+export async function loadIntegration(
+  db: Database,
+  id: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<IntegrationRecord | null> {
+  const [row] = await db.execute<
+    IntegrationRecord & { vault_secret_id: string | null; [k: string]: unknown }
+  >(sql`
+    select i.id, i.org_id, i.kind, i.name, i.config, i.vault_secret_id, v.decrypted_secret as secret
     from public.integrations i left join vault.decrypted_secrets v on v.id = i.vault_secret_id
     where i.id = ${id}::uuid`);
-  return row ?? null;
+  if (!row) return null;
+  const oauth = parseOAuthSecret(row.secret);
+  if (oauth?.refresh_token && oauth.expires_at && oauth.expires_at < Date.now() + 120_000) {
+    try {
+      const tokens = await refreshAuthorization(oauth.auth_server, {
+        metadata: oauth.metadata as never,
+        clientInformation: oauth.client as never,
+        refreshToken: oauth.refresh_token,
+        resource: oauth.resource ? new URL(oauth.resource) : undefined,
+        fetchFn: fetchImpl as never,
+      });
+      const { type: _t, access_token: _a, refresh_token: _r, expires_at: _e, ...ctx } = oauth;
+      const next = JSON.stringify(oauthSecretFrom(tokens, ctx, oauth));
+      if (row.vault_secret_id)
+        await db.execute(sql`select vault.update_secret(${row.vault_secret_id}::uuid, ${next})`);
+      row.secret = next;
+    } catch (err) {
+      await db.execute(sql`
+        update public.integrations set status = 'error', error = ${`Sign-in expired: ${(err as Error).message}`.slice(0, 500)}
+        where id = ${id}::uuid`);
+    }
+  }
+  const { vault_secret_id: _v, ...rec } = row;
+  return rec;
 }
 
 /** Lists an integration's tools and caches them (with status) on the row. */
 export async function refreshIntegration(db: Database, id: string, ctx: AdapterContext) {
-  const rec = await loadIntegration(db, id);
+  const rec = await loadIntegration(db, id, ctx.fetch);
   if (!rec) throw new Error("integration_not_found");
   let adapter: IntegrationAdapter | undefined;
   try {
@@ -500,3 +583,146 @@ export const wrapIntegrationOutput = (
   rec: Pick<IntegrationRecord, "kind" | "name">,
   text: string,
 ) => wrapUntrusted(`${rec.kind}:${rec.name}`, text);
+
+// ---------------------------------------------------------------------------
+// Guided connections through Composio and Pipedream (D-089): their app directories, and
+// connecting a person's account to one app through the provider's hosted sign-in page.
+// ---------------------------------------------------------------------------
+
+export interface ProviderApp {
+  slug: string;
+  name: string;
+  description: string;
+  logo: string | null;
+}
+
+export interface ProviderAccount {
+  app: string;
+  status: "connected" | "pending" | "error";
+}
+
+async function providerJson(fetchImpl: typeof fetch, url: string, init: RequestInit) {
+  const res = await fetchImpl(url, init);
+  const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!res.ok) {
+    const msg = textOf(json.error ?? json.message ?? "");
+    throw new Error(`${new URL(url).hostname} returned ${res.status}${msg ? `: ${msg}` : ""}`);
+  }
+  return json;
+}
+
+/** Composio: toolkits, Composio-managed sign-in links, and connected accounts (REST v3). */
+export function composioDirectory(rec: IntegrationRecord, fetchImpl: typeof fetch) {
+  if (!rec.secret) throw new Error("Composio needs an API key");
+  const base = (str(rec.config.base_url) ?? "https://backend.composio.dev").replace(/\/$/, "");
+  const userId = str(rec.config.user_id) ?? rec.org_id;
+  const headers = { "x-api-key": rec.secret, "content-type": "application/json" };
+  const call = (path: string, init: RequestInit = {}) =>
+    providerJson(fetchImpl, `${base}${path}`, { ...init, headers });
+  return {
+    async apps(query: string): Promise<ProviderApp[]> {
+      const r = await call(
+        `/api/v3/toolkits?limit=50${query ? `&search=${encodeURIComponent(query)}` : ""}`,
+      );
+      return ((r.items as Array<Record<string, unknown>>) ?? []).map((t) => {
+        const meta = (t.meta as Record<string, unknown>) ?? {};
+        return {
+          slug: String(t.slug),
+          name: str(t.name) ?? String(t.slug),
+          description: str(meta.description) ?? "",
+          logo: str(meta.logo) ?? null,
+        };
+      });
+    },
+    /** Starts a sign-in for one app; returns the page to open. */
+    async connect(app: string, callbackUrl: string): Promise<{ redirect_url: string }> {
+      const config = await call("/api/v3/auth_configs", {
+        method: "POST",
+        body: JSON.stringify({
+          toolkit: { slug: app },
+          auth_config: { type: "use_composio_managed_auth" },
+        }),
+      });
+      const authConfigId =
+        str((config.auth_config as Record<string, unknown>)?.id) ?? str(config.id);
+      if (!authConfigId) throw new Error("Composio did not return an auth config");
+      const account = await call("/api/v3/connected_accounts", {
+        method: "POST",
+        body: JSON.stringify({
+          auth_config: { id: authConfigId },
+          connection: { user_id: userId, callback_url: callbackUrl },
+        }),
+      });
+      const redirect =
+        str(account.redirect_url) ??
+        str((account.connectionData as Record<string, unknown>)?.redirect_url);
+      if (!redirect) throw new Error("Composio did not return a sign-in link");
+      return { redirect_url: redirect };
+    },
+    async accounts(): Promise<ProviderAccount[]> {
+      const r = await call(
+        `/api/v3/connected_accounts?user_ids=${encodeURIComponent(userId)}&limit=100`,
+      );
+      return ((r.items as Array<Record<string, unknown>>) ?? []).map((a) => ({
+        app: str((a.toolkit as Record<string, unknown>)?.slug) ?? "",
+        status:
+          a.status === "ACTIVE"
+            ? "connected"
+            : a.status === "INITIATED" || a.status === "INITIALIZING"
+              ? "pending"
+              : "error",
+      }));
+    },
+  };
+}
+
+/** Pipedream Connect: the app directory, Connect Link sign-in pages, and connected accounts. */
+export function pipedreamDirectory(rec: IntegrationRecord, fetchImpl: typeof fetch) {
+  const adapter = new PipedreamAdapter(rec, { fetch: fetchImpl, secrets: [] });
+  const base = (str(rec.config.base_url) ?? "https://api.pipedream.com").replace(/\/$/, "");
+  const project = str(rec.config.project_id) ?? "";
+  const externalUserId = str(rec.config.external_user_id) ?? rec.org_id;
+  const call = async (path: string, init: RequestInit = {}) =>
+    providerJson(fetchImpl, `${base}${path}`, {
+      ...init,
+      headers: {
+        authorization: `Bearer ${await adapter.token_()}`,
+        "x-pd-environment": str(rec.config.environment) ?? "production",
+        "content-type": "application/json",
+      },
+    });
+  return {
+    async apps(query: string): Promise<ProviderApp[]> {
+      const r = await call(`/v1/apps?limit=50${query ? `&q=${encodeURIComponent(query)}` : ""}`);
+      return ((r.data as Array<Record<string, unknown>>) ?? []).map((a) => ({
+        slug: String(a.name_slug),
+        name: str(a.name) ?? String(a.name_slug),
+        description: str(a.description) ?? "",
+        logo: str(a.img_src) ?? null,
+      }));
+    },
+    async connect(app: string, callbackUrl: string): Promise<{ redirect_url: string }> {
+      const r = await call(`/v1/connect/${project}/tokens`, {
+        method: "POST",
+        body: JSON.stringify({
+          external_user_id: externalUserId,
+          success_redirect_uri: callbackUrl,
+        }),
+      });
+      const link = str(r.connect_link_url);
+      if (!link) throw new Error("Pipedream did not return a Connect Link");
+      return {
+        redirect_url: `${link}${link.includes("?") ? "&" : "?"}app=${encodeURIComponent(app)}`,
+      };
+    },
+    async accounts(): Promise<ProviderAccount[]> {
+      const r = await call(
+        `/v1/connect/${project}/accounts?external_user_id=${encodeURIComponent(externalUserId)}`,
+      );
+      return ((r.data as Array<Record<string, unknown>>) ?? []).map((a) => ({
+        app: str((a.app as Record<string, unknown>)?.name_slug) ?? "",
+        status: a.healthy === false || a.dead === true ? "error" : "connected",
+      }));
+    },
+  };
+}

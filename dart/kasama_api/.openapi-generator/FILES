@@ -40,6 +40,7 @@ lib/src/model/admin_service.dart
 lib/src/model/admin_service_list.dart
 lib/src/model/admin_user.dart
 lib/src/model/admin_user_list.dart
+lib/src/model/app_catalog.dart
 lib/src/model/approval.dart
 lib/src/model/approval_decision_request.dart
 lib/src/model/approval_list.dart
@@ -56,6 +57,8 @@ lib/src/model/billing_usage_item.dart
 lib/src/model/bot.dart
 lib/src/model/bot_budget.dart
 lib/src/model/bot_list.dart
+lib/src/model/catalog_app.dart
+lib/src/model/catalog_app_api_key.dart
 lib/src/model/checkout_request.dart
 lib/src/model/checkpoint.dart
 lib/src/model/checkpoint_created_event.dart
@@ -69,6 +72,9 @@ lib/src/model/computer_size.dart
 lib/src/model/computer_state.dart
 lib/src/model/computer_state_event.dart
 lib/src/model/computer_state_event_payload.dart
+lib/src/model/connect_app_request.dart
+lib/src/model/connect_app_response.dart
+lib/src/model/connect_flow_status.dart
 lib/src/model/connect_key.dart
 lib/src/model/connect_key_list.dart
 lib/src/model/conversation.dart
@@ -94,6 +100,7 @@ lib/src/model/credential_test_result.dart
 lib/src/model/credit_entry.dart
 lib/src/model/credit_pack.dart
 lib/src/model/delete_account_request.dart
+lib/src/model/delete_integration200_response.dart
 lib/src/model/delete_result.dart
 lib/src/model/deleted_computer.dart
 lib/src/model/deleted_device.dart
@@ -140,6 +147,12 @@ lib/src/model/plan_catalog.dart
 lib/src/model/portal_request.dart
 lib/src/model/problem.dart
 lib/src/model/problem_errors_inner.dart
+lib/src/model/provider_account.dart
+lib/src/model/provider_account_list.dart
+lib/src/model/provider_app.dart
+lib/src/model/provider_app_list.dart
+lib/src/model/provider_connect_request.dart
+lib/src/model/provider_connect_response.dart
 lib/src/model/provider_id.dart
 lib/src/model/public_config.dart
 lib/src/model/purchase_request.dart
@@ -207,6 +220,7 @@ lib/src/model/ui_action_part.dart
 lib/src/model/ui_shown_event.dart
 lib/src/model/ui_shown_event_payload.dart
 lib/src/model/update_computer_request.dart
+lib/src/model/update_integration_request.dart
 lib/src/model/update_local_device_request.dart
 lib/src/model/update_notice.dart
 lib/src/model/update_org_settings_request.dart

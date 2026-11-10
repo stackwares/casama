@@ -557,6 +557,49 @@ class SupabaseBackend implements Backend {
       (await api.integrations.testIntegration(id: integrationId)).data!;
 
   @override
+  Future<AppCatalog> appCatalog() async => (await api.integrations.listApps()).data!;
+
+  @override
+  Future<ConnectAppResponse> connectApp(String orgId, {required String appId, required String method, String? apiKey, String? integrationId}) async =>
+      (await api.integrations.connectApp(
+        connectAppRequest: ConnectAppRequest(
+          orgId: orgId,
+          appId: appId,
+          method: ConnectAppRequestMethodEnum.values.firstWhere((m) => m.value == method),
+          apiKey: apiKey,
+          integrationId: integrationId,
+        ),
+      )).data!;
+
+  @override
+  Future<ConnectFlowStatus> connectStatus(String flowId) async => (await api.integrations.connectStatus(id: flowId)).data!;
+
+  @override
+  Future<void> deleteIntegration(String integrationId) async => api.integrations.deleteIntegration(id: integrationId);
+
+  @override
+  Future<Integration> setToolRisks(String integrationId, Map<String, String> risks) async => (await api.integrations.updateIntegration(
+        id: integrationId,
+        updateIntegrationRequest: UpdateIntegrationRequest(
+          riskOverrides: {
+            for (final e in risks.entries) e.key: UpdateIntegrationRequestRiskOverridesEnum.values.firstWhere((r) => r.value == e.value),
+          },
+        ),
+      )).data!;
+
+  @override
+  Future<List<ProviderApp>> providerApps(String integrationId, {String? query}) async =>
+      (await api.integrations.listProviderApps(id: integrationId, q: query == null || query.trim().isEmpty ? null : query.trim())).data!.items;
+
+  @override
+  Future<String> connectProviderApp(String integrationId, String app) async =>
+      (await api.integrations.connectProviderApp(id: integrationId, providerConnectRequest: ProviderConnectRequest(app: app))).data!.redirectUrl;
+
+  @override
+  Future<List<ProviderAccount>> providerAccounts(String integrationId) async =>
+      (await api.integrations.listProviderAccounts(id: integrationId)).data!.items;
+
+  @override
   Future<Set<String>> botIntegrationIds(String botId) async {
     final rows = await supabase.from('bot_integrations').select('integration_id').eq('bot_id', botId);
     return {for (final r in rows) r['integration_id'] as String};

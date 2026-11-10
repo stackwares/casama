@@ -3503,6 +3503,37 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "app_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "auth": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "oauth",
+              "api_key",
+              "none",
+              null
+            ]
+          },
+          "bot_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "risk_overrides": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Risk"
+            }
           }
         },
         "required": [
@@ -4119,6 +4150,31 @@
                 "name",
                 "schedule_cron"
               ]
+            }
+          },
+          "persona": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "work",
+              "research",
+              "build",
+              "create",
+              "life"
+            ]
+          },
+          "icon": {
+            "type": "string"
+          },
+          "mascot": {
+            "type": "string"
+          },
+          "starters": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         },
@@ -5452,6 +5508,326 @@
         "required": [
           "download_location"
         ]
+      },
+      "ConnectAppResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "connected",
+              "authorize",
+              "error"
+            ]
+          },
+          "integration": {
+            "$ref": "#/components/schemas/Integration"
+          },
+          "authorize_url": {
+            "type": "string"
+          },
+          "flow_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ConnectAppRequest": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "app_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "oauth",
+              "api_key",
+              "none"
+            ]
+          },
+          "api_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "integration_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "org_id",
+          "app_id",
+          "method"
+        ]
+      },
+      "ProviderConnectResponse": {
+        "type": "object",
+        "properties": {
+          "redirect_url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "redirect_url"
+        ]
+      },
+      "ProviderConnectRequest": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "app"
+        ]
+      },
+      "ConnectFlowStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "connected",
+              "error",
+              "expired"
+            ]
+          },
+          "integration": {
+            "$ref": "#/components/schemas/Integration"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "AppCatalog": {
+        "type": "object",
+        "properties": {
+          "apps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogApp"
+            }
+          },
+          "redirect_uri": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "apps",
+          "redirect_uri"
+        ]
+      },
+      "CatalogApp": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "developer",
+              "productivity",
+              "google",
+              "payments",
+              "design",
+              "sales",
+              "data",
+              "automation"
+            ]
+          },
+          "color": {
+            "type": "string",
+            "description": "Brand color, hex without #"
+          },
+          "homepage": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "auth": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "oauth",
+                "api_key",
+                "none"
+              ]
+            }
+          },
+          "api_key": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "placeholder": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "steps": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "label",
+              "url",
+              "steps"
+            ]
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "popular": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": "string"
+          },
+          "oauth_available": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "category",
+          "color",
+          "homepage",
+          "url",
+          "auth",
+          "capabilities",
+          "popular",
+          "oauth_available"
+        ]
+      },
+      "ProviderAccountList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProviderAccount"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ProviderAccount": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "connected",
+              "pending",
+              "error"
+            ]
+          }
+        },
+        "required": [
+          "app",
+          "status"
+        ]
+      },
+      "ProviderAppList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProviderApp"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ProviderApp": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "logo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "description",
+          "logo"
+        ]
+      },
+      "UpdateIntegrationRequest": {
+        "type": "object",
+        "properties": {
+          "risk_overrides": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            }
+          }
+        }
       }
     },
     "parameters": {}
@@ -11421,6 +11797,554 @@
         "responses": {
           "204": {
             "description": "Recorded"
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/apps/connect": {
+      "post": {
+        "operationId": "connectApp",
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Connect a built-in app: with an API key at once, or start an OAuth sign-in",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectAppRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connected, or a sign-in to open",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectAppResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/{id}/provider/connect": {
+      "post": {
+        "operationId": "connectProviderApp",
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Add an app to a Composio or Pipedream connection and start signing in to it",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderConnectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sign-in page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderConnectResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/apps/connect/{id}": {
+      "get": {
+        "operationId": "connectStatus",
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Whether an OAuth sign-in has finished",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectFlowStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/{id}": {
+      "delete": {
+        "operationId": "deleteIntegration",
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Disconnect: removes it from every bot and deletes its stored credential",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateIntegration",
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIntegrationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Integration"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/apps": {
+      "get": {
+        "operationId": "listApps",
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Built-in apps (vendors' hosted MCP servers) people can connect in one step",
+        "responses": {
+          "200": {
+            "description": "Catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppCatalog"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/{id}/provider/accounts": {
+      "get": {
+        "operationId": "listProviderAccounts",
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Accounts signed in through a Composio or Pipedream connection",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderAccountList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/{id}/provider/apps": {
+      "get": {
+        "operationId": "listProviderApps",
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Search a Composio or Pipedream connection's app directory",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Apps",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderAppList"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation failed",

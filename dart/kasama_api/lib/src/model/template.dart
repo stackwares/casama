@@ -32,6 +32,16 @@ class Template {
     required  this.skills,
 
     required  this.routines,
+
+     this.persona,
+
+     this.category,
+
+     this.icon,
+
+     this.mascot,
+
+     this.starters,
   });
 
   @JsonKey(
@@ -106,6 +116,66 @@ class Template {
 
 
 
+  @JsonKey(
+    
+    name: r'persona',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? persona;
+
+
+
+  @JsonKey(
+    
+    name: r'category',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final TemplateCategoryEnum? category;
+
+
+
+  @JsonKey(
+    
+    name: r'icon',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? icon;
+
+
+
+  @JsonKey(
+    
+    name: r'mascot',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? mascot;
+
+
+
+  @JsonKey(
+    
+    name: r'starters',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? starters;
+
+
+
 
 
     @override
@@ -115,7 +185,12 @@ class Template {
       other.description == description &&
       other.autonomy == autonomy &&
       other.skills == skills &&
-      other.routines == routines;
+      other.routines == routines &&
+      other.persona == persona &&
+      other.category == category &&
+      other.icon == icon &&
+      other.mascot == mascot &&
+      other.starters == starters;
 
     @override
     int get hashCode =>
@@ -124,7 +199,12 @@ class Template {
         description.hashCode +
         autonomy.hashCode +
         skills.hashCode +
-        routines.hashCode;
+        routines.hashCode +
+        persona.hashCode +
+        category.hashCode +
+        icon.hashCode +
+        mascot.hashCode +
+        starters.hashCode;
 
   factory Template.fromJson(Map<String, dynamic> json) => _$TemplateFromJson(json);
 
@@ -147,6 +227,28 @@ askRisky(r'ask_risky'),
 autonomous(r'autonomous');
 
 const TemplateAutonomyEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+
+enum TemplateCategoryEnum {
+@JsonValue(r'work')
+work(r'work'),
+@JsonValue(r'research')
+research(r'research'),
+@JsonValue(r'build')
+build(r'build'),
+@JsonValue(r'create')
+create(r'create'),
+@JsonValue(r'life')
+life(r'life');
+
+const TemplateCategoryEnum(this.value);
 
 final String value;
 

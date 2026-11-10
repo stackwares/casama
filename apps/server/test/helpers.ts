@@ -78,6 +78,8 @@ export async function startHarness(
     connect?: AppDeps["connect"];
     /** Cloud Connect, self-hosted side. */
     cloud?: { url: string; key: string };
+    /** Built-in app connections: catalog and fetch overrides. */
+    apps?: import("../src/api/routes/apps.ts").AppsOptions;
   } = {},
 ): Promise<Harness> {
   const tdb = await startTestDatabase();
@@ -151,6 +153,7 @@ export async function startHarness(
     devices: opts.local ? new DeviceRegistry() : undefined,
     billing,
     connect: opts.connect,
+    apps: opts.apps,
     env,
     db: handle.db,
     logger: createLogger("test", "error"),

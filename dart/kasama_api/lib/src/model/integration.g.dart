@@ -25,6 +25,14 @@ abstract class _$IntegrationCWProxy {
 
   Integration createdAt(DateTime createdAt);
 
+  Integration appId(String? appId);
+
+  Integration auth(IntegrationAuthEnum? auth);
+
+  Integration botIds(List<String>? botIds);
+
+  Integration riskOverrides(Map<String, Risk>? riskOverrides);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Integration(...).copyWith.fieldName(value)`.
@@ -43,6 +51,10 @@ abstract class _$IntegrationCWProxy {
     List<IntegrationToolsInner> tools,
     DateTime? toolsCachedAt,
     DateTime createdAt,
+    String? appId,
+    IntegrationAuthEnum? auth,
+    List<String>? botIds,
+    Map<String, Risk>? riskOverrides,
   });
 }
 
@@ -81,6 +93,19 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
   @override
   Integration createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
+  @override
+  Integration appId(String? appId) => call(appId: appId);
+
+  @override
+  Integration auth(IntegrationAuthEnum? auth) => call(auth: auth);
+
+  @override
+  Integration botIds(List<String>? botIds) => call(botIds: botIds);
+
+  @override
+  Integration riskOverrides(Map<String, Risk>? riskOverrides) =>
+      call(riskOverrides: riskOverrides);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Integration(...).copyWith.fieldName(value)`.
@@ -100,6 +125,10 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
     Object? tools = const $CopyWithPlaceholder(),
     Object? toolsCachedAt = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
+    Object? appId = const $CopyWithPlaceholder(),
+    Object? auth = const $CopyWithPlaceholder(),
+    Object? botIds = const $CopyWithPlaceholder(),
+    Object? riskOverrides = const $CopyWithPlaceholder(),
   }) {
     return Integration(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -138,6 +167,22 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
+      appId: appId == const $CopyWithPlaceholder()
+          ? _value.appId
+          // ignore: cast_nullable_to_non_nullable
+          : appId as String?,
+      auth: auth == const $CopyWithPlaceholder()
+          ? _value.auth
+          // ignore: cast_nullable_to_non_nullable
+          : auth as IntegrationAuthEnum?,
+      botIds: botIds == const $CopyWithPlaceholder()
+          ? _value.botIds
+          // ignore: cast_nullable_to_non_nullable
+          : botIds as List<String>?,
+      riskOverrides: riskOverrides == const $CopyWithPlaceholder()
+          ? _value.riskOverrides
+          // ignore: cast_nullable_to_non_nullable
+          : riskOverrides as Map<String, Risk>?,
     );
   }
 }
@@ -200,6 +245,21 @@ Integration _$IntegrationFromJson(Map<String, dynamic> json) => $checkedCreate(
         'created_at',
         (v) => DateTime.parse(v as String),
       ),
+      appId: $checkedConvert('app_id', (v) => v as String?),
+      auth: $checkedConvert(
+        'auth',
+        (v) => $enumDecodeNullable(_$IntegrationAuthEnumEnumMap, v),
+      ),
+      botIds: $checkedConvert(
+        'bot_ids',
+        (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+      ),
+      riskOverrides: $checkedConvert(
+        'risk_overrides',
+        (v) => (v as Map<String, dynamic>?)?.map(
+          (k, e) => MapEntry(k, $enumDecode(_$RiskEnumMap, e)),
+        ),
+      ),
     );
     return val;
   },
@@ -207,6 +267,9 @@ Integration _$IntegrationFromJson(Map<String, dynamic> json) => $checkedCreate(
     'orgId': 'org_id',
     'toolsCachedAt': 'tools_cached_at',
     'createdAt': 'created_at',
+    'appId': 'app_id',
+    'botIds': 'bot_ids',
+    'riskOverrides': 'risk_overrides',
   },
 );
 
@@ -221,6 +284,12 @@ Map<String, dynamic> _$IntegrationToJson(Integration instance) =>
       'tools': instance.tools.map((e) => e.toJson()).toList(),
       'tools_cached_at': instance.toolsCachedAt?.toIso8601String(),
       'created_at': instance.createdAt.toIso8601String(),
+      'app_id': ?instance.appId,
+      'auth': ?_$IntegrationAuthEnumEnumMap[instance.auth],
+      'bot_ids': ?instance.botIds,
+      'risk_overrides': ?instance.riskOverrides?.map(
+        (k, e) => MapEntry(k, _$RiskEnumMap[e]!),
+      ),
     };
 
 const _$IntegrationKindEnumMap = {
@@ -234,4 +303,16 @@ const _$IntegrationStatusEnumEnumMap = {
   IntegrationStatusEnum.pending: 'pending',
   IntegrationStatusEnum.ok: 'ok',
   IntegrationStatusEnum.error: 'error',
+};
+
+const _$IntegrationAuthEnumEnumMap = {
+  IntegrationAuthEnum.oauth: 'oauth',
+  IntegrationAuthEnum.apiKey: 'api_key',
+  IntegrationAuthEnum.none: 'none',
+};
+
+const _$RiskEnumMap = {
+  Risk.low: 'low',
+  Risk.medium: 'medium',
+  Risk.high: 'high',
 };

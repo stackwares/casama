@@ -168,6 +168,9 @@ final routinesProvider = FutureProvider.family<List<Routine>, String>(
   (ref, botId) => ref.watch(backendProvider).routines(botId),
 );
 
+/// Built-in apps (D-089); cached for the session.
+final appCatalogProvider = FutureProvider<AppCatalog>((ref) => ref.watch(backendProvider).appCatalog());
+
 final integrationsProvider = FutureProvider<List<Integration>>((ref) async {
   final org = ref.watch(currentOrgProvider);
   if (org == null) return const [];

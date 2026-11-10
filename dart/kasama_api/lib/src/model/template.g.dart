@@ -19,6 +19,16 @@ abstract class _$TemplateCWProxy {
 
   Template routines(List<TemplateRoutinesInner> routines);
 
+  Template persona(String? persona);
+
+  Template category(TemplateCategoryEnum? category);
+
+  Template icon(String? icon);
+
+  Template mascot(String? mascot);
+
+  Template starters(List<String>? starters);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Template(...).copyWith.fieldName(value)`.
@@ -34,6 +44,11 @@ abstract class _$TemplateCWProxy {
     TemplateAutonomyEnum autonomy,
     List<String> skills,
     List<TemplateRoutinesInner> routines,
+    String? persona,
+    TemplateCategoryEnum? category,
+    String? icon,
+    String? mascot,
+    List<String>? starters,
   });
 }
 
@@ -63,6 +78,21 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
   Template routines(List<TemplateRoutinesInner> routines) =>
       call(routines: routines);
 
+  @override
+  Template persona(String? persona) => call(persona: persona);
+
+  @override
+  Template category(TemplateCategoryEnum? category) => call(category: category);
+
+  @override
+  Template icon(String? icon) => call(icon: icon);
+
+  @override
+  Template mascot(String? mascot) => call(mascot: mascot);
+
+  @override
+  Template starters(List<String>? starters) => call(starters: starters);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Template(...).copyWith.fieldName(value)`.
@@ -79,6 +109,11 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
     Object? autonomy = const $CopyWithPlaceholder(),
     Object? skills = const $CopyWithPlaceholder(),
     Object? routines = const $CopyWithPlaceholder(),
+    Object? persona = const $CopyWithPlaceholder(),
+    Object? category = const $CopyWithPlaceholder(),
+    Object? icon = const $CopyWithPlaceholder(),
+    Object? mascot = const $CopyWithPlaceholder(),
+    Object? starters = const $CopyWithPlaceholder(),
   }) {
     return Template(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -106,6 +141,26 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
           ? _value.routines
           // ignore: cast_nullable_to_non_nullable
           : routines as List<TemplateRoutinesInner>,
+      persona: persona == const $CopyWithPlaceholder()
+          ? _value.persona
+          // ignore: cast_nullable_to_non_nullable
+          : persona as String?,
+      category: category == const $CopyWithPlaceholder()
+          ? _value.category
+          // ignore: cast_nullable_to_non_nullable
+          : category as TemplateCategoryEnum?,
+      icon: icon == const $CopyWithPlaceholder()
+          ? _value.icon
+          // ignore: cast_nullable_to_non_nullable
+          : icon as String?,
+      mascot: mascot == const $CopyWithPlaceholder()
+          ? _value.mascot
+          // ignore: cast_nullable_to_non_nullable
+          : mascot as String?,
+      starters: starters == const $CopyWithPlaceholder()
+          ? _value.starters
+          // ignore: cast_nullable_to_non_nullable
+          : starters as List<String>?,
     );
   }
 }
@@ -155,6 +210,17 @@ Template _$TemplateFromJson(Map<String, dynamic> json) =>
               )
               .toList(),
         ),
+        persona: $checkedConvert('persona', (v) => v as String?),
+        category: $checkedConvert(
+          'category',
+          (v) => $enumDecodeNullable(_$TemplateCategoryEnumEnumMap, v),
+        ),
+        icon: $checkedConvert('icon', (v) => v as String?),
+        mascot: $checkedConvert('mascot', (v) => v as String?),
+        starters: $checkedConvert(
+          'starters',
+          (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+        ),
       );
       return val;
     });
@@ -166,10 +232,23 @@ Map<String, dynamic> _$TemplateToJson(Template instance) => <String, dynamic>{
   'autonomy': _$TemplateAutonomyEnumEnumMap[instance.autonomy]!,
   'skills': instance.skills,
   'routines': instance.routines.map((e) => e.toJson()).toList(),
+  'persona': ?instance.persona,
+  'category': ?_$TemplateCategoryEnumEnumMap[instance.category],
+  'icon': ?instance.icon,
+  'mascot': ?instance.mascot,
+  'starters': ?instance.starters,
 };
 
 const _$TemplateAutonomyEnumEnumMap = {
   TemplateAutonomyEnum.askAlways: 'ask_always',
   TemplateAutonomyEnum.askRisky: 'ask_risky',
   TemplateAutonomyEnum.autonomous: 'autonomous',
+};
+
+const _$TemplateCategoryEnumEnumMap = {
+  TemplateCategoryEnum.work: 'work',
+  TemplateCategoryEnum.research: 'research',
+  TemplateCategoryEnum.build: 'build',
+  TemplateCategoryEnum.create: 'create',
+  TemplateCategoryEnum.life: 'life',
 };

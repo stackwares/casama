@@ -171,8 +171,9 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           orgId: body.org_id,
           createdBy: claims.sub,
           name: body.name,
+          // An empty persona falls back to the template's instructions.
           personaMd:
-            body.persona_md ??
+            body.persona_md?.trim() ||
             (body.template_id ? (templateById(body.template_id)?.persona ?? "") : ""),
           avatarUrl: body.avatar_url,
           modelPolicy: body.model_policy ?? {},

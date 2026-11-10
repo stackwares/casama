@@ -13,7 +13,12 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/bot_avatar.dart';
 import '../../ui/glow_button.dart';
+import '../../ui/segmented.dart';
+import 'app_logo.dart';
+import 'connect_app_sheet.dart';
+import 'provider_setup.dart';
 
 String integrationKindLabel(BuildContext context, IntegrationKind kind) => switch (kind) {
   IntegrationKind.mcp => context.l10n.kindMcp,
@@ -29,92 +34,464 @@ IconData integrationKindIcon(IntegrationKind kind) => switch (kind) {
   IntegrationKind.pipedream => LucideIcons.cable,
 };
 
-/// Workspace integrations: MCP servers, OpenAPI sources, Composio and Pipedream Connect.
-class IntegrationsScreen extends ConsumerWidget {
+String appCategoryLabel(BuildContext context, CatalogAppCategoryEnum c) {
+  final l10n = context.l10n;
+  return switch (c) {
+    CatalogAppCategoryEnum.developer => l10n.appCatDeveloper,
+    CatalogAppCategoryEnum.productivity => l10n.appCatProductivity,
+    CatalogAppCategoryEnum.google => l10n.appCatGoogle,
+    CatalogAppCategoryEnum.payments => l10n.appCatPayments,
+    CatalogAppCategoryEnum.design => l10n.appCatDesign,
+    CatalogAppCategoryEnum.sales => l10n.appCatSales,
+    CatalogAppCategoryEnum.data => l10n.appCatData,
+    CatalogAppCategoryEnum.automation => l10n.appCatAutomation,
+  };
+}
+
+/// The catalog app a connection came from, if any.
+CatalogApp? catalogAppFor(WidgetRef ref, Integration i) {
+  if (i.appId == null) return null;
+  for (final a in ref.watch(appCatalogProvider).value?.apps ?? const <CatalogApp>[]) {
+    if (a.id == i.appId) return a;
+  }
+  return null;
+}
+
+enum _HubTab { connected, browse }
+
+/// Settings → Apps (D-089): the workspace's connections, and a catalog of apps to connect in one
+/// step (vendors' own MCP servers), plus Composio, Pipedream and custom servers for the rest.
+class IntegrationsScreen extends ConsumerStatefulWidget {
   const IntegrationsScreen({super.key});
 
-  Future<void> _add(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<IntegrationsScreen> createState() => _IntegrationsScreenState();
+}
+
+class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
+  _HubTab? _tab;
+  final _search = TextEditingController();
+  CatalogAppCategoryEnum? _category;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addCustom() async {
     final added = await showAdaptiveSheet<bool>(context: context, builder: (_) => const AddIntegrationSheet());
     if (added == true) ref.invalidate(integrationsProvider);
   }
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    return SubPage(
-      title: l10n.integrations,
-      actions: [HeaderIconButton(key: const Key('addIntegration'), icon: LucideIcons.plus, tooltip: l10n.addIntegration, onPressed: () => _add(context, ref))],
-      body: AsyncView(
-        value: ref.watch(integrationsProvider),
-        onRetry: () => ref.invalidate(integrationsProvider),
-        data: (items) => items.isEmpty
-            ? EmptyState(
-                icon: LucideIcons.puzzle,
-                title: l10n.noIntegrationsTitle,
-                message: l10n.noIntegrations,
-                action: GlowButton.icon(onPressed: () => _add(context, ref), icon: const Icon(LucideIcons.plus, size: 18), label: Text(l10n.addIntegration)),
-              )
-            : PageColumn(
-                children: [
-                  FormNote(l10n.integrationsHelp),
-                  const SizedBox(height: AppSpace.md),
-                  GroupedCard(children: [for (final i in items) _IntegrationRow(integration: i)]),
-                ],
-              ),
-      ),
-    );
-  }
-}
-
-class _IntegrationRow extends ConsumerStatefulWidget {
-  const _IntegrationRow({required this.integration});
-  final Integration integration;
-
-  @override
-  ConsumerState<_IntegrationRow> createState() => _IntegrationRowState();
-}
-
-class _IntegrationRowState extends ConsumerState<_IntegrationRow> {
-  var _testing = false;
-
-  Future<void> _test() async {
-    final l10n = context.l10n;
-    setState(() => _testing = true);
-    final r = await runGuarded(context, () => ref.read(backendProvider).testIntegration(widget.integration.id));
-    if (!mounted) return;
-    setState(() => _testing = false);
-    if (r == null) return;
-    ref.invalidate(integrationsProvider);
-    showMessage(context, r.ok ? l10n.integrationOk(r.tools.length) : l10n.integrationFailed(r.error ?? ''));
+  Future<void> _connect(CatalogApp app) async {
+    final i = await showConnectApp(context, app);
+    if (i != null && mounted) setState(() => _tab = _HubTab.connected);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final colors = context.appColors;
-    final i = widget.integration;
-    final (statusText, statusColor) = switch (i.status) {
-      IntegrationStatusEnum.ok => (l10n.keyWorking, colors.positive),
-      IntegrationStatusEnum.error => (l10n.keyFailing, colors.negative),
-      IntegrationStatusEnum.pending => (l10n.keyUntested, context.colorScheme.onSurfaceVariant),
-    };
-    return GroupedTile(
-      key: Key('integration-${i.id}'),
-      icon: integrationKindIcon(i.kind),
-      iconColor: i.status == IntegrationStatusEnum.error ? colors.negative : null,
-      title: i.name,
-      subtitle: [integrationKindLabel(context, i.kind), if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length), if (i.error != null) i.error!].join(' · '),
-      trailing: Row(
+    final connections = ref.watch(integrationsProvider);
+    final catalog = ref.watch(appCatalogProvider);
+    final items = connections.value ?? const <Integration>[];
+    final tab = _tab ?? (items.isEmpty ? _HubTab.browse : _HubTab.connected);
+    return SubPage(
+      title: l10n.appsTitle,
+      subtitle: l10n.appsSubtitle,
+      actions: [HeaderIconButton(key: const Key('addIntegration'), icon: LucideIcons.squareTerminal, tooltip: l10n.customServer, onPressed: _addCustom)],
+      body: AsyncView(
+        value: connections,
+        onRetry: () => ref.invalidate(integrationsProvider),
+        data: (items) => PageColumn(
+          children: [
+            AppSegmentedControl<_HubTab>(
+              values: _HubTab.values,
+              labels: {
+                _HubTab.connected: items.isEmpty ? l10n.connectedTab : '${l10n.connectedTab} · ${items.length}',
+                _HubTab.browse: l10n.browseTab,
+              },
+              icons: const {_HubTab.connected: LucideIcons.plug, _HubTab.browse: LucideIcons.layoutGrid},
+              groupValue: tab,
+              onValueChanged: (t) => setState(() => _tab = t),
+            ),
+            const SizedBox(height: AppSpace.md),
+            if (tab == _HubTab.connected)
+              _Connected(items: items, onBrowse: () => setState(() => _tab = _HubTab.browse))
+            else
+              catalog.when(
+                loading: () => const Padding(padding: EdgeInsets.all(AppSpace.xl), child: Center(child: CircularProgressIndicator())),
+                error: (e, _) => FormNote(errorText(context, e), icon: LucideIcons.triangleAlert),
+                data: (cat) => _browse(context, cat, items),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _browse(BuildContext context, AppCatalog cat, List<Integration> connected) {
+    final l10n = context.l10n;
+    final q = _search.text.trim().toLowerCase();
+    final connectedIds = {for (final i in connected) ?i.appId};
+    final categories = [for (final c in CatalogAppCategoryEnum.values) if (cat.apps.any((a) => a.category == c)) c];
+    final shown = [
+      for (final a in cat.apps)
+        if ((_category == null || a.category == _category) &&
+            (q.isEmpty || '${a.name} ${a.description} ${a.capabilities.join(' ')}'.toLowerCase().contains(q)))
+          a,
+    ];
+    final popular = [for (final a in cat.apps) if (a.popular) a];
+    final filtering = q.isNotEmpty || _category != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          key: const Key('appSearch'),
+          controller: _search,
+          decoration: InputDecoration(
+            hintText: l10n.searchApps,
+            prefixIcon: const Icon(LucideIcons.search, size: 20),
+            suffixIcon: _search.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+                    icon: const Icon(LucideIcons.x, size: 18),
+                    onPressed: () => setState(_search.clear),
+                  ),
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: AppSpace.sm),
+        SizedBox(
+          height: 38,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              for (final c in [null, ...categories])
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpace.xs),
+                  child: ChoiceChip(
+                    key: Key('appCategory-${c?.name ?? 'all'}'),
+                    showCheckmark: false,
+                    selected: _category == c,
+                    label: Text(c == null ? l10n.allApps : appCategoryLabel(context, c)),
+                    onSelected: (_) => setState(() => _category = c),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (!filtering && popular.isNotEmpty) ...[
+          SectionHeader(title: l10n.popularApps),
+          SizedBox(
+            height: 204,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              itemCount: popular.length,
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpace.sm),
+              itemBuilder: (_, i) => _FeaturedApp(app: popular[i], connected: connectedIds.contains(popular[i].id), onTap: () => _connect(popular[i])),
+            ),
+          ),
+        ],
+        SectionHeader(title: filtering ? '${shown.length}' : l10n.allApps),
+        if (shown.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpace.xl),
+            child: Text(l10n.noThemesFound, textAlign: TextAlign.center, style: context.textTheme.bodyMedium),
+          )
+        else
+          LayoutBuilder(
+            builder: (context, c) {
+              final columns = c.maxWidth > 900 ? 3 : (c.maxWidth > 560 ? 2 : 1);
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  mainAxisSpacing: AppSpace.sm,
+                  crossAxisSpacing: AppSpace.sm,
+                  mainAxisExtent: 100,
+                ),
+                itemCount: shown.length,
+                itemBuilder: (_, i) => _AppTile(app: shown[i], connected: connectedIds.contains(shown[i].id), onTap: () => _connect(shown[i])),
+              );
+            },
+          ),
+        SectionHeader(title: l10n.moreWays),
+        GroupedCard(
+          children: [
+            GroupedTile(
+              key: const Key('setupComposio'),
+              icon: LucideIcons.blocks,
+              title: 'Composio',
+              subtitle: l10n.composioHelp,
+              onTap: () => showProviderSetup(context, ProviderKind.composio),
+            ),
+            GroupedTile(
+              key: const Key('setupPipedream'),
+              icon: LucideIcons.cable,
+              title: 'Pipedream',
+              subtitle: l10n.pipedreamHelp,
+              onTap: () => showProviderSetup(context, ProviderKind.pipedream),
+            ),
+            GroupedTile(icon: LucideIcons.squareTerminal, title: l10n.customServer, subtitle: l10n.customServerHelp, onTap: _addCustom),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+String _authLabel(BuildContext context, CatalogApp a) {
+  final l10n = context.l10n;
+  if (a.auth.contains(CatalogAppAuthEnum.oauth) && a.oauthAvailable) return l10n.authOneClick;
+  if (a.auth.contains(CatalogAppAuthEnum.none)) return l10n.authNone;
+  if (a.auth.contains(CatalogAppAuthEnum.apiKey)) return l10n.authApiKey;
+  return l10n.authAdminSetup;
+}
+
+class _ConnectedBadge extends StatelessWidget {
+  const _ConnectedBadge();
+
+  @override
+  Widget build(BuildContext context) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          StatusLabel(text: statusText, color: statusColor, pill: true),
-          const SizedBox(width: AppSpace.xxs),
-          _testing
-              ? const SizedBox(
-                  width: 56,
-                  child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
-                )
-              : TextButton(key: Key('testIntegration-${i.id}'), onPressed: _test, child: Text(l10n.test)),
+          Icon(LucideIcons.circleCheck, size: 14, color: context.appColors.positive),
+          const SizedBox(width: 4),
+          Text(context.l10n.connectedBadge, style: context.textTheme.labelMedium?.copyWith(color: context.appColors.positive, fontWeight: FontWeight.w700)),
+        ],
+      );
+}
+
+/// A popular app as a big card with a wash of its brand color.
+class _FeaturedApp extends StatelessWidget {
+  const _FeaturedApp({required this.app, required this.connected, required this.onTap});
+  final CatalogApp app;
+  final bool connected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final brand = brandColor(app.color, scheme.primary);
+    final dark = context.isDark;
+    return SizedBox(
+      width: 220,
+      child: Material(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: BorderSide(color: context.appColors.hairline)),
+        color: dark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
+        child: InkWell(
+          key: Key('featured-${app.id}'),
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [brand.withValues(alpha: dark ? 0.32 : 0.16), brand.withValues(alpha: 0)],
+              ),
+            ),
+            padding: const EdgeInsets.all(AppSpace.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    AppLogo(appId: app.id, name: app.name, color: app.color, size: 48),
+                    const Spacer(),
+                    if (connected) const _ConnectedBadge(),
+                  ],
+                ),
+                const Spacer(),
+                Text(app.name, style: context.textTheme.titleMedium),
+                const SizedBox(height: 2),
+                Text(app.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                const SizedBox(height: AppSpace.sm),
+                Row(
+                  children: [
+                    Icon(app.oauthAvailable && app.auth.contains(CatalogAppAuthEnum.oauth) ? LucideIcons.zap : LucideIcons.keyRound, size: 13, color: brand),
+                    const SizedBox(width: 4),
+                    Text(_authLabel(context, app), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AppTile extends StatelessWidget {
+  const _AppTile({required this.app, required this.connected, required this.onTap});
+  final CatalogApp app;
+  final bool connected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Material(
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card), side: BorderSide(color: context.appColors.hairline)),
+      color: context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
+      child: InkWell(
+        key: Key('app-${app.id}'),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.md),
+          child: Row(
+            children: [
+              AppLogo(appId: app.id, name: app.name, color: app.color, size: 48),
+              const SizedBox(width: AppSpace.md),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(app.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall),
+                    const SizedBox(height: 2),
+                    Text(app.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                    const SizedBox(height: 4),
+                    connected
+                        ? const _ConnectedBadge()
+                        : Text(_authLabel(context, app), style: context.textTheme.labelSmall?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+              Icon(LucideIcons.chevronRight, size: 18, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The workspace's connections, each with its health and who uses it.
+class _Connected extends ConsumerWidget {
+  const _Connected({required this.items, required this.onBrowse});
+  final List<Integration> items;
+  final VoidCallback onBrowse;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    if (items.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: AppSpace.xl),
+        child: EmptyState(
+          icon: LucideIcons.plug,
+          title: l10n.noConnectionsTitle,
+          message: l10n.noConnections,
+          action: GlowButton.icon(onPressed: onBrowse, icon: const Icon(LucideIcons.layoutGrid, size: 18), label: Text(l10n.browseApps)),
+        ),
+      );
+    }
+    return Column(
+      children: [
+        for (final i in items) ...[
+          _ConnectionCard(integration: i),
+          const SizedBox(height: AppSpace.sm),
+        ],
+      ],
+    );
+  }
+}
+
+class _ConnectionCard extends ConsumerWidget {
+  const _ConnectionCard({required this.integration});
+  final Integration integration;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
+    final i = integration;
+    final app = catalogAppFor(ref, i);
+    final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    final users = [for (final b in bots) if (i.botIds?.contains(b.id) ?? false) b];
+    final (status, statusColor) = switch (i.status) {
+      IntegrationStatusEnum.ok => (l10n.statusReady, colors.positive),
+      IntegrationStatusEnum.error => (l10n.statusNeedsAttention, colors.negative),
+      IntegrationStatusEnum.pending => (l10n.statusChecking, scheme.onSurfaceVariant),
+    };
+    return Material(
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        side: BorderSide(color: i.status == IntegrationStatusEnum.error ? colors.negative.withValues(alpha: 0.4) : colors.hairline),
+      ),
+      color: context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
+      child: InkWell(
+        key: Key('integration-${i.id}'),
+        onTap: () => context.push('/settings/integrations/${i.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpace.md),
+          child: Row(
+            children: [
+              AppLogo.forIntegration(i, app: app, size: 48),
+              const SizedBox(width: AppSpace.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(child: Text(app?.name ?? i.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall)),
+                        const SizedBox(width: AppSpace.xs),
+                        StatusLabel(text: status, color: statusColor, pill: true),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      i.status == IntegrationStatusEnum.error && i.error != null
+                          ? i.error!
+                          : [if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length), l10n.usedByBots(users.length)].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodySmall?.copyWith(color: i.status == IntegrationStatusEnum.error ? colors.negative : scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              if (users.isNotEmpty) ...[
+                const SizedBox(width: AppSpace.sm),
+                _AvatarStack(bots: users),
+              ],
+              const SizedBox(width: AppSpace.xs),
+              Icon(LucideIcons.chevronRight, size: 18, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Up to three overlapping bot avatars.
+class _AvatarStack extends StatelessWidget {
+  const _AvatarStack({required this.bots});
+  final List<Bot> bots;
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = bots.take(3).toList();
+    const size = 26.0;
+    return SizedBox(
+      width: size + (shown.length - 1) * 16,
+      height: size,
+      child: Stack(
+        children: [
+          for (final (i, b) in shown.indexed)
+            Positioned(left: i * 16.0, child: BotAvatar(name: b.name, avatar: b.avatarUrl, size: size, animate: false)),
         ],
       ),
     );
@@ -333,8 +710,8 @@ class BotIntegrationsScreen extends ConsumerWidget {
                         GroupedTile(
                           key: Key('attach-${i.id}'),
                           icon: integrationKindIcon(i.kind),
-                          iconColor: attached.contains(i.id) ? null : context.colorScheme.onSurfaceVariant,
-                          title: i.name,
+                          leading: AppLogo.forIntegration(i, app: catalogAppFor(ref, i), size: 36),
+                          title: catalogAppFor(ref, i)?.name ?? i.name,
                           subtitle: [integrationKindLabel(context, i.kind), if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length)].join(' · '),
                           onTap: () => set(i, !attached.contains(i.id)),
                           trailing: Switch(value: attached.contains(i.id), onChanged: (v) => set(i, v)),

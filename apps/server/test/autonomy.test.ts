@@ -487,7 +487,12 @@ describe("Phase 4 gate", () => {
     });
 
     const templates = await j(await h.request("/v1/templates", { token: owner.token }));
-    expect(templates.items).toHaveLength(5);
+    expect(templates.items.length).toBeGreaterThanOrEqual(20);
+    // Each persona carries its instructions, so the app can show and edit them.
+    expect(templates.items.find((t: { id: string }) => t.id === "daily-briefing")).toMatchObject({
+      category: "work",
+      mascot: "sleepy",
+    });
     const bot = await makeBot("My briefing", undefined, { template_id: "daily-briefing" });
     expect(bot.persona_md).toContain("briefings");
     const routines = await j(

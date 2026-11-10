@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:kasama_api/src/model/risk.dart';
 import 'package:kasama_api/src/model/integration_kind.dart';
 import 'package:kasama_api/src/model/integration_tools_inner.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
@@ -39,6 +40,14 @@ class Integration {
     required  this.toolsCachedAt,
 
     required  this.createdAt,
+
+     this.appId,
+
+     this.auth,
+
+     this.botIds,
+
+     this.riskOverrides,
   });
 
   @JsonKey(
@@ -149,6 +158,54 @@ class Integration {
 
 
 
+  @JsonKey(
+    
+    name: r'app_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? appId;
+
+
+
+  @JsonKey(
+    
+    name: r'auth',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final IntegrationAuthEnum? auth;
+
+
+
+  @JsonKey(
+    
+    name: r'bot_ids',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? botIds;
+
+
+
+  @JsonKey(
+    
+    name: r'risk_overrides',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final Map<String, Risk>? riskOverrides;
+
+
+
 
 
     @override
@@ -161,7 +218,11 @@ class Integration {
       other.error == error &&
       other.tools == tools &&
       other.toolsCachedAt == toolsCachedAt &&
-      other.createdAt == createdAt;
+      other.createdAt == createdAt &&
+      other.appId == appId &&
+      other.auth == auth &&
+      other.botIds == botIds &&
+      other.riskOverrides == riskOverrides;
 
     @override
     int get hashCode =>
@@ -173,7 +234,11 @@ class Integration {
         (error == null ? 0 : error.hashCode) +
         tools.hashCode +
         (toolsCachedAt == null ? 0 : toolsCachedAt.hashCode) +
-        createdAt.hashCode;
+        createdAt.hashCode +
+        (appId == null ? 0 : appId.hashCode) +
+        (auth == null ? 0 : auth.hashCode) +
+        botIds.hashCode +
+        riskOverrides.hashCode;
 
   factory Integration.fromJson(Map<String, dynamic> json) => _$IntegrationFromJson(json);
 
@@ -196,6 +261,24 @@ ok(r'ok'),
 error(r'error');
 
 const IntegrationStatusEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+
+enum IntegrationAuthEnum {
+@JsonValue(r'oauth')
+oauth(r'oauth'),
+@JsonValue(r'api_key')
+apiKey(r'api_key'),
+@JsonValue(r'none')
+none(r'none');
+
+const IntegrationAuthEnum(this.value);
 
 final String value;
 

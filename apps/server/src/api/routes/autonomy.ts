@@ -17,12 +17,12 @@ import { iso } from "../util.ts";
 const { approvals, secrets, integrations, routines, tasks, bots } = schema;
 const MAX_WEBHOOK_BODY = 1024 * 1024;
 
-function requireClaims(claims: JwtClaims | undefined): JwtClaims {
+export function requireClaims(claims: JwtClaims | undefined): JwtClaims {
   if (!claims) throw new ApiError(401, "unauthorized", "Missing or invalid bearer token");
   return claims;
 }
 
-const isAdmin = async (db: Database, claims: JwtClaims, orgId: string) => {
+export const isAdmin = async (db: Database, claims: JwtClaims, orgId: string) => {
   const [r] = await withUserSession(db, claims, (tx) =>
     tx.execute<{ ok: boolean }>(sql`select public.has_role(${orgId}::uuid, 'admin') as ok`),
   );
@@ -60,8 +60,8 @@ const secretOut = (s: SecretRow) => ({
   created_at: iso(s.createdAt),
 });
 
-type IntegrationRow = typeof integrations.$inferSelect;
-const integrationOut = (i: IntegrationRow) => ({
+export type IntegrationRow = typeof integrations.$inferSelect;
+export const integrationOut = (i: IntegrationRow, botIds?: string[]) => ({
   id: i.id,
   org_id: i.orgId,
   kind: i.kind as "mcp",
@@ -77,6 +77,14 @@ const integrationOut = (i: IntegrationRow) => ({
   ),
   tools_cached_at: i.toolsCachedAt ? iso(i.toolsCachedAt) : null,
   created_at: iso(i.createdAt),
+  app_id:
+    typeof (i.config as Record<string, unknown>)?.app === "string"
+      ? ((i.config as Record<string, string>).app ?? null)
+      : null,
+  auth: (((i.config as Record<string, unknown>)?.auth as string | undefined) ??
+    (i.vaultSecretId ? "api_key" : "none")) as "oauth" | "api_key" | "none",
+  risk_overrides: (i.riskOverrides as Record<string, "low" | "medium" | "high">) ?? {},
+  ...(botIds ? { bot_ids: botIds } : {}),
 });
 
 type RoutineRow = typeof routines.$inferSelect;
@@ -256,7 +264,21 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         .where(eq(integrations.orgId, c.req.valid("query").org_id))
         .orderBy(integrations.name),
     );
-    return c.json({ items: rows.map(integrationOut) }, 200);
+    const links = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ integration_id: string; bot_id: string }>(sql`
+        select integration_id, bot_id from public.bot_integrations
+        where org_id = ${c.req.valid("query").org_id}::uuid`),
+    );
+    const byIntegration = new Map<string, string[]>();
+    for (const l of links)
+      byIntegration.set(l.integration_id, [
+        ...(byIntegration.get(l.integration_id) ?? []),
+        l.bot_id,
+      ]);
+    return c.json(
+      { items: rows.map((r) => integrationOut(r, byIntegration.get(r.id) ?? [])) },
+      200,
+    );
   });
 
   app.openapi(routes.createIntegration, async (c) => {
@@ -510,6 +532,11 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
             name: r.name,
             schedule_cron: r.schedule_cron,
           })),
+          persona: t.persona,
+          category: t.category,
+          icon: t.icon,
+          mascot: t.mascot,
+          starters: t.starters,
         })),
       },
       200,

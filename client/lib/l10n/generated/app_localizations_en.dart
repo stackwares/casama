@@ -151,10 +151,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get model => 'Model';
 
   @override
-  String get persona => 'Persona';
+  String get persona => 'Instructions';
 
   @override
-  String get personaHint => 'How should this bot behave? (optional)';
+  String get personaHint =>
+      'What this bot does and how it should work. A persona fills this in; edit it freely.';
 
   @override
   String get modelKey => 'Model key';
@@ -738,7 +739,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get specUrl => 'OpenAPI spec URL';
 
   @override
-  String get startFrom => 'Start from';
+  String get startFrom => 'Persona';
 
   @override
   String get storedEncrypted => 'Stored encrypted; never shown again';
@@ -2433,4 +2434,346 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kindTts => 'Read aloud';
+
+  @override
+  String get personaWork => 'Work';
+
+  @override
+  String get personaResearch => 'Research';
+
+  @override
+  String get personaBuild => 'Build';
+
+  @override
+  String get personaCreate => 'Create';
+
+  @override
+  String get personaLife => 'Life';
+
+  @override
+  String get personaOther => 'Other';
+
+  @override
+  String get blankBotHelp =>
+      'Start from scratch and write your own instructions.';
+
+  @override
+  String get browse => 'Browse';
+
+  @override
+  String get choosePersona => 'Choose a persona';
+
+  @override
+  String get choosePersonaHelp =>
+      'Each one comes with instructions, a look, and sometimes skills and routines. You can change anything afterwards.';
+
+  @override
+  String get searchPersonas => 'Search personas';
+
+  @override
+  String get noPersonasFound => 'No persona matches that';
+
+  @override
+  String get previewPersona => 'Preview';
+
+  @override
+  String get personaInstructions => 'Instructions';
+
+  @override
+  String get personaTryAsking => 'Try asking';
+
+  @override
+  String usePersona(String name) {
+    return 'Use $name';
+  }
+
+  @override
+  String get loadPersona => 'Load a persona';
+
+  @override
+  String get replaceInstructionsTitle => 'Replace the instructions?';
+
+  @override
+  String replaceInstructionsBody(String name) {
+    return 'The bot\'s current instructions will be replaced with $name\'s. Skills and routines stay as they are.';
+  }
+
+  @override
+  String get replace => 'Replace';
+
+  @override
+  String get appsTitle => 'Apps';
+
+  @override
+  String get appsSubtitle => 'Give your bots the tools your team already uses.';
+
+  @override
+  String get connectedTab => 'Connected';
+
+  @override
+  String get browseTab => 'Browse';
+
+  @override
+  String get searchApps => 'Search apps';
+
+  @override
+  String get popularApps => 'Popular';
+
+  @override
+  String get allApps => 'All apps';
+
+  @override
+  String get appCatDeveloper => 'Developer';
+
+  @override
+  String get appCatProductivity => 'Productivity';
+
+  @override
+  String get appCatGoogle => 'Google';
+
+  @override
+  String get appCatPayments => 'Payments';
+
+  @override
+  String get appCatDesign => 'Design';
+
+  @override
+  String get appCatSales => 'Sales & support';
+
+  @override
+  String get appCatData => 'Data & search';
+
+  @override
+  String get appCatAutomation => 'Automation';
+
+  @override
+  String get authOneClick => 'One click';
+
+  @override
+  String get authApiKey => 'API key';
+
+  @override
+  String get authNone => 'No sign-in';
+
+  @override
+  String get authAdminSetup => 'Needs setup';
+
+  @override
+  String get connectedBadge => 'Connected';
+
+  @override
+  String get whatBotsCanDo => 'What your bots can do';
+
+  @override
+  String continueWith(String app) {
+    return 'Continue with $app';
+  }
+
+  @override
+  String get signInTab => 'Sign in';
+
+  @override
+  String get connectNoSignIn => 'This app works without signing in.';
+
+  @override
+  String finishSignIn(String app) {
+    return 'Finish signing in to $app';
+  }
+
+  @override
+  String finishSignInHelp(String app) {
+    return '$app opened in your browser. Approve access there and this updates by itself.';
+  }
+
+  @override
+  String get reopenSignIn => 'Open the sign-in page again';
+
+  @override
+  String appConnected(String app) {
+    return '$app is connected';
+  }
+
+  @override
+  String appToolsReady(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tools are ready for your bots.',
+      one: '1 tool is ready for your bots.',
+      zero: 'Ready to use.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get whichBots => 'Which bots can use it?';
+
+  @override
+  String get whichBotsHelp => 'Bots still ask you before anything risky.';
+
+  @override
+  String get doneLabel => 'Done';
+
+  @override
+  String openApp(String app) {
+    return 'Open $app';
+  }
+
+  @override
+  String get pasteLabel => 'Paste';
+
+  @override
+  String get connectingLabel => 'Connecting…';
+
+  @override
+  String get connectFailedTitle => 'Couldn\'t connect';
+
+  @override
+  String adminSetupNeeded(String app) {
+    return 'One-click sign-in for $app needs a one-time setup by whoever runs this Kasama server.';
+  }
+
+  @override
+  String adminSetupRedirect(String uri) {
+    return 'Register this redirect address with the app: $uri';
+  }
+
+  @override
+  String get privacyNote =>
+      'The sign-in is stored encrypted and never shown again. Disconnect anytime.';
+
+  @override
+  String get moreWays => 'More ways to connect';
+
+  @override
+  String get composioHelp =>
+      'Hundreds of apps like Gmail, Salesforce and Shopify, with sign-in handled by Composio.';
+
+  @override
+  String get pipedreamHelp => 'Thousands of apps through Pipedream Connect.';
+
+  @override
+  String get customServer => 'Custom server';
+
+  @override
+  String get customServerHelp =>
+      'Any MCP server or OpenAPI spec. For developers.';
+
+  @override
+  String usedByBots(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Used by $count bots',
+      one: 'Used by 1 bot',
+      zero: 'Not given to any bot yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statusReady => 'Ready';
+
+  @override
+  String get statusNeedsAttention => 'Needs attention';
+
+  @override
+  String get statusChecking => 'Checking';
+
+  @override
+  String get toolsTitle => 'Tools';
+
+  @override
+  String get toolsHelp =>
+      'Read-only tools run on their own. Tools that make changes ask first when a bot has read something untrusted, and ones marked “Always asks” wait for you every time.';
+
+  @override
+  String get botsWithAccess => 'Bots with access';
+
+  @override
+  String get reconnect => 'Reconnect';
+
+  @override
+  String get disconnect => 'Disconnect';
+
+  @override
+  String disconnectTitle(String app) {
+    return 'Disconnect $app?';
+  }
+
+  @override
+  String get disconnectBody =>
+      'Bots lose its tools right away, and the saved sign-in is deleted.';
+
+  @override
+  String get testConnection => 'Test connection';
+
+  @override
+  String get signedInOAuth => 'Signed in with your account';
+
+  @override
+  String get signedInKey => 'Connected with an API key';
+
+  @override
+  String get signedInNone => 'No sign-in needed';
+
+  @override
+  String get noConnectionsTitle => 'Connect your first app';
+
+  @override
+  String get noConnections =>
+      'Stripe, Linear, Notion, Gmail and more. Most take one click.';
+
+  @override
+  String get browseApps => 'Browse apps';
+
+  @override
+  String providerSetupTitle(String provider) {
+    return 'Connect $provider';
+  }
+
+  @override
+  String providerSetupHelp(String provider) {
+    return '$provider signs in to the apps for you, so you never handle their keys.';
+  }
+
+  @override
+  String get getFreeKey => 'Get a free key';
+
+  @override
+  String providerAppsTitle(String provider) {
+    return 'Apps through $provider';
+  }
+
+  @override
+  String get addAnApp => 'Add an app';
+
+  @override
+  String searchProviderApps(String provider) {
+    return 'Search $provider apps';
+  }
+
+  @override
+  String get accountConnected => 'Signed in';
+
+  @override
+  String get accountPending => 'Waiting for sign-in';
+
+  @override
+  String get accountError => 'Sign-in problem';
+
+  @override
+  String get noProviderAccounts => 'No apps yet. Add one and sign in to it.';
+
+  @override
+  String get projectId => 'Project ID';
+
+  @override
+  String get toolRiskLow => 'Read-only';
+
+  @override
+  String get toolRiskMedium => 'Makes changes';
+
+  @override
+  String get toolRiskHigh => 'Always asks';
 }

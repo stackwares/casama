@@ -2,7 +2,7 @@
 Type=Application
 Name=Browser
 Comment=Open the web browser (the bot's signed-in profile)
-Exec=chrome --user-data-dir=/home/kasama/.browser-profile --no-first-run --no-default-browser-check --start-maximized
+Exec=/usr/local/bin/kasama-open-browser
 Icon=web-browser
 Terminal=false
 Categories=Network;WebBrowser;

@@ -73,6 +73,14 @@ export const Integration = z
     tools: z.array(z.object({ name: z.string(), description: z.string(), risk: Risk.optional() })),
     tools_cached_at: ts.nullable(),
     created_at: ts,
+    /** The catalog app this came from (stripe, linear…); null for custom connections. */
+    app_id: z.string().nullable().optional(),
+    /** How it signs in. */
+    auth: z.enum(["oauth", "api_key", "none"]).nullable().optional(),
+    /** Bots that may use it. */
+    bot_ids: z.array(Uuid).optional(),
+    /** Admin overrides of a tool's risk (low runs freely, high always asks). */
+    risk_overrides: z.record(z.string(), Risk).optional(),
   })
   .openapi("Integration");
 
@@ -183,6 +191,15 @@ export const Template = z
     autonomy: z.enum(["ask_always", "ask_risky", "autonomous"]),
     skills: z.array(z.string()),
     routines: z.array(z.object({ name: z.string(), schedule_cron: z.string() })),
+    /** The persona's standing instructions (system prompt), so the app can show and edit them. */
+    persona: z.string().optional(),
+    category: z.enum(["work", "research", "build", "create", "life"]).optional(),
+    /** Lucide icon name, kebab-case. */
+    icon: z.string().optional(),
+    /** Suggested cloud mascot name (avatar `mascot:<name>`). */
+    mascot: z.string().optional(),
+    /** Example first messages. */
+    starters: z.array(z.string()).optional(),
   })
   .openapi("Template");
 

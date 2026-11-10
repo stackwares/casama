@@ -91,9 +91,13 @@ class GroupedTile extends StatelessWidget {
     this.iconColor,
     this.destructive = false,
     this.showChevron,
+    this.leading,
   });
 
   final IconData icon;
+
+  /// Replaces the icon tile (an avatar or a logo).
+  final Widget? leading;
   final String title;
   final String? subtitle;
   final Widget? trailing;
@@ -115,16 +119,17 @@ class GroupedTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
         child: Row(
           children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: tint.withValues(alpha: context.isDark ? 0.2 : 0.12),
-                borderRadius: BorderRadius.circular(AppRadius.icon),
-              ),
-              alignment: Alignment.center,
-              child: Icon(icon, size: 18, color: tint),
-            ),
+            leading ??
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: tint.withValues(alpha: context.isDark ? 0.2 : 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.icon),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(icon, size: 18, color: tint),
+                ),
             const SizedBox(width: AppSpace.sm),
             Expanded(
               child: Column(

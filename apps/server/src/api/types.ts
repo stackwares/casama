@@ -29,6 +29,8 @@ export interface AppDeps {
   };
   /** Wallpaper photo search (D-087); defaults to Unsplash when UNSPLASH_ACCESS_KEY is set. */
   wallpapers?: import("../services/wallpapers.ts").WallpaperSource | null;
+  /** Built-in app connections: outbound fetch and catalog overrides (tests). */
+  apps?: import("./routes/apps.ts").AppsOptions;
   /** Readiness checks by name; each throws when unhealthy. */
   readiness: Record<string, () => Promise<void>>;
 }

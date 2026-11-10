@@ -1,0 +1,583 @@
+/**
+ * Built-in app connections (D-089). People pick an app (Stripe, Linear, Gmail…) and connect it in
+ * one step: an API key is checked and saved at once; OAuth follows the MCP authorization spec
+ * (protected-resource discovery, then dynamic client registration, a client metadata document or
+ * an admin-registered client, with PKCE). The vendor redirects back to /oauth/callback, which
+ * stores the tokens in Vault and lists the app's tools. Also: removing connections, tool risk
+ * overrides, and guided Composio and Pipedream sign-ins.
+ */
+import { randomBytes } from "node:crypto";
+import type { OpenAPIHono } from "@hono/zod-openapi";
+import {
+  composioDirectory,
+  loadIntegration,
+  oauthSecretFrom,
+  pipedreamDirectory,
+  refreshIntegration,
+} from "@kasama/agent";
+import { routes } from "@kasama/contracts";
+import { pgErrorCode, schema, withUserSession } from "@kasama/db";
+import { APP_CATALOG, appByIdOrNull, type CatalogApp } from "@kasama/domain";
+import {
+  discoverOAuthServerInfo,
+  exchangeAuthorization,
+  registerClient,
+  startAuthorization,
+} from "@modelcontextprotocol/sdk/client/auth.js";
+import { and, eq, sql } from "drizzle-orm";
+import type { Context } from "hono";
+import { ApiError } from "../errors.ts";
+import type { AppDeps, AppEnv } from "../types.ts";
+import { integrationOut, isAdmin, requireClaims } from "./autonomy.ts";
+
+const { integrations } = schema;
+
+type OAuthClient = { client_id: string; client_secret?: string };
+const GOOGLE_APPS = new Set(["gmail", "google_calendar", "google_drive"]);
+
+export interface AppsOptions {
+  /** Outbound fetch (tests point vendors at local fakes). */
+  fetch?: typeof fetch;
+  /** Extra or replacement catalog entries (tests, private deployments). */
+  catalog?: CatalogApp[];
+}
+
+/** Admin-registered OAuth clients: MCP_OAUTH_CLIENTS (JSON by app id), and Google's own pair. */
+export function preregisteredClients(env: AppDeps["env"]): Record<string, OAuthClient> {
+  let out: Record<string, OAuthClient> = {};
+  if (env.MCP_OAUTH_CLIENTS) {
+    try {
+      out = JSON.parse(env.MCP_OAUTH_CLIENTS) as Record<string, OAuthClient>;
+    } catch {
+      // Ignored: a broken value shouldn't take the API down; the catalog shows OAuth as unavailable.
+    }
+  }
+  if (env.GOOGLE_OAUTH_CLIENT_ID) {
+    for (const id of GOOGLE_APPS)
+      out[id] ??= {
+        client_id: env.GOOGLE_OAUTH_CLIENT_ID,
+        client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
+      };
+  }
+  return out;
+}
+
+export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts: AppsOptions = {}) {
+  const { db, env } = deps;
+  const fetchImpl = opts.fetch ?? fetch;
+  const catalog = opts.catalog ?? APP_CATALOG;
+  const findApp = (id: string) => catalog.find((a) => a.id === id) ?? appByIdOrNull(id);
+  const clients = preregisteredClients(env);
+
+  const apiBase = (c: Context) =>
+    (env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
+  const redirectUri = (c: Context) => `${apiBase(c)}/oauth/callback`;
+  const cimdUrl = (c: Context) => `${apiBase(c)}/oauth/client.json`;
+  const oauthAvailable = (a: CatalogApp, c: Context) =>
+    a.auth.includes("oauth") &&
+    (a.oauthClient === "preregistered"
+      ? !!clients[a.id]
+      : a.oauthClient === "cimd"
+        ? apiBase(c).startsWith("https://")
+        : true);
+
+  const vault = async (value: string, description: string) => {
+    const [r] = await db.execute<{ id: string }>(
+      sql`select vault.create_secret(${value}, null, ${description}) as id`,
+    );
+    return r?.id as string;
+  };
+
+  /** A free integration name for an app: stripe, stripe_2, … */
+  const freeName = async (orgId: string, base: string) => {
+    const rows = await db.execute<{ name: string }>(
+      sql`select name from public.integrations where org_id = ${orgId}::uuid and name like ${`${base}%`}`,
+    );
+    const taken = new Set(rows.map((r) => r.name));
+    if (!taken.has(base)) return base;
+    for (let i = 2; ; i++) if (!taken.has(`${base}_${i}`)) return `${base}_${i}`;
+  };
+
+  /** Saves a connection (new, or a reconnect replacing the credential) and lists its tools. */
+  const saveConnection = async (args: {
+    orgId: string;
+    createdBy: string | null;
+    app: CatalogApp;
+    name: string;
+    config: Record<string, unknown>;
+    secret: string | null;
+    integrationId?: string | null;
+  }) => {
+    const vaultId = args.secret ? await vault(args.secret, `integration ${args.app.id}`) : null;
+    let id = args.integrationId ?? null;
+    if (id) {
+      const [old] = await db.execute<{ vault_secret_id: string | null }>(
+        sql`select vault_secret_id from public.integrations where id = ${id}::uuid`,
+      );
+      await db.execute(sql`
+        update public.integrations set config = ${JSON.stringify(args.config)}::jsonb, vault_secret_id = ${vaultId},
+          status = 'pending', error = null where id = ${id}::uuid`);
+      if (old?.vault_secret_id)
+        await db.execute(sql`delete from vault.secrets where id = ${old.vault_secret_id}::uuid`);
+    } else {
+      try {
+        const [row] = await db
+          .insert(integrations)
+          .values({
+            orgId: args.orgId,
+            kind: "mcp",
+            name: args.name,
+            config: args.config,
+            vaultSecretId: vaultId,
+            createdBy: args.createdBy,
+          })
+          .returning();
+        id = row?.id ?? null;
+      } catch (err) {
+        if (pgErrorCode(err) === "23505")
+          throw new ApiError(
+            409 as never,
+            "integration_exists",
+            `${args.app.name} is already connected`,
+          );
+        throw err;
+      }
+    }
+    if (!id) throw new Error("integration insert returned nothing");
+    await refreshIntegration(db, id, { fetch: fetchImpl, secrets: [] });
+    const [row] = await db.select().from(integrations).where(eq(integrations.id, id));
+    const bots = await db.execute<{ bot_id: string }>(
+      sql`select bot_id from public.bot_integrations where integration_id = ${id}::uuid`,
+    );
+    return integrationOut(
+      row!,
+      bots.map((b) => b.bot_id),
+    );
+  };
+
+  // ------------------------------------------------------------------ catalog
+
+  app.openapi(routes.listApps, async (c) => {
+    requireClaims(c.get("claims"));
+    return c.json(
+      {
+        redirect_uri: redirectUri(c),
+        apps: catalog.map((a) => ({
+          id: a.id,
+          name: a.name,
+          description: a.description,
+          category: a.category,
+          color: a.color,
+          homepage: a.homepage,
+          url: a.url,
+          auth: a.auth,
+          ...(a.apiKey
+            ? {
+                api_key: {
+                  label: a.apiKey.label,
+                  placeholder: a.apiKey.placeholder,
+                  url: a.apiKey.url,
+                  steps: a.apiKey.steps,
+                },
+              }
+            : {}),
+          capabilities: a.capabilities,
+          popular: a.popular ?? false,
+          ...(a.note ? { note: a.note } : {}),
+          oauth_available: oauthAvailable(a, c),
+        })),
+      },
+      200,
+    );
+  });
+
+  // Kasama's OAuth client metadata document (for servers that use CIMD instead of registration).
+  app.get("/oauth/client.json", (c) =>
+    c.json({
+      client_id: cimdUrl(c),
+      client_name: "Kasama",
+      client_uri: env.PUBLIC_APP_URL,
+      redirect_uris: [redirectUri(c)],
+      grant_types: ["authorization_code", "refresh_token"],
+      response_types: ["code"],
+      token_endpoint_auth_method: "none",
+    }),
+  );
+
+  // ------------------------------------------------------------------ connect
+
+  app.openapi(routes.connectApp, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const body = c.req.valid("json");
+    const a = findApp(body.app_id);
+    if (!a) throw new ApiError(404, "app_not_found", "No such app");
+    if (!(await isAdmin(db, claims, body.org_id)))
+      throw new ApiError(403, "forbidden", "Only owners and admins can connect apps");
+    if (!a.auth.includes(body.method))
+      throw new ApiError(400, "validation_failed", `${a.name} can't connect that way`);
+    if (body.integration_id) {
+      const [own] = await db.execute<{ ok: boolean }>(
+        sql`select exists(select 1 from public.integrations where id = ${body.integration_id}::uuid and org_id = ${body.org_id}::uuid) as ok`,
+      );
+      if (!own?.ok) throw new ApiError(404, "integration_not_found", "Integration not found");
+    }
+    const name = body.integration_id ? a.id : await freeName(body.org_id, a.id);
+    const config: Record<string, unknown> = { url: a.url, app: a.id, auth: body.method };
+
+    if (body.method !== "oauth") {
+      if (body.method === "api_key" && !body.api_key)
+        throw new ApiError(400, "validation_failed", "Paste the key first", {
+          errors: [{ path: "api_key", message: "Required" }],
+        });
+      if (a.apiKey?.header) config.auth_header = a.apiKey.header;
+      const integration = await saveConnection({
+        orgId: body.org_id,
+        createdBy: claims.sub,
+        app: a,
+        name,
+        config,
+        secret: body.method === "api_key" ? (body.api_key ?? null) : null,
+        integrationId: body.integration_id,
+      });
+      return c.json(
+        (integration.status as string) === "error"
+          ? {
+              status: "error" as const,
+              integration,
+              error: integration.error ?? "Couldn't connect",
+            }
+          : { status: "connected" as const, integration },
+        200,
+      );
+    }
+
+    if (!oauthAvailable(a, c))
+      throw new ApiError(
+        400,
+        "oauth_unavailable",
+        a.oauthClient === "preregistered"
+          ? `${a.name} needs an OAuth client set up on this server first (MCP_OAUTH_CLIENTS).`
+          : `${a.name} sign-in needs this server to have a public https address (PUBLIC_API_URL).`,
+      );
+    try {
+      const info = await discoverOAuthServerInfo(a.url, { fetchFn: fetchImpl as never });
+      const metadata = info.authorizationServerMetadata;
+      const resource = info.resourceMetadata?.resource;
+      const scopes =
+        (info.resourceMetadata?.scopes_supported as string[] | undefined)?.join(" ") ??
+        (a.scopes?.length ? a.scopes.join(" ") : undefined);
+      let client: OAuthClient | undefined = clients[a.id];
+      if (!client && a.oauthClient === "cimd") client = { client_id: cimdUrl(c) };
+      if (!client) {
+        if (!metadata?.registration_endpoint)
+          throw new Error(
+            `${a.name} doesn't allow automatic sign-up; an admin must register an OAuth client`,
+          );
+        client = await registerClient(info.authorizationServerUrl, {
+          metadata,
+          clientMetadata: {
+            client_name: "Kasama",
+            client_uri: env.PUBLIC_APP_URL,
+            redirect_uris: [redirectUri(c)],
+            grant_types: ["authorization_code", "refresh_token"],
+            response_types: ["code"],
+          },
+          scope: scopes,
+          fetchFn: fetchImpl as never,
+        });
+      }
+      const state = randomBytes(24).toString("base64url");
+      const { authorizationUrl, codeVerifier } = await startAuthorization(
+        info.authorizationServerUrl,
+        {
+          metadata,
+          clientInformation: client as never,
+          redirectUrl: redirectUri(c),
+          scope: scopes,
+          state,
+          resource: resource ? new URL(resource) : undefined,
+        },
+      );
+      // Google only issues a refresh token when asked for offline access.
+      if (GOOGLE_APPS.has(a.id)) {
+        authorizationUrl.searchParams.set("access_type", "offline");
+        authorizationUrl.searchParams.set("prompt", "consent");
+      }
+      const [flow] = await db.execute<{ id: string }>(sql`
+        insert into public.integration_oauth_flows (state, org_id, created_by, app_id, name, config, oauth, integration_id)
+        values (${state}, ${body.org_id}::uuid, ${claims.sub}::uuid, ${a.id}, ${name}, ${JSON.stringify(config)}::jsonb,
+          ${JSON.stringify({
+            auth_server: String(info.authorizationServerUrl),
+            metadata,
+            client,
+            code_verifier: codeVerifier,
+            redirect_uri: redirectUri(c),
+            resource,
+          })}::jsonb, ${body.integration_id ?? null})
+        returning id`);
+      return c.json(
+        {
+          status: "authorize" as const,
+          authorize_url: authorizationUrl.toString(),
+          flow_id: flow!.id,
+        },
+        200,
+      );
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      deps.logger.warn("oauth start failed", { app: a.id, error: (err as Error).message });
+      return c.json(
+        {
+          status: "error" as const,
+          error: `Couldn't start ${a.name} sign-in: ${(err as Error).message}`,
+        },
+        200,
+      );
+    }
+  });
+
+  app.openapi(routes.connectStatus, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const [flow] = await db.execute<{
+      org_id: string;
+      created_by: string | null;
+      status: string;
+      error: string | null;
+      integration_id: string | null;
+      expired: boolean;
+    }>(sql`
+      select org_id, created_by, status, error, integration_id, expires_at < now() as expired
+      from public.integration_oauth_flows where id = ${id}::uuid`);
+    if (!flow || flow.created_by !== claims.sub)
+      throw new ApiError(404, "flow_not_found", "Sign-in not found");
+    if (flow.status === "connected" && flow.integration_id) {
+      const [row] = await db
+        .select()
+        .from(integrations)
+        .where(eq(integrations.id, flow.integration_id));
+      const bots = await db.execute<{ bot_id: string }>(
+        sql`select bot_id from public.bot_integrations where integration_id = ${flow.integration_id}::uuid`,
+      );
+      if (row)
+        return c.json(
+          {
+            status: "connected" as const,
+            integration: integrationOut(
+              row,
+              bots.map((b) => b.bot_id),
+            ),
+          },
+          200,
+        );
+    }
+    if (flow.status === "error")
+      return c.json({ status: "error" as const, error: flow.error ?? "Sign-in failed" }, 200);
+    return c.json({ status: flow.expired ? ("expired" as const) : ("pending" as const) }, 200);
+  });
+
+  // The vendor sends the browser here after sign-in. Public: the state is the credential.
+  app.get("/oauth/callback", async (c) => {
+    const state = c.req.query("state") ?? "";
+    const [flow] = await db.execute<{
+      id: string;
+      org_id: string;
+      created_by: string | null;
+      app_id: string;
+      name: string;
+      config: Record<string, unknown>;
+      oauth: {
+        auth_server: string;
+        metadata?: Record<string, unknown>;
+        client: OAuthClient;
+        code_verifier: string;
+        redirect_uri: string;
+        resource?: string;
+      };
+      integration_id: string | null;
+    }>(sql`
+      update public.integration_oauth_flows set status = 'error', error = 'in progress'
+      where state = ${state} and status = 'pending' and expires_at > now()
+      returning id, org_id, created_by, app_id, name, config, oauth, integration_id`);
+    const a = flow ? findApp(flow.app_id) : null;
+    if (!flow || !a)
+      return c.html(
+        resultPage("This sign-in link has expired. Go back to Kasama and try again.", false),
+        400,
+      );
+    const fail = async (message: string) => {
+      await db.execute(
+        sql`update public.integration_oauth_flows set status = 'error', error = ${message.slice(0, 500)} where id = ${flow.id}::uuid`,
+      );
+      return c.html(resultPage(message, false), 400);
+    };
+    const denied = c.req.query("error");
+    if (denied)
+      return fail(
+        `${a.name} sign-in was cancelled (${c.req.query("error_description") ?? denied}).`,
+      );
+    const code = c.req.query("code");
+    if (!code) return fail(`${a.name} didn't send a sign-in code.`);
+    try {
+      const o = flow.oauth;
+      const tokens = await exchangeAuthorization(o.auth_server, {
+        metadata: o.metadata as never,
+        clientInformation: o.client as never,
+        authorizationCode: code,
+        codeVerifier: o.code_verifier,
+        redirectUri: o.redirect_uri,
+        resource: o.resource ? new URL(o.resource) : undefined,
+        fetchFn: fetchImpl as never,
+      });
+      const secret = oauthSecretFrom(tokens, {
+        auth_server: o.auth_server,
+        metadata: o.metadata,
+        client: o.client,
+        resource: o.resource,
+      });
+      const integration = await saveConnection({
+        orgId: flow.org_id,
+        createdBy: flow.created_by,
+        app: a,
+        name: flow.name,
+        config: flow.config,
+        secret: JSON.stringify(secret),
+        integrationId: flow.integration_id,
+      });
+      await db.execute(sql`
+        update public.integration_oauth_flows set status = 'connected', error = null, integration_id = ${integration.id}::uuid,
+          oauth = oauth - 'code_verifier' - 'client' where id = ${flow.id}::uuid`);
+      return c.html(
+        resultPage(
+          `${a.name} is connected. You can close this window and go back to Kasama.`,
+          true,
+        ),
+      );
+    } catch (err) {
+      deps.logger.warn("oauth callback failed", { app: a.id, error: (err as Error).message });
+      return fail(`Couldn't finish connecting ${a.name}: ${(err as Error).message}`);
+    }
+  });
+
+  // ------------------------------------------------------------------ manage
+
+  const ownIntegration = async (c: Context<AppEnv>, id: string, admin = true) => {
+    const claims = requireClaims(c.get("claims"));
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(integrations).where(eq(integrations.id, id)),
+    );
+    if (!row) throw new ApiError(404, "integration_not_found", "Integration not found");
+    if (admin && !(await isAdmin(db, claims, row.orgId)))
+      throw new ApiError(403, "forbidden", "Only owners and admins can change integrations");
+    return row;
+  };
+
+  app.openapi(routes.updateIntegration, async (c) => {
+    const { id } = c.req.valid("param");
+    await ownIntegration(c, id);
+    const body = c.req.valid("json");
+    if (body.risk_overrides)
+      await db
+        .update(integrations)
+        .set({ riskOverrides: body.risk_overrides })
+        .where(eq(integrations.id, id));
+    const [row] = await db.select().from(integrations).where(eq(integrations.id, id));
+    return c.json(integrationOut(row!), 200);
+  });
+
+  app.openapi(routes.deleteIntegration, async (c) => {
+    const { id } = c.req.valid("param");
+    const row = await ownIntegration(c, id);
+    await db
+      .delete(integrations)
+      .where(and(eq(integrations.id, id), eq(integrations.orgId, row.orgId)));
+    if (row.vaultSecretId)
+      await db.execute(sql`delete from vault.secrets where id = ${row.vaultSecretId}::uuid`);
+    return c.json({ ok: true }, 200);
+  });
+
+  // ------------------------------------------------- Composio and Pipedream
+
+  const directory = async (c: Context<AppEnv>, id: string, admin = false) => {
+    const row = await ownIntegration(c, id, admin);
+    if (row.kind !== "composio" && row.kind !== "pipedream")
+      throw new ApiError(
+        400,
+        "not_a_provider",
+        "Only Composio and Pipedream connections have an app directory",
+      );
+    const rec = await loadIntegration(db, id, fetchImpl);
+    if (!rec) throw new ApiError(404, "integration_not_found", "Integration not found");
+    return {
+      row,
+      rec,
+      dir:
+        row.kind === "composio"
+          ? composioDirectory(rec, fetchImpl)
+          : pipedreamDirectory(rec, fetchImpl),
+    };
+  };
+  const providerError = (err: unknown) =>
+    new ApiError(400, "provider_error", (err as Error).message.slice(0, 300));
+
+  app.openapi(routes.listProviderApps, async (c) => {
+    const { dir } = await directory(c, c.req.valid("param").id);
+    try {
+      return c.json({ items: await dir.apps(c.req.valid("query").q ?? "") }, 200);
+    } catch (err) {
+      throw providerError(err);
+    }
+  });
+
+  app.openapi(routes.connectProviderApp, async (c) => {
+    const { id } = c.req.valid("param");
+    const { row, dir } = await directory(c, id, true);
+    const { app: slug } = c.req.valid("json");
+    try {
+      const out = await dir.connect(slug, `${apiBase(c)}/oauth/done`);
+      // The app's tools become available to bots once it's on the list.
+      const config = row.config as Record<string, unknown>;
+      const key = row.kind === "composio" ? "toolkits" : "apps";
+      const list = new Set([...((config[key] as string[]) ?? []), slug]);
+      await db
+        .update(integrations)
+        .set({ config: { ...config, [key]: [...list] } })
+        .where(eq(integrations.id, id));
+      return c.json(out, 200);
+    } catch (err) {
+      throw providerError(err);
+    }
+  });
+
+  app.openapi(routes.listProviderAccounts, async (c) => {
+    const { dir } = await directory(c, c.req.valid("param").id);
+    try {
+      return c.json({ items: await dir.accounts() }, 200);
+    } catch (err) {
+      throw providerError(err);
+    }
+  });
+
+  // Where Composio and Pipedream send people after signing in.
+  app.get("/oauth/done", (c) =>
+    c.html(resultPage("You're signed in. You can close this window and go back to Kasama.", true)),
+  );
+}
+
+/** A small page shown in the browser after a sign-in; it tries to close itself. */
+function resultPage(message: string, ok: boolean) {
+  const esc = message.replace(
+    /[&<>"]/g,
+    (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!,
+  );
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kasama</title><style>
+:root{color-scheme:light dark}body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.5 system-ui,sans-serif;background:linear-gradient(160deg,#efe4fb,#dcebff);color:#1c1530}
+@media (prefers-color-scheme:dark){body{background:linear-gradient(160deg,#25102f,#151f3f);color:#f3eefc}}
+main{max-width:420px;margin:24px;padding:32px;border-radius:24px;background:rgba(255,255,255,.7);text-align:center;box-shadow:0 20px 60px rgba(60,20,120,.18)}
+@media (prefers-color-scheme:dark){main{background:rgba(30,20,50,.7)}}
+.icon{width:56px;height:56px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;font-size:28px;color:#fff;background:${ok ? "#22a06b" : "#d9534f"}}
+h1{font-size:20px;margin:0 0 8px}</style></head><body><main><div class="icon">${ok ? "&#10003;" : "!"}</div>
+<h1>${ok ? "All set" : "Something went wrong"}</h1><p>${esc}</p></main>
+<script>${ok ? "setTimeout(function(){window.close()},1500)" : ""}</script></body></html>`;
+}

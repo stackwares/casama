@@ -22,6 +22,8 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 
 | OpenAI key with Realtime access | Live voice calls; measuring the gate's "reply within 1 s" (Phase 6) | Workspace credential, provider `openai` | Session, tool forwarding and transcripts tested against a mock |
 | Deepgram, ElevenLabs, Cartesia or Fish Audio keys (optional) | Dictation and read-aloud with those providers | Workspace credentials | Tested against mocks |
+| OAuth clients for apps that don't allow automatic sign-up: Google (one client for Gmail, Calendar and Drive; enable those MCP servers in Google Cloud), Slack, HubSpot, Box, Asana, GitHub (optional; tokens work now), and Figma (Figma must approve the app) | One-click sign-in for those apps (D-089) | `GOOGLE_OAUTH_CLIENT_ID`/`GOOGLE_OAUTH_CLIENT_SECRET`; `MCP_OAUTH_CLIENTS` JSON by app id. Redirect URI: `<API>/oauth/callback` | Thirteen other apps already sign in with one click (checked live); these show "Needs setup" until configured |
+| A public https API address (`PUBLIC_API_URL`) | Vercel's sign-in (needs a client metadata document), and OAuth redirects from phones | Server env | Local OAuth works against `http://localhost:8787` |
 | Unsplash access key (free "Demo" app; apply for Production for 5,000 requests/hour) | Wallpaper photo search in Settings → Background (D-087) | Server `UNSPLASH_ACCESS_KEY`; the key stays on the server | Built and tested against a mock; "Browse photos" stays hidden until a key is set. Your own photos work without it |
 
 ## Infrastructure

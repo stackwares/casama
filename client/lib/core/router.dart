@@ -10,6 +10,7 @@ import '../features/computer/computers_screen.dart';
 import '../features/computer/live_view_screen.dart';
 import '../features/home/home_shell.dart';
 import '../features/inbox/inbox_screen.dart';
+import '../features/integrations/integration_detail_screen.dart';
 import '../features/integrations/integrations_screen.dart';
 import '../features/routines/routines_screen.dart';
 import '../features/settings/secrets_screen.dart';
@@ -154,7 +155,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'usage', pageBuilder: _page((_, _) => const UsageScreen())),
               GoRoute(path: 'background', pageBuilder: _page((_, _) => const BackgroundScreen())),
               GoRoute(path: 'skills', pageBuilder: _page((_, _) => const SkillsScreen())),
-              GoRoute(path: 'integrations', pageBuilder: _page((_, _) => const IntegrationsScreen())),
+              GoRoute(
+                path: 'integrations',
+                pageBuilder: _page((_, _) => const IntegrationsScreen()),
+                routes: [GoRoute(path: ':id', pageBuilder: _page((_, s) => IntegrationDetailScreen(integrationId: s.pathParameters['id']!)))],
+              ),
               GoRoute(path: 'secrets', pageBuilder: _page((_, _) => const SecretsScreen())),
               GoRoute(path: 'computers', pageBuilder: _page((_, _) => const ComputersScreen())),
               GoRoute(path: 'companion', pageBuilder: _page((_, _) => const CompanionScreen())),

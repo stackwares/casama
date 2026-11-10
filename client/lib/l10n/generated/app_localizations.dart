@@ -367,13 +367,13 @@ abstract class AppLocalizations {
   /// No description provided for @persona.
   ///
   /// In en, this message translates to:
-  /// **'Persona'**
+  /// **'Instructions'**
   String get persona;
 
   /// No description provided for @personaHint.
   ///
   /// In en, this message translates to:
-  /// **'How should this bot behave? (optional)'**
+  /// **'What this bot does and how it should work. A persona fills this in; edit it freely.'**
   String get personaHint;
 
   /// No description provided for @modelKey.
@@ -1399,7 +1399,7 @@ abstract class AppLocalizations {
   /// No description provided for @startFrom.
   ///
   /// In en, this message translates to:
-  /// **'Start from'**
+  /// **'Persona'**
   String get startFrom;
 
   /// No description provided for @storedEncrypted.
@@ -4257,6 +4257,582 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Read aloud'**
   String get kindTts;
+
+  /// No description provided for @personaWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get personaWork;
+
+  /// No description provided for @personaResearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Research'**
+  String get personaResearch;
+
+  /// No description provided for @personaBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Build'**
+  String get personaBuild;
+
+  /// No description provided for @personaCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get personaCreate;
+
+  /// No description provided for @personaLife.
+  ///
+  /// In en, this message translates to:
+  /// **'Life'**
+  String get personaLife;
+
+  /// No description provided for @personaOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get personaOther;
+
+  /// No description provided for @blankBotHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from scratch and write your own instructions.'**
+  String get blankBotHelp;
+
+  /// No description provided for @browse.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse'**
+  String get browse;
+
+  /// No description provided for @choosePersona.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a persona'**
+  String get choosePersona;
+
+  /// No description provided for @choosePersonaHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Each one comes with instructions, a look, and sometimes skills and routines. You can change anything afterwards.'**
+  String get choosePersonaHelp;
+
+  /// No description provided for @searchPersonas.
+  ///
+  /// In en, this message translates to:
+  /// **'Search personas'**
+  String get searchPersonas;
+
+  /// No description provided for @noPersonasFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No persona matches that'**
+  String get noPersonasFound;
+
+  /// No description provided for @previewPersona.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get previewPersona;
+
+  /// No description provided for @personaInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructions'**
+  String get personaInstructions;
+
+  /// No description provided for @personaTryAsking.
+  ///
+  /// In en, this message translates to:
+  /// **'Try asking'**
+  String get personaTryAsking;
+
+  /// No description provided for @usePersona.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {name}'**
+  String usePersona(String name);
+
+  /// No description provided for @loadPersona.
+  ///
+  /// In en, this message translates to:
+  /// **'Load a persona'**
+  String get loadPersona;
+
+  /// No description provided for @replaceInstructionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace the instructions?'**
+  String get replaceInstructionsTitle;
+
+  /// No description provided for @replaceInstructionsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The bot\'s current instructions will be replaced with {name}\'s. Skills and routines stay as they are.'**
+  String replaceInstructionsBody(String name);
+
+  /// No description provided for @replace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replace;
+
+  /// No description provided for @appsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps'**
+  String get appsTitle;
+
+  /// No description provided for @appsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Give your bots the tools your team already uses.'**
+  String get appsSubtitle;
+
+  /// No description provided for @connectedTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get connectedTab;
+
+  /// No description provided for @browseTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse'**
+  String get browseTab;
+
+  /// No description provided for @searchApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Search apps'**
+  String get searchApps;
+
+  /// No description provided for @popularApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get popularApps;
+
+  /// No description provided for @allApps.
+  ///
+  /// In en, this message translates to:
+  /// **'All apps'**
+  String get allApps;
+
+  /// No description provided for @appCatDeveloper.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get appCatDeveloper;
+
+  /// No description provided for @appCatProductivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Productivity'**
+  String get appCatProductivity;
+
+  /// No description provided for @appCatGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google'**
+  String get appCatGoogle;
+
+  /// No description provided for @appCatPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get appCatPayments;
+
+  /// No description provided for @appCatDesign.
+  ///
+  /// In en, this message translates to:
+  /// **'Design'**
+  String get appCatDesign;
+
+  /// No description provided for @appCatSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales & support'**
+  String get appCatSales;
+
+  /// No description provided for @appCatData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data & search'**
+  String get appCatData;
+
+  /// No description provided for @appCatAutomation.
+  ///
+  /// In en, this message translates to:
+  /// **'Automation'**
+  String get appCatAutomation;
+
+  /// No description provided for @authOneClick.
+  ///
+  /// In en, this message translates to:
+  /// **'One click'**
+  String get authOneClick;
+
+  /// No description provided for @authApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get authApiKey;
+
+  /// No description provided for @authNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No sign-in'**
+  String get authNone;
+
+  /// No description provided for @authAdminSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs setup'**
+  String get authAdminSetup;
+
+  /// No description provided for @connectedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get connectedBadge;
+
+  /// No description provided for @whatBotsCanDo.
+  ///
+  /// In en, this message translates to:
+  /// **'What your bots can do'**
+  String get whatBotsCanDo;
+
+  /// No description provided for @continueWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with {app}'**
+  String continueWith(String app);
+
+  /// No description provided for @signInTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signInTab;
+
+  /// No description provided for @connectNoSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'This app works without signing in.'**
+  String get connectNoSignIn;
+
+  /// No description provided for @finishSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish signing in to {app}'**
+  String finishSignIn(String app);
+
+  /// No description provided for @finishSignInHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'{app} opened in your browser. Approve access there and this updates by itself.'**
+  String finishSignInHelp(String app);
+
+  /// No description provided for @reopenSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the sign-in page again'**
+  String get reopenSignIn;
+
+  /// No description provided for @appConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'{app} is connected'**
+  String appConnected(String app);
+
+  /// No description provided for @appToolsReady.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Ready to use.} =1{1 tool is ready for your bots.} other{{count} tools are ready for your bots.}}'**
+  String appToolsReady(int count);
+
+  /// No description provided for @whichBots.
+  ///
+  /// In en, this message translates to:
+  /// **'Which bots can use it?'**
+  String get whichBots;
+
+  /// No description provided for @whichBotsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots still ask you before anything risky.'**
+  String get whichBotsHelp;
+
+  /// No description provided for @doneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get doneLabel;
+
+  /// No description provided for @openApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {app}'**
+  String openApp(String app);
+
+  /// No description provided for @pasteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get pasteLabel;
+
+  /// No description provided for @connectingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get connectingLabel;
+
+  /// No description provided for @connectFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect'**
+  String get connectFailedTitle;
+
+  /// No description provided for @adminSetupNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'One-click sign-in for {app} needs a one-time setup by whoever runs this Kasama server.'**
+  String adminSetupNeeded(String app);
+
+  /// No description provided for @adminSetupRedirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Register this redirect address with the app: {uri}'**
+  String adminSetupRedirect(String uri);
+
+  /// No description provided for @privacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in is stored encrypted and never shown again. Disconnect anytime.'**
+  String get privacyNote;
+
+  /// No description provided for @moreWays.
+  ///
+  /// In en, this message translates to:
+  /// **'More ways to connect'**
+  String get moreWays;
+
+  /// No description provided for @composioHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Hundreds of apps like Gmail, Salesforce and Shopify, with sign-in handled by Composio.'**
+  String get composioHelp;
+
+  /// No description provided for @pipedreamHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Thousands of apps through Pipedream Connect.'**
+  String get pipedreamHelp;
+
+  /// No description provided for @customServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom server'**
+  String get customServer;
+
+  /// No description provided for @customServerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Any MCP server or OpenAPI spec. For developers.'**
+  String get customServerHelp;
+
+  /// No description provided for @usedByBots.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Not given to any bot yet} =1{Used by 1 bot} other{Used by {count} bots}}'**
+  String usedByBots(int count);
+
+  /// No description provided for @statusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get statusReady;
+
+  /// No description provided for @statusNeedsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get statusNeedsAttention;
+
+  /// No description provided for @statusChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get statusChecking;
+
+  /// No description provided for @toolsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get toolsTitle;
+
+  /// No description provided for @toolsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only tools run on their own. Tools that make changes ask first when a bot has read something untrusted, and ones marked “Always asks” wait for you every time.'**
+  String get toolsHelp;
+
+  /// No description provided for @botsWithAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots with access'**
+  String get botsWithAccess;
+
+  /// No description provided for @reconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect'**
+  String get reconnect;
+
+  /// No description provided for @disconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get disconnect;
+
+  /// No description provided for @disconnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect {app}?'**
+  String disconnectTitle(String app);
+
+  /// No description provided for @disconnectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots lose its tools right away, and the saved sign-in is deleted.'**
+  String get disconnectBody;
+
+  /// No description provided for @testConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get testConnection;
+
+  /// No description provided for @signedInOAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in with your account'**
+  String get signedInOAuth;
+
+  /// No description provided for @signedInKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected with an API key'**
+  String get signedInKey;
+
+  /// No description provided for @signedInNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No sign-in needed'**
+  String get signedInNone;
+
+  /// No description provided for @noConnectionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect your first app'**
+  String get noConnectionsTitle;
+
+  /// No description provided for @noConnections.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripe, Linear, Notion, Gmail and more. Most take one click.'**
+  String get noConnections;
+
+  /// No description provided for @browseApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse apps'**
+  String get browseApps;
+
+  /// No description provided for @providerSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect {provider}'**
+  String providerSetupTitle(String provider);
+
+  /// No description provided for @providerSetupHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} signs in to the apps for you, so you never handle their keys.'**
+  String providerSetupHelp(String provider);
+
+  /// No description provided for @getFreeKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a free key'**
+  String get getFreeKey;
+
+  /// No description provided for @providerAppsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps through {provider}'**
+  String providerAppsTitle(String provider);
+
+  /// No description provided for @addAnApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an app'**
+  String get addAnApp;
+
+  /// No description provided for @searchProviderApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Search {provider} apps'**
+  String searchProviderApps(String provider);
+
+  /// No description provided for @accountConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get accountConnected;
+
+  /// No description provided for @accountPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for sign-in'**
+  String get accountPending;
+
+  /// No description provided for @accountError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in problem'**
+  String get accountError;
+
+  /// No description provided for @noProviderAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'No apps yet. Add one and sign in to it.'**
+  String get noProviderAccounts;
+
+  /// No description provided for @projectId.
+  ///
+  /// In en, this message translates to:
+  /// **'Project ID'**
+  String get projectId;
+
+  /// No description provided for @toolRiskLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only'**
+  String get toolRiskLow;
+
+  /// No description provided for @toolRiskMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes changes'**
+  String get toolRiskMedium;
+
+  /// No description provided for @toolRiskHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Always asks'**
+  String get toolRiskHigh;
 }
 
 class _AppLocalizationsDelegate

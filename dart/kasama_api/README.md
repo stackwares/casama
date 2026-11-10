@@ -119,9 +119,17 @@ Class | Method | HTTP request | Description
 [*CredentialsApi*](doc/CredentialsApi.md) | [**listCredentials**](doc/CredentialsApi.md#listcredentials) | **GET** /v1/credentials | 
 [*CredentialsApi*](doc/CredentialsApi.md) | [**testCredential**](doc/CredentialsApi.md#testcredential) | **POST** /v1/credentials/{id}/test | Validate a key with a 1-token call
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**attachIntegration**](doc/IntegrationsApi.md#attachintegration) | **POST** /v1/bots/{id}/integrations | Let a bot use an integration&#39;s tools (optionally only some)
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectApp**](doc/IntegrationsApi.md#connectapp) | **POST** /v1/apps/connect | Connect a built-in app: with an API key at once, or start an OAuth sign-in
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectProviderApp**](doc/IntegrationsApi.md#connectproviderapp) | **POST** /v1/integrations/{id}/provider/connect | Add an app to a Composio or Pipedream connection and start signing in to it
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectStatus**](doc/IntegrationsApi.md#connectstatus) | **GET** /v1/apps/connect/{id} | Whether an OAuth sign-in has finished
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**createIntegration**](doc/IntegrationsApi.md#createintegration) | **POST** /v1/integrations | Add an MCP server, OpenAPI source, Composio or Pipedream Connect
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**deleteIntegration**](doc/IntegrationsApi.md#deleteintegration) | **DELETE** /v1/integrations/{id} | Disconnect: removes it from every bot and deletes its stored credential
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**listApps**](doc/IntegrationsApi.md#listapps) | **GET** /v1/apps | Built-in apps (vendors&#39; hosted MCP servers) people can connect in one step
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**listIntegrations**](doc/IntegrationsApi.md#listintegrations) | **GET** /v1/integrations | 
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**listProviderAccounts**](doc/IntegrationsApi.md#listprovideraccounts) | **GET** /v1/integrations/{id}/provider/accounts | Accounts signed in through a Composio or Pipedream connection
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**listProviderApps**](doc/IntegrationsApi.md#listproviderapps) | **GET** /v1/integrations/{id}/provider/apps | Search a Composio or Pipedream connection&#39;s app directory
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**testIntegration**](doc/IntegrationsApi.md#testintegration) | **POST** /v1/integrations/{id}/test | List tools to prove the connection works (refreshes the tool cache)
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**updateIntegration**](doc/IntegrationsApi.md#updateintegration) | **PATCH** /v1/integrations/{id} | 
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**createLocalDevice**](doc/LocalComputerApi.md#createlocaldevice) | **POST** /v1/local-devices | Pair this machine as a bot computer (desktop companion); returns a device token once
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**deleteLocalDevice**](doc/LocalComputerApi.md#deletelocaldevice) | **DELETE** /v1/local-devices/{id} | 
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**listLocalDevices**](doc/LocalComputerApi.md#listlocaldevices) | **GET** /v1/local-devices | 
@@ -173,6 +181,7 @@ Class | Method | HTTP request | Description
  - [AdminServiceList](doc/AdminServiceList.md)
  - [AdminUser](doc/AdminUser.md)
  - [AdminUserList](doc/AdminUserList.md)
+ - [AppCatalog](doc/AppCatalog.md)
  - [Approval](doc/Approval.md)
  - [ApprovalDecisionRequest](doc/ApprovalDecisionRequest.md)
  - [ApprovalList](doc/ApprovalList.md)
@@ -189,6 +198,8 @@ Class | Method | HTTP request | Description
  - [Bot](doc/Bot.md)
  - [BotBudget](doc/BotBudget.md)
  - [BotList](doc/BotList.md)
+ - [CatalogApp](doc/CatalogApp.md)
+ - [CatalogAppApiKey](doc/CatalogAppApiKey.md)
  - [CheckoutRequest](doc/CheckoutRequest.md)
  - [Checkpoint](doc/Checkpoint.md)
  - [CheckpointCreatedEvent](doc/CheckpointCreatedEvent.md)
@@ -202,6 +213,9 @@ Class | Method | HTTP request | Description
  - [ComputerState](doc/ComputerState.md)
  - [ComputerStateEvent](doc/ComputerStateEvent.md)
  - [ComputerStateEventPayload](doc/ComputerStateEventPayload.md)
+ - [ConnectAppRequest](doc/ConnectAppRequest.md)
+ - [ConnectAppResponse](doc/ConnectAppResponse.md)
+ - [ConnectFlowStatus](doc/ConnectFlowStatus.md)
  - [ConnectKey](doc/ConnectKey.md)
  - [ConnectKeyList](doc/ConnectKeyList.md)
  - [Conversation](doc/Conversation.md)
@@ -227,6 +241,7 @@ Class | Method | HTTP request | Description
  - [CreditEntry](doc/CreditEntry.md)
  - [CreditPack](doc/CreditPack.md)
  - [DeleteAccountRequest](doc/DeleteAccountRequest.md)
+ - [DeleteIntegration200Response](doc/DeleteIntegration200Response.md)
  - [DeleteResult](doc/DeleteResult.md)
  - [DeletedComputer](doc/DeletedComputer.md)
  - [DeletedDevice](doc/DeletedDevice.md)
@@ -273,6 +288,12 @@ Class | Method | HTTP request | Description
  - [PortalRequest](doc/PortalRequest.md)
  - [Problem](doc/Problem.md)
  - [ProblemErrorsInner](doc/ProblemErrorsInner.md)
+ - [ProviderAccount](doc/ProviderAccount.md)
+ - [ProviderAccountList](doc/ProviderAccountList.md)
+ - [ProviderApp](doc/ProviderApp.md)
+ - [ProviderAppList](doc/ProviderAppList.md)
+ - [ProviderConnectRequest](doc/ProviderConnectRequest.md)
+ - [ProviderConnectResponse](doc/ProviderConnectResponse.md)
  - [ProviderId](doc/ProviderId.md)
  - [PublicConfig](doc/PublicConfig.md)
  - [PurchaseRequest](doc/PurchaseRequest.md)
@@ -340,6 +361,7 @@ Class | Method | HTTP request | Description
  - [UiShownEvent](doc/UiShownEvent.md)
  - [UiShownEventPayload](doc/UiShownEventPayload.md)
  - [UpdateComputerRequest](doc/UpdateComputerRequest.md)
+ - [UpdateIntegrationRequest](doc/UpdateIntegrationRequest.md)
  - [UpdateLocalDeviceRequest](doc/UpdateLocalDeviceRequest.md)
  - [UpdateNotice](doc/UpdateNotice.md)
  - [UpdateOrgSettingsRequest](doc/UpdateOrgSettingsRequest.md)

@@ -7,6 +7,7 @@ import 'package:kasama_api/src/model/admin_service.dart';
 import 'package:kasama_api/src/model/admin_service_list.dart';
 import 'package:kasama_api/src/model/admin_user.dart';
 import 'package:kasama_api/src/model/admin_user_list.dart';
+import 'package:kasama_api/src/model/app_catalog.dart';
 import 'package:kasama_api/src/model/approval.dart';
 import 'package:kasama_api/src/model/approval_decision_request.dart';
 import 'package:kasama_api/src/model/approval_list.dart';
@@ -21,6 +22,8 @@ import 'package:kasama_api/src/model/billing_usage_item.dart';
 import 'package:kasama_api/src/model/bot.dart';
 import 'package:kasama_api/src/model/bot_budget.dart';
 import 'package:kasama_api/src/model/bot_list.dart';
+import 'package:kasama_api/src/model/catalog_app.dart';
+import 'package:kasama_api/src/model/catalog_app_api_key.dart';
 import 'package:kasama_api/src/model/checkout_request.dart';
 import 'package:kasama_api/src/model/checkpoint.dart';
 import 'package:kasama_api/src/model/checkpoint_created_event.dart';
@@ -33,6 +36,9 @@ import 'package:kasama_api/src/model/computer_list.dart';
 import 'package:kasama_api/src/model/computer_size.dart';
 import 'package:kasama_api/src/model/computer_state_event.dart';
 import 'package:kasama_api/src/model/computer_state_event_payload.dart';
+import 'package:kasama_api/src/model/connect_app_request.dart';
+import 'package:kasama_api/src/model/connect_app_response.dart';
+import 'package:kasama_api/src/model/connect_flow_status.dart';
 import 'package:kasama_api/src/model/connect_key.dart';
 import 'package:kasama_api/src/model/connect_key_list.dart';
 import 'package:kasama_api/src/model/conversation.dart';
@@ -58,6 +64,7 @@ import 'package:kasama_api/src/model/credential_test_result.dart';
 import 'package:kasama_api/src/model/credit_entry.dart';
 import 'package:kasama_api/src/model/credit_pack.dart';
 import 'package:kasama_api/src/model/delete_account_request.dart';
+import 'package:kasama_api/src/model/delete_integration200_response.dart';
 import 'package:kasama_api/src/model/delete_result.dart';
 import 'package:kasama_api/src/model/deleted_computer.dart';
 import 'package:kasama_api/src/model/deleted_device.dart';
@@ -101,6 +108,12 @@ import 'package:kasama_api/src/model/plan_catalog.dart';
 import 'package:kasama_api/src/model/portal_request.dart';
 import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/problem_errors_inner.dart';
+import 'package:kasama_api/src/model/provider_account.dart';
+import 'package:kasama_api/src/model/provider_account_list.dart';
+import 'package:kasama_api/src/model/provider_app.dart';
+import 'package:kasama_api/src/model/provider_app_list.dart';
+import 'package:kasama_api/src/model/provider_connect_request.dart';
+import 'package:kasama_api/src/model/provider_connect_response.dart';
 import 'package:kasama_api/src/model/public_config.dart';
 import 'package:kasama_api/src/model/purchase_request.dart';
 import 'package:kasama_api/src/model/redirect_url.dart';
@@ -162,6 +175,7 @@ import 'package:kasama_api/src/model/ui_action_part.dart';
 import 'package:kasama_api/src/model/ui_shown_event.dart';
 import 'package:kasama_api/src/model/ui_shown_event_payload.dart';
 import 'package:kasama_api/src/model/update_computer_request.dart';
+import 'package:kasama_api/src/model/update_integration_request.dart';
 import 'package:kasama_api/src/model/update_local_device_request.dart';
 import 'package:kasama_api/src/model/update_notice.dart';
 import 'package:kasama_api/src/model/update_org_settings_request.dart';
@@ -220,6 +234,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminUser.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminUserList':
           return AdminUserList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AppCatalog':
+          return AppCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Approval':
           return Approval.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ApprovalDecisionRequest':
@@ -254,6 +270,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BotBudget.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotList':
           return BotList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CatalogApp':
+          return CatalogApp.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CatalogAppApiKey':
+          return CatalogAppApiKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CheckoutRequest':
           return CheckoutRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Checkpoint':
@@ -281,6 +301,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ComputerStateEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerStateEventPayload':
           return ComputerStateEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ConnectAppRequest':
+          return ConnectAppRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ConnectAppResponse':
+          return ConnectAppResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ConnectFlowStatus':
+          return ConnectFlowStatus.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConnectKey':
           return ConnectKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConnectKeyList':
@@ -331,6 +357,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteAccountRequest':
           return DeleteAccountRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeleteIntegration200Response':
+          return DeleteIntegration200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteResult':
           return DeleteResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedComputer':
@@ -426,6 +454,18 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Problem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ProblemErrorsInner':
           return ProblemErrorsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProviderAccount':
+          return ProviderAccount.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProviderAccountList':
+          return ProviderAccountList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProviderApp':
+          return ProviderApp.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProviderAppList':
+          return ProviderAppList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProviderConnectRequest':
+          return ProviderConnectRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProviderConnectResponse':
+          return ProviderConnectResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ProviderId':
           
           
@@ -566,6 +606,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UiShownEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateComputerRequest':
           return UpdateComputerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateIntegrationRequest':
+          return UpdateIntegrationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateLocalDeviceRequest':
           return UpdateLocalDeviceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateNotice':

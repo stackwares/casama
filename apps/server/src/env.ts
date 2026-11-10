@@ -112,6 +112,12 @@ export const EnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   /** Prometheus metrics at /metrics (D-075); protect with a bearer token in production. */
   METRICS_TOKEN: z.string().min(16).optional(),
+  /** OAuth clients for apps that don't allow automatic registration (D-089), as JSON by app id:
+   * {"slack": {"client_id": "...", "client_secret": "..."}}. Redirect URI: <API>/oauth/callback. */
+  MCP_OAUTH_CLIENTS: z.string().optional(),
+  /** A Google OAuth client for Gmail, Calendar and Drive (Google's MCP servers, D-089). */
+  GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
   /** Public base URL of this API (signaling URLs); defaults to the request's origin. */
   PUBLIC_API_URL: z.url().optional(),
 });

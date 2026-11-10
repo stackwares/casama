@@ -173,6 +173,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
   String? _autoName;
   String? _credentialId;
   String? _templateId;
+  String? _autoPersona;
 
   /// New bots start as a random cloud bot; the picker can change it or go back to initials.
   String? _avatar = Mascot.random().avatarValue;
@@ -252,6 +253,10 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
             onChanged: (t) => setState(() {
               _templateId = t?.id;
               _setAutoName(t?.name);
+              // The persona's instructions and mascot fill in, unless the user wrote their own.
+              if (_persona.text.trim().isEmpty || _persona.text == _autoPersona) _persona.text = t?.persona ?? '';
+              _autoPersona = t?.persona;
+              if (t?.mascot != null) _avatar = 'mascot:${t!.mascot}';
             }),
           ),
           const SizedBox(height: 8),
@@ -298,9 +303,11 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
           ],
           const SizedBox(height: 8),
           TextField(
+            key: const Key('botInstructions'),
             controller: _persona,
-            decoration: InputDecoration(labelText: l10n.persona, hintText: l10n.personaHint),
-            maxLines: 3,
+            decoration: InputDecoration(labelText: l10n.persona, hintText: l10n.personaHint, alignLabelWithHint: true),
+            minLines: 3,
+            maxLines: 8,
           ),
           const SizedBox(height: 12),
           const SizedBox(height: AppSpace.xs),

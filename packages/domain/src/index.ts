@@ -1,5 +1,6 @@
 /** Pure domain logic: no I/O, no vendor SDKs. */
 export * from "./approvals.ts";
+export * from "./apps.ts";
 export * from "./budget.ts";
 export * from "./models.ts";
 export * from "./roles.ts";

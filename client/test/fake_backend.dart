@@ -151,6 +151,11 @@ class FakeBackend implements Backend {
           autonomy: TemplateAutonomyEnum.askRisky,
           skills: const ['briefing'],
           routines: [TemplateRoutinesInner(name: 'Morning summary', scheduleCron: '0 7 * * *')],
+          persona: 'You prepare short briefings.',
+          category: TemplateCategoryEnum.work,
+          icon: 'newspaper',
+          mascot: 'sleepy',
+          starters: const ['Brief me on AI news'],
         ),
         Template(
           id: 'writer',
@@ -351,6 +356,91 @@ class FakeBackend implements Backend {
   @override
   Future<void> setBotIntegration(String botId, String integrationId, bool enabled) async =>
       enabled ? attached.add(integrationId) : attached.remove(integrationId);
+
+  // Built-in apps
+  static CatalogApp catalogApp(String id, String name, List<CatalogAppAuthEnum> auth, {bool popular = true, String color = '635BFF'}) => CatalogApp(
+        id: id,
+        name: name,
+        description: '$name for your bots.',
+        category: CatalogAppCategoryEnum.payments,
+        color: color,
+        homepage: 'https://$id.com',
+        url: 'https://mcp.$id.com',
+        auth: auth,
+        apiKey: auth.contains(CatalogAppAuthEnum.apiKey)
+            ? CatalogAppApiKey(label: 'Secret key', url: 'https://dashboard.$id.com/keys', steps: const ['Open the dashboard.', 'Copy the key.'])
+            : null,
+        capabilities: const ['Look up customers', 'Create invoices'],
+        popular: popular,
+        oauthAvailable: auth.contains(CatalogAppAuthEnum.oauth),
+      );
+  final catalog = [
+    catalogApp('stripe', 'Stripe', [CatalogAppAuthEnum.oauth, CatalogAppAuthEnum.apiKey]),
+    catalogApp('notion', 'Notion', [CatalogAppAuthEnum.oauth], color: '000000'),
+    catalogApp('cloudflare', 'Cloudflare Docs', [CatalogAppAuthEnum.none], popular: false, color: 'F38020'),
+  ];
+  final connectCalls = <(String app, String method, String? key)>[];
+  final deleted = <String>[];
+  var pendingPolls = 1;
+  Integration _connected(String appId, String auth) {
+    final i = Integration(
+      id: 'app-$appId',
+      orgId: orgId,
+      kind: IntegrationKind.mcp,
+      name: appId,
+      status: IntegrationStatusEnum.ok,
+      error: null,
+      tools: [IntegrationToolsInner(name: 'list_customers', description: 'List customers', risk: Risk.low), IntegrationToolsInner(name: 'create_refund', description: 'Refund a payment', risk: Risk.high)],
+      toolsCachedAt: DateTime(2026),
+      createdAt: DateTime(2026),
+      appId: appId,
+      auth: IntegrationAuthEnum.values.firstWhere((a) => a.value == auth),
+      botIds: const [],
+      riskOverrides: const {},
+    );
+    integrationList.removeWhere((x) => x.id == i.id);
+    integrationList.add(i);
+    return i;
+  }
+
+  @override
+  Future<AppCatalog> appCatalog() async => AppCatalog(apps: catalog, redirectUri: 'http://localhost/oauth/callback');
+  @override
+  Future<ConnectAppResponse> connectApp(String orgId, {required String appId, required String method, String? apiKey, String? integrationId}) async {
+    connectCalls.add((appId, method, apiKey));
+    if (method == 'oauth') {
+      return ConnectAppResponse(status: ConnectAppResponseStatusEnum.authorize, authorizeUrl: 'https://auth.$appId.com/authorize', flowId: 'flow-$appId');
+    }
+    return ConnectAppResponse(status: ConnectAppResponseStatusEnum.connected, integration: _connected(appId, method));
+  }
+  @override
+  Future<ConnectFlowStatus> connectStatus(String flowId) async {
+    if (pendingPolls-- > 0) return ConnectFlowStatus(status: ConnectFlowStatusStatusEnum.pending);
+    return ConnectFlowStatus(status: ConnectFlowStatusStatusEnum.connected, integration: _connected(flowId.replaceFirst('flow-', ''), 'oauth'));
+  }
+  @override
+  Future<void> deleteIntegration(String integrationId) async {
+    deleted.add(integrationId);
+    integrationList.removeWhere((i) => i.id == integrationId);
+  }
+  final toolRisks = <String, Map<String, String>>{};
+  @override
+  Future<Integration> setToolRisks(String integrationId, Map<String, String> risks) async {
+    toolRisks[integrationId] = risks;
+    return integrationList.firstWhere((i) => i.id == integrationId);
+  }
+  @override
+  Future<List<ProviderApp>> providerApps(String integrationId, {String? query}) async =>
+      [ProviderApp(slug: 'gmail', name: 'Gmail', description: 'Email', logo: null)];
+  final providerConnects = <String>[];
+  @override
+  Future<String> connectProviderApp(String integrationId, String app) async {
+    providerConnects.add(app);
+    return 'https://connect.example.com/$app';
+  }
+  @override
+  Future<List<ProviderAccount>> providerAccounts(String integrationId) async =>
+      [for (final a in providerConnects) ProviderAccount(app: a, status: ProviderAccountStatusEnum.connected)];
 
   @override
   Future<List<Secret>> secrets(String orgId) async => secretList;

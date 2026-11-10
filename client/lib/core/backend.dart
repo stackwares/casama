@@ -172,6 +172,17 @@ abstract class Backend {
   Future<IntegrationTestResult> testIntegration(String integrationId);
   Future<Set<String>> botIntegrationIds(String botId);
   Future<void> setBotIntegration(String botId, String integrationId, bool enabled);
+
+  // Built-in apps (D-089)
+  Future<AppCatalog> appCatalog();
+  /// Connects an app: done at once with an API key, or a sign-in to open for OAuth.
+  Future<ConnectAppResponse> connectApp(String orgId, {required String appId, required String method, String? apiKey, String? integrationId});
+  Future<ConnectFlowStatus> connectStatus(String flowId);
+  Future<void> deleteIntegration(String integrationId);
+  Future<Integration> setToolRisks(String integrationId, Map<String, String> risks);
+  Future<List<ProviderApp>> providerApps(String integrationId, {String? query});
+  Future<String> connectProviderApp(String integrationId, String app);
+  Future<List<ProviderAccount>> providerAccounts(String integrationId);
   Future<List<Secret>> secrets(String orgId);
   Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts});
   Future<void> deleteSecret(String secretId);

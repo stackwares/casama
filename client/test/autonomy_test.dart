@@ -9,6 +9,7 @@ import 'package:kasama_app/core/backend.dart';
 import 'package:kasama_app/features/bots/bots_screen.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
 import 'package:kasama_app/features/inbox/inbox_screen.dart';
+import 'package:kasama_app/features/integrations/integration_detail_screen.dart';
 import 'package:kasama_app/features/integrations/integrations_screen.dart';
 import 'package:kasama_app/features/routines/routines_screen.dart';
 import 'package:kasama_app/features/settings/secrets_screen.dart';
@@ -184,6 +185,8 @@ void main() {
     expect(backend.integrationList.single.name, 'calc');
     expect(find.text('calc'), findsOneWidget);
 
+    await tester.pumpWidget(harness(backend, const IntegrationDetailScreen(integrationId: 'i1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('testIntegration-i1')));
     await tester.pumpAndSettle();
     expect(find.text('Connected, 2 tools'), findsOneWidget);
@@ -193,6 +196,73 @@ void main() {
     await tester.tap(find.byKey(const Key('attach-i1')));
     await tester.pumpAndSettle();
     expect(backend.attached, {'i1'});
+  });
+
+  testWidgets('apps: connect Stripe with an API key and give it to a bot', (tester) async {
+    await setSize(tester, const Size(700, 1400));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const IntegrationsScreen()));
+    await tester.pumpAndSettle();
+    // No connections yet, so the catalog shows first.
+    expect(find.byKey(const Key('featured-stripe')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('app-stripe')));
+    await tester.pumpAndSettle();
+    expect(find.text('What your bots can do'), findsOneWidget);
+    await tester.tap(find.text('API key'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('appApiKey')), 'rk_test_1234567890');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('connectAppSubmit')));
+    await tester.pumpAndSettle();
+    expect(backend.connectCalls.single, ('stripe', 'api_key', 'rk_test_1234567890'));
+    expect(find.byKey(const Key('appConnected')), findsOneWidget);
+    expect(find.text('2 tools are ready for your bots.'), findsOneWidget);
+    // Every bot is offered it; Done gives it to the chosen ones.
+    await tester.tap(find.byKey(const Key('connectDone')));
+    await tester.pumpAndSettle();
+    expect(backend.attached, contains('app-stripe'));
+    expect(find.text('Stripe'), findsWidgets);
+  });
+
+  testWidgets('apps: one-click sign-in waits for the browser, then finishes by itself', (tester) async {
+    await setSize(tester, const Size(700, 1400));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const IntegrationsScreen()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('featured-notion')));
+    await tester.pumpAndSettle();
+    expect(find.text('Continue with Notion'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('connectAppSubmit')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Finish signing in to Notion'), findsOneWidget);
+    expect(backend.connectCalls.single.$2, 'oauth');
+    // First poll: still signing in. Second: connected.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byKey(const Key('appConnected')), findsOneWidget);
+  });
+
+  testWidgets('apps: a connection tools can be set to always ask, and it can be disconnected', (tester) async {
+    await setSize(tester, const Size(700, 1400));
+    final backend = FakeBackend();
+    await backend.connectApp(orgId, appId: 'stripe', method: 'api_key', apiKey: 'k');
+    await tester.pumpWidget(harness(backend, const IntegrationDetailScreen(integrationId: 'app-stripe')));
+    await tester.pumpAndSettle();
+    expect(find.text('List customers'), findsOneWidget);
+    expect(find.text('Read-only'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('toolRisk-list_customers')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Always asks').last);
+    await tester.pumpAndSettle();
+    expect(backend.toolRisks['app-stripe'], {'list_customers': 'high'});
+    await tester.ensureVisible(find.byKey(const Key('disconnectIntegration')));
+    await tester.tap(find.byKey(const Key('disconnectIntegration')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirmDisconnect')));
+    await tester.pumpAndSettle();
+    expect(backend.deleted, ['app-stripe']);
   });
 
   testWidgets('secrets are added with allowed hosts and never shown', (tester) async {
@@ -234,9 +304,13 @@ void main() {
     ));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('personaPicker')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('template-daily-briefing')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Includes routines: Morning summary.'), findsOneWidget);
+    // The persona's instructions fill in, ready to edit.
+    expect(tester.widget<TextField>(find.byKey(const Key('botInstructions'))).controller!.text, 'You prepare short briefings.');
     await tester.tap(find.widgetWithText(FilledButton, 'Create'));
     await tester.pumpAndSettle();
     expect(backend.createdBotTemplate, 'daily-briefing');
@@ -301,10 +375,14 @@ void main() {
     expect(find.text('openai/gpt-6-luna'), findsOneWidget);
 
     // A template fills in its name; going back to Blank empties the field again.
+    await tester.tap(find.byKey(const Key('personaPicker')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('template-daily-briefing')));
     await tester.pumpAndSettle();
     expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, isNotEmpty);
-    await tester.tap(find.text('Blank'));
+    await tester.tap(find.byKey(const Key('personaPicker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template-blank')));
     await tester.pumpAndSettle();
     expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, '');
 

@@ -14,6 +14,7 @@ import { idempotency } from "./middleware/idempotency.ts";
 import { rateLimit } from "./middleware/rate-limit.ts";
 import { registerAdminRoutes } from "./routes/admin.ts";
 import { registerAppearanceRoutes } from "./routes/appearance.ts";
+import { registerAppRoutes } from "./routes/apps.ts";
 import { registerAutonomyRoutes } from "./routes/autonomy.ts";
 import { billingFor, registerBillingRoutes } from "./routes/billing.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
@@ -149,6 +150,7 @@ export function createApp(deps: AppDeps) {
   registerBillingRoutes(app, deps);
   registerPrivacyRoutes(app, deps);
   registerAppearanceRoutes(app, deps, deps.wallpapers);
+  registerAppRoutes(app, deps, deps.apps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {
     db: deps.db,

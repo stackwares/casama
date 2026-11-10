@@ -16,6 +16,7 @@ import '../../theme/wallpaper.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
+import '../bots/template_picker.dart';
 import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../bots/model_picker.dart';
@@ -512,9 +513,32 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
               TextField(
                 controller: _persona,
                 decoration: InputDecoration(labelText: l10n.persona, hintText: l10n.personaHint, alignLabelWithHint: true),
-                maxLines: 8,
-                minLines: 3,
+                maxLines: 12,
+                minLines: 4,
                 onChanged: (_) => setState(() {}),
+              ),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  key: const Key('loadPersona'),
+                  icon: const Icon(LucideIcons.swatchBook, size: 18),
+                  label: Text(l10n.loadPersona),
+                  onPressed: () async {
+                    final choice = await showPersonaGallery(context, allowBlank: false);
+                    final t = choice?.template;
+                    if (t == null || !context.mounted) return;
+                    if (_persona!.text.trim().isNotEmpty) {
+                      final ok = await showConfirm(
+                        context: context,
+                        title: l10n.replaceInstructionsTitle,
+                        message: l10n.replaceInstructionsBody(t.name),
+                        confirmLabel: l10n.replace,
+                      );
+                      if (!ok) return;
+                    }
+                    setState(() => _persona!.text = t.persona ?? '');
+                  },
+                ),
               ),
             ],
           ),

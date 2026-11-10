@@ -62,8 +62,8 @@
   "createFirstBot": "Create your first bot",
   "botName": "Bot name",
   "model": "Model",
-  "persona": "Persona",
-  "personaHint": "How should this bot behave? (optional)",
+  "persona": "Instructions",
+  "personaHint": "What this bot does and how it should work. A persona fills this in; edit it freely.",
   "modelKey": "Model key",
   "navBots": "Bots",
   "navComputer": "Computer",
@@ -370,7 +370,7 @@
   "secrets": "Secrets",
   "serverUrl": "Server URL",
   "specUrl": "OpenAPI spec URL",
-  "startFrom": "Start from",
+  "startFrom": "Persona",
   "storedEncrypted": "Stored encrypted; never shown again",
   "taskBlocked": "Blocked",
   "taskBoard": "Tasks",
@@ -1356,5 +1356,213 @@
   "kindTokensOut": "Model output",
   "kindComputer": "Cloud computer time",
   "kindStream": "Live view",
-  "kindTts": "Read aloud"
+  "kindTts": "Read aloud",
+  "personaWork": "Work",
+  "personaResearch": "Research",
+  "personaBuild": "Build",
+  "personaCreate": "Create",
+  "personaLife": "Life",
+  "personaOther": "Other",
+  "blankBotHelp": "Start from scratch and write your own instructions.",
+  "browse": "Browse",
+  "choosePersona": "Choose a persona",
+  "choosePersonaHelp": "Each one comes with instructions, a look, and sometimes skills and routines. You can change anything afterwards.",
+  "searchPersonas": "Search personas",
+  "noPersonasFound": "No persona matches that",
+  "previewPersona": "Preview",
+  "personaInstructions": "Instructions",
+  "personaTryAsking": "Try asking",
+  "usePersona": "Use {name}",
+  "@usePersona": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "loadPersona": "Load a persona",
+  "replaceInstructionsTitle": "Replace the instructions?",
+  "replaceInstructionsBody": "The bot's current instructions will be replaced with {name}'s. Skills and routines stay as they are.",
+  "@replaceInstructionsBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "replace": "Replace",
+  "appsTitle": "Apps",
+  "appsSubtitle": "Give your bots the tools your team already uses.",
+  "connectedTab": "Connected",
+  "browseTab": "Browse",
+  "searchApps": "Search apps",
+  "popularApps": "Popular",
+  "allApps": "All apps",
+  "appCatDeveloper": "Developer",
+  "appCatProductivity": "Productivity",
+  "appCatGoogle": "Google",
+  "appCatPayments": "Payments",
+  "appCatDesign": "Design",
+  "appCatSales": "Sales & support",
+  "appCatData": "Data & search",
+  "appCatAutomation": "Automation",
+  "authOneClick": "One click",
+  "authApiKey": "API key",
+  "authNone": "No sign-in",
+  "authAdminSetup": "Needs setup",
+  "connectedBadge": "Connected",
+  "whatBotsCanDo": "What your bots can do",
+  "continueWith": "Continue with {app}",
+  "@continueWith": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "signInTab": "Sign in",
+  "connectNoSignIn": "This app works without signing in.",
+  "finishSignIn": "Finish signing in to {app}",
+  "@finishSignIn": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "finishSignInHelp": "{app} opened in your browser. Approve access there and this updates by itself.",
+  "@finishSignInHelp": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "reopenSignIn": "Open the sign-in page again",
+  "appConnected": "{app} is connected",
+  "@appConnected": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "appToolsReady": "{count, plural, =0{Ready to use.} =1{1 tool is ready for your bots.} other{{count} tools are ready for your bots.}}",
+  "@appToolsReady": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "whichBots": "Which bots can use it?",
+  "whichBotsHelp": "Bots still ask you before anything risky.",
+  "doneLabel": "Done",
+  "openApp": "Open {app}",
+  "@openApp": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "pasteLabel": "Paste",
+  "connectingLabel": "Connecting…",
+  "connectFailedTitle": "Couldn't connect",
+  "adminSetupNeeded": "One-click sign-in for {app} needs a one-time setup by whoever runs this Kasama server.",
+  "@adminSetupNeeded": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "adminSetupRedirect": "Register this redirect address with the app: {uri}",
+  "@adminSetupRedirect": {
+    "placeholders": {
+      "uri": {
+        "type": "String"
+      }
+    }
+  },
+  "privacyNote": "The sign-in is stored encrypted and never shown again. Disconnect anytime.",
+  "moreWays": "More ways to connect",
+  "composioHelp": "Hundreds of apps like Gmail, Salesforce and Shopify, with sign-in handled by Composio.",
+  "pipedreamHelp": "Thousands of apps through Pipedream Connect.",
+  "customServer": "Custom server",
+  "customServerHelp": "Any MCP server or OpenAPI spec. For developers.",
+  "usedByBots": "{count, plural, =0{Not given to any bot yet} =1{Used by 1 bot} other{Used by {count} bots}}",
+  "@usedByBots": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statusReady": "Ready",
+  "statusNeedsAttention": "Needs attention",
+  "statusChecking": "Checking",
+  "toolsTitle": "Tools",
+  "toolsHelp": "Read-only tools run on their own. Tools that make changes ask first when a bot has read something untrusted, and ones marked “Always asks” wait for you every time.",
+  "botsWithAccess": "Bots with access",
+  "reconnect": "Reconnect",
+  "disconnect": "Disconnect",
+  "disconnectTitle": "Disconnect {app}?",
+  "@disconnectTitle": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnectBody": "Bots lose its tools right away, and the saved sign-in is deleted.",
+  "testConnection": "Test connection",
+  "signedInOAuth": "Signed in with your account",
+  "signedInKey": "Connected with an API key",
+  "signedInNone": "No sign-in needed",
+  "noConnectionsTitle": "Connect your first app",
+  "noConnections": "Stripe, Linear, Notion, Gmail and more. Most take one click.",
+  "browseApps": "Browse apps",
+  "providerSetupTitle": "Connect {provider}",
+  "@providerSetupTitle": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "providerSetupHelp": "{provider} signs in to the apps for you, so you never handle their keys.",
+  "@providerSetupHelp": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "getFreeKey": "Get a free key",
+  "providerAppsTitle": "Apps through {provider}",
+  "@providerAppsTitle": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "addAnApp": "Add an app",
+  "searchProviderApps": "Search {provider} apps",
+  "@searchProviderApps": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "accountConnected": "Signed in",
+  "accountPending": "Waiting for sign-in",
+  "accountError": "Sign-in problem",
+  "noProviderAccounts": "No apps yet. Add one and sign in to it.",
+  "projectId": "Project ID",
+  "toolRiskLow": "Read-only",
+  "toolRiskMedium": "Makes changes",
+  "toolRiskHigh": "Always asks"
 }

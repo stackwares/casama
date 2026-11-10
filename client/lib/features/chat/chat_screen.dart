@@ -309,14 +309,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             tooltip: l10n.startCall,
             onPressed: () => context.push('/bots/${widget.botId}/call${chat.conversationId == null ? '' : '?c=${chat.conversationId}'}'),
           ),
+          _MoreMenu(botId: widget.botId, showComputer: layout != LayoutSize.desktop),
+          // Far right, next to the panel it opens and closes.
           if (layout == LayoutSize.desktop)
             HeaderIconButton(
+              key: const Key('computerPanelToggle'),
               icon: LucideIcons.panelRight,
               tooltip: ref.watch(computerPanelProvider) ? l10n.hideComputer : l10n.showComputer,
               selected: ref.watch(computerPanelProvider),
               onPressed: ref.read(computerPanelProvider.notifier).toggle,
             ),
-          _MoreMenu(botId: widget.botId, showComputer: layout != LayoutSize.desktop),
         ],
       ),
       body: _wrapFiles(
