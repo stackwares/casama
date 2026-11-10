@@ -12,6 +12,7 @@ import '../../../theme/app_colors.dart';
 import '../../../core/backend.dart';
 import '../../../theme/app_tokens.dart';
 import '../../files/file_preview.dart';
+import '../../settings/totp_scan.dart';
 import '../../../ui/app_card.dart';
 import '../../../ui/bot_avatar.dart';
 import '../../../ui/motion.dart';
@@ -888,7 +889,7 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
       key: const Key('chatSecret'),
       accent: colors.warning,
       icon: LucideIcons.keyRound,
-      title: l10n.secretRequestTitle(widget.botName, e.service),
+      title: e.totp ? l10n.totpRequestTitle(widget.botName, e.service) : l10n.secretRequestTitle(widget.botName, e.service),
       subtitle: l10n.secretRequestHosts(e.hosts.join(', ')),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -906,13 +907,19 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
               keyboardType: TextInputType.visiblePassword,
               autofillHints: const <String>[],
               decoration: InputDecoration(
-                labelText: e.name,
-                helperText: l10n.secretRequestHelp,
+                labelText: e.totp ? '${e.name} · ${l10n.totpSeedLabel}' : e.name,
+                helperText: e.totp ? l10n.totpSeedHelp : l10n.secretRequestHelp,
                 prefixIcon: const Icon(LucideIcons.lock, size: 18),
-                suffixIcon: IconButton(
-                  tooltip: _obscure ? l10n.show : l10n.hide,
-                  icon: Icon(_obscure ? LucideIcons.eye : LucideIcons.eyeOff, size: 18),
-                  onPressed: () => setState(() => _obscure = !_obscure),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (e.totp) TotpScanButton(onScanned: (link) => setState(() => _value.text = link)),
+                    IconButton(
+                      tooltip: _obscure ? l10n.show : l10n.hide,
+                      icon: Icon(_obscure ? LucideIcons.eye : LucideIcons.eyeOff, size: 18),
+                      onPressed: () => setState(() => _obscure = !_obscure),
+                    ),
+                  ],
                 ),
               ),
               onSubmitted: (_) => _busy ? null : _answer(true),

@@ -200,6 +200,7 @@ lib/src/model/run_started_event_payload.dart
 lib/src/model/run_status.dart
 lib/src/model/saved_count.dart
 lib/src/model/secret.dart
+lib/src/model/secret_kind.dart
 lib/src/model/secret_list.dart
 lib/src/model/secret_requested_event.dart
 lib/src/model/secret_requested_event_payload.dart

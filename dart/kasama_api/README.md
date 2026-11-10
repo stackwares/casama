@@ -364,6 +364,7 @@ Class | Method | HTTP request | Description
  - [RunStatus](doc/RunStatus.md)
  - [SavedCount](doc/SavedCount.md)
  - [Secret](doc/Secret.md)
+ - [SecretKind](doc/SecretKind.md)
  - [SecretList](doc/SecretList.md)
  - [SecretRequestedEvent](doc/SecretRequestedEvent.md)
  - [SecretRequestedEventPayload](doc/SecretRequestedEventPayload.md)

@@ -17,6 +17,8 @@ abstract class _$CreateSecretRequestCWProxy {
 
   CreateSecretRequest allowedBotIds(List<String>? allowedBotIds);
 
+  CreateSecretRequest kind(SecretKind? kind);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateSecretRequest(...).copyWith.fieldName(value)`.
@@ -31,6 +33,7 @@ abstract class _$CreateSecretRequestCWProxy {
     String value,
     List<String> allowedHosts,
     List<String>? allowedBotIds,
+    SecretKind? kind,
   });
 }
 
@@ -58,6 +61,9 @@ class _$CreateSecretRequestCWProxyImpl implements _$CreateSecretRequestCWProxy {
   CreateSecretRequest allowedBotIds(List<String>? allowedBotIds) =>
       call(allowedBotIds: allowedBotIds);
 
+  @override
+  CreateSecretRequest kind(SecretKind? kind) => call(kind: kind);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateSecretRequest(...).copyWith.fieldName(value)`.
@@ -73,6 +79,7 @@ class _$CreateSecretRequestCWProxyImpl implements _$CreateSecretRequestCWProxy {
     Object? value = const $CopyWithPlaceholder(),
     Object? allowedHosts = const $CopyWithPlaceholder(),
     Object? allowedBotIds = const $CopyWithPlaceholder(),
+    Object? kind = const $CopyWithPlaceholder(),
   }) {
     return CreateSecretRequest(
       orgId: orgId == const $CopyWithPlaceholder() || orgId == null
@@ -96,6 +103,10 @@ class _$CreateSecretRequestCWProxyImpl implements _$CreateSecretRequestCWProxy {
           ? _value.allowedBotIds
           // ignore: cast_nullable_to_non_nullable
           : allowedBotIds as List<String>?,
+      kind: kind == const $CopyWithPlaceholder()
+          ? _value.kind
+          // ignore: cast_nullable_to_non_nullable
+          : kind as SecretKind?,
     );
   }
 }
@@ -133,6 +144,10 @@ CreateSecretRequest _$CreateSecretRequestFromJson(Map<String, dynamic> json) =>
             'allowed_bot_ids',
             (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
           ),
+          kind: $checkedConvert(
+            'kind',
+            (v) => $enumDecodeNullable(_$SecretKindEnumMap, v),
+          ),
         );
         return val;
       },
@@ -151,4 +166,10 @@ Map<String, dynamic> _$CreateSecretRequestToJson(
   'value': instance.value,
   'allowed_hosts': instance.allowedHosts,
   'allowed_bot_ids': ?instance.allowedBotIds,
+  'kind': ?_$SecretKindEnumMap[instance.kind],
+};
+
+const _$SecretKindEnumMap = {
+  SecretKind.plain: 'value',
+  SecretKind.totp: 'totp',
 };

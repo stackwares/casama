@@ -200,6 +200,7 @@ export 'package:kasama_api/src/model/run_started_event_payload.dart';
 export 'package:kasama_api/src/model/run_status.dart';
 export 'package:kasama_api/src/model/saved_count.dart';
 export 'package:kasama_api/src/model/secret.dart';
+export 'package:kasama_api/src/model/secret_kind.dart';
 export 'package:kasama_api/src/model/secret_list.dart';
 export 'package:kasama_api/src/model/secret_requested_event.dart';
 export 'package:kasama_api/src/model/secret_requested_event_payload.dart';

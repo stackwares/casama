@@ -190,4 +190,67 @@ describe("secrets.request", () => {
     >`select count(*)::int as n from public.secret_requests where name = 'MIXED_KEY'`;
     expect(n?.n).toBe(0);
   });
+
+  it("asks for a sign-in code seed and checks it is one (D-102)", async () => {
+    const runId = await chat(owner.token, "Please sign in with a code.");
+    await waitStatus(runId, "waiting_approval");
+    const open = await j(
+      await h.request(`/v1/secrets/requests?org_id=${orgId}`, { token: owner.token }),
+    );
+    const ask = open.items.find((x: { name: string }) => x.name === "ACME_2FA");
+    expect(ask.kind).toBe("totp");
+    const bad = await h.request(`/v1/secrets/requests/${ask.id}/fulfill`, {
+      method: "POST",
+      token: owner.token,
+      json: { value: "nope!" },
+    });
+    expect(bad.status).toBe(400);
+    const ok = await h.request(`/v1/secrets/requests/${ask.id}/fulfill`, {
+      method: "POST",
+      token: owner.token,
+      json: { value: "otpauth://totp/Acme:ada?secret=JBSWY3DPEHPK3PXP" },
+    });
+    expect(ok.status).toBe(200);
+    await waitStatus(runId, "completed");
+    const list = await j(await h.request(`/v1/secrets?org_id=${orgId}`, { token: owner.token }));
+    expect(list.items.find((x: { name: string }) => x.name === "ACME_2FA")?.kind).toBe("totp");
+    const evs = (
+      await j(await h.request(`/v1/runs/${runId}/events?limit=1000`, { token: owner.token }))
+    ).items as Array<{
+      type: string;
+      payload: Record<string, unknown>;
+    }>;
+    expect(JSON.stringify(evs)).toContain("{{totp:ACME_2FA}}");
+    expect(JSON.stringify(evs)).not.toContain("JBSWY3DPEHPK3PXP");
+  });
+
+  it("admins add sign-in code secrets only with a valid seed", async () => {
+    const bad = await h.request("/v1/secrets", {
+      method: "POST",
+      token: owner.token,
+      json: {
+        org_id: orgId,
+        name: "BAD_2FA",
+        kind: "totp",
+        value: "otpauth://hotp/x?secret=JBSWY3DPEHPK3PXP",
+        allowed_hosts: ["x.example"],
+      },
+    });
+    expect(bad.status).toBe(400);
+    expect((await j(bad)).code).toBe("invalid_totp");
+    const good = await j(
+      await h.request("/v1/secrets", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          org_id: orgId,
+          name: "GH_2FA",
+          kind: "totp",
+          value: "JBSWY3DPEHPK3PXP",
+          allowed_hosts: ["github.com"],
+        },
+      }),
+    );
+    expect(good.kind).toBe("totp");
+  });
 });

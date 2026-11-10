@@ -8,6 +8,8 @@ import {
   isValidCron,
   isValidTimezone,
   nextRunAt,
+  parseTotp,
+  TotpError,
   templateById,
 } from "@kasama/domain";
 import { and, desc, eq, sql } from "drizzle-orm";
@@ -22,6 +24,16 @@ export function requireClaims(claims: JwtClaims | undefined): JwtClaims {
   if (!claims) throw new ApiError(401, "unauthorized", "Missing or invalid bearer token");
   return claims;
 }
+
+/** A sign-in code secret must hold a readable two-step seed (D-102). */
+const checkTotpValue = (value: string) => {
+  try {
+    parseTotp(value);
+  } catch (err) {
+    if (err instanceof TotpError) throw new ApiError(400, "invalid_totp", err.message);
+    throw err;
+  }
+};
 
 export const isAdmin = async (db: Database, claims: JwtClaims, orgId: string) => {
   const [r] = await withUserSession(db, claims, (tx) =>
@@ -58,6 +70,7 @@ const secretOut = (s: SecretRow) => ({
   name: s.name,
   allowed_hosts: s.allowedHosts,
   allowed_bot_ids: s.allowedBotIds,
+  kind: (s.kind ?? "value") as "value" | "totp",
   created_at: iso(s.createdAt),
 });
 
@@ -216,6 +229,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     service: string;
     allowed_hosts: string[];
     reason: string;
+    kind: "value" | "totp";
     status: "pending";
     expires_at: Date | string;
     created_at: Date | string;
@@ -231,12 +245,13 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     service: r.service,
     allowed_hosts: r.allowed_hosts,
     reason: r.reason,
+    kind: r.kind,
     status: r.status,
     expires_at: iso(r.expires_at),
     created_at: iso(r.created_at),
   });
   const ASK_COLUMNS = sql`s.id, s.org_id, s.bot_id, s.run_id, s.conversation_id, s.name, s.service, s.allowed_hosts,
-    s.reason, case when s.status = 'pending' and s.expires_at <= now() then 'expired' else s.status end as status,
+    s.reason, s.kind, case when s.status = 'pending' and s.expires_at <= now() then 'expired' else s.status end as status,
     s.expires_at, s.created_at, r.created_by as run_by`;
 
   /** The request, if this person can see it (RLS) and may answer it: an admin or the run's sender. */
@@ -273,6 +288,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const { id } = c.req.valid("param");
     const { value } = c.req.valid("json");
     const ask = await askFor(claims, id);
+    if (ask.kind === "totp") checkTotpValue(value);
     const admin = await isAdmin(db, claims, ask.org_id);
     const secretId = await db.transaction(async (tx) => {
       const [existing] = await tx.execute<{ id: string; vault_secret_id: string | null }>(sql`
@@ -307,8 +323,8 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       );
       // Only the bot that asked may use it, and only on the hosts it named.
       const [r] = await tx.execute<{ id: string }>(sql`
-        insert into public.secrets (org_id, name, vault_secret_id, allowed_hosts, allowed_bot_ids, created_by)
-        values (${ask.org_id}::uuid, ${ask.name}, ${v?.id}::uuid, array(select jsonb_array_elements_text(${JSON.stringify(ask.allowed_hosts)}::jsonb)), array[${ask.bot_id}::uuid], ${claims.sub}::uuid)
+        insert into public.secrets (org_id, name, kind, vault_secret_id, allowed_hosts, allowed_bot_ids, created_by)
+        values (${ask.org_id}::uuid, ${ask.name}, ${ask.kind}, ${v?.id}::uuid, array(select jsonb_array_elements_text(${JSON.stringify(ask.allowed_hosts)}::jsonb)), array[${ask.bot_id}::uuid], ${claims.sub}::uuid)
         returning id`);
       return r?.id;
     });
@@ -351,6 +367,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const body = c.req.valid("json");
     if (!(await isAdmin(db, claims, body.org_id)))
       throw new ApiError(403, "forbidden", "Only owners and admins can add secrets");
+    if (body.kind === "totp") checkTotpValue(body.value);
     try {
       const row = await db.transaction(async (tx) => {
         const [v] = await tx.execute<{ id: string }>(
@@ -361,6 +378,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
           .values({
             orgId: body.org_id,
             name: body.name,
+            kind: body.kind ?? "value",
             vaultSecretId: v?.id,
             allowedHosts: body.allowed_hosts.map((h) => h.toLowerCase()),
             allowedBotIds: body.allowed_bot_ids ?? null,

@@ -149,6 +149,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 ## Ask for a secret (D-101)
 
 - `packages/agent/src/secret-requests.ts` (`secrets.request`, handled in the run loop like takeovers), `secret_requests`, `/v1/secrets/requests` (list, fulfill, decline), events `secret.requested`/`secret.resolved`, and the chat's protected `SecretPrompt` card.
+- Sign-in codes (D-102): `secrets.kind = totp`, `{{totp:NAME}}` resolved by `resolvePlaceholders` with `@kasama/domain` `totp.ts`; QR scanning in `client/lib/features/settings/totp_scan.dart`.
 
 ## Production and launch (Phase 8)
 

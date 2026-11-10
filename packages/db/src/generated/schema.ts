@@ -730,33 +730,6 @@ export const toolGrants = pgTable("tool_grants", {
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 ]);
 
-export const secrets = pgTable("secrets", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	name: text().notNull(),
-	vaultSecretId: uuid("vault_secret_id"),
-	allowedBotIds: uuid("allowed_bot_ids").array(),
-	allowedHosts: text("allowed_hosts").array().default([""]).notNull(),
-	createdBy: uuid("created_by"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "secrets_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.createdBy],
-			foreignColumns: [users.id],
-			name: "secrets_created_by_fkey"
-		}).onDelete("set null"),
-	unique("secrets_org_id_name_key").on(table.orgId, table.name),
-	pgPolicy("secrets_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("secrets_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("secrets_name_check", sql`name ~ '^[A-Z][A-Z0-9_]{0,63}$'::text`),
-]);
-
 export const routines = pgTable("routines", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -802,6 +775,35 @@ export const routines = pgTable("routines", {
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("routines_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 120)`),
 	check("routines_instructions_md_check", sql`(char_length(instructions_md) >= 1) AND (char_length(instructions_md) <= 20000)`),
+]);
+
+export const secrets = pgTable("secrets", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	name: text().notNull(),
+	vaultSecretId: uuid("vault_secret_id"),
+	allowedBotIds: uuid("allowed_bot_ids").array(),
+	allowedHosts: text("allowed_hosts").array().default([""]).notNull(),
+	createdBy: uuid("created_by"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	kind: text().default('value').notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "secrets_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "secrets_created_by_fkey"
+		}).onDelete("set null"),
+	unique("secrets_org_id_name_key").on(table.orgId, table.name),
+	pgPolicy("secrets_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
+	pgPolicy("secrets_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("secrets_name_check", sql`name ~ '^[A-Z][A-Z0-9_]{0,63}$'::text`),
+	check("secrets_kind_check", sql`kind = ANY (ARRAY['value'::text, 'totp'::text])`),
 ]);
 
 export const botIntegrations = pgTable("bot_integrations", {
@@ -1475,6 +1477,66 @@ export const botFolders = pgTable("bot_folders", {
 	pgPolicy("bot_folders_write", { as: "permissive", for: "all", to: ["authenticated"] }),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("bot_folders_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 60)`),
+]);
+
+export const secretRequests = pgTable("secret_requests", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	runId: uuid("run_id").notNull(),
+	conversationId: uuid("conversation_id"),
+	name: text().notNull(),
+	service: text().notNull(),
+	allowedHosts: text("allowed_hosts").array().notNull(),
+	reason: text().default("").notNull(),
+	status: text().default('pending').notNull(),
+	secretId: uuid("secret_id"),
+	resolvedBy: uuid("resolved_by"),
+	resolvedAt: timestamp("resolved_at", { withTimezone: true, mode: 'string' }),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '24:00:00'::interval)`).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	kind: text().default('value').notNull(),
+}, (table) => [
+	index("secret_requests_org_idx").using("btree", table.orgId.asc().nullsLast().op("text_ops"), table.status.asc().nullsLast().op("text_ops")),
+	index("secret_requests_run_idx").using("btree", table.runId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "secret_requests_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "secret_requests_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "secret_requests_run_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.conversationId],
+			foreignColumns: [conversations.id],
+			name: "secret_requests_conversation_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.secretId],
+			foreignColumns: [secrets.id],
+			name: "secret_requests_secret_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.resolvedBy],
+			foreignColumns: [users.id],
+			name: "secret_requests_resolved_by_fkey"
+		}).onDelete("set null"),
+	pgPolicy("secret_requests_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("secret_requests_name_check", sql`name ~ '^[A-Z][A-Z0-9_]{0,63}$'::text`),
+	check("secret_requests_service_check", sql`(char_length(service) >= 1) AND (char_length(service) <= 80)`),
+	check("secret_requests_allowed_hosts_check", sql`(cardinality(allowed_hosts) >= 1) AND (cardinality(allowed_hosts) <= 10)`),
+	check("secret_requests_reason_check", sql`char_length(reason) <= 1000`),
+	check("secret_requests_status_check", sql`status = ANY (ARRAY['pending'::text, 'fulfilled'::text, 'declined'::text, 'expired'::text])`),
+	check("secret_requests_kind_check", sql`kind = ANY (ARRAY['value'::text, 'totp'::text])`),
 ]);
 
 export const ttsCache = pgTable("tts_cache", {

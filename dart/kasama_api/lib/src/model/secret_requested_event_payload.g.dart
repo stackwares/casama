@@ -17,6 +17,8 @@ abstract class _$SecretRequestedEventPayloadCWProxy {
 
   SecretRequestedEventPayload reason(String reason);
 
+  SecretRequestedEventPayload kind(SecretRequestedEventPayloadKindEnum kind);
+
   SecretRequestedEventPayload expiresAt(DateTime expiresAt);
 
   /// Creates a new instance with the provided field values.
@@ -33,6 +35,7 @@ abstract class _$SecretRequestedEventPayloadCWProxy {
     String service,
     List<String> allowedHosts,
     String reason,
+    SecretRequestedEventPayloadKindEnum kind,
     DateTime expiresAt,
   });
 }
@@ -63,6 +66,10 @@ class _$SecretRequestedEventPayloadCWProxyImpl
   SecretRequestedEventPayload reason(String reason) => call(reason: reason);
 
   @override
+  SecretRequestedEventPayload kind(SecretRequestedEventPayloadKindEnum kind) =>
+      call(kind: kind);
+
+  @override
   SecretRequestedEventPayload expiresAt(DateTime expiresAt) =>
       call(expiresAt: expiresAt);
 
@@ -81,6 +88,7 @@ class _$SecretRequestedEventPayloadCWProxyImpl
     Object? service = const $CopyWithPlaceholder(),
     Object? allowedHosts = const $CopyWithPlaceholder(),
     Object? reason = const $CopyWithPlaceholder(),
+    Object? kind = const $CopyWithPlaceholder(),
     Object? expiresAt = const $CopyWithPlaceholder(),
   }) {
     return SecretRequestedEventPayload(
@@ -105,6 +113,10 @@ class _$SecretRequestedEventPayloadCWProxyImpl
           ? _value.reason
           // ignore: cast_nullable_to_non_nullable
           : reason as String,
+      kind: kind == const $CopyWithPlaceholder() || kind == null
+          ? _value.kind
+          // ignore: cast_nullable_to_non_nullable
+          : kind as SecretRequestedEventPayloadKindEnum,
       expiresAt: expiresAt == const $CopyWithPlaceholder() || expiresAt == null
           ? _value.expiresAt
           // ignore: cast_nullable_to_non_nullable
@@ -139,6 +151,7 @@ SecretRequestedEventPayload _$SecretRequestedEventPayloadFromJson(
         'service',
         'allowed_hosts',
         'reason',
+        'kind',
         'expires_at',
       ],
     );
@@ -151,6 +164,10 @@ SecretRequestedEventPayload _$SecretRequestedEventPayloadFromJson(
         (v) => (v as List<dynamic>).map((e) => e as String).toList(),
       ),
       reason: $checkedConvert('reason', (v) => v as String),
+      kind: $checkedConvert(
+        'kind',
+        (v) => $enumDecode(_$SecretRequestedEventPayloadKindEnumEnumMap, v),
+      ),
       expiresAt: $checkedConvert(
         'expires_at',
         (v) => DateTime.parse(v as String),
@@ -173,5 +190,11 @@ Map<String, dynamic> _$SecretRequestedEventPayloadToJson(
   'service': instance.service,
   'allowed_hosts': instance.allowedHosts,
   'reason': instance.reason,
+  'kind': _$SecretRequestedEventPayloadKindEnumEnumMap[instance.kind]!,
   'expires_at': instance.expiresAt.toIso8601String(),
+};
+
+const _$SecretRequestedEventPayloadKindEnumEnumMap = {
+  SecretRequestedEventPayloadKindEnum.plain: 'value',
+  SecretRequestedEventPayloadKindEnum.totp: 'totp',
 };

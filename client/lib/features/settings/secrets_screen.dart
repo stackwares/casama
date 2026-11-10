@@ -12,16 +12,21 @@ import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
+import 'package:kasama_sdk/kasama_sdk.dart';
+import 'totp_scan.dart';
 
 /// Named secrets bots reference as {{secret:NAME}}; each is only sent to its allowed hosts.
 class SecretsScreen extends ConsumerWidget {
   const SecretsScreen({super.key});
 
   Future<void> _add(BuildContext context, WidgetRef ref) async {
-    final result = await showAdaptiveSheet<(String, String, List<String>)>(context: context, builder: (_) => const _AddSecretForm());
+    final result = await showAdaptiveSheet<(String, String, List<String>, bool)>(context: context, builder: (_) => const _AddSecretForm());
     if (result == null || !context.mounted) return;
     final org = ref.read(currentOrgProvider)!;
-    await runGuarded(context, () => ref.read(backendProvider).createSecret(org.id, name: result.$1, value: result.$2, hosts: result.$3));
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).createSecret(org.id, name: result.$1, value: result.$2, hosts: result.$3, totp: result.$4),
+    );
     ref.invalidate(secretsProvider);
   }
 
@@ -51,10 +56,13 @@ class SecretsScreen extends ConsumerWidget {
                       for (final s in items)
                         GroupedTile(
                           key: Key('secret-${s.id}'),
-                          icon: LucideIcons.keyRound,
+                          icon: s.kind == SecretKind.totp ? LucideIcons.shieldCheck : LucideIcons.keyRound,
                           iconColor: context.appColors.warning,
                           title: s.name,
-                          subtitle: l10n.onlySentTo(s.allowedHosts.join(', ')),
+                          subtitle: [
+                            if (s.kind == SecretKind.totp) l10n.signInCode,
+                            l10n.onlySentTo(s.allowedHosts.join(', ')),
+                          ].join(' · '),
                           trailing: IconButton(
                             tooltip: l10n.delete,
                             icon: Icon(LucideIcons.trash2, color: context.colorScheme.onSurfaceVariant),
@@ -93,6 +101,7 @@ class _AddSecretFormState extends State<_AddSecretForm> {
   final _value = TextEditingController();
   final _hosts = TextEditingController();
   var _show = false;
+  var _totp = false;
 
   @override
   void dispose() {
@@ -116,8 +125,17 @@ class _AddSecretFormState extends State<_AddSecretForm> {
       subtitle: l10n.secretsHelp,
       submitLabel: l10n.save,
       submitKey: const Key('saveSecret'),
-      onSubmit: valid ? () => Navigator.pop(context, (_name.text, _value.text, _hostList)) : null,
+      onSubmit: valid ? () => Navigator.pop(context, (_name.text, _value.text.trim(), _hostList, _totp)) : null,
       children: [
+        SegmentedButton<bool>(
+          key: const Key('secretKind'),
+          segments: [
+            ButtonSegment(value: false, icon: const Icon(LucideIcons.keyRound, size: 18), label: Text(l10n.secretKindValue)),
+            ButtonSegment(value: true, icon: const Icon(LucideIcons.shieldCheck, size: 18), label: Text(l10n.signInCode)),
+          ],
+          selected: {_totp},
+          onSelectionChanged: (v) => setState(() => _totp = v.first),
+        ),
         TextField(
           key: const Key('secretName'),
           controller: _name,
@@ -148,12 +166,28 @@ class _AddSecretFormState extends State<_AddSecretForm> {
           autocorrect: false,
           enableSuggestions: false,
           decoration: InputDecoration(
-            labelText: l10n.secretValue,
+            labelText: _totp ? l10n.totpSeedLabel : l10n.secretValue,
+            helperText: _totp ? l10n.totpSeedHelp : null,
             prefixIcon: const Icon(LucideIcons.rectangleEllipsis, size: 20),
-            suffixIcon: IconButton(
-              tooltip: _show ? l10n.hide : l10n.show,
-              icon: Icon(_show ? LucideIcons.eyeOff : LucideIcons.eye, size: 20),
-              onPressed: () => setState(() => _show = !_show),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_totp)
+                  TotpScanButton(
+                    onScanned: (link) => setState(() {
+                      _value.text = link;
+                      final issuer = Uri.tryParse(link)?.queryParameters['issuer'];
+                      if (_name.text.isEmpty && issuer != null && issuer.isNotEmpty) {
+                        _name.text = '${issuer.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]+'), '_')}_2FA';
+                      }
+                    }),
+                  ),
+                IconButton(
+                  tooltip: _show ? l10n.hide : l10n.show,
+                  icon: Icon(_show ? LucideIcons.eyeOff : LucideIcons.eye, size: 20),
+                  onPressed: () => setState(() => _show = !_show),
+                ),
+              ],
             ),
           ),
           onChanged: (_) => setState(() {}),

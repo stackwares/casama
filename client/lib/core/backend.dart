@@ -249,7 +249,8 @@ abstract class Backend {
   Future<String> connectProviderApp(String integrationId, String app);
   Future<List<ProviderAccount>> providerAccounts(String integrationId);
   Future<List<Secret>> secrets(String orgId);
-  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts});
+  /// [totp]: a sign-in code seed (otpauth:// link or base32 key) bots use as {{totp:NAME}} (D-102).
+  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts, bool totp = false});
   Future<void> deleteSecret(String secretId);
 
   // Task board

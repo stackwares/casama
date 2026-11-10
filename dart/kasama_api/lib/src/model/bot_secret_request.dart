@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:kasama_api/src/model/secret_kind.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -37,6 +38,8 @@ class BotSecretRequest {
     required  this.allowedHosts,
 
     required  this.reason,
+
+    required  this.kind,
 
     required  this.status,
 
@@ -155,6 +158,18 @@ class BotSecretRequest {
 
   @JsonKey(
     
+    name: r'kind',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final SecretKind kind;
+
+
+
+  @JsonKey(
+    
     name: r'status',
     required: true,
     includeIfNull: false,
@@ -202,6 +217,7 @@ class BotSecretRequest {
       other.service == service &&
       other.allowedHosts == allowedHosts &&
       other.reason == reason &&
+      other.kind == kind &&
       other.status == status &&
       other.expiresAt == expiresAt &&
       other.createdAt == createdAt;
@@ -217,6 +233,7 @@ class BotSecretRequest {
         service.hashCode +
         allowedHosts.hashCode +
         reason.hashCode +
+        kind.hashCode +
         status.hashCode +
         expiresAt.hashCode +
         createdAt.hashCode;

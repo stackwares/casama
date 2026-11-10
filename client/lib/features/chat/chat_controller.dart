@@ -81,8 +81,9 @@ class TakeoverEntry extends ChatEntry {
 
 /// A bot asking for a secret (D-101); the value is typed into the card and never kept here.
 class SecretEntry extends ChatEntry {
-  const SecretEntry({required this.requestId, required this.name, required this.service, required this.hosts, required this.reason, this.outcome});
+  const SecretEntry({required this.requestId, required this.name, required this.service, required this.hosts, required this.reason, this.totp = false, this.outcome});
   final String requestId;
+  final bool totp;
   final String name;
   final String service;
   final List<String> hosts;
@@ -331,12 +332,12 @@ class ChatController extends Notifier<ChatState> {
         ref.invalidate(approvalsProvider);
       case SecretRequestedItem(:final event):
         final p = event.payload;
-        entries.add(SecretEntry(requestId: p.requestId, name: p.name, service: p.service, hosts: p.allowedHosts.toList(), reason: p.reason));
+        entries.add(SecretEntry(requestId: p.requestId, name: p.name, service: p.service, hosts: p.allowedHosts.toList(), reason: p.reason, totp: p.kind.value == 'totp'));
       case SecretResolvedItem(:final event):
         final i = indexWhere((x) => x is SecretEntry && x.requestId == event.payload.requestId);
         if (i >= 0) {
           final e = entries[i] as SecretEntry;
-          entries[i] = SecretEntry(requestId: e.requestId, name: e.name, service: e.service, hosts: e.hosts, reason: e.reason, outcome: event.payload.outcome.value);
+          entries[i] = SecretEntry(requestId: e.requestId, name: e.name, service: e.service, hosts: e.hosts, reason: e.reason, totp: e.totp, outcome: event.payload.outcome.value);
         }
       case TakeoverRequestedItem(:final event):
         entries.add(TakeoverEntry(computerId: event.payload.computerId, reason: event.payload.reason));

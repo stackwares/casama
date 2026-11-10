@@ -761,6 +761,13 @@
               "reason": {
                 "type": "string"
               },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "value",
+                  "totp"
+                ]
+              },
               "expires_at": {
                 "type": "string",
                 "format": "date-time"
@@ -772,6 +779,7 @@
               "service",
               "allowed_hosts",
               "reason",
+              "kind",
               "expires_at"
             ]
           }
@@ -4415,6 +4423,9 @@
               "format": "uuid"
             }
           },
+          "kind": {
+            "$ref": "#/components/schemas/SecretKind"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -4426,8 +4437,17 @@
           "name",
           "allowed_hosts",
           "allowed_bot_ids",
+          "kind",
           "created_at"
         ]
+      },
+      "SecretKind": {
+        "type": "string",
+        "enum": [
+          "value",
+          "totp"
+        ],
+        "description": "value: the secret itself; totp: a two-step seed bots use as {{totp:NAME}} (D-102)"
       },
       "CreateSecretRequest": {
         "type": "object",
@@ -4463,6 +4483,16 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SecretKind"
+              },
+              {
+                "description": "totp: value is an otpauth://totp link or a base32 key"
+              }
+            ]
           }
         },
         "required": [
@@ -4868,6 +4898,9 @@
           "reason": {
             "type": "string"
           },
+          "kind": {
+            "$ref": "#/components/schemas/SecretKind"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -4896,6 +4929,7 @@
           "service",
           "allowed_hosts",
           "reason",
+          "kind",
           "status",
           "expires_at",
           "created_at"

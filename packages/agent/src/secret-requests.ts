@@ -38,6 +38,12 @@ export const SecretRequestArgs = z.object({
     .max(10)
     .describe("Hosts the secret may be sent to, all of one service (e.g. api.stripe.com)"),
   reason: z.string().max(1000).describe("Why you need it, shown to the person"),
+  kind: z
+    .enum(["value", "totp"])
+    .optional()
+    .describe(
+      "totp: ask for a two-step sign-in seed instead; then use {{totp:NAME}} where a code goes",
+    ),
 });
 export type SecretRequestArgs = z.infer<typeof SecretRequestArgs>;
 
@@ -59,7 +65,7 @@ export function registerSecretRequestTool(registry: ToolRegistry) {
   registry.register({
     name: SECRET_REQUEST_TOOL,
     description:
-      "Ask the person for a secret (an API key or password) for one service. They type it into a protected card; it goes straight to the vault and you never see it. You wait until they save or decline, then use it as {{secret:NAME}} in tools that accept secrets, only on the hosts you list. Never ask for secrets in plain chat.",
+      "Ask the person for a secret (an API key, password, or a two-step sign-in seed with kind totp) for one service. They type it into a protected card; it goes straight to the vault and you never see it. You wait until they save or decline, then use it as {{secret:NAME}} in tools that accept secrets, only on the hosts you list. Never ask for secrets in plain chat.",
     risk: "low",
     schema: SecretRequestArgs,
     async execute() {
@@ -91,9 +97,9 @@ export async function createSecretRequest(
     return { error: (err as Error).message };
   }
   const [row] = await db.execute<{ id: string; expires_at: string }>(sql`
-    insert into public.secret_requests (org_id, bot_id, run_id, conversation_id, name, service, allowed_hosts, reason, expires_at)
+    insert into public.secret_requests (org_id, bot_id, run_id, conversation_id, name, service, allowed_hosts, reason, kind, expires_at)
     values (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, ${info.conversationId}::uuid, ${args.name},
-            ${args.service}, array(select jsonb_array_elements_text(${JSON.stringify(hosts)}::jsonb)), ${args.reason},
+            ${args.service}, array(select jsonb_array_elements_text(${JSON.stringify(hosts)}::jsonb)), ${args.reason}, ${args.kind ?? "value"},
             now() + make_interval(secs => ${SECRET_REQUEST_TTL_MS / 1000}))
     returning id, expires_at`);
   const id = (row as { id: string }).id;
@@ -105,6 +111,7 @@ export async function createSecretRequest(
     service: args.service,
     allowed_hosts: hosts,
     reason: args.reason,
+    kind: args.kind ?? "value",
     expires_at: new Date(String(row?.expires_at)).toISOString(),
   });
   if (notifications) {
@@ -143,8 +150,8 @@ export async function secretRequestState(db: Database, id: string): Promise<stri
 
 /** Ends the wait: resumes the run, records the outcome and returns what the model is told. */
 export async function finishSecretRequest(db: Database, runId: string, id: string, bus: Bus) {
-  const [r] = await db.execute<{ status: string; name: string; service: string }>(sql`
-    select status, name, service from public.secret_requests where id = ${id}::uuid`);
+  const [r] = await db.execute<{ status: string; name: string; service: string; kind: string }>(sql`
+    select status, name, service, kind from public.secret_requests where id = ${id}::uuid`);
   const status = r?.status ?? "expired";
   const outcome =
     status === "fulfilled" ? "fulfilled" : status === "declined" ? "declined" : "expired";
@@ -152,7 +159,9 @@ export async function finishSecretRequest(db: Database, runId: string, id: strin
     where id = ${runId}::uuid and status = 'waiting_approval'`);
   await (await bus()).append(runId, "secret.resolved", { request_id: id, outcome });
   if (outcome === "fulfilled")
-    return `Saved ${r?.name} for ${r?.service}. Use it as {{secret:${r?.name}}}.`;
+    return r?.kind === "totp"
+      ? `Saved the sign-in code seed ${r?.name} for ${r?.service}. Write {{totp:${r?.name}}} where a code goes.`
+      : `Saved ${r?.name} for ${r?.service}. Use it as {{secret:${r?.name}}}.`;
   if (outcome === "declined")
     return `The person declined to give ${r?.name}. Continue without it or explain what you need it for.`;
   return `Nobody saved ${r?.name} within 24 hours. Continue without it or ask again later.`;

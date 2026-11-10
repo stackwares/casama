@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:kasama_api/src/model/secret_kind.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -29,6 +30,8 @@ class Secret {
     required  this.allowedHosts,
 
     required  this.allowedBotIds,
+
+    required  this.kind,
 
     required  this.createdAt,
   });
@@ -95,6 +98,18 @@ class Secret {
 
   @JsonKey(
     
+    name: r'kind',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final SecretKind kind;
+
+
+
+  @JsonKey(
+    
     name: r'created_at',
     required: true,
     includeIfNull: false,
@@ -114,6 +129,7 @@ class Secret {
       other.name == name &&
       other.allowedHosts == allowedHosts &&
       other.allowedBotIds == allowedBotIds &&
+      other.kind == kind &&
       other.createdAt == createdAt;
 
     @override
@@ -123,6 +139,7 @@ class Secret {
         name.hashCode +
         allowedHosts.hashCode +
         (allowedBotIds == null ? 0 : allowedBotIds.hashCode) +
+        kind.hashCode +
         createdAt.hashCode;
 
   factory Secret.fromJson(Map<String, dynamic> json) => _$SecretFromJson(json);

@@ -533,3 +533,11 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **App:** a protected card in the chat (service, hosts, reason, a masked field with no suggestions, autocorrect or IME learning, Save and Decline). The value never touches the composer or drafts and is cleared after sending.
 - **Tests:** pgTAP (`secret_requests_rls.test.sql`), API with a scripted model (`secret-requests.test.ts`: wait, fulfill, nothing leaks, decline, mixed hosts refused), widget tests (`secret_request_test.dart`).
 
+## D-102 Sign-in codes for bots
+
+- **Kind:** `secrets.kind` is `value` (default) or `totp`; `secret_requests.kind` likewise, so `secrets.request` can ask for a seed (`kind: "totp"`). A totp secret holds an `otpauth://totp/...` link or a bare base32 key, checked when saved (`invalid_totp`): time-based only, SHA-1/256/512, 6–8 digits, 10–300 s periods.
+- **Codes:** bots write `{{totp:NAME}}`. `resolvePlaceholders` turns it into the current RFC 6238 code (`@kasama/domain` `totpCode`, node crypto) only at execution time, only for tools that accept secrets, only on the secret's allowed hosts. `{{secret:NAME}}` on a totp secret is refused (`totp_seed_protected`), so the seed never leaves Vault; `{{totp:...}}` on a plain secret is refused too. Each code is added to the run's redactor so it is scrubbed from output.
+- **App:** Secrets → Add has Key or password / Sign-in code; a sign-in code takes a pasted link or key, and phones scan the site's QR code (`mobile_scanner`, iOS and Android only; the name is suggested from the issuer). The chat's secret card does the same for `kind: totp` requests.
+- **Generator:** `--enum-name-mappings=value=plain` stops an enum member named `value` from clashing with the generated enum's own `value` field (Dart `SecretKind.plain` is `"value"` on the wire).
+- **Tests:** RFC 6238 vectors (`totp.test.ts`), placeholder rules (`totp-placeholders.test.ts`), API (seed validation, totp request in `secret-requests.test.ts`), widget test (sign-in code form).
+

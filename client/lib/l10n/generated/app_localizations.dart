@@ -5841,6 +5841,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Decline'**
   String get decline;
+
+  /// No description provided for @signInCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in code'**
+  String get signInCode;
+
+  /// No description provided for @secretKindValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Key or password'**
+  String get secretKindValue;
+
+  /// No description provided for @totpSeedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step key or otpauth:// link'**
+  String get totpSeedLabel;
+
+  /// No description provided for @totpSeedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'From the site\'s two-step setup. Bots only ever get the current code, never the key.'**
+  String get totpSeedHelp;
+
+  /// No description provided for @scanQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR code'**
+  String get scanQrCode;
+
+  /// No description provided for @totpRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} needs a {service} sign-in code'**
+  String totpRequestTitle(String bot, String service);
 }
 
 class _AppLocalizationsDelegate

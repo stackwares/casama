@@ -1174,7 +1174,10 @@ async function toolStep(
         );
       const host = (await def.destinationHost?.(args as never, toolCtx)) ?? null;
       try {
-        args = resolvePlaceholders(args, await secretsFn(), host);
+        // Sign-in codes are scrubbed from output like other secrets (D-102).
+        args = resolvePlaceholders(args, await secretsFn(), host, {
+          onCode: (code, name) => redactor.add(code, `${name}_code`),
+        });
       } catch (err) {
         if (err instanceof SecretError) throw new ToolError(err.code, err.message);
         throw err;

@@ -25,6 +25,8 @@ abstract class _$BotSecretRequestCWProxy {
 
   BotSecretRequest reason(String reason);
 
+  BotSecretRequest kind(SecretKind kind);
+
   BotSecretRequest status(BotSecretRequestStatusEnum status);
 
   BotSecretRequest expiresAt(DateTime expiresAt);
@@ -49,6 +51,7 @@ abstract class _$BotSecretRequestCWProxy {
     String service,
     List<String> allowedHosts,
     String reason,
+    SecretKind kind,
     BotSecretRequestStatusEnum status,
     DateTime expiresAt,
     DateTime createdAt,
@@ -92,6 +95,9 @@ class _$BotSecretRequestCWProxyImpl implements _$BotSecretRequestCWProxy {
   BotSecretRequest reason(String reason) => call(reason: reason);
 
   @override
+  BotSecretRequest kind(SecretKind kind) => call(kind: kind);
+
+  @override
   BotSecretRequest status(BotSecretRequestStatusEnum status) =>
       call(status: status);
 
@@ -120,6 +126,7 @@ class _$BotSecretRequestCWProxyImpl implements _$BotSecretRequestCWProxy {
     Object? service = const $CopyWithPlaceholder(),
     Object? allowedHosts = const $CopyWithPlaceholder(),
     Object? reason = const $CopyWithPlaceholder(),
+    Object? kind = const $CopyWithPlaceholder(),
     Object? status = const $CopyWithPlaceholder(),
     Object? expiresAt = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
@@ -162,6 +169,10 @@ class _$BotSecretRequestCWProxyImpl implements _$BotSecretRequestCWProxy {
           ? _value.reason
           // ignore: cast_nullable_to_non_nullable
           : reason as String,
+      kind: kind == const $CopyWithPlaceholder() || kind == null
+          ? _value.kind
+          // ignore: cast_nullable_to_non_nullable
+          : kind as SecretKind,
       status: status == const $CopyWithPlaceholder() || status == null
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
@@ -189,69 +200,69 @@ extension $BotSecretRequestCopyWith on BotSecretRequest {
 // JsonSerializableGenerator
 // **************************************************************************
 
-BotSecretRequest _$BotSecretRequestFromJson(Map<String, dynamic> json) =>
-    $checkedCreate(
-      'BotSecretRequest',
+BotSecretRequest _$BotSecretRequestFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate(
+  'BotSecretRequest',
+  json,
+  ($checkedConvert) {
+    $checkKeys(
       json,
-      ($checkedConvert) {
-        $checkKeys(
-          json,
-          requiredKeys: const [
-            'id',
-            'org_id',
-            'bot_id',
-            'run_id',
-            'conversation_id',
-            'name',
-            'service',
-            'allowed_hosts',
-            'reason',
-            'status',
-            'expires_at',
-            'created_at',
-          ],
-        );
-        final val = BotSecretRequest(
-          id: $checkedConvert('id', (v) => v as String),
-          orgId: $checkedConvert('org_id', (v) => v as String),
-          botId: $checkedConvert('bot_id', (v) => v as String),
-          runId: $checkedConvert('run_id', (v) => v as String),
-          conversationId: $checkedConvert(
-            'conversation_id',
-            (v) => v as String?,
-          ),
-          name: $checkedConvert('name', (v) => v as String),
-          service: $checkedConvert('service', (v) => v as String),
-          allowedHosts: $checkedConvert(
-            'allowed_hosts',
-            (v) => (v as List<dynamic>).map((e) => e as String).toList(),
-          ),
-          reason: $checkedConvert('reason', (v) => v as String),
-          status: $checkedConvert(
-            'status',
-            (v) => $enumDecode(_$BotSecretRequestStatusEnumEnumMap, v),
-          ),
-          expiresAt: $checkedConvert(
-            'expires_at',
-            (v) => DateTime.parse(v as String),
-          ),
-          createdAt: $checkedConvert(
-            'created_at',
-            (v) => DateTime.parse(v as String),
-          ),
-        );
-        return val;
-      },
-      fieldKeyMap: const {
-        'orgId': 'org_id',
-        'botId': 'bot_id',
-        'runId': 'run_id',
-        'conversationId': 'conversation_id',
-        'allowedHosts': 'allowed_hosts',
-        'expiresAt': 'expires_at',
-        'createdAt': 'created_at',
-      },
+      requiredKeys: const [
+        'id',
+        'org_id',
+        'bot_id',
+        'run_id',
+        'conversation_id',
+        'name',
+        'service',
+        'allowed_hosts',
+        'reason',
+        'kind',
+        'status',
+        'expires_at',
+        'created_at',
+      ],
     );
+    final val = BotSecretRequest(
+      id: $checkedConvert('id', (v) => v as String),
+      orgId: $checkedConvert('org_id', (v) => v as String),
+      botId: $checkedConvert('bot_id', (v) => v as String),
+      runId: $checkedConvert('run_id', (v) => v as String),
+      conversationId: $checkedConvert('conversation_id', (v) => v as String?),
+      name: $checkedConvert('name', (v) => v as String),
+      service: $checkedConvert('service', (v) => v as String),
+      allowedHosts: $checkedConvert(
+        'allowed_hosts',
+        (v) => (v as List<dynamic>).map((e) => e as String).toList(),
+      ),
+      reason: $checkedConvert('reason', (v) => v as String),
+      kind: $checkedConvert('kind', (v) => $enumDecode(_$SecretKindEnumMap, v)),
+      status: $checkedConvert(
+        'status',
+        (v) => $enumDecode(_$BotSecretRequestStatusEnumEnumMap, v),
+      ),
+      expiresAt: $checkedConvert(
+        'expires_at',
+        (v) => DateTime.parse(v as String),
+      ),
+      createdAt: $checkedConvert(
+        'created_at',
+        (v) => DateTime.parse(v as String),
+      ),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'orgId': 'org_id',
+    'botId': 'bot_id',
+    'runId': 'run_id',
+    'conversationId': 'conversation_id',
+    'allowedHosts': 'allowed_hosts',
+    'expiresAt': 'expires_at',
+    'createdAt': 'created_at',
+  },
+);
 
 Map<String, dynamic> _$BotSecretRequestToJson(BotSecretRequest instance) =>
     <String, dynamic>{
@@ -264,10 +275,16 @@ Map<String, dynamic> _$BotSecretRequestToJson(BotSecretRequest instance) =>
       'service': instance.service,
       'allowed_hosts': instance.allowedHosts,
       'reason': instance.reason,
+      'kind': _$SecretKindEnumMap[instance.kind]!,
       'status': _$BotSecretRequestStatusEnumEnumMap[instance.status]!,
       'expires_at': instance.expiresAt.toIso8601String(),
       'created_at': instance.createdAt.toIso8601String(),
     };
+
+const _$SecretKindEnumMap = {
+  SecretKind.plain: 'value',
+  SecretKind.totp: 'totp',
+};
 
 const _$BotSecretRequestStatusEnumEnumMap = {
   BotSecretRequestStatusEnum.pending: 'pending',

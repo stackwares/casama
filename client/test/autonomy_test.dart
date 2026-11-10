@@ -254,6 +254,7 @@ void main() {
   });
 
   testWidgets('secrets are added with allowed hosts and never shown', (tester) async {
+    await setSize(tester, const Size(700, 1100));
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const SecretsScreen()));
     await tester.pumpAndSettle();
@@ -268,6 +269,26 @@ void main() {
     expect(find.text('GITHUB_TOKEN'), findsOneWidget);
     expect(find.text('Only sent to api.github.com'), findsOneWidget);
     expect(find.textContaining('ghp_supersecret'), findsNothing);
+  });
+
+  testWidgets('sign-in code secrets are added as totp (D-102)', (tester) async {
+    await setSize(tester, const Size(700, 1100));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const SecretsScreen()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('addSecret')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sign-in code'));
+    await tester.pumpAndSettle();
+    expect(find.text('Two-step key or otpauth:// link'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('secretName')), 'ACME_2FA');
+    await tester.enterText(find.byKey(const Key('secretValue')), 'otpauth://totp/Acme?secret=JBSWY3DPEHPK3PXP');
+    await tester.enterText(find.byKey(const Key('secretHosts')), 'acme.example');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('saveSecret')));
+    await tester.pumpAndSettle();
+    expect(backend.secretList.single.kind.value, 'totp');
+    expect(find.text('Sign-in code · Only sent to acme.example'), findsOneWidget);
   });
 
   testWidgets('creating a bot from a template sends the template id', (tester) async {

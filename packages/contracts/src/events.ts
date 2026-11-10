@@ -49,6 +49,7 @@ export const runEventPayloads = {
     service: z.string(),
     allowed_hosts: z.array(z.string()),
     reason: z.string(),
+    kind: z.enum(["value", "totp"]),
     expires_at: ts,
   }),
   "secret.resolved": z.object({

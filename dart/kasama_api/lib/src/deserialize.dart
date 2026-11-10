@@ -599,6 +599,9 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SavedCount.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Secret':
           return Secret.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SecretKind':
+          
+          
         case 'SecretList':
           return SecretList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SecretRequestedEvent':

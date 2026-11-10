@@ -3341,4 +3341,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get decline => 'Decline';
+
+  @override
+  String get signInCode => 'Sign-in code';
+
+  @override
+  String get secretKindValue => 'Key or password';
+
+  @override
+  String get totpSeedLabel => 'Two-step key or otpauth:// link';
+
+  @override
+  String get totpSeedHelp =>
+      'From the site\'s two-step setup. Bots only ever get the current code, never the key.';
+
+  @override
+  String get scanQrCode => 'Scan QR code';
+
+  @override
+  String totpRequestTitle(String bot, String service) {
+    return '$bot needs a $service sign-in code';
+  }
 }

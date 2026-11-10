@@ -1798,5 +1798,12 @@
   "secretSaved": "Saved {name}",
   "@secretSaved": {"placeholders": {"name": {"type": "String"}}},
   "secretDeclined": "Declined",
-  "decline": "Decline"
+  "decline": "Decline",
+  "signInCode": "Sign-in code",
+  "secretKindValue": "Key or password",
+  "totpSeedLabel": "Two-step key or otpauth:// link",
+  "totpSeedHelp": "From the site's two-step setup. Bots only ever get the current code, never the key.",
+  "scanQrCode": "Scan QR code",
+  "totpRequestTitle": "{bot} needs a {service} sign-in code",
+  "@totpRequestTitle": {"placeholders": {"bot": {"type": "String"}, "service": {"type": "String"}}}
 }

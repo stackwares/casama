@@ -30,6 +30,8 @@ class SecretRequestedEventPayload {
 
     required  this.reason,
 
+    required  this.kind,
+
     required  this.expiresAt,
   });
 
@@ -95,6 +97,18 @@ class SecretRequestedEventPayload {
 
   @JsonKey(
     
+    name: r'kind',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final SecretRequestedEventPayloadKindEnum kind;
+
+
+
+  @JsonKey(
+    
     name: r'expires_at',
     required: true,
     includeIfNull: false,
@@ -114,6 +128,7 @@ class SecretRequestedEventPayload {
       other.service == service &&
       other.allowedHosts == allowedHosts &&
       other.reason == reason &&
+      other.kind == kind &&
       other.expiresAt == expiresAt;
 
     @override
@@ -123,6 +138,7 @@ class SecretRequestedEventPayload {
         service.hashCode +
         allowedHosts.hashCode +
         reason.hashCode +
+        kind.hashCode +
         expiresAt.hashCode;
 
   factory SecretRequestedEventPayload.fromJson(Map<String, dynamic> json) => _$SecretRequestedEventPayloadFromJson(json);
@@ -135,4 +151,20 @@ class SecretRequestedEventPayload {
   }
 
 }
+
+
+enum SecretRequestedEventPayloadKindEnum {
+@JsonValue(r'value')
+plain(r'value'),
+@JsonValue(r'totp')
+totp(r'totp');
+
+const SecretRequestedEventPayloadKindEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
 

@@ -17,6 +17,8 @@ abstract class _$SecretCWProxy {
 
   Secret allowedBotIds(List<String>? allowedBotIds);
 
+  Secret kind(SecretKind kind);
+
   Secret createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -33,6 +35,7 @@ abstract class _$SecretCWProxy {
     String name,
     List<String> allowedHosts,
     List<String>? allowedBotIds,
+    SecretKind kind,
     DateTime createdAt,
   });
 }
@@ -62,6 +65,9 @@ class _$SecretCWProxyImpl implements _$SecretCWProxy {
       call(allowedBotIds: allowedBotIds);
 
   @override
+  Secret kind(SecretKind kind) => call(kind: kind);
+
+  @override
   Secret createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -79,6 +85,7 @@ class _$SecretCWProxyImpl implements _$SecretCWProxy {
     Object? name = const $CopyWithPlaceholder(),
     Object? allowedHosts = const $CopyWithPlaceholder(),
     Object? allowedBotIds = const $CopyWithPlaceholder(),
+    Object? kind = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Secret(
@@ -103,6 +110,10 @@ class _$SecretCWProxyImpl implements _$SecretCWProxy {
           ? _value.allowedBotIds
           // ignore: cast_nullable_to_non_nullable
           : allowedBotIds as List<String>?,
+      kind: kind == const $CopyWithPlaceholder() || kind == null
+          ? _value.kind
+          // ignore: cast_nullable_to_non_nullable
+          : kind as SecretKind,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -134,6 +145,7 @@ Secret _$SecretFromJson(Map<String, dynamic> json) => $checkedCreate(
         'name',
         'allowed_hosts',
         'allowed_bot_ids',
+        'kind',
         'created_at',
       ],
     );
@@ -149,6 +161,7 @@ Secret _$SecretFromJson(Map<String, dynamic> json) => $checkedCreate(
         'allowed_bot_ids',
         (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
       ),
+      kind: $checkedConvert('kind', (v) => $enumDecode(_$SecretKindEnumMap, v)),
       createdAt: $checkedConvert(
         'created_at',
         (v) => DateTime.parse(v as String),
@@ -170,5 +183,11 @@ Map<String, dynamic> _$SecretToJson(Secret instance) => <String, dynamic>{
   'name': instance.name,
   'allowed_hosts': instance.allowedHosts,
   'allowed_bot_ids': instance.allowedBotIds,
+  'kind': _$SecretKindEnumMap[instance.kind]!,
   'created_at': instance.createdAt.toIso8601String(),
+};
+
+const _$SecretKindEnumMap = {
+  SecretKind.plain: 'value',
+  SecretKind.totp: 'totp',
 };

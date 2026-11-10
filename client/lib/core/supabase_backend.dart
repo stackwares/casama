@@ -749,8 +749,10 @@ class SupabaseBackend implements Backend {
   Future<List<Secret>> secrets(String orgId) async => (await api.secrets.listSecrets(orgId: orgId)).data!.items;
 
   @override
-  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts}) async =>
-      api.secrets.createSecret(createSecretRequest: CreateSecretRequest(orgId: orgId, name: name, value: value, allowedHosts: hosts));
+  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts, bool totp = false}) async =>
+      api.secrets.createSecret(
+        createSecretRequest: CreateSecretRequest(orgId: orgId, name: name, value: value, allowedHosts: hosts, kind: totp ? SecretKind.totp : SecretKind.plain),
+      );
 
   @override
   Future<void> deleteSecret(String secretId) async => api.secrets.deleteSecret(id: secretId);

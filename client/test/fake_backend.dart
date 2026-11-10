@@ -544,8 +544,16 @@ class FakeBackend implements Backend {
   @override
   Future<List<Secret>> secrets(String orgId) async => secretList;
   @override
-  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts}) async =>
-      secretList.add(Secret(id: 's${secretList.length + 1}', orgId: orgId, name: name, allowedHosts: hosts, allowedBotIds: null, createdAt: DateTime.now()));
+  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts, bool totp = false}) async =>
+      secretList.add(Secret(
+        id: 's${secretList.length + 1}',
+        orgId: orgId,
+        name: name,
+        allowedHosts: hosts,
+        allowedBotIds: null,
+        kind: totp ? SecretKind.totp : SecretKind.plain,
+        createdAt: DateTime.now(),
+      ));
   @override
   Future<void> deleteSecret(String secretId) async => secretList.removeWhere((s) => s.id == secretId);
 

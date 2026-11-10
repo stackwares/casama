@@ -27,6 +27,7 @@ void main() {
         'service': 'Stripe',
         'allowed_hosts': ['api.stripe.com'],
         'reason': 'To create the charge.',
+      'kind': 'value',
         'expires_at': '2026-11-11T00:00:00Z',
       }),
     );

@@ -30,6 +30,10 @@ export const ApprovalDecisionRequest = z
   })
   .openapi("ApprovalDecisionRequest");
 
+export const SecretKind = z.enum(["value", "totp"]).openapi("SecretKind", {
+  description: "value: the secret itself; totp: a two-step seed bots use as {{totp:NAME}} (D-102)",
+});
+
 export const Secret = z
   .object({
     id: Uuid,
@@ -37,6 +41,7 @@ export const Secret = z
     name: z.string(),
     allowed_hosts: z.array(z.string()),
     allowed_bot_ids: z.array(Uuid).nullable(),
+    kind: SecretKind,
     created_at: ts,
   })
   .openapi("Secret");
@@ -52,6 +57,7 @@ export const BotSecretRequest = z
     service: z.string(),
     allowed_hosts: z.array(z.string()),
     reason: z.string(),
+    kind: SecretKind,
     status: z.enum(["pending", "fulfilled", "declined", "expired"]),
     expires_at: ts,
     created_at: ts,
@@ -84,6 +90,9 @@ export const CreateSecretRequest = z
       .openapi({ description: "Stored in Vault; never returned" }),
     allowed_hosts: z.array(z.string().min(1).max(253)).min(1).max(50),
     allowed_bot_ids: z.array(Uuid).optional(),
+    kind: SecretKind.optional().openapi({
+      description: "totp: value is an otpauth://totp link or a base32 key",
+    }),
   })
   .openapi("CreateSecretRequest");
 

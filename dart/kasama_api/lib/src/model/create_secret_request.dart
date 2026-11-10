@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:kasama_api/src/model/secret_kind.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -29,6 +30,8 @@ class CreateSecretRequest {
     required  this.allowedHosts,
 
      this.allowedBotIds,
+
+     this.kind,
   });
 
   @JsonKey(
@@ -93,6 +96,19 @@ class CreateSecretRequest {
 
 
 
+      /// totp: value is an otpauth://totp link or a base32 key
+  @JsonKey(
+    
+    name: r'kind',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final SecretKind? kind;
+
+
+
 
 
     @override
@@ -101,7 +117,8 @@ class CreateSecretRequest {
       other.name == name &&
       other.value == value &&
       other.allowedHosts == allowedHosts &&
-      other.allowedBotIds == allowedBotIds;
+      other.allowedBotIds == allowedBotIds &&
+      other.kind == kind;
 
     @override
     int get hashCode =>
@@ -109,7 +126,8 @@ class CreateSecretRequest {
         name.hashCode +
         value.hashCode +
         allowedHosts.hashCode +
-        allowedBotIds.hashCode;
+        allowedBotIds.hashCode +
+        kind.hashCode;
 
   factory CreateSecretRequest.fromJson(Map<String, dynamic> json) => _$CreateSecretRequestFromJson(json);
 
