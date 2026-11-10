@@ -219,6 +219,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/domain/src/pages.ts` (CSP, document assembly), `packages/agent/src/pages.ts` (`pages.publish|update_data|share|list`, versions, refresh routines), `pages`/`page_versions`/`page_view_tokens`, `apps/server/src/api/routes/pages.ts` (list, view links, share, revert, delete), `apps/server/src/pages/app.ts` (the pages origin on `PAGES_PORT`), `apps/server/src/services/pdf.ts`, and `client/lib/features/pages/`.
 
+## Teach a task (D-120)
+
+- `packages/domain/src/teach.ts` (password detection, transcript), `packages/agent/src/teach.ts` (`captureTeachContext`, `teach.save_draft`), `teach_sessions`/`teach_steps`, `apps/server/src/api/routes/teach.ts`, and in the app `features/teach/` (`TeachRecorder`, the draft screen) plus the recording banner in the live view.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

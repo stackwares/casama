@@ -213,6 +213,13 @@ Class | Method | HTTP request | Description
 [*TasksApi*](doc/TasksApi.md) | [**listTaskComments**](doc/TasksApi.md#listtaskcomments) | **GET** /v1/tasks/{id}/comments | 
 [*TasksApi*](doc/TasksApi.md) | [**listTasks**](doc/TasksApi.md#listtasks) | **GET** /v1/tasks | 
 [*TasksApi*](doc/TasksApi.md) | [**updateTask**](doc/TasksApi.md#updatetask) | **PATCH** /v1/tasks/{id} | Change a ticket (moving, reassigning, editing); a newly assigned bot starts its work
+[*TeachApi*](doc/TeachApi.md) | [**addTeachStep**](doc/TeachApi.md#addteachstep) | **POST** /v1/teach/{id}/steps | Record a step; the server captures the screen&#39;s state after it
+[*TeachApi*](doc/TeachApi.md) | [**cancelTeach**](doc/TeachApi.md#cancelteach) | **DELETE** /v1/teach/{id} | Discard a recording and everything it captured
+[*TeachApi*](doc/TeachApi.md) | [**getTeach**](doc/TeachApi.md#getteach) | **GET** /v1/teach/{id} | 
+[*TeachApi*](doc/TeachApi.md) | [**markTeachSecret**](doc/TeachApi.md#markteachsecret) | **POST** /v1/teach/{id}/steps/{seq}/secret | Mark a typed value as a secret: its text is deleted and it becomes a {{secret:NAME}} input
+[*TeachApi*](doc/TeachApi.md) | [**saveTeach**](doc/TeachApi.md#saveteach) | **POST** /v1/teach/{id}/save | Save the (edited) draft as one of the bot&#39;s skills, and optionally try it now
+[*TeachApi*](doc/TeachApi.md) | [**startTeach**](doc/TeachApi.md#startteach) | **POST** /v1/teach | Start recording a task while you have control of a computer (D-120)
+[*TeachApi*](doc/TeachApi.md) | [**stopTeach**](doc/TeachApi.md#stopteach) | **POST** /v1/teach/{id}/stop | Stop recording; the bot drafts a skill from it
 [*UsageApi*](doc/UsageApi.md) | [**getUsage**](doc/UsageApi.md#getusage) | **GET** /v1/usage | 
 [*VoiceApi*](doc/VoiceApi.md) | [**createVoiceSession**](doc/VoiceApi.md#createvoicesession) | **POST** /v1/voice/session | Start a live call: mints an ephemeral realtime key with the bot&#39;s persona and tools
 [*VoiceApi*](doc/VoiceApi.md) | [**messageSpeech**](doc/VoiceApi.md#messagespeech) | **GET** /v1/messages/{id}/speech | Read aloud: MP3 audio of an assistant message (cached per voice)
@@ -247,6 +254,7 @@ Class | Method | HTTP request | Description
  - [ActionRule](doc/ActionRule.md)
  - [ActionRuleList](doc/ActionRuleList.md)
  - [ActionRuleTarget](doc/ActionRuleTarget.md)
+ - [AddTeachStepRequest](doc/AddTeachStepRequest.md)
  - [AdminOrg](doc/AdminOrg.md)
  - [AdminOrgList](doc/AdminOrgList.md)
  - [AdminOverview](doc/AdminOverview.md)
@@ -349,6 +357,7 @@ Class | Method | HTTP request | Description
  - [DeletedPage](doc/DeletedPage.md)
  - [DeletedRoutine](doc/DeletedRoutine.md)
  - [DeletedRule](doc/DeletedRule.md)
+ - [DeletedTeach](doc/DeletedTeach.md)
  - [DeletedWatcher](doc/DeletedWatcher.md)
  - [DismissSuggestionRequest](doc/DismissSuggestionRequest.md)
  - [EditMessageRequest](doc/EditMessageRequest.md)
@@ -386,6 +395,7 @@ Class | Method | HTTP request | Description
  - [LocalDeviceList](doc/LocalDeviceList.md)
  - [LocalMcpIntegrationList](doc/LocalMcpIntegrationList.md)
  - [LocalMcpServerInfo](doc/LocalMcpServerInfo.md)
+ - [MarkTeachSecretRequest](doc/MarkTeachSecretRequest.md)
  - [McpAuthRequestInfo](doc/McpAuthRequestInfo.md)
  - [McpConsentRequest](doc/McpConsentRequest.md)
  - [McpConsentResult](doc/McpConsentResult.md)
@@ -462,6 +472,8 @@ Class | Method | HTTP request | Description
  - [RunStartedEvent](doc/RunStartedEvent.md)
  - [RunStartedEventPayload](doc/RunStartedEventPayload.md)
  - [RunStatus](doc/RunStatus.md)
+ - [SaveTeachRequest](doc/SaveTeachRequest.md)
+ - [SaveTeachResponse](doc/SaveTeachResponse.md)
  - [SavedCount](doc/SavedCount.md)
  - [SearchKind](doc/SearchKind.md)
  - [SearchResponse](doc/SearchResponse.md)
@@ -484,6 +496,7 @@ Class | Method | HTTP request | Description
  - [SkillPreviewFile](doc/SkillPreviewFile.md)
  - [SkillUpdateCheck](doc/SkillUpdateCheck.md)
  - [StartSetupResponse](doc/StartSetupResponse.md)
+ - [StartTeachRequest](doc/StartTeachRequest.md)
  - [StreamMode](doc/StreamMode.md)
  - [StreamSession](doc/StreamSession.md)
  - [StreamSessionRequest](doc/StreamSessionRequest.md)
@@ -510,6 +523,10 @@ Class | Method | HTTP request | Description
  - [TaskList](doc/TaskList.md)
  - [TaskPriority](doc/TaskPriority.md)
  - [TaskStatus](doc/TaskStatus.md)
+ - [TeachDraft](doc/TeachDraft.md)
+ - [TeachDraftInputsInner](doc/TeachDraftInputsInner.md)
+ - [TeachSession](doc/TeachSession.md)
+ - [TeachStep](doc/TeachStep.md)
  - [Template](doc/Template.md)
  - [TemplateList](doc/TemplateList.md)
  - [TemplateRoutinesInner](doc/TemplateRoutinesInner.md)

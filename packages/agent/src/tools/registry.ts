@@ -33,6 +33,8 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   requires?: { computer?: boolean; desktop?: boolean; vision?: boolean };
   /** Arguments may carry {{secret:NAME}} placeholders, swapped in only for allowed hosts. */
   acceptsSecrets?: boolean;
+  /** Stores {{secret:NAME}} placeholders as written (skill text); they're never filled in here. */
+  keepsPlaceholders?: boolean;
   /** Where the call sends data, for secret host allowlists (may ask the computer, e.g. the browser's page). */
   destinationHost?: (args: z.infer<S>, ctx: ToolContext) => Promise<string | null> | string | null;
   /** No side effects: never needs approval. */

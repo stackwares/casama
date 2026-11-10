@@ -913,6 +913,32 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<TeachSession> startTeach(String computerId, String botId) async =>
+      (await api.teach.startTeach(startTeachRequest: StartTeachRequest(computerId: computerId, botId: botId))).data!;
+
+  @override
+  Future<TeachSession> teach(String id) async => (await api.teach.getTeach(id: id)).data!;
+
+  @override
+  Future<TeachStep> addTeachStep(String id, AddTeachStepRequest step) async => (await api.teach.addTeachStep(id: id, addTeachStepRequest: step)).data!;
+
+  @override
+  Future<TeachStep> markTeachSecret(String id, int seq, String name) async =>
+      (await api.teach.markTeachSecret(id: id, seq: seq, markTeachSecretRequest: MarkTeachSecretRequest(secretName: name))).data!;
+
+  @override
+  Future<TeachSession> stopTeach(String id) async => (await api.teach.stopTeach(id: id)).data!;
+
+  @override
+  Future<SaveTeachResponse> saveTeach(String id, {required String name, required String description, required String body, bool tryNow = false}) async =>
+      (await api.teach.saveTeach(id: id, saveTeachRequest: SaveTeachRequest(name: name, description: description, body: body, tryNow: tryNow))).data!;
+
+  @override
+  Future<void> cancelTeach(String id) async {
+    await api.teach.cancelTeach(id: id);
+  }
+
+  @override
   Future<List<BotPage>> pages(String orgId, {String? botId}) async => (await api.pages.listPages(orgId: orgId, botId: botId)).data!.items;
 
   @override

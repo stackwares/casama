@@ -28,6 +28,7 @@ import {
   registerComputerTools,
   registerDesktopTools,
   registerPageTools,
+  registerTeachTools,
   registerProjectTools,
   registerSecretRequestTool,
   registerSetupTools,
@@ -255,6 +256,7 @@ export async function startWorker(opts: WorkerOptions) {
   // Check-in scans leave suggestions (D-114).
   registerSuggestionTools(tools, { db, notifications });
   registerWatcherTools(tools, { db });
+  registerTeachTools(tools, { db });
   registerPageTools(tools, { db, pagesUrl: opts.pagesUrl ?? "http://localhost:8790" });
   // Projects (D-113): the tools start planning runs; the heartbeat lives in the minute tick.
   registerProjectTools(tools, {

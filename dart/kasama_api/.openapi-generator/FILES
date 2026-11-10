@@ -28,6 +28,7 @@ lib/src/api/secrets_api.dart
 lib/src/api/skills_api.dart
 lib/src/api/system_api.dart
 lib/src/api/tasks_api.dart
+lib/src/api/teach_api.dart
 lib/src/api/usage_api.dart
 lib/src/api/voice_api.dart
 lib/src/api/watchers_api.dart
@@ -47,6 +48,7 @@ lib/src/model/account_deletion.dart
 lib/src/model/action_rule.dart
 lib/src/model/action_rule_list.dart
 lib/src/model/action_rule_target.dart
+lib/src/model/add_teach_step_request.dart
 lib/src/model/admin_org.dart
 lib/src/model/admin_org_list.dart
 lib/src/model/admin_overview.dart
@@ -149,6 +151,7 @@ lib/src/model/deleted_id.dart
 lib/src/model/deleted_page.dart
 lib/src/model/deleted_routine.dart
 lib/src/model/deleted_rule.dart
+lib/src/model/deleted_teach.dart
 lib/src/model/deleted_watcher.dart
 lib/src/model/dismiss_suggestion_request.dart
 lib/src/model/edit_message_request.dart
@@ -186,6 +189,7 @@ lib/src/model/local_device.dart
 lib/src/model/local_device_list.dart
 lib/src/model/local_mcp_integration_list.dart
 lib/src/model/local_mcp_server_info.dart
+lib/src/model/mark_teach_secret_request.dart
 lib/src/model/mcp_auth_request_info.dart
 lib/src/model/mcp_consent_request.dart
 lib/src/model/mcp_consent_result.dart
@@ -262,6 +266,8 @@ lib/src/model/run_started.dart
 lib/src/model/run_started_event.dart
 lib/src/model/run_started_event_payload.dart
 lib/src/model/run_status.dart
+lib/src/model/save_teach_request.dart
+lib/src/model/save_teach_response.dart
 lib/src/model/saved_count.dart
 lib/src/model/search_kind.dart
 lib/src/model/search_response.dart
@@ -284,6 +290,7 @@ lib/src/model/skill_loaded_event_payload.dart
 lib/src/model/skill_preview_file.dart
 lib/src/model/skill_update_check.dart
 lib/src/model/start_setup_response.dart
+lib/src/model/start_teach_request.dart
 lib/src/model/stream_mode.dart
 lib/src/model/stream_session.dart
 lib/src/model/stream_session_request.dart
@@ -310,6 +317,10 @@ lib/src/model/task_comment_list.dart
 lib/src/model/task_list.dart
 lib/src/model/task_priority.dart
 lib/src/model/task_status.dart
+lib/src/model/teach_draft.dart
+lib/src/model/teach_draft_inputs_inner.dart
+lib/src/model/teach_session.dart
+lib/src/model/teach_step.dart
 lib/src/model/template.dart
 lib/src/model/template_list.dart
 lib/src/model/template_routines_inner.dart

@@ -1421,7 +1421,7 @@ async function toolStep(
     };
     // {{secret:NAME}} placeholders are filled in only now, only for tools that accept them,
     // and only when the destination host is in the secret's allowlist.
-    if (hasPlaceholders(args)) {
+    if (hasPlaceholders(args) && !def.keepsPlaceholders) {
       if (!def.acceptsSecrets)
         throw new ToolError(
           "secrets_not_accepted",

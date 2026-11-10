@@ -6993,6 +6993,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open in Pages'**
   String get openPages;
+
+  /// No description provided for @skillInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructions'**
+  String get skillInstructions;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// No description provided for @teachTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Teach a task'**
+  String get teachTask;
+
+  /// No description provided for @teachWhichBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Which bot should learn this?'**
+  String get teachWhichBot;
+
+  /// No description provided for @teachRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get teachRecording;
+
+  /// No description provided for @teachRecordingPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording stopped'**
+  String get teachRecordingPaused;
+
+  /// No description provided for @teachRecordingHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Do the task as you normally would. Each step is saved with what\'s on screen; password fields never are.'**
+  String get teachRecordingHelp;
+
+  /// No description provided for @teachStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get teachStop;
+
+  /// No description provided for @teachMarkSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as secret'**
+  String get teachMarkSecret;
+
+  /// No description provided for @teachMarkSecretHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'What you just typed is deleted from the recording and becomes a secret input the bot asks for.'**
+  String get teachMarkSecretHelp;
+
+  /// No description provided for @teachDraftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New skill'**
+  String get teachDraftTitle;
+
+  /// No description provided for @teachDrafting.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing a skill from your recording…'**
+  String get teachDrafting;
+
+  /// No description provided for @teachSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 step} other{{count} steps}}'**
+  String teachSteps(int count);
+
+  /// No description provided for @teachRecordedSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'What you showed ({count, plural, =1{1 step} other{{count} steps}})'**
+  String teachRecordedSteps(int count);
+
+  /// No description provided for @teachReviewHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the steps, inputs and success checks, then save. You can try it right away.'**
+  String get teachReviewHelp;
+
+  /// No description provided for @teachDraftFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The bot couldn\'t write a draft. Write the steps yourself from the recording below, or discard it.'**
+  String get teachDraftFailed;
+
+  /// No description provided for @teachAlreadySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'This skill is saved'**
+  String get teachAlreadySaved;
+
+  /// No description provided for @teachSaveAndTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and try'**
+  String get teachSaveAndTry;
+
+  /// No description provided for @teachSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String teachSaved(String name);
+
+  /// No description provided for @teachDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this recording?'**
+  String get teachDiscardTitle;
+
+  /// No description provided for @teachDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every step, snapshot and screenshot it captured is deleted.'**
+  String get teachDiscardBody;
+
+  /// No description provided for @teachStepClick.
+  ///
+  /// In en, this message translates to:
+  /// **'Click at {x}, {y}'**
+  String teachStepClick(int x, int y);
+
+  /// No description provided for @teachStepType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type “{text}”'**
+  String teachStepType(String text);
+
+  /// No description provided for @teachStepSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Type secret {name}'**
+  String teachStepSecret(String name);
+
+  /// No description provided for @teachStepKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Press {key}'**
+  String teachStepKey(String key);
+
+  /// No description provided for @teachStepScroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll'**
+  String get teachStepScroll;
 }
 
 class _AppLocalizationsDelegate

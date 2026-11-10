@@ -1,0 +1,109 @@
+{
+  "name": "teach",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Turn this recording into a skill"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "t1",
+            "name": "teach__save_draft",
+            "args": {
+              "name": "file-expense",
+              "description": "File an expense report in the finance portal.",
+              "instructions": "1. Open the finance portal and sign in with {{secret:PASSWORD}}.\n2. Click New expense.\n3. Type the amount and submit.",
+              "inputs": [
+                {
+                  "name": "amount",
+                  "description": "The expense amount"
+                },
+                {
+                  "name": "PASSWORD",
+                  "secret": true
+                }
+              ],
+              "checks": [
+                "The portal shows Expense submitted"
+              ]
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "teach.save_draft"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Draft saved for your review."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Try your new skill"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Trying it now."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

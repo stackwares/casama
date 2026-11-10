@@ -6,6 +6,7 @@ import 'package:kasama_api/src/model/account_deletion.dart';
 import 'package:kasama_api/src/model/action_rule.dart';
 import 'package:kasama_api/src/model/action_rule_list.dart';
 import 'package:kasama_api/src/model/action_rule_target.dart';
+import 'package:kasama_api/src/model/add_teach_step_request.dart';
 import 'package:kasama_api/src/model/admin_org.dart';
 import 'package:kasama_api/src/model/admin_org_list.dart';
 import 'package:kasama_api/src/model/admin_overview.dart';
@@ -104,6 +105,7 @@ import 'package:kasama_api/src/model/deleted_id.dart';
 import 'package:kasama_api/src/model/deleted_page.dart';
 import 'package:kasama_api/src/model/deleted_routine.dart';
 import 'package:kasama_api/src/model/deleted_rule.dart';
+import 'package:kasama_api/src/model/deleted_teach.dart';
 import 'package:kasama_api/src/model/deleted_watcher.dart';
 import 'package:kasama_api/src/model/dismiss_suggestion_request.dart';
 import 'package:kasama_api/src/model/edit_message_request.dart';
@@ -139,6 +141,7 @@ import 'package:kasama_api/src/model/local_device.dart';
 import 'package:kasama_api/src/model/local_device_list.dart';
 import 'package:kasama_api/src/model/local_mcp_integration_list.dart';
 import 'package:kasama_api/src/model/local_mcp_server_info.dart';
+import 'package:kasama_api/src/model/mark_teach_secret_request.dart';
 import 'package:kasama_api/src/model/mcp_auth_request_info.dart';
 import 'package:kasama_api/src/model/mcp_consent_request.dart';
 import 'package:kasama_api/src/model/mcp_consent_result.dart';
@@ -208,6 +211,8 @@ import 'package:kasama_api/src/model/run_failed_event_payload.dart';
 import 'package:kasama_api/src/model/run_started.dart';
 import 'package:kasama_api/src/model/run_started_event.dart';
 import 'package:kasama_api/src/model/run_started_event_payload.dart';
+import 'package:kasama_api/src/model/save_teach_request.dart';
+import 'package:kasama_api/src/model/save_teach_response.dart';
 import 'package:kasama_api/src/model/saved_count.dart';
 import 'package:kasama_api/src/model/search_response.dart';
 import 'package:kasama_api/src/model/search_result.dart';
@@ -228,6 +233,7 @@ import 'package:kasama_api/src/model/skill_loaded_event_payload.dart';
 import 'package:kasama_api/src/model/skill_preview_file.dart';
 import 'package:kasama_api/src/model/skill_update_check.dart';
 import 'package:kasama_api/src/model/start_setup_response.dart';
+import 'package:kasama_api/src/model/start_teach_request.dart';
 import 'package:kasama_api/src/model/stream_session.dart';
 import 'package:kasama_api/src/model/stream_session_request.dart';
 import 'package:kasama_api/src/model/subrun_completed_event.dart';
@@ -251,6 +257,10 @@ import 'package:kasama_api/src/model/task.dart';
 import 'package:kasama_api/src/model/task_comment.dart';
 import 'package:kasama_api/src/model/task_comment_list.dart';
 import 'package:kasama_api/src/model/task_list.dart';
+import 'package:kasama_api/src/model/teach_draft.dart';
+import 'package:kasama_api/src/model/teach_draft_inputs_inner.dart';
+import 'package:kasama_api/src/model/teach_session.dart';
+import 'package:kasama_api/src/model/teach_step.dart';
 import 'package:kasama_api/src/model/template.dart';
 import 'package:kasama_api/src/model/template_list.dart';
 import 'package:kasama_api/src/model/template_routines_inner.dart';
@@ -336,6 +346,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ActionRuleList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ActionRuleTarget':
           return ActionRuleTarget.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AddTeachStepRequest':
+          return AddTeachStepRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOrg':
           return AdminOrg.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOrgList':
@@ -544,6 +556,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedRule':
           return DeletedRule.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedTeach':
+          return DeletedTeach.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedWatcher':
           return DeletedWatcher.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DismissSuggestionRequest':
@@ -620,6 +634,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return LocalMcpIntegrationList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LocalMcpServerInfo':
           return LocalMcpServerInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MarkTeachSecretRequest':
+          return MarkTeachSecretRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'McpAuthRequestInfo':
           return McpAuthRequestInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'McpConsentRequest':
@@ -779,6 +795,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'RunStatus':
           
           
+        case 'SaveTeachRequest':
+          return SaveTeachRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SaveTeachResponse':
+          return SaveTeachResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SavedCount':
           return SavedCount.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SearchKind':
@@ -825,6 +845,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SkillUpdateCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StartSetupResponse':
           return StartSetupResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'StartTeachRequest':
+          return StartTeachRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StreamMode':
           
           
@@ -880,6 +902,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'TaskStatus':
           
           
+        case 'TeachDraft':
+          return TeachDraft.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TeachDraftInputsInner':
+          return TeachDraftInputsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TeachSession':
+          return TeachSession.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TeachStep':
+          return TeachStep.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Template':
           return Template.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TemplateList':

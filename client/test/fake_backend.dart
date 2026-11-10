@@ -568,6 +568,71 @@ class FakeBackend implements Backend {
   Future<Conversation> createConversation(String botId) async =>
       Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
 
+  // Teach a task (D-120)
+  final teachSteps = <AddTeachStepRequest>[];
+  final teachActions = <String>[];
+  TeachSessionStatusEnum teachStatus = TeachSessionStatusEnum.recording;
+  TeachDraft? teachDraft;
+  ({String name, String description, String body, bool tryNow})? savedTeach;
+  TeachStep teachStep(int seq, AddTeachStepRequest r, {String? secret}) => TeachStep(
+        seq: seq,
+        kind: TeachStepKindEnum.values.byName(r.kind.name),
+        x: r.x,
+        y: r.y,
+        button: r.button,
+        text: secret != null ? null : r.text,
+        key: r.key,
+        dx: r.dx,
+        dy: r.dy,
+        secretName: secret,
+        password: false,
+        url: 'https://finance.example.com',
+        hasScreenshot: true,
+        createdAt: DateTime(2026, 11, 10),
+      );
+  TeachSession teachSession() => TeachSession(
+        id: 'teach-1',
+        botId: botId,
+        computerId: computerId,
+        status: teachStatus,
+        conversationId: null,
+        draft: teachDraft,
+        skillId: null,
+        steps: [for (var i = 0; i < teachSteps.length; i++) teachStep(i + 1, teachSteps[i])],
+        startedAt: DateTime(2026, 11, 10),
+        stoppedAt: null,
+      );
+  @override
+  Future<TeachSession> startTeach(String computerId, String botId) async {
+    teachActions.add('start:$botId');
+    return teachSession();
+  }
+  @override
+  Future<TeachSession> teach(String id) async => teachSession();
+  @override
+  Future<TeachStep> addTeachStep(String id, AddTeachStepRequest step) async {
+    teachSteps.add(step);
+    return teachStep(teachSteps.length, step);
+  }
+  @override
+  Future<TeachStep> markTeachSecret(String id, int seq, String name) async {
+    teachActions.add('secret:$seq:$name');
+    return teachStep(seq, teachSteps[seq - 1], secret: name);
+  }
+  @override
+  Future<TeachSession> stopTeach(String id) async {
+    teachActions.add('stop');
+    teachStatus = TeachSessionStatusEnum.drafting;
+    return teachSession();
+  }
+  @override
+  Future<SaveTeachResponse> saveTeach(String id, {required String name, required String description, required String body, bool tryNow = false}) async {
+    savedTeach = (name: name, description: description, body: body, tryNow: tryNow);
+    return SaveTeachResponse(skillId: 'skill-9', conversationId: tryNow ? convId : null, runId: tryNow ? runId : null);
+  }
+  @override
+  Future<void> cancelTeach(String id) async => teachActions.add('cancel');
+
   final pageList = <BotPage>[
     BotPage(
       id: 'page-1',

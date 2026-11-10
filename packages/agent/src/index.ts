@@ -28,6 +28,7 @@ export * from "./search.ts";
 export * from "./secret-requests.ts";
 export * from "./secrets.ts";
 export * from "./takeover.ts";
+export * from "./teach.ts";
 export * from "./tickets.ts";
 export * from "./tools/autonomy.ts";
 export * from "./tools/bots.ts";

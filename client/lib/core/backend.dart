@@ -362,6 +362,14 @@ abstract class Backend {
   Future<void> revokeMcpKey(String orgId, String keyId);
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
+  // Teach a task by showing it (D-120)
+  Future<TeachSession> startTeach(String computerId, String botId);
+  Future<TeachSession> teach(String id);
+  Future<TeachStep> addTeachStep(String id, AddTeachStepRequest step);
+  Future<TeachStep> markTeachSecret(String id, int seq, String name);
+  Future<TeachSession> stopTeach(String id);
+  Future<SaveTeachResponse> saveTeach(String id, {required String name, required String description, required String body, bool tryNow = false});
+  Future<void> cancelTeach(String id);
   // Pages (D-119): opened in the system browser, never embedded.
   Future<List<BotPage>> pages(String orgId, {String? botId});
   Future<String> pageViewLink(String id, {bool pdf = false});

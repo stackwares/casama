@@ -91,6 +91,7 @@ class KasamaClient {
   ActionRulesApi get actionRules => api.getActionRulesApi();
   WatchersApi get watchers => api.getWatchersApi();
   PagesApi get pages => api.getPagesApi();
+  TeachApi get teach => api.getTeachApi();
   McpApi get mcp => api.getMcpApi();
 
   /// Wallpaper photo search, when the server has a photo source (D-087).

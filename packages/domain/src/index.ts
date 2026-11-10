@@ -14,3 +14,4 @@ export * from "./quiet-hours.ts";
 export * from "./action-rules.ts";
 export * from "./mentions.ts";
 export * from "./pages.ts";
+export * from "./teach.ts";

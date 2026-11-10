@@ -4003,4 +4003,113 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openPages => 'Open in Pages';
+
+  @override
+  String get skillInstructions => 'Instructions';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
+  String get teachTask => 'Teach a task';
+
+  @override
+  String get teachWhichBot => 'Which bot should learn this?';
+
+  @override
+  String get teachRecording => 'Recording';
+
+  @override
+  String get teachRecordingPaused => 'Recording stopped';
+
+  @override
+  String get teachRecordingHelp =>
+      'Do the task as you normally would. Each step is saved with what\'s on screen; password fields never are.';
+
+  @override
+  String get teachStop => 'Stop';
+
+  @override
+  String get teachMarkSecret => 'Mark as secret';
+
+  @override
+  String get teachMarkSecretHelp =>
+      'What you just typed is deleted from the recording and becomes a secret input the bot asks for.';
+
+  @override
+  String get teachDraftTitle => 'New skill';
+
+  @override
+  String get teachDrafting => 'Writing a skill from your recording…';
+
+  @override
+  String teachSteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count steps',
+      one: '1 step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String teachRecordedSteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count steps',
+      one: '1 step',
+    );
+    return 'What you showed ($_temp0)';
+  }
+
+  @override
+  String get teachReviewHelp =>
+      'Check the steps, inputs and success checks, then save. You can try it right away.';
+
+  @override
+  String get teachDraftFailed =>
+      'The bot couldn\'t write a draft. Write the steps yourself from the recording below, or discard it.';
+
+  @override
+  String get teachAlreadySaved => 'This skill is saved';
+
+  @override
+  String get teachSaveAndTry => 'Save and try';
+
+  @override
+  String teachSaved(String name) {
+    return 'Saved $name';
+  }
+
+  @override
+  String get teachDiscardTitle => 'Discard this recording?';
+
+  @override
+  String get teachDiscardBody =>
+      'Every step, snapshot and screenshot it captured is deleted.';
+
+  @override
+  String teachStepClick(int x, int y) {
+    return 'Click at $x, $y';
+  }
+
+  @override
+  String teachStepType(String text) {
+    return 'Type “$text”';
+  }
+
+  @override
+  String teachStepSecret(String name) {
+    return 'Type secret $name';
+  }
+
+  @override
+  String teachStepKey(String key) {
+    return 'Press $key';
+  }
+
+  @override
+  String get teachStepScroll => 'Scroll';
 }

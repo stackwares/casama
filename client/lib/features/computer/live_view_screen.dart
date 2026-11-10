@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -18,6 +19,8 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
+import '../teach/teach_draft_screen.dart';
+import '../teach/teach_recorder.dart';
 
 /// Watch a computer's desktop live and take control (deep link: /computer/live?c=&takeover=).
 class LiveViewScreen extends ConsumerStatefulWidget {
@@ -46,6 +49,11 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   final _typing = TextEditingController();
   final _typingFocus = FocusNode();
   var _typed = '';
+  // Teach a task (D-120): a recording while we hold control.
+  TeachSession? _teach;
+  TeachRecorder? _recorder;
+  TeachStep? _lastStep;
+  var _stepQueue = Future<void>.value();
 
   @override
   void initState() {
@@ -75,6 +83,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     _focus.dispose();
     _typing.dispose();
     _typingFocus.dispose();
+    _recorder?.dispose();
     super.dispose();
   }
 
@@ -168,12 +177,117 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   Future<void> _handBack() async {
     final text = await showAdaptiveSheet<String>(context: context, builder: (_) => const _HandBackDialog());
     if (text == null || !mounted) return;
+    if (_teach != null) await _stopTeach();
+    if (!mounted) return;
     _conn?.releaseControl();
     final l = await runGuarded(context, () => ref.read(backendProvider).releaseLease(widget.computerId, note: text.isEmpty ? null : text));
     if (mounted && l != null) setState(() => _lease = l);
   }
 
   bool get _controlling => _lease?.you == true && (_conn?.isHost.value ?? false);
+
+  // --- teach a task (D-120) -------------------------------------------------
+
+  Future<void> _startTeach() async {
+    final l10n = context.l10n;
+    final computers = await ref.read(computersProvider.future).catchError((Object _) => const <Computer>[]);
+    if (!mounted) return;
+    var botId = computers.where((c) => c.id == widget.computerId).firstOrNull?.ownerBotId;
+    if (botId == null) {
+      final bots = await ref.read(botsProvider.future).catchError((Object _) => const <Bot>[]);
+      if (!mounted) return;
+      botId = await showAdaptiveSheet<String>(
+        context: context,
+        builder: (c) => FormSheet(
+          icon: LucideIcons.graduationCap,
+          title: l10n.teachWhichBot,
+          submitLabel: l10n.cancel,
+          onSubmit: () => Navigator.pop(c),
+          children: [for (final b in bots) ListTile(key: Key('teachBot-${b.id}'), title: Text(b.name), onTap: () => Navigator.pop(c, b.id))],
+        ),
+      );
+      if (botId == null || !mounted) return;
+    }
+    final s = await runGuarded(context, () => ref.read(backendProvider).startTeach(widget.computerId, botId!));
+    if (s == null || !mounted) return;
+    setState(() {
+      _teach = s;
+      _lastStep = null;
+      _recorder = TeachRecorder(_sendStep);
+    });
+  }
+
+  /// Steps go one at a time, in order; losing control ends the recording.
+  void _sendStep(AddTeachStepRequest step) {
+    final s = _teach;
+    if (s == null) return;
+    _stepQueue = _stepQueue.then((_) async {
+      try {
+        final st = await ref.read(backendProvider).addTeachStep(s.id, step);
+        if (mounted && _teach?.id == s.id) setState(() => _lastStep = st);
+      } catch (e) {
+        if (!mounted || _teach?.id != s.id) return;
+        showError(context, e);
+        setState(() {
+          _recorder?.dispose();
+          _recorder = null;
+        });
+      }
+    });
+  }
+
+  Future<void> _stopTeach() async {
+    final s = _teach;
+    if (s == null) return;
+    _recorder?.flush();
+    await _stepQueue;
+    if (!mounted) return;
+    setState(() {
+      _recorder?.dispose();
+      _recorder = null;
+      _teach = null;
+      _lastStep = null;
+    });
+    final stopped = await runGuarded(context, () => ref.read(backendProvider).stopTeach(s.id));
+    if (stopped != null && mounted) unawaited(GoRouter.maybeOf(context)?.push('/teach/${s.id}'));
+  }
+
+  Future<void> _markSecret(TeachStep st) async {
+    final s = _teach;
+    if (s == null) return;
+    final name = await showAdaptiveSheet<String>(context: context, builder: (_) => const _SecretNameSheet());
+    if (name == null || !mounted) return;
+    final updated = await runGuarded(context, () => ref.read(backendProvider).markTeachSecret(s.id, st.seq, name));
+    if (updated != null && mounted) setState(() => _lastStep = updated);
+  }
+
+  /// A Flutter key as a readable name for the recording.
+  static String? _keyName(KeyEvent e) {
+    final k = e.logicalKey;
+    if ({LogicalKeyboardKey.shift, LogicalKeyboardKey.shiftLeft, LogicalKeyboardKey.shiftRight, LogicalKeyboardKey.control, LogicalKeyboardKey.controlLeft, LogicalKeyboardKey.controlRight, LogicalKeyboardKey.alt, LogicalKeyboardKey.altLeft, LogicalKeyboardKey.altRight, LogicalKeyboardKey.meta, LogicalKeyboardKey.metaLeft, LogicalKeyboardKey.metaRight}.contains(k)) return null;
+    final mods = [
+      if (HardwareKeyboard.instance.isControlPressed) 'Ctrl',
+      if (HardwareKeyboard.instance.isMetaPressed) 'Cmd',
+      if (HardwareKeyboard.instance.isAltPressed) 'Alt',
+    ];
+    final label = k.keyLabel.isEmpty ? k.debugName ?? '?' : k.keyLabel;
+    return [...mods, label].join('+');
+  }
+
+  void _recordKey(KeyEvent e) {
+    final r = _recorder;
+    if (r == null || e is KeyUpEvent) return;
+    final ch = e.character;
+    final plain = !HardwareKeyboard.instance.isControlPressed && !HardwareKeyboard.instance.isMetaPressed;
+    if (plain && ch != null && ch.isNotEmpty && ch.runes.every((c) => c >= 0x20 && c != 0x7f)) {
+      r.char(ch);
+    } else if (e.logicalKey == LogicalKeyboardKey.backspace) {
+      r.backspace();
+    } else {
+      final name = _keyName(e);
+      if (name != null) r.key(name);
+    }
+  }
 
   // --- input ---------------------------------------------------------------
 
@@ -199,6 +313,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
         : (_rightClick ? 3 : 1);
     if (down) _lastButton = button;
     _send(NekoInput.button(down ? button : _lastButton, down: down));
+    if (!down) _recorder?.click(p.dx.round(), p.dy.round(), button: _lastButton);
     if (!down && _rightClick) setState(() => _rightClick = false);
   }
 
@@ -209,6 +324,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     final sym = keysymFor(e.logicalKey, character: e.character);
     if (sym == null) return KeyEventResult.ignored;
     _send(NekoInput.key(sym, down: e is! KeyUpEvent));
+    _recordKey(e);
     return KeyEventResult.handled;
   }
 
@@ -217,12 +333,14 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     if (!_controlling) return;
     if (value.length < _typed.length) {
       for (var i = 0; i < _typed.length - value.length; i++) {
+        _recorder?.backspace();
         _send(NekoInput.key(0xff08, down: true));
         _send(NekoInput.key(0xff08, down: false));
       }
     } else {
       for (final ch in value.substring(_typed.length).runes) {
         final sym = ch == 10 ? 0xff0d : (ch < 0x100 ? ch : 0x01000000 | ch);
+        ch == 10 ? _recorder?.key('Enter') : _recorder?.char(String.fromCharCode(ch));
         _send(NekoInput.key(sym, down: true));
         _send(NekoInput.key(sym, down: false));
       }
@@ -284,6 +402,8 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
             ),
             HeaderIconButton(tooltip: l10n.showKeyboard, icon: LucideIcons.keyboard, onPressed: () => _typingFocus.requestFocus()),
           ],
+          if (_lease?.you == true && _teach == null)
+            HeaderIconButton(key: const Key('teachStart'), tooltip: l10n.teachTask, icon: LucideIcons.graduationCap, onPressed: _startTeach),
         ],
       ),
       body: Column(
@@ -362,7 +482,14 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
               ],
             ),
           ),
-          if (_lease?.you == true)
+          if (_teach != null)
+            _RecordingBanner(
+              lastStep: _lastStep,
+              recording: _recorder != null,
+              onStop: _stopTeach,
+              onMarkSecret: _lastStep != null && _lastStep!.kind == TeachStepKindEnum.type && _lastStep!.secretName == null ? () => _markSecret(_lastStep!) : null,
+            )
+          else if (_lease?.you == true)
             Padding(
               padding: const EdgeInsets.fromLTRB(AppSpace.gutter, 0, AppSpace.gutter, AppSpace.sm),
               child: FormNote(l10n.takeoverPrivacy, icon: LucideIcons.lock),
@@ -396,6 +523,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
                             onPointerSignal: (e) {
                               if (e is PointerScrollEvent && _controlling) {
                                 _send(NekoInput.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round()));
+                                _recorder?.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round());
                               }
                             },
                             child: video,
@@ -458,6 +586,80 @@ class _HandBackDialogState extends State<_HandBackDialog> {
           minLines: 2,
           maxLines: 4,
         ),
+      ],
+    );
+  }
+}
+
+/// The red banner that stays on screen for the whole recording (D-120).
+class _RecordingBanner extends StatelessWidget {
+  const _RecordingBanner({required this.lastStep, required this.recording, required this.onStop, this.onMarkSecret});
+  final TeachStep? lastStep;
+  final bool recording;
+  final VoidCallback onStop;
+  final VoidCallback? onMarkSecret;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final red = Theme.of(context).colorScheme.error;
+    return Container(
+      key: const Key('teachRecording'),
+      margin: const EdgeInsets.fromLTRB(AppSpace.gutter, 0, AppSpace.gutter, AppSpace.sm),
+      padding: const EdgeInsets.fromLTRB(14, 8, 6, 8),
+      decoration: BoxDecoration(color: red.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.row), border: Border.all(color: red)),
+      child: Row(
+        children: [
+          Icon(LucideIcons.circleDot, size: 18, color: red),
+          const SizedBox(width: AppSpace.xs),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(recording ? l10n.teachRecording : l10n.teachRecordingPaused, style: TextStyle(color: red, fontWeight: FontWeight.w700)),
+                Text(lastStep == null ? l10n.teachRecordingHelp : teachStepLabel(context, lastStep!), maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+          if (onMarkSecret != null) TextButton(key: const Key('teachMarkSecret'), onPressed: onMarkSecret, child: Text(l10n.teachMarkSecret)),
+          FilledButton(key: const Key('teachStop'), style: FilledButton.styleFrom(backgroundColor: red), onPressed: onStop, child: Text(l10n.teachStop)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Names a secret input: uppercase letters, digits and underscores.
+class _SecretNameSheet extends StatefulWidget {
+  const _SecretNameSheet();
+
+  @override
+  State<_SecretNameSheet> createState() => _SecretNameSheetState();
+}
+
+class _SecretNameSheetState extends State<_SecretNameSheet> {
+  final _name = TextEditingController();
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final name = _name.text.trim().toUpperCase().replaceAll(RegExp(r'[^A-Z0-9_]'), '_');
+    final valid = RegExp(r'^[A-Z][A-Z0-9_]{0,63}$').hasMatch(name);
+    return FormSheet(
+      icon: LucideIcons.keyRound,
+      title: l10n.teachMarkSecret,
+      subtitle: l10n.teachMarkSecretHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('teachSecretSave'),
+      onSubmit: valid ? () => Navigator.pop(context, name) : null,
+      children: [
+        TextField(key: const Key('teachSecretName'), controller: _name, autofocus: true, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: l10n.secretName, hintText: 'EMPLOYEE_ID')),
       ],
     );
   }

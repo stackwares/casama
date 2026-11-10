@@ -34,6 +34,7 @@ export function registerSkillTools(registry: ToolRegistry, deps: { db: Database 
     description:
       'Save a method as a skill for yourself (for example when the user says "save that as a skill"): a name, a one-line description of when to use it, and step-by-step instructions in Markdown. It joins your skills index.',
     risk: "medium",
+    keepsPlaceholders: true,
     schema: z.object({
       name: NAME,
       description: z.string().min(1).max(300),
@@ -69,6 +70,7 @@ export function registerSkillTools(registry: ToolRegistry, deps: { db: Database 
     description:
       "Change one of your own skills: its description and/or instructions. Workspace-wide skills are changed by admins in the app.",
     risk: "medium",
+    keepsPlaceholders: true,
     schema: z.object({
       name: NAME,
       description: z.string().min(1).max(300).optional(),
