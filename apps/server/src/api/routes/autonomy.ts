@@ -467,6 +467,10 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const body = c.req.valid("json");
     if (!(await isAdmin(db, claims, body.org_id)))
       throw new ApiError(403, "forbidden", "Only owners and admins can add integrations");
+    if (body.kind === "a2a" && typeof body.config.url !== "string")
+      throw new ApiError(400, "validation_failed", "A2A agents need config.url (their address or agent card)", {
+        errors: [{ path: "config.url", message: "Required" }],
+      });
     if (body.kind === "mcp" && typeof body.config.url !== "string") {
       throw new ApiError(400, "validation_failed", "MCP integrations need config.url", {
         errors: [{ path: "config.url", message: "Required" }],

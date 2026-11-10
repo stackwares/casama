@@ -56,3 +56,4 @@ export * from "./phone-calls.ts";
 export * from "./encryption.ts";
 export * from "./memory-store.ts";
 export * from "./data.ts";
+export * from "./a2a.ts";

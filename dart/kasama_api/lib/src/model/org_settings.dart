@@ -28,6 +28,8 @@ class OrgSettings {
 
     required  this.allowBotToBot,
 
+    required  this.a2aEnabled,
+
     required  this.llmTracing,
   });
 
@@ -84,6 +86,19 @@ class OrgSettings {
 
 
 
+      /// Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys (D-140)
+  @JsonKey(
+    
+    name: r'a2a_enabled',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final bool a2aEnabled;
+
+
+
       /// Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse
   @JsonKey(
     
@@ -105,6 +120,7 @@ class OrgSettings {
       other.requireMfa == requireMfa &&
       other.mcpDecideApprovals == mcpDecideApprovals &&
       other.allowBotToBot == allowBotToBot &&
+      other.a2aEnabled == a2aEnabled &&
       other.llmTracing == llmTracing;
 
     @override
@@ -113,6 +129,7 @@ class OrgSettings {
         requireMfa.hashCode +
         mcpDecideApprovals.hashCode +
         allowBotToBot.hashCode +
+        a2aEnabled.hashCode +
         llmTracing.hashCode;
 
   factory OrgSettings.fromJson(Map<String, dynamic> json) => _$OrgSettingsFromJson(json);

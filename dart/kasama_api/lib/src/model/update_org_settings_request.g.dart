@@ -15,6 +15,8 @@ abstract class _$UpdateOrgSettingsRequestCWProxy {
 
   UpdateOrgSettingsRequest allowBotToBot(bool? allowBotToBot);
 
+  UpdateOrgSettingsRequest a2aEnabled(bool? a2aEnabled);
+
   UpdateOrgSettingsRequest llmTracing(bool? llmTracing);
 
   /// Creates a new instance with the provided field values.
@@ -30,6 +32,7 @@ abstract class _$UpdateOrgSettingsRequestCWProxy {
     bool? requireMfa,
     bool? mcpDecideApprovals,
     bool? allowBotToBot,
+    bool? a2aEnabled,
     bool? llmTracing,
   });
 }
@@ -59,6 +62,10 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
       call(allowBotToBot: allowBotToBot);
 
   @override
+  UpdateOrgSettingsRequest a2aEnabled(bool? a2aEnabled) =>
+      call(a2aEnabled: a2aEnabled);
+
+  @override
   UpdateOrgSettingsRequest llmTracing(bool? llmTracing) =>
       call(llmTracing: llmTracing);
 
@@ -76,6 +83,7 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
     Object? requireMfa = const $CopyWithPlaceholder(),
     Object? mcpDecideApprovals = const $CopyWithPlaceholder(),
     Object? allowBotToBot = const $CopyWithPlaceholder(),
+    Object? a2aEnabled = const $CopyWithPlaceholder(),
     Object? llmTracing = const $CopyWithPlaceholder(),
   }) {
     return UpdateOrgSettingsRequest(
@@ -96,6 +104,10 @@ class _$UpdateOrgSettingsRequestCWProxyImpl
           ? _value.allowBotToBot
           // ignore: cast_nullable_to_non_nullable
           : allowBotToBot as bool?,
+      a2aEnabled: a2aEnabled == const $CopyWithPlaceholder()
+          ? _value.a2aEnabled
+          // ignore: cast_nullable_to_non_nullable
+          : a2aEnabled as bool?,
       llmTracing: llmTracing == const $CopyWithPlaceholder()
           ? _value.llmTracing
           // ignore: cast_nullable_to_non_nullable
@@ -133,6 +145,7 @@ UpdateOrgSettingsRequest _$UpdateOrgSettingsRequestFromJson(
         (v) => v as bool?,
       ),
       allowBotToBot: $checkedConvert('allow_bot_to_bot', (v) => v as bool?),
+      a2aEnabled: $checkedConvert('a2a_enabled', (v) => v as bool?),
       llmTracing: $checkedConvert('llm_tracing', (v) => v as bool?),
     );
     return val;
@@ -142,6 +155,7 @@ UpdateOrgSettingsRequest _$UpdateOrgSettingsRequestFromJson(
     'requireMfa': 'require_mfa',
     'mcpDecideApprovals': 'mcp_decide_approvals',
     'allowBotToBot': 'allow_bot_to_bot',
+    'a2aEnabled': 'a2a_enabled',
     'llmTracing': 'llm_tracing',
   },
 );
@@ -153,5 +167,6 @@ Map<String, dynamic> _$UpdateOrgSettingsRequestToJson(
   'require_mfa': ?instance.requireMfa,
   'mcp_decide_approvals': ?instance.mcpDecideApprovals,
   'allow_bot_to_bot': ?instance.allowBotToBot,
+  'a2a_enabled': ?instance.a2aEnabled,
   'llm_tracing': ?instance.llmTracing,
 };

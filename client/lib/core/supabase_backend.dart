@@ -916,6 +916,26 @@ class SupabaseBackend implements Backend {
   Future<bool> allowBotToBot(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.allowBotToBot;
 
   @override
+  Future<bool> a2aEnabled(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.a2aEnabled;
+
+  @override
+  Future<void> setA2aEnabled(String orgId, bool enabled) async {
+    await api.privacy.updateOrgSettings(
+      id: orgId,
+      updateOrgSettingsRequest: UpdateOrgSettingsRequest(a2aEnabled: enabled),
+    );
+  }
+
+  @override
+  Future<BotA2a> botA2a(String botId) async => (await api.a2a.getBotA2a(id: botId)).data!;
+
+  @override
+  Future<BotA2a> setBotA2a(String botId, bool published) async => (await api.a2a.setBotA2a(
+    id: botId,
+    setBotA2aRequest: SetBotA2aRequest(published: published),
+  )).data!;
+
+  @override
   Future<EncryptionStatus> encryption(String orgId) async => (await api.encryption.getEncryption(id: orgId)).data!;
 
   @override

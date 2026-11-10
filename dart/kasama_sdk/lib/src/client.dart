@@ -98,6 +98,7 @@ class KasamaClient {
   KnowledgeApi get knowledge => api.getKnowledgeApi();
   ChannelsApi get channels => api.getChannelsApi();
   EncryptionApi get encryption => api.getEncryptionApi();
+  A2aApi get a2a => api.getA2aApi();
   ReplaysApi get replays => api.getReplaysApi();
   PasswordManagersApi get passwordManagers => api.getPasswordManagersApi();
   McpApi get mcp => api.getMcpApi();

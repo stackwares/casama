@@ -7,9 +7,10 @@ import { sql } from "drizzle-orm";
 import { wrapUntrusted } from "./context.ts";
 import { type NamedSecret, resolvePlaceholders } from "./secrets.ts";
 
-export type IntegrationKind = "mcp" | "openapi" | "composio" | "pipedream" | "local_mcp" | "computer_mcp";
+export type IntegrationKind = "mcp" | "openapi" | "composio" | "pipedream" | "local_mcp" | "computer_mcp" | "a2a";
 
 import type { Risk } from "./tools/registry.ts";
+import { A2aAdapter } from "./a2a.ts";
 
 export interface IntegrationToolInfo {
   /** Name inside the integration (the full tool name adds kind and integration name). */
@@ -643,6 +644,9 @@ export function createAdapter(rec: IntegrationRecord, ctx: AdapterContext): Inte
       return new LocalMcpAdapter(rec, ctx);
     case "computer_mcp":
       return new ComputerMcpAdapter(rec, ctx);
+    case "a2a":
+      // An outside A2A agent (D-140): one `send` tool from its agent card.
+      return new A2aAdapter(rec, ctx);
   }
 }
 

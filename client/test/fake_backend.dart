@@ -623,6 +623,22 @@ class FakeBackend implements Backend {
   @override
   Future<bool> allowBotToBot(String orgId) async => botToBot;
 
+  // Agent-to-agent (D-140)
+  var a2aOn = false;
+  var a2aPublished = false;
+  @override
+  Future<bool> a2aEnabled(String orgId) async => a2aOn;
+  @override
+  Future<void> setA2aEnabled(String orgId, bool enabled) async => a2aOn = enabled;
+  BotA2a _a2a(String botId) => BotA2a(workspaceEnabled: a2aOn, published: a2aPublished, agentCardUrl: 'https://api.example.com/a2a/$botId/.well-known/agent-card.json');
+  @override
+  Future<BotA2a> botA2a(String botId) async => _a2a(botId);
+  @override
+  Future<BotA2a> setBotA2a(String botId, bool published) async {
+    a2aPublished = published;
+    return _a2a(botId);
+  }
+
   // Encryption at rest (D-136)
   var encryptionMode = EncryptionStatusModeEnum.off;
   final encryptionActions = <String>[];

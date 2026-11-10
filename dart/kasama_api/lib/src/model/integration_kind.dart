@@ -16,7 +16,9 @@ enum IntegrationKind {
       @JsonValue(r'pipedream')
       pipedream(r'pipedream'),
       @JsonValue(r'local_mcp')
-      localMcp(r'local_mcp');
+      localMcp(r'local_mcp'),
+      @JsonValue(r'a2a')
+      a2a(r'a2a');
 
   const IntegrationKind(this.value);
 

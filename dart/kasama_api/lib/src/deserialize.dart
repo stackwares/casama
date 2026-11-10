@@ -33,6 +33,7 @@ import 'package:kasama_api/src/model/billing_summary.dart';
 import 'package:kasama_api/src/model/billing_usage.dart';
 import 'package:kasama_api/src/model/billing_usage_item.dart';
 import 'package:kasama_api/src/model/bot.dart';
+import 'package:kasama_api/src/model/bot_a2a.dart';
 import 'package:kasama_api/src/model/bot_access.dart';
 import 'package:kasama_api/src/model/bot_access_entry.dart';
 import 'package:kasama_api/src/model/bot_budget.dart';
@@ -288,6 +289,7 @@ import 'package:kasama_api/src/model/secret_resolved_event.dart';
 import 'package:kasama_api/src/model/secret_resolved_event_payload.dart';
 import 'package:kasama_api/src/model/send_message_request.dart';
 import 'package:kasama_api/src/model/send_message_response.dart';
+import 'package:kasama_api/src/model/set_bot_a2a_request.dart';
 import 'package:kasama_api/src/model/set_bot_access_request.dart';
 import 'package:kasama_api/src/model/set_bot_access_request_entries_inner.dart';
 import 'package:kasama_api/src/model/set_encryption_request.dart';
@@ -494,6 +496,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BillingUsageItem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Bot':
           return Bot.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotA2a':
+          return BotA2a.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotAccess':
           return BotAccess.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotAccessEntry':
@@ -1046,6 +1050,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SendMessageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SendMessageResponse':
           return SendMessageResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetBotA2aRequest':
+          return SetBotA2aRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotAccessRequest':
           return SetBotAccessRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotAccessRequestEntriesInner':

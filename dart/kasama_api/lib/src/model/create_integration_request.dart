@@ -68,7 +68,7 @@ class CreateIntegrationRequest {
 
 
 
-      /// mcp: {url, auth_header?}; openapi: {spec, base_url?, auth?: {type, header?, secret}}; composio: {toolkits[], user_id?}; pipedream: {project_id, client_id, apps[], environment?}
+      /// mcp: {url, auth_header?}; a2a: {url} (the agent's address or agent card; secret: its bearer token); openapi: {spec, base_url?, auth?: {type, header?, secret}}; composio: {toolkits[], user_id?}; pipedream: {project_id, client_id, apps[], environment?}
   @JsonKey(
     
     name: r'config',

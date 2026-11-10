@@ -15,6 +15,8 @@ abstract class _$OrgSettingsCWProxy {
 
   OrgSettings allowBotToBot(bool allowBotToBot);
 
+  OrgSettings a2aEnabled(bool a2aEnabled);
+
   OrgSettings llmTracing(bool llmTracing);
 
   /// Creates a new instance with the provided field values.
@@ -30,6 +32,7 @@ abstract class _$OrgSettingsCWProxy {
     bool requireMfa,
     bool mcpDecideApprovals,
     bool allowBotToBot,
+    bool a2aEnabled,
     bool llmTracing,
   });
 }
@@ -57,6 +60,9 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
       call(allowBotToBot: allowBotToBot);
 
   @override
+  OrgSettings a2aEnabled(bool a2aEnabled) => call(a2aEnabled: a2aEnabled);
+
+  @override
   OrgSettings llmTracing(bool llmTracing) => call(llmTracing: llmTracing);
 
   /// Creates a new instance with the provided field values.
@@ -73,6 +79,7 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
     Object? requireMfa = const $CopyWithPlaceholder(),
     Object? mcpDecideApprovals = const $CopyWithPlaceholder(),
     Object? allowBotToBot = const $CopyWithPlaceholder(),
+    Object? a2aEnabled = const $CopyWithPlaceholder(),
     Object? llmTracing = const $CopyWithPlaceholder(),
   }) {
     return OrgSettings(
@@ -98,6 +105,11 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
           ? _value.allowBotToBot
           // ignore: cast_nullable_to_non_nullable
           : allowBotToBot as bool,
+      a2aEnabled:
+          a2aEnabled == const $CopyWithPlaceholder() || a2aEnabled == null
+          ? _value.a2aEnabled
+          // ignore: cast_nullable_to_non_nullable
+          : a2aEnabled as bool,
       llmTracing:
           llmTracing == const $CopyWithPlaceholder() || llmTracing == null
           ? _value.llmTracing
@@ -129,6 +141,7 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
         'require_mfa',
         'mcp_decide_approvals',
         'allow_bot_to_bot',
+        'a2a_enabled',
         'llm_tracing',
       ],
     );
@@ -143,6 +156,7 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
         (v) => v as bool,
       ),
       allowBotToBot: $checkedConvert('allow_bot_to_bot', (v) => v as bool),
+      a2aEnabled: $checkedConvert('a2a_enabled', (v) => v as bool),
       llmTracing: $checkedConvert('llm_tracing', (v) => v as bool),
     );
     return val;
@@ -152,6 +166,7 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
     'requireMfa': 'require_mfa',
     'mcpDecideApprovals': 'mcp_decide_approvals',
     'allowBotToBot': 'allow_bot_to_bot',
+    'a2aEnabled': 'a2a_enabled',
     'llmTracing': 'llm_tracing',
   },
 );
@@ -162,5 +177,6 @@ Map<String, dynamic> _$OrgSettingsToJson(OrgSettings instance) =>
       'require_mfa': instance.requireMfa,
       'mcp_decide_approvals': instance.mcpDecideApprovals,
       'allow_bot_to_bot': instance.allowBotToBot,
+      'a2a_enabled': instance.a2aEnabled,
       'llm_tracing': instance.llmTracing,
     };

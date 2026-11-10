@@ -9,6 +9,7 @@ export 'package:kasama_api/src/auth/bearer_auth.dart';
 export 'package:kasama_api/src/auth/oauth.dart';
 
 
+export 'package:kasama_api/src/api/a2a_api.dart';
 export 'package:kasama_api/src/api/action_rules_api.dart';
 export 'package:kasama_api/src/api/admin_api.dart';
 export 'package:kasama_api/src/api/appearance_api.dart';
@@ -85,6 +86,7 @@ export 'package:kasama_api/src/model/billing_summary.dart';
 export 'package:kasama_api/src/model/billing_usage.dart';
 export 'package:kasama_api/src/model/billing_usage_item.dart';
 export 'package:kasama_api/src/model/bot.dart';
+export 'package:kasama_api/src/model/bot_a2a.dart';
 export 'package:kasama_api/src/model/bot_access.dart';
 export 'package:kasama_api/src/model/bot_access_entry.dart';
 export 'package:kasama_api/src/model/bot_budget.dart';
@@ -354,6 +356,7 @@ export 'package:kasama_api/src/model/secret_resolved_event.dart';
 export 'package:kasama_api/src/model/secret_resolved_event_payload.dart';
 export 'package:kasama_api/src/model/send_message_request.dart';
 export 'package:kasama_api/src/model/send_message_response.dart';
+export 'package:kasama_api/src/model/set_bot_a2a_request.dart';
 export 'package:kasama_api/src/model/set_bot_access_request.dart';
 export 'package:kasama_api/src/model/set_bot_access_request_entries_inner.dart';
 export 'package:kasama_api/src/model/set_encryption_request.dart';

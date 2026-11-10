@@ -4,6 +4,7 @@ analysis_options.yaml
 build.yaml
 lib/kasama_api.dart
 lib/src/api.dart
+lib/src/api/a2a_api.dart
 lib/src/api/action_rules_api.dart
 lib/src/api/admin_api.dart
 lib/src/api/appearance_api.dart
@@ -85,6 +86,7 @@ lib/src/model/billing_summary.dart
 lib/src/model/billing_usage.dart
 lib/src/model/billing_usage_item.dart
 lib/src/model/bot.dart
+lib/src/model/bot_a2a.dart
 lib/src/model/bot_access.dart
 lib/src/model/bot_access_entry.dart
 lib/src/model/bot_budget.dart
@@ -354,6 +356,7 @@ lib/src/model/secret_resolved_event.dart
 lib/src/model/secret_resolved_event_payload.dart
 lib/src/model/send_message_request.dart
 lib/src/model/send_message_response.dart
+lib/src/model/set_bot_a2a_request.dart
 lib/src/model/set_bot_access_request.dart
 lib/src/model/set_bot_access_request_entries_inner.dart
 lib/src/model/set_encryption_request.dart

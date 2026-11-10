@@ -291,6 +291,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `packages/sandbox/src/hosted-more.ts` (Novita, Kubernetes, Incus, Boat, Railway control planes and `tlsFetch`), their stand-ins in `testing-hosted.ts` and the contract runs in `hosted.test.ts`; supervisor configuration in `apps/supervisor/src/main.ts`; `X-Computerd-Token` in computerd and `ComputerdClient`.
 
+## Agent-to-agent (D-140)
+
+- `packages/agent/src/a2a.ts` (A2A 1.0 shapes, `A2aClient`, `A2aAdapter` for `integrations.kind = a2a`); `apps/server/src/api/routes/a2a.ts` (agent cards, the JSON-RPC endpoint, bot publishing); `organizations.a2a_enabled`, `bots.a2a_published`, `a2a_tasks`; the app's A2A switch, the bot's publish sheet and the A2A integration type.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

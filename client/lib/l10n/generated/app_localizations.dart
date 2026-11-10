@@ -8571,6 +8571,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'paid data (places, emails, SEO)'**
   String get providerHintData;
+
+  /// No description provided for @kindA2a.
+  ///
+  /// In en, this message translates to:
+  /// **'AI agent (A2A)'**
+  String get kindA2a;
+
+  /// No description provided for @a2aAgentUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent address or agent card URL'**
+  String get a2aAgentUrl;
+
+  /// No description provided for @a2aAgentToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Access token (optional)'**
+  String get a2aAgentToken;
+
+  /// No description provided for @a2a.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent-to-agent (A2A)'**
+  String get a2a;
+
+  /// No description provided for @a2aHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Let outside AI agents give tasks to bots you publish, using workspace API keys. Tasks run with the bot\'s usual approvals and limits.'**
+  String get a2aHelp;
+
+  /// No description provided for @a2aPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish as an A2A agent'**
+  String get a2aPublish;
+
+  /// No description provided for @a2aPublishHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside agents with a workspace API key can give this bot tasks.'**
+  String get a2aPublishHelp;
+
+  /// No description provided for @a2aWorkspaceOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on agent-to-agent in workspace settings first.'**
+  String get a2aWorkspaceOff;
+
+  /// No description provided for @a2aCardUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent card'**
+  String get a2aCardUrl;
 }
 
 class _AppLocalizationsDelegate

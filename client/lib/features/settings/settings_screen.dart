@@ -17,6 +17,7 @@ import '../../theme/wallpaper.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
+import '../bots/a2a_sheet.dart';
 import '../bots/template_picker.dart';
 import '../bots/bot_template.dart';
 import '../../ui/mascot.dart';
@@ -670,6 +671,16 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
             GroupedTile(key: const Key('botSharing'), icon: LucideIcons.users, title: l10n.sharing, subtitle: l10n.sharingRow, onTap: () => context.push('/bots/${bot.id}/sharing')),
             GroupedTile(key: const Key('botReplays'), icon: LucideIcons.listVideo, title: l10n.replays, subtitle: l10n.replaysRow, onTap: () => context.push('/bots/${bot.id}/replays')),
             GroupedTile(key: const Key('botChatApps'), icon: LucideIcons.messagesSquare, title: l10n.chatApps, subtitle: l10n.chatAppsRow, onTap: () => context.push('/bots/${bot.id}/chat-apps')),
+            GroupedTile(
+              key: const Key('botA2a'),
+              icon: LucideIcons.bot,
+              title: l10n.a2aPublish,
+              subtitle: l10n.a2aPublishHelp,
+              onTap: () => showAdaptiveSheet<void>(
+                context: context,
+                builder: (_) => BotA2aSheet(botId: bot.id),
+              ),
+            ),
             GroupedTile(key: const Key('botKnowledge'), icon: LucideIcons.library, title: l10n.knowledge, subtitle: l10n.knowledgeRow, onTap: () => context.push('/bots/${bot.id}/knowledge')),
             GroupedTile(key: const Key('botPlugins'), icon: LucideIcons.puzzle, title: l10n.plugins, subtitle: l10n.pluginsRow, onTap: () => context.push('/bots/${bot.id}/plugins')),
             GroupedTile(key: const Key('botPages'), icon: LucideIcons.fileText, title: l10n.pages, subtitle: l10n.pagesRow, onTap: () => context.push('/pages?bot=${bot.id}')),

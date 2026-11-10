@@ -48,14 +48,14 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:kasama_api/kasama_api.dart';
 
 
-final api = KasamaApi().getActionRulesApi();
-final CreateActionRuleRequest createActionRuleRequest = ; // CreateActionRuleRequest | 
+final api = KasamaApi().getA2aApi();
+final String id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
 
 try {
-    final response = await api.createActionRule(createActionRuleRequest);
+    final response = await api.getBotA2a(id);
     print(response);
 } catch on DioException (e) {
-    print("Exception when calling ActionRulesApi->createActionRule: $e\n");
+    print("Exception when calling A2aApi->getBotA2a: $e\n");
 }
 
 ```
@@ -66,6 +66,8 @@ All URIs are relative to *http://localhost:8787*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*A2aApi*](doc/A2aApi.md) | [**getBotA2a**](doc/A2aApi.md#getbota2a) | **GET** /v1/bots/{id}/a2a | 
+[*A2aApi*](doc/A2aApi.md) | [**setBotA2a**](doc/A2aApi.md#setbota2a) | **PUT** /v1/bots/{id}/a2a | Publish a bot as an A2A agent (the workspace must have A2A on)
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**createActionRule**](doc/ActionRulesApi.md#createactionrule) | **POST** /v1/action-rules | 
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**deleteActionRule**](doc/ActionRulesApi.md#deleteactionrule) | **DELETE** /v1/action-rules/{id} | 
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**listActionRules**](doc/ActionRulesApi.md#listactionrules) | **GET** /v1/action-rules | A bot&#39;s rules plus the workspace&#39;s (or only the workspace&#39;s without bot_id)
@@ -339,6 +341,7 @@ Class | Method | HTTP request | Description
  - [BillingUsage](doc/BillingUsage.md)
  - [BillingUsageItem](doc/BillingUsageItem.md)
  - [Bot](doc/Bot.md)
+ - [BotA2a](doc/BotA2a.md)
  - [BotAccess](doc/BotAccess.md)
  - [BotAccessEntry](doc/BotAccessEntry.md)
  - [BotBudget](doc/BotBudget.md)
@@ -608,6 +611,7 @@ Class | Method | HTTP request | Description
  - [SecretResolvedEventPayload](doc/SecretResolvedEventPayload.md)
  - [SendMessageRequest](doc/SendMessageRequest.md)
  - [SendMessageResponse](doc/SendMessageResponse.md)
+ - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
  - [SetBotAccessRequestEntriesInner](doc/SetBotAccessRequestEntriesInner.md)
  - [SetEncryptionRequest](doc/SetEncryptionRequest.md)

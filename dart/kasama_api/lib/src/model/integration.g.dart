@@ -316,6 +316,7 @@ const _$IntegrationKindEnumMap = {
   IntegrationKind.composio: 'composio',
   IntegrationKind.pipedream: 'pipedream',
   IntegrationKind.localMcp: 'local_mcp',
+  IntegrationKind.a2a: 'a2a',
 };
 
 const _$IntegrationStatusEnumEnumMap = {

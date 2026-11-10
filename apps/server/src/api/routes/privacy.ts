@@ -62,8 +62,9 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       llm_tracing: boolean;
       mcp_decide_approvals: boolean;
       allow_bot_to_bot: boolean;
+      a2a_enabled: boolean;
     }>(
-      sql`select run_event_retention_days, require_mfa, llm_tracing, mcp_decide_approvals, allow_bot_to_bot from public.organizations where id = ${orgId}::uuid`,
+      sql`select run_event_retention_days, require_mfa, llm_tracing, mcp_decide_approvals, allow_bot_to_bot, a2a_enabled from public.organizations where id = ${orgId}::uuid`,
     );
     return {
       run_event_retention_days: o?.run_event_retention_days ?? 180,
@@ -71,6 +72,7 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       llm_tracing: o?.llm_tracing ?? true,
       mcp_decide_approvals: o?.mcp_decide_approvals ?? false,
       allow_bot_to_bot: o?.allow_bot_to_bot ?? true,
+      a2a_enabled: o?.a2a_enabled ?? false,
     };
   };
 
@@ -99,8 +101,14 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       body.require_mfa != null ||
       body.llm_tracing != null ||
       body.mcp_decide_approvals != null ||
-      body.allow_bot_to_bot != null
+      body.allow_bot_to_bot != null ||
+      body.a2a_enabled != null
     ) {
+      if (body.a2a_enabled != null) {
+        await db.execute(sql`update public.organizations set a2a_enabled = ${body.a2a_enabled} where id = ${id}::uuid`);
+        // Turning it off unpublishes every bot.
+        if (!body.a2a_enabled) await db.execute(sql`update public.bots set a2a_published = false where org_id = ${id}::uuid`);
+      }
       if (body.allow_bot_to_bot != null)
         await db.execute(sql`
           update public.organizations set allow_bot_to_bot = ${body.allow_bot_to_bot} where id = ${id}::uuid`);

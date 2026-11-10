@@ -97,7 +97,7 @@ export const CreateSecretRequest = z
   .openapi("CreateSecretRequest");
 
 export const IntegrationKind = z
-  .enum(["mcp", "openapi", "composio", "pipedream", "local_mcp"])
+  .enum(["mcp", "openapi", "composio", "pipedream", "local_mcp", "a2a"])
   .openapi("IntegrationKind");
 
 export const Integration = z
@@ -134,7 +134,7 @@ export const CreateIntegrationRequest = z
     name: z.string().regex(/^[a-z][a-z0-9_]{0,39}$/),
     config: z.record(z.string(), z.unknown()).openapi({
       description:
-        "mcp: {url, auth_header?}; openapi: {spec, base_url?, auth?: {type, header?, secret}}; composio: {toolkits[], user_id?}; pipedream: {project_id, client_id, apps[], environment?}",
+        "mcp: {url, auth_header?}; a2a: {url} (the agent's address or agent card; secret: its bearer token); openapi: {spec, base_url?, auth?: {type, header?, secret}}; composio: {toolkits[], user_id?}; pipedream: {project_id, client_id, apps[], environment?}",
     }),
     secret: z
       .string()

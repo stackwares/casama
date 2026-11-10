@@ -25,6 +25,7 @@ import {
   TestCredentialRequest,
   UpdateCredentialRequest,
   UsageReport,
+  BotA2a,
   MemoryBackend,
   SetMemoryBackendRequest,
 } from "../bots.ts";
@@ -447,4 +448,25 @@ export const deleteMemoryBackend = createRoute({
   summary: "Go back to the built-in memory (memories in the provider stay there)",
   request: { params: idParam },
   responses: { 200: jsonResponse("Backend", MemoryBackend), 401: e401, 403: e403, 404: e404 },
+});
+
+// Agent-to-agent (D-140)
+export const getBotA2a = createRoute({
+  operationId: "getBotA2a",
+  method: "get",
+  path: "/v1/bots/{id}/a2a",
+  tags: ["a2a"],
+  security,
+  request: { params: idParam },
+  responses: { 200: jsonResponse("A2A", BotA2a), 401: e401, 404: e404 },
+});
+export const setBotA2a = createRoute({
+  operationId: "setBotA2a",
+  method: "put",
+  path: "/v1/bots/{id}/a2a",
+  tags: ["a2a"],
+  security,
+  summary: "Publish a bot as an A2A agent (the workspace must have A2A on)",
+  request: { params: idParam, body: jsonBody(z.object({ published: z.boolean() }).openapi("SetBotA2aRequest")) },
+  responses: { 200: jsonResponse("A2A", BotA2a), 401: e401, 403: e403, 404: e404, 409: e409 },
 });

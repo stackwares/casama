@@ -1245,3 +1245,44 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
 - **Tests:**
   - The contract suite for Novita, Kubernetes (asserting computerd was reached through the pod proxy), Incus, Boat and Railway.
   - A computerd test for `X-Computerd-Token`.
+
+## D-140 Agent-to-agent (A2A)
+
+- **Version:** A2A v1.0, the current release at build time, over its JSON-RPC binding, written from the public spec:
+  - agent cards at `/.well-known/agent-card.json`
+  - PascalCase methods: `SendMessage`, `GetTask`, `CancelTask`, `ListTasks`
+  - `A2A-Version: 1.0`
+  - roles `ROLE_USER`/`ROLE_AGENT`, text parts `{ "text": … }`, states `TASK_STATE_*`
+  - a send result is `{ task }` or `{ message }`
+  - errors: TaskNotFound `-32001`, plus the standard JSON-RPC codes
+  - Streaming and push notifications aren't offered yet (the card says so).
+- **Publishing bots (server):**
+  - Off by default. An admin turns on `organizations.a2a_enabled` (workspace settings), then people who manage a bot publish it (`PUT /v1/bots/{id}/a2a`, audited). Turning the workspace switch off unpublishes every bot.
+  - A published bot's card lives at `/a2a/{bot}/.well-known/agent-card.json`. It's public, with the name, a description from the persona, one JSON-RPC interface, and a bearer security scheme.
+  - Calls go to `POST /a2a/{bot}`.
+- **Callers:**
+  - They authenticate with a workspace API key (the hosted MCP endpoint's `ksk_` keys, D-117) from the bot's workspace, and act as that key's person, who must be able to use the bot.
+- **Tasks:**
+  - `SendMessage` becomes a run (trigger `a2a`, created by the key's person) in a conversation; the same `contextId` continues the same conversation.
+  - The bot's usual approvals, budgets, action rules and audit log apply (`a2a.task` audit entries).
+  - It blocks for up to 55 seconds unless `returnImmediately` is set; after that the caller polls `GetTask`.
+  - A run waiting for its owner's approval reports `TASK_STATE_WORKING` with a status message saying so. The answer comes back as an artifact and the final status message.
+  - `CancelTask` cancels the run; `ListTasks` lists the caller's tasks, optionally by context.
+  - Tasks are recorded in `a2a_tasks`.
+- **Calling outside agents (client):**
+  - An outside agent is an integration with `kind = a2a`: config `{url}` (its address or agent card), with its token as the integration secret.
+  - Its adapter reads the card, uses the A2A 1.0 JSON-RPC interface, and offers one tool, `a2a.<name>.send(task, context_id?, task_id?)`, medium risk, described from the card's description and skills.
+  - The tool sends a blocking `SendMessage`, then polls `GetTask` until the task finishes, needs input, or 10 minutes pass. It returns the agent's answer with its `context_id` for follow-ups, and says when the agent needs more input.
+  - Like other integrations, it must be attached to the bot.
+  - The spec writes the tool as `a2a.send(agent, task)`; per-integration names (`a2a.<agent>.send`) fit how bots already get integration tools.
+- **Across Kasama servers:** this is the same protocol linked agents will use.
+- **The app:** a workspace switch, a "Publish as an A2A agent" sheet in bot settings with the agent card URL, and "AI agent (A2A)" as an integration type.
+- **Tests:**
+  - API (`a2a.test.ts`), over real HTTP with a scripted model:
+    - Off by default (no card; publishing refused).
+    - The card's interface; a key is required.
+    - An outside A2A client's blocking task completes with the bot's answer.
+    - `GetTask`, `ListTasks`, task-not-found and method-not-found errors.
+    - The run is attributed to the key's person and audited.
+  - Calling out: a bot in another workspace adds the published bot as an `a2a` integration (the connection test lists `send`), hands it a task through `a2a.planner.send`, and gets the answer. Turning A2A off removes the card.
+  - widget (`a2a_test.dart`).

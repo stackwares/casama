@@ -7,6 +7,7 @@ import 'package:kasama_api/src/auth/api_key_auth.dart';
 import 'package:kasama_api/src/auth/basic_auth.dart';
 import 'package:kasama_api/src/auth/bearer_auth.dart';
 import 'package:kasama_api/src/auth/oauth.dart';
+import 'package:kasama_api/src/api/a2a_api.dart';
 import 'package:kasama_api/src/api/action_rules_api.dart';
 import 'package:kasama_api/src/api/admin_api.dart';
 import 'package:kasama_api/src/api/appearance_api.dart';
@@ -95,6 +96,12 @@ class KasamaApi {
     if (this.dio.interceptors.any((i) => i is ApiKeyAuthInterceptor)) {
       (this.dio.interceptors.firstWhere((element) => element is ApiKeyAuthInterceptor) as ApiKeyAuthInterceptor).apiKeys[name] = apiKey;
     }
+  }
+
+  /// Get A2aApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  A2aApi getA2aApi() {
+    return A2aApi(dio);
   }
 
   /// Get ActionRulesApi instance, base route and serializer can be overridden by a given but be careful,

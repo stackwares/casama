@@ -443,3 +443,8 @@ export const SetMemoryBackendRequest = z
     copy_existing: z.boolean().optional(),
   })
   .openapi("SetMemoryBackendRequest");
+
+/** Agent-to-agent (D-140): whether a bot is published, and its agent card. */
+export const BotA2a = z
+  .object({ workspace_enabled: z.boolean(), published: z.boolean(), agent_card_url: z.string() })
+  .openapi("BotA2a");

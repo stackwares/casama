@@ -5022,4 +5022,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerHintData => 'paid data (places, emails, SEO)';
+
+  @override
+  String get kindA2a => 'AI agent (A2A)';
+
+  @override
+  String get a2aAgentUrl => 'Agent address or agent card URL';
+
+  @override
+  String get a2aAgentToken => 'Access token (optional)';
+
+  @override
+  String get a2a => 'Agent-to-agent (A2A)';
+
+  @override
+  String get a2aHelp =>
+      'Let outside AI agents give tasks to bots you publish, using workspace API keys. Tasks run with the bot\'s usual approvals and limits.';
+
+  @override
+  String get a2aPublish => 'Publish as an A2A agent';
+
+  @override
+  String get a2aPublishHelp =>
+      'Outside agents with a workspace API key can give this bot tasks.';
+
+  @override
+  String get a2aWorkspaceOff =>
+      'Turn on agent-to-agent in workspace settings first.';
+
+  @override
+  String get a2aCardUrl => 'Agent card';
 }

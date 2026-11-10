@@ -41,21 +41,27 @@ class AppLogo extends StatelessWidget {
 
   /// The logo for a connection: its catalog app when it has one, otherwise its kind.
   factory AppLogo.forIntegration(Integration i, {CatalogApp? app, double size = 44, Key? key}) => AppLogo(
-        key: key,
-        appId: i.appId ?? switch (i.kind) { IntegrationKind.mcp => 'mcp', _ => null },
-        name: app?.name ?? i.name,
-        color: app?.color,
-        icon: i.appId != null
-            ? null
-            : switch (i.kind) {
-                IntegrationKind.mcp => null,
-                IntegrationKind.openapi => LucideIcons.braces,
-                IntegrationKind.composio => LucideIcons.blocks,
-                IntegrationKind.pipedream => LucideIcons.cable,
-                IntegrationKind.localMcp => LucideIcons.laptop,
-              },
-        size: size,
-      );
+    key: key,
+    appId:
+        i.appId ??
+        switch (i.kind) {
+          IntegrationKind.mcp => 'mcp',
+          _ => null,
+        },
+    name: app?.name ?? i.name,
+    color: app?.color,
+    icon: i.appId != null
+        ? null
+        : switch (i.kind) {
+            IntegrationKind.mcp => null,
+            IntegrationKind.openapi => LucideIcons.braces,
+            IntegrationKind.composio => LucideIcons.blocks,
+            IntegrationKind.pipedream => LucideIcons.cable,
+            IntegrationKind.localMcp => LucideIcons.laptop,
+            IntegrationKind.a2a => LucideIcons.bot,
+          },
+    size: size,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -89,19 +95,22 @@ class AppLogo extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: radius,
-        gradient: imageUrl != null
-            ? null
-            : LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color.lerp(tile, Colors.white, lightBrand ? 0.18 : 0.14)!, tile],
-              ),
+        gradient: imageUrl != null ? null : LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color.lerp(tile, Colors.white, lightBrand ? 0.18 : 0.14)!, tile]),
         color: imageUrl != null ? tile : null,
         // Very dark brands (GitHub, Notion) would vanish on a dark page without an edge.
         border: Border.all(color: dark && base.computeLuminance() < 0.04 ? Colors.white24 : context.appColors.hairline.withValues(alpha: imageUrl != null ? 1 : 0)),
         boxShadow: [
-          if (glow) BoxShadow(color: base.withValues(alpha: dark ? 0.55 : 0.4), blurRadius: size * 0.5, spreadRadius: size * 0.02),
-          BoxShadow(color: Colors.black.withValues(alpha: dark ? 0.3 : 0.08), blurRadius: size * 0.12, offset: Offset(0, size * 0.04)),
+          if (glow)
+            BoxShadow(
+              color: base.withValues(alpha: dark ? 0.55 : 0.4),
+              blurRadius: size * 0.5,
+              spreadRadius: size * 0.02,
+            ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: dark ? 0.3 : 0.08),
+            blurRadius: size * 0.12,
+            offset: Offset(0, size * 0.04),
+          ),
         ],
       ),
       alignment: Alignment.center,
@@ -110,7 +119,7 @@ class AppLogo extends StatelessWidget {
   }
 
   Widget _initial(Color ink) => Text(
-        (name.isEmpty ? '?' : name.characters.first).toUpperCase(),
-        style: TextStyle(color: ink, fontWeight: FontWeight.w800, fontSize: size * 0.44, height: 1),
-      );
+    (name.isEmpty ? '?' : name.characters.first).toUpperCase(),
+    style: TextStyle(color: ink, fontWeight: FontWeight.w800, fontSize: size * 0.44, height: 1),
+  );
 }

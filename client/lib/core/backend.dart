@@ -385,6 +385,11 @@ abstract class Backend {
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
   // Bot-to-bot switch (D-133)
   Future<bool> allowBotToBot(String orgId);
+  // Agent-to-agent (D-140)
+  Future<bool> a2aEnabled(String orgId);
+  Future<void> setA2aEnabled(String orgId, bool enabled);
+  Future<BotA2a> botA2a(String botId);
+  Future<BotA2a> setBotA2a(String botId, bool published);
   // Encryption at rest (D-136)
   Future<EncryptionStatus> encryption(String orgId);
   Future<EncryptionStatus> setEncryption(String orgId, bool enabled);

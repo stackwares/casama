@@ -32,7 +32,7 @@ void main() {
   });
 
   testWidgets('check-ins turn on from bot settings', (tester) async {
-    await setSize(tester, const Size(1000, 2400));
+    await setSize(tester, const Size(1000, 3200));
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const BotSettingsScreen(botId: botId)));
     await tester.pumpAndSettle();

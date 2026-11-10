@@ -3161,6 +3161,25 @@
           "text"
         ]
       },
+      "BotA2a": {
+        "type": "object",
+        "properties": {
+          "workspace_enabled": {
+            "type": "boolean"
+          },
+          "published": {
+            "type": "boolean"
+          },
+          "agent_card_url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspace_enabled",
+          "published",
+          "agent_card_url"
+        ]
+      },
       "ConversationThread": {
         "type": "object",
         "properties": {
@@ -3580,6 +3599,17 @@
         "required": [
           "surface_id",
           "name"
+        ]
+      },
+      "SetBotA2aRequest": {
+        "type": "object",
+        "properties": {
+          "published": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "published"
         ]
       },
       "SetMemoryBackendRequest": {
@@ -4543,7 +4573,8 @@
           "openapi",
           "composio",
           "pipedream",
-          "local_mcp"
+          "local_mcp",
+          "a2a"
         ]
       },
       "Risk": {
@@ -4571,7 +4602,7 @@
           "config": {
             "type": "object",
             "additionalProperties": {},
-            "description": "mcp: {url, auth_header?}; openapi: {spec, base_url?, auth?: {type, header?, secret}}; composio: {toolkits[], user_id?}; pipedream: {project_id, client_id, apps[], environment?}"
+            "description": "mcp: {url, auth_header?}; a2a: {url} (the agent's address or agent card; secret: its bearer token); openapi: {spec, base_url?, auth?: {type, header?, secret}}; composio: {toolkits[], user_id?}; pipedream: {project_id, client_id, apps[], environment?}"
           },
           "secret": {
             "type": "string",
@@ -7180,6 +7211,10 @@
             "type": "boolean",
             "description": "Bots may @mention, message and delegate to each other (D-133); subagents always work"
           },
+          "a2a_enabled": {
+            "type": "boolean",
+            "description": "Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys (D-140)"
+          },
           "llm_tracing": {
             "type": "boolean",
             "description": "Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse"
@@ -7190,6 +7225,7 @@
           "require_mfa",
           "mcp_decide_approvals",
           "allow_bot_to_bot",
+          "a2a_enabled",
           "llm_tracing"
         ]
       },
@@ -7212,6 +7248,10 @@
           "allow_bot_to_bot": {
             "type": "boolean",
             "description": "Bots may @mention, message and delegate to each other (D-133); subagents always work"
+          },
+          "a2a_enabled": {
+            "type": "boolean",
+            "description": "Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys (D-140)"
           },
           "llm_tracing": {
             "type": "boolean",
@@ -14039,6 +14079,147 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bots/{id}/a2a": {
+      "get": {
+        "operationId": "getBotA2a",
+        "tags": [
+          "a2a"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A2A",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotA2a"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setBotA2a",
+        "tags": [
+          "a2a"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Publish a bot as an A2A agent (the workspace must have A2A on)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetBotA2aRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A2A",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotA2a"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {

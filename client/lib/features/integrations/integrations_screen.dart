@@ -26,6 +26,7 @@ String integrationKindLabel(BuildContext context, IntegrationKind kind) => switc
   IntegrationKind.composio => 'Composio',
   IntegrationKind.pipedream => 'Pipedream Connect',
   IntegrationKind.localMcp => context.l10n.kindLocalMcp,
+  IntegrationKind.a2a => context.l10n.kindA2a,
 };
 
 IconData integrationKindIcon(IntegrationKind kind) => switch (kind) {
@@ -33,6 +34,7 @@ IconData integrationKindIcon(IntegrationKind kind) => switch (kind) {
   IntegrationKind.openapi => LucideIcons.braces,
   IntegrationKind.composio => LucideIcons.blocks,
   IntegrationKind.pipedream => LucideIcons.cable,
+  IntegrationKind.a2a => LucideIcons.bot,
   IntegrationKind.localMcp => LucideIcons.laptop,
 };
 
@@ -109,10 +111,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
           children: [
             AppSegmentedControl<_HubTab>(
               values: _HubTab.values,
-              labels: {
-                _HubTab.connected: items.isEmpty ? l10n.connectedTab : '${l10n.connectedTab} · ${items.length}',
-                _HubTab.browse: l10n.browseTab,
-              },
+              labels: {_HubTab.connected: items.isEmpty ? l10n.connectedTab : '${l10n.connectedTab} · ${items.length}', _HubTab.browse: l10n.browseTab},
               icons: const {_HubTab.connected: LucideIcons.plug, _HubTab.browse: LucideIcons.layoutGrid},
               groupValue: tab,
               onValueChanged: (t) => setState(() => _tab = t),
@@ -122,7 +121,10 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
               _Connected(items: items, onBrowse: () => setState(() => _tab = _HubTab.browse))
             else
               catalog.when(
-                loading: () => const Padding(padding: EdgeInsets.all(AppSpace.xl), child: Center(child: CircularProgressIndicator())),
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(AppSpace.xl),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
                 error: (e, _) => FormNote(errorText(context, e), icon: LucideIcons.triangleAlert),
                 data: (cat) => _browse(context, cat, items),
               ),
@@ -136,14 +138,18 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
     final l10n = context.l10n;
     final q = _search.text.trim().toLowerCase();
     final connectedIds = {for (final i in connected) ?i.appId};
-    final categories = [for (final c in CatalogAppCategoryEnum.values) if (cat.apps.any((a) => a.category == c)) c];
+    final categories = [
+      for (final c in CatalogAppCategoryEnum.values)
+        if (cat.apps.any((a) => a.category == c)) c,
+    ];
     final shown = [
       for (final a in cat.apps)
-        if ((_category == null || a.category == _category) &&
-            (q.isEmpty || '${a.name} ${a.description} ${a.capabilities.join(' ')}'.toLowerCase().contains(q)))
-          a,
+        if ((_category == null || a.category == _category) && (q.isEmpty || '${a.name} ${a.description} ${a.capabilities.join(' ')}'.toLowerCase().contains(q))) a,
     ];
-    final popular = [for (final a in cat.apps) if (a.popular) a];
+    final popular = [
+      for (final a in cat.apps)
+        if (a.popular) a,
+    ];
     final filtering = q.isNotEmpty || _category != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -156,11 +162,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
             prefixIcon: const Icon(LucideIcons.search, size: 20),
             suffixIcon: _search.text.isEmpty
                 ? null
-                : IconButton(
-                    tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
-                    icon: const Icon(LucideIcons.x, size: 18),
-                    onPressed: () => setState(_search.clear),
-                  ),
+                : IconButton(tooltip: MaterialLocalizations.of(context).deleteButtonTooltip, icon: const Icon(LucideIcons.x, size: 18), onPressed: () => setState(_search.clear)),
           ),
           onChanged: (_) => setState(() {}),
         ),
@@ -211,12 +213,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 padding: EdgeInsets.zero,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columns,
-                  mainAxisSpacing: AppSpace.sm,
-                  crossAxisSpacing: AppSpace.sm,
-                  mainAxisExtent: 100,
-                ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: columns, mainAxisSpacing: AppSpace.sm, crossAxisSpacing: AppSpace.sm, mainAxisExtent: 100),
                 itemCount: shown.length,
                 itemBuilder: (_, i) => _AppTile(app: shown[i], connected: connectedIds.contains(shown[i].id), onTap: () => _connect(shown[i])),
               );
@@ -225,20 +222,8 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
         SectionHeader(title: l10n.moreWays),
         GroupedCard(
           children: [
-            GroupedTile(
-              key: const Key('setupComposio'),
-              icon: LucideIcons.blocks,
-              title: 'Composio',
-              subtitle: l10n.composioHelp,
-              onTap: () => showProviderSetup(context, ProviderKind.composio),
-            ),
-            GroupedTile(
-              key: const Key('setupPipedream'),
-              icon: LucideIcons.cable,
-              title: 'Pipedream',
-              subtitle: l10n.pipedreamHelp,
-              onTap: () => showProviderSetup(context, ProviderKind.pipedream),
-            ),
+            GroupedTile(key: const Key('setupComposio'), icon: LucideIcons.blocks, title: 'Composio', subtitle: l10n.composioHelp, onTap: () => showProviderSetup(context, ProviderKind.composio)),
+            GroupedTile(key: const Key('setupPipedream'), icon: LucideIcons.cable, title: 'Pipedream', subtitle: l10n.pipedreamHelp, onTap: () => showProviderSetup(context, ProviderKind.pipedream)),
             GroupedTile(icon: LucideIcons.squareTerminal, title: l10n.customServer, subtitle: l10n.customServerHelp, onTap: _addCustom),
           ],
         ),
@@ -260,13 +245,16 @@ class _ConnectedBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(LucideIcons.circleCheck, size: 14, color: context.appColors.positive),
-          const SizedBox(width: 4),
-          Text(context.l10n.connectedBadge, style: context.textTheme.labelMedium?.copyWith(color: context.appColors.positive, fontWeight: FontWeight.w700)),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(LucideIcons.circleCheck, size: 14, color: context.appColors.positive),
+      const SizedBox(width: 4),
+      Text(
+        context.l10n.connectedBadge,
+        style: context.textTheme.labelMedium?.copyWith(color: context.appColors.positive, fontWeight: FontWeight.w700),
+      ),
+    ],
+  );
 }
 
 /// A popular app as a big card with a wash of its brand color.
@@ -285,7 +273,10 @@ class _FeaturedApp extends StatelessWidget {
       width: 220,
       child: Material(
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: BorderSide(color: context.appColors.hairline)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: BorderSide(color: context.appColors.hairline),
+        ),
         color: dark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
         child: InkWell(
           key: Key('featured-${app.id}'),
@@ -295,7 +286,10 @@ class _FeaturedApp extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [brand.withValues(alpha: dark ? 0.32 : 0.16), brand.withValues(alpha: 0)],
+                colors: [
+                  brand.withValues(alpha: dark ? 0.32 : 0.16),
+                  brand.withValues(alpha: 0),
+                ],
               ),
             ),
             padding: const EdgeInsets.all(AppSpace.md),
@@ -312,13 +306,21 @@ class _FeaturedApp extends StatelessWidget {
                 const Spacer(),
                 Text(app.name, style: context.textTheme.titleMedium),
                 const SizedBox(height: 2),
-                Text(app.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                Text(
+                  app.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                ),
                 const SizedBox(height: AppSpace.sm),
                 Row(
                   children: [
                     Icon(app.oauthAvailable && app.auth.contains(CatalogAppAuthEnum.oauth) ? LucideIcons.zap : LucideIcons.keyRound, size: 13, color: brand),
                     const SizedBox(width: 4),
-                    Text(_authLabel(context, app), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+                    Text(
+                      _authLabel(context, app),
+                      style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+                    ),
                   ],
                 ),
               ],
@@ -341,7 +343,10 @@ class _AppTile extends StatelessWidget {
     final scheme = context.colorScheme;
     return Material(
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card), side: BorderSide(color: context.appColors.hairline)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        side: BorderSide(color: context.appColors.hairline),
+      ),
       color: context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
       child: InkWell(
         key: Key('app-${app.id}'),
@@ -359,11 +364,19 @@ class _AppTile extends StatelessWidget {
                   children: [
                     Text(app.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall),
                     const SizedBox(height: 2),
-                    Text(app.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                    Text(
+                      app.description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
                     const SizedBox(height: 4),
                     connected
                         ? const _ConnectedBadge()
-                        : Text(_authLabel(context, app), style: context.textTheme.labelSmall?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700)),
+                        : Text(
+                            _authLabel(context, app),
+                            style: context.textTheme.labelSmall?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
+                          ),
                   ],
                 ),
               ),
@@ -398,10 +411,7 @@ class _Connected extends ConsumerWidget {
     }
     return Column(
       children: [
-        for (final i in items) ...[
-          _ConnectionCard(integration: i),
-          const SizedBox(height: AppSpace.sm),
-        ],
+        for (final i in items) ...[_ConnectionCard(integration: i), const SizedBox(height: AppSpace.sm)],
       ],
     );
   }
@@ -419,7 +429,10 @@ class _ConnectionCard extends ConsumerWidget {
     final i = integration;
     final app = catalogAppFor(ref, i);
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
-    final users = [for (final b in bots) if (i.botIds?.contains(b.id) ?? false) b];
+    final users = [
+      for (final b in bots)
+        if (i.botIds?.contains(b.id) ?? false) b,
+    ];
     final (status, statusColor) = switch (i.status) {
       IntegrationStatusEnum.ok => (l10n.statusReady, colors.positive),
       IntegrationStatusEnum.error => (l10n.statusNeedsAttention, colors.negative),
@@ -447,16 +460,16 @@ class _ConnectionCard extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Flexible(child: Text(app?.name ?? i.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall)),
+                        Flexible(
+                          child: Text(app?.name ?? i.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall),
+                        ),
                         const SizedBox(width: AppSpace.xs),
                         StatusLabel(text: status, color: statusColor, pill: true),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      i.status == IntegrationStatusEnum.error && i.error != null
-                          ? i.error!
-                          : [if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length), l10n.usedByBots(users.length)].join(' · '),
+                      i.status == IntegrationStatusEnum.error && i.error != null ? i.error! : [if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length), l10n.usedByBots(users.length)].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.bodySmall?.copyWith(color: i.status == IntegrationStatusEnum.error ? colors.negative : scheme.onSurfaceVariant),
@@ -464,10 +477,7 @@ class _ConnectionCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              if (users.isNotEmpty) ...[
-                const SizedBox(width: AppSpace.sm),
-                _AvatarStack(bots: users),
-              ],
+              if (users.isNotEmpty) ...[const SizedBox(width: AppSpace.sm), _AvatarStack(bots: users)],
               const SizedBox(width: AppSpace.xs),
               Icon(LucideIcons.chevronRight, size: 18, color: scheme.onSurfaceVariant),
             ],
@@ -493,7 +503,10 @@ class _AvatarStack extends StatelessWidget {
       child: Stack(
         children: [
           for (final (i, b) in shown.indexed)
-            Positioned(left: i * 16.0, child: BotAvatar(name: b.name, avatar: b.avatarUrl, size: size, animate: false)),
+            Positioned(
+              left: i * 16.0,
+              child: BotAvatar(name: b.name, avatar: b.avatarUrl, size: size, animate: false),
+            ),
         ],
       ),
     );
@@ -533,6 +546,8 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
   Map<String, Object?> _config() => switch (_kind) {
     IntegrationKind.localMcp => const {},
     IntegrationKind.mcp => {'url': _primary.text.trim()},
+    // An outside A2A agent (D-140): its address or agent card; the secret is its bearer token.
+    IntegrationKind.a2a => {'url': _primary.text.trim()},
     IntegrationKind.openapi => {
       'spec': _primary.text.trim(),
       if (_secondary.text.trim().isNotEmpty) 'base_url': _secondary.text.trim(),
@@ -548,13 +563,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
     final org = ref.read(currentOrgProvider)!;
     final backend = ref.read(backendProvider);
     final created = await runGuarded(context, () async {
-      final i = await backend.createIntegration(
-        org.id,
-        kind: _kind.value,
-        name: name,
-        config: _config(),
-        secret: _secret.text.isEmpty || _kind == IntegrationKind.openapi ? null : _secret.text,
-      );
+      final i = await backend.createIntegration(org.id, kind: _kind.value, name: name, config: _config(), secret: _secret.text.isEmpty || _kind == IntegrationKind.openapi ? null : _secret.text);
       // Prove the connection and cache tools right away; failures show on the list.
       try {
         await backend.testIntegration(i.id);
@@ -571,6 +580,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
     final l10n = context.l10n;
     final (primaryLabel, secondaryLabel, secretLabel) = switch (_kind) {
       IntegrationKind.mcp || IntegrationKind.localMcp => (l10n.serverUrl, null, l10n.authHeaderOptional),
+      IntegrationKind.a2a => (l10n.a2aAgentUrl, null, l10n.a2aAgentToken),
       IntegrationKind.openapi => (l10n.specUrl, l10n.baseUrlOptional, l10n.authSecretName),
       IntegrationKind.composio => (l10n.composioToolkits, null, l10n.apiKey),
       IntegrationKind.pipedream => (l10n.pipedreamProject, l10n.pipedreamClientId, l10n.pipedreamClientSecret),
@@ -578,7 +588,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
     final name = integrationSlug(_name.text);
     final nameOk = RegExp(r'^[a-z][a-z0-9_]{0,39}$').hasMatch(name);
     final primary = _primary.text.trim();
-    final needsUrl = _kind == IntegrationKind.mcp || _kind == IntegrationKind.openapi;
+    final needsUrl = _kind == IntegrationKind.mcp || _kind == IntegrationKind.openapi || _kind == IntegrationKind.a2a;
     final primaryOk = primary.isNotEmpty && (!needsUrl || RegExp(r'^https?://').hasMatch(primary));
     // Say what is missing instead of leaving a disabled button unexplained.
     final missing = !nameOk ? l10n.integrationNeedsName : (!primaryOk ? l10n.integrationNeedsField(primaryLabel) : null);
@@ -631,10 +641,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
           TextField(
             controller: _secondary,
             autocorrect: false,
-            decoration: InputDecoration(
-              labelText: secondaryLabel,
-              prefixIcon: Icon(_kind == IntegrationKind.openapi ? LucideIcons.server : LucideIcons.idCard, size: 20),
-            ),
+            decoration: InputDecoration(labelText: secondaryLabel, prefixIcon: Icon(_kind == IntegrationKind.openapi ? LucideIcons.server : LucideIcons.idCard, size: 20)),
           ),
         if (_kind == IntegrationKind.pipedream)
           TextField(
@@ -701,11 +708,7 @@ class BotIntegrationsScreen extends ConsumerWidget {
                 icon: LucideIcons.puzzle,
                 title: l10n.noIntegrationsTitle,
                 message: l10n.noIntegrationsForBot,
-                action: FilledButton.tonalIcon(
-                  onPressed: () => context.push('/settings/integrations'),
-                  icon: const Icon(LucideIcons.settings, size: 18),
-                  label: Text(l10n.openSettings),
-                ),
+                action: FilledButton.tonalIcon(onPressed: () => context.push('/settings/integrations'), icon: const Icon(LucideIcons.settings, size: 18), label: Text(l10n.openSettings)),
               )
             : PageColumn(
                 children: [

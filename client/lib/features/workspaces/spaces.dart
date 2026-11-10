@@ -561,6 +561,7 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
           ],
         ),
         if (admin) ...[const SizedBox(height: AppSpace.lg), BotToBotSwitch(orgId: org.id)],
+        if (admin) ...[const SizedBox(height: AppSpace.lg), A2aSwitch(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), MemoryBackendSection(orgId: org.id)],
         if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), EncryptionSection(orgId: org.id)],
         if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
@@ -802,6 +803,33 @@ class _MemoryBackendSheetState extends ConsumerState<_MemoryBackendSheet> {
             },
             child: Text(l10n.memoryUseBuiltIn),
           ),
+      ],
+    );
+  }
+}
+
+final _a2aProvider = FutureProvider.autoDispose.family<bool, String>((ref, orgId) => ref.watch(backendProvider).a2aEnabled(orgId));
+
+/// Agent-to-agent (D-140): whether bots may be published as A2A agents.
+class A2aSwitch extends ConsumerWidget {
+  const A2aSwitch({super.key, required this.orgId});
+  final String orgId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return GroupedCard(
+      children: [
+        SwitchListTile(
+          key: const Key('a2aSwitch'),
+          title: Text(l10n.a2a),
+          subtitle: Text(l10n.a2aHelp),
+          value: ref.watch(_a2aProvider(orgId)).value ?? false,
+          onChanged: (v) async {
+            await runGuarded(context, () => ref.read(backendProvider).setA2aEnabled(orgId, v));
+            ref.invalidate(_a2aProvider(orgId));
+          },
+        ),
       ],
     );
   }

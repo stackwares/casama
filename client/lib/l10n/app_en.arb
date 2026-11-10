@@ -2826,5 +2826,14 @@
   "memoryBaseUrlHelp": "Only for a self-hosted Honcho or Supermemory",
   "memoryCopyExisting": "Copy current memories over",
   "memoryUseBuiltIn": "Use built-in memory again",
-  "providerHintData": "paid data (places, emails, SEO)"
+  "providerHintData": "paid data (places, emails, SEO)",
+  "kindA2a": "AI agent (A2A)",
+  "a2aAgentUrl": "Agent address or agent card URL",
+  "a2aAgentToken": "Access token (optional)",
+  "a2a": "Agent-to-agent (A2A)",
+  "a2aHelp": "Let outside AI agents give tasks to bots you publish, using workspace API keys. Tasks run with the bot's usual approvals and limits.",
+  "a2aPublish": "Publish as an A2A agent",
+  "a2aPublishHelp": "Outside agents with a workspace API key can give this bot tasks.",
+  "a2aWorkspaceOff": "Turn on agent-to-agent in workspace settings first.",
+  "a2aCardUrl": "Agent card"
 }
