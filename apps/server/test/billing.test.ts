@@ -236,13 +236,13 @@ describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
 
   it("an App Store purchase unlocks the workspace on the web; refunds and expiry remove it", async () => {
     const orgId = await newOrg("iPhone buyer");
-    const sub = f.apple.add({ productId: "dev.kasama.pro.monthly", appAccountToken: orgId });
+    const sub = f.apple.add({ productId: "com.kasama.pro.monthly", appAccountToken: orgId });
     const res = await h.request(`/v1/orgs/${orgId}/billing/purchases`, {
       method: "POST",
       token: owner.token,
       json: {
         source: "app_store",
-        product_id: "dev.kasama.pro.monthly",
+        product_id: "com.kasama.pro.monthly",
         transaction_id: sub.transactionId,
       },
     });
@@ -281,13 +281,13 @@ describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
 
     // Expiry.
     const org2 = await newOrg("Expires");
-    const s2 = f.apple.add({ productId: "dev.kasama.pro.yearly", appAccountToken: org2 });
+    const s2 = f.apple.add({ productId: "com.kasama.pro.yearly", appAccountToken: org2 });
     await h.request(`/v1/orgs/${org2}/billing/purchases`, {
       method: "POST",
       token: owner.token,
       json: {
         source: "app_store",
-        product_id: "dev.kasama.pro.yearly",
+        product_id: "com.kasama.pro.yearly",
         transaction_id: s2.transactionId,
       },
     });
@@ -304,13 +304,13 @@ describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
   it("a store purchase cannot be claimed by another workspace (Restore Purchases is safe)", async () => {
     const mine = await newOrg("Mine");
     const theirs = await newOrg("Theirs");
-    const sub = f.apple.add({ productId: "dev.kasama.pro.monthly", appAccountToken: mine });
+    const sub = f.apple.add({ productId: "com.kasama.pro.monthly", appAccountToken: mine });
     const claim = await h.request(`/v1/orgs/${theirs}/billing/purchases`, {
       method: "POST",
       token: owner.token,
       json: {
         source: "app_store",
-        product_id: "dev.kasama.pro.monthly",
+        product_id: "com.kasama.pro.monthly",
         transaction_id: sub.transactionId,
       },
     });
@@ -322,7 +322,7 @@ describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
         token: owner.token,
         json: {
           source: "app_store",
-          product_id: "dev.kasama.pro.monthly",
+          product_id: "com.kasama.pro.monthly",
           transaction_id: sub.transactionId,
         },
       });

@@ -19,6 +19,7 @@ import 'package:kasama_api/src/api/integrations_api.dart';
 import 'package:kasama_api/src/api/local_computer_api.dart';
 import 'package:kasama_api/src/api/memory_api.dart';
 import 'package:kasama_api/src/api/privacy_api.dart';
+import 'package:kasama_api/src/api/projects_api.dart';
 import 'package:kasama_api/src/api/routines_api.dart';
 import 'package:kasama_api/src/api/runs_api.dart';
 import 'package:kasama_api/src/api/search_api.dart';
@@ -152,6 +153,12 @@ class KasamaApi {
   /// by doing that all interceptors will not be executed
   PrivacyApi getPrivacyApi() {
     return PrivacyApi(dio);
+  }
+
+  /// Get ProjectsApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ProjectsApi getProjectsApi() {
+    return ProjectsApi(dio);
   }
 
   /// Get RoutinesApi instance, base route and serializer can be overridden by a given but be careful,

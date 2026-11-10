@@ -3625,4 +3625,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineSaved => 'Offline. Showing saved messages.';
+
+  @override
+  String get projects => 'Projects';
+
+  @override
+  String get newProject => 'New project';
+
+  @override
+  String get noProjects => 'No projects yet';
+
+  @override
+  String get projectsHelp =>
+      'Give a bot a goal. It drafts a plan for you to approve, then works in sessions until it\'s done, within the budget and deadline you set.';
+
+  @override
+  String get newProjectHelp =>
+      'The lead bot drafts milestones and tickets. Nothing starts until you approve the plan.';
+
+  @override
+  String get startPlanning => 'Start planning';
+
+  @override
+  String get projectTitle => 'Title';
+
+  @override
+  String get projectGoal => 'Goal';
+
+  @override
+  String get projectDoneWhen => 'Done when';
+
+  @override
+  String get projectLead => 'Lead bot';
+
+  @override
+  String get projectBudget => 'Budget';
+
+  @override
+  String get projectThread => 'Project chat';
+
+  @override
+  String get approvePlan => 'Approve the plan';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get resume => 'Resume';
+
+  @override
+  String get milestones => 'Milestones';
+
+  @override
+  String get needsSignoff => 'needs your sign-off';
+
+  @override
+  String get signOff => 'Sign off';
+
+  @override
+  String get projectPlan => 'Plan';
+
+  @override
+  String get tickets => 'Tickets';
+
+  @override
+  String get projectTimeline => 'Timeline';
+
+  @override
+  String get projectPlanning => 'Planning';
+
+  @override
+  String get projectActive => 'Active';
+
+  @override
+  String get projectPaused => 'Paused';
+
+  @override
+  String get projectBlocked => 'Blocked';
+
+  @override
+  String get projectDone => 'Done';
+
+  @override
+  String get projectCancelled => 'Cancelled';
 }

@@ -104,7 +104,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     final url = switch (source) {
       'dodo' => await ref.read(backendProvider).billingPortalUrl(_orgId),
       'app_store' => 'https://apps.apple.com/account/subscriptions',
-      _ => 'https://play.google.com/store/account/subscriptions?package=dev.kasama.app',
+      _ => 'https://play.google.com/store/account/subscriptions?package=com.kasama.app',
     };
     await ref.read(openUrlProvider)(url);
   });

@@ -35,6 +35,12 @@ abstract class _$TaskCWProxy {
 
   Task reviewRequired(bool reviewRequired);
 
+  Task projectId(String? projectId);
+
+  Task milestoneId(String? milestoneId);
+
+  Task parentTaskId(String? parentTaskId);
+
   Task conversationId(String? conversationId);
 
   Task comments(int comments);
@@ -66,6 +72,9 @@ abstract class _$TaskCWProxy {
     List<String> labels,
     num position,
     bool reviewRequired,
+    String? projectId,
+    String? milestoneId,
+    String? parentTaskId,
     String? conversationId,
     int comments,
     DateTime updatedAt,
@@ -128,6 +137,15 @@ class _$TaskCWProxyImpl implements _$TaskCWProxy {
       call(reviewRequired: reviewRequired);
 
   @override
+  Task projectId(String? projectId) => call(projectId: projectId);
+
+  @override
+  Task milestoneId(String? milestoneId) => call(milestoneId: milestoneId);
+
+  @override
+  Task parentTaskId(String? parentTaskId) => call(parentTaskId: parentTaskId);
+
+  @override
   Task conversationId(String? conversationId) =>
       call(conversationId: conversationId);
 
@@ -164,6 +182,9 @@ class _$TaskCWProxyImpl implements _$TaskCWProxy {
     Object? labels = const $CopyWithPlaceholder(),
     Object? position = const $CopyWithPlaceholder(),
     Object? reviewRequired = const $CopyWithPlaceholder(),
+    Object? projectId = const $CopyWithPlaceholder(),
+    Object? milestoneId = const $CopyWithPlaceholder(),
+    Object? parentTaskId = const $CopyWithPlaceholder(),
     Object? conversationId = const $CopyWithPlaceholder(),
     Object? comments = const $CopyWithPlaceholder(),
     Object? updatedAt = const $CopyWithPlaceholder(),
@@ -228,6 +249,18 @@ class _$TaskCWProxyImpl implements _$TaskCWProxy {
           ? _value.reviewRequired
           // ignore: cast_nullable_to_non_nullable
           : reviewRequired as bool,
+      projectId: projectId == const $CopyWithPlaceholder()
+          ? _value.projectId
+          // ignore: cast_nullable_to_non_nullable
+          : projectId as String?,
+      milestoneId: milestoneId == const $CopyWithPlaceholder()
+          ? _value.milestoneId
+          // ignore: cast_nullable_to_non_nullable
+          : milestoneId as String?,
+      parentTaskId: parentTaskId == const $CopyWithPlaceholder()
+          ? _value.parentTaskId
+          // ignore: cast_nullable_to_non_nullable
+          : parentTaskId as String?,
       conversationId: conversationId == const $CopyWithPlaceholder()
           ? _value.conversationId
           // ignore: cast_nullable_to_non_nullable
@@ -280,6 +313,9 @@ Task _$TaskFromJson(Map<String, dynamic> json) => $checkedCreate(
         'labels',
         'position',
         'review_required',
+        'project_id',
+        'milestone_id',
+        'parent_task_id',
         'conversation_id',
         'comments',
         'updated_at',
@@ -316,6 +352,9 @@ Task _$TaskFromJson(Map<String, dynamic> json) => $checkedCreate(
       ),
       position: $checkedConvert('position', (v) => v as num),
       reviewRequired: $checkedConvert('review_required', (v) => v as bool),
+      projectId: $checkedConvert('project_id', (v) => v as String?),
+      milestoneId: $checkedConvert('milestone_id', (v) => v as String?),
+      parentTaskId: $checkedConvert('parent_task_id', (v) => v as String?),
       conversationId: $checkedConvert('conversation_id', (v) => v as String?),
       comments: $checkedConvert('comments', (v) => (v as num).toInt()),
       updatedAt: $checkedConvert(
@@ -338,6 +377,9 @@ Task _$TaskFromJson(Map<String, dynamic> json) => $checkedCreate(
     'resultMd': 'result_md',
     'dueAt': 'due_at',
     'reviewRequired': 'review_required',
+    'projectId': 'project_id',
+    'milestoneId': 'milestone_id',
+    'parentTaskId': 'parent_task_id',
     'conversationId': 'conversation_id',
     'updatedAt': 'updated_at',
     'createdAt': 'created_at',
@@ -359,6 +401,9 @@ Map<String, dynamic> _$TaskToJson(Task instance) => <String, dynamic>{
   'labels': instance.labels,
   'position': instance.position,
   'review_required': instance.reviewRequired,
+  'project_id': instance.projectId,
+  'milestone_id': instance.milestoneId,
+  'parent_task_id': instance.parentTaskId,
   'conversation_id': instance.conversationId,
   'comments': instance.comments,
   'updated_at': instance.updatedAt.toIso8601String(),

@@ -205,6 +205,46 @@ class FakeBackend implements Backend {
     ),
   ];
   BotRevision? restored;
+  ProjectDetail projectDetail = ProjectDetail(
+    id: 'p1',
+    orgId: orgId,
+    slug: 'launch',
+    title: 'Launch site',
+    goalMd: 'Put the launch page live.',
+    doneCriteriaMd: 'Public page',
+    status: ProjectStatus.planning,
+    planStatus: ProjectDetailPlanStatusEnum.proposed,
+    statusReason: null,
+    leadBotId: botId,
+    ownerUserId: null,
+    conversationId: null,
+    budgetUsd: 50,
+    spentUsd: 12.5,
+    deadlineAt: null,
+    planMd: 'Build, then ship.',
+    sessions: 0,
+    createdAt: DateTime(2026),
+    milestones: [
+      ProjectMilestone(id: 'm1', name: 'Build', position: 1, requiresSignoff: true, status: ProjectMilestoneStatusEnum.awaitingSignoff, ticketsDone: 1, ticketsTotal: 1),
+    ],
+    runs: const [],
+  );
+  final projectActions = <String>[];
+  @override
+  Future<List<Project>> projects(String orgId) async => [Project.fromJson(projectDetail.toJson())];
+  @override
+  Future<Project> createProject(String orgId, {required String title, required String goal, String doneCriteria = '', required String leadBotId, double? budgetUsd}) async {
+    projectActions.add('create:$title:$budgetUsd');
+    return Project.fromJson(projectDetail.toJson());
+  }
+  @override
+  Future<ProjectDetail> project(String projectId) async => projectDetail;
+  @override
+  Future<void> updateProject(String projectId, {String? status, double? budgetUsd}) async => projectActions.add('status:$status');
+  @override
+  Future<void> approveProjectPlan(String projectId) async => projectActions.add('approve');
+  @override
+  Future<void> signOffMilestone(String projectId, String milestoneId) async => projectActions.add('signoff:$milestoneId');
   final shares = <bool>[];
   ({String credentialId, String model, bool memories, bool routines})? imported;
   BotTemplateFile template() => BotTemplateFile(
@@ -727,6 +767,9 @@ class FakeBackend implements Backend {
       position: 1,
       reviewRequired: false,
       conversationId: null,
+      projectId: null,
+      milestoneId: null,
+      parentTaskId: null,
       comments: 1,
       updatedAt: DateTime(2026),
       createdAt: DateTime(2026),
@@ -738,7 +781,7 @@ class FakeBackend implements Backend {
     ],
   };
   @override
-  Future<List<Task>> tasks(String orgId) async => List.of(taskList);
+  Future<List<Task>> tasks(String orgId, {String? projectId}) async => List.of(taskList);
   @override
   Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired}) async {
     final t = taskList.first.rebuild(id: 't${taskList.length + 1}', title: title, detailsMd: details ?? '', assigneeBotId: assigneeBotId,
@@ -1255,6 +1298,9 @@ extension on Task {
         position: position ?? this.position,
         reviewRequired: reviewRequired ?? this.reviewRequired,
         conversationId: conversationId,
+        projectId: projectId,
+        milestoneId: milestoneId,
+        parentTaskId: parentTaskId,
         comments: comments ?? this.comments,
         updatedAt: updatedAt,
         createdAt: createdAt,

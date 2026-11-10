@@ -9,7 +9,7 @@ store's required sizes; the demo clip is docs/media/demo-app-flow.mp4.
 - Support URL: https://github.com/stackwares/kasama/issues
 - Category: Productivity (secondary: Developer Tools)
 - Age rating: 4+ / Everyone (no user-generated content shared publicly)
-- In-app purchases (Kasama Cloud only): Pro monthly `dev.kasama.pro.monthly`, Pro yearly
-  `dev.kasama.pro.yearly`; Play subscription `kasama_pro` with base plans `monthly`, `yearly`.
+- In-app purchases (Kasama Cloud only): Pro monthly `com.kasama.pro.monthly`, Pro yearly
+  `com.kasama.pro.yearly`; Play subscription `kasama_pro` with base plans `monthly`, `yearly`.
 - Review notes: the app works with self-hosted servers (sign-in → Use a different server). Provide a
   demo account on Kasama Cloud for review.

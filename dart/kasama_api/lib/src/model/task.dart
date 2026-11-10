@@ -50,6 +50,12 @@ class Task {
 
     required  this.reviewRequired,
 
+    required  this.projectId,
+
+    required  this.milestoneId,
+
+    required  this.parentTaskId,
+
     required  this.conversationId,
 
     required  this.comments,
@@ -227,6 +233,43 @@ class Task {
 
 
 
+      /// Its project (D-113)
+  @JsonKey(
+    
+    name: r'project_id',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? projectId;
+
+
+
+  @JsonKey(
+    
+    name: r'milestone_id',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? milestoneId;
+
+
+
+  @JsonKey(
+    
+    name: r'parent_task_id',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? parentTaskId;
+
+
+
   @JsonKey(
     
     name: r'conversation_id',
@@ -294,6 +337,9 @@ class Task {
       other.labels == labels &&
       other.position == position &&
       other.reviewRequired == reviewRequired &&
+      other.projectId == projectId &&
+      other.milestoneId == milestoneId &&
+      other.parentTaskId == parentTaskId &&
       other.conversationId == conversationId &&
       other.comments == comments &&
       other.updatedAt == updatedAt &&
@@ -315,6 +361,9 @@ class Task {
         labels.hashCode +
         position.hashCode +
         reviewRequired.hashCode +
+        (projectId == null ? 0 : projectId.hashCode) +
+        (milestoneId == null ? 0 : milestoneId.hashCode) +
+        (parentTaskId == null ? 0 : parentTaskId.hashCode) +
         (conversationId == null ? 0 : conversationId.hashCode) +
         comments.hashCode +
         updatedAt.hashCode +

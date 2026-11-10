@@ -71,6 +71,7 @@ import 'package:kasama_api/src/model/create_invite_link_request.dart';
 import 'package:kasama_api/src/model/create_invite_request.dart';
 import 'package:kasama_api/src/model/create_local_device_request.dart';
 import 'package:kasama_api/src/model/create_organization_request.dart';
+import 'package:kasama_api/src/model/create_project_request.dart';
 import 'package:kasama_api/src/model/create_routine_request.dart';
 import 'package:kasama_api/src/model/create_secret_request.dart';
 import 'package:kasama_api/src/model/create_task_comment_request.dart';
@@ -147,6 +148,11 @@ import 'package:kasama_api/src/model/plan_catalog.dart';
 import 'package:kasama_api/src/model/portal_request.dart';
 import 'package:kasama_api/src/model/problem.dart';
 import 'package:kasama_api/src/model/problem_errors_inner.dart';
+import 'package:kasama_api/src/model/project.dart';
+import 'package:kasama_api/src/model/project_detail.dart';
+import 'package:kasama_api/src/model/project_list.dart';
+import 'package:kasama_api/src/model/project_milestone.dart';
+import 'package:kasama_api/src/model/project_run.dart';
 import 'package:kasama_api/src/model/provider_account.dart';
 import 'package:kasama_api/src/model/provider_account_list.dart';
 import 'package:kasama_api/src/model/provider_app.dart';
@@ -237,6 +243,7 @@ import 'package:kasama_api/src/model/update_local_device_request.dart';
 import 'package:kasama_api/src/model/update_notice.dart';
 import 'package:kasama_api/src/model/update_org_settings_request.dart';
 import 'package:kasama_api/src/model/update_organization_request.dart';
+import 'package:kasama_api/src/model/update_project_request.dart';
 import 'package:kasama_api/src/model/update_routine_request.dart';
 import 'package:kasama_api/src/model/update_task_request.dart';
 import 'package:kasama_api/src/model/upload_result.dart';
@@ -432,6 +439,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateLocalDeviceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateOrganizationRequest':
           return CreateOrganizationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateProjectRequest':
+          return CreateProjectRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateRoutineRequest':
           return CreateRoutineRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateSecretRequest':
@@ -596,6 +605,19 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Problem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ProblemErrorsInner':
           return ProblemErrorsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Project':
+          return Project.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProjectDetail':
+          return ProjectDetail.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProjectList':
+          return ProjectList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProjectMilestone':
+          return ProjectMilestone.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProjectRun':
+          return ProjectRun.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProjectStatus':
+          
+          
         case 'ProviderAccount':
           return ProviderAccount.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ProviderAccountList':
@@ -806,6 +828,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateOrgSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateOrganizationRequest':
           return UpdateOrganizationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateProjectRequest':
+          return UpdateProjectRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateRoutineRequest':
           return UpdateRoutineRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateTaskRequest':

@@ -344,7 +344,14 @@ abstract class Backend {
   Future<void> deleteSecret(String secretId);
 
   // Task board
-  Future<List<Task>> tasks(String orgId);
+  Future<List<Task>> tasks(String orgId, {String? projectId});
+  // Projects (D-113)
+  Future<List<Project>> projects(String orgId);
+  Future<Project> createProject(String orgId, {required String title, required String goal, String doneCriteria, required String leadBotId, double? budgetUsd});
+  Future<ProjectDetail> project(String projectId);
+  Future<void> updateProject(String projectId, {String? status, double? budgetUsd});
+  Future<void> approveProjectPlan(String projectId);
+  Future<void> signOffMilestone(String projectId, String milestoneId);
   // Ticket board (D-098)
   Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired});
   /// Changes a ticket; assigning a new bot starts its work.

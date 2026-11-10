@@ -6321,6 +6321,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Offline. Showing saved messages.'**
   String get offlineSaved;
+
+  /// No description provided for @projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get projects;
+
+  /// No description provided for @newProject.
+  ///
+  /// In en, this message translates to:
+  /// **'New project'**
+  String get newProject;
+
+  /// No description provided for @noProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'No projects yet'**
+  String get noProjects;
+
+  /// No description provided for @projectsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Give a bot a goal. It drafts a plan for you to approve, then works in sessions until it\'s done, within the budget and deadline you set.'**
+  String get projectsHelp;
+
+  /// No description provided for @newProjectHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The lead bot drafts milestones and tickets. Nothing starts until you approve the plan.'**
+  String get newProjectHelp;
+
+  /// No description provided for @startPlanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Start planning'**
+  String get startPlanning;
+
+  /// No description provided for @projectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get projectTitle;
+
+  /// No description provided for @projectGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get projectGoal;
+
+  /// No description provided for @projectDoneWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Done when'**
+  String get projectDoneWhen;
+
+  /// No description provided for @projectLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Lead bot'**
+  String get projectLead;
+
+  /// No description provided for @projectBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget'**
+  String get projectBudget;
+
+  /// No description provided for @projectThread.
+  ///
+  /// In en, this message translates to:
+  /// **'Project chat'**
+  String get projectThread;
+
+  /// No description provided for @approvePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve the plan'**
+  String get approvePlan;
+
+  /// No description provided for @pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause;
+
+  /// No description provided for @resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resume;
+
+  /// No description provided for @milestones.
+  ///
+  /// In en, this message translates to:
+  /// **'Milestones'**
+  String get milestones;
+
+  /// No description provided for @needsSignoff.
+  ///
+  /// In en, this message translates to:
+  /// **'needs your sign-off'**
+  String get needsSignoff;
+
+  /// No description provided for @signOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign off'**
+  String get signOff;
+
+  /// No description provided for @projectPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get projectPlan;
+
+  /// No description provided for @tickets.
+  ///
+  /// In en, this message translates to:
+  /// **'Tickets'**
+  String get tickets;
+
+  /// No description provided for @projectTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get projectTimeline;
+
+  /// No description provided for @projectPlanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Planning'**
+  String get projectPlanning;
+
+  /// No description provided for @projectActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get projectActive;
+
+  /// No description provided for @projectPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get projectPaused;
+
+  /// No description provided for @projectBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get projectBlocked;
+
+  /// No description provided for @projectDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get projectDone;
+
+  /// No description provided for @projectCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get projectCancelled;
 }
 
 class _AppLocalizationsDelegate

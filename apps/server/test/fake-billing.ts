@@ -248,7 +248,7 @@ export async function startFakeBilling(
   const modelCalls: Array<Record<string, unknown>> = [];
 
   let url = "";
-  const bundleId = "dev.kasama.app";
+  const bundleId = "com.kasama.app";
   const issuerId = randomUUID();
   const keyId = "TESTKEY123";
 
@@ -413,7 +413,7 @@ export async function startFakeBilling(
           return send(401, { error: { code: 401 } });
         const m = path.match(/applications\/([^/]+)\/purchases\/subscriptionsv2\/tokens\/([^/]+)$/);
         if (m) {
-          if (m[1] !== "dev.kasama.app") return send(404, {});
+          if (m[1] !== "com.kasama.app") return send(404, {});
           const s = playSubs.get(decodeURIComponent(m[2] as string));
           return s ? send(200, s) : send(404, { error: { code: 404 } });
         }
@@ -570,7 +570,7 @@ export async function startFakeBilling(
       },
     },
     google: {
-      packageName: "dev.kasama.app",
+      packageName: "com.kasama.app",
       serviceAccount: {
         client_email: "play-billing@kasama-test.iam.gserviceaccount.com",
         private_key: await exportPKCS8(googleKeys.privateKey),
@@ -602,7 +602,7 @@ export async function startFakeBilling(
             data: Buffer.from(
               JSON.stringify({
                 version: "1.0",
-                packageName: "dev.kasama.app",
+                packageName: "com.kasama.app",
                 eventTimeMillis: String(Date.now()),
                 ...n,
               }),

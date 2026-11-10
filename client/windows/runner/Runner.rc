@@ -93,7 +93,7 @@ BEGIN
             VALUE "FileDescription", "kasama_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "kasama_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 dev.kasama. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Kasama. All rights reserved." "\0"
             VALUE "OriginalFilename", "kasama_app.exe" "\0"
             VALUE "ProductName", "kasama_app" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

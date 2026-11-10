@@ -733,6 +733,9 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     conversation_id: t.conversationId ?? null,
     comments,
     updated_at: iso(t.updatedAt),
+    project_id: t.projectId ?? null,
+    milestone_id: t.milestoneId ?? null,
+    parent_task_id: t.parentTaskId ?? null,
     created_at: iso(t.createdAt),
   });
   const commentCounts = async (ids: string[]) => {
@@ -764,13 +767,17 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
 
   app.openapi(routes.listTasks, async (c) => {
     const claims = requireClaims(c.get("claims"));
-    const { org_id } = c.req.valid("query");
+    const { org_id, project_id } = c.req.valid("query");
     if (!(await isMember(db, claims, org_id))) return c.json({ items: [] }, 200);
     const rows = await withUserSession(db, claims, (tx) =>
       tx
         .select()
         .from(tasks)
-        .where(eq(tasks.orgId, org_id))
+        .where(
+          project_id
+            ? and(eq(tasks.orgId, org_id), eq(tasks.projectId, project_id))
+            : eq(tasks.orgId, org_id),
+        )
         .orderBy(tasks.position, desc(tasks.updatedAt))
         .limit(500),
     );

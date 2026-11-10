@@ -10,7 +10,7 @@ import 'providers.dart';
 import 'router.dart';
 
 /// App Group shared by the app and its iOS widget and share extensions.
-const appGroupId = 'group.dev.kasama.app';
+const appGroupId = 'group.com.kasama.app';
 
 bool get _ios => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 bool get _android => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;

@@ -26,6 +26,7 @@ import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
 import { registerPrivacyRoutes } from "./routes/privacy.ts";
+import { registerProjectRoutes } from "./routes/projects.ts";
 import { registerSearchRoutes } from "./routes/search.ts";
 import { registerSkillRoutes } from "./routes/skills.ts";
 import { registerSystemRoutes } from "./routes/system.ts";
@@ -205,6 +206,7 @@ export function createApp(deps: AppDeps) {
   registerSearchRoutes(app, deps);
   registerSkillRoutes(app, deps);
   registerBotTemplateRoutes(app, deps);
+  registerProjectRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {
     db: deps.db,

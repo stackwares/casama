@@ -19,6 +19,7 @@ type TicketRow = {
   review_required: boolean;
   created_by_user_id: string | null;
   assignee_user_id: string | null;
+  project_id?: string | null;
 };
 
 const FINISHED = new Set(["done"]);
@@ -49,7 +50,7 @@ export async function startTicketWork(
 ): Promise<string | null> {
   const [t] = await db.execute<TicketRow>(sql`
     select id, org_id, title, details_md, status, priority, due_at, assignee_bot_id, conversation_id,
-           review_required, created_by_user_id, assignee_user_id
+           review_required, created_by_user_id, assignee_user_id, project_id
     from public.tasks where id = ${opts.ticketId}::uuid`);
   if (!t?.assignee_bot_id || FINISHED.has(t.status)) return null;
   const created = await db.transaction(async (tx) => {
@@ -71,8 +72,8 @@ export async function startTicketWork(
       );
     }
     const [run] = await tx.execute<{ id: string }>(sql`
-      insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
-      values (${t.org_id}::uuid, ${t.assignee_bot_id}::uuid, ${conversationId}::uuid, ${opts.actorUserId}::uuid, 'task')
+      insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger, project_id)
+      values (${t.org_id}::uuid, ${t.assignee_bot_id}::uuid, ${conversationId}::uuid, ${opts.actorUserId}::uuid, 'task', ${t.project_id ?? null}::uuid)
       returning id`);
     const text = opts.comment
       ? `New comment on the ticket "${t.title}" (id ${t.id}):\n\n${opts.comment}`

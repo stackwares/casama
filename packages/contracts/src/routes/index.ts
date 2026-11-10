@@ -8,6 +8,7 @@ import * as bots from "./bots.ts";
 import * as computers from "./computers.ts";
 import * as local from "./local.ts";
 import * as privacy from "./privacy.ts";
+import * as projects from "./projects.ts";
 import * as search from "./search.ts";
 import * as skills from "./skills.ts";
 import * as system from "./system.ts";
@@ -30,6 +31,7 @@ export const routes = {
   ...search,
   ...skills,
   ...botTemplate,
+  ...projects,
 };
 export {
   admin,
@@ -41,6 +43,7 @@ export {
   computers,
   local,
   privacy,
+  projects,
   search,
   skills,
   system,

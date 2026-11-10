@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../features/bots/bot_history_screen.dart';
 import '../features/bots/bot_template.dart';
 import '../features/search/search_view.dart';
+import '../features/projects/projects_screen.dart';
 import '../features/routines/run_routine_screen.dart';
 import '../features/auth/sign_in_screen.dart';
 import '../features/bots/bots_screen.dart';
@@ -160,6 +161,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: _page((_, s) => InboxScreen(initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? 0)),
           ),
           GoRoute(path: '/tasks', pageBuilder: _page((_, _) => const BoardScreen())),
+          GoRoute(
+            path: '/projects',
+            pageBuilder: _page((_, _) => const ProjectsScreen()),
+            routes: [GoRoute(path: ':id', pageBuilder: _page((_, s) => ProjectScreen(projectId: s.pathParameters['id']!)))],
+          ),
           GoRoute(path: '/search', pageBuilder: _page((_, _) => const SearchScreen())),
           GoRoute(path: '/run-routine/:ref', pageBuilder: _page((_, s) => RunRoutineScreen(reference: s.pathParameters['ref']!))),
           GoRoute(

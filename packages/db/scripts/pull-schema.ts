@@ -57,12 +57,16 @@ try {
           /^(export const authSchema)/m,
           'const tsvector = customType<{ data: string }>({ dataType: () => "tsvector" });\n\n$1',
         );
-      // conversations.head_message_id → messages and messages → conversations make a type cycle;
-      // the app never needs that foreign key's metadata, so it's left out (the database keeps it).
-      src = src.replace(
-        /\tforeignKey\(\{\n\t\t\tcolumns: \[table\.headMessageId\],\n\t\t\tforeignColumns: \[messages\.id\],\n\t\t\tname: "conversations_head_message_id_fkey"\n\t\t\}\)[^\n]*\n/,
-        "",
-      );
+      // Foreign keys that make a type cycle between two tables (conversations ↔ messages,
+      // projects ↔ conversations). The app never needs their metadata; the database keeps them.
+      for (const name of ["conversations_head_message_id_fkey", "projects_conversation_id_fkey"]) {
+        src = src.replace(
+          new RegExp(
+            `\\tforeignKey\\(\\{\\n(?:\\t\\t\\t[^\\n]*\\n){2}\\t\\t\\tname: "${name}"\\n\\t\\t\\}\\)[^\\n]*\\n`,
+          ),
+          "",
+        );
+      }
       // drizzle-kit renders empty-string defaults as .default(')
       src = src.replaceAll(".default(')", '.default("")');
       // citext columns are compared case-insensitively by Postgres; text is the right TS type.

@@ -91,6 +91,7 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
     return SubPage(
       title: l10n.board,
       actions: [
+        IconButton(key: const Key('openProjects'), tooltip: l10n.projects, icon: const Icon(LucideIcons.target), onPressed: () => context.push('/projects')),
         IconButton(key: const Key('newTicket'), tooltip: l10n.newTicket, icon: const Icon(LucideIcons.plus), onPressed: _newTicket),
       ],
       maxWidth: double.infinity,

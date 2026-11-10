@@ -18,6 +18,7 @@ export * from "./media.ts";
 export * from "./memory.ts";
 export * from "./models.ts";
 export * from "./notifications.ts";
+export * from "./projects.ts";
 export * from "./redact.ts";
 export * from "./run.ts";
 export * from "./safe-fetch.ts";

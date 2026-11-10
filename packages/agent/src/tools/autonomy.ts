@@ -550,9 +550,10 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       conversationId = conv?.id ?? null;
     }
     const [child] = await db.execute<{ id: string }>(sql`
-      insert into public.runs (org_id, bot_id, conversation_id, parent_run_id, created_by, trigger, budget)
+      insert into public.runs (org_id, bot_id, conversation_id, parent_run_id, created_by, trigger, budget, project_id)
       values (${ctx.orgId}::uuid, ${opts.botId}::uuid, ${conversationId}::uuid, ${ctx.runId}::uuid, ${parent.created_by}::uuid, ${opts.trigger},
-              ${JSON.stringify({ per_run_usd: budget, task: opts.task, tools: opts.tools, timeout_s: opts.timeoutS ?? 600 })}::jsonb)
+              ${JSON.stringify({ per_run_usd: budget, task: opts.task, tools: opts.tools, timeout_s: opts.timeoutS ?? 600 })}::jsonb,
+              (select project_id from public.runs where id = ${ctx.runId}::uuid))
       returning id`);
     const childId = child?.id as string;
     if (conversationId) {

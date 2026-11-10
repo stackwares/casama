@@ -4,7 +4,7 @@ import WidgetKit
 
 /// Data the app shares with its widgets through the App Group (written by home_widget and
 /// live_activities on the Dart side).
-private let groupId = "group.dev.kasama.app"
+private let groupId = "group.com.kasama.app"
 private let shared = UserDefaults(suiteName: groupId)
 
 // MARK: - Home-screen widget: bot status and a quick-ask button

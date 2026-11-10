@@ -191,6 +191,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `client/lib/core/local_cache.dart` (drift key/value cache, `openLocalCache` installed in `main.dart`), cache-first `BotsNotifier` and `ChatController.open`, cleared on sign-out.
 
+## Projects (D-113)
+
+- `packages/agent/src/projects.ts` (`projectHeartbeat` in the worker's minute tick, `startProjectRun`, `projects.create|plan|update|status`), `projects`/`project_milestones`, `project_id` on tickets, runs, conversations and routines, `apps/server/src/api/routes/projects.ts`, and the app's `features/projects/`.
+
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).

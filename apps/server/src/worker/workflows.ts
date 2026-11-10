@@ -8,6 +8,7 @@ import {
   type ModelGateway,
   type ModelList,
   mergeModelList,
+  projectHeartbeat,
   type RunDeps,
   refreshIntegration,
   revokeToken,
@@ -115,6 +116,13 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       },
     );
     const runIds = await DBOS.runStep(() => claimDueRoutines(rt().db), { name: "claim-due" });
+    // Projects (D-113): start the next session of each active project that has ready work.
+    const sessions = await DBOS.runStep(
+      (): Promise<string[]> =>
+        projectHeartbeat(rt().db, async () => {}, rt().agent.notifications).catch(() => []),
+      { name: "project-heartbeat" },
+    );
+    runIds.push(...sessions);
     for (const runId of runIds) {
       await DBOS.startWorkflow(agentRunWorkflow, { workflowID: runId, queueName: QUEUES.runs })(
         runId,

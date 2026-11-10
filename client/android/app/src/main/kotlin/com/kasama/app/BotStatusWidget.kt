@@ -1,4 +1,4 @@
-package dev.kasama.kasama_app
+package com.kasama.app
 
 import android.appwidget.AppWidgetManager
 import android.content.Context

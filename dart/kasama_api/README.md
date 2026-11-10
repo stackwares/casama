@@ -155,6 +155,12 @@ Class | Method | HTTP request | Description
 [*PrivacyApi*](doc/PrivacyApi.md) | [**exportMyData**](doc/PrivacyApi.md#exportmydata) | **GET** /v1/me/export | Download everything you can see as a ZIP of JSON files
 [*PrivacyApi*](doc/PrivacyApi.md) | [**getOrgSettings**](doc/PrivacyApi.md#getorgsettings) | **GET** /v1/orgs/{id}/settings | 
 [*PrivacyApi*](doc/PrivacyApi.md) | [**updateOrgSettings**](doc/PrivacyApi.md#updateorgsettings) | **PATCH** /v1/orgs/{id}/settings | Change workspace settings such as run event retention (admins)
+[*ProjectsApi*](doc/ProjectsApi.md) | [**approveProjectPlan**](doc/ProjectsApi.md#approveprojectplan) | **POST** /v1/projects/{id}/plan/approve | Approve the proposed plan; sessions start
+[*ProjectsApi*](doc/ProjectsApi.md) | [**createProject**](doc/ProjectsApi.md#createproject) | **POST** /v1/projects | Start a project; its lead bot drafts a plan for you to approve
+[*ProjectsApi*](doc/ProjectsApi.md) | [**getProject**](doc/ProjectsApi.md#getproject) | **GET** /v1/projects/{id} | 
+[*ProjectsApi*](doc/ProjectsApi.md) | [**listProjects**](doc/ProjectsApi.md#listprojects) | **GET** /v1/projects | 
+[*ProjectsApi*](doc/ProjectsApi.md) | [**signOffMilestone**](doc/ProjectsApi.md#signoffmilestone) | **POST** /v1/projects/{id}/milestones/{milestone_id}/signoff | Sign off a finished milestone so the next one begins
+[*ProjectsApi*](doc/ProjectsApi.md) | [**updateProject**](doc/ProjectsApi.md#updateproject) | **PATCH** /v1/projects/{id} | Pause, resume or cancel a project, or change its budget, deadline or plan
 [*RoutinesApi*](doc/RoutinesApi.md) | [**createRoutine**](doc/RoutinesApi.md#createroutine) | **POST** /v1/routines | Schedule a routine (cron in a timezone) or create a GitHub/custom webhook trigger
 [*RoutinesApi*](doc/RoutinesApi.md) | [**deleteRoutine**](doc/RoutinesApi.md#deleteroutine) | **DELETE** /v1/routines/{id} | Delete a routine (its past runs and conversation are kept)
 [*RoutinesApi*](doc/RoutinesApi.md) | [**listRoutines**](doc/RoutinesApi.md#listroutines) | **GET** /v1/bots/{id}/routines | 
@@ -285,6 +291,7 @@ Class | Method | HTTP request | Description
  - [CreateInviteRequest](doc/CreateInviteRequest.md)
  - [CreateLocalDeviceRequest](doc/CreateLocalDeviceRequest.md)
  - [CreateOrganizationRequest](doc/CreateOrganizationRequest.md)
+ - [CreateProjectRequest](doc/CreateProjectRequest.md)
  - [CreateRoutineRequest](doc/CreateRoutineRequest.md)
  - [CreateSecretRequest](doc/CreateSecretRequest.md)
  - [CreateTaskCommentRequest](doc/CreateTaskCommentRequest.md)
@@ -365,6 +372,12 @@ Class | Method | HTTP request | Description
  - [PortalRequest](doc/PortalRequest.md)
  - [Problem](doc/Problem.md)
  - [ProblemErrorsInner](doc/ProblemErrorsInner.md)
+ - [Project](doc/Project.md)
+ - [ProjectDetail](doc/ProjectDetail.md)
+ - [ProjectList](doc/ProjectList.md)
+ - [ProjectMilestone](doc/ProjectMilestone.md)
+ - [ProjectRun](doc/ProjectRun.md)
+ - [ProjectStatus](doc/ProjectStatus.md)
  - [ProviderAccount](doc/ProviderAccount.md)
  - [ProviderAccountList](doc/ProviderAccountList.md)
  - [ProviderApp](doc/ProviderApp.md)
@@ -465,6 +478,7 @@ Class | Method | HTTP request | Description
  - [UpdateNotice](doc/UpdateNotice.md)
  - [UpdateOrgSettingsRequest](doc/UpdateOrgSettingsRequest.md)
  - [UpdateOrganizationRequest](doc/UpdateOrganizationRequest.md)
+ - [UpdateProjectRequest](doc/UpdateProjectRequest.md)
  - [UpdateRoutineRequest](doc/UpdateRoutineRequest.md)
  - [UpdateTaskRequest](doc/UpdateTaskRequest.md)
  - [UploadResult](doc/UploadResult.md)

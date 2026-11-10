@@ -1,4 +1,4 @@
-package dev.kasama.kasama_app
+package com.kasama.app
 
 import io.flutter.embedding.android.FlutterActivity
 

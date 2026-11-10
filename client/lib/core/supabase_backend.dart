@@ -875,7 +875,37 @@ class SupabaseBackend implements Backend {
   // --- task board -----------------------------------------------------------
 
   @override
-  Future<List<Task>> tasks(String orgId) async => (await api.tasks.listTasks(orgId: orgId)).data!.items;
+  Future<List<Task>> tasks(String orgId, {String? projectId}) async => (await api.tasks.listTasks(orgId: orgId, projectId: projectId)).data!.items;
+
+  @override
+  Future<List<Project>> projects(String orgId) async => (await api.projects.listProjects(orgId: orgId)).data!.items;
+
+  @override
+  Future<Project> createProject(String orgId, {required String title, required String goal, String doneCriteria = '', required String leadBotId, double? budgetUsd}) async =>
+      (await api.projects.createProject(
+        createProjectRequest: CreateProjectRequest(orgId: orgId, title: title, goalMd: goal, doneCriteriaMd: doneCriteria, leadBotId: leadBotId, budgetUsd: budgetUsd),
+      )).data!;
+
+  @override
+  Future<ProjectDetail> project(String projectId) async => (await api.projects.getProject(id: projectId)).data!;
+
+  @override
+  Future<void> updateProject(String projectId, {String? status, double? budgetUsd}) async {
+    await api.projects.updateProject(
+      id: projectId,
+      updateProjectRequest: UpdateProjectRequest(status: status == null ? null : UpdateProjectRequestStatusEnum.values.firstWhere((s) => s.value == status), budgetUsd: budgetUsd),
+    );
+  }
+
+  @override
+  Future<void> approveProjectPlan(String projectId) async {
+    await api.projects.approveProjectPlan(id: projectId);
+  }
+
+  @override
+  Future<void> signOffMilestone(String projectId, String milestoneId) async {
+    await api.projects.signOffMilestone(id: projectId, milestoneId: milestoneId);
+  }
 
   @override
   Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired}) async =>

@@ -16,6 +16,7 @@ lib/src/api/integrations_api.dart
 lib/src/api/local_computer_api.dart
 lib/src/api/memory_api.dart
 lib/src/api/privacy_api.dart
+lib/src/api/projects_api.dart
 lib/src/api/routines_api.dart
 lib/src/api/runs_api.dart
 lib/src/api/search_api.dart
@@ -109,6 +110,7 @@ lib/src/model/create_invite_link_request.dart
 lib/src/model/create_invite_request.dart
 lib/src/model/create_local_device_request.dart
 lib/src/model/create_organization_request.dart
+lib/src/model/create_project_request.dart
 lib/src/model/create_routine_request.dart
 lib/src/model/create_secret_request.dart
 lib/src/model/create_task_comment_request.dart
@@ -189,6 +191,12 @@ lib/src/model/plan_catalog.dart
 lib/src/model/portal_request.dart
 lib/src/model/problem.dart
 lib/src/model/problem_errors_inner.dart
+lib/src/model/project.dart
+lib/src/model/project_detail.dart
+lib/src/model/project_list.dart
+lib/src/model/project_milestone.dart
+lib/src/model/project_run.dart
+lib/src/model/project_status.dart
 lib/src/model/provider_account.dart
 lib/src/model/provider_account_list.dart
 lib/src/model/provider_app.dart
@@ -289,6 +297,7 @@ lib/src/model/update_local_device_request.dart
 lib/src/model/update_notice.dart
 lib/src/model/update_org_settings_request.dart
 lib/src/model/update_organization_request.dart
+lib/src/model/update_project_request.dart
 lib/src/model/update_routine_request.dart
 lib/src/model/update_task_request.dart
 lib/src/model/upload_result.dart

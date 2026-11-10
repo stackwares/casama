@@ -275,7 +275,7 @@ export const listTasks = createRoute({
   path: "/v1/tasks",
   tags: ["tasks"],
   security,
-  request: { query: orgQuery },
+  request: { query: orgQuery.extend({ project_id: Uuid.optional() }) },
   responses: { 200: jsonResponse("The shared task board", list("TaskList", Task)), 401: e401 },
 });
 

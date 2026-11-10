@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 /// Share to bot: saves shared text and links to the App Group and opens Kasama's quick ask.
 /// (Kept native and dependency-free so the extension stays small.)
 final class ShareViewController: UIViewController {
-  private let groupId = "group.dev.kasama.app"
+  private let groupId = "group.com.kasama.app"
 
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)

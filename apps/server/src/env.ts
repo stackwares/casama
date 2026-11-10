@@ -53,13 +53,13 @@ export const EnvSchema = z.object({
   APP_STORE_ISSUER_ID: z.string().optional(),
   APP_STORE_KEY_ID: z.string().optional(),
   APP_STORE_PRIVATE_KEY: z.string().optional(),
-  APP_STORE_BUNDLE_ID: z.string().default("dev.kasama.app"),
+  APP_STORE_BUNDLE_ID: z.string().default("com.kasama.app"),
   APP_STORE_ENVIRONMENT: z.enum(["production", "sandbox"]).default("production"),
   APP_STORE_API_URL: z.url().optional(),
   /** Extra trusted roots (PEM text, or PEM paths comma-separated); Apple Root CA - G3 is built in. */
   APP_STORE_ROOT_CA: z.string().optional(),
   /** Google Play Developer API (Android). The service account is JSON text or a path. */
-  GOOGLE_PLAY_PACKAGE_NAME: z.string().default("dev.kasama.app"),
+  GOOGLE_PLAY_PACKAGE_NAME: z.string().default("com.kasama.app"),
   GOOGLE_PLAY_SERVICE_ACCOUNT: z.string().optional(),
   GOOGLE_PLAY_API_URL: z.url().optional(),
   /** RTDN push auth: a secret ?token= on the push URL and/or the push subscription's OIDC audience. */
