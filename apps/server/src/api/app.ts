@@ -29,6 +29,7 @@ import { registerPaymentRoutes } from "./routes/payments.ts";
 import { registerLinkRoutes } from "./routes/links.ts";
 import { registerSecretStoreRoutes } from "./routes/secret-store.ts";
 import { registerDeviceDataRoutes } from "./routes/device-data.ts";
+import { registerAttentionRoutes } from "./routes/attention.ts";
 import { registerBotTemplateRoutes } from "./routes/bot-template.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
 import { registerChatGptRoutes } from "./routes/chatgpt.ts";
@@ -256,6 +257,7 @@ export function createApp(deps: AppDeps) {
   registerLinkRoutes(app, deps);
   registerSecretStoreRoutes(app, deps);
   registerDeviceDataRoutes(app, deps);
+  registerAttentionRoutes(app, deps);
   registerMcpRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {

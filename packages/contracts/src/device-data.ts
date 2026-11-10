@@ -144,7 +144,7 @@ export const HealthSummary = z.discriminatedUnion("type", [HealthDaySummary, Hea
 export const DeviceEventInput = z
   .object({
     id: z.string().min(1).max(200).openapi({ description: "Unique per event on the device, so a retry never fires twice" }),
-    type: z.enum(["wake", "arrive", "leave", "workout_ended", "notification", "focus_on", "focus_off", "file_added"]),
+    type: z.enum(["wake", "arrive", "leave", "workout_ended", "notification", "focus_on", "focus_off", "file_added", "driving_on", "driving_off"]),
     at: z.iso.datetime({ offset: true }),
     place: z.string().max(60).optional(),
     app: z.string().max(200).optional(),

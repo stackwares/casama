@@ -100,7 +100,24 @@ class SkillView {
 }
 
 class NotificationView {
-  const NotificationView({required this.id, required this.kind, required this.title, required this.body, this.link, required this.createdAt, this.readAt});
+  const NotificationView({
+    required this.id,
+    required this.kind,
+    required this.title,
+    required this.body,
+    this.link,
+    required this.createdAt,
+    this.readAt,
+    this.whyRule,
+    this.whyData = const [],
+    this.urgency,
+    this.heldReason,
+  });
+  /// Attention rules (D-153): why a proactive message was sent, and whether it waited for the brief.
+  final String? whyRule;
+  final List<String> whyData;
+  final String? urgency;
+  final String? heldReason;
   final String id;
   final String kind;
   final String title;
@@ -622,6 +639,9 @@ abstract class Backend {
 
   /// Fires when a run asks one of this person's devices for something (its request id).
   Stream<String> watchDeviceRequests();
+
+  /// "Less like this" on a proactive message (D-153): saved as the bot's memory.
+  Future<void> lessLikeThis(String notificationId);
 
   // Device triggers (D-151).
   Future<int> reportDeviceEvents(String key, List<DeviceEventInput> events);

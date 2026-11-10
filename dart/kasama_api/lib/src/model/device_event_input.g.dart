@@ -194,4 +194,6 @@ const _$DeviceEventInputTypeEnumEnumMap = {
   DeviceEventInputTypeEnum.focusOn: 'focus_on',
   DeviceEventInputTypeEnum.focusOff: 'focus_off',
   DeviceEventInputTypeEnum.fileAdded: 'file_added',
+  DeviceEventInputTypeEnum.drivingOn: 'driving_on',
+  DeviceEventInputTypeEnum.drivingOff: 'driving_off',
 };

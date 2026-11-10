@@ -11,6 +11,7 @@ import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import type { NotificationService } from "./notifications.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
+import { deviceDataOfRun } from "./attention.ts";
 
 export const BRIEF_INSTRUCTIONS = [
   "Write my morning brief for today. Check what you can reach: calendar and email accounts you're connected to, tickets on the board assigned to you or me, active projects, and anything you're watching.",
@@ -132,17 +133,18 @@ export function registerSuggestionTools(
                 ${args.action ? JSON.stringify(args.action) : null}::jsonb, ${JSON.stringify(args.sources ?? [])}::jsonb,
                 ${args.urgency ?? "normal"}, now() + make_interval(hours => ${args.expires_in_hours ?? 72}))
         returning id`);
-      // Only urgent ones push, and quiet hours still apply (D-109).
-      if ((args.urgency ?? "normal") === "urgent")
-        await deps.notifications
-          ?.notify(user, ctx.orgId, "suggestion", {
-            title: args.title,
-            body: (args.body ?? "").slice(0, 240),
-            link: "/inbox",
-            suggestion_id: row?.id,
-            bot_id: ctx.botId,
-          })
-          .catch(() => {});
+      // Attention rules (D-153): urgent ones push now; normal ones push unless the person is busy
+      // or the bot is over its daily cap (then the next brief carries them); low ones wait for the brief.
+      const [bot] = await db.execute<{ name: string }>(sql`select name from public.bots where id = ${ctx.botId}::uuid`);
+      await deps.notifications
+        ?.notify(
+          user,
+          ctx.orgId,
+          "suggestion",
+          { title: args.title, body: (args.body ?? "").slice(0, 240), link: "/inbox", suggestion_id: row?.id, bot_id: ctx.botId },
+          { urgency: args.urgency ?? "normal", why: { rule: `A suggestion from ${bot?.name ?? "your bot"} during a check-in scan`, data: await deviceDataOfRun(db, ctx.runId).catch(() => []) } },
+        )
+        .catch(() => {});
       return { content: `Suggested: ${args.title}.`, preview: args.title };
     },
   });

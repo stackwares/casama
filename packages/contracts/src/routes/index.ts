@@ -26,6 +26,7 @@ import * as payments from "./payments.ts";
 import * as links from "./links.ts";
 import * as secretStore from "./secret-store.ts";
 import * as deviceData from "./device-data.ts";
+import * as attention from "./attention.ts";
 import * as pages from "./pages.ts";
 import * as passwordManagers from "./password-managers.ts";
 import * as replays from "./replays.ts";
@@ -65,6 +66,7 @@ export const routes = {
   ...links,
   ...secretStore,
   ...deviceData,
+  ...attention,
   ...pages,
   ...passwordManagers,
   ...replays,
@@ -103,6 +105,7 @@ export {
   links,
   secretStore,
   deviceData,
+  attention,
   pages,
   passwordManagers,
   replays,

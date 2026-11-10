@@ -108,6 +108,7 @@ import { type ToolDefinition, ToolError, ToolRegistry } from "./tools/registry.t
 import { contentKeys } from "@kasama/db";
 import { hasCardPlaceholders, resolveCardPlaceholders } from "./payments.ts";
 import { claimDesktop, inTeamFolder, releaseDesktop, teamFolder } from "./team-computer.ts";
+import { deviceDataOfRun } from "./attention.ts";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
 export type StepRunner = <T>(name: string, fn: () => Promise<T>) => Promise<T>;
@@ -806,14 +807,35 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       await step("notify", async () => {
         const to = routine.createdBy ?? info.botOwner;
         if (!to) return;
+        // Attention rules (D-153): a routine's result is proactive; it says why it was sent.
+        const [rt] = await db.execute<{ kind: string | null; trigger: { type?: string; event?: string; place?: string; app?: string; folder?: string } | null }>(
+          sql`select kind, trigger from public.routines where id = ${routine.id}::uuid`,
+        );
+        const t = rt?.trigger ?? {};
+        const brief = rt?.kind === "brief";
+        const rule = brief
+          ? "Your morning brief (check-ins)"
+          : t.type === "device"
+            ? `Routine "${routine.name}", when you ${t.event === "arrive" ? `arrive at ${t.place}` : t.event === "leave" ? `leave ${t.place}` : t.event === "notification" ? `get a notification from ${t.app}` : t.event === "file_added" ? `get a new file in ${t.folder}` : (t.event ?? "").replace(/_/g, " ")}`
+            : t.type === "calendar_event"
+              ? `Routine "${routine.name}", for a calendar event`
+              : t.type === "message"
+                ? `Routine "${routine.name}", for a message you received`
+                : `Routine "${routine.name}", on its schedule`;
         await notifications
-          .notify(to, info.orgId, "routine_result", {
-            title: `${info.botName}: ${routine.name}`,
-            body: finalMessage.text.replace(/\s+/g, " ").slice(0, 240),
-            link: `/bots/${info.botId}/chat${info.conversationId ? `?c=${info.conversationId}` : ""}`,
-            bot_id: info.botId,
-            run_id: info.runId,
-          })
+          .notify(
+            to,
+            info.orgId,
+            "routine_result",
+            {
+              title: `${info.botName}: ${routine.name}`,
+              body: finalMessage.text.replace(/\s+/g, " ").slice(0, 240),
+              link: `/bots/${info.botId}/chat${info.conversationId ? `?c=${info.conversationId}` : ""}`,
+              bot_id: info.botId,
+              run_id: info.runId,
+            },
+            { urgency: "normal", why: { rule, data: await deviceDataOfRun(db, info.runId).catch(() => []) }, hold: !brief },
+          )
           .catch((err) =>
             log?.warn("routine notification failed", {
               run_id: runId,

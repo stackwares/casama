@@ -218,6 +218,7 @@ Class | Method | HTTP request | Description
 [*MemoryApi*](doc/MemoryApi.md) | [**listMemories**](doc/MemoryApi.md#listmemories) | **GET** /v1/bots/{id}/memories | 
 [*MemoryApi*](doc/MemoryApi.md) | [**setMemoryBackend**](doc/MemoryApi.md#setmemorybackend) | **PUT** /v1/orgs/{id}/memory-backend | Keep bot memory in Honcho or Supermemory with the workspace&#39;s own key (admins)
 [*MemoryApi*](doc/MemoryApi.md) | [**updateMemory**](doc/MemoryApi.md#updatememory) | **PATCH** /v1/bots/{id}/memories/{memoryId} | 
+[*NotificationsApi*](doc/NotificationsApi.md) | [**lessLikeThis**](doc/NotificationsApi.md#lesslikethis) | **POST** /v1/notifications/{id}/less-like-this | Tell the bot to send fewer messages like this one
 [*PagesApi*](doc/PagesApi.md) | [**createPageViewLink**](doc/PagesApi.md#createpageviewlink) | **POST** /v1/pages/{id}/view-link | A single-use link (60 s) that opens the page in a browser
 [*PagesApi*](doc/PagesApi.md) | [**deletePage**](doc/PagesApi.md#deletepage) | **DELETE** /v1/pages/{id} | 
 [*PagesApi*](doc/PagesApi.md) | [**getPage**](doc/PagesApi.md#getpage) | **GET** /v1/pages/{id} | 

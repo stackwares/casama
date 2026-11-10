@@ -589,6 +589,10 @@ class FakeBackend implements Backend {
   @override
   Stream<String> watchDeviceRequests() => deviceRequestsController.stream;
 
+  final lessLiked = <String>[];
+  @override
+  Future<void> lessLikeThis(String notificationId) async => lessLiked.add(notificationId);
+
   final reportedEvents = <(String, DeviceEventInput)>[];
   final places = <DevicePlace>[];
   @override

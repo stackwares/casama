@@ -2,6 +2,7 @@ import { createSign } from "node:crypto";
 import type { Database } from "@kasama/db";
 import { type QuietHours, quietUntil } from "@kasama/domain";
 import { sql } from "drizzle-orm";
+import { attentionHold, type HoldReason, type Why } from "./attention.ts";
 
 export interface PushMessage {
   title: string;
@@ -124,14 +125,30 @@ export class NotificationService {
     orgId: string | null,
     kind: string,
     message: PushMessage & Record<string, unknown> & { bot_id?: string; urgent?: boolean },
+    /**
+     * Proactive messages (D-153: check-ins, suggestions, triggered routines): their urgency, why
+     * they were sent, and whether attention rules may hold them (briefs carry the held ones, so
+     * they aren't held themselves).
+     */
+    proactive?: { urgency: "low" | "normal" | "urgent"; why: Why; hold?: boolean },
   ) {
+    const urgent = message.urgent || proactive?.urgency === "urgent";
+    // Attention rules: non-urgent proactive messages wait for the next brief while the person is busy.
+    const held: HoldReason | null =
+      proactive && !urgent && proactive.hold !== false
+        ? proactive.urgency === "low"
+          ? "low_urgency"
+          : await attentionHold(this.db, userId, message.bot_id ?? null).catch(() => null)
+        : null;
     // Quiet hours (D-109): the inbox row now, the push when the window ends (unless urgent).
-    const later = message.urgent ? null : await this.quietUntil(userId, message.bot_id ?? null);
+    const later = urgent || held ? null : await this.quietUntil(userId, message.bot_id ?? null);
+    const payload = proactive ? { ...message, why: proactive.why, urgency: proactive.urgency } : message;
     const [row] = await this.db.execute<{ id: string }>(sql`
-      insert into public.notifications (user_id, org_id, kind, payload, push_status, push_after)
-      values (${userId}::uuid, ${orgId}::uuid, ${kind}, ${JSON.stringify(message)}::jsonb,
-              ${later ? "deferred" : "sent"}, ${later?.toISOString() ?? null}::timestamptz) returning id`);
-    if (!later) await this.pushTo(userId, row?.id ?? "", kind, message);
+      insert into public.notifications (user_id, org_id, kind, payload, push_status, push_after, urgency, held_reason)
+      values (${userId}::uuid, ${orgId}::uuid, ${kind}, ${JSON.stringify(payload)}::jsonb,
+              ${held ? "held" : later ? "deferred" : "sent"}, ${later?.toISOString() ?? null}::timestamptz,
+              ${proactive?.urgency ?? null}, ${held}) returning id`);
+    if (!later && !held) await this.pushTo(userId, row?.id ?? "", kind, message);
     return row?.id;
   }
 

@@ -9423,6 +9423,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A new file in one of these folders can start a routine (for example, file new PDFs in Downloads). Only its name is shared; bots read the file only if they work on this computer.'**
   String get watchedFoldersHelp;
+
+  /// No description provided for @whyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why am I seeing this?'**
+  String get whyTitle;
+
+  /// No description provided for @whyData.
+  ///
+  /// In en, this message translates to:
+  /// **'Used: {data}'**
+  String whyData(String data);
+
+  /// No description provided for @whyUrgency.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgency: {urgency}'**
+  String whyUrgency(String urgency);
+
+  /// No description provided for @heldMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'It waited while you were in a meeting and came with your brief.'**
+  String get heldMeeting;
+
+  /// No description provided for @heldFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'It waited while Focus was on and came with your brief.'**
+  String get heldFocus;
+
+  /// No description provided for @heldDriving.
+  ///
+  /// In en, this message translates to:
+  /// **'It waited while you were driving and came with your brief.'**
+  String get heldDriving;
+
+  /// No description provided for @heldCap.
+  ///
+  /// In en, this message translates to:
+  /// **'The bot had already sent 5 messages today, so this one waited for your brief.'**
+  String get heldCap;
+
+  /// No description provided for @heldLow.
+  ///
+  /// In en, this message translates to:
+  /// **'It wasn\'t urgent, so it waited for your brief instead of buzzing your phone.'**
+  String get heldLow;
+
+  /// No description provided for @lessLikeThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Less like this'**
+  String get lessLikeThis;
+
+  /// No description provided for @lessLikeThisDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it, fewer like this'**
+  String get lessLikeThisDone;
 }
 
 class _AppLocalizationsDelegate

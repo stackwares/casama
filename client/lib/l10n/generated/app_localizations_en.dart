@@ -5505,4 +5505,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get watchedFoldersHelp =>
       'A new file in one of these folders can start a routine (for example, file new PDFs in Downloads). Only its name is shared; bots read the file only if they work on this computer.';
+
+  @override
+  String get whyTitle => 'Why am I seeing this?';
+
+  @override
+  String whyData(String data) {
+    return 'Used: $data';
+  }
+
+  @override
+  String whyUrgency(String urgency) {
+    return 'Urgency: $urgency';
+  }
+
+  @override
+  String get heldMeeting =>
+      'It waited while you were in a meeting and came with your brief.';
+
+  @override
+  String get heldFocus =>
+      'It waited while Focus was on and came with your brief.';
+
+  @override
+  String get heldDriving =>
+      'It waited while you were driving and came with your brief.';
+
+  @override
+  String get heldCap =>
+      'The bot had already sent 5 messages today, so this one waited for your brief.';
+
+  @override
+  String get heldLow =>
+      'It wasn\'t urgent, so it waited for your brief instead of buzzing your phone.';
+
+  @override
+  String get lessLikeThis => 'Less like this';
+
+  @override
+  String get lessLikeThisDone => 'Got it, fewer like this';
 }

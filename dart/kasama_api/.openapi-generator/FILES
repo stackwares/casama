@@ -26,6 +26,7 @@ lib/src/api/links_api.dart
 lib/src/api/local_computer_api.dart
 lib/src/api/mcp_api.dart
 lib/src/api/memory_api.dart
+lib/src/api/notifications_api.dart
 lib/src/api/pages_api.dart
 lib/src/api/password_managers_api.dart
 lib/src/api/payments_api.dart

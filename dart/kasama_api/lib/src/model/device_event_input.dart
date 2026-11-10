@@ -204,7 +204,11 @@ focusOn(r'focus_on'),
 @JsonValue(r'focus_off')
 focusOff(r'focus_off'),
 @JsonValue(r'file_added')
-fileAdded(r'file_added');
+fileAdded(r'file_added'),
+@JsonValue(r'driving_on')
+drivingOn(r'driving_on'),
+@JsonValue(r'driving_off')
+drivingOff(r'driving_off');
 
 const DeviceEventInputTypeEnum(this.value);
 

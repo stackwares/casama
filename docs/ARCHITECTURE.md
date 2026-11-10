@@ -324,6 +324,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - D-150: `HealthSummary` schemas in `packages/contracts/src/device-data.ts`; health validation, extras and sealing in `routes/device-data.ts`; `healthTrends` in `packages/agent/src/device-data.ts`; `client/lib/features/devices/health_summary.dart` and the `health` plugin collector; the "Health and habits" welcome pick.
 - D-151: `device_places`, `device_event_log`; `apps/server/src/worker/device-triggers.ts` (`fireDeviceEvent`, `checkLeaveNow`, `maskCodes`); `packages/agent/src/travel.ts`; device events and places routes in `routes/device-data.ts`; `client/lib/features/devices/device_events.dart` (queue, background geofence callback, `PluginTriggerPlatform`).
 - D-152: `packages/agent/src/desktop-context.ts` (`desktop.files.search`); `file_added` device events; `ActivitySummary` schema; `client/lib/features/desktop/` (`DesktopContextReader`, `FolderWatcher`, `ActivityTracker`) and the quick-ask context chips.
+- D-153: `packages/agent/src/attention.ts` (`attentionHold`, `takeHeldForBrief`, `deviceDataOfRun`); `NotificationService.notify(..., proactive)`; held messages added to briefs in `createRoutineRun`; `routes/attention.ts` ("Less like this"); `WhySheet` in the inbox.
 
 ## Production and launch (Phase 8)
 

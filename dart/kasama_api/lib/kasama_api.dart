@@ -31,6 +31,7 @@ export 'package:kasama_api/src/api/links_api.dart';
 export 'package:kasama_api/src/api/local_computer_api.dart';
 export 'package:kasama_api/src/api/mcp_api.dart';
 export 'package:kasama_api/src/api/memory_api.dart';
+export 'package:kasama_api/src/api/notifications_api.dart';
 export 'package:kasama_api/src/api/pages_api.dart';
 export 'package:kasama_api/src/api/password_managers_api.dart';
 export 'package:kasama_api/src/api/payments_api.dart';

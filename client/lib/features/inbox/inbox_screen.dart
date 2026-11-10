@@ -19,6 +19,8 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/form_sheet.dart';
 
 /// Approvals waiting for you, notifications, and the shared task board.
 class InboxScreen extends ConsumerWidget {
@@ -359,6 +361,14 @@ class _NotificationRow extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: AppSpace.xs),
+                      // "Why am I seeing this?" (D-153) on proactive messages.
+                      if (n.whyRule != null)
+                        InkWell(
+                          key: Key('why-${n.id}'),
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => showAdaptiveSheet<void>(context: context, builder: (_) => WhySheet(notification: n)),
+                          child: Padding(padding: const EdgeInsets.all(4), child: Icon(LucideIcons.info, size: 16, color: scheme.onSurfaceVariant)),
+                        ),
                       Text(relativeTime(n.createdAt, context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
                       if (unread) ...[
                         const SizedBox(width: 6),
@@ -465,6 +475,54 @@ class TakeoverCard extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Why am I seeing this?" (D-153): the rule and the data behind a proactive message, whether it
+/// waited for the brief, and "Less like this".
+class WhySheet extends ConsumerStatefulWidget {
+  const WhySheet({super.key, required this.notification});
+  final NotificationView notification;
+  @override
+  ConsumerState<WhySheet> createState() => _WhySheetState();
+}
+
+class _WhySheetState extends ConsumerState<WhySheet> {
+  var _sent = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final n = widget.notification;
+    final held = switch (n.heldReason) {
+      'meeting' => l10n.heldMeeting,
+      'focus' => l10n.heldFocus,
+      'driving' => l10n.heldDriving,
+      'daily_cap' => l10n.heldCap,
+      'low_urgency' => l10n.heldLow,
+      _ => null,
+    };
+    return FormSheet(
+      icon: LucideIcons.info,
+      title: l10n.whyTitle,
+      submitLabel: _sent ? l10n.lessLikeThisDone : l10n.lessLikeThis,
+      submitKey: const Key('lessLikeThis'),
+      onSubmit: _sent
+          ? null
+          : () async {
+              final ok = await runGuarded(context, () async {
+                await ref.read(backendProvider).lessLikeThis(n.id);
+                return true;
+              });
+              if (ok == true && mounted) setState(() => _sent = true);
+            },
+      children: [
+        Text(n.whyRule ?? '', key: const Key('whyRule'), style: context.textTheme.bodyLarge),
+        if (n.whyData.isNotEmpty) Text(l10n.whyData(n.whyData.join(', ')), style: context.textTheme.bodyMedium),
+        if (n.urgency != null) Text(l10n.whyUrgency(n.urgency!), style: context.textTheme.bodySmall),
+        if (held != null) Text(held, key: const Key('whyHeld'), style: context.textTheme.bodySmall),
+      ],
     );
   }
 }

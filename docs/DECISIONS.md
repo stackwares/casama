@@ -1689,3 +1689,34 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
     - Partial-download filtering.
     - Hourly activity summaries uploaded once the hour ends.
     - Quick ask with hotkey context: chips, leaving the window out, and the sent text.
+
+## D-153 Attention rules
+
+- **Every proactive message has an urgency (low, normal or urgent):**
+  - Proactive messages are check-in briefs, suggestions and routine results, including triggered routines.
+  - `NotificationService.notify` takes `proactive: {urgency, why, hold}` and stores the urgency and any hold reason on the notification.
+- **Urgent:** pushes now. It skips quiet hours, as before.
+- **Normal:**
+  - Pushes, unless the person is busy:
+    - **Focus:** the latest focus event from their devices in the last 12 hours is "on".
+    - **Driving:** the latest driving event in the last 3 hours is "on". Devices can report `driving_on` and `driving_off`; the collectors are listed for Oliver.
+    - **Meeting:** a timed event on the calendar they share from their devices is happening now.
+    - **Daily cap:** the bot has already sent 5 non-urgent pushes in the last 24 hours.
+  - A held message is stored in the inbox with `push_status = held` and no push. Quiet hours still defer the pushes that do go.
+  - Suggestions with normal urgency used to wait for the For you feed. They now push under these rules.
+- **Low:** never pushes. It's held for the brief.
+- **The next brief carries them:**
+  - When a brief run is created (on schedule or on wake-up, D-151), the held messages from the last 36 hours are added to its instructions as "These waited for this brief", each with the reason it waited. They're then marked as bundled.
+  - Briefs aren't held themselves, since they're the bundle.
+- **"Why am I seeing this?":**
+  - Each proactive message records `why: {rule, data}`. The rule is the routine with its trigger in words ("when you arrive at Home"), "Your morning brief (check-ins)" or "A suggestion from <bot> during a check-in scan". The data is the device kinds the run's model saw (from `device.data_used`, D-149).
+  - The inbox shows an info button on these. Its sheet shows the rule, the data, the urgency and why it waited, plus "Less like this".
+  - "Less like this" (`POST /v1/notifications/{id}/less-like-this`, the owner only) saves a pinned preference memory for that bot ("send these only when they really matter, or fold them into the brief").
+- **Tests:**
+  - API (`attention.test.ts`):
+    - During a calendar meeting a normal message waits (reason meeting, with its why), an urgent one pushes, and a low one waits.
+    - Focus holds messages until focus is turned off.
+    - The sixth normal push from one bot waits, while another bot keeps its own count.
+    - A normal suggestion during a meeting doesn't push and shows up in the next brief's instructions with "you were in a meeting". Nothing stays held afterwards.
+    - "Less like this" saves a pinned preference, and only the owner can send it.
+  - App: the why sheet (rule, data, why it waited) and "Less like this".

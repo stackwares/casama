@@ -685,12 +685,16 @@ class SupabaseBackend implements Backend {
       link: payload['link'] as String?,
       createdAt: DateTime.parse(row['created_at'] as String),
       readAt: row['read_at'] == null ? null : DateTime.parse(row['read_at'] as String),
+      whyRule: payload['why'] is Map ? '${(payload['why'] as Map)['rule'] ?? ''}' : null,
+      whyData: payload['why'] is Map && (payload['why'] as Map)['data'] is List ? [for (final d in (payload['why'] as Map)['data'] as List) '$d'] : const [],
+      urgency: (row['urgency'] ?? payload['urgency']) as String?,
+      heldReason: row['held_reason'] as String?,
     );
   }
 
   @override
   Future<List<NotificationView>> notifications() async {
-    final rows = await supabase.from('notifications').select('id, kind, payload, read_at, created_at').order('created_at', ascending: false).limit(100);
+    final rows = await supabase.from('notifications').select('id, kind, payload, read_at, created_at, urgency, held_reason').order('created_at', ascending: false).limit(100);
     return [for (final r in rows) _notification(r)];
   }
 
@@ -1760,6 +1764,9 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> deleteDevicePlace(String id) async => api.devices.deleteDevicePlace(id: id);
+
+  @override
+  Future<void> lessLikeThis(String notificationId) async => api.notifications.lessLikeThis(id: notificationId);
 
   @override
   Stream<String> watchDeviceRequests() => _userEvents('device_request').map((m) => '${m['id'] ?? ''}').where((id) => id.isNotEmpty);

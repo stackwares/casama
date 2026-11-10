@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { checkinCapReached, describeEvent, scanContext, wrapUntrusted } from "@kasama/agent";
+import { checkinCapReached, describeEvent, scanContext, takeHeldForBrief, wrapUntrusted } from "@kasama/agent";
 import type { Database } from "@kasama/db";
 import { nextRunAt } from "@kasama/domain";
 import { sql } from "drizzle-orm";
@@ -41,6 +41,11 @@ export async function createRoutineRun(
     );
     return run?.id as string;
   }
+  // Attention rules (D-153): a brief carries what waited while the person was busy.
+  if (r.kind === "brief" && r.created_by) {
+    const held = await takeHeldForBrief(tx as Database, r.created_by);
+    if (held) eventText = eventText ? `${eventText}\n\n${held}` : held;
+  }
   let conversationId = r.conversation_id;
   if (!conversationId) {
     const [conv] = await tx.execute<{ id: string }>(sql`
@@ -57,7 +62,7 @@ export async function createRoutineRun(
     returning id`);
   const runId = run?.id as string;
   const text = eventText
-    ? `${r.instructions_md}\n\nThe event that triggered this run:\n${wrapUntrusted(trigger === "calendar" ? "calendar" : trigger === "message" ? "message" : trigger === "device" ? "device event" : "webhook", eventText)}`
+    ? `${r.instructions_md}\n\nThe event that triggered this run:\n${wrapUntrusted(trigger === "calendar" ? "calendar" : trigger === "message" ? "message" : trigger === "device" ? "device event" : trigger === "routine" ? "held messages" : "webhook", eventText)}`
     : r.instructions_md;
   await tx.execute(sql`
     insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)

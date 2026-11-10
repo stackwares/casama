@@ -9,7 +9,7 @@ import type { Database } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { createRoutineRun } from "./routines.ts";
 
-export type DeviceEventType = "wake" | "arrive" | "leave" | "leave_now" | "workout_ended" | "notification" | "focus_on" | "focus_off" | "file_added";
+export type DeviceEventType = "wake" | "arrive" | "leave" | "leave_now" | "workout_ended" | "notification" | "focus_on" | "focus_off" | "file_added" | "driving_on" | "driving_off";
 export interface DeviceEvent {
   id: string;
   type: DeviceEventType;
@@ -48,6 +48,10 @@ export function describeDeviceEvent(e: DeviceEvent): string {
       return `The person turned on Focus / Do Not Disturb${e.title ? ` (${e.title})` : ""}.`;
     case "focus_off":
       return "The person turned off Focus / Do Not Disturb.";
+    case "driving_on":
+      return "The person started driving.";
+    case "driving_off":
+      return "The person stopped driving.";
     case "file_added":
       return `A new file arrived in the watched folder ${e.folder}: ${e.name}. It's on the person's own computer.`;
   }

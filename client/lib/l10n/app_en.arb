@@ -3040,5 +3040,29 @@
   "ctxScreenshotAdded": "Screenshot added",
   "ctxScreenshotFailed": "Couldn't take a screenshot. Allow screen recording for Kasama in your system settings.",
   "watchedFolders": "Watched folders",
-  "watchedFoldersHelp": "A new file in one of these folders can start a routine (for example, file new PDFs in Downloads). Only its name is shared; bots read the file only if they work on this computer."
+  "watchedFoldersHelp": "A new file in one of these folders can start a routine (for example, file new PDFs in Downloads). Only its name is shared; bots read the file only if they work on this computer.",
+  "whyTitle": "Why am I seeing this?",
+  "whyData": "Used: {data}",
+  "@whyData": {
+    "placeholders": {
+      "data": {
+        "type": "String"
+      }
+    }
+  },
+  "whyUrgency": "Urgency: {urgency}",
+  "@whyUrgency": {
+    "placeholders": {
+      "urgency": {
+        "type": "String"
+      }
+    }
+  },
+  "heldMeeting": "It waited while you were in a meeting and came with your brief.",
+  "heldFocus": "It waited while Focus was on and came with your brief.",
+  "heldDriving": "It waited while you were driving and came with your brief.",
+  "heldCap": "The bot had already sent 5 messages today, so this one waited for your brief.",
+  "heldLow": "It wasn't urgent, so it waited for your brief instead of buzzing your phone.",
+  "lessLikeThis": "Less like this",
+  "lessLikeThisDone": "Got it, fewer like this"
 }

@@ -84,6 +84,7 @@ class KasamaClient {
   VoiceApi get voice => api.getVoiceApi();
   LocalComputerApi get localComputer => api.getLocalComputerApi();
   DevicesApi get devices => api.getDevicesApi();
+  NotificationsApi get notifications => api.getNotificationsApi();
   AdminApi get admin => api.getAdminApi();
   SearchApi get search => api.getSearchApi();
   SkillsApi get skills => api.getSkillsApi();

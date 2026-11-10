@@ -1272,36 +1272,6 @@ export const usedSignupChallenges = pgTable("used_signup_challenges", {
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
-export const notifications = pgTable("notifications", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	userId: uuid("user_id").notNull(),
-	orgId: uuid("org_id"),
-	kind: text().notNull(),
-	payload: jsonb().default({}).notNull(),
-	readAt: timestamp("read_at", { withTimezone: true, mode: 'string' }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	pushStatus: text("push_status").default('sent').notNull(),
-	pushAfter: timestamp("push_after", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	index("notifications_deferred_idx").using("btree", table.pushAfter.asc().nullsLast().op("timestamptz_ops")).where(sql`(push_status = 'deferred'::text)`),
-	index("notifications_user_idx").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
-	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "notifications_user_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "notifications_org_id_fkey"
-		}).onDelete("cascade"),
-	pgPolicy("notifications_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
-	pgPolicy("notifications_update", { as: "permissive", for: "update", to: ["authenticated"] }),
-	pgPolicy("notifications_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("notifications_push_status_check", sql`push_status = ANY (ARRAY['sent'::text, 'deferred'::text, 'none'::text])`),
-]);
-
 export const usageLedger = pgTable("usage_ledger", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -1471,6 +1441,41 @@ export const modelCredentials = pgTable("model_credentials", {
 	check("model_credentials_status_check", sql`status = ANY (ARRAY['ok'::text, 'plan_usage_off'::text, 'needs_reconnect'::text])`),
 	check("model_credentials_chatgpt_owner", sql`(provider <> 'chatgpt'::text) OR (owner_user_id IS NOT NULL)`),
 	check("model_credentials_provider_check", sql`provider = ANY (ARRAY['openai'::text, 'anthropic'::text, 'google'::text, 'xai'::text, 'openrouter'::text, 'openai_compatible'::text, 'fal'::text, 'brave_search'::text, 'tavily'::text, 'deepgram'::text, 'elevenlabs'::text, 'cartesia'::text, 'fish_audio'::text, 'chatgpt'::text, 'treg'::text, 'google_maps'::text, 'mapbox'::text])`),
+]);
+
+export const notifications = pgTable("notifications", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	orgId: uuid("org_id"),
+	kind: text().notNull(),
+	payload: jsonb().default({}).notNull(),
+	readAt: timestamp("read_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	pushStatus: text("push_status").default('sent').notNull(),
+	pushAfter: timestamp("push_after", { withTimezone: true, mode: 'string' }),
+	urgency: text(),
+	heldReason: text("held_reason"),
+}, (table) => [
+	index("notifications_deferred_idx").using("btree", table.pushAfter.asc().nullsLast().op("timestamptz_ops")).where(sql`(push_status = 'deferred'::text)`),
+	index("notifications_held_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")).where(sql`(push_status = 'held'::text)`),
+	index("notifications_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "notifications_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "notifications_org_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("notifications_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("notifications_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("notifications_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("notifications_push_status_check", sql`push_status = ANY (ARRAY['sent'::text, 'deferred'::text, 'none'::text, 'held'::text, 'bundled'::text])`),
+	check("notifications_urgency_check", sql`urgency = ANY (ARRAY['low'::text, 'normal'::text, 'urgent'::text])`),
+	check("notifications_held_reason_check", sql`held_reason = ANY (ARRAY['focus'::text, 'meeting'::text, 'driving'::text, 'daily_cap'::text, 'low_urgency'::text])`),
 ]);
 
 export const botRevisions = pgTable("bot_revisions", {
