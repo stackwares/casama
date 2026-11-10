@@ -10,14 +10,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/backend.dart';
 import '../../core/providers.dart';
 import 'device_collector.dart';
+import 'device_events.dart';
 
 /// Keeps this device's shared data up to date and answers runs' requests (D-149).
 class DeviceSync {
-  DeviceSync(this.backend, this.collector, {this.now = DateTime.now});
+  DeviceSync(this.backend, this.collector, {DeviceTriggerPlatform? triggers, this.now = DateTime.now}) : triggers = triggers ?? PluginTriggerPlatform();
   final Backend backend;
   final DeviceCollector collector;
+  final DeviceTriggerPlatform triggers;
   final DateTime Function() now;
   StreamSubscription<String>? _sub;
+  StreamSubscription<({String app, String title, String text})>? _notifications;
+
+  /// Kinds this device can share: collected data plus event-based kinds (D-151).
+  Set<DeviceKind> get supported => {
+    ...collector.supported,
+    if (triggers.supportsPlaces) DeviceKind.places,
+    if (triggers.supportsNotifications) DeviceKind.notifications,
+  };
   AppLifecycleListener? _life;
   bool _busy = false;
 
@@ -65,7 +75,7 @@ class DeviceSync {
   /// Turns a kind on (after the system prompt) or off (the server deletes its data).
   /// Returns false when the person declined the permission.
   Future<bool> setKind(DeviceKind kind, bool on, {DeviceKindSettings? settings}) async {
-    if (on && !await collector.requestPermission(kind, settings: settings)) return false;
+    if (on && !await _permission(kind, settings)) return false;
     final key = await deviceKey();
     final s = await current();
     final kinds = Map<String, DeviceKindSettings>.of(s?.kinds ?? const {});
@@ -75,8 +85,47 @@ class DeviceSync {
       kinds.remove(kind.value);
     }
     await backend.saveDeviceSource(key, name: s?.name ?? defaultName, platform: platform, kinds: kinds);
-    if (on) await _upload(key, kind, settings: kinds[kind.value]);
+    if (kind == DeviceKind.places) {
+      on ? await refreshPlaces() : await triggers.stopPlaces();
+    } else if (kind == DeviceKind.notifications) {
+      on ? _watchNotifications(kinds[kind.value]) : await _stopNotifications();
+    } else if (on) {
+      await _upload(key, kind, settings: kinds[kind.value]);
+    }
     return true;
+  }
+
+  Future<bool> _permission(DeviceKind kind, DeviceKindSettings? settings) => switch (kind) {
+    DeviceKind.places => triggers.requestPlaces(),
+    DeviceKind.notifications => triggers.requestNotifications(),
+    _ => collector.requestPermission(kind, settings: settings),
+  };
+
+  /// Re-registers geofences for the person's named places (after they change).
+  Future<void> refreshPlaces() async => triggers.watchPlaces(await backend.devicePlaces());
+
+  void _watchNotifications(DeviceKindSettings? settings) {
+    unawaited(_notifications?.cancel());
+    final apps = [for (final a in settings?.apps ?? const <String>[]) a.toLowerCase()];
+    _notifications = triggers.notifications().listen((n) async {
+      // Only apps the person picked; codes are masked before anything is queued.
+      if (!apps.any((a) => n.app.toLowerCase().contains(a))) return;
+      final at = now().toUtc();
+      await DeviceEventQueue.add({
+        'id': 'notif-${at.microsecondsSinceEpoch}-${n.app.hashCode & 0xffff}',
+        'type': 'notification',
+        'at': at.toIso8601String(),
+        'app': n.app,
+        'title': maskCodes(n.title),
+        'text': maskCodes(n.text),
+      });
+      await DeviceEventQueue.flush(backend).catchError((_) => 0);
+    });
+  }
+
+  Future<void> _stopNotifications() async {
+    await _notifications?.cancel();
+    _notifications = null;
   }
 
   (DateTime, DateTime) _window(DeviceKind kind) {
@@ -127,7 +176,11 @@ class DeviceSync {
       for (final r in await backend.deviceRequests(s.deviceKey)) {
         final kind = DeviceKind.values.where((v) => v.value == r.kind).firstOrNull;
         try {
-          if (kind == null || !s.kinds.containsKey(r.kind) || !collector.supported.contains(kind)) {
+          if (r.action == DeviceRequestActionEnum.locate) {
+            // "Where am I now" for leave-now: answered once, never stored here (D-151).
+            final at = s.kinds.containsKey('places') ? await triggers.currentLocation() : null;
+            await backend.answerDeviceRequest(r.id, ok: at != null, result: at == null ? null : {'lat': at.lat, 'lng': at.lng}, error: at == null ? 'Location isn\'t available' : null);
+          } else if (kind == null || !s.kinds.containsKey(r.kind) || !collector.supported.contains(kind)) {
             await backend.answerDeviceRequest(r.id, ok: false, error: '${r.kind} isn\'t shared from this device');
           } else if (r.action == DeviceRequestActionEnum.read) {
             final from = DateTime.tryParse('${r.params['from']}');
@@ -151,15 +204,26 @@ class DeviceSync {
     _sub ??= backend.watchDeviceRequests().listen((_) => unawaited(answerPending().catchError((_) {})));
     _life ??= AppLifecycleListener(
       onResume: () {
+        unawaited(DeviceEventQueue.flush(backend).catchError((_) => 0));
         unawaited(answerPending().catchError((_) {}));
         unawaited(syncAll().catchError((_) {}));
       },
     );
     unawaited(answerPending().catchError((_) {}));
     unawaited(syncAll().catchError((_) {}));
+    unawaited(_startTriggers().catchError((_) {}));
+  }
+
+  Future<void> _startTriggers() async {
+    await DeviceEventQueue.flush(backend);
+    final s = await current();
+    if (s == null) return;
+    if (s.kinds.containsKey('places') && triggers.supportsPlaces) await refreshPlaces();
+    if (s.kinds.containsKey('notifications') && triggers.supportsNotifications) _watchNotifications(s.kinds['notifications']);
   }
 
   void dispose() {
+    unawaited(_notifications?.cancel());
     unawaited(_sub?.cancel());
     _sub = null;
     _life?.dispose();
@@ -168,12 +232,13 @@ class DeviceSync {
 }
 
 final deviceCollectorProvider = Provider<DeviceCollector>((ref) => PluginDeviceCollector());
+final deviceTriggerPlatformProvider = Provider<DeviceTriggerPlatform>((ref) => PluginTriggerPlatform());
 
 final deviceSyncProvider = Provider<DeviceSync>((ref) {
-  final sync = DeviceSync(ref.watch(backendProvider), ref.watch(deviceCollectorProvider));
+  final sync = DeviceSync(ref.watch(backendProvider), ref.watch(deviceCollectorProvider), triggers: ref.watch(deviceTriggerPlatformProvider));
   ref.onDispose(sync.dispose);
   ref.listen(signedInProvider, (_, next) {
-    if (next.value == true && sync.collector.supported.isNotEmpty) sync.start();
+    if (next.value == true && sync.supported.isNotEmpty) sync.start();
   }, fireImmediately: true);
   return sync;
 });

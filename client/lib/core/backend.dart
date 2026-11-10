@@ -622,6 +622,12 @@ abstract class Backend {
 
   /// Fires when a run asks one of this person's devices for something (its request id).
   Stream<String> watchDeviceRequests();
+
+  // Device triggers (D-151).
+  Future<int> reportDeviceEvents(String key, List<DeviceEventInput> events);
+  Future<List<DevicePlace>> devicePlaces();
+  Future<DevicePlace> saveDevicePlace({required String name, required double latitude, required double longitude, int? radiusM});
+  Future<void> deleteDevicePlace(String id);
   Future<List<TakeoverRequest>> takeovers(String orgId);
   Future<void> dismissTakeover(String takeoverId, {String? note});
 

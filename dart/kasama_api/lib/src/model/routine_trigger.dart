@@ -24,7 +24,10 @@ enum RoutineTrigger {
       calendarEvent(r'calendar_event'),
           /// schedule repeats on a cron; once runs a single time at run_at
       @JsonValue(r'message')
-      message(r'message');
+      message(r'message'),
+          /// schedule repeats on a cron; once runs a single time at run_at
+      @JsonValue(r'device')
+      device(r'device');
 
   const RoutineTrigger(this.value);
 

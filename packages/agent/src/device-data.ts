@@ -272,6 +272,9 @@ export async function purgeDeviceData(db: Database) {
       and r.period_end < now() - make_interval(days => coalesce((s.kinds -> r.kind ->> 'retention_days')::int, (${defaults}::jsonb ->> r.kind)::int, 365))
     returning r.id`);
   await db.execute(sql`update public.device_requests set status = 'expired' where status = 'pending' and created_at < now() - interval '1 hour'`);
+  // "Where am I now" answers (leave-now, D-151) never outlive 10 minutes; the event log 30 days.
+  await db.execute(sql`delete from public.device_requests where action = 'locate' and created_at < now() - interval '10 minutes'`);
+  await db.execute(sql`delete from public.device_event_log where received_at < now() - interval '30 days'`);
   await db.execute(sql`delete from public.device_requests where created_at < now() - interval '7 days'`);
   return removed.length;
 }

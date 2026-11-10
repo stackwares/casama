@@ -3,6 +3,7 @@ import Flutter
 import PushKit
 import UIKit
 import flutter_callkit_incoming
+import native_geofence
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, PKPushRegistryDelegate {
@@ -17,6 +18,10 @@ import flutter_callkit_incoming
     registry.delegate = self
     registry.desiredPushTypes = [.voIP]
     voipRegistry = registry
+    // Device triggers (D-151): a geofence can wake the app in the background, without a UI scene.
+    NativeGeofencePlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

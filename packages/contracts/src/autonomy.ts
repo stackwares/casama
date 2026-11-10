@@ -154,7 +154,7 @@ export const AttachIntegrationRequest = z
   .openapi("AttachIntegrationRequest");
 
 export const RoutineTrigger = z
-  .enum(["schedule", "once", "github", "webhook", "calendar_event", "message"])
+  .enum(["schedule", "once", "github", "webhook", "calendar_event", "message", "device"])
   .openapi("RoutineTrigger", {
     description: "schedule repeats on a cron; once runs a single time at run_at",
   });
@@ -180,6 +180,16 @@ export const MessageTriggerConfig = z
   })
   .openapi("MessageTriggerConfig");
 
+/** Device triggers (D-151): events from the routine creator's own phone or computer. */
+export const DeviceTriggerConfig = z
+  .object({
+    event: z.enum(["wake", "arrive", "leave", "leave_now", "workout_ended", "notification", "focus_on", "focus_off"]),
+    place: z.string().trim().min(1).max(60).optional().openapi({ description: "arrive and leave: a named place (Home, Work, Gym)" }),
+    app: z.string().trim().min(1).max(200).optional().openapi({ description: "notification: the watched app (its name or package id)" }),
+    minutes_before: z.number().int().min(0).max(120).optional().openapi({ description: "leave_now: extra minutes on top of the travel time (default 5)" }),
+  })
+  .openapi("DeviceTriggerConfig");
+
 export const Routine = z
   .object({
     id: Uuid,
@@ -191,6 +201,7 @@ export const Routine = z
     trigger: RoutineTrigger,
     calendar: CalendarTriggerConfig.nullable().optional(),
     message: MessageTriggerConfig.nullable().optional(),
+    device: DeviceTriggerConfig.nullable().optional(),
     notify: z.boolean(),
     enabled: z.boolean(),
     next_run_at: ts.nullable(),
@@ -228,6 +239,7 @@ export const CreateRoutineRequest = z
       .openapi({ description: "GitHub event names to accept" }),
     calendar: CalendarTriggerConfig.optional().openapi({ description: "Required for calendar_event triggers (D-132)" }),
     message: MessageTriggerConfig.optional().openapi({ description: "Filters for message triggers: an email or chat message that matches starts the routine (D-134)" }),
+    device: DeviceTriggerConfig.optional().openapi({ description: "Required for device triggers (D-151): the event on your own phone or computer" }),
   })
   .openapi("CreateRoutineRequest");
 

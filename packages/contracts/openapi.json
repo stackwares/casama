@@ -2829,7 +2829,9 @@
           "cartesia",
           "fish_audio",
           "chatgpt",
-          "treg"
+          "treg",
+          "google_maps",
+          "mapbox"
         ]
       },
       "CredentialStatus": {
@@ -4806,7 +4808,8 @@
           "github",
           "webhook",
           "calendar_event",
-          "message"
+          "message",
+          "device"
         ],
         "description": "schedule repeats on a cron; once runs a single time at run_at"
       },
@@ -4885,6 +4888,48 @@
           }
         }
       },
+      "DeviceTriggerConfig": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "event": {
+            "type": "string",
+            "enum": [
+              "wake",
+              "arrive",
+              "leave",
+              "leave_now",
+              "workout_ended",
+              "notification",
+              "focus_on",
+              "focus_off"
+            ]
+          },
+          "place": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "arrive and leave: a named place (Home, Work, Gym)"
+          },
+          "app": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "notification: the watched app (its name or package id)"
+          },
+          "minutes_before": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120,
+            "description": "leave_now: extra minutes on top of the travel time (default 5)"
+          }
+        },
+        "required": [
+          "event"
+        ]
+      },
       "Routine": {
         "type": "object",
         "properties": {
@@ -4919,6 +4964,9 @@
           },
           "message": {
             "$ref": "#/components/schemas/MessageTriggerConfig"
+          },
+          "device": {
+            "$ref": "#/components/schemas/DeviceTriggerConfig"
           },
           "notify": {
             "type": "boolean"
@@ -5032,6 +5080,16 @@
               },
               {
                 "description": "Filters for message triggers: an email or chat message that matches starts the routine (D-134)"
+              }
+            ]
+          },
+          "device": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceTriggerConfig"
+              },
+              {
+                "description": "Required for device triggers (D-151): the event on your own phone or computer"
               }
             ]
           }
@@ -10890,6 +10948,39 @@
           "activity"
         ]
       },
+      "DevicePlace": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "radius_m": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "latitude",
+          "longitude",
+          "radius_m",
+          "created_at"
+        ]
+      },
       "DeviceReading": {
         "type": "object",
         "properties": {
@@ -10954,7 +11045,8 @@
             "enum": [
               "read",
               "calendar.create",
-              "reminders.create"
+              "reminders.create",
+              "locate"
             ]
           },
           "params": {
@@ -11048,8 +11140,111 @@
               ]
             },
             "description": "Health only: sensitive extras the person turned on (off by default)"
+          },
+          "apps": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "maxItems": 50,
+            "description": "Notifications only: the apps (names or package ids) whose notifications are shared; nothing else is"
           }
         }
+      },
+      "ReportDeviceEventsRequest": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceEventInput"
+            },
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "events"
+        ]
+      },
+      "DeviceEventInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Unique per event on the device, so a retry never fires twice"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "wake",
+              "arrive",
+              "leave",
+              "workout_ended",
+              "notification",
+              "focus_on",
+              "focus_off"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "place": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "app": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "at"
+        ]
+      },
+      "SaveDevicePlaceRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "radius_m": {
+            "type": "integer",
+            "minimum": 50,
+            "maximum": 2000
+          }
+        },
+        "required": [
+          "name",
+          "latitude",
+          "longitude"
+        ]
       },
       "SaveDeviceSourceRequest": {
         "type": "object",
@@ -26838,6 +27033,70 @@
         }
       }
     },
+    "/v1/device-places/{id}": {
+      "delete": {
+        "operationId": "deleteDevicePlace",
+        "tags": [
+          "devices"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/device-sources/{key}": {
       "delete": {
         "operationId": "deleteDeviceSource",
@@ -27101,6 +27360,107 @@
         }
       }
     },
+    "/v1/device-places": {
+      "get": {
+        "operationId": "listDevicePlaces",
+        "tags": [
+          "devices"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Your named places",
+        "responses": {
+          "200": {
+            "description": "Places",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DevicePlace"
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "saveDevicePlace",
+        "tags": [
+          "devices"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Add or update a named place (up to 20)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDevicePlaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Place",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevicePlace"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/device-readings": {
       "get": {
         "operationId": "listDeviceReadings",
@@ -27272,6 +27632,95 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/device-sources/{key}/events": {
+      "post": {
+        "operationId": "reportDeviceEvents",
+        "tags": [
+          "devices"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Report events that start device-triggered routines (D-151)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,100}$"
+            },
+            "required": true,
+            "name": "key",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportDeviceEventsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accepted": {
+                      "type": "integer"
+                    },
+                    "runs": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "accepted",
+                    "runs"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/problem+json": {
                 "schema": {

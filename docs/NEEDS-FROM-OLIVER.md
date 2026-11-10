@@ -114,3 +114,6 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 
 - iOS Reminders: no maintained Flutter plugin reads or writes Reminders (EventKit `EKReminder`). The server and tools support them; the app needs a small native channel (Swift, EventKit) or a plugin choice. Until then Reminders don't show in Settings → Device connections.
 - App Store and Play review: calendar and contacts purpose strings are in place. Health (D-150) needs Google's Health Connect declaration, and the privacy policy must cover device data before release.
+- Focus / Do Not Disturb triggers and Android's first-unlock wake-up (D-151) need native code: iOS Focus status (its capability and `INFocusStatusCenter`), and an Android broadcast receiver (USER_PRESENT) plus `NotificationListenerService.onInterruptionFilterChanged`. The server already accepts these events.
+- Real-device checks for device connections (calendar, contacts, Health, Health Connect, geofences, the notification listener). The simulator and emulator builds pass, but background geofence delivery and Health permission screens need real phones.
+- Store review: background location ("Always"), the notification listener and Health Connect each need a declaration and a reason in App Store Connect and the Play Console.

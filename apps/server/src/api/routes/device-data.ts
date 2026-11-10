@@ -10,6 +10,7 @@ import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
+import { type DeviceEvent, fireDeviceEvent, maskCodes } from "../../worker/device-triggers.ts";
 
 const MAX_SUMMARY_BYTES = 64 * 1024;
 
@@ -117,6 +118,18 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
         insert into public.device_readings (user_id, source_id, kind, period_start, period_end, external_id, summary)
         values (${userId}::uuid, ${s.id}::uuid, ${r.kind}, ${r.period_start}::timestamptz, ${r.period_end}::timestamptz, ${r.external_id}, ${contentKeys.sealJson(sealWith, r.summary)}::jsonb)
         on conflict (source_id, kind, external_id) do update set period_start = excluded.period_start, period_end = excluded.period_end, summary = excluded.summary, collected_at = now()`);
+    // Health uploads also tell wake-ups and finished workouts (D-151): last night's sleep ending
+    // today, and workouts that ended in the last 6 hours (so a backfill doesn't fire old ones).
+    const derived: DeviceEvent[] = [];
+    for (const r of b.readings.filter((x) => x.kind === "health")) {
+      const sm = r.summary as { type?: string; date?: string; sleep?: { end?: string }; activity?: string };
+      const nowMs = Date.now();
+      if (sm.type === "day" && sm.sleep?.end && Date.parse(r.period_start) <= nowMs && nowMs <= Date.parse(r.period_end))
+        derived.push({ id: `wake-${s.id}-${sm.date}`, type: "wake", at: new Date().toISOString() });
+      if (sm.type === "workout" && nowMs - Date.parse(r.period_end) < 6 * 3600_000)
+        derived.push({ id: `workout-${s.id}-${r.external_id}`, type: "workout_ended", at: r.period_end, title: sm.activity });
+    }
+    for (const e of derived) for (const runId of await fireDeviceEvent(db, userId, e)) await deps.workflows.startRun(runId);
     if (b.request_id) {
       const live = b.readings.filter((r) => !keep.includes(r));
       await db.execute(sql`
@@ -177,5 +190,81 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
       await db.execute(sql`insert into public.device_grants (user_id, bot_id, kind) values (${userId}::uuid, ${b.bot_id}::uuid, ${b.kind}) on conflict do nothing`);
     else await db.execute(sql`delete from public.device_grants where user_id = ${userId}::uuid and bot_id = ${b.bot_id}::uuid and kind = ${b.kind}`);
     return c.json({ items: await grants(userId, b.bot_id) }, 200);
+  });
+
+  // Device triggers (D-151): events start the person's own routines within seconds.
+  app.openapi(routes.reportDeviceEvents, async (c) => {
+    const userId = me(c.get("claims"));
+    const { key } = c.req.valid("param");
+    const b = c.req.valid("json");
+    const s = await source(userId, key);
+    const sealWith = await keyOrg(userId);
+    let runs = 0;
+    const picked = ((s.kinds.notifications as { apps?: string[] } | undefined)?.apps ?? []).map((a) => a.toLowerCase());
+    for (const e of b.events) {
+      if ((e.type === "arrive" || e.type === "leave") && !e.place) throw new ApiError(400, "place_required", "Arrive and leave events need the named place");
+      if (e.type === "notification" && !e.app) throw new ApiError(400, "app_required", "Notification events need the app");
+      // Notifications only from apps the person picked (and only with the kind on): others are dropped.
+      if (e.type === "notification" && (!("notifications" in s.kinds) || !picked.some((p) => (e.app ?? "").toLowerCase().includes(p)))) continue;
+      // Visits and notifications are kept only when that kind is on (and for its retention).
+      if ((e.type === "arrive" || e.type === "leave") && "places" in s.kinds && (s.kinds.places as { retention_days?: number }).retention_days !== 0) {
+        if (e.type === "arrive")
+          await db.execute(sql`
+            insert into public.device_readings (user_id, source_id, kind, period_start, period_end, external_id, summary)
+            values (${userId}::uuid, ${s.id}::uuid, 'places', ${e.at}::timestamptz, ${e.at}::timestamptz, ${`visit-${e.id}`},
+              ${contentKeys.sealJson(sealWith, { place: e.place, arrived_at: e.at, left_at: null })}::jsonb)
+            on conflict do nothing`);
+        else {
+          // Close the latest open visit to that place.
+          const open = await db.execute<{ id: string; summary: { place?: string; arrived_at?: string; left_at?: string | null } }>(sql`
+            select id, summary from public.device_readings where source_id = ${s.id}::uuid and kind = 'places' order by period_start desc limit 20`);
+          const v = open.find((o) => o.summary?.place?.toLowerCase() === e.place?.toLowerCase() && !o.summary.left_at);
+          if (v)
+            await db.execute(sql`update public.device_readings set period_end = ${e.at}::timestamptz,
+              summary = ${contentKeys.sealJson(sealWith, { ...v.summary, left_at: e.at })}::jsonb where id = ${v.id}::uuid`);
+        }
+      }
+      if (e.type === "notification" && "notifications" in s.kinds && (s.kinds.notifications as { retention_days?: number }).retention_days !== 0)
+        await db.execute(sql`
+          insert into public.device_readings (user_id, source_id, kind, period_start, period_end, external_id, summary)
+          values (${userId}::uuid, ${s.id}::uuid, 'notifications', ${e.at}::timestamptz, ${e.at}::timestamptz, ${`notif-${e.id}`},
+            ${contentKeys.sealJson(sealWith, { app: e.app, title: e.title ? maskCodes(e.title) : undefined, text: e.text ? maskCodes(e.text) : undefined })}::jsonb)
+          on conflict do nothing`);
+      for (const runId of await fireDeviceEvent(db, userId, { ...e, id: `${s.id}:${e.id}` })) {
+        runs++;
+        await deps.workflows.startRun(runId);
+      }
+    }
+    return c.json({ accepted: b.events.length, runs }, 200);
+  });
+
+  type PlaceRow = { id: string; name: string; latitude: number; longitude: number; radius_m: number; created_at: Date };
+  const outPlace = (p: PlaceRow) => ({ ...p, created_at: iso(p.created_at) });
+  app.openapi(routes.listDevicePlaces, async (c) => {
+    const userId = me(c.get("claims"));
+    const rows = await db.execute<PlaceRow>(sql`select id, name, latitude, longitude, radius_m, created_at from public.device_places where user_id = ${userId}::uuid order by name`);
+    return c.json({ items: rows.map(outPlace) }, 200);
+  });
+  app.openapi(routes.saveDevicePlace, async (c) => {
+    const userId = me(c.get("claims"));
+    const b = c.req.valid("json");
+    const [existing] = await db.execute<{ id: string }>(sql`select id from public.device_places where user_id = ${userId}::uuid and lower(name) = lower(${b.name})`);
+    if (!existing) {
+      const [n] = await db.execute<{ n: number }>(sql`select count(*)::int as n from public.device_places where user_id = ${userId}::uuid`);
+      // iOS monitors up to 20 regions per app.
+      if ((n?.n ?? 0) >= 20) throw new ApiError(400, "too_many_places", "Up to 20 named places");
+    }
+    const [p] = existing
+      ? await db.execute<PlaceRow>(sql`update public.device_places set name = ${b.name}, latitude = ${b.latitude}, longitude = ${b.longitude}, radius_m = ${b.radius_m ?? 150}
+          where id = ${existing.id}::uuid returning id, name, latitude, longitude, radius_m, created_at`)
+      : await db.execute<PlaceRow>(sql`insert into public.device_places (user_id, name, latitude, longitude, radius_m)
+          values (${userId}::uuid, ${b.name}, ${b.latitude}, ${b.longitude}, ${b.radius_m ?? 150}) returning id, name, latitude, longitude, radius_m, created_at`);
+    return c.json(outPlace(p as PlaceRow), 200);
+  });
+  app.openapi(routes.deleteDevicePlace, async (c) => {
+    const userId = me(c.get("claims"));
+    const rows = await db.execute(sql`delete from public.device_places where id = ${c.req.valid("param").id}::uuid and user_id = ${userId}::uuid returning id`);
+    if (!rows.length) throw new ApiError(404, "place_not_found", "No such place");
+    return c.json({ ok: true }, 200);
   });
 }

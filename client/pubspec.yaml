@@ -68,6 +68,9 @@ dependencies:
   device_calendar: ^4.3.3
   flutter_contacts: ^2.6.0
   health: ^13.3.2
+  native_geofence: ^1.5.1
+  geolocator: ^14.0.1
+  notification_listener_service: ^1.0.0
 dev_dependencies:
   integration_test:
     sdk: flutter

@@ -57,7 +57,7 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final supported = ref.watch(deviceCollectorProvider).supported;
+    final supported = ref.watch(deviceSyncProvider).supported;
     return SubPage(
       title: l10n.deviceConnections,
       body: AsyncView(
@@ -80,6 +80,11 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
                     grants: st.grants.where((g) => g.kind == kind).toList(),
                     onToggle: (on) => _toggle(kind, on),
                     onSettings: (s) => _settings(kind, s),
+                    extra: kind == DeviceKind.places
+                        ? const _PlacesEditor()
+                        : kind == DeviceKind.notifications
+                        ? _AppsEditor(apps: st.mine?.kinds['notifications']?.apps ?? const [], onChanged: (apps) => _settings(kind, DeviceKindSettings(retentionDays: st.mine?.kinds['notifications']?.retentionDays, privateModel: st.mine?.kinds['notifications']?.privateModel, apps: apps)))
+                        : null,
                     onRevoke: (g) async {
                       await runGuarded(context, () => ref.read(backendProvider).setDeviceGrant(g.botId, g.kind, false));
                       ref.invalidate(_deviceStateProvider);
@@ -120,7 +125,8 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
 }
 
 class _KindCard extends StatelessWidget {
-  const _KindCard({required this.kind, required this.settings, required this.busy, required this.grants, required this.onToggle, required this.onSettings, required this.onRevoke});
+  const _KindCard({required this.kind, required this.settings, required this.busy, required this.grants, required this.onToggle, required this.onSettings, required this.onRevoke, this.extra});
+  final Widget? extra;
   final DeviceKind kind;
   final DeviceKindSettings? settings;
   final bool busy;
@@ -196,6 +202,7 @@ class _KindCard extends StatelessWidget {
                   ),
                 ),
             if (kind == DeviceKind.health) Text(l10n.healthNotMedical, style: context.textTheme.bodySmall),
+            ?extra,
             Padding(
               padding: const EdgeInsets.only(top: AppSpace.xs, bottom: AppSpace.sm),
               child: grants.isEmpty
@@ -209,6 +216,129 @@ class _KindCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Named places (D-151): up to 20, used for arrive and leave. Only their names leave the device in events.
+class _PlacesEditor extends ConsumerStatefulWidget {
+  const _PlacesEditor();
+  @override
+  ConsumerState<_PlacesEditor> createState() => _PlacesEditorState();
+}
+
+class _PlacesEditorState extends ConsumerState<_PlacesEditor> {
+  List<DevicePlace>? _places;
+  var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final p = await ref.read(backendProvider).devicePlaces().catchError((_) => <DevicePlace>[]);
+    if (mounted) setState(() => _places = p);
+  }
+
+  Future<void> _addHere() async {
+    final l10n = context.l10n;
+    final name = await showTextPrompt(context, title: l10n.placeAddHere, label: l10n.placeName, submitLabel: l10n.save, icon: LucideIcons.mapPin);
+    if (name == null || name.trim().isEmpty || !mounted) return;
+    setState(() => _busy = true);
+    await runGuarded(context, () async {
+      final sync = ref.read(deviceSyncProvider);
+      final at = await sync.triggers.currentLocation();
+      if (at == null) throw StateError(l10n.placeNoLocation);
+      await ref.read(backendProvider).saveDevicePlace(name: name.trim(), latitude: at.lat, longitude: at.lng);
+      await sync.refreshPlaces();
+      return true;
+    });
+    if (!mounted) return;
+    setState(() => _busy = false);
+    await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final places = _places ?? const <DevicePlace>[];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.placesHelp, style: context.textTheme.bodySmall),
+        Wrap(
+          spacing: AppSpace.xs,
+          runSpacing: AppSpace.xs,
+          children: [
+            for (final p in places)
+              InputChip(
+                key: Key('place-${p.name}'),
+                avatar: const Icon(LucideIcons.mapPin, size: 16),
+                label: Text(p.name),
+                onDeleted: () async {
+                  await runGuarded(context, () async {
+                    await ref.read(backendProvider).deleteDevicePlace(p.id);
+                    await ref.read(deviceSyncProvider).refreshPlaces();
+                    return true;
+                  });
+                  await _load();
+                },
+              ),
+            if (places.length < 20)
+              ActionChip(key: const Key('placeAddHere'), avatar: const Icon(LucideIcons.locateFixed, size: 16), label: Text(l10n.placeAddHere), onPressed: _busy ? null : _addHere),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Watched apps (D-151, Android): only notifications from these apps are shared.
+class _AppsEditor extends StatefulWidget {
+  const _AppsEditor({required this.apps, required this.onChanged});
+  final List<String> apps;
+  final ValueChanged<List<String>> onChanged;
+  @override
+  State<_AppsEditor> createState() => _AppsEditorState();
+}
+
+class _AppsEditorState extends State<_AppsEditor> {
+  final _app = TextEditingController();
+
+  @override
+  void dispose() {
+    _app.dispose();
+    super.dispose();
+  }
+
+  void _add() {
+    final v = _app.text.trim();
+    if (v.isEmpty || widget.apps.contains(v)) return;
+    _app.clear();
+    widget.onChanged([...widget.apps, v]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.watchedAppsHelp, style: context.textTheme.bodySmall),
+        Wrap(
+          spacing: AppSpace.xs,
+          runSpacing: AppSpace.xs,
+          children: [for (final a in widget.apps) InputChip(key: Key('app-$a'), label: Text(a), onDeleted: () => widget.onChanged([...widget.apps]..remove(a)))],
+        ),
+        TextField(
+          key: const Key('watchedAppInput'),
+          controller: _app,
+          decoration: InputDecoration(labelText: l10n.watchedAppAdd, hintText: 'com.mybank.app', suffixIcon: IconButton(key: const Key('watchedAppSave'), icon: const Icon(LucideIcons.plus), onPressed: _add)),
+          onSubmitted: (_) => _add(),
+        ),
+      ],
     );
   }
 }

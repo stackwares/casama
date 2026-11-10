@@ -25,6 +25,8 @@ abstract class _$CreatedRoutineCWProxy {
 
   CreatedRoutine message(MessageTriggerConfig? message);
 
+  CreatedRoutine device(DeviceTriggerConfig? device);
+
   CreatedRoutine notify(bool notify);
 
   CreatedRoutine enabled(bool enabled);
@@ -59,6 +61,7 @@ abstract class _$CreatedRoutineCWProxy {
     RoutineTrigger trigger,
     CalendarTriggerConfig? calendar,
     MessageTriggerConfig? message,
+    DeviceTriggerConfig? device,
     bool notify,
     bool enabled,
     DateTime? nextRunAt,
@@ -109,6 +112,9 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
       call(message: message);
 
   @override
+  CreatedRoutine device(DeviceTriggerConfig? device) => call(device: device);
+
+  @override
   CreatedRoutine notify(bool notify) => call(notify: notify);
 
   @override
@@ -153,6 +159,7 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
     Object? trigger = const $CopyWithPlaceholder(),
     Object? calendar = const $CopyWithPlaceholder(),
     Object? message = const $CopyWithPlaceholder(),
+    Object? device = const $CopyWithPlaceholder(),
     Object? notify = const $CopyWithPlaceholder(),
     Object? enabled = const $CopyWithPlaceholder(),
     Object? nextRunAt = const $CopyWithPlaceholder(),
@@ -201,6 +208,10 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
           ? _value.message
           // ignore: cast_nullable_to_non_nullable
           : message as MessageTriggerConfig?,
+      device: device == const $CopyWithPlaceholder()
+          ? _value.device
+          // ignore: cast_nullable_to_non_nullable
+          : device as DeviceTriggerConfig?,
       notify: notify == const $CopyWithPlaceholder() || notify == null
           ? _value.notify
           // ignore: cast_nullable_to_non_nullable
@@ -295,6 +306,12 @@ CreatedRoutine _$CreatedRoutineFromJson(
             ? null
             : MessageTriggerConfig.fromJson(v as Map<String, dynamic>),
       ),
+      device: $checkedConvert(
+        'device',
+        (v) => v == null
+            ? null
+            : DeviceTriggerConfig.fromJson(v as Map<String, dynamic>),
+      ),
       notify: $checkedConvert('notify', (v) => v as bool),
       enabled: $checkedConvert('enabled', (v) => v as bool),
       nextRunAt: $checkedConvert(
@@ -339,6 +356,7 @@ Map<String, dynamic> _$CreatedRoutineToJson(CreatedRoutine instance) =>
       'trigger': _$RoutineTriggerEnumMap[instance.trigger]!,
       'calendar': ?instance.calendar?.toJson(),
       'message': ?instance.message?.toJson(),
+      'device': ?instance.device?.toJson(),
       'notify': instance.notify,
       'enabled': instance.enabled,
       'next_run_at': instance.nextRunAt?.toIso8601String(),
@@ -356,4 +374,5 @@ const _$RoutineTriggerEnumMap = {
   RoutineTrigger.webhook: 'webhook',
   RoutineTrigger.calendarEvent: 'calendar_event',
   RoutineTrigger.message: 'message',
+  RoutineTrigger.device: 'device',
 };

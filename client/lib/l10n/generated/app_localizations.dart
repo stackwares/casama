@@ -9339,6 +9339,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Health data needs encryption at rest. Turn it on for a workspace you own, then try again.'**
   String get healthNeedsEncryption;
+
+  /// No description provided for @placeAddHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Add where I am now'**
+  String get placeAddHere;
+
+  /// No description provided for @placeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name this place (Home, Work, Gym)'**
+  String get placeName;
+
+  /// No description provided for @placeNoLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location isn\'t available. Allow location for Kasama, then try again.'**
+  String get placeNoLocation;
+
+  /// No description provided for @placesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots hear when you arrive at or leave these places. Only the place name and the time are shared, never your route.'**
+  String get placesHelp;
+
+  /// No description provided for @watchedAppsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only notifications from these apps are shared. One-time codes are hidden before anything leaves your phone.'**
+  String get watchedAppsHelp;
+
+  /// No description provided for @watchedAppAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an app (name or package id)'**
+  String get watchedAppAdd;
+
+  /// No description provided for @providerHintMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'travel times for leave-now'**
+  String get providerHintMaps;
+
+  /// No description provided for @routineDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'On your phone: {event} {detail}'**
+  String routineDevice(String event, String detail);
 }
 
 class _AppLocalizationsDelegate

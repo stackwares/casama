@@ -163,4 +163,5 @@ const _$DeviceRequestActionEnumEnumMap = {
   DeviceRequestActionEnum.read: 'read',
   DeviceRequestActionEnum.calendarPeriodCreate: 'calendar.create',
   DeviceRequestActionEnum.remindersPeriodCreate: 'reminders.create',
+  DeviceRequestActionEnum.locate: 'locate',
 };

@@ -5,6 +5,7 @@
 // ignore_for_file: unused_element
 import 'package:kasama_api/src/model/calendar_trigger_config.dart';
 import 'package:kasama_api/src/model/routine_trigger.dart';
+import 'package:kasama_api/src/model/device_trigger_config.dart';
 import 'package:kasama_api/src/model/message_trigger_config.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -44,6 +45,8 @@ class CreateRoutineRequest {
      this.calendar,
 
      this.message,
+
+     this.device,
   });
 
   @JsonKey(
@@ -184,6 +187,19 @@ class CreateRoutineRequest {
 
 
 
+      /// Required for device triggers (D-151): the event on your own phone or computer
+  @JsonKey(
+    
+    name: r'device',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final DeviceTriggerConfig? device;
+
+
+
 
 
     @override
@@ -198,7 +214,8 @@ class CreateRoutineRequest {
       other.notify == notify &&
       other.events == events &&
       other.calendar == calendar &&
-      other.message == message;
+      other.message == message &&
+      other.device == device;
 
     @override
     int get hashCode =>
@@ -212,7 +229,8 @@ class CreateRoutineRequest {
         notify.hashCode +
         events.hashCode +
         (calendar == null ? 0 : calendar.hashCode) +
-        (message == null ? 0 : message.hashCode);
+        (message == null ? 0 : message.hashCode) +
+        (device == null ? 0 : device.hashCode);
 
   factory CreateRoutineRequest.fromJson(Map<String, dynamic> json) => _$CreateRoutineRequestFromJson(json);
 

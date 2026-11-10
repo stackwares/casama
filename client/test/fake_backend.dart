@@ -589,6 +589,29 @@ class FakeBackend implements Backend {
   @override
   Stream<String> watchDeviceRequests() => deviceRequestsController.stream;
 
+  final reportedEvents = <(String, DeviceEventInput)>[];
+  final places = <DevicePlace>[];
+  @override
+  Future<int> reportDeviceEvents(String key, List<DeviceEventInput> events) async {
+    for (final e in events) {
+      reportedEvents.add((key, e));
+    }
+    return 0;
+  }
+
+  @override
+  Future<List<DevicePlace>> devicePlaces() async => List.of(places);
+  @override
+  Future<DevicePlace> saveDevicePlace({required String name, required double latitude, required double longitude, int? radiusM}) async {
+    places.removeWhere((p) => p.name.toLowerCase() == name.toLowerCase());
+    final p = DevicePlace(id: 'place-$name', name: name, latitude: latitude, longitude: longitude, radiusM: radiusM ?? 150, createdAt: DateTime(2027));
+    places.add(p);
+    return p;
+  }
+
+  @override
+  Future<void> deleteDevicePlace(String id) async => places.removeWhere((p) => p.id == id);
+
   @override
   Future<List<BotFolder>> botFolders(String orgId) async => [if (botFolder != null) BotFolder(id: botFolder!, name: botFolder!)];
   @override

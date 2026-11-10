@@ -105,6 +105,8 @@ export interface WorkerOptions {
   /** Device connections (D-149): how long tools wait for a device (tests shorten it). */
   deviceWaitMs?: { read?: number; write?: number };
   providerBases?: {
+    google_maps?: string;
+    mapbox?: string;
     fal?: string;
     brave?: string;
     tavily?: string;
@@ -397,6 +399,14 @@ export async function startWorker(opts: WorkerOptions) {
     },
     voip,
     auditForwarding: opts.auditForwarding,
+    leaveNow: {
+      fetch: opts.providerBases?.google_maps || opts.providerBases?.mapbox ? fetch : fetchOut,
+      bases: opts.providerBases,
+      mapsKey: async (orgId) => {
+        const k = await providerKey(orgId, ["google_maps", "mapbox"]);
+        return k?.key ? { provider: k.provider as "google_maps" | "mapbox", key: k.key } : null;
+      },
+    },
     agent: {
       payments,
       db,

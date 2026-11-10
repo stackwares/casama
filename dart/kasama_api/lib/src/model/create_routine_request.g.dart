@@ -29,6 +29,8 @@ abstract class _$CreateRoutineRequestCWProxy {
 
   CreateRoutineRequest message(MessageTriggerConfig? message);
 
+  CreateRoutineRequest device(DeviceTriggerConfig? device);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateRoutineRequest(...).copyWith.fieldName(value)`.
@@ -49,6 +51,7 @@ abstract class _$CreateRoutineRequestCWProxy {
     List<String>? events,
     CalendarTriggerConfig? calendar,
     MessageTriggerConfig? message,
+    DeviceTriggerConfig? device,
   });
 }
 
@@ -98,6 +101,10 @@ class _$CreateRoutineRequestCWProxyImpl
   CreateRoutineRequest message(MessageTriggerConfig? message) =>
       call(message: message);
 
+  @override
+  CreateRoutineRequest device(DeviceTriggerConfig? device) =>
+      call(device: device);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateRoutineRequest(...).copyWith.fieldName(value)`.
@@ -119,6 +126,7 @@ class _$CreateRoutineRequestCWProxyImpl
     Object? events = const $CopyWithPlaceholder(),
     Object? calendar = const $CopyWithPlaceholder(),
     Object? message = const $CopyWithPlaceholder(),
+    Object? device = const $CopyWithPlaceholder(),
   }) {
     return CreateRoutineRequest(
       botId: botId == const $CopyWithPlaceholder() || botId == null
@@ -166,6 +174,10 @@ class _$CreateRoutineRequestCWProxyImpl
           ? _value.message
           // ignore: cast_nullable_to_non_nullable
           : message as MessageTriggerConfig?,
+      device: device == const $CopyWithPlaceholder()
+          ? _value.device
+          // ignore: cast_nullable_to_non_nullable
+          : device as DeviceTriggerConfig?,
     );
   }
 }
@@ -220,6 +232,12 @@ CreateRoutineRequest _$CreateRoutineRequestFromJson(
             ? null
             : MessageTriggerConfig.fromJson(v as Map<String, dynamic>),
       ),
+      device: $checkedConvert(
+        'device',
+        (v) => v == null
+            ? null
+            : DeviceTriggerConfig.fromJson(v as Map<String, dynamic>),
+      ),
     );
     return val;
   },
@@ -244,6 +262,7 @@ Map<String, dynamic> _$CreateRoutineRequestToJson(
   'events': ?instance.events,
   'calendar': ?instance.calendar?.toJson(),
   'message': ?instance.message?.toJson(),
+  'device': ?instance.device?.toJson(),
 };
 
 const _$RoutineTriggerEnumMap = {
@@ -253,4 +272,5 @@ const _$RoutineTriggerEnumMap = {
   RoutineTrigger.webhook: 'webhook',
   RoutineTrigger.calendarEvent: 'calendar_event',
   RoutineTrigger.message: 'message',
+  RoutineTrigger.device: 'device',
 };

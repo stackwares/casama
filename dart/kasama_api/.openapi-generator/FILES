@@ -201,14 +201,17 @@ lib/src/model/device_access_requested_event.dart
 lib/src/model/device_access_requested_event_payload.dart
 lib/src/model/device_data_used_event.dart
 lib/src/model/device_data_used_event_payload.dart
+lib/src/model/device_event_input.dart
 lib/src/model/device_grant.dart
 lib/src/model/device_kind.dart
 lib/src/model/device_kind_settings.dart
+lib/src/model/device_place.dart
 lib/src/model/device_reading.dart
 lib/src/model/device_reading_input.dart
 lib/src/model/device_request.dart
 lib/src/model/device_request_result.dart
 lib/src/model/device_source.dart
+lib/src/model/device_trigger_config.dart
 lib/src/model/dismiss_suggestion_request.dart
 lib/src/model/edit_message_request.dart
 lib/src/model/encryption_status.dart
@@ -252,6 +255,7 @@ lib/src/model/lease_changed_event_payload.dart
 lib/src/model/link_exchange.dart
 lib/src/model/link_exchange_list.dart
 lib/src/model/list_device_grants200_response.dart
+lib/src/model/list_device_places200_response.dart
 lib/src/model/list_device_readings200_response.dart
 lib/src/model/list_device_requests200_response.dart
 lib/src/model/list_device_sources200_response.dart
@@ -348,6 +352,8 @@ lib/src/model/replay_from_teach_request.dart
 lib/src/model/replay_list.dart
 lib/src/model/replay_param_info.dart
 lib/src/model/replay_steps_inner.dart
+lib/src/model/report_device_events200_response.dart
+lib/src/model/report_device_events_request.dart
 lib/src/model/revert_page_request.dart
 lib/src/model/revoked_connect_key.dart
 lib/src/model/revoked_key.dart
@@ -371,6 +377,7 @@ lib/src/model/run_started.dart
 lib/src/model/run_started_event.dart
 lib/src/model/run_started_event_payload.dart
 lib/src/model/run_status.dart
+lib/src/model/save_device_place_request.dart
 lib/src/model/save_device_source_request.dart
 lib/src/model/save_device_source_request_kinds.dart
 lib/src/model/save_imported_memories_request.dart

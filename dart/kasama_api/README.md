@@ -154,11 +154,15 @@ Class | Method | HTTP request | Description
 [*CredentialsApi*](doc/CredentialsApi.md) | [**testCredential**](doc/CredentialsApi.md#testcredential) | **POST** /v1/credentials/{id}/test | Validate a key with a 1-token call
 [*CredentialsApi*](doc/CredentialsApi.md) | [**updateCredential**](doc/CredentialsApi.md#updatecredential) | **PATCH** /v1/credentials/{id} | Rename a credential or change its settings
 [*DevicesApi*](doc/DevicesApi.md) | [**answerDeviceRequest**](doc/DevicesApi.md#answerdevicerequest) | **POST** /v1/device-requests/{id}/result | 
+[*DevicesApi*](doc/DevicesApi.md) | [**deleteDevicePlace**](doc/DevicesApi.md#deletedeviceplace) | **DELETE** /v1/device-places/{id} | 
 [*DevicesApi*](doc/DevicesApi.md) | [**deleteDeviceSource**](doc/DevicesApi.md#deletedevicesource) | **DELETE** /v1/device-sources/{key} | Forget this device and everything it shared
 [*DevicesApi*](doc/DevicesApi.md) | [**listDeviceGrants**](doc/DevicesApi.md#listdevicegrants) | **GET** /v1/device-grants | Which bots may read which kinds of your device data
+[*DevicesApi*](doc/DevicesApi.md) | [**listDevicePlaces**](doc/DevicesApi.md#listdeviceplaces) | **GET** /v1/device-places | Your named places
 [*DevicesApi*](doc/DevicesApi.md) | [**listDeviceReadings**](doc/DevicesApi.md#listdevicereadings) | **GET** /v1/device-readings | What your devices have shared
 [*DevicesApi*](doc/DevicesApi.md) | [**listDeviceRequests**](doc/DevicesApi.md#listdevicerequests) | **GET** /v1/device-sources/{key}/requests | Work waiting for this device
 [*DevicesApi*](doc/DevicesApi.md) | [**listDeviceSources**](doc/DevicesApi.md#listdevicesources) | **GET** /v1/device-sources | Your devices that share data (D-149)
+[*DevicesApi*](doc/DevicesApi.md) | [**reportDeviceEvents**](doc/DevicesApi.md#reportdeviceevents) | **POST** /v1/device-sources/{key}/events | Report events that start device-triggered routines (D-151)
+[*DevicesApi*](doc/DevicesApi.md) | [**saveDevicePlace**](doc/DevicesApi.md#savedeviceplace) | **POST** /v1/device-places | Add or update a named place (up to 20)
 [*DevicesApi*](doc/DevicesApi.md) | [**saveDeviceSource**](doc/DevicesApi.md#savedevicesource) | **PUT** /v1/device-sources/{key} | Register this device and the kinds it shares; kinds turned off lose their data
 [*DevicesApi*](doc/DevicesApi.md) | [**setDeviceGrant**](doc/DevicesApi.md#setdevicegrant) | **PUT** /v1/device-grants | Allow or stop a bot reading one kind of your device data
 [*DevicesApi*](doc/DevicesApi.md) | [**uploadDeviceReadings**](doc/DevicesApi.md#uploaddevicereadings) | **POST** /v1/device-sources/{key}/readings | Upload summaries (re-uploading the same external_id replaces it)
@@ -479,14 +483,17 @@ Class | Method | HTTP request | Description
  - [DeviceAccessRequestedEventPayload](doc/DeviceAccessRequestedEventPayload.md)
  - [DeviceDataUsedEvent](doc/DeviceDataUsedEvent.md)
  - [DeviceDataUsedEventPayload](doc/DeviceDataUsedEventPayload.md)
+ - [DeviceEventInput](doc/DeviceEventInput.md)
  - [DeviceGrant](doc/DeviceGrant.md)
  - [DeviceKind](doc/DeviceKind.md)
  - [DeviceKindSettings](doc/DeviceKindSettings.md)
+ - [DevicePlace](doc/DevicePlace.md)
  - [DeviceReading](doc/DeviceReading.md)
  - [DeviceReadingInput](doc/DeviceReadingInput.md)
  - [DeviceRequest](doc/DeviceRequest.md)
  - [DeviceRequestResult](doc/DeviceRequestResult.md)
  - [DeviceSource](doc/DeviceSource.md)
+ - [DeviceTriggerConfig](doc/DeviceTriggerConfig.md)
  - [DismissSuggestionRequest](doc/DismissSuggestionRequest.md)
  - [EditMessageRequest](doc/EditMessageRequest.md)
  - [EncryptionStatus](doc/EncryptionStatus.md)
@@ -530,6 +537,7 @@ Class | Method | HTTP request | Description
  - [LinkExchange](doc/LinkExchange.md)
  - [LinkExchangeList](doc/LinkExchangeList.md)
  - [ListDeviceGrants200Response](doc/ListDeviceGrants200Response.md)
+ - [ListDevicePlaces200Response](doc/ListDevicePlaces200Response.md)
  - [ListDeviceReadings200Response](doc/ListDeviceReadings200Response.md)
  - [ListDeviceRequests200Response](doc/ListDeviceRequests200Response.md)
  - [ListDeviceSources200Response](doc/ListDeviceSources200Response.md)
@@ -626,6 +634,8 @@ Class | Method | HTTP request | Description
  - [ReplayList](doc/ReplayList.md)
  - [ReplayParamInfo](doc/ReplayParamInfo.md)
  - [ReplayStepsInner](doc/ReplayStepsInner.md)
+ - [ReportDeviceEvents200Response](doc/ReportDeviceEvents200Response.md)
+ - [ReportDeviceEventsRequest](doc/ReportDeviceEventsRequest.md)
  - [RevertPageRequest](doc/RevertPageRequest.md)
  - [RevokedConnectKey](doc/RevokedConnectKey.md)
  - [RevokedKey](doc/RevokedKey.md)
@@ -649,6 +659,7 @@ Class | Method | HTTP request | Description
  - [RunStartedEvent](doc/RunStartedEvent.md)
  - [RunStartedEventPayload](doc/RunStartedEventPayload.md)
  - [RunStatus](doc/RunStatus.md)
+ - [SaveDevicePlaceRequest](doc/SaveDevicePlaceRequest.md)
  - [SaveDeviceSourceRequest](doc/SaveDeviceSourceRequest.md)
  - [SaveDeviceSourceRequestKinds](doc/SaveDeviceSourceRequestKinds.md)
  - [SaveImportedMemoriesRequest](doc/SaveImportedMemoriesRequest.md)

@@ -141,13 +141,16 @@ import 'package:kasama_api/src/model/device_access_requested_event.dart';
 import 'package:kasama_api/src/model/device_access_requested_event_payload.dart';
 import 'package:kasama_api/src/model/device_data_used_event.dart';
 import 'package:kasama_api/src/model/device_data_used_event_payload.dart';
+import 'package:kasama_api/src/model/device_event_input.dart';
 import 'package:kasama_api/src/model/device_grant.dart';
 import 'package:kasama_api/src/model/device_kind_settings.dart';
+import 'package:kasama_api/src/model/device_place.dart';
 import 'package:kasama_api/src/model/device_reading.dart';
 import 'package:kasama_api/src/model/device_reading_input.dart';
 import 'package:kasama_api/src/model/device_request.dart';
 import 'package:kasama_api/src/model/device_request_result.dart';
 import 'package:kasama_api/src/model/device_source.dart';
+import 'package:kasama_api/src/model/device_trigger_config.dart';
 import 'package:kasama_api/src/model/dismiss_suggestion_request.dart';
 import 'package:kasama_api/src/model/edit_message_request.dart';
 import 'package:kasama_api/src/model/encryption_status.dart';
@@ -189,6 +192,7 @@ import 'package:kasama_api/src/model/lease_changed_event_payload.dart';
 import 'package:kasama_api/src/model/link_exchange.dart';
 import 'package:kasama_api/src/model/link_exchange_list.dart';
 import 'package:kasama_api/src/model/list_device_grants200_response.dart';
+import 'package:kasama_api/src/model/list_device_places200_response.dart';
 import 'package:kasama_api/src/model/list_device_readings200_response.dart';
 import 'package:kasama_api/src/model/list_device_requests200_response.dart';
 import 'package:kasama_api/src/model/list_device_sources200_response.dart';
@@ -281,6 +285,8 @@ import 'package:kasama_api/src/model/replay_from_teach_request.dart';
 import 'package:kasama_api/src/model/replay_list.dart';
 import 'package:kasama_api/src/model/replay_param_info.dart';
 import 'package:kasama_api/src/model/replay_steps_inner.dart';
+import 'package:kasama_api/src/model/report_device_events200_response.dart';
+import 'package:kasama_api/src/model/report_device_events_request.dart';
 import 'package:kasama_api/src/model/revert_page_request.dart';
 import 'package:kasama_api/src/model/revoked_connect_key.dart';
 import 'package:kasama_api/src/model/revoked_key.dart';
@@ -301,6 +307,7 @@ import 'package:kasama_api/src/model/run_replay_response.dart';
 import 'package:kasama_api/src/model/run_started.dart';
 import 'package:kasama_api/src/model/run_started_event.dart';
 import 'package:kasama_api/src/model/run_started_event_payload.dart';
+import 'package:kasama_api/src/model/save_device_place_request.dart';
 import 'package:kasama_api/src/model/save_device_source_request.dart';
 import 'package:kasama_api/src/model/save_device_source_request_kinds.dart';
 import 'package:kasama_api/src/model/save_imported_memories_request.dart';
@@ -760,6 +767,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeviceDataUsedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeviceDataUsedEventPayload':
           return DeviceDataUsedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeviceEventInput':
+          return DeviceEventInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeviceGrant':
           return DeviceGrant.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeviceKind':
@@ -767,6 +776,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           
         case 'DeviceKindSettings':
           return DeviceKindSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DevicePlace':
+          return DevicePlace.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeviceReading':
           return DeviceReading.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeviceReadingInput':
@@ -777,6 +788,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeviceRequestResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeviceSource':
           return DeviceSource.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeviceTriggerConfig':
+          return DeviceTriggerConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DismissSuggestionRequest':
           return DismissSuggestionRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'EditMessageRequest':
@@ -865,6 +878,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return LinkExchangeList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ListDeviceGrants200Response':
           return ListDeviceGrants200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ListDevicePlaces200Response':
+          return ListDevicePlaces200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ListDeviceReadings200Response':
           return ListDeviceReadings200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ListDeviceRequests200Response':
@@ -1061,6 +1076,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ReplayParamInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReplayStepsInner':
           return ReplayStepsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReportDeviceEvents200Response':
+          return ReportDeviceEvents200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReportDeviceEventsRequest':
+          return ReportDeviceEventsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevertPageRequest':
           return RevertPageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevokedConnectKey':
@@ -1110,6 +1129,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'RunStatus':
           
           
+        case 'SaveDevicePlaceRequest':
+          return SaveDevicePlaceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveDeviceSourceRequest':
           return SaveDeviceSourceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveDeviceSourceRequestKinds':

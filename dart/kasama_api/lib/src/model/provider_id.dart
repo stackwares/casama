@@ -36,7 +36,11 @@ enum ProviderId {
       @JsonValue(r'chatgpt')
       chatgpt(r'chatgpt'),
       @JsonValue(r'treg')
-      treg(r'treg');
+      treg(r'treg'),
+      @JsonValue(r'google_maps')
+      googleMaps(r'google_maps'),
+      @JsonValue(r'mapbox')
+      mapbox(r'mapbox');
 
   const ProviderId(this.value);
 

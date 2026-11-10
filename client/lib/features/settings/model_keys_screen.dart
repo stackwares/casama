@@ -26,6 +26,8 @@ String providerLabel(ProviderId p) => switch (p) {
   ProviderId.braveSearch => 'Brave Search',
   ProviderId.tavily => 'Tavily',
   ProviderId.treg => 'Treg',
+  ProviderId.googleMaps => 'Google Maps',
+  ProviderId.mapbox => 'Mapbox',
   ProviderId.deepgram => 'Deepgram',
   ProviderId.elevenlabs => 'ElevenLabs',
   ProviderId.cartesia => 'Cartesia',
@@ -111,6 +113,7 @@ String? _providerHint(BuildContext context, ProviderId p) => switch (p) {
   ProviderId.fal => context.l10n.providerHintImages,
   ProviderId.braveSearch || ProviderId.tavily => context.l10n.providerHintSearch,
   ProviderId.treg => context.l10n.providerHintData,
+  ProviderId.googleMaps || ProviderId.mapbox => context.l10n.providerHintMaps,
   ProviderId.deepgram || ProviderId.elevenlabs || ProviderId.cartesia || ProviderId.fishAudio => context.l10n.providerHintVoice,
   _ => null,
 };

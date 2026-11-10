@@ -1,0 +1,93 @@
+{
+  "name": "device-triggers",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "woke up"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "h1",
+            "name": "device.read",
+            "args": {
+              "kind": "health"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "device.read"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Good morning! You slept 5 hours last night."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Noted."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

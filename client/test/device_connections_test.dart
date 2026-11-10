@@ -3,9 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
 import 'package:kasama_app/features/devices/device_collector.dart';
 import 'package:kasama_app/features/devices/device_connections_screen.dart';
+import 'package:kasama_app/features/devices/device_events.dart';
 import 'package:kasama_app/features/devices/device_sync.dart';
 import 'package:kasama_app/features/devices/health_summary.dart';
+import 'dart:async';
+
 import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:native_geofence/native_geofence.dart' show GeofenceEvent;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show harness, setSize;
@@ -40,6 +44,28 @@ class FakeCollector implements DeviceCollector {
     writes.add((action, params));
     return {'event_id': 'E1'};
   }
+}
+
+class FakeTriggers implements DeviceTriggerPlatform {
+  final watched = <List<String>>[];
+  final notes = StreamController<({String app, String title, String text})>.broadcast();
+  var stopped = 0;
+  @override
+  bool get supportsPlaces => true;
+  @override
+  bool get supportsNotifications => true;
+  @override
+  Future<bool> requestPlaces() async => true;
+  @override
+  Future<({double lat, double lng})?> currentLocation() async => (lat: 40.7, lng: -74.0);
+  @override
+  Future<void> watchPlaces(List<DevicePlace> places) async => watched.add([for (final p in places) p.name]);
+  @override
+  Future<void> stopPlaces() async => stopped++;
+  @override
+  Future<bool> requestNotifications() async => true;
+  @override
+  Stream<({String app, String title, String text})> notifications() => notes.stream;
 }
 
 DeviceRequest req(String id, String kind, String action, [Map<String, Object?> params = const {}]) =>
@@ -144,12 +170,47 @@ void main() {
     expect(backend.pendingDeviceRequests, isEmpty);
   });
 
+  test('geofence events become arrive and leave with the place name only; codes are masked', () {
+    final at = DateTime.utc(2027, 1, 10, 18, 2);
+    expect(geofenceEvent('place:Home', GeofenceEvent.enter, at), {'id': 'geo-Home-arrive-${at.millisecondsSinceEpoch ~/ 60000}', 'type': 'arrive', 'at': '2027-01-10T18:02:00.000Z', 'place': 'Home'});
+    expect(geofenceEvent('place:Work', GeofenceEvent.exit, at)!['type'], 'leave');
+    expect(geofenceEvent('place:Gym', GeofenceEvent.dwell, at), isNull);
+    expect(geofenceEvent('other', GeofenceEvent.enter, at), isNull);
+    expect(maskCodes('Your code is 482913, ref AB12-CD34.'), 'Your code is ••••, ref ••••.');
+    expect(maskCodes('Lunch at 12?'), 'Lunch at 12?');
+  });
+
+  test('places watch the named places; picked apps only, masked; "where am I" answered once', () async {
+    final backend = FakeBackend();
+    final triggers = FakeTriggers();
+    final sync = DeviceSync(backend, FakeCollector(), triggers: triggers);
+    await backend.saveDevicePlace(name: 'Home', latitude: 1, longitude: 2);
+    expect(sync.supported, containsAll([DeviceKind.places, DeviceKind.notifications]));
+    await sync.setKind(DeviceKind.places, true);
+    expect(triggers.watched.single, ['Home']);
+    await sync.setKind(DeviceKind.notifications, true, settings: DeviceKindSettings(apps: ['bank']));
+    triggers.notes.add((app: 'com.mybank.app', title: 'Code', text: 'Your code is 482913'));
+    triggers.notes.add((app: 'com.games.app', title: 'Play', text: 'now'));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(backend.reportedEvents.map((e) => e.$2.app), ['com.mybank.app']);
+    expect(backend.reportedEvents.single.$2.text, 'Your code is ••••');
+    expect(await DeviceEventQueue.pending(), isEmpty);
+
+    backend.pendingDeviceRequests.add(req('loc1', 'places', 'locate'));
+    await sync.answerPending();
+    expect((backend.deviceAnswers.single.$1, backend.deviceAnswers.single.$2), ('loc1', true));
+    expect(backend.deviceAnswers.single.$3, {'lat': 40.7, 'lng': -74.0});
+    await sync.setKind(DeviceKind.places, false);
+    expect(triggers.stopped, 1);
+    sync.dispose();
+  });
+
   testWidgets('settings: turn a kind on, keep it shorter, and stop a bot reading it', (tester) async {
     await setSize(tester, const Size(500, 1200));
     final backend = FakeBackend();
     final collector = FakeCollector();
     backend.grants.add(DeviceGrant(botId: botId, botName: 'Pal', kind: DeviceKind.calendar, createdAt: DateTime(2026)));
-    await tester.pumpWidget(harness(backend, const DeviceConnectionsScreen(), overrides: [deviceCollectorProvider.overrideWithValue(collector)]));
+    await tester.pumpWidget(harness(backend, const DeviceConnectionsScreen(), overrides: [deviceCollectorProvider.overrideWithValue(collector), deviceTriggerPlatformProvider.overrideWithValue(FakeTriggers())]));
     await tester.pumpAndSettle();
     expect(find.text('Calendar'), findsOneWidget);
     expect(find.text('Contacts'), findsOneWidget);

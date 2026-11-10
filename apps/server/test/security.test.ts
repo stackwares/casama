@@ -229,6 +229,8 @@ describe("cross-tenant sweep (Phase 8 security review)", () => {
       // registers B's own device (device-data.test.ts proves A's device is untouched).
       "saveDeviceSource",
       "deleteDeviceSource",
+      // Named places (D-151) are created in the caller's own list; device-triggers.test.ts checks isolation.
+      "saveDevicePlace",
     ]);
     for (const [path, ops] of Object.entries(doc.paths)) {
       if (!path.startsWith("/v1/")) continue;

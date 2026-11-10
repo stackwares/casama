@@ -63,6 +63,8 @@ let runtime:
       voip?: import("@kasama/agent").VoipSender;
       /** Audit-log forwarding is licensed (D-146). */
       auditForwarding?: boolean;
+      /** Leave-now device triggers (D-151): maps key and fetch. */
+      leaveNow?: import("./device-triggers.ts").LeaveNowDeps;
     }
   | undefined;
 export function configureWorkflows(r: NonNullable<typeof runtime>) {
@@ -138,6 +140,9 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     // Phone calls nobody answered (D-135) become a push with the reason.
     await DBOS.runStep(() => expireCalls({ db: rt().db, notifications: rt().agent.notifications }).catch(() => 0), { name: "expire-calls" });
     const runIds = await DBOS.runStep(() => claimDueRoutines(rt().db), { name: "claim-due" });
+    // Device triggers (D-151): leave now for the next event with a place.
+    const lnDeps = rt().leaveNow;
+    if (lnDeps) runIds.push(...(await DBOS.runStep(() => import("./device-triggers.ts").then((m) => m.checkLeaveNow(rt().db, lnDeps)).catch(() => [] as string[]), { name: "leave-now" })));
     // Calendar triggers (D-132): read calendars every 5 minutes; start the runs whose time has come.
     await DBOS.runStep(
       () => checkCalendarTriggers({ db: rt().db, fetch: rt().agent.fetch ?? fetch }).catch(() => 0),

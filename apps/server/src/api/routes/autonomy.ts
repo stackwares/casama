@@ -127,7 +127,8 @@ const routineOut = (r: RoutineRow) => ({
     | "github"
     | "webhook"
     | "calendar_event"
-    | "message",
+    | "message"
+    | "device",
   message: (() => {
     const t = r.trigger as Record<string, unknown> & { type?: string };
     if (t?.type !== "message") return null;
@@ -144,6 +145,16 @@ const routineOut = (r: RoutineRow) => ({
       ...(t.outside_guests !== undefined ? { outside_guests: t.outside_guests } : {}),
       ...(t.title_match ? { title_match: t.title_match } : {}),
       ...(t.has_video_link !== undefined ? { has_video_link: t.has_video_link } : {}),
+    };
+  })(),
+  device: (() => {
+    const t = r.trigger as { type?: string; event?: string; place?: string; app?: string; minutes_before?: number };
+    if (t?.type !== "device" || !t.event) return null;
+    return {
+      event: t.event as "wake",
+      ...(t.place ? { place: t.place } : {}),
+      ...(t.app ? { app: t.app } : {}),
+      ...(t.minutes_before !== undefined ? { minutes_before: t.minutes_before } : {}),
     };
   })(),
   notify: r.notify,
@@ -641,6 +652,13 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         select id from public.integrations where id = ${cal.integration_id}::uuid and org_id = ${bot.orgId}::uuid`);
       if (!i) throw new ApiError(404, "integration_not_found", "Connect a calendar first");
       triggerJson = { type: trigger, ...cal };
+    }
+    if (trigger === "device") {
+      const d = body.device;
+      if (!d) throw new ApiError(400, "validation_failed", "A device routine needs its event");
+      if ((d.event === "arrive" || d.event === "leave") && !d.place) throw new ApiError(400, "validation_failed", "Arrive and leave routines need a named place");
+      if (d.event === "notification" && !d.app) throw new ApiError(400, "validation_failed", "Notification routines need the app to watch");
+      triggerJson = { type: trigger, ...d };
     }
     if (trigger === "github" || trigger === "webhook") {
       webhookSecret = randomBytes(24).toString("hex");

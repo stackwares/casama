@@ -13,6 +13,8 @@ abstract class _$DeviceKindSettingsCWProxy {
 
   DeviceKindSettings extras(List<DeviceKindSettingsExtrasEnum>? extras);
 
+  DeviceKindSettings apps(List<String>? apps);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `DeviceKindSettings(...).copyWith.fieldName(value)`.
@@ -25,6 +27,7 @@ abstract class _$DeviceKindSettingsCWProxy {
     int? retentionDays,
     bool? privateModel,
     List<DeviceKindSettingsExtrasEnum>? extras,
+    List<String>? apps,
   });
 }
 
@@ -47,6 +50,9 @@ class _$DeviceKindSettingsCWProxyImpl implements _$DeviceKindSettingsCWProxy {
   DeviceKindSettings extras(List<DeviceKindSettingsExtrasEnum>? extras) =>
       call(extras: extras);
 
+  @override
+  DeviceKindSettings apps(List<String>? apps) => call(apps: apps);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `DeviceKindSettings(...).copyWith.fieldName(value)`.
@@ -60,6 +66,7 @@ class _$DeviceKindSettingsCWProxyImpl implements _$DeviceKindSettingsCWProxy {
     Object? retentionDays = const $CopyWithPlaceholder(),
     Object? privateModel = const $CopyWithPlaceholder(),
     Object? extras = const $CopyWithPlaceholder(),
+    Object? apps = const $CopyWithPlaceholder(),
   }) {
     return DeviceKindSettings(
       retentionDays: retentionDays == const $CopyWithPlaceholder()
@@ -74,6 +81,10 @@ class _$DeviceKindSettingsCWProxyImpl implements _$DeviceKindSettingsCWProxy {
           ? _value.extras
           // ignore: cast_nullable_to_non_nullable
           : extras as List<DeviceKindSettingsExtrasEnum>?,
+      apps: apps == const $CopyWithPlaceholder()
+          ? _value.apps
+          // ignore: cast_nullable_to_non_nullable
+          : apps as List<String>?,
     );
   }
 }
@@ -109,6 +120,10 @@ DeviceKindSettings _$DeviceKindSettingsFromJson(Map<String, dynamic> json) =>
                 )
                 .toList(),
           ),
+          apps: $checkedConvert(
+            'apps',
+            (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+          ),
         );
         return val;
       },
@@ -125,6 +140,7 @@ Map<String, dynamic> _$DeviceKindSettingsToJson(DeviceKindSettings instance) =>
       'extras': ?instance.extras
           ?.map((e) => _$DeviceKindSettingsExtrasEnumEnumMap[e]!)
           .toList(),
+      'apps': ?instance.apps,
     };
 
 const _$DeviceKindSettingsExtrasEnumEnumMap = {

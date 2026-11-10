@@ -143,7 +143,9 @@ read(r'read'),
 @JsonValue(r'calendar.create')
 calendarPeriodCreate(r'calendar.create'),
 @JsonValue(r'reminders.create')
-remindersPeriodCreate(r'reminders.create');
+remindersPeriodCreate(r'reminders.create'),
+@JsonValue(r'locate')
+locate(r'locate');
 
 const DeviceRequestActionEnum(this.value);
 

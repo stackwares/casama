@@ -76,6 +76,8 @@ export async function startHarness(
         deepgram?: string;
         elevenlabs?: string;
         treg?: string;
+        google_maps?: string;
+        mapbox?: string;
         twilio?: string;
         twilioLookups?: string;
         stripe?: string;

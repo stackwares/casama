@@ -6,7 +6,10 @@ import {
   DeviceReading,
   DeviceRequest,
   DeviceRequestResult,
+  DevicePlace,
   DeviceSource,
+  ReportDeviceEventsRequest,
+  SaveDevicePlaceRequest,
   SaveDeviceSourceRequest,
   SetDeviceGrantRequest,
   UploadDeviceReadingsRequest,
@@ -79,3 +82,26 @@ export const setDeviceGrant = createRoute({
   request: { body: jsonBody(SetDeviceGrantRequest) },
   responses: { 200: jsonResponse("Grants", z.object({ items: z.array(DeviceGrant) })), 400: e400, 401: e401, 404: e404 },
 });
+
+export const reportDeviceEvents = createRoute({
+  operationId: "reportDeviceEvents",
+  method: "post",
+  path: "/v1/device-sources/{key}/events",
+  tags,
+  security,
+  summary: "Report events that start device-triggered routines (D-151)",
+  request: { params: key, body: jsonBody(ReportDeviceEventsRequest) },
+  responses: { 200: jsonResponse("Accepted", z.object({ accepted: z.number().int(), runs: z.number().int() })), 400: e400, 401: e401, 404: e404 },
+});
+export const listDevicePlaces = createRoute({ operationId: "listDevicePlaces", method: "get", path: "/v1/device-places", tags, security, summary: "Your named places", responses: { 200: jsonResponse("Places", z.object({ items: z.array(DevicePlace) })), 401: e401 } });
+export const saveDevicePlace = createRoute({
+  operationId: "saveDevicePlace",
+  method: "post",
+  path: "/v1/device-places",
+  tags,
+  security,
+  summary: "Add or update a named place (up to 20)",
+  request: { body: jsonBody(SaveDevicePlaceRequest) },
+  responses: { 200: jsonResponse("Place", DevicePlace), 400: e400, 401: e401 },
+});
+export const deleteDevicePlace = createRoute({ operationId: "deleteDevicePlace", method: "delete", path: "/v1/device-places/{id}", tags, security, request: { params: z.object({ id: Uuid }) }, responses: { 200: jsonResponse("Deleted", z.object({ ok: z.boolean() })), 401: e401, 404: e404 } });

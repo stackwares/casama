@@ -14,6 +14,11 @@ export const DeviceKindSettings = z
       .array(z.enum(["cycle", "glucose", "blood_pressure"]))
       .optional()
       .openapi({ description: "Health only: sensitive extras the person turned on (off by default)" }),
+    apps: z
+      .array(z.string().trim().min(1).max(200))
+      .max(50)
+      .optional()
+      .openapi({ description: "Notifications only: the apps (names or package ids) whose notifications are shared; nothing else is" }),
   })
   .openapi("DeviceKindSettings");
 
@@ -72,7 +77,7 @@ export const DeviceRequest = z
     id: Uuid,
     source_id: Uuid,
     kind: z.string(),
-    action: z.enum(["read", "calendar.create", "reminders.create"]),
+    action: z.enum(["read", "calendar.create", "reminders.create", "locate"]),
     params: z.record(z.string(), z.unknown()),
     created_at: z.iso.datetime({ offset: true }),
   })
@@ -134,3 +139,38 @@ export const HealthWorkoutSummary = z
   .openapi("HealthWorkoutSummary");
 
 export const HealthSummary = z.discriminatedUnion("type", [HealthDaySummary, HealthWorkoutSummary]);
+
+/** Device triggers (D-151): what a device reports. Places are named; no coordinates are sent. */
+export const DeviceEventInput = z
+  .object({
+    id: z.string().min(1).max(200).openapi({ description: "Unique per event on the device, so a retry never fires twice" }),
+    type: z.enum(["wake", "arrive", "leave", "workout_ended", "notification", "focus_on", "focus_off"]),
+    at: z.iso.datetime({ offset: true }),
+    place: z.string().max(60).optional(),
+    app: z.string().max(200).optional(),
+    title: z.string().max(300).optional(),
+    text: z.string().max(2000).optional(),
+  })
+  .openapi("DeviceEventInput");
+
+export const ReportDeviceEventsRequest = z.object({ events: z.array(DeviceEventInput).max(50) }).openapi("ReportDeviceEventsRequest");
+
+export const DevicePlace = z
+  .object({
+    id: Uuid,
+    name: z.string(),
+    latitude: z.number(),
+    longitude: z.number(),
+    radius_m: z.number().int(),
+    created_at: z.iso.datetime({ offset: true }),
+  })
+  .openapi("DevicePlace");
+
+export const SaveDevicePlaceRequest = z
+  .object({
+    name: z.string().trim().min(1).max(60),
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+    radius_m: z.number().int().min(50).max(2000).optional(),
+  })
+  .openapi("SaveDevicePlaceRequest");

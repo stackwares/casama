@@ -1603,3 +1603,46 @@ Choices the spec left open, recorded as they are made. Newest last. Each entry: 
   - Agent: trend rules (thresholds, the 30-day window, enough history, later days never counting) and private model URLs.
   - App: day and workout summaries (sleep attribution, stages, sums and averages, extras only when on).
   - The wake-up brief that cites last night's sleep is tested with the wake-up trigger (D-151).
+
+## D-151 Device triggers
+
+- **The trigger:**
+  - Routines take `trigger: "device"` with `{event, place?, app?, minutes_before?}`. Events are wake, arrive, leave, leave_now, workout_ended, notification, focus_on and focus_off.
+  - A device routine fires only for events from its creator's own devices. The data is personal (D-149), so a teammate's routine never sees another person's events.
+  - Bots create them with `routines.create(on_device_event)`. The routine's creator is the person the run acts for.
+  - Arrive and leave need a place; notification needs an app.
+- **Reporting events:**
+  - `POST /v1/device-sources/{key}/events`. Each event carries a device-side id. `device_event_log` remembers ids for 30 days, so a retried upload never starts a routine twice.
+  - The API creates the runs and starts them at once (no polling), which is well inside the 2-minute target. The event reaches the run as untrusted "device event" context.
+- **No GPS trail:**
+  - Named places are the only coordinates kept: `device_places`, up to 20 per person (the iOS region limit), saved through the API.
+  - Devices report only the place name and a time. A visit is stored as `{place, arrived_at, left_at}` (leave closes the latest open visit), and only when Places is on and not "live only".
+- **Notifications:** only from apps the person picked (`kinds.notifications.apps`). The server drops anything else, even if a device sends it. One-time codes are masked on the device and again on the server before storing or passing to a run.
+- **Wake-up and workouts come from health:**
+  - A day summary covering today with a sleep end means a wake-up, once per day per device. A workout summary that ended in the last 6 hours means workout_ended, so a backfill doesn't fire old ones.
+  - A wake-up also runs the person's check-in briefs (D-114) that haven't run in the last 14 hours. The scheduled brief time becomes the fallback: `claimDueRoutines` skips a brief that already ran on wake-up.
+- **Leave now:**
+  - Each minute, for each leave-now routine, the worker finds the creator's next calendar event with a location in the next 3 hours.
+  - It asks an online device with Places on where the person is: a `locate` request, answered once.
+  - It gets the travel time on the workspace's own maps key: Google Maps Distance Matrix with traffic, or Mapbox geocoding plus driving-traffic directions (new providers `google_maps` and `mapbox` in Model keys).
+  - It fires once travel time plus the buffer (default 5 minutes) reaches the start. The location is cleared as soon as it's used, and `locate` requests are deleted after 10 minutes.
+- **App:**
+  - Places (iOS, Android) turns on location ("While using", then "Always" for arrive and leave with the app closed). It registers geofences named `place:<name>` with `native_geofence`.
+  - The geofence callback runs even with the app terminated. It queues the event and tries to send it within the OS's time limit by bringing up a background backend (stored server address and Supabase session). Anything unsent goes on the next launch or resume.
+  - Settings shows the named places, with "Add where I am now". The "where am I" answer uses `geolocator`.
+  - Notifications (Android) uses the notification listener, with a watched-apps list in Settings. Codes are masked before anything is queued.
+  - iOS registers plugins for background geofence launches in `AppDelegate`. Purpose strings, Android permissions, geofence receivers and the notification listener service are declared.
+- **Not in this step (server-ready, collectors pending):**
+  - Focus and Do Not Disturb changes, and Android's first unlock as a wake-up signal. Both need native code (iOS Focus status needs its capability; Android needs a broadcast receiver and the interruption-filter callback). Listed for Oliver.
+  - The notification listener only hears notifications while the app's process is alive.
+  - Every collector still needs a check on real phones.
+- **Tests:**
+  - API (`device-triggers.test.ts`):
+    - Named places are owner-only and capped at 20.
+    - Arriving at Home starts the owner's routine at once, with the event text. It doesn't start the Work routine or a teammate's Home routine, and a retry doesn't fire twice.
+    - The visit is stored as times only, with no coordinates.
+    - A watched app's notification fires with the code masked, in the run and in storage. Unpicked apps are dropped.
+    - A health upload with last night's sleep runs the wake routine and the brief, which reads health and cites the sleep. A second upload doesn't run them again, and the scheduled brief skips.
+    - Leave-now asks for the location, then fires at travel (with traffic) plus buffer and not before, with the right maps request. The location is cleared afterwards, and it fires only once.
+  - pgTAP: places and the event log are owner-only and written only through the API.
+  - App: geofence-to-event mapping, code masking, places watching, notification filtering and masking, the locate answer, and Places off.

@@ -5,6 +5,7 @@
 // ignore_for_file: unused_element
 import 'package:kasama_api/src/model/calendar_trigger_config.dart';
 import 'package:kasama_api/src/model/routine_trigger.dart';
+import 'package:kasama_api/src/model/device_trigger_config.dart';
 import 'package:kasama_api/src/model/message_trigger_config.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -40,6 +41,8 @@ class Routine {
      this.calendar,
 
      this.message,
+
+     this.device,
 
     required  this.notify,
 
@@ -164,6 +167,18 @@ class Routine {
 
   @JsonKey(
     
+    name: r'device',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final DeviceTriggerConfig? device;
+
+
+
+  @JsonKey(
+    
     name: r'notify',
     required: true,
     includeIfNull: false,
@@ -247,6 +262,7 @@ class Routine {
       other.trigger == trigger &&
       other.calendar == calendar &&
       other.message == message &&
+      other.device == device &&
       other.notify == notify &&
       other.enabled == enabled &&
       other.nextRunAt == nextRunAt &&
@@ -265,6 +281,7 @@ class Routine {
         trigger.hashCode +
         (calendar == null ? 0 : calendar.hashCode) +
         (message == null ? 0 : message.hashCode) +
+        (device == null ? 0 : device.hashCode) +
         notify.hashCode +
         enabled.hashCode +
         (nextRunAt == null ? 0 : nextRunAt.hashCode) +

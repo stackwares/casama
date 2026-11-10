@@ -5456,4 +5456,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get healthNeedsEncryption =>
       'Health data needs encryption at rest. Turn it on for a workspace you own, then try again.';
+
+  @override
+  String get placeAddHere => 'Add where I am now';
+
+  @override
+  String get placeName => 'Name this place (Home, Work, Gym)';
+
+  @override
+  String get placeNoLocation =>
+      'Your location isn\'t available. Allow location for Kasama, then try again.';
+
+  @override
+  String get placesHelp =>
+      'Bots hear when you arrive at or leave these places. Only the place name and the time are shared, never your route.';
+
+  @override
+  String get watchedAppsHelp =>
+      'Only notifications from these apps are shared. One-time codes are hidden before anything leaves your phone.';
+
+  @override
+  String get watchedAppAdd => 'Add an app (name or package id)';
+
+  @override
+  String get providerHintMaps => 'travel times for leave-now';
+
+  @override
+  String routineDevice(String event, String detail) {
+    return 'On your phone: $event $detail';
+  }
 }

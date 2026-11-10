@@ -1016,50 +1016,6 @@ export const billingEvents = pgTable("billing_events", {
 	check("billing_events_source_check", sql`source = ANY (ARRAY['dodo'::text, 'app_store'::text, 'google_play'::text])`),
 ]);
 
-export const modelCredentials = pgTable("model_credentials", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	provider: text().notNull(),
-	label: text().notNull(),
-	baseUrl: text("base_url"),
-	vaultSecretId: uuid("vault_secret_id"),
-	keyHint: text("key_hint"),
-	createdBy: uuid("created_by"),
-	lastTestedAt: timestamp("last_tested_at", { withTimezone: true, mode: 'string' }),
-	lastTestOk: boolean("last_test_ok"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	ownerUserId: uuid("owner_user_id"),
-	status: text().default('ok').notNull(),
-	settings: jsonb().default({}).notNull(),
-	oauth: jsonb().default({}).notNull(),
-	refreshedAt: timestamp("refreshed_at", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	index("model_credentials_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
-	index("model_credentials_owner_idx").using("btree", table.ownerUserId.asc().nullsLast().op("uuid_ops")).where(sql`(owner_user_id IS NOT NULL)`),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "model_credentials_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.createdBy],
-			foreignColumns: [users.id],
-			name: "model_credentials_created_by_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.ownerUserId],
-			foreignColumns: [users.id],
-			name: "model_credentials_owner_user_id_fkey"
-		}).onDelete("cascade"),
-	pgPolicy("model_credentials_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("model_credentials_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("model_credentials_label_check", sql`(char_length(label) >= 1) AND (char_length(label) <= 80)`),
-	check("model_credentials_status_check", sql`status = ANY (ARRAY['ok'::text, 'plan_usage_off'::text, 'needs_reconnect'::text])`),
-	check("model_credentials_chatgpt_owner", sql`(provider <> 'chatgpt'::text) OR (owner_user_id IS NOT NULL)`),
-	check("model_credentials_provider_check", sql`provider = ANY (ARRAY['openai'::text, 'anthropic'::text, 'google'::text, 'xai'::text, 'openrouter'::text, 'openai_compatible'::text, 'fal'::text, 'brave_search'::text, 'tavily'::text, 'deepgram'::text, 'elevenlabs'::text, 'cartesia'::text, 'fish_audio'::text, 'chatgpt'::text, 'treg'::text])`),
-]);
-
 export const devices = pgTable("devices", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	userId: uuid("user_id").notNull(),
@@ -1471,6 +1427,50 @@ export const tasks = pgTable("tasks", {
 	check("tasks_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 300)`),
 	check("tasks_status_check", sql`status = ANY (ARRAY['todo'::text, 'in_progress'::text, 'in_review'::text, 'blocked'::text, 'done'::text])`),
 	check("tasks_priority_check", sql`priority = ANY (ARRAY['urgent'::text, 'high'::text, 'medium'::text, 'low'::text, 'none'::text])`),
+]);
+
+export const modelCredentials = pgTable("model_credentials", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	provider: text().notNull(),
+	label: text().notNull(),
+	baseUrl: text("base_url"),
+	vaultSecretId: uuid("vault_secret_id"),
+	keyHint: text("key_hint"),
+	createdBy: uuid("created_by"),
+	lastTestedAt: timestamp("last_tested_at", { withTimezone: true, mode: 'string' }),
+	lastTestOk: boolean("last_test_ok"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	ownerUserId: uuid("owner_user_id"),
+	status: text().default('ok').notNull(),
+	settings: jsonb().default({}).notNull(),
+	oauth: jsonb().default({}).notNull(),
+	refreshedAt: timestamp("refreshed_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("model_credentials_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
+	index("model_credentials_owner_idx").using("btree", table.ownerUserId.asc().nullsLast().op("uuid_ops")).where(sql`(owner_user_id IS NOT NULL)`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "model_credentials_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "model_credentials_created_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.ownerUserId],
+			foreignColumns: [users.id],
+			name: "model_credentials_owner_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("model_credentials_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
+	pgPolicy("model_credentials_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("model_credentials_label_check", sql`(char_length(label) >= 1) AND (char_length(label) <= 80)`),
+	check("model_credentials_status_check", sql`status = ANY (ARRAY['ok'::text, 'plan_usage_off'::text, 'needs_reconnect'::text])`),
+	check("model_credentials_chatgpt_owner", sql`(provider <> 'chatgpt'::text) OR (owner_user_id IS NOT NULL)`),
+	check("model_credentials_provider_check", sql`provider = ANY (ARRAY['openai'::text, 'anthropic'::text, 'google'::text, 'xai'::text, 'openrouter'::text, 'openai_compatible'::text, 'fal'::text, 'brave_search'::text, 'tavily'::text, 'deepgram'::text, 'elevenlabs'::text, 'cartesia'::text, 'fish_audio'::text, 'chatgpt'::text, 'treg'::text, 'google_maps'::text, 'mapbox'::text])`),
 ]);
 
 export const botRevisions = pgTable("bot_revisions", {
@@ -3216,6 +3216,29 @@ export const auditForwarders = pgTable("audit_forwarders", {
 	check("audit_forwarders_kind_check", sql`kind = ANY (ARRAY['webhook'::text, 'otlp'::text, 's3'::text])`),
 ]);
 
+export const devicePlaces = pgTable("device_places", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	name: text().notNull(),
+	latitude: doublePrecision().notNull(),
+	longitude: doublePrecision().notNull(),
+	radiusM: integer("radius_m").default(150).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	uniqueIndex("device_places_name_idx").using("btree", sql`user_id`, sql`lower(name)`),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "device_places_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("device_places_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("device_places_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 60)`),
+	check("device_places_latitude_check", sql`(latitude >= ('-90'::integer)::double precision) AND (latitude <= (90)::double precision)`),
+	check("device_places_longitude_check", sql`(longitude >= ('-180'::integer)::double precision) AND (longitude <= (180)::double precision)`),
+	check("device_places_radius_m_check", sql`(radius_m >= 50) AND (radius_m <= 2000)`),
+]);
+
 export const deviceRequests = pgTable("device_requests", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	userId: uuid("user_id").notNull(),
@@ -3242,8 +3265,8 @@ export const deviceRequests = pgTable("device_requests", {
 		}).onDelete("cascade"),
 	pgPolicy("device_requests_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
-	check("device_requests_action_check", sql`action = ANY (ARRAY['read'::text, 'calendar.create'::text, 'reminders.create'::text])`),
 	check("device_requests_status_check", sql`status = ANY (ARRAY['pending'::text, 'done'::text, 'failed'::text, 'expired'::text])`),
+	check("device_requests_action_check", sql`action = ANY (ARRAY['read'::text, 'calendar.create'::text, 'reminders.create'::text, 'locate'::text])`),
 ]);
 
 export const agentImportFiles = pgTable("agent_import_files", {
@@ -3283,6 +3306,23 @@ export const deviceGrants = pgTable("device_grants", {
 	pgPolicy("device_grants_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
 	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
 	check("device_grants_kind_check", sql`kind = ANY (ARRAY['calendar'::text, 'reminders'::text, 'contacts'::text, 'places'::text, 'photos'::text, 'health'::text, 'notifications'::text, 'activity'::text])`),
+]);
+
+export const deviceEventLog = pgTable("device_event_log", {
+	userId: uuid("user_id").notNull(),
+	eventId: text("event_id").notNull(),
+	type: text().notNull(),
+	receivedAt: timestamp("received_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "device_event_log_user_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.userId, table.eventId], name: "device_event_log_pkey"}),
+	pgPolicy("device_event_log_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	check("device_event_log_event_id_check", sql`(char_length(event_id) >= 1) AND (char_length(event_id) <= 200)`),
 ]);
 
 export const ttsCache = pgTable("tts_cache", {

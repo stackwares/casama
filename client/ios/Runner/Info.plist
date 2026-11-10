@@ -30,6 +30,10 @@
 	<string>Your bots can see daily summaries of your sleep, activity and workouts, only when you turn on Health in Device connections. Kasama never writes to Health and never uses it for ads.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Kasama only reads Health data; it never writes to it.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Save named places (Home, Work) and tell your bots when it's time to leave, only when you turn on Places in Device connections.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Tell your bots when you arrive at or leave your named places, even when Kasama is closed. Only the place name and time are shared, never your route.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Kasama uses the microphone for dictation and voice calls with your bots.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>

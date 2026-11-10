@@ -233,6 +233,8 @@ export const ProviderId = z
     "fish_audio",
     "chatgpt",
     "treg",
+    "google_maps",
+    "mapbox",
   ])
   .openapi("ProviderId");
 

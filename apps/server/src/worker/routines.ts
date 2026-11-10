@@ -25,7 +25,7 @@ type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 export async function createRoutineRun(
   tx: Tx | Database,
   r: RoutineRow,
-  trigger: "routine" | "webhook" | "calendar" | "message",
+  trigger: "routine" | "webhook" | "calendar" | "message" | "device",
   eventText?: string,
 ) {
   // Check-in scans (D-114) keep no conversation: a quiet scan writes nothing. Their instructions
@@ -57,7 +57,7 @@ export async function createRoutineRun(
     returning id`);
   const runId = run?.id as string;
   const text = eventText
-    ? `${r.instructions_md}\n\nThe event that triggered this run:\n${wrapUntrusted(trigger === "calendar" ? "calendar" : trigger === "message" ? "message" : "webhook", eventText)}`
+    ? `${r.instructions_md}\n\nThe event that triggered this run:\n${wrapUntrusted(trigger === "calendar" ? "calendar" : trigger === "message" ? "message" : trigger === "device" ? "device event" : "webhook", eventText)}`
     : r.instructions_md;
   await tx.execute(sql`
     insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
@@ -90,7 +90,9 @@ export async function claimDueRoutines(
       const capped =
         (r.kind === "brief" || r.kind === "scan") &&
         (await checkinCapReached(tx as Database, r.bot_id));
-      if (!capped) runIds.push(await createRoutineRun(tx, r, "routine"));
+      // A brief that already ran this morning on wake-up (D-151) skips its scheduled time.
+      const briefed = r.kind === "brief" && r.last_run_at && now.getTime() - new Date(r.last_run_at as string).getTime() < 14 * 3600_000;
+      if (!capped && !briefed) runIds.push(await createRoutineRun(tx, r, "routine"));
       if (r.trigger?.type === "once") {
         // A one-time routine runs once and switches itself off.
         await tx.execute(

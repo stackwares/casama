@@ -16,6 +16,7 @@ import { startTicketWork } from "../tickets.ts";
 import { type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
 import { contentKeys } from "@kasama/db";
 import { sealRunPayload } from "../events.ts";
+import { actingUserOf } from "../acting.ts";
 
 export interface AutonomyToolDeps {
   db: Database;
@@ -335,19 +336,41 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         .optional()
         .describe("Run once at this ISO 8601 time (with offset)"),
       schedule_cron: z.string().max(100).optional().describe("Repeat on this 5-field cron"),
+      on_device_event: z
+        .object({
+          event: z.enum(["wake", "arrive", "leave", "leave_now", "workout_ended", "notification", "focus_on", "focus_off"]),
+          place: z.string().max(60).optional().describe("arrive/leave: a named place like Home"),
+          app: z.string().max(200).optional().describe("notification: the app to watch"),
+          minutes_before: z.number().int().min(0).max(120).optional().describe("leave_now: buffer on top of travel time"),
+        })
+        .optional()
+        .describe("Run each time this happens on the person's own phone (they must share that kind in Device connections)"),
       timezone: z.string().max(64).optional(),
       notify: z.boolean().optional(),
     }),
     async execute(args, ctx) {
       const target = await routineBot(args.bot, ctx);
-      const kinds = [args.in_minutes != null, !!args.run_at, !!args.schedule_cron].filter(
+      const kinds = [args.in_minutes != null, !!args.run_at, !!args.schedule_cron, !!args.on_device_event].filter(
         Boolean,
       ).length;
       if (kinds !== 1)
         throw new ToolError(
           "invalid_schedule",
-          "Pass exactly one of in_minutes, run_at (once) or schedule_cron (repeating).",
+          "Pass exactly one of in_minutes, run_at (once), schedule_cron (repeating) or on_device_event.",
         );
+      if (args.on_device_event) {
+        // Device triggers (D-151) belong to the person this run acts for: their events, their routine.
+        const d = args.on_device_event;
+        if ((d.event === "arrive" || d.event === "leave") && !d.place) throw new ToolError("place_required", "Arrive and leave need a named place.");
+        if (d.event === "notification" && !d.app) throw new ToolError("app_required", "Notification routines need the app to watch.");
+        const person = await actingUserOf(db, ctx.runId);
+        if (!person) throw new ToolError("no_person", "Device routines need a person: this run isn't acting for anyone.");
+        const [r] = await db.execute<{ id: string }>(sql`
+          insert into public.routines (org_id, bot_id, created_by, name, instructions_md, timezone, trigger, notify)
+          values (${ctx.orgId}::uuid, ${target}::uuid, ${person}::uuid, ${args.name}, ${args.instructions}, ${args.timezone ?? "UTC"},
+                  ${JSON.stringify({ type: "device", ...d })}::jsonb, ${args.notify ?? true}) returning id`);
+        return { content: `Created routine ${r?.id}: it runs on ${d.event}${d.place ? ` (${d.place})` : ""}${d.app ? ` (${d.app})` : ""}.`, preview: `${args.name} · on ${d.event}` };
+      }
       if (args.schedule_cron && !isValidCron(args.schedule_cron))
         throw new ToolError("invalid_cron", "Use a 5-field cron expression like '0 8 * * *'.");
       const [owner] = await db.execute<{ user_id: string | null; timezone: string | null }>(sql`

@@ -296,6 +296,8 @@ const _$ProviderIdEnumMap = {
   ProviderId.fishAudio: 'fish_audio',
   ProviderId.chatgpt: 'chatgpt',
   ProviderId.treg: 'treg',
+  ProviderId.googleMaps: 'google_maps',
+  ProviderId.mapbox: 'mapbox',
 };
 
 const _$CredentialStatusEnumMap = {

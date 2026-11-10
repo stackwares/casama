@@ -25,6 +25,8 @@ class DeviceKindSettings {
      this.privateModel,
 
      this.extras,
+
+     this.apps,
   });
 
       /// 0 keeps nothing (live only); the default is 365 for daily summaries, 90 for places and notifications
@@ -68,19 +70,34 @@ class DeviceKindSettings {
 
 
 
+      /// Notifications only: the apps (names or package ids) whose notifications are shared; nothing else is
+  @JsonKey(
+    
+    name: r'apps',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? apps;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is DeviceKindSettings &&
       other.retentionDays == retentionDays &&
       other.privateModel == privateModel &&
-      other.extras == extras;
+      other.extras == extras &&
+      other.apps == apps;
 
     @override
     int get hashCode =>
         retentionDays.hashCode +
         privateModel.hashCode +
-        extras.hashCode;
+        extras.hashCode +
+        apps.hashCode;
 
   factory DeviceKindSettings.fromJson(Map<String, dynamic> json) => _$DeviceKindSettingsFromJson(json);
 

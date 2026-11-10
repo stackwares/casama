@@ -1748,6 +1748,20 @@ class SupabaseBackend implements Backend {
       (await api.devices.setDeviceGrant(setDeviceGrantRequest: SetDeviceGrantRequest(botId: botId, kind: kind, allowed: allowed))).data!.items;
 
   @override
+  Future<int> reportDeviceEvents(String key, List<DeviceEventInput> events) async =>
+      (await api.devices.reportDeviceEvents(key: key, reportDeviceEventsRequest: ReportDeviceEventsRequest(events: events))).data!.runs;
+
+  @override
+  Future<List<DevicePlace>> devicePlaces() async => (await api.devices.listDevicePlaces()).data!.items;
+
+  @override
+  Future<DevicePlace> saveDevicePlace({required String name, required double latitude, required double longitude, int? radiusM}) async =>
+      (await api.devices.saveDevicePlace(saveDevicePlaceRequest: SaveDevicePlaceRequest(name: name, latitude: latitude, longitude: longitude, radiusM: radiusM))).data!;
+
+  @override
+  Future<void> deleteDevicePlace(String id) async => api.devices.deleteDevicePlace(id: id);
+
+  @override
   Stream<String> watchDeviceRequests() => _userEvents('device_request').map((m) => '${m['id'] ?? ''}').where((id) => id.isNotEmpty);
 
   @override
