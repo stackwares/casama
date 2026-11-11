@@ -3,12 +3,28 @@
  * Supabase sends (generated into supabase/templates by scripts/build-email-templates.ts).
  *
  * The app's brand: plum and lilac, Libre Baskerville headings and Lato text, and a mascot on top.
- * Built for email clients: tables, inline styles, PNG images on casama.ai (SVG is stripped by
- * most clients), web fonts with Georgia and Helvetica fallbacks, and a dark variant for clients
+ * Built for email clients: tables, inline styles, animated GIF mascots on casama.ai (Lottie needs
+ * JavaScript and SVG is stripped by most clients; Outlook on Windows shows the first frame), web fonts with Georgia and Helvetica fallbacks, and a dark variant for clients
  * that honor prefers-color-scheme.
  */
 
-export type EmailMascot = "winky" | "lovey" | "wow" | "thinker" | "focused" | "shy";
+/**
+ * The mascots, as animated GIFs made from the app's Lottie animations
+ * (scripts/render-email-gifs.mjs). Each kind of email has its own:
+ * sign-in winky, welcome lovey, Casama invite wow, workspace invite starry, password reset
+ * thinker, email change focused, security code shy; giggly, cool and sleepy are free.
+ */
+export type EmailMascot =
+  | "winky"
+  | "lovey"
+  | "wow"
+  | "thinker"
+  | "focused"
+  | "shy"
+  | "giggly"
+  | "starry"
+  | "cool"
+  | "sleepy";
 
 export interface BrandedEmail {
   mascot: EmailMascot;
@@ -29,7 +45,7 @@ export interface BrandedEmail {
   raw?: boolean;
 }
 
-/** Where the mascot images live (served by the casama.ai site, site/email). */
+/** Where the mascot GIFs live (served by the casama.ai site, site/email). */
 export const EMAIL_ASSET_BASE = "https://casama.ai/email";
 
 const C = {
@@ -100,7 +116,7 @@ export function renderEmailHtml(e: BrandedEmail, assetBase = EMAIL_ASSET_BASE): 
     <tr><td class="card" style="background:${C.card};border:1px solid ${C.border};border-radius:24px;padding:32px 32px 28px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr><td align="center" style="padding:0 0 12px">
-          <img src="${assetBase}/${e.mascot}.png" width="112" height="112" alt="" style="display:block;width:112px;height:112px;border:0">
+          <img src="${assetBase}/${e.mascot}.gif" width="112" height="112" alt="" style="display:block;width:112px;height:112px;border:0;border-radius:28px">
         </td></tr>
         <tr><td>
           <h1 class="h" style="margin:0 0 16px;font-family:${HEADING};font-size:24px;line-height:1.3;font-weight:700;text-align:center;color:${C.ink}">${t(e.title)}</h1>

@@ -22,7 +22,7 @@ describe("Casama email layout", () => {
     expect(html).toContain("&lt;script&gt;");
     expect(html).toContain("a&amp;b@example.com");
     expect(html).toContain('href="https://casama.ai/join/abc?x=1&amp;y=2"');
-    expect(html).toContain(`${EMAIL_ASSET_BASE}/wow.png`);
+    expect(html).toContain(`${EMAIL_ASSET_BASE}/wow.gif`);
     expect(html).toContain("#7A3FA8"); // plum button
     expect(html).toContain("Libre Baskerville");
     expect(html).toContain("prefers-color-scheme: dark");
@@ -41,6 +41,6 @@ describe("Casama email layout", () => {
     );
     expect(html).toContain("{{ .Token }}");
     expect(html).toContain('href="{{ .ConfirmationURL }}"');
-    expect(html).toContain(`${EMAIL_ASSET_BASE}/winky.png`);
+    expect(html).toContain(`${EMAIL_ASSET_BASE}/winky.gif`);
   });
 });

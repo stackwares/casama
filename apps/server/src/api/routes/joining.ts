@@ -844,7 +844,7 @@ export async function sendInviteEmail(deps: AppDeps, orgId: string, email: strin
   const link = `${deps.env.PUBLIC_APP_URL.replace(/\/$/, "")}/join/${token}`;
   try {
     const message: BrandedEmail = {
-      mascot: "wow",
+      mascot: "starry",
       preheader: `Join ${name} on ${PRODUCT_NAME}`,
       title: `You're invited to ${name}`,
       intro: [
