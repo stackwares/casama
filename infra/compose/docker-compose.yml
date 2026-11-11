@@ -195,6 +195,20 @@ services:
       GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_AUTH_SECRET:-}
       GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${CASAMA_PUBLIC_URL}/auth/v1/callback
       GOTRUE_MAILER_AUTOCONFIRM: ${EMAIL_AUTOCONFIRM:-true}
+      # Casama's branded emails (supabase/templates, built by apps/server/scripts/build-email-templates.ts),
+      # fetched from Caddy's internal-only :8081. Override a URL to use your own.
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: ${EMAIL_TEMPLATE_MAGIC_LINK:-http://caddy:8081/magic_link.html}
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: ${EMAIL_TEMPLATE_CONFIRMATION:-http://caddy:8081/confirmation.html}
+      GOTRUE_MAILER_TEMPLATES_INVITE: ${EMAIL_TEMPLATE_INVITE:-http://caddy:8081/invite.html}
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: ${EMAIL_TEMPLATE_RECOVERY:-http://caddy:8081/recovery.html}
+      GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: ${EMAIL_TEMPLATE_EMAIL_CHANGE:-http://caddy:8081/email_change.html}
+      GOTRUE_MAILER_TEMPLATES_REAUTHENTICATION: ${EMAIL_TEMPLATE_REAUTHENTICATION:-http://caddy:8081/reauthentication.html}
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: Your Casama sign-in link
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: Confirm your Casama account
+      GOTRUE_MAILER_SUBJECTS_INVITE: You're invited to Casama
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: Reset your Casama password
+      GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE: Confirm your new email for Casama
+      GOTRUE_MAILER_SUBJECTS_REAUTHENTICATION: Your Casama security code
       GOTRUE_SMTP_HOST: ${SMTP_HOST:-}
       GOTRUE_SMTP_PORT: ${SMTP_PORT:-587}
       GOTRUE_SMTP_USER: ${SMTP_USER:-}
@@ -308,6 +322,8 @@ services:
       # Web search without a workspace key (D-179): http://searxng:8080 with the search profile.
       SEARXNG_URL: ${SEARXNG_URL:-}
     depends_on: { migrate: { condition: service_completed_successfully } }
+    # The worker serves no HTTP, so the image's /healthz check would always fail here.
+    healthcheck: { disable: true }
 
   # The only service with Docker access. It joins each computer's private network to reach computerd.
   supervisor:
@@ -428,10 +444,13 @@ services:
     ports:
       - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-80}:80"
       - "${HTTP_BIND:-0.0.0.0}:${HTTPS_PORT:-443}:443"
-      - "${PAGES_PORT:-8790}:8790"
+      # Pages follow HTTP_BIND too: behind a tunnel they stay on loopback (Docker skips ufw).
+      - "${HTTP_BIND:-0.0.0.0}:${PAGES_PORT:-8790}:8790"
     volumes:
       - ./selfhost/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
+      # Casama's branded auth emails, served to Supabase Auth on the internal network only.
+      - ../../supabase/templates:/srv/email-templates:ro
 
   # ---------------------------------------------------------------- optional
   web:

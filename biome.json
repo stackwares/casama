@@ -17,7 +17,8 @@
       "!docs-site/**/*.md",
       "!**/SKILL.md",
       "!site",
-      "!infra/helm/**/templates"
+      "!infra/helm/**/templates",
+      "!infra/compose/selfhost/kong.yml"
     ]
   },
   "formatter": {

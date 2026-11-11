@@ -43,3 +43,10 @@
 	encode zstd gzip
 	reverse_proxy api:8790
 }
+
+# Auth email templates for Supabase Auth (GOTRUE_MAILER_TEMPLATES_*): internal network only, the
+# port isn't published.
+:8081 {
+	root * /srv/email-templates
+	file_server
+}

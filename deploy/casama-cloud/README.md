@@ -43,16 +43,23 @@ Then start: `./install.sh` (re-running keeps the .env and pulls the images).
 
 ## 3. Network
 
-- **Cloudflare Tunnel** for HTTPS: install `cloudflared` as a service with the `casama-dev`
-  tunnel's token is the simplest move. Point `api.casama.ai`, `auth.casama.ai` and
-  `telemetry.casama.ai` at `http://localhost:80` in the tunnel's ingress
-  (`cf tunnels config update`), then stop the Mac's copy for those names. `api-dev` and
-  `auth-dev` stay on the Mac (D-172). The rewrite rule `telemetry.casama.ai/v1/ping` →
+- **Cloudflare Tunnel** for HTTPS (done 2026-11-12, D-199): the server runs the `casama-prod`
+  tunnel as the `cloudflared` service. Its ingress sends `api.casama.ai`, `auth.casama.ai` and
+  `telemetry.casama.ai` to `http://localhost:80` and `pages.casama.ai` to `http://localhost:8790`
+  (`cf tunnels config get|update`). `api-dev`, `auth-dev` and `app-dev` stay on the Mac's
+  `casama-dev` tunnel (D-172). The rewrite rule `telemetry.casama.ai/v1/ping` →
   `/telemetry/v1/ping` is already at Cloudflare's edge.
+- **Start without `install.sh` while names move:** its readiness check calls the public URL, which
+  may still reach another machine. `docker compose ... --profile search --profile backup up -d`,
+  then `curl http://127.0.0.1/readyz` on the server.
+- **DNS on Contabo:** its resolvers returned SERVFAIL; set 1.1.1.1 / 9.9.9.9 in
+  `/etc/systemd/resolved.conf.d/`.
 - **TURN for live view**: a DNS-only (grey cloud) record `turn.casama.ai` → the server's public
   IP, and the firewall open for **3478 UDP and TCP**. That is the only port live view needs:
   media goes relay to relay inside coturn, so the 49160–49260 relay range stays closed.
 - Nothing else is published: SSH, plus 3478. Ports 80/443 stay closed when the tunnel serves HTTPS.
+  Docker-published ports skip ufw, so the server also has a `DOCKER-USER` rule in
+  `/etc/ufw/after.rules` dropping outside traffic to containers except 3478.
 
 ## 4. Checks after start
 

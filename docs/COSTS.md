@@ -24,7 +24,7 @@ adds a paid service or a vendor changes its price.
 
 | Item | Cost | Notes |
 |---|---|---|
-| Server for API, worker, database (Hetzner CPX42, 8 vCPU / 16 GB, EU) | €59.49–69.99 / month | One machine to start; self-hosted Postgres instead of Supabase Cloud. Traffic: 20 TB included, then about €1/TB |
+| **Server: Contabo Cloud VPS 6** (6 vCPU / 12 GB / 200 GB, US Central; D-199) | **$11 / month** | Runs everything: API, worker, our own Supabase, search, TURN, and the bot computers. The stack uses about 2.2 GB, leaving about 9 GB for computers (about 6–7 headless at once). Bigger later: a dedicated server such as Hetzner AX102 (€159 / month, 128 GB) |
 | Supabase Cloud (only if we don't self-host Postgres) | from $25 / month | Includes 8 GB database, 250 GB egress, 100k monthly active users |
 | Composio | $0 now (Hobby), **$29 / month** on Pro | Pro needed at launch for the data processing agreement; usage on top, see below |
 | E2B (only if hosted computers run on E2B) | **$150 / month** Pro, plus usage | Hobby has a one-time $100 credit, 1-hour sessions only |
@@ -39,8 +39,8 @@ adds a paid service or a vendor changes its price.
 | Apple Developer Program | $99 / year | |
 | Google Play registration | $25 once | |
 
-**Floor before the first paying user: roughly $110–150 a month** (server, Sentry, Composio Pro,
-mailboxes, domain, Apple), plus E2B's $150 if we use it for computers.
+**Floor before the first paying user: roughly $60–80 a month** (the $11 server, Sentry, Composio
+Pro, mailboxes, domain, Apple). Computers run on the same server, so there's no E2B bill.
 
 ## Usage costs (scale with what people do)
 
