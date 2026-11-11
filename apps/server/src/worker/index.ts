@@ -6,6 +6,7 @@ import {
   builtinTools,
   ComputerService,
   CredentialResolver,
+  computerRates,
   createSafeFetch,
   type Embedder,
   FalMediaProvider,
@@ -143,6 +144,8 @@ export interface WorkerOptions {
   realtimeModel?: string;
   /** Gemini Live model for live calls (default gemini-3.8-live). */
   geminiLiveModel?: string;
+  /** COMPUTER_RATES: computer prices by provider as JSON (D-180). */
+  computerRates?: string;
   /** The server's SearXNG (SEARXNG_URL, D-179): web search for workspaces without their own key. */
   searxngUrl?: string;
   /** ChatGPT plan sign-in endpoints; defaults are OpenAI's (tests point them at a fake). */
@@ -222,6 +225,7 @@ export async function startWorker(opts: WorkerOptions) {
         )
       : undefined;
   if (computers) computers.requireVerifiedEmail = opts.requireVerifiedEmail ?? false;
+  if (computers) computers.rates = computerRates(opts.computerRates);
   const tools = builtinTools({
     db,
     memory: async (orgId) =>

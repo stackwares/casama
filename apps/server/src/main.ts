@@ -1,4 +1,4 @@
-import { ComputerService, createSafeFetch } from "@casama/agent";
+import { ComputerService, computerRates, createSafeFetch } from "@casama/agent";
 import { contentKeys, createDb } from "@casama/db";
 import { createLogger, initObservability, shutdownObservability } from "@casama/observability";
 import { LocalProvider, SupervisorProvider, unavailableProvider } from "@casama/sandbox";
@@ -121,6 +121,7 @@ if (env.MODE === "api") {
   };
   // Casama Cloud (D-094): free workspaces start computers only with a verified owner email.
   if (deps.computers) deps.computers.requireVerifiedEmail = abuseControlsOn(env);
+  if (deps.computers) deps.computers.rates = computerRates(env.COMPUTER_RATES);
   const app = createApp(deps);
   const server = serve({ fetch: app.fetch, port: env.PORT }, (info) =>
     logger.info("api listening", { port: info.port }),
@@ -154,6 +155,7 @@ if (env.MODE === "api") {
     pagesUrl: env.PAGES_URL,
     publicApiUrl: env.PUBLIC_API_URL,
     geminiLiveModel: env.GEMINI_LIVE_MODEL,
+    computerRates: env.COMPUTER_RATES,
     searxngUrl: env.SEARXNG_URL,
     auditForwarding: await import("@casama/ee")
       .then((m) => m.verifyLicense(env.CASAMA_LICENSE_KEY))

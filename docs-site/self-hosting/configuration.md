@@ -401,6 +401,11 @@ Billing is for Casama Cloud. The bundled compose file sets `BILLING_ENABLED=fals
 worker, so there's no paywall and no usage limit, and none of the payment settings apply. Settings
 that switch on with billing (`ABUSE_CONTROLS=auto`, `HEALTH_REQUIRES_ENCRYPTION=auto`) stay off.
 
+Computer time is recorded at what it costs whoever runs it: E2B and Daytona at their published
+prices, Docker at a share of the server. Change the prices with `COMPUTER_RATES`, as JSON by
+provider (`docker`, `e2b`, `daytona`, `local`, `casama-cloud`), in USD per vCPU-hour and per
+GB-hour: `{"docker":{"cpu_hour":0.003,"gb_hour":0.005}}`.
+
 ## Cloud Connect
 
 Cloud Connect lets your server run computers on Casama Cloud and use its model credits, billed to a

@@ -7,6 +7,57 @@ export const IDLE_SLEEP_MS = 5 * 60_000;
 export const CHECKPOINT_KEEP = 20;
 export const CHECKPOINT_MAX_AGE_DAYS = 7;
 
+/** What a computer costs per hour: per vCPU plus per GiB of memory (USD, D-180). */
+export interface ComputerRate {
+  cpu_hour: number;
+  gb_hour: number;
+}
+
+/**
+ * Default computer prices by provider. E2B and Daytona: their published per-second prices
+ * ($0.000014 per vCPU-second, $0.0000045 per GiB-second; 2 vCPU / 4 GiB ≈ $0.166 an hour).
+ * Docker on our own servers: a Hetzner CPX42 (8 vCPU / 16 GB, about $75 a month) spread over what
+ * it holds, memory being the limit (1 vCPU / 1 GB ≈ $0.008 an hour). Local computers are the
+ * person's own. Cloud Connect computers: Casama Cloud's price per computer-hour.
+ * Override with COMPUTER_RATES (JSON by provider). See docs/COSTS.md.
+ */
+const DOCKER_RATE: ComputerRate = { cpu_hour: 0.003, gb_hour: 0.005 };
+export const COMPUTER_RATES: Record<string, ComputerRate> = {
+  docker: DOCKER_RATE,
+  e2b: { cpu_hour: 0.0504, gb_hour: 0.0162 },
+  daytona: { cpu_hour: 0.0504, gb_hour: 0.0162 },
+  local: { cpu_hour: 0, gb_hour: 0 },
+  "casama-cloud": { cpu_hour: 0.05, gb_hour: 0 },
+};
+
+/** The default rates with COMPUTER_RATES' overrides (JSON by provider) on top. */
+export function computerRates(json?: string): Record<string, ComputerRate> {
+  if (!json) return COMPUTER_RATES;
+  const parsed = JSON.parse(json) as Record<string, Partial<ComputerRate>>;
+  const out = { ...COMPUTER_RATES };
+  for (const [id, r] of Object.entries(parsed)) {
+    const base = out[id] ?? DOCKER_RATE;
+    const cpu = r.cpu_hour ?? base.cpu_hour;
+    const gb = r.gb_hour ?? base.gb_hour;
+    if (!(cpu >= 0 && gb >= 0)) throw new Error(`COMPUTER_RATES: bad rate for ${id}`);
+    out[id] = { cpu_hour: cpu, gb_hour: gb };
+  }
+  return out;
+}
+
+/** What `seconds` of a computer of this size cost on this provider, in USD. */
+export function computerCostUsd(
+  provider: string,
+  size: { cpus?: number; memory_mb?: number } | null | undefined,
+  seconds: number,
+  rates: Record<string, ComputerRate> = COMPUTER_RATES,
+): number {
+  const r = rates[provider] ?? rates.docker ?? DOCKER_RATE;
+  const cpus = size?.cpus ?? 1;
+  const gb = (size?.memory_mb ?? 1024) / 1024;
+  return (seconds / 3600) * (r.cpu_hour * cpus + r.gb_hour * gb);
+}
+
 export interface ComputerRow {
   id: string;
   org_id: string;
@@ -43,6 +94,8 @@ export class ComputerService {
   readonly extra: Record<string, ComputerProvider>;
   /** Casama Cloud (D-094): free-plan workspaces start computers only with a verified owner email. */
   requireVerifiedEmail = false;
+  /** Prices for computer-seconds usage (D-180). */
+  rates: Record<string, ComputerRate> = COMPUTER_RATES;
   constructor(
     db: Database,
     provider: ComputerProvider,
@@ -144,8 +197,8 @@ export class ComputerService {
       Math.round((Date.now() - new Date(c.running_since).getTime()) / 1000),
     );
     if (seconds === 0) return;
-    // Rough cost per vCPU-hour; replaced by plan pricing in Phase 7.
-    const cost = (seconds / 3600) * 0.01 * (c.size?.cpus ?? 1);
+    const provider = typeof c.provider === "string" ? c.provider : "docker";
+    const cost = computerCostUsd(provider, c.size, seconds, this.rates);
     await this.db.execute(sql`
       insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd)
       values (${c.org_id}::uuid, ${c.owner_bot_id}::uuid, 'computer_seconds', ${seconds}, ${cost})`);

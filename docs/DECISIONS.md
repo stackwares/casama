@@ -1979,3 +1979,10 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 
 - **Before:** SPEC planned Shorebird for Flutter over-the-air patches (urgent Dart-only fixes pushed to installed apps without a store review); only `client/shorebird.yaml` (placeholder app id) and `scripts/shorebird-release.sh` existed, never set up.
 - **Now:** dropped by Oliver. Mobile updates go through the App Store and Play (an urgent fix ships as an expedited review); desktop direct downloads keep updating through Sparkle and WinSparkle (D-159). Removed the config, the script, the SPEC rows and the NEEDS item. One less paid service and one less thing that can change shipped code outside store review.
+
+## D-180 Computer time is priced at what the provider charges
+
+- **Problem:** `computer_seconds` usage was priced at a placeholder $0.01 per vCPU-hour, 8× below what E2B and Daytona charge for a 2 vCPU / 4 GiB computer ($0.166 an hour). On Casama Cloud that usage is billable, so every hosted computer-hour lost money (docs/COSTS.md).
+- **Decision:** usage is priced per provider as vCPU-hours plus GiB-hours of the computer's size (`computerCostUsd` in `packages/agent/src/computers.ts`). Defaults: E2B and Daytona at their published per-second prices ($0.0504 per vCPU-hour, $0.0162 per GiB-hour); Docker on our own servers at $0.003 per vCPU-hour and $0.005 per GB-hour (a Hetzner CPX42 spread over what it holds, so 1 vCPU / 1 GB ≈ $0.008 an hour); local computers free; Cloud Connect computers $0.05 per vCPU-hour. `COMPUTER_RATES` (JSON by provider) overrides them, for example after moving to a dense server.
+- **Known gap:** E2B sizes come from its template, so the price follows the size recorded on the computer; keep the templates at the recorded sizes.
+- **Tests:** `packages/agent/test/computer-rates.test.ts`.

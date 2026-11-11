@@ -95,6 +95,8 @@ export const EnvSchema = z.object({
   CLOUD_MODEL_UPSTREAM_KEY: z.string().optional(),
   CLOUD_MODEL_MARKUP: z.coerce.number().positive().default(1),
   CLOUD_COMPUTER_USD_PER_HOUR: z.coerce.number().nonnegative().default(0.05),
+  /** Computer prices by provider, overriding the defaults (D-180): {"docker":{"cpu_hour":0.003,"gb_hour":0.005}}. */
+  COMPUTER_RATES: z.string().optional(),
   /** Cloud Connect, self-hosted side: use Casama Cloud computers with this key. Unset = off. */
   CASAMA_CLOUD_URL: z.url().optional(),
   /** GitHub API base for skill imports (tests point it at a fake). */
