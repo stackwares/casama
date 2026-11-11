@@ -239,14 +239,17 @@ otp_length = 6
 otp_expiry = 3600
 
 # Use a production-ready SMTP server
-# [auth.email.smtp]
-# enabled = true
-# host = "smtp.sendgrid.net"
-# port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# Off by default: sign-in emails go to the local Mailpit inbox. A machine that should send real
+# email turns it on with SUPABASE_AUTH_EMAIL_SMTP_* in the root .env (the CLI only overrides
+# settings that appear here), as the casama.ai setup does with Zoho (D-171).
+[auth.email.smtp]
+enabled = false
+host = "smtp.example.com"
+port = 587
+user = "user"
+pass = "unset"
+admin_email = "noreply@example.com"
+sender_name = "Casama"
 
 # Sign-in emails carry the link and the 6-digit code, so people can sign in on another device or
 # in the desktop app by typing the code (the default templates only have the link).
