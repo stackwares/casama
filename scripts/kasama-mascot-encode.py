@@ -39,4 +39,4 @@ def bleed(im):
 files = sorted(f for f in os.listdir(frames_dir) if f.endswith('.png'))
 frames = [bleed(Image.open(os.path.join(frames_dir, f)).convert('RGBA')) for f in files]
 frames[0].save(out, save_all=True, append_images=frames[1:], duration=round(1000 / fps), loop=0,
-               quality=62, alpha_quality=40, method=4, exact=True, minimize_size=True, allow_mixed=False)
+               quality=66, alpha_quality=50, method=4, exact=True, minimize_size=True, allow_mixed=False)

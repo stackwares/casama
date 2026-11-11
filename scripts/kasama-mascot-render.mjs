@@ -10,7 +10,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "n
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const SIZE = Number(process.argv[2] ?? 192);
+const SIZE = Number(process.argv[2] ?? 320);
 const FPS = Number(process.argv[3] ?? 12);
 const ONLY = process.argv.slice(4);
 const LOOP = 8; // seconds, matches T in kasama-cloud-svg.py
