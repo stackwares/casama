@@ -61,3 +61,19 @@ export async function setConnectionSettings(
 export function resetConnectionSettingsCache() {
   cached = null;
 }
+
+/**
+ * How a new person can connect Google from the welcome chat (D-204), the same way the catalog
+ * routes it (catalogFor): "composio" through the server's Composio account, "direct" through the
+ * server's own Google client (self-hosted only), or null when Google can't be connected here.
+ */
+export async function googleConnectRoute(
+  db: AppDeps["db"],
+  env: Pick<AppDeps["env"], "COMPOSIO_API_KEY" | "GOOGLE_OAUTH_CLIENT_ID" | "BILLING_ENABLED">,
+): Promise<GoogleMode | null> {
+  const s = await getConnectionSettings(db);
+  const composio = !!env.COMPOSIO_API_KEY && s.composio === "server";
+  if (composio && (env.BILLING_ENABLED || s.google !== "direct")) return "composio";
+  if (!env.BILLING_ENABLED && env.GOOGLE_OAUTH_CLIENT_ID) return "direct";
+  return null;
+}

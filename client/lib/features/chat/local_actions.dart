@@ -14,7 +14,15 @@ import 'widgets/bot_ui.dart';
 /// Card actions the app handles itself (D-129): "app:connect" opens a connection, "app:route" a
 /// screen, "app:invite" makes an invite link. They never reach the server. Returns whether the
 /// action was one of these.
-Future<bool> handleLocalUiAction(BuildContext context, WidgetRef ref, BotUiAction action) async {
+///
+/// An "app:connect" with `after` in its context sends that action to the server through [send]
+/// once the app is connected, so the welcome chat goes straight on to the catch-up (D-204).
+Future<bool> handleLocalUiAction(
+  BuildContext context,
+  WidgetRef ref,
+  BotUiAction action, {
+  Future<void> Function(BotUiAction action)? send,
+}) async {
   if (!action.name.startsWith('app:')) return false;
   final ctx = action.context;
   switch (action.name) {
@@ -38,8 +46,19 @@ Future<bool> handleLocalUiAction(BuildContext context, WidgetRef ref, BotUiActio
       final catalog = await runGuarded(context, () => ref.read(appCatalogProvider.future));
       final app = catalog?.apps.where((a) => a.id == id).firstOrNull;
       if (app != null && context.mounted) {
-        await showConnectApp(context, app);
+        final connected = await showConnectApp(context, app);
         ref.invalidate(integrationsProvider);
+        final after = ctx['after'];
+        if (connected != null && after is String && after.startsWith('welcome.') && send != null && context.mounted) {
+          await send(BotUiAction(
+            surfaceId: action.surfaceId,
+            name: after,
+            context: {'app': app.id},
+            sourceComponentId: action.sourceComponentId,
+            // Shown in the chat as what the person did: "Connected Google Calendar".
+            optionLabels: {app.id: context.l10n.connectedAppSummary(app.name)},
+          ));
+        }
       }
     case 'app:invite':
       final org = ref.read(currentOrgProvider);

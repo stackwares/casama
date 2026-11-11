@@ -262,6 +262,8 @@ describe("built-in app connections", () => {
     expect(authorize.searchParams.get("access_type")).toBe("offline");
     expect(authorize.searchParams.get("prompt")).toBe("consent");
     expect(authorize.searchParams.has("include_granted_scopes")).toBe(false);
+    // Google skips its account chooser for the account they signed in with (D-204).
+    expect(authorize.searchParams.get("login_hint")).toMatch(/@example\.com$/);
   });
 
   it("comes back to localhost when the API is on a private network address", () => {

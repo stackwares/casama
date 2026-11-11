@@ -3358,6 +3358,30 @@ abstract class AppLocalizations {
   /// **'What can you do on your computer?'**
   String get suggestCapabilities;
 
+  /// What the person did, shown in the welcome chat after connecting an app from a card.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected {app}'**
+  String connectedAppSummary(String app);
+
+  /// No description provided for @connectAppsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect your apps'**
+  String get connectAppsTitle;
+
+  /// No description provided for @connectAppsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Let me read and act in the tools you already use.'**
+  String get connectAppsHint;
+
+  /// Screen-reader label for an app tile in an empty chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect {app}'**
+  String connectAppTile(String app);
+
   /// No description provided for @showComputer.
   ///
   /// In en, this message translates to:

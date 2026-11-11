@@ -1,9 +1,10 @@
 /**
  * Welcome chat (SPEC: Post-v1 roadmap → Welcome chat; D-129). A new person's first chat with their
  * personal bot. The opening is scripted: ordinary bot messages with A2UI cards, answered without a
- * model call. Picks become memories and the bot's instructions; then come one main connection,
- * a first piece of value (a catch-up with consent, or a first task), the setup interview (D-105)
- * in the same chat, and a "What I learned" card.
+ * model call. After the name comes Google (D-204): connecting it starts the catch-up at once, and
+ * the picks are skipped. Otherwise, picks become memories and the bot's instructions; then come
+ * one main connection, a first piece of value (a catch-up with consent, or a first task), the
+ * setup interview (D-105) in the same chat, and a "What I learned" card.
  *
  * Card actions named "welcome.*" come back here. Actions named "app:*" are handled by the app
  * itself (open a connection, a screen, or an invite) and never reach the server.
@@ -14,6 +15,7 @@ import { contentKeys } from "@casama/db";
 import { defaultModelFor } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { PLATFORM_OPENROUTER_CREDENTIAL_ID } from "./credentials.ts";
+import { composioDirectory, loadIntegration } from "./integrations.ts";
 import { surfaceMessages } from "./tools/ui.ts";
 
 export const WELCOME_FOCUS = [
@@ -30,9 +32,13 @@ export const WELCOME_FOCUS = [
 export type Focus = (typeof WELCOME_FOCUS)[number]["id"];
 export type Scope = "just_me" | "team" | "business";
 
+/** How Google connects on this server (D-204); absent when it can't, so the Google card is skipped. */
+export type GoogleRoute = "composio" | "direct";
+
 export interface WelcomeState {
   step:
     | "name"
+    | "google"
     | "focus"
     | "scope"
     | "model"
@@ -48,7 +54,16 @@ export interface WelcomeState {
   other?: string;
   scope?: Scope;
   learned?: string[];
+  /** Offer Google right after the name (D-204), and how it connects. */
+  google?: GoogleRoute;
+  /** They said "Not now" to Google, so later cards don't ask again. */
+  googleDeclined?: boolean;
+  /** Google is connected (or its sign-in was started) from the welcome chat. */
+  connected?: boolean;
 }
+
+/** The Google apps the welcome chat connects and the catch-up reads. */
+const GOOGLE_APPS = ["google_calendar", "gmail"];
 
 /** The main connection for each pick (apps from the catalog; "More apps" covers the rest). */
 export const MAIN_CONNECTION: Record<Focus, string[]> = {
@@ -145,6 +160,9 @@ const FIRST_TASK: Record<Focus, { label: string; placeholder: string; prefix: st
 
 export const CATCHUP_TEXT =
   "Yes, catch me up: look at my next 14 days of calendar and, if you can read my inbox, the last 14 days of email.";
+/** The catch-up when only the calendar is connected (D-204). */
+export const CATCHUP_CALENDAR_TEXT =
+  "Yes, catch me up: look at my next 14 days of calendar and tell me what stands out.";
 
 /** What the bot is told in the welcome chat (appended to its instructions). */
 export const WELCOME_GUIDE = `You are in this person's welcome chat. When they ask for a catch-up: look at the next 14 days of their calendar and, only if you have inbox access, the last 14 days of email. Reply with "Here's what I noticed" and 3-5 short items, then show up to three one-tap task cards with ui.show (one Button each whose action context holds the task), and offer a morning brief (check-ins). Don't send, change or delete anything during the catch-up. For a first task, do it well and briefly.`;
@@ -257,17 +275,69 @@ export function scopeCard() {
 }
 
 /**
- * The scripted opening. When the person already said what to call them (the app's name step,
- * About you D-169), it greets them by name and goes straight to the focus question.
+ * Google first (D-204): one card, right after the name, for everyone. Connecting is also the
+ * consent to the catch-up, so the card says what it reads and that nothing is sent or changed.
+ * The app opens the connection itself ("app:connect") and, once it worked, sends
+ * "welcome.connected" back ("after").
  */
-export function openingMessage(botName: string, firstName = "", nameKnown = false) {
+export function googleCard(route: GoogleRoute) {
+  const connect = (app: string) => ({ app, after: "welcome.connected" });
+  return card(
+    column(
+      ["q", "t", ...(route === "composio" ? ["via"] : []), "row"],
+      [
+        text("q", "## Start with your Google account"),
+        text(
+          "t",
+          "Connect Google Calendar and I'll catch you up on your next two weeks: what's coming, what clashes and what needs preparing. Add Gmail too and I'll tell you which emails need you. I only read; I won't send, change or delete anything.",
+        ),
+        ...(route === "composio"
+          ? [
+              text(
+                "via",
+                "Google's screen names Composio, the service that keeps your Google sign-in safe for Casama. You can disconnect any time in Settings → Connections.",
+                "caption",
+              ),
+            ]
+          : []),
+        { id: "row", component: "Row", children: ["cal", "mail", "skip"] },
+        ...button(
+          "cal",
+          "Connect Google Calendar",
+          "app:connect",
+          connect("google_calendar"),
+          "primary",
+        ),
+        ...button("mail", "Gmail too", "app:connect", connect("gmail")),
+        ...button("skip", "Not now", "welcome.nogoogle", {}, "borderless"),
+      ],
+    ),
+  );
+}
+
+/** What comes after the name: the Google card when this server can connect Google, else the focus question. */
+function afterName(s: WelcomeState) {
+  s.step = s.google ? "google" : "focus";
+  return s.google ? googleCard(s.google) : focusCard();
+}
+
+/**
+ * The scripted opening. When the person already said what to call them (the app's name step,
+ * About you D-169), it greets them by name and goes straight to the next question.
+ */
+export function openingMessage(
+  botName: string,
+  firstName = "",
+  nameKnown = false,
+  google?: GoogleRoute,
+) {
   const hi = nameKnown && firstName.trim() ? `Hi ${firstName.trim()}!` : "Hi!";
   return [
     {
       type: "text",
-      text: `${hi} I'm ${botName}, your assistant. I can work on my own computer, use your apps when you connect them, and remember how you like things done. A couple of quick questions so I can start in the right place.`,
+      text: `${hi} I'm ${botName}, your assistant. I can work on my own computer, use your apps when you connect them, and remember how you like things done. ${google ? "Let's get you something useful in a minute." : "A couple of quick questions so I can start in the right place."}`,
     },
-    nameKnown ? focusCard() : nameCard(firstName),
+    nameKnown ? afterName({ step: "name", focus: [], google }) : nameCard(firstName),
   ];
 }
 
@@ -299,14 +369,22 @@ const laterBots = (s: WelcomeState) => {
 function setupPrompts(s: WelcomeState, hasModel: boolean): SetupPrompt[] {
   const prompts: SetupPrompt[] = [];
   if (!hasModel) prompts.push("model");
-  if (s.focus.some((f) => MAIN_CONNECTION[f].length > 0)) prompts.push("connect");
+  if (mainApps(s).length > 0) prompts.push("connect");
   if (s.focus.some((f) => f === "health" || f === "errands")) prompts.push("phone");
   if (s.scope === "team" || s.scope === "business") prompts.push("invite");
   return prompts;
 }
 
+/** The picks' main connections, without Google once it was connected or turned down at the start. */
+function mainApps(s: WelcomeState) {
+  const skipGoogle = s.googleDeclined || s.connected;
+  return [...new Set(s.focus.flatMap((f) => MAIN_CONNECTION[f]))]
+    .filter((a) => !(skipGoogle && GOOGLE_APPS.includes(a)))
+    .slice(0, 3);
+}
+
 function connectCard(s: WelcomeState) {
-  const apps = [...new Set(s.focus.flatMap((f) => MAIN_CONNECTION[f]))].slice(0, 3);
+  const apps = mainApps(s);
   const names = apps.map((a) => APP_NAMES[a] ?? a);
   return card(
     column(
@@ -629,12 +707,55 @@ async function saveState(db: Database, conversationId: string, s: WelcomeState, 
     update public.conversations set welcome = ${JSON.stringify(s)}::jsonb, purpose = coalesce(${purpose ?? null}, purpose) where id = ${conversationId}::uuid`);
 }
 
-async function hasConnection(db: Database, orgId: string, apps: string[]) {
-  const [r] = await db.execute<{ n: number }>(sql`
-    select count(*)::int as n from public.integrations
-    where org_id = ${orgId}::uuid and status <> 'error' and (config ->> 'app' = any(array(select jsonb_array_elements_text(${JSON.stringify(apps)}::jsonb)))
-      or (kind = 'composio' and config ->> 'managed' = 'true'))`);
-  return (r?.n ?? 0) > 0;
+export type ConnectionState = "connected" | "pending" | "none";
+
+/** Composio's names for the Google apps (the catalog's `composio` slugs). */
+const COMPOSIO_SLUGS: Record<string, string> = {
+  google_calendar: "googlecalendar",
+  gmail: "gmail",
+};
+
+/**
+ * Whether Google is really connected (D-204). A direct connection exists only once its sign-in
+ * finished. A Composio one is added as soon as the sign-in page opens, so Composio is asked
+ * whether that account is active yet: "pending" while the person is still signing in, or when
+ * Composio can't be reached.
+ */
+export async function googleConnection(
+  db: Database,
+  orgId: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ state: ConnectionState; inbox: boolean }> {
+  const direct = await db.execute<{ app: string }>(sql`
+    select distinct case when config ->> 'app' = 'gmail_inbox' then 'gmail' else config ->> 'app' end as app
+    from public.integrations
+    where org_id = ${orgId}::uuid and kind <> 'composio' and status <> 'error'
+      and config ->> 'app' = any(array['google_calendar', 'gmail', 'gmail_inbox'])`);
+  const connected = new Set(direct.map((r) => r.app));
+  let pending = false;
+  const [managed] = await db.execute<{ id: string; toolkits: string[] | null }>(sql`
+    select id, config -> 'toolkits' as toolkits from public.integrations
+    where org_id = ${orgId}::uuid and kind = 'composio' and config ->> 'managed' = 'true' limit 1`);
+  const wanted = GOOGLE_APPS.filter(
+    (a) => !connected.has(a) && (managed?.toolkits ?? []).includes(COMPOSIO_SLUGS[a] as string),
+  );
+  if (managed && wanted.length) {
+    try {
+      const rec = await loadIntegration(db, managed.id, fetchImpl);
+      const accounts = rec ? await composioDirectory(rec, fetchImpl).accounts() : [];
+      for (const a of wanted) {
+        const mine = accounts.filter((x) => x.app === COMPOSIO_SLUGS[a]);
+        if (mine.some((x) => x.status === "connected")) connected.add(a);
+        else if (mine.some((x) => x.status === "pending") || !mine.length) pending = true;
+      }
+    } catch {
+      pending = true;
+    }
+  }
+  return {
+    state: connected.size ? "connected" : pending ? "pending" : "none",
+    inbox: connected.has("gmail"),
+  };
 }
 
 export interface WelcomeAction {
@@ -648,6 +769,8 @@ export interface WelcomeDeps {
   modelOverrides?: Record<string, string | undefined>;
   /** This server has Casama Cloud's shared model key, so the model card is skipped. */
   platformModel?: boolean;
+  /** For asking Composio whether a Google sign-in finished (tests pass a fake). */
+  fetch?: typeof fetch;
 }
 
 /**
@@ -712,12 +835,52 @@ export async function handleWelcomeAction(
       await db.execute(sql`
         insert into public.user_about (user_id, name_asked_at) values (${c.userId}::uuid, now())
         on conflict (user_id) do update set name_asked_at = coalesce(public.user_about.name_asked_at, now())`);
-      s.step = "focus";
+      const next = afterName(s);
       return scripted([
         ...(name ? [{ type: "text", text: `Nice to meet you, ${name}!` }] : []),
-        focusCard(),
+        next,
       ]);
     }
+    // The app connected a Google app from the Google card (D-204): the catch-up starts right away,
+    // since connecting under that card's wording was the consent to it.
+    case "welcome.connected": {
+      const g = await googleConnection(db, c.orgId, d.fetch);
+      if (g.state === "none")
+        return scripted([
+          {
+            type: "text",
+            text: "I don't see Google connected yet. Try again, or tap Not now and we'll carry on.",
+          },
+          googleCard(s.google ?? "direct"),
+        ]);
+      s.connected = true;
+      if (s.step === "google" || s.step === "name") {
+        await memory(
+          `Connected Google ${g.inbox ? "Calendar and Gmail" : "Calendar"} in the welcome chat.`,
+        );
+      }
+      s.step = "first_value";
+      if (g.state === "pending")
+        return scripted([
+          {
+            type: "text",
+            text: "Finish signing in to Google in your browser, then tap Catch me up.",
+          },
+          ...catchupMessage(g.inbox),
+        ]);
+      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel))) {
+        s.step = "model";
+        return scripted([modelCard(true)]);
+      }
+      return modelTurn(g.inbox ? CATCHUP_TEXT : CATCHUP_CALENDAR_TEXT);
+    }
+    case "welcome.nogoogle":
+      s.googleDeclined = true;
+      s.step = "focus";
+      return scripted([
+        { type: "text", text: "No problem, you can connect it any time." },
+        focusCard(),
+      ]);
     case "welcome.focus": {
       const picked = Array.isArray(ctx.focus) ? (ctx.focus as string[]) : [];
       s.focus = ctx.skip
@@ -788,24 +951,33 @@ export async function handleWelcomeAction(
         s.step = next;
         return scripted(onePrompt(next, s));
       }
-      const calendarOrMail = await hasConnection(db, c.orgId, [
-        "google_calendar",
-        "gmail",
-        "gmail_inbox",
-      ]);
+      const g = await googleConnection(db, c.orgId, d.fetch);
       s.step = "first_value";
-      if (calendarOrMail)
-        return scripted(catchupMessage(await hasConnection(db, c.orgId, ["gmail", "gmail_inbox"])));
+      if (g.state !== "none") return scripted(catchupMessage(g.inbox));
       return scripted(firstTaskMessage(s));
     }
     case "welcome.nocatchup":
       s.step = "first_value";
       return scripted(firstTaskMessage(s));
-    case "welcome.catchup":
+    case "welcome.catchup": {
       if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel)))
         return scripted([modelCard(true)]);
+      // A Composio sign-in still open in the browser: a catch-up now would find nothing to read.
+      const g = await googleConnection(db, c.orgId, d.fetch);
+      if (g.state !== "connected")
+        return scripted([
+          {
+            type: "text",
+            text:
+              g.state === "pending"
+                ? "Google isn't connected yet. Finish signing in in your browser, then tap Catch me up again."
+                : "I can't see your Google account anymore. Connect it in Settings → Connections, then try again.",
+          },
+          ...catchupMessage(g.inbox),
+        ]);
       s.step = "first_value";
-      return modelTurn(CATCHUP_TEXT);
+      return modelTurn(g.inbox ? CATCHUP_TEXT : CATCHUP_CALENDAR_TEXT);
+    }
     case "welcome.task": {
       // Skipped: no first task, straight on to the setup offer (what a finished first task leads to).
       if (ctx.skip) {
@@ -916,12 +1088,18 @@ export async function afterWelcomeRun(
  */
 export async function welcomeNameAnswered(db: Database, userId: string) {
   // Claims the step first, so two saves at once can't both post.
-  const [conv] = await db.execute<{ id: string; org_id: string; bot_id: string }>(sql`
-    update public.conversations set welcome = jsonb_set(welcome, '{step}', '"focus"')
+  const [conv] = await db.execute<{
+    id: string;
+    org_id: string;
+    bot_id: string;
+    welcome: WelcomeState;
+  }>(sql`
+    update public.conversations
+    set welcome = jsonb_set(welcome, '{step}', case when welcome ? 'google' then '"google"'::jsonb else '"focus"'::jsonb end)
     where id = (select id from public.conversations
                 where created_by = ${userId}::uuid and welcome is not null order by created_at limit 1)
       and welcome ->> 'step' = 'name'
-    returning id, org_id, bot_id`);
+    returning id, org_id, bot_id, welcome`);
   if (!conv) return false;
   const [opening] = await db.execute<{ content: unknown }>(sql`
     select content from public.messages where conversation_id = ${conv.id}::uuid and role = 'assistant'
@@ -937,7 +1115,10 @@ export async function welcomeNameAnswered(db: Database, userId: string) {
   await postScripted(
     db,
     { orgId: conv.org_id, botId: conv.bot_id, conversationId: conv.id, userId },
-    [...(name ? [{ type: "text", text: `Nice to meet you, ${name}!` }] : []), focusCard()],
+    [
+      ...(name ? [{ type: "text", text: `Nice to meet you, ${name}!` }] : []),
+      afterName({ ...conv.welcome }),
+    ],
     {
       text: name || "Skip",
       ...(surface
@@ -973,6 +1154,8 @@ export async function startWelcome(
     mascot?: string;
     /** They already answered "What should bots call you?" (About you, D-169). */
     nameKnown?: boolean;
+    /** How Google connects here; the Google card comes right after the name (D-204). */
+    google?: GoogleRoute | null;
   },
 ): Promise<{ orgId: string; botId: string; conversationId: string }> {
   return db.transaction(async (tx) => {
@@ -983,11 +1166,11 @@ export async function startWelcome(
       returning id`);
     const [conv] = await tx.execute<{ id: string }>(sql`
       insert into public.conversations (org_id, bot_id, title, created_by, last_message_at, purpose, welcome)
-      values (${a.orgId}::uuid, ${bot?.id}::uuid, 'Welcome', ${a.userId}::uuid, now(), 'welcome', ${JSON.stringify({ step: a.nameKnown ? "focus" : "name", focus: [] })}::jsonb)
+      values (${a.orgId}::uuid, ${bot?.id}::uuid, 'Welcome', ${a.userId}::uuid, now(), 'welcome', ${JSON.stringify({ step: a.nameKnown ? (a.google ? "google" : "focus") : "name", focus: [], ...(a.google ? { google: a.google } : {}) })}::jsonb)
       returning id`);
     await tx.execute(sql`
       insert into public.messages (org_id, conversation_id, role, content, bot_id)
-      values (${a.orgId}::uuid, ${conv?.id}::uuid, 'assistant', ${contentKeys.sealJson(a.orgId, openingMessage(a.botName, a.firstName, a.nameKnown))}::jsonb, ${bot?.id}::uuid)`);
+      values (${a.orgId}::uuid, ${conv?.id}::uuid, 'assistant', ${contentKeys.sealJson(a.orgId, openingMessage(a.botName, a.firstName, a.nameKnown, a.google ?? undefined))}::jsonb, ${bot?.id}::uuid)`);
     return { orgId: a.orgId, botId: bot?.id as string, conversationId: conv?.id as string };
   });
 }

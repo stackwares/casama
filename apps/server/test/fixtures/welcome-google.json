@@ -1,0 +1,19 @@
+{
+  "name": "welcome-google",
+  "turns": [
+    {
+      "when": { "systemIncludes": "extract lasting memories" },
+      "events": [
+        { "type": "text", "text": "{\"memories\":[]}" },
+        { "type": "finish", "usage": { "inputTokens": 100, "outputTokens": 10 }, "finishReason": "stop", "model": "" }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "catch me up" },
+      "events": [
+        { "type": "text", "text": "Here's what I noticed: two meetings overlap on Thursday." },
+        { "type": "finish", "usage": { "inputTokens": 100, "outputTokens": 10 }, "finishReason": "stop", "model": "" }
+      ]
+    }
+  ]
+}

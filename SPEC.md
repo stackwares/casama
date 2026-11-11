@@ -1098,7 +1098,9 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 ### Welcome chat
 
 - First run (signed in, no invite): the app creates a personal workspace ("<first name>'s space") and a personal bot (named from the product-name constant, with a mascot avatar; renamable in chat) and opens its chat. Joining by invite link skips this. The three-step wizard stays behind "Set up manually".
-- The opening is scripted: normal bot messages with A2UI cards, stored like any message, with no model call. First "What should I call you?" (About you, D-169), then "What should I help with first?" (up to three of Email and calendar, Work projects, Coding, Research, Sales and customers, Personal errands, Something else with free text), then "Just me, my team or my business?". Both can be skipped, which gives a general intro.
+- The opening is scripted: normal bot messages with A2UI cards, stored like any message, with no model call. First "What should I call you?" (About you, D-169).
+- **Google first (D-204):** when the server can connect Google (Composio, or a self-hosted Google client), the next card is "Start with your Google account": Connect Google Calendar, Gmail too, or Not now. Its wording is the consent to the catch-up. Once Google is really connected (a Composio sign-in counts only when Composio reports the account active), the catch-up runs at once and the picks below are skipped; the setup interview learns the rest. Still signing in: a "Catch me up" card that checks again. Not now: the picks, and later cards leave Google out. Direct Google sign-ins pass the sign-in email as `login_hint`.
+- Then "What should I help with first?" (up to three of Email and calendar, Work projects, Coding, Research, Sales and customers, Personal errands, Something else with free text), then "Just me, my team or my business?". Both can be skipped, which gives a general intro.
 - Then a scripted intro written for the picks (ARB strings in Casama's own words) and one main connection card, with "More apps" below it:
 
   | Pick                | Main connection                                                  | First value without a connection               |
@@ -1116,6 +1118,7 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - The setup interview (D-105) then runs in the same chat with two or three questions, followed by a "What I learned" card listing the memories saved (up to 10) to edit or delete. Then the chat is open.
 - The picks are saved as memories, shape the personal bot's instructions, choose which starter bots it suggests and set what check-ins cover. "My team" or "My business" adds an invite-link card and suggests shared bots.
 - Wave 4 adds the picks "Health and habits" and phone connections.
+- **App tiles (D-204):** an empty chat shows one-tap tiles for Gmail, Google Calendar, Google Drive, Notion, GitHub and Slack (those that connect in one click on this server and aren't connected yet) above the starter requests, until two apps are connected.
 
 ### About you
 

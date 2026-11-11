@@ -25,6 +25,7 @@ import { streamSSE } from "hono/streaming";
 import { enforceLimit } from "../../billing/limits.ts";
 import { modelOverrides } from "../../env.ts";
 import { getCloudModels } from "../../services/cloud-models.ts";
+import { googleConnectRoute } from "../../services/connection-settings.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -767,6 +768,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           : "",
       botName: b.bot_name ?? "Casama",
       nameKnown: !!profile?.asked,
+      google: await googleConnectRoute(db, deps.env),
     });
     return c.json(
       { org_id: w.orgId, bot_id: w.botId, conversation_id: w.conversationId, created: true },

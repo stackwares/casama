@@ -434,6 +434,9 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       if (isGoogleApp(a)) {
         authorizationUrl.searchParams.set("access_type", "offline");
         authorizationUrl.searchParams.set("prompt", "consent");
+        // The account they signed in to Casama with, so Google skips its account chooser (D-204).
+        if (typeof claims.email === "string" && claims.email)
+          authorizationUrl.searchParams.set("login_hint", claims.email);
       }
       const [flow] = await db.execute<{ id: string }>(sql`
         insert into public.integration_oauth_flows (state, org_id, created_by, app_id, name, config, oauth, integration_id)

@@ -2212,6 +2212,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestCapabilities => 'What can you do on your computer?';
 
   @override
+  String connectedAppSummary(String app) {
+    return 'Connected $app';
+  }
+
+  @override
+  String get connectAppsTitle => 'Connect your apps';
+
+  @override
+  String get connectAppsHint =>
+      'Let me read and act in the tools you already use.';
+
+  @override
+  String connectAppTile(String app) {
+    return 'Connect $app';
+  }
+
+  @override
   String get showComputer => 'Show computer';
 
   @override

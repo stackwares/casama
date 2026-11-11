@@ -33,6 +33,7 @@ import 'chat_controller.dart';
 import 'chat_detail.dart';
 import 'local_actions.dart';
 import 'widgets/bot_ui.dart';
+import 'widgets/app_tiles.dart';
 import 'widgets/chat_widgets.dart';
 import 'widgets/composer.dart';
 import 'widgets/error_details.dart';
@@ -239,8 +240,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _onUiAction(BotUiAction action) async {
-    // Some card actions are the app's own: open a connection, a screen, an invite (D-129).
-    if (await handleLocalUiAction(context, ref, action)) return;
+    // Some card actions are the app's own: open a connection, a screen, an invite (D-129). A
+    // connection made from a welcome card reports back here (D-204).
+    if (await handleLocalUiAction(context, ref, action, send: _onUiAction)) return;
     if (!mounted) return;
     final chat = ref.read(chatControllerProvider(widget.botId));
     if (chat.running || chat.answeredUi.contains(action.surfaceId)) return;
@@ -1245,6 +1247,9 @@ class _EmptyThread extends StatelessWidget {
                   ],
                 ),
                 const Spacer(),
+                // Apps to connect first, until two are connected (D-204).
+                const ConnectAppTiles(),
+                const SizedBox(height: AppSpace.md),
                 for (var i = 0; i < suggestions.length; i++)
                   Padding(
                     padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpace.xs),

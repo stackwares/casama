@@ -629,6 +629,18 @@
   "suggestFiles": "Make a project folder with a to-do list in my workspace",
   "suggestWebsite": "Check a website and tell me what's new",
   "suggestCapabilities": "What can you do on your computer?",
+  "connectedAppSummary": "Connected {app}",
+  "@connectedAppSummary": {
+    "description": "What the person did, shown in the welcome chat after connecting an app from a card.",
+    "placeholders": { "app": { "type": "String" } }
+  },
+  "connectAppsTitle": "Connect your apps",
+  "connectAppsHint": "Let me read and act in the tools you already use.",
+  "connectAppTile": "Connect {app}",
+  "@connectAppTile": {
+    "description": "Screen-reader label for an app tile in an empty chat.",
+    "placeholders": { "app": { "type": "String" } }
+  },
   "showComputer": "Show computer",
   "hideComputer": "Hide computer",
   "moreActions": "More",
