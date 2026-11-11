@@ -9,13 +9,19 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
+import '../../core/display_text.dart';
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
+import '../../ui/edge_fade.dart';
+import '../../ui/reveal_when_selected.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/page.dart';
+import '../../ui/tab_reselect.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/adaptive_modal.dart';
@@ -64,7 +70,10 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       InboxFilter.briefs => l10n.inboxBriefs,
       InboxFilter.pages => l10n.pages,
     };
-    return Scaffold(
+    // Tapping Inbox again scrolls the feed (or Pages) to the top (TabReselect); so does the iOS status bar.
+    return PrimaryScrollController(
+      controller: TabReselect.inbox,
+      child: Scaffold(
       appBar: ShellHeader(
         title: l10n.inbox,
         bottom: PreferredSize(
@@ -72,27 +81,28 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           child: SizedBox(
             height: 52,
             // Scrolls sideways, so the chips never wrap or overflow on a small phone.
-            child: SingleChildScrollView(
+            child: EdgeFade(child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.fromLTRB(AppSpace.md, 0, AppSpace.md, AppSpace.xxs),
               child: Row(
                 spacing: AppSpace.xs,
                 children: [
                   for (final f in InboxFilter.values)
-                    ChoiceChip(
+                    RevealWhenSelected(selected: _filter == f, child: ChoiceChip(
                       key: Key('inboxFilter-${f.name}'),
                       showCheckmark: false,
-                      label: Text(label(f)),
+                      label: Text(label(f), style: const TextStyle(fontFeatures: AppText.tabular)),
                       selected: _filter == f,
                       onSelected: (_) => setState(() => _filter = f),
-                    ),
+                    )),
                 ],
               ),
-            ),
+            )),
           ),
         ),
       ),
       body: _filter == InboxFilter.pages ? const PagesList() : _InboxFeed(filter: _filter),
+    ),
     );
   }
 }
@@ -219,7 +229,7 @@ class _InboxFeed extends ConsumerWidget {
         final hasUnread = notes.any((n) => n.readAt == null);
         final children = <Widget>[
           if (failed.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: AppSpace.sm), child: InlineError(error: failed.first.error!, onRetry: refresh)),
-          if (all && decisions.isNotEmpty) SectionHeader(title: l10n.inboxNeedsYou, count: '${decisions.length}', padding: const EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.xs, AppSpace.xxs, AppSpace.xs)),
+          if (all && decisions.isNotEmpty) SectionHeader(title: l10n.inboxNeedsYou, count: decisions.length.humanizedCount(context.l10n.localeName), padding: const EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.xs, AppSpace.xxs, AppSpace.xs)),
           ...decisions,
           if (all && updateWidgets.isNotEmpty)
             SectionHeader(
@@ -244,7 +254,10 @@ class _InboxFeed extends ConsumerWidget {
           };
         }
         return RefreshIndicator(
-          onRefresh: refresh,
+          onRefresh: () {
+            HapticsHelper.medium();
+            return refresh();
+          },
           child: LayoutBuilder(
             builder: (context, constraints) {
               final side = pageSide(constraints.maxWidth);
@@ -703,9 +716,9 @@ class _WhySheetState extends ConsumerState<WhySheet> {
               if (ok == true && mounted) setState(() => _sent = true);
             },
       children: [
-        Text(n.whyRule ?? '', key: const Key('whyRule'), style: context.textTheme.bodyLarge),
+        if (n.whyRule.isUsable) Text(n.whyRule!, key: const Key('whyRule'), style: context.textTheme.bodyLarge),
         if (n.whyData.isNotEmpty) Text(l10n.whyData(n.whyData.join(', ')), style: context.textTheme.bodyMedium),
-        if (n.urgency != null) Text(l10n.whyUrgency(n.urgency!), style: context.textTheme.bodySmall),
+        if (n.urgency.isUsable) Text(l10n.whyUrgency(n.urgency!), style: context.textTheme.bodySmall),
         if (held != null) Text(held, key: const Key('whyHeld'), style: context.textTheme.bodySmall),
       ],
     );

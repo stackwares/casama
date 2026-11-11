@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/backend.dart';
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -361,7 +362,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
         padded(
           SectionHeader(
             title: _typeLabel(l10n, type),
-            count: '${list.length}',
+            count: list.length.humanizedCount(context.l10n.localeName),
             trailing: TextButton(
               key: Key('gallerySeeAll-$type'),
               onPressed: () => _showType(type),
@@ -1121,7 +1122,7 @@ class _GalleryDetailState extends ConsumerState<_GalleryDetail> {
       _busy = false;
     });
     if (done == true) {
-      showMessage(
+      showSuccess(
         context,
         _item.type == 'skill'
             ? l10n.galleryInstalled(_item.name)

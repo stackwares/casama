@@ -7,6 +7,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 
 import 'backend.dart';
 import 'local_cache.dart';
+import 'number_format.dart';
 
 /// The backend; overridden in main() and in tests.
 final backendProvider = Provider<Backend>((ref) => throw UnimplementedError('backendProvider must be overridden'));
@@ -371,9 +372,6 @@ final takeoversProvider = FutureProvider<List<TakeoverRequest>>((ref) async {
   return ref.watch(backendProvider).takeovers(org.id);
 });
 
-/// Formats US dollars for cost meters.
-String formatUsd(num value) {
-  if (value >= 1) return '\$${value.toStringAsFixed(2)}';
-  if (value == 0) return '\$0.00';
-  return '\$${value.toStringAsFixed(4)}';
-}
+/// Formats US dollars for cost meters in the person's locale: two decimals from a dollar up and
+/// at zero, four below so small costs don't read as $0.00.
+String formatUsd(num value, String locale) => value.humanizedCurrency(locale, 'USD', decimalDigits: value >= 1 || value == 0 ? 2 : 4);

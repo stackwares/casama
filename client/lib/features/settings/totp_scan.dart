@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/widgets.dart';
+import '../../ui/adaptive_modal.dart';
 
 /// Phones scan a two-step QR code (D-102); other platforms paste the link.
 bool get canScanTotp => !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
@@ -21,7 +22,8 @@ class TotpScanButton extends StatelessWidget {
       tooltip: context.l10n.scanQrCode,
       icon: const Icon(LucideIcons.scanQrCode, size: 20),
       onPressed: () async {
-        final link = await Navigator.of(context).push<String>(MaterialPageRoute(fullscreenDialog: true, builder: (_) => const _ScanPage()));
+        unfocusBeforeModal();
+        final link = await Navigator.of(context).push<String>(MaterialPageRoute(fullscreenDialog: true, settings: const RouteSettings(name: '/scan/sign-in-code'), builder: (_) => const _ScanPage()));
         if (link != null) onScanned(link);
       },
     );

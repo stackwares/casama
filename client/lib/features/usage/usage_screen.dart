@@ -8,6 +8,9 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/display_text.dart';
+import '../../core/number_format.dart';
+import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/share.dart';
 import '../../core/widgets.dart';
@@ -98,10 +101,10 @@ class _Report extends StatelessWidget {
           spacing: AppSpace.sm,
           children: [
             Expanded(
-              child: _Stat(key: const Key('usageSpend'), label: l10n.totalSpend, value: formatUsd(report.totalCostUsd), icon: LucideIcons.banknote, accent: true),
+              child: _Stat(key: const Key('usageSpend'), label: l10n.totalSpend, value: formatUsd(report.totalCostUsd, context.l10n.localeName), icon: LucideIcons.banknote, accent: true),
             ),
             Expanded(
-              child: _Stat(label: l10n.runsLabel, value: '${report.runs ?? 0}', icon: LucideIcons.zap),
+              child: _Stat(label: l10n.runsLabel, value: (report.runs ?? 0).humanizedCount(context.l10n.localeName), icon: LucideIcons.zap),
             ),
           ],
         ),
@@ -111,14 +114,14 @@ class _Report extends StatelessWidget {
         ] else ...[
           if (period != UsagePeriod.day && days.isNotEmpty) ...[
             SectionHeader(title: l10n.spendByDay),
-            AppCard(child: SizedBox(height: 200, child: _DailyChart(days: _filled(days, period, DateTime.parse(report.since.toIso8601String()))))),
+            AppCard(child: SizedBox(height: 200, child: _DailyChart(days: _filled(days, period, DateTime.parse(report.since.toIso8601String())), byMonth: period == UsagePeriod.year))),
           ],
           if (report.byBot.isNotEmpty) ...[
             SectionHeader(title: l10n.byBot),
             AppCard(
               child: _Bars(
                 rows: [
-                  for (final b in report.byBot) (b.name ?? l10n.deletedBot, b.costUsd.toDouble(), b.tokensIn + b.tokensOut == 0 ? '' : '${compactNumber(b.tokensIn + b.tokensOut)} tokens'),
+                  for (final b in report.byBot) (b.name.orPlaceholder(l10n.deletedBot), b.costUsd.toDouble(), b.tokensIn + b.tokensOut == 0 ? '' : '${(b.tokensIn + b.tokensOut).humanizedCompact(context.l10n.localeName)} tokens'),
                 ],
               ),
             ),
@@ -135,8 +138,8 @@ class _Report extends StatelessWidget {
                   GroupedTile(
                     icon: _kindIcon(k.kind),
                     title: _kindLabel(context, k.kind),
-                    subtitle: _kindQuantity(k.kind, k.quantity),
-                    trailing: Text(formatUsd(k.costUsd), style: context.textTheme.titleSmall?.copyWith(fontFeatures: AppText.tabular)),
+                    subtitle: _kindQuantity(k.kind, k.quantity, context.l10n.localeName),
+                    trailing: Text(formatUsd(k.costUsd, context.l10n.localeName), style: context.textTheme.titleSmall?.copyWith(fontFeatures: AppText.tabular)),
                   ),
               ],
             ),
@@ -177,13 +180,13 @@ class _Report extends StatelessWidget {
                   key: const Key('usageTokensIn'),
                   icon: LucideIcons.arrowDownToLine,
                   title: l10n.tokensIn,
-                  trailing: Text(compactNumber(_tokensIn), style: context.textTheme.titleSmall?.copyWith(fontFeatures: AppText.tabular)),
+                  trailing: Text(_tokensIn.humanizedCompact(context.l10n.localeName), style: context.textTheme.titleSmall?.copyWith(fontFeatures: AppText.tabular)),
                 ),
                 GroupedTile(
                   key: const Key('usageTokensOut'),
                   icon: LucideIcons.arrowUpFromLine,
                   title: l10n.tokensOut,
-                  trailing: Text(compactNumber(_tokensOut), style: context.textTheme.titleSmall?.copyWith(fontFeatures: AppText.tabular)),
+                  trailing: Text(_tokensOut.humanizedCompact(context.l10n.localeName), style: context.textTheme.titleSmall?.copyWith(fontFeatures: AppText.tabular)),
                 ),
                 Builder(
                   builder: (tile) => GroupedTile(
@@ -214,8 +217,8 @@ class _Report extends StatelessWidget {
 }
 
 /// Every day of the period up to today, zero where nothing was used, so the chart has no gaps.
-/// A year is shown by month.
-List<(String, double)> _filled(List<UsageReportByDayInner> days, UsagePeriod period, DateTime since) {
+/// A year is shown by month (each month as its first day). The dates are UTC calendar days.
+List<(DateTime, double)> _filled(List<UsageReportByDayInner> days, UsagePeriod period, DateTime since) {
   final byDay = {for (final d in days) d.day: d.costUsd.toDouble()};
   final now = DateTime.now().toUtc();
   if (period == UsagePeriod.year) {
@@ -226,21 +229,24 @@ List<(String, double)> _filled(List<UsageReportByDayInner> days, UsagePeriod per
     }
     return [
       for (var m = 1; m <= now.month; m++)
-        (const ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'][m - 1], byMonth['${now.year}-${m.toString().padLeft(2, '0')}'] ?? 0),
+        (DateTime.utc(now.year, m), byMonth['${now.year}-${m.toString().padLeft(2, '0')}'] ?? 0),
     ];
   }
   final start = DateTime.utc(since.toUtc().year, since.toUtc().month, since.toUtc().day);
-  final out = <(String, double)>[];
+  final out = <(DateTime, double)>[];
   for (var d = start; !d.isAfter(now); d = d.add(const Duration(days: 1))) {
     final key = d.toIso8601String().substring(0, 10);
-    out.add(('${d.day}', byDay[key] ?? 0));
+    out.add((d, byDay[key] ?? 0));
   }
   return out;
 }
 
 class _DailyChart extends StatelessWidget {
-  const _DailyChart({required this.days});
-  final List<(String, double)> days;
+  const _DailyChart({required this.days, required this.byMonth});
+  final List<(DateTime, double)> days;
+
+  /// The year view: one bar per month instead of one per day.
+  final bool byMonth;
 
   @override
   Widget build(BuildContext context) {
@@ -267,7 +273,7 @@ class _DailyChart extends StatelessWidget {
               interval: max == 0 ? 0.25 : max / 3,
               getTitlesWidget: (v, meta) => v == meta.max
                   ? const SizedBox.shrink()
-                  : Text(formatUsd(v), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                  : Text(formatUsd(v, context.l10n.localeName), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, fontFeatures: AppText.tabular)),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -279,7 +285,7 @@ class _DailyChart extends StatelessWidget {
                 if (i < 0 || i >= days.length || (i % every != 0 && i != days.length - 1)) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text(days[i].$1, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                  child: Text(byMonth ? days[i].$1.formattedMonthInitial(context) : days[i].$1.formattedDayOfMonth(context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
                 );
               },
             ),
@@ -289,7 +295,7 @@ class _DailyChart extends StatelessWidget {
           touchTooltipData: BarTouchTooltipData(
             getTooltipColor: (_) => scheme.inverseSurface,
             getTooltipItem: (group, _, rod, _) => BarTooltipItem(
-              '${days[group.x].$1}\n${formatUsd(rod.toY)}',
+              '${byMonth ? days[group.x].$1.formattedMonthYear(context) : days[group.x].$1.formattedWeekdayDate(context)}\n${formatUsd(rod.toY, context.l10n.localeName)}',
               context.textTheme.labelMedium!.copyWith(color: scheme.onInverseSurface),
             ),
           ),
@@ -331,7 +337,7 @@ class _Bars extends StatelessWidget {
               Expanded(child: Text(r.$1, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600))),
               Text(r.$3, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
               const SizedBox(width: AppSpace.sm),
-              Text(formatUsd(r.$2), style: context.textTheme.labelLarge?.copyWith(fontFeatures: AppText.tabular)),
+              Text(formatUsd(r.$2, context.l10n.localeName), style: context.textTheme.labelLarge?.copyWith(fontFeatures: AppText.tabular)),
             ],
           ),
           const SizedBox(height: 6),
@@ -394,13 +400,13 @@ class _ModelBreakdown extends ConsumerWidget {
                 const SizedBox(width: AppSpace.xs),
                 Expanded(
                   child: Text(
-                    m.model == null ? context.l10n.otherModel : names[m.model] ?? m.model!,
+                    m.model.isUsable ? names[m.model] ?? m.model! : context.l10n.otherModel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.textTheme.bodyMedium,
                   ),
                 ),
-                Text(formatUsd(m.costUsd), style: context.textTheme.labelLarge?.copyWith(fontFeatures: AppText.tabular)),
+                Text(formatUsd(m.costUsd, context.l10n.localeName), style: context.textTheme.labelLarge?.copyWith(fontFeatures: AppText.tabular)),
               ],
             ),
           ),
@@ -474,43 +480,35 @@ String _kindLabel(BuildContext context, String kind) => switch (kind) {
   _ => kind,
 };
 
-String _kindQuantity(String kind, num q) => switch (kind) {
-  'tokens_in' || 'tokens_out' => '${compactNumber(q)} tokens',
-  'computer_seconds' => '${(q / 3600).toStringAsFixed(2)} h',
-  'stream_seconds' => '${(q / 60).toStringAsFixed(0)} min',
-  'tts_chars' => '${compactNumber(q)} characters',
-  _ => '$q',
+String _kindQuantity(String kind, num q, String locale) => switch (kind) {
+  'tokens_in' || 'tokens_out' => '${q.humanizedCompact(locale)} tokens',
+  'computer_seconds' => '${(q / 3600).humanizedCount(locale, decimalDigits: 2)} h',
+  'stream_seconds' => '${(q / 60).humanizedCount(locale, decimalDigits: 0)} min',
+  'tts_chars' => '${q.humanizedCompact(locale)} characters',
+  _ => q.humanizedCount(locale),
 };
-
-/// 1234 → 1.2K, 3400000 → 3.4M.
-String compactNumber(num n) {
-  if (n >= 1e9) return '${(n / 1e9).toStringAsFixed(1)}B';
-  if (n >= 1e6) return '${(n / 1e6).toStringAsFixed(1)}M';
-  if (n >= 1e3) return '${(n / 1e3).toStringAsFixed(1)}K';
-  return n.toStringAsFixed(n is int || n == n.roundToDouble() ? 0 : 1);
-}
 
 /// The report as plain text, for a bot to read.
 String usageSummary(BuildContext context, UsageReport r) {
   final l10n = context.l10n;
   final b = StringBuffer()
-    ..writeln('Total: ${formatUsd(r.totalCostUsd)} since ${r.since.toIso8601String().substring(0, 10)} (${r.runs ?? 0} runs)');
+    ..writeln('Total: ${formatUsd(r.totalCostUsd, l10n.localeName)} since ${r.since.toIso8601String().substring(0, 10)} (${r.runs ?? 0} runs)');
   if (r.byBot.isNotEmpty) {
     b.writeln('By bot:');
     for (final x in r.byBot) {
-      b.writeln('- ${x.name ?? l10n.deletedBot}: ${formatUsd(x.costUsd)}, ${x.tokensIn} tokens in, ${x.tokensOut} out');
+      b.writeln('- ${x.name ?? l10n.deletedBot}: ${formatUsd(x.costUsd, l10n.localeName)}, ${x.tokensIn} tokens in, ${x.tokensOut} out');
     }
   }
   if ((r.byModel ?? const []).isNotEmpty) {
     b.writeln('By model:');
     for (final m in r.byModel!) {
-      b.writeln('- ${m.model ?? l10n.otherModel}: ${formatUsd(m.costUsd)}, ${m.tokensIn} in, ${m.tokensOut} out');
+      b.writeln('- ${m.model ?? l10n.otherModel}: ${formatUsd(m.costUsd, l10n.localeName)}, ${m.tokensIn} in, ${m.tokensOut} out');
     }
   }
   if ((r.byDay ?? const []).isNotEmpty) {
     b.writeln('By day:');
     for (final d in r.byDay!) {
-      b.writeln('- ${d.day}: ${formatUsd(d.costUsd)}');
+      b.writeln('- ${d.day}: ${formatUsd(d.costUsd, l10n.localeName)}');
     }
   }
   return b.toString().trim();

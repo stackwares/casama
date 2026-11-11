@@ -4,8 +4,10 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -39,7 +41,7 @@ class _ScopePicker extends ConsumerWidget {
         DropdownMenuItem(value: null, child: Text(l10n.wholeWorkspace)),
         for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name)),
       ],
-      onChanged: onChanged,
+      onChanged: hapticOnChanged(onChanged, haptic: HapticsHelper.selection),
     );
   }
 }
@@ -89,7 +91,7 @@ class _GitHubImportState extends ConsumerState<_GitHubImport> {
     if (ok == true) {
       ref.invalidate(skillsProvider);
       Navigator.pop(context);
-      showMessage(context, context.l10n.skillInstalled(p.name));
+      showSuccess(context, context.l10n.skillInstalled(p.name));
     }
   }
 
@@ -119,7 +121,7 @@ class _GitHubImportState extends ConsumerState<_GitHubImport> {
           Text(p.description),
           FormNote(l10n.skillScriptsNote),
           _FileBlock(key: const Key('previewSkillMd'), title: 'SKILL.md', text: p.skillMd),
-          for (final f in p.files) _FileBlock(title: '${f.path}${f.executable ? ' (executable)' : ''} · ${f.size} B', text: f.text ?? l10n.binaryFile),
+          for (final f in p.files) _FileBlock(title: '${f.path}${f.executable ? ' (executable)' : ''} · ${f.size.humanizedCount(context.l10n.localeName)} B', text: f.text ?? l10n.binaryFile),
         ],
       ],
     );

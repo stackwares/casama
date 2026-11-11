@@ -4,11 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/edge_fade.dart';
+import '../../ui/reveal_when_selected.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
@@ -135,12 +140,16 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
             if (tab == _HubTab.connected)
               _Readable(child: _Connected(items: items, onBrowse: () => setState(() => _tab = _HubTab.browse)))
             else
-              catalog.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(AppSpace.xl),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (e, _) => FormNote(errorText(context, e), icon: LucideIcons.triangleAlert),
+              // Spread into the page, so each part gets the page's side padding and the sideways
+              // lists can reach the edges (PageBleed).
+              ...catalog.when<List<Widget>>(
+                loading: () => const [
+                  Padding(
+                    padding: EdgeInsets.all(AppSpace.xl),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ],
+                error: (e, _) => [FormNote(errorText(context, e), icon: LucideIcons.triangleAlert)],
                 data: (cat) => _browse(context, cat, items),
               ),
             // Hubs and custom servers, folded on both tabs (D-182): the one way to add a server by hand.
@@ -166,7 +175,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
     );
   }
 
-  Widget _browse(BuildContext context, AppCatalog cat, List<Integration> connected) {
+  List<Widget> _browse(BuildContext context, AppCatalog cat, List<Integration> connected) {
     final l10n = context.l10n;
     final q = _search.text.trim().toLowerCase();
     final connectedIds = {for (final i in connected) ?i.appId};
@@ -183,9 +192,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
         if (a.popular) a,
     ];
     final filtering = q.isNotEmpty || _category != null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+    return [
         TextField(
           key: const Key('appSearch'),
           controller: _search,
@@ -199,39 +206,40 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: AppSpace.sm),
-        SizedBox(
+        PageBleed(child: SizedBox(
           height: 38,
-          child: ListView(
+          child: EdgeFade(child: ListView(
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
             children: [
               for (final c in [null, ...categories])
                 Padding(
                   padding: const EdgeInsets.only(right: AppSpace.xs),
-                  child: ChoiceChip(
+                  child: RevealWhenSelected(selected: _category == c, child: ChoiceChip(
                     key: Key('appCategory-${c?.name ?? 'all'}'),
                     showCheckmark: false,
                     selected: _category == c,
                     label: Text(c == null ? l10n.allApps : appCategoryLabel(context, c)),
                     onSelected: (_) => setState(() => _category = c),
-                  ),
+                  )),
                 ),
             ],
-          ),
-        ),
+          )),
+        )),
         if (!filtering && popular.isNotEmpty) ...[
           SectionHeader(title: l10n.popularApps),
-          SizedBox(
+          PageBleed(child: SizedBox(
             height: 204,
-            child: ListView.separated(
+            child: EdgeFade(child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
               itemCount: popular.length,
               separatorBuilder: (_, _) => const SizedBox(width: AppSpace.sm),
               itemBuilder: (_, i) => _FeaturedApp(app: popular[i], connected: connectedIds.contains(popular[i].id), onTap: () => _connect(popular[i])),
-            ),
-          ),
+            )),
+          )),
         ],
-        SectionHeader(title: filtering ? '${shown.length}' : l10n.allApps),
+        SectionHeader(title: filtering ? shown.length.humanizedCount(context.l10n.localeName) : l10n.allApps),
         if (shown.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpace.xl),
@@ -251,8 +259,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
               );
             },
           ),
-      ],
-    );
+    ];
   }
 }
 
@@ -495,7 +502,7 @@ class _ConnectionCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      i.status == IntegrationStatusEnum.error && i.error != null ? i.error! : [if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length), l10n.usedByBots(users.length)].join(' · '),
+                      i.status == IntegrationStatusEnum.error && i.error.isUsable ? i.error! : [if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length), l10n.usedByBots(users.length)].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.bodySmall?.copyWith(color: i.status == IntegrationStatusEnum.error ? colors.negative : scheme.onSurfaceVariant),
@@ -639,11 +646,12 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
             for (final k in IntegrationKind.values)
               if (k != IntegrationKind.localMcp) DropdownMenuItem(value: k, child: Text(integrationKindLabel(context, k))),
           ],
-          onChanged: (v) => setState(() => _kind = v ?? _kind),
+          onChanged: hapticOnChanged((v) => setState(() => _kind = v ?? _kind), haptic: HapticsHelper.selection),
         ),
         TextField(
           key: const Key('integrationName'),
           controller: _name,
+          textInputAction: TextInputAction.next,
           decoration: InputDecoration(
             labelText: l10n.integrationName,
             prefixIcon: const Icon(LucideIcons.idCard, size: 20),
@@ -654,6 +662,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
         TextField(
           key: const Key('integrationPrimary'),
           controller: _primary,
+          textInputAction: TextInputAction.next,
           keyboardType: needsUrl ? TextInputType.url : TextInputType.text,
           autocorrect: false,
           decoration: InputDecoration(
@@ -667,17 +676,23 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
         if (secondaryLabel != null)
           TextField(
             controller: _secondary,
+            textInputAction: TextInputAction.next,
             autocorrect: false,
             decoration: InputDecoration(labelText: secondaryLabel, prefixIcon: Icon(_kind == IntegrationKind.openapi ? LucideIcons.server : LucideIcons.idCard, size: 20)),
           ),
         if (_kind == IntegrationKind.pipedream)
           TextField(
             controller: _apps,
+            textInputAction: TextInputAction.next,
             decoration: InputDecoration(labelText: l10n.pipedreamApps, prefixIcon: const Icon(LucideIcons.layoutGrid, size: 20)),
           ),
         TextField(
           key: const Key('integrationSecret'),
           controller: _secret,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) {
+            if (missing == null) _save(name);
+          },
           obscureText: !secretIsName && !_showSecret,
           autocorrect: false,
           enableSuggestions: false,
@@ -752,7 +767,7 @@ class BotIntegrationsScreen extends ConsumerWidget {
                           // No "MCP server" / "OpenAPI" label here (D-182); the connection's page still says.
                           subtitle: i.tools.isEmpty ? null : l10n.toolCount(i.tools.length),
                           onTap: () => set(i, !attached.contains(i.id)),
-                          trailing: Switch(value: attached.contains(i.id), onChanged: (v) => set(i, v)),
+                          trailing: Switch(value: attached.contains(i.id), onChanged: hapticOnChanged((v) => set(i, v))),
                         ),
                     ],
                   ),

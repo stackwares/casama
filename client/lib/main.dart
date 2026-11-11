@@ -13,11 +13,16 @@ import 'core/desktop_window.dart';
 import 'core/providers.dart';
 import 'core/server_address.dart';
 import 'core/server_config_cache.dart';
+import 'core/startup_assets.dart';
 import 'core/supabase_backend.dart';
 import 'core/telemetry.dart';
 import 'core/theme.dart';
+import 'theme/appearance.dart';
+import 'theme/fonts.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'ui/glow_button.dart';
+import 'ui/text_scale.dart';
+import 'ui/friendly_error_view.dart';
 
 /// Connects to the API and Supabase and returns the app widget with its backend.
 ///
@@ -26,6 +31,9 @@ import 'ui/glow_button.dart';
 /// offline cache) while the server's are fetched in the background (D-158). If the server has
 /// moved to another Supabase project since, [onServerMoved] reconnects.
 Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onServerMoved}) async {
+  // The saved look and its Google Fonts load alongside the connection, so the app's first frame
+  // already draws them and no text swaps fonts a moment later.
+  final look = _savedLookWithFonts();
   final saved = await ServerConfigCache.read(config.apiUrl);
   final server = saved ?? (await CasamaClient.connect(config.apiUrl)).config;
   if (saved == null) unawaited(ServerConfigCache.write(config.apiUrl, server));
@@ -34,11 +42,28 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onS
   final api = await SupabaseBackend.connectApi(config.apiUrl, supabase, config: server);
   final backend = SupabaseBackend(supabase, api, config: server);
   if (saved != null) unawaited(_refreshServerConfig(config.apiUrl, api, backend, saved, onServerMoved));
+  final appearance = await look;
   final app = ProviderScope(
-    overrides: [backendProvider.overrideWithValue(backend), localCacheProvider.overrideWithValue(openLocalCache())],
+    overrides: [
+      backendProvider.overrideWithValue(backend),
+      localCacheProvider.overrideWithValue(openLocalCache()),
+      appearanceProvider.overrideWith(() => AppearanceNotifier(appearance)),
+    ],
     child: const CasamaApp(),
   );
   return (app as Widget, backend);
+}
+
+/// The look saved on this device once its Google Fonts have loaded (see [preloadFonts]); null when
+/// preferences are slow or unreadable, and the app then reads the look itself, as before.
+Future<Appearance?> _savedLookWithFonts() async {
+  try {
+    final look = await AppearanceNotifier.readSaved().timeout(const Duration(seconds: 2));
+    if (look != null) await preloadFonts(heading: look.headingFont, body: look.bodyFont);
+    return look;
+  } catch (_) {
+    return null;
+  }
 }
 
 /// Replaces the saved server settings with the server's; offline, the saved ones stay.
@@ -54,6 +79,9 @@ Future<void> _refreshServerConfig(String apiUrl, CasamaClient api, SupabaseBacke
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // A widget that fails to build shows a calm "Something went wrong" in the app's colors instead of
+  // Flutter's red screen (debug) or an empty grey box (release). Telemetry still reports the error.
+  ErrorWidget.builder = (details) => FriendlyErrorView(details: details);
   // Desktop: a window sized for the sidebar, chat and computer panel, or where it was last.
   await setUpDesktopWindow();
   // Draw at once; connecting happens behind the startup gate (never block runApp on the network).
@@ -77,6 +105,9 @@ class _StartupGateState extends State<StartupGate> {
   Object? _error;
   late AppConfig _config = widget.config;
 
+  /// The first screens' pictures, decoding while the app connects (see [precacheStartupAssets]).
+  Future<void>? _assets;
+
   @override
   void initState() {
     super.initState();
@@ -85,12 +116,20 @@ class _StartupGateState extends State<StartupGate> {
     _start();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _assets ??= precacheStartupAssets(context);
+  }
+
   Future<void> _start() async {
     setState(() => _error = null);
     try {
       _config = await ServerAddress.load(fallback: widget.config);
       final connect = widget.connect ?? (c) async => (await bootstrap(c, onServerMoved: _reconnect)).$1;
       final app = await connect(_config).timeout(const Duration(seconds: 20));
+      // The first screen opens with its pictures decoded; never more than half a second's wait.
+      await (_assets ?? Future<void>.value()).timeout(const Duration(milliseconds: 500), onTimeout: () {});
       if (mounted) setState(() => _app = app);
     } catch (e) {
       if (mounted) setState(() => _error = e);
@@ -117,11 +156,13 @@ class _StartupGateState extends State<StartupGate> {
     final app = _app;
     if (app != null) return app;
     return MaterialApp(
+      onGenerateTitle: (c) => AppLocalizations.of(c).appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: limitTextScale,
       home: Builder(
         builder: (context) {
           final l10n = AppLocalizations.of(context);

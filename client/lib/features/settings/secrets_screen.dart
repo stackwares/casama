@@ -12,6 +12,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
+import '../../ui/revealable.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'totp_scan.dart';
 
@@ -139,6 +140,7 @@ class _AddSecretFormState extends State<_AddSecretForm> {
         TextField(
           key: const Key('secretName'),
           controller: _name,
+          textInputAction: TextInputAction.next,
           autofocus: true,
           decoration: InputDecoration(
             labelText: l10n.secretName,
@@ -162,6 +164,7 @@ class _AddSecretFormState extends State<_AddSecretForm> {
         TextField(
           key: const Key('secretValue'),
           controller: _value,
+          textInputAction: TextInputAction.next,
           obscureText: !_show,
           autocorrect: false,
           enableSuggestions: false,
@@ -169,25 +172,27 @@ class _AddSecretFormState extends State<_AddSecretForm> {
             labelText: _totp ? l10n.totpSeedLabel : l10n.secretValue,
             helperText: _totp ? l10n.totpSeedHelp : null,
             prefixIcon: const Icon(LucideIcons.rectangleEllipsis, size: 20),
-            suffixIcon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_totp)
-                  TotpScanButton(
-                    onScanned: (link) => setState(() {
-                      _value.text = link;
-                      final issuer = Uri.tryParse(link)?.queryParameters['issuer'];
-                      if (_name.text.isEmpty && issuer != null && issuer.isNotEmpty) {
-                        _name.text = '${issuer.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]+'), '_')}_2FA';
-                      }
-                    }),
+            suffixIcon: FieldSuffix(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_totp)
+                    TotpScanButton(
+                      onScanned: (link) => setState(() {
+                        _value.text = link;
+                        final issuer = Uri.tryParse(link)?.queryParameters['issuer'];
+                        if (_name.text.isEmpty && issuer != null && issuer.isNotEmpty) {
+                          _name.text = '${issuer.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]+'), '_')}_2FA';
+                        }
+                      }),
+                    ),
+                  IconButton(
+                    tooltip: _show ? l10n.hide : l10n.show,
+                    icon: Icon(_show ? LucideIcons.eyeOff : LucideIcons.eye, size: 20),
+                    onPressed: () => setState(() => _show = !_show),
                   ),
-                IconButton(
-                  tooltip: _show ? l10n.hide : l10n.show,
-                  icon: Icon(_show ? LucideIcons.eyeOff : LucideIcons.eye, size: 20),
-                  onPressed: () => setState(() => _show = !_show),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           onChanged: (_) => setState(() {}),
@@ -195,6 +200,10 @@ class _AddSecretFormState extends State<_AddSecretForm> {
         TextField(
           key: const Key('secretHosts'),
           controller: _hosts,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) {
+            if (valid) Navigator.pop(context, (_name.text, _value.text.trim(), _hostList, _totp));
+          },
           keyboardType: TextInputType.url,
           autocorrect: false,
           decoration: InputDecoration(

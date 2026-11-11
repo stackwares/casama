@@ -5,10 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
+import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/form_sheet.dart';
@@ -61,11 +65,12 @@ class RoutinesScreen extends ConsumerWidget {
   Future<void> _create(BuildContext context, WidgetRef ref) async {
     final created = await showAdaptiveSheet<CreatedRoutine>(
       context: context,
+      contentPadsBottom: true,
       builder: (_) => NewRoutineSheet(botId: botId),
     );
     if (created == null || !context.mounted) return;
     ref.invalidate(routinesProvider(botId));
-    if (created.webhookUrl != null) {
+    if (created.webhookUrl.isUsable) {
       final l10n = context.l10n;
       await showAdaptiveSheet<void>(
         context: context,
@@ -100,8 +105,8 @@ class RoutinesScreen extends ConsumerWidget {
               showMessage(c, l10n.copied);
             },
             children: [
-              field(l10n.webhookUrl, created.webhookUrl ?? ''),
-              field(l10n.webhookSecret, created.webhookSecret ?? '', key: const Key('webhookSecret')),
+              field(l10n.webhookUrl, created.webhookUrl.orPlaceholder()),
+              field(l10n.webhookSecret, created.webhookSecret.orPlaceholder(), key: const Key('webhookSecret')),
             ],
           );
         },
@@ -112,7 +117,7 @@ class RoutinesScreen extends ConsumerWidget {
 
 String _formatWhen(BuildContext context, DateTime t) {
   final local = t.toLocal();
-  return '${MaterialLocalizations.of(context).formatMediumDate(local)} · ${TimeOfDay.fromDateTime(local).format(context)}';
+  return '${local.formattedWeekdayDate(context)} · ${local.formattedTime(context)}';
 }
 
 class _RoutineCard extends ConsumerWidget {
@@ -133,7 +138,7 @@ class _RoutineCard extends ConsumerWidget {
     final scheme = context.colorScheme;
     final r = routine;
     final (icon, schedule) = switch (r.trigger) {
-      RoutineTrigger.schedule => (LucideIcons.repeat, l10n.routineSchedule(scheduleWords(context, r.scheduleCron ?? ''), r.timezone)),
+      RoutineTrigger.schedule => (LucideIcons.repeat, l10n.routineSchedule(scheduleWords(context, r.scheduleCron.orPlaceholder()), r.timezone)),
       RoutineTrigger.once => (LucideIcons.alarmClock, l10n.routineOnce),
       RoutineTrigger.github => (LucideIcons.codeXml, l10n.routineGithub),
       RoutineTrigger.webhook => (LucideIcons.webhook, l10n.routineWebhook),
@@ -183,10 +188,10 @@ class _RoutineCard extends ConsumerWidget {
           Switch(
             key: Key('routineEnabled-${r.id}'),
             value: r.enabled,
-            onChanged: (v) async {
+            onChanged: hapticOnChanged((v) async {
               await runGuarded(context, () => ref.read(backendProvider).setRoutineEnabled(r.id, v));
               ref.invalidate(routinesProvider(r.botId));
-            },
+            }),
           ),
           MenuAnchor(
             alignmentOffset: const Offset(-120, 0),
@@ -198,6 +203,7 @@ class _RoutineCard extends ConsumerWidget {
                   final runId = await runGuarded(context, () => ref.read(backendProvider).runRoutine(r.id));
                   if (runId != null && context.mounted) {
                     final router = GoRouter.maybeOf(context);
+                    HapticsHelper.success();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(l10n.routineStarted),
@@ -312,6 +318,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
   }
 
   Future<void> _pickRepeatTime() async {
+    unfocusBeforeModal();
     final time = await showTimePicker(context: context, initialTime: _time);
     if (time == null || !mounted) return;
     setState(() {
@@ -321,6 +328,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
   }
 
   Future<void> _pickTime() async {
+    unfocusBeforeModal();
     final date = await showDatePicker(context: context, initialDate: _runAt, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
     if (date == null || !mounted) return;
     final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_runAt));
@@ -343,8 +351,10 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
     final now = DateTime.now();
     final tomorrow9 = DateTime(now.year, now.month, now.day + 1, 9);
     final quick = <(String, DateTime)>[(l10n.inMinutes(15), now.add(const Duration(minutes: 15))), (l10n.inHours(1), now.add(const Duration(hours: 1))), (l10n.tomorrowAt9, tomorrow9)];
+    VoidCallback? create;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.md),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.md)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -354,6 +364,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
           TextField(
             key: const Key('routineName'),
             controller: _name,
+            textInputAction: TextInputAction.next,
             decoration: InputDecoration(labelText: l10n.routineName),
             onChanged: (_) => setState(() {}),
           ),
@@ -395,7 +406,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                 initialValue: _calendarId,
                 decoration: InputDecoration(labelText: l10n.calendarTriggerCalendar),
                 items: [for (final c in calendars) DropdownMenuItem(value: c.id, child: Text(c.name))],
-                onChanged: (v) => setState(() => _calendarId = v),
+                onChanged: hapticOnChanged((v) => setState(() => _calendarId = v), haptic: HapticsHelper.selection),
               ),
               const SizedBox(height: AppSpace.sm),
               Wrap(
@@ -411,11 +422,13 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.calendarOutsideGuests),
                 value: _outsideGuests,
-                onChanged: (v) => setState(() => _outsideGuests = v ?? false),
+                onChanged: hapticOnChanged((v) => setState(() => _outsideGuests = v ?? false), haptic: HapticsHelper.soft),
               ),
-              CheckboxListTile(contentPadding: EdgeInsets.zero, title: Text(l10n.calendarVideoLink), value: _videoLink, onChanged: (v) => setState(() => _videoLink = v ?? false)),
+              CheckboxListTile(contentPadding: EdgeInsets.zero, title: Text(l10n.calendarVideoLink), value: _videoLink, onChanged: hapticOnChanged((v) => setState(() => _videoLink = v ?? false), haptic: HapticsHelper.soft)),
               TextField(
                 controller: _titleMatch,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => create?.call(),
                 decoration: InputDecoration(labelText: l10n.calendarTitleMatch),
               ),
             ],
@@ -433,23 +446,27 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                 DropdownMenuItem(value: null, child: Text(l10n.messageTriggerAnyApp)),
                 for (final k in MessageTriggerConfigChannelKindEnum.values) DropdownMenuItem(value: k, child: Text(channelKindName(ChannelKind.values.firstWhere((c) => c.value == k.value)))),
               ],
-              onChanged: (v) => setState(() => _msgKind = v),
+              onChanged: hapticOnChanged((v) => setState(() => _msgKind = v), haptic: HapticsHelper.selection),
             ),
             TextField(
               key: const Key('messageSender'),
               controller: _msgSender,
+              textInputAction: TextInputAction.next,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(labelText: l10n.messageTriggerSender),
             ),
             TextField(
               key: const Key('messageSubject'),
               controller: _msgSubject,
+              textInputAction: TextInputAction.next,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(labelText: l10n.messageTriggerSubject),
             ),
             TextField(
               key: const Key('messageText'),
               controller: _msgText,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => create?.call(),
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(labelText: l10n.messageTriggerWords),
             ),
@@ -494,10 +511,10 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                           initialValue: _weekday,
                           decoration: InputDecoration(labelText: l10n.routineDay),
                           items: [for (final d in const [1, 2, 3, 4, 5, 6, 0]) DropdownMenuItem(value: d, child: Text(l10n.cronDay(cronDayKey(d))))],
-                          onChanged: (v) => setState(() {
+                          onChanged: hapticOnChanged((v) => setState(() {
                             _weekday = v ?? _weekday;
                             _writeCron();
-                          }),
+                          }), haptic: HapticsHelper.selection),
                         ),
                       ),
                     ),
@@ -542,6 +559,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                 TextField(
                   key: const Key('routineCron'),
                   controller: _cron,
+                  textInputAction: TextInputAction.next,
                   decoration: InputDecoration(labelText: l10n.cronExpression, helperText: l10n.cronHelp),
                   onChanged: (_) => setState(_readCron),
                 ),
@@ -549,6 +567,8 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                 TextField(
                   key: const Key('routineTimezone'),
                   controller: _timezone,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => create?.call(),
                   decoration: InputDecoration(labelText: l10n.timezone),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -559,7 +579,8 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
           GlowButton(
             key: const Key('createRoutine'),
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-            onPressed: _busy || !valid
+            // Also run by the keyboard's Done key on the last field.
+            onPressed: create = _busy || !valid
                 ? null
                 : () async {
                     setState(() => _busy = true);

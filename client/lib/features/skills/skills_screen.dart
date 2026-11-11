@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import 'skill_proposals.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -112,7 +114,7 @@ class SkillsScreen extends ConsumerWidget {
                           subtitle: [
                             s.description,
                             switch (s.source) {
-                              'github' => 'GitHub ${s.sourceRef['repo'] ?? ''}',
+                              'github' => 'GitHub ${(s.sourceRef['repo']?.toString()).orPlaceholder()}',
                               'catalog' => l10n.fromCatalog,
                               'gallery' => l10n.fromGallery,
                               'bot' => l10n.savedByBot,
@@ -150,7 +152,7 @@ class SkillsScreen extends ConsumerWidget {
                                 ),
                               Switch(
                                 value: s.enabled,
-                                onChanged: (v) async {
+                                onChanged: hapticOnChanged((v) async {
                                   final org = ref.read(currentOrgProvider)!;
                                   await runGuarded(
                                     context,
@@ -167,7 +169,7 @@ class SkillsScreen extends ConsumerWidget {
                                         ),
                                   );
                                   ref.invalidate(skillsProvider);
-                                },
+                                }),
                               ),
                             ],
                           ),
@@ -273,6 +275,7 @@ class _SkillEditorState extends ConsumerState<_SkillEditor> {
       children: [
         TextField(
           controller: _name,
+          textInputAction: TextInputAction.next,
           decoration: InputDecoration(
             labelText: l10n.skillName,
             hintText: 'weekly-report',
@@ -282,6 +285,7 @@ class _SkillEditorState extends ConsumerState<_SkillEditor> {
         ),
         TextField(
           controller: _description,
+          textInputAction: TextInputAction.next,
           decoration: InputDecoration(
             labelText: l10n.skillDescription,
             helperText: l10n.skillDescriptionHelp,

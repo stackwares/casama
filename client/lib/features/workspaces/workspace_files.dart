@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
+import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
@@ -45,7 +48,7 @@ class WorkspaceFilesSection extends ConsumerWidget {
       final ok = await showAdaptiveSheet<bool>(context: context, builder: (_) => _ImportPreview(result: dry));
       if (ok != true || !context.mounted) return;
       final r = await runGuarded(context, () => backend.importWorkspaceFiles(orgId, zip));
-      if (r != null && context.mounted) showMessage(context, l10n.filesImported(r.created.length, r.updated.length));
+      if (r != null && context.mounted) showSuccess(context, l10n.filesImported(r.created.length, r.updated.length));
     }
 
     Future<void> configure() async {
@@ -71,10 +74,10 @@ class WorkspaceFilesSection extends ConsumerWidget {
               subtitle: sync == null || !sync.configured
                   ? l10n.gitSyncOff
                   : [
-                      '${sync.repo}@${sync.branch}${(sync.path ?? '').isEmpty ? '' : '/${sync.path}'}',
+                      '${sync.repo}@${sync.branch}${sync.path.isUsable ? '/${sync.path}' : ''}',
                       if (!sync.hasToken) l10n.gitSyncNeedsToken,
-                      if (sync.lastError != null) sync.lastError!,
-                      if (sync.lastSyncedAt != null) l10n.gitSyncLast(MaterialLocalizations.of(context).formatShortDate(sync.lastSyncedAt!.toLocal())),
+                      if (sync.lastError.isUsable) sync.lastError!,
+                      if (sync.lastSyncedAt != null) l10n.gitSyncLast(sync.lastSyncedAt!.toLocal().formattedDate(context)),
                     ].join(' · '),
               onTap: configure,
             ),
@@ -88,7 +91,7 @@ class WorkspaceFilesSection extends ConsumerWidget {
                 onTap: () async {
                   await runGuarded(context, () => backend.runGitSync(orgId));
                   ref.invalidate(gitSyncProvider(orgId));
-                  if (context.mounted) showMessage(context, l10n.syncQueued);
+                  if (context.mounted) showSuccess(context, l10n.syncQueued);
                 },
               ),
           ],
@@ -149,13 +152,15 @@ class _GitSyncFormState extends ConsumerState<_GitSyncForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final valid = RegExp(r'^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$').hasMatch(_repo.text.trim());
+    VoidCallback? submit;
     return FormSheet(
       icon: LucideIcons.gitBranch,
       title: l10n.gitSync,
       subtitle: l10n.gitSyncHelp,
       submitLabel: l10n.save,
       submitKey: const Key('saveGitSync'),
-      onSubmit: !valid
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = !valid
           ? null
           : () async {
               final s = await runGuarded(
@@ -165,10 +170,10 @@ class _GitSyncFormState extends ConsumerState<_GitSyncForm> {
               if (s != null && context.mounted) Navigator.pop(context, s);
             },
       children: [
-        TextField(key: const Key('gitRepo'), controller: _repo, onChanged: (_) => setState(() {}), decoration: const InputDecoration(labelText: 'owner/repository')),
-        TextField(key: const Key('gitBranch'), controller: _branch, decoration: InputDecoration(labelText: l10n.gitBranch)),
-        TextField(key: const Key('gitPath'), controller: _path, decoration: InputDecoration(labelText: l10n.gitFolder)),
-        SwitchListTile(contentPadding: EdgeInsets.zero, title: Text(l10n.gitSyncOn), value: _enabled, onChanged: (v) => setState(() => _enabled = v)),
+        TextField(key: const Key('gitRepo'), controller: _repo, textInputAction: TextInputAction.next, onChanged: (_) => setState(() {}), decoration: const InputDecoration(labelText: 'owner/repository')),
+        TextField(key: const Key('gitBranch'), controller: _branch, textInputAction: TextInputAction.next, decoration: InputDecoration(labelText: l10n.gitBranch)),
+        TextField(key: const Key('gitPath'), controller: _path, textInputAction: TextInputAction.done, onSubmitted: (_) => submit?.call(), decoration: InputDecoration(labelText: l10n.gitFolder)),
+        SwitchListTile(contentPadding: EdgeInsets.zero, title: Text(l10n.gitSyncOn), value: _enabled, onChanged: hapticOnChanged((v) => setState(() => _enabled = v))),
         if (widget.current?.configured == true)
           TextButton(
             key: const Key('deleteGitSync'),

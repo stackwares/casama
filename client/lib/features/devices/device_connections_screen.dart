@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -50,7 +51,7 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
     } catch (e) {
       if (!mounted) return null;
       if (problemOf(e)?.code != 'health_needs_encryption') return runGuarded(context, () => Future<bool>.error(e));
-      showMessage(context, context.l10n.healthNeedsEncryption);
+      showWarning(context, context.l10n.healthNeedsEncryption);
       return null;
     }
   }
@@ -61,7 +62,7 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
     final ok = await _guarded(() => ref.read(deviceSyncProvider).setKind(kind, on));
     if (!mounted) return;
     setState(() => _busy.remove(kind));
-    if (ok == false) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.devicePermissionDenied)));
+    if (ok == false) showWarning(context, l10n.devicePermissionDenied);
     ref.invalidate(_deviceStateProvider);
   }
 
@@ -190,7 +191,7 @@ class _KindCard extends StatelessWidget {
             secondary: Icon(deviceKindIcon(kind)),
             title: Text(_kindTitle(l10n, kind)),
             value: on,
-            onChanged: busy ? null : onToggle,
+            onChanged: hapticOnChanged(busy ? null : onToggle),
           ),
           if (on && (kind == DeviceKind.health || extra != null))
             Padding(
@@ -250,7 +251,7 @@ class _KindAdvanced extends StatelessWidget {
                   for (final d in const [0, 7, 30, 90, 365])
                     if (d <= defaultRetentionDays(kind)) DropdownMenuItem(value: d, child: Text(d == 0 ? l10n.deviceKeepLiveOnly : l10n.deviceKeepDays(d))),
                 ],
-                onChanged: (d) => d == null ? null : onSettings(DeviceKindSettings(retentionDays: d, privateModel: settings.privateModel, extras: settings.extras)),
+                onChanged: hapticOnChanged((d) => d == null ? null : onSettings(DeviceKindSettings(retentionDays: d, privateModel: settings.privateModel, extras: settings.extras)), haptic: HapticsHelper.selection),
               ),
             ],
           ),
@@ -261,7 +262,7 @@ class _KindAdvanced extends StatelessWidget {
             title: Text(l10n.devicePrivateModel),
             subtitle: Text(l10n.devicePrivateModelHelp),
             value: settings.privateModel ?? false,
-            onChanged: (v) => onSettings(DeviceKindSettings(retentionDays: settings.retentionDays, privateModel: v, extras: settings.extras)),
+            onChanged: hapticOnChanged((v) => onSettings(DeviceKindSettings(retentionDays: settings.retentionDays, privateModel: v, extras: settings.extras))),
           ),
           // Health (D-150): sensitive extras are separate switches, off by default.
           if (kind == DeviceKind.health)
@@ -276,13 +277,13 @@ class _KindAdvanced extends StatelessWidget {
                   DeviceKindSettingsExtrasEnum.bloodPressure => l10n.healthExtraBloodPressure,
                 }),
                 value: settings.extras?.contains(x) ?? false,
-                onChanged: (v) => onSettings(
+                onChanged: hapticOnChanged((v) => onSettings(
                   DeviceKindSettings(
                     retentionDays: settings.retentionDays,
                     privateModel: settings.privateModel,
                     extras: [...?settings.extras?.where((e) => e != x), if (v) x],
                   ),
-                ),
+                )),
               ),
           Padding(
             padding: const EdgeInsets.only(top: AppSpace.xs, bottom: AppSpace.sm),

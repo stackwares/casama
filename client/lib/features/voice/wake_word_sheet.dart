@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../ui/form_sheet.dart';
 import 'wake_word.dart';
 
@@ -61,7 +62,7 @@ class _WakeWordSheetState extends ConsumerState<WakeWordSheet> {
               if (r == true) Navigator.pop(context);
             },
       children: [
-        SwitchListTile(key: const Key('wakeWordOn'), contentPadding: EdgeInsets.zero, title: Text(l10n.wakeWordListen), value: _enabled, onChanged: (v) => setState(() => _enabled = v)),
+        SwitchListTile(key: const Key('wakeWordOn'), contentPadding: EdgeInsets.zero, title: Text(l10n.wakeWordListen), value: _enabled, onChanged: hapticOnChanged((v) => setState(() => _enabled = v))),
         TextField(
           key: const Key('wakePhrase'),
           controller: _phrase,
@@ -74,7 +75,7 @@ class _WakeWordSheetState extends ConsumerState<WakeWordSheet> {
           initialValue: _bot,
           decoration: InputDecoration(labelText: l10n.wakeWordBot),
           items: [for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name))],
-          onChanged: (v) => setState(() => _bot = v),
+          onChanged: hapticOnChanged((v) => setState(() => _bot = v), haptic: HapticsHelper.selection),
         ),
         if (_progress != null && _progress! < 1) ...[Text(l10n.wakeWordDownloading), LinearProgressIndicator(value: _progress)],
         FormNote(l10n.wakeWordPrivacy),

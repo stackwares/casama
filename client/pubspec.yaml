@@ -74,11 +74,15 @@ dependencies:
   notification_listener_service: ^1.0.0
   auto_updater: ^1.0.0
   package_info_plus: ^10.2.2
+  pub_semver: ^2.2.1
   flutter_soloud: ^5.2.3
   qr_flutter: ^4.1.0
   lottie: ^3.8.2
   audio_session: ^0.2.4
   passkeys: ^2.24.1
+  haptic_feedback: 0.8.0
+  stupid_simple_sheet: 0.9.1+1
+  phone_numbers_parser: ^9.0.29
 dev_dependencies:
   integration_test:
     sdk: flutter

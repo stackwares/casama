@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
@@ -133,13 +134,15 @@ class _AddRuleState extends ConsumerState<_AddRule> {
     final amount = double.tryParse(_amount.text.trim());
     final hasLimits = domains.isNotEmpty || amount != null;
     final valid = _rule != 'allow_within_limits' || hasLimits;
+    VoidCallback? submit;
     return FormSheet(
       icon: LucideIcons.shieldCheck,
       title: l10n.addRule,
       subtitle: l10n.addRuleHelp,
       submitLabel: l10n.save,
       submitKey: const Key('saveRule'),
-      onSubmit: !valid
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = !valid
           ? null
           : () async {
               final org = ref.read(currentOrgProvider);
@@ -164,7 +167,7 @@ class _AddRuleState extends ConsumerState<_AddRule> {
           initialValue: _category,
           decoration: InputDecoration(labelText: l10n.whenTheBot),
           items: [for (final c in _categories) DropdownMenuItem(value: c, child: Text(categoryLabel(context, c)))],
-          onChanged: (v) => setState(() => _category = v ?? 'send'),
+          onChanged: hapticOnChanged((v) => setState(() => _category = v ?? 'send'), haptic: HapticsHelper.selection),
         ),
         DropdownButtonFormField<String>(
           isExpanded: true,
@@ -177,11 +180,12 @@ class _AddRuleState extends ConsumerState<_AddRule> {
             DropdownMenuItem(value: 'ask', child: Text(l10n.ruleAsk)),
             DropdownMenuItem(value: 'hand_off', child: Text(l10n.ruleHandOff)),
           ],
-          onChanged: (v) => setState(() => _rule = v ?? 'ask'),
+          onChanged: hapticOnChanged((v) => setState(() => _rule = v ?? 'ask'), haptic: HapticsHelper.selection),
         ),
         TextField(
           key: const Key('ruleDomains'),
           controller: _domains,
+          textInputAction: TextInputAction.next,
           keyboardType: TextInputType.url,
           decoration: InputDecoration(labelText: l10n.ruleDomains, hintText: 'acme.com'),
           onChanged: (_) => setState(() {}),
@@ -189,6 +193,8 @@ class _AddRuleState extends ConsumerState<_AddRule> {
         TextField(
           key: const Key('ruleAmount'),
           controller: _amount,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => submit?.call(),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(labelText: l10n.ruleMaxAmount),
           onChanged: (_) => setState(() {}),
@@ -198,7 +204,7 @@ class _AddRuleState extends ConsumerState<_AddRule> {
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.ruleForWorkspace),
           value: _workspace,
-          onChanged: (v) => setState(() => _workspace = v),
+          onChanged: hapticOnChanged((v) => setState(() => _workspace = v)),
         ),
       ],
     );

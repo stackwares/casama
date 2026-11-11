@@ -18,6 +18,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/spring_sheet.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -320,9 +321,8 @@ class _CallScreenState extends ConsumerState<CallScreen>
           ? const CallRoute(CallRouteKind.earpiece)
           : const CallRoute(CallRouteKind.speaker);
     } else {
-      pick = await showModalBottomSheet<CallRoute>(
+      pick = await showSpringBottomSheet<CallRoute>(
         context: context,
-        showDragHandle: true,
         builder: (context) => SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -594,6 +594,7 @@ class _CallScreenState extends ConsumerState<CallScreen>
                                   Expanded(child: stage),
                                   Flexible(
                                     child: SingleChildScrollView(
+                                      primary: false,
                                       child: _NeedsKeyCard(
                                         onAddKey: () => context.push(
                                           '/settings/keys?provider=google',

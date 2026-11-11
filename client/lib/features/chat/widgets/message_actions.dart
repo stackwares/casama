@@ -7,6 +7,7 @@ import '../../../core/share.dart';
 import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
+import '../../../ui/bottom_padding.dart';
 import '../../../ui/adaptive_modal.dart';
 import 'chat_markdown.dart';
 
@@ -39,13 +40,15 @@ class MessageActions extends StatelessWidget {
     showAdaptiveSheet<void>(
       context: context,
       heightFactor: 0.7,
+      contentPadsBottom: true,
       builder: (sheet) => Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpace.xl, 0, AppSpace.xl, AppSpace.lg),
+        padding: const EdgeInsets.fromLTRB(AppSpace.xl, 0, AppSpace.xl, 0),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text(context.l10n.selectText, style: sheet.textTheme.titleLarge),
           const SizedBox(height: AppSpace.md),
           Expanded(
             child: SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: BottomPadding.of(sheet, minimum: AppSpace.lg)),
               child: markdown ? ChatMarkdown(data: text) : SelectableText(text, style: sheet.textTheme.bodyLarge?.copyWith(height: 1.5)),
             ),
           ),
@@ -55,6 +58,7 @@ class MessageActions extends StatelessWidget {
   }
 
   Future<void> _menu(BuildContext context, Offset at) async {
+    unfocusBeforeModal();
     HapticFeedback.mediumImpact();
     final l10n = context.l10n;
     final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;

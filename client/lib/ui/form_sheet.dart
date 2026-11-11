@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../core/haptics.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
+import 'bottom_padding.dart';
 import 'adaptive_modal.dart';
 import 'app_card.dart';
 import '../ui/glow_button.dart';
@@ -227,7 +229,7 @@ class FormSwitch extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: SwitchListTile(
         value: value,
-        onChanged: onChanged,
+        onChanged: hapticOnChanged(onChanged),
         shape: shape,
         contentPadding: const EdgeInsets.fromLTRB(16, 4, 12, 4),
         secondary: icon == null ? null : Icon(icon, color: scheme.onSurfaceVariant),
@@ -370,11 +372,12 @@ Future<Choice<T>?> showChoiceSheet<T>(
 }) {
   return showAdaptiveSheet<Choice<T>>(
     context: context,
+    contentPadsBottom: true,
     builder: (context) {
       final scheme = context.colorScheme;
       return SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.fromLTRB(AppSpace.xl, 0, AppSpace.xl, AppSpace.lg),
+        padding: EdgeInsets.fromLTRB(AppSpace.xl, 0, AppSpace.xl, BottomPadding.of(context, minimum: AppSpace.lg)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
@@ -417,7 +420,10 @@ Future<Choice<T>?> showChoiceSheet<T>(
                     icon: c.icon ?? LucideIcons.circle,
                     title: c.label,
                     subtitle: c.subtitle,
-                    onTap: () => Navigator.of(context).pop(c),
+                    onTap: () {
+                      HapticsHelper.selection();
+                      Navigator.of(context).pop(c);
+                    },
                     trailing: c.value == selected ? Icon(LucideIcons.check, color: scheme.primary) : const SizedBox(width: 24),
                   ),
               ],

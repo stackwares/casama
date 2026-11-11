@@ -29,7 +29,7 @@ Future<bool> handleLocalUiAction(BuildContext context, WidgetRef ref, BotUiActio
           return true;
         }
         // Elsewhere ChatGPT sign-in can't run; say so and offer a key instead.
-        if (provider == 'chatgpt') showMessage(context, context.l10n.chatGptDesktopOnly);
+        if (provider == 'chatgpt') showWarning(context, context.l10n.chatGptDesktopOnly);
         final target = provider is String && provider != 'chatgpt' ? '$path?provider=$provider' : path;
         unawaited(GoRouter.maybeOf(context)?.push(target) ?? Future<void>.value());
       }

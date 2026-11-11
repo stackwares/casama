@@ -11,10 +11,16 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
+import '../../core/number_format.dart';
+import '../../core/date_format.dart';
+import '../../core/phone_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
@@ -128,6 +134,7 @@ class WorkspaceSwitcher extends ConsumerWidget {
 /// The workspace list: switch, create, or join with a link.
 Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiveSheet<void>(
   context: context,
+  contentPadsBottom: true,
   builder: (c) => Consumer(
     builder: (context, ref, _) {
       final l10n = context.l10n;
@@ -135,7 +142,7 @@ Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiv
       final current = ref.watch(currentOrgProvider);
       final badges = ref.watch(workspaceBadgesProvider).value ?? const {};
       return SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpace.lg),
+        padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -151,7 +158,7 @@ Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiv
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if ((badges[o.id] ?? 0) > 0) Badge(label: Text('${badges[o.id]}')),
+                        if ((badges[o.id] ?? 0) > 0) Badge(label: Text('${badges[o.id]}', style: const TextStyle(fontFeatures: AppText.tabular))),
                         if (o.id == current?.id)
                           Padding(
                             padding: const EdgeInsets.only(left: 8),
@@ -438,10 +445,10 @@ class BotToBotSwitch extends ConsumerWidget {
           title: Text(l10n.botToBot),
           subtitle: Text(l10n.botToBotHelp),
           value: on,
-          onChanged: (v) async {
+          onChanged: hapticOnChanged((v) async {
             await runGuarded(context, () => ref.read(backendProvider).setAllowBotToBot(orgId, v));
             ref.invalidate(_botToBotProvider(orgId));
-          },
+          }),
         ),
       ],
     );
@@ -469,6 +476,7 @@ class EncryptionSection extends ConsumerWidget {
     };
     Future<void> toggle(bool v) async {
       if (v) {
+        unfocusBeforeModal();
         final ok = await showDialog<bool>(
           context: context,
           builder: (d) => AlertDialog(
@@ -494,14 +502,14 @@ class EncryptionSection extends ConsumerWidget {
           subtitle: Text('$status\n${l10n.encryptionHelp}${on ? '\n${l10n.encryptionKeyManaged}' : ''}'),
           isThreeLine: true,
           value: on,
-          onChanged: s.available || on ? toggle : null,
+          onChanged: hapticOnChanged(s.available || on ? toggle : null),
         ),
         if (on)
           GroupedTile(
             key: const Key('rotateKey'),
             icon: LucideIcons.rotateCw,
             title: l10n.encryptionRotate,
-            subtitle: s.rotatedAt != null ? l10n.encryptionRotated(MaterialLocalizations.of(context).formatMediumDate(s.rotatedAt!.toLocal())) : l10n.encryptionRotateHelp,
+            subtitle: s.rotatedAt != null ? l10n.encryptionRotated(s.rotatedAt!.toLocal().formattedDate(context)) : l10n.encryptionRotateHelp,
             onTap: () async {
               final ok = await showConfirm(
                 context: context,
@@ -636,6 +644,7 @@ class _MemoryBackendSheetState extends ConsumerState<_MemoryBackendSheet> {
         Revealable(builder: (context, hidden, toggle) => TextField(
           key: const Key('memoryApiKey'),
           controller: _key,
+          textInputAction: TextInputAction.next,
           obscureText: hidden,
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(labelText: l10n.chApiKey, suffixIcon: toggle),
@@ -644,14 +653,19 @@ class _MemoryBackendSheetState extends ConsumerState<_MemoryBackendSheet> {
           TextField(
             key: const Key('memoryWorkspace'),
             controller: _workspace,
+            textInputAction: TextInputAction.next,
             decoration: InputDecoration(labelText: l10n.memoryHonchoWorkspace, helperText: l10n.memoryHonchoWorkspaceHelp),
           ),
         TextField(
           key: const Key('memoryUrl'),
           controller: _url,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) {
+            if (!_busy && _key.text.trim().length >= 8) _save();
+          },
           decoration: InputDecoration(labelText: l10n.memoryBaseUrl, helperText: l10n.memoryBaseUrlHelp),
         ),
-        SwitchListTile(key: const Key('memoryCopy'), contentPadding: EdgeInsets.zero, title: Text(l10n.memoryCopyExisting), value: _copy, onChanged: (v) => setState(() => _copy = v)),
+        SwitchListTile(key: const Key('memoryCopy'), contentPadding: EdgeInsets.zero, title: Text(l10n.memoryCopyExisting), value: _copy, onChanged: hapticOnChanged((v) => setState(() => _copy = v))),
         if (external)
           TextButton(
             key: const Key('memoryBuiltIn'),
@@ -683,10 +697,10 @@ class A2aSwitch extends ConsumerWidget {
           title: Text(l10n.a2a),
           subtitle: Text(l10n.a2aHelp),
           value: ref.watch(_a2aProvider(orgId)).value ?? false,
-          onChanged: (v) async {
+          onChanged: hapticOnChanged((v) async {
             await runGuarded(context, () => ref.read(backendProvider).setA2aEnabled(orgId, v));
             ref.invalidate(_a2aProvider(orgId));
-          },
+          }),
         ),
       ],
     );
@@ -715,7 +729,7 @@ class PhoneCallsSection extends ConsumerWidget {
           key: const Key('phoneCalls'),
           icon: LucideIcons.phoneOutgoing,
           title: l10n.phoneCalls,
-          subtitle: t.connected ? '${t.fromNumber} · ${l10n.phoneCallsCap}: ${t.dailyCap}' : '${l10n.phoneCallsOff} · ${l10n.phoneCallsHelp}',
+          subtitle: t.connected ? '${(t.fromNumber ?? '').formattedPhoneNumber} · ${l10n.phoneCallsCap}: ${t.dailyCap}' : '${l10n.phoneCallsOff} · ${l10n.phoneCallsHelp}',
           onTap: () async {
             final changed = await showAdaptiveSheet<bool>(
               context: context,
@@ -741,7 +755,7 @@ class _PhoneCallsSheet extends ConsumerStatefulWidget {
 class _PhoneCallsSheetState extends ConsumerState<_PhoneCallsSheet> {
   late final _sid = TextEditingController(text: widget.current.accountSid ?? '');
   final _token = TextEditingController();
-  late final _from = TextEditingController(text: widget.current.fromNumber ?? '');
+  late final _from = TextEditingController(text: (widget.current.fromNumber ?? '').formattedPhoneNumber);
   late final _cap = TextEditingController(text: '${widget.current.dailyCap}');
   late var _personal = widget.current.allowPersonalNumbers;
   var _busy = false;
@@ -755,18 +769,20 @@ class _PhoneCallsSheetState extends ConsumerState<_PhoneCallsSheet> {
   }
 
   bool get _valid =>
-      RegExp(r'^AC[0-9a-fA-F]{32}$').hasMatch(_sid.text.trim()) && RegExp(r'^\+[1-9][0-9]{7,14}$').hasMatch(_from.text.trim()) && (widget.current.connected || _token.text.trim().length >= 16);
+      RegExp(r'^AC[0-9a-fA-F]{32}$').hasMatch(_sid.text.trim()) && RegExp(r'^\+[1-9][0-9]{7,14}$').hasMatch(_from.text.unformattedPhoneNumber) && (widget.current.connected || _token.text.trim().length >= 16);
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    VoidCallback? submit;
     return FormSheet(
       icon: LucideIcons.phoneOutgoing,
       title: l10n.phoneCalls,
       subtitle: l10n.phoneCallsHelp,
       submitLabel: l10n.save,
       submitKey: const Key('savePhoneCalls'),
-      onSubmit: !_valid || _busy
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = !_valid || _busy
           ? null
           : () async {
               setState(() => _busy = true);
@@ -779,7 +795,7 @@ class _PhoneCallsSheetState extends ConsumerState<_PhoneCallsSheet> {
                       SetTelephonyRequest(
                         accountSid: _sid.text.trim(),
                         authToken: _token.text.trim().isEmpty ? null : _token.text.trim(),
-                        fromNumber: _from.text.trim(),
+                        fromNumber: _from.text.unformattedPhoneNumber,
                         allowPersonalNumbers: _personal,
                         dailyCap: int.tryParse(_cap.text.trim()) ?? 10,
                       ),
@@ -794,12 +810,14 @@ class _PhoneCallsSheetState extends ConsumerState<_PhoneCallsSheet> {
         TextField(
           key: const Key('twilioSid'),
           controller: _sid,
+          textInputAction: TextInputAction.next,
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(labelText: l10n.twilioSid),
         ),
         Revealable(builder: (context, hidden, toggle) => TextField(
           key: const Key('twilioToken'),
           controller: _token,
+          textInputAction: TextInputAction.next,
           obscureText: hidden,
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(labelText: l10n.twilioToken, suffixIcon: toggle),
@@ -807,17 +825,21 @@ class _PhoneCallsSheetState extends ConsumerState<_PhoneCallsSheet> {
         TextField(
           key: const Key('twilioFrom'),
           controller: _from,
+          textInputAction: TextInputAction.next,
           keyboardType: TextInputType.phone,
+          inputFormatters: const [PhoneInputFormatter()],
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(labelText: l10n.twilioFrom),
         ),
         TextField(
           key: const Key('phoneCallsCap'),
           controller: _cap,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => submit?.call(),
           keyboardType: TextInputType.number,
           decoration: InputDecoration(labelText: l10n.phoneCallsCap),
         ),
-        SwitchListTile(key: const Key('phoneCallsPersonal'), contentPadding: EdgeInsets.zero, title: Text(l10n.phoneCallsPersonal), value: _personal, onChanged: (v) => setState(() => _personal = v)),
+        SwitchListTile(key: const Key('phoneCallsPersonal'), contentPadding: EdgeInsets.zero, title: Text(l10n.phoneCallsPersonal), value: _personal, onChanged: hapticOnChanged((v) => setState(() => _personal = v))),
       ],
     );
   }
@@ -826,7 +848,7 @@ class _PhoneCallsSheetState extends ConsumerState<_PhoneCallsSheet> {
 final _paymentsProvider = FutureProvider.autoDispose.family<PaymentSettings, String>((ref, orgId) => ref.watch(backendProvider).paymentSettings(orgId));
 final _paymentRequestsProvider = FutureProvider.autoDispose.family<List<PaymentRequest>, String>((ref, orgId) => ref.watch(backendProvider).paymentRequests(orgId));
 
-String _money(int cents, String currency) => '${currency == 'USD' ? r'$' : '$currency '}${(cents / 100).toStringAsFixed(2)}';
+String _money(int cents, String currency, String locale) => (cents / 100).humanizedCurrency(locale, currency.toUpperCase());
 
 /// Payments (D-142): the workspace's card issuing account, caps and recent single-use cards (owners).
 class PaymentsSection extends ConsumerWidget {
@@ -845,7 +867,7 @@ class PaymentsSection extends ConsumerWidget {
           key: const Key('payments'),
           icon: LucideIcons.creditCard,
           title: l10n.payments,
-          subtitle: p.connected ? l10n.paymentsOn(r'$' + p.spentThisMonthUsd.toStringAsFixed(2), r'$' + p.monthlyCapUsd.toStringAsFixed(0)) : l10n.paymentsHelp,
+          subtitle: p.connected ? l10n.paymentsOn(p.spentThisMonthUsd.humanizedCurrency(context.l10n.localeName, 'USD', decimalDigits: 2), p.monthlyCapUsd.humanizedCurrency(context.l10n.localeName, 'USD', decimalDigits: 0)) : l10n.paymentsHelp,
           onTap: () async {
             final changed = await showAdaptiveSheet<bool>(
               context: context,
@@ -858,7 +880,7 @@ class PaymentsSection extends ConsumerWidget {
           GroupedTile(
             key: Key('payment-${r.id}'),
             icon: LucideIcons.receipt,
-            title: '${_money(r.spentCents ?? r.amountCents, r.currency)} · ${r.merchant}',
+            title: '${_money(r.spentCents ?? r.amountCents, r.currency, context.l10n.localeName)} · ${r.merchant}',
             subtitle: '${r.status.value} · ${r.reason}',
           ),
       ],
@@ -904,10 +926,14 @@ class _PaymentsSheetState extends ConsumerState<_PaymentsSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    Widget field(String key, TextEditingController c, String label, {bool secret = false}) => Revealable(builder: (context, hidden, toggle) => TextField(
+    VoidCallback? submit;
+    Widget field(String key, TextEditingController c, String label, {bool secret = false, bool last = false}) => Revealable(builder: (context, hidden, toggle) => TextField(
       key: Key(key),
       controller: c,
       obscureText: hidden && (secret),
+      // Next moves down the form; Done on the last field saves it.
+      textInputAction: last ? TextInputAction.done : TextInputAction.next,
+      onSubmitted: last ? (_) => submit?.call() : null,
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(labelText: label, suffixIcon: (secret) ? toggle : null),
     ));
@@ -917,7 +943,8 @@ class _PaymentsSheetState extends ConsumerState<_PaymentsSheet> {
       subtitle: l10n.paymentsSheetHelp,
       submitLabel: l10n.save,
       submitKey: const Key('savePayments'),
-      onSubmit: !_valid || _busy
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = !_valid || _busy
           ? null
           : () async {
               setState(() => _busy = true);
@@ -950,7 +977,7 @@ class _PaymentsSheetState extends ConsumerState<_PaymentsSheet> {
               if (r != null) Navigator.pop(context, true);
             },
       children: [
-        if (widget.current.webhookUrl != null) SelectableText('${l10n.paymentsWebhook}: ${widget.current.webhookUrl}'),
+        if (widget.current.webhookUrl.isUsable) SelectableText('${l10n.paymentsWebhook}: ${widget.current.webhookUrl}'),
         field('stripeKey', _key, l10n.paymentsStripeKey, secret: true),
         field('stripeWebhookSecret', _whsec, l10n.paymentsWebhookSecret, secret: true),
         field('cardholderName', _name, l10n.paymentsCardholder),
@@ -961,7 +988,7 @@ class _PaymentsSheetState extends ConsumerState<_PaymentsSheet> {
         field('cardholderZip', _zip, l10n.paymentsZip),
         field('cardholderCountry', _country, l10n.paymentsCountry),
         field('paymentsCap', _cap, l10n.paymentsCap),
-        field('paymentsBotCap', _botCap, l10n.paymentsBotCap),
+        field('paymentsBotCap', _botCap, l10n.paymentsBotCap, last: true),
       ],
     );
   }
@@ -986,7 +1013,7 @@ class SecretStoreSection extends ConsumerWidget {
           key: const Key('secretStore'),
           icon: LucideIcons.vault,
           title: l10n.secretStore,
-          subtitle: infisical ? 'Infisical · ${s.projectId} · ${s.environment}' : l10n.secretStoreVault,
+          subtitle: infisical ? 'Infisical · ${s.projectId.orPlaceholder()} · ${s.environment.orPlaceholder()}' : l10n.secretStoreVault,
           onTap: () async {
             final changed = await showAdaptiveSheet<bool>(
               context: context,
@@ -1029,10 +1056,14 @@ class _SecretStoreSheetState extends ConsumerState<_SecretStoreSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final valid = [_site, _project, _clientId, _clientSecret].every((c) => c.text.trim().isNotEmpty);
-    Widget field(String key, TextEditingController c, String label, {bool secret = false}) => Revealable(builder: (context, hidden, toggle) => TextField(
+    VoidCallback? submit;
+    Widget field(String key, TextEditingController c, String label, {bool secret = false, bool last = false}) => Revealable(builder: (context, hidden, toggle) => TextField(
       key: Key(key),
       controller: c,
       obscureText: hidden && (secret),
+      // Next moves down the form; Done on the last field saves it.
+      textInputAction: last ? TextInputAction.done : TextInputAction.next,
+      onSubmitted: last ? (_) => submit?.call() : null,
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(labelText: label, suffixIcon: (secret) ? toggle : null),
     ));
@@ -1042,7 +1073,8 @@ class _SecretStoreSheetState extends ConsumerState<_SecretStoreSheet> {
       subtitle: l10n.secretStoreHelp,
       submitLabel: l10n.save,
       submitKey: const Key('saveSecretStore'),
-      onSubmit: !valid || _busy
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = !valid || _busy
           ? null
           : () async {
               setState(() => _busy = true);
@@ -1072,8 +1104,8 @@ class _SecretStoreSheetState extends ConsumerState<_SecretStoreSheet> {
         field('infisicalProject', _project, l10n.secretStoreProject),
         field('infisicalEnv', _env, l10n.secretStoreEnv),
         field('infisicalClientId', _clientId, l10n.secretStoreClientId),
-        field('infisicalClientSecret', _clientSecret, l10n.secretStoreClientSecret, secret: true),
-        SwitchListTile(key: const Key('infisicalMove'), contentPadding: EdgeInsets.zero, title: Text(l10n.secretStoreMove), value: _move, onChanged: (v) => setState(() => _move = v)),
+        field('infisicalClientSecret', _clientSecret, l10n.secretStoreClientSecret, secret: true, last: true),
+        SwitchListTile(key: const Key('infisicalMove'), contentPadding: EdgeInsets.zero, title: Text(l10n.secretStoreMove), value: _move, onChanged: hapticOnChanged((v) => setState(() => _move = v))),
         if (widget.current.provider == SecretStoreSettingsProviderEnum.infisical)
           TextButton(
             key: const Key('secretStoreVault'),

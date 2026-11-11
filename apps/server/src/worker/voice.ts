@@ -23,7 +23,9 @@ import {
   VOICE_CALL_TOOLS,
   VOICE_PRICES,
   type VoiceBases,
+  OPENROUTER_STT_MODEL,
 } from "@casama/agent";
+import { cloudOpenRouterCharge } from "@casama/domain";
 import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 
@@ -47,6 +49,10 @@ export interface VoiceRuntime {
   serverGeminiKey?: string;
   /** Casama Cloud's live assignment (D-188). Unset on a self-hosted server. */
   cloudModels?: () => Promise<CloudModelAssignment>;
+  /** The server's shared OpenRouter key (CLOUD_MODEL_UPSTREAM_KEY): dictation without a key of their own. */
+  platformOpenRouterKey?: string;
+  /** Casama Cloud: usage on the shared key is charged to credits. */
+  billPlatform?: boolean;
 }
 
 type BotVoice = {
@@ -134,7 +140,10 @@ export async function voiceTranscribe(
   if (bot.org_id !== orgId) throw new Error("bot_not_found");
   const assigned = await rt.cloudModels?.();
   // On Casama Cloud the person cannot pick a dictation service.
-  const k = await rt.key(orgId, assigned ? STT_PROVIDERS : ordered(bot.voice.stt_provider, STT_PROVIDERS));
+  const own = await rt.key(orgId, assigned ? STT_PROVIDERS : ordered(bot.voice.stt_provider, STT_PROVIDERS));
+  // No key of their own: the server's shared OpenRouter key, on the server's model (D-194).
+  const shared = !own?.key && !!rt.platformOpenRouterKey;
+  const k = shared ? { provider: "openrouter", key: rt.platformOpenRouterKey ?? null } : own;
   if (!k?.key)
     return { ok: false as const, error: "Add an OpenAI or Deepgram key to use dictation." };
   const r = await transcribe(
@@ -146,10 +155,19 @@ export async function voiceTranscribe(
       bases: rt.bases,
       fetch: rt.fetch,
       language,
-      model: k.provider === "openai" ? assigned?.stt : undefined,
+      model: k.provider === "openai" ? assigned?.stt : shared ? OPENROUTER_STT_MODEL : undefined,
     },
   );
   const seconds = Math.ceil(r.seconds ?? 0);
+  if (shared) {
+    const cost = r.costUsd ?? (seconds / 60) * 0.0002;
+    const billable = rt.billPlatform === true;
+    await rt.db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
+      values (${orgId}::uuid, ${botId}::uuid, 'stt_seconds', ${seconds},
+              ${billable ? cloudOpenRouterCharge(cost) : cost}, ${billable},
+              ${JSON.stringify({ provider: "openrouter", model: OPENROUTER_STT_MODEL, provider_cost_usd: cost, ...(billable ? { key: "server" } : {}) })}::jsonb)`);
+    return { ok: true as const, text: r.text, provider: k.provider, seconds };
+  }
   await ledger(
     rt.db,
     orgId,

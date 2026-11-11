@@ -72,3 +72,27 @@ TextStyle fontStyle(String family, TextStyle base) {
     return base;
   }
 }
+
+/// The weights the theme draws each family at (AppTheme's `_typography`): headlines at 600; body
+/// text at 400 (paragraphs), 500 (small labels) and 600 (titles and buttons). All upright.
+const _headingWeights = [FontWeight.w600];
+const _bodyWeights = [FontWeight.w400, FontWeight.w500, FontWeight.w600];
+
+/// Loads the Google Fonts the theme will use for [heading] and [body], so text opens in them
+/// instead of in a fallback that swaps a moment later. Bundled families need nothing. Never throws,
+/// and gives up after [timeout]: a font that can't download (a first start offline) must not hold
+/// the app, which then falls back as before.
+Future<void> preloadFonts({required String heading, required String body, Duration timeout = const Duration(seconds: 2)}) async {
+  final styles = <TextStyle>[
+    if (!bundledFonts.contains(heading))
+      for (final weight in _headingWeights) fontStyle(heading, TextStyle(fontWeight: weight)),
+    if (!bundledFonts.contains(body))
+      for (final weight in _bodyWeights) fontStyle(body, TextStyle(fontWeight: weight)),
+  ];
+  if (styles.isEmpty) return;
+  try {
+    await GoogleFonts.pendingFonts(styles).timeout(timeout);
+  } catch (_) {
+    // Offline, or the family is no longer on Google Fonts.
+  }
+}

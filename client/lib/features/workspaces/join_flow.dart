@@ -8,16 +8,19 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/server_address.dart';
 import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/progressive_fade.dart';
 import 'spaces.dart';
 
 // --- reading invites (D-167) ------------------------------------------------------------------
@@ -194,7 +197,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
           return _JoinCard(
             key: const Key('joinPreview'),
             leading: SpaceAvatar(name: ws.name, icon: ws.icon, color: ws.color, size: 72),
-            eyebrow: p.inviterName == null ? l10n.invitedToJoin : l10n.invitedBy(p.inviterName!),
+            eyebrow: p.inviterName.isUsable ? l10n.invitedBy(p.inviterName!) : l10n.invitedToJoin,
             title: ws.name,
             message: [
               l10n.memberCount(ws.memberCount),
@@ -203,7 +206,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
             notes: [
               if (member) l10n.alreadyMember,
               if (p.requiresApproval && !member) l10n.joinNeedsApproval,
-              if (p.emailHint != null) l10n.inviteSentTo(p.emailHint!),
+              if (p.emailHint.isUsable) l10n.inviteSentTo(p.emailHint!),
             ],
             actions: [
               FilledButton(
@@ -226,7 +229,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         },
       );
     }
-    return Scaffold(body: SafeArea(child: body));
+    return Scaffold(body: SafeArea(top: false, bottom: false, child: body));
   }
 }
 
@@ -243,9 +246,11 @@ class _JoinCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final muted = context.colorScheme.onSurfaceVariant;
-    return Center(
+    final statusBar = MediaQuery.paddingOf(context).top;
+    return ProgressiveFade(child: Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpace.gutter),
+        // Starts under the status bar (the pages leave the top of their SafeArea to it), so the card dissolves there as it scrolls up.
+        padding: EdgeInsets.fromLTRB(AppSpace.gutter, AppSpace.gutter + statusBar, AppSpace.gutter, BottomPadding.of(context, minimum: AppSpace.gutter)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: AppCard(
@@ -269,7 +274,7 @@ class _JoinCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -305,6 +310,8 @@ class _JoinedScreenState extends ConsumerState<JoinedScreen> {
     final name = org?.name ?? '';
     return Scaffold(
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: _JoinCard(
           key: const Key('joinedWelcome'),
           leading: SpaceAvatar(name: name, icon: org?.icon, color: org?.color, size: 72),
@@ -352,6 +359,8 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
     final list = ref.watch(joinableWorkspacesProvider).value ?? const <JoinableWorkspace>[];
     return Scaffold(
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: _JoinCard(
           key: const Key('joinTeam'),
           leading: Icon(LucideIcons.usersRound, size: 48, color: context.colorScheme.primary),
@@ -531,7 +540,8 @@ class _JoinSpaceSheetState extends ConsumerState<JoinSpaceSheet> {
                     tooltip: l10n.scanQrCode,
                     icon: const Icon(LucideIcons.scanQrCode, size: 20),
                     onPressed: () async {
-                      final v = await Navigator.of(context).push<String>(MaterialPageRoute(fullscreenDialog: true, builder: (_) => const _ScanInvitePage()));
+                      unfocusBeforeModal();
+                      final v = await Navigator.of(context).push<String>(MaterialPageRoute(fullscreenDialog: true, settings: const RouteSettings(name: '/scan/invite'), builder: (_) => const _ScanInvitePage()));
                       if (v != null && mounted) _open(v);
                     },
                   ),
@@ -580,10 +590,11 @@ class _ScanInvitePageState extends State<_ScanInvitePage> {
 /// The invite link as a QR code, for someone in the room or moving from a computer to a phone.
 Future<void> showInviteQr(BuildContext context, {required String url, required String workspace}) => showAdaptiveSheet<void>(
   context: context,
+  contentPadsBottom: true,
   builder: (c) {
     final l10n = c.l10n;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpace.lg),
+      padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(c, minimum: AppSpace.lg)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

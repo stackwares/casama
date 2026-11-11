@@ -189,7 +189,7 @@ export function registerBotTemplateRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
     const cloudKey = cloud || body.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
     const model = cloud
       ? (await getCloudModels(deps.db)).chat
-      : cloudKey && deps.env.BILLING_ENABLED
+      : cloudKey
         ? (defaultModelFor("openrouter", modelOverrides(deps.env)) ?? CLOUD_LOCKED_MODEL)
         : body.model;
     const credentialId = cloud ? PLATFORM_OPENROUTER_CREDENTIAL_ID : body.credential_id;

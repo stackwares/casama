@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -75,7 +77,7 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
       _busy = false;
       if (ok == true) _loaded = next;
     });
-    if (ok == true && learn == null) showMessage(context, context.l10n.saved);
+    if (ok == true && learn == null) showSuccess(context, context.l10n.saved);
   }
 
   Future<void> _editFact({UserFactView? fact}) async {
@@ -101,7 +103,7 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
     final l10n = context.l10n;
     final n = await showAdaptiveSheet<int>(context: context, builder: (_) => const MemoryImportSheet());
     ref.invalidate(userFactsProvider);
-    if (n != null && mounted) showMessage(context, l10n.factsImported(n));
+    if (n != null && mounted) showSuccess(context, l10n.factsImported(n));
   }
 
   @override
@@ -135,6 +137,7 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
               TextField(
                 key: const Key('aboutName'),
                 controller: _name,
+                textInputAction: TextInputAction.next,
                 maxLength: 60,
                 textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(labelText: l10n.whatToCallYou, counterText: ''),
@@ -143,6 +146,7 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
               TextField(
                 key: const Key('aboutPronouns'),
                 controller: _pronouns,
+                textInputAction: TextInputAction.next,
                 maxLength: 40,
                 decoration: InputDecoration(labelText: l10n.pronounsOptional, counterText: ''),
                 onChanged: (_) => setState(() {}),
@@ -181,7 +185,7 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
               title: Text(l10n.learnAboutMe),
               subtitle: Text(l10n.learnAboutMeHelp),
               value: learn,
-              onChanged: _busy ? null : (on) => _save(learn: on),
+              onChanged: hapticOnChanged(_busy ? null : (on) => _save(learn: on)),
             ),
             if (org != null)
               SwitchListTile(
@@ -190,16 +194,16 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
                 title: Text(l10n.useInThisSpace(org.name)),
                 subtitle: Text(l10n.useInThisSpaceHelp),
                 value: ref.watch(profileSharedProvider(org.id)).value ?? false,
-                onChanged: (on) async {
+                onChanged: hapticOnChanged((on) async {
                   await runGuarded(context, () => ref.read(backendProvider).setProfileSharedIn(org.id, on));
                   ref.invalidate(profileSharedProvider(org.id));
-                },
+                }),
               ),
           ],
         ),
         SectionHeader(
           title: l10n.learnedAboutYou,
-          count: facts.value == null ? null : '${facts.value!.length}',
+          count: facts.value?.length.humanizedCount(context.l10n.localeName),
           trailing: TextButton.icon(key: const Key('addFact'), icon: const Icon(LucideIcons.plus, size: 16), label: Text(l10n.addFact), onPressed: () => _editFact()),
         ),
         AsyncView(
@@ -246,6 +250,7 @@ class _FactRow extends StatelessWidget {
       title: Text(fact.content, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
       trailing: PopupMenuButton<String>(
         tooltip: l10n.moreActions,
+        onOpened: unfocusBeforeModal,
         icon: Icon(LucideIcons.ellipsisVertical, color: scheme.onSurfaceVariant),
         onSelected: (v) => switch (v) {
           'edit' => onEdit(),

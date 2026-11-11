@@ -8,6 +8,7 @@ import 'package:casama_app/core/providers.dart';
 import 'package:casama_app/core/router.dart';
 import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'package:casama_app/theme/app_theme.dart';
+import 'package:casama_app/ui/text_scale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_backend.dart';
@@ -61,8 +62,11 @@ const routes = [
 ];
 
 void main() {
-  for (final size in const [Size(430, 932), Size(375, 667)]) {
-    testWidgets('every screen fits a ${size.width.toInt()}x${size.height.toInt()} phone', (tester) async {
+  // Third run: the largest system text size, which the app caps at kMaxTextScale.
+  for (final (size, textScale) in const [(Size(430, 932), 1.0), (Size(375, 667), 1.0), (Size(375, 667), 2.0)]) {
+    testWidgets('every screen fits a ${size.width.toInt()}x${size.height.toInt()} phone${textScale == 1.0 ? '' : ' with the largest text size'}', (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       SharedPreferences.setMockInitialValues({});
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
@@ -76,6 +80,7 @@ void main() {
             routerConfig: router,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
+            builder: limitTextScale,
           ),
         ),
       );

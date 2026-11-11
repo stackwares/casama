@@ -247,7 +247,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const modelPolicy =
       deps.env.BILLING_ENABLED && deps.env.CLOUD_MODEL_UPSTREAM_KEY
         ? cloudRunPolicy(await getCloudModels(db))
-        : deps.env.BILLING_ENABLED
+        : deps.env.BILLING_ENABLED || deps.env.CLOUD_MODEL_UPSTREAM_KEY
           ? lockCloudPolicy(
               body.model_policy ?? {},
               defaultModelFor("openrouter", modelOverrides(deps.env)) ?? CLOUD_LOCKED_MODEL,
@@ -1050,14 +1050,12 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       );
       if (!member?.ok) throw new ApiError(404, "credential_not_found", "Credential not found");
       const featured = FEATURED_MODELS.openrouter ?? [];
-      // Casama Cloud runs one model. A self-hosted server that set the key keeps the short list.
+      // The shared key runs one model, on Casama Cloud and on self-hosted servers that set it.
       const locked = deps.env.BILLING_ENABLED
         ? (await getCloudModels(db)).chat
         : (defaultModelFor("openrouter", modelOverrides(deps.env)) ?? CLOUD_LOCKED_MODEL);
       const known = featured.find((m) => m.id === locked);
-      const items = deps.env.BILLING_ENABLED
-        ? [{ id: locked, name: known?.name ?? locked, featured: true }]
-        : featured.map((m) => ({ ...m, featured: true }));
+      const items = [{ id: locked, name: known?.name ?? locked, featured: true }];
       return c.json({ items, source: "featured" as const }, 200);
     }
     // RLS limits this to members of the key's workspace; the key itself never leaves the worker.

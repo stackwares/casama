@@ -8,6 +8,7 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/app_card.dart';
 import '../../ui/casama_mark.dart';
 import '../bots/bots_screen.dart';
@@ -158,6 +159,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             Padding(
@@ -182,7 +184,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(AppSpace.gutter, AppSpace.lg, AppSpace.gutter, AppSpace.xl),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(AppSpace.gutter, AppSpace.lg, AppSpace.gutter, BottomPadding.of(context, minimum: AppSpace.xl)),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),

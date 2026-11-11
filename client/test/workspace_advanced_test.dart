@@ -144,6 +144,6 @@ void main() {
     for (final key in moved) {
       expect(find.byKey(Key(key)), findsOneWidget, reason: key);
     }
-    expect(find.text('1.0K'), findsOneWidget);
+    expect(find.text('1K'), findsOneWidget);
   });
 }

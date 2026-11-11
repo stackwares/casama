@@ -20,7 +20,7 @@ void main() {
     await tester.tap(find.byKey(const Key('saveQuiet')));
     await tester.pumpAndSettle();
     expect(backend.quiet.enabled, isTrue);
-    expect(find.text('22:00 to 07:00'), findsOneWidget);
+    expect(find.text('10:00\u202fPM to 7:00\u202fAM'), findsOneWidget);
   });
 
   testWidgets('a bot can be let through quiet hours', (tester) async {

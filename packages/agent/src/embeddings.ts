@@ -5,6 +5,9 @@ import type { ResolvedModel } from "./gateway/types.ts";
 
 export const EMBEDDING_DIMENSIONS = 1536;
 
+/** Memory search on the server's shared OpenRouter key: same vectors as a workspace's OpenAI key. */
+export const OPENROUTER_EMBEDDING_MODEL = "openai/text-embedding-3-small";
+
 export interface Embedder {
   readonly model: string;
   embed(text: string): Promise<number[]>;

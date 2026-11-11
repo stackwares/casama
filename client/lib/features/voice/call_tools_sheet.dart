@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/form_sheet.dart';
@@ -96,11 +97,11 @@ class _CallToolsSheetState extends ConsumerState<CallToolsSheet> {
                 contentPadding: EdgeInsets.zero,
                 dense: true,
                 value: _chosen.contains(callToolName(i, t.name)),
-                onChanged: (v) => setState(
+                onChanged: hapticOnChanged((v) => setState(
                   () => v == true
                       ? _chosen.add(callToolName(i, t.name))
                       : _chosen.remove(callToolName(i, t.name)),
-                ),
+                ), haptic: HapticsHelper.soft),
                 title: Text(t.name),
                 subtitle: t.description.isEmpty
                     ? null

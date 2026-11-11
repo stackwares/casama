@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -39,7 +41,12 @@ class _IntegrationDetailScreenState extends ConsumerState<IntegrationDetailScree
     if (!mounted) return;
     setState(() => _testing = false);
     ref.invalidate(integrationsProvider);
-    if (r != null) showMessage(context, r.ok ? l10n.integrationOk(r.tools.length) : l10n.integrationFailed(r.error ?? ''));
+    if (r == null) return;
+    if (r.ok) {
+      showSuccess(context, l10n.integrationOk(r.tools.length));
+    } else {
+      showFailure(context, l10n.integrationFailed(r.error.orPlaceholder()));
+    }
   }
 
   Future<void> _disconnect(Integration i, String name) async {
@@ -267,7 +274,7 @@ class _BotAccess extends ConsumerWidget {
             leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 32, animate: false),
             title: b.name,
             onTap: () => onChanged(b.id, !on.contains(b.id)),
-            trailing: Switch(value: on.contains(b.id), onChanged: (v) => onChanged(b.id, v)),
+            trailing: Switch(value: on.contains(b.id), onChanged: hapticOnChanged((v) => onChanged(b.id, v))),
           ),
       ],
     );

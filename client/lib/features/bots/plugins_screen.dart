@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
@@ -98,7 +99,7 @@ class _PluginCard extends ConsumerWidget {
       children: [
         GroupedTile(
           icon: LucideIcons.puzzle,
-          title: '${p.name}${p.version == null ? '' : ' ${p.version}'}',
+          title: '${p.name}${p.version.isUsable ? ' ${p.version}' : ''}',
           subtitle: '${p.repo}${p.path.isEmpty ? '' : '/${p.path}'} @ ${p.commit.substring(0, 7)}',
           trailing: PopupMenuButton<String>(
             key: Key('pluginMenu-${p.id}'),
@@ -114,9 +115,9 @@ class _PluginCard extends ConsumerWidget {
             icon: s.type == InstalledPluginServerTypeEnum.stdio ? LucideIcons.cpu : LucideIcons.globe,
             title: s.key,
             subtitle: s.status == InstalledPluginServerStatusEnum.error
-                ? (s.error ?? l10n.pluginServerError)
+                ? s.error.orPlaceholder(l10n.pluginServerError)
                 : s.tools.isEmpty
-                ? (s.type == InstalledPluginServerTypeEnum.stdio ? l10n.pluginRunsOnComputer : (s.url ?? ''))
+                ? (s.type == InstalledPluginServerTypeEnum.stdio ? l10n.pluginRunsOnComputer : s.url.orPlaceholder())
                 : s.tools.map((t) => '${t.name} (${riskLabel(context, t.risk.name)})').join(', '),
           ),
         if (p.hosts.isNotEmpty) GroupedTile(icon: LucideIcons.network, title: l10n.pluginHosts, subtitle: p.hosts.join(', ')),
@@ -144,7 +145,7 @@ class _PreviewList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('${p.name}${p.version == null ? '' : ' ${p.version}'}', style: style.titleMedium),
+        Text('${p.name}${p.version.isUsable ? ' ${p.version}' : ''}', style: style.titleMedium),
         if (p.description.isNotEmpty) Text(p.description),
         Text('${p.repo} @ ${p.commit.substring(0, 7)}', style: style.bodySmall),
         const SizedBox(height: AppSpace.sm),
@@ -156,7 +157,7 @@ class _PreviewList extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
             leading: Icon(s.type == PluginServerInfoTypeEnum.stdio ? LucideIcons.cpu : LucideIcons.globe, size: 18),
             title: Text(s.key),
-            subtitle: Text(s.type == PluginServerInfoTypeEnum.stdio ? l10n.pluginStdio([s.command ?? '', ...s.args].join(' ')) : l10n.pluginRemote(s.url ?? '')),
+            subtitle: Text(s.type == PluginServerInfoTypeEnum.stdio ? l10n.pluginStdio([s.command.orPlaceholder(), ...s.args].join(' ')) : l10n.pluginRemote(s.url.orPlaceholder())),
           ),
         if (p.hosts.isNotEmpty) Text(l10n.pluginTalksTo(p.hosts.join(', ')), style: style.bodySmall),
         for (final w in p.warnings) Text(w, style: style.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error)),
@@ -227,6 +228,10 @@ class _AddPluginState extends ConsumerState<_AddPlugin> {
         TextField(
           key: const Key('pluginUrl'),
           controller: _url,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) {
+            if (ready && !_busy) _submit();
+          },
           enabled: p == null,
           onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(labelText: 'GitHub', hintText: 'https://github.com/owner/repo/tree/main/plugin'),
@@ -237,6 +242,12 @@ class _AddPluginState extends ConsumerState<_AddPlugin> {
             Revealable(builder: (context, hidden, toggle) => TextField(
               key: Key('pluginSecret-${s.name}'),
               controller: _secrets[s.name],
+              textInputAction: s == p.secrets.last ? TextInputAction.done : TextInputAction.next,
+              onSubmitted: s == p.secrets.last
+                  ? (_) {
+                      if (ready && !_busy) _submit();
+                    }
+                  : null,
               obscureText: hidden,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(labelText: s.name, helperText: s.description.isEmpty ? null : s.description, suffixIcon: toggle),
@@ -290,13 +301,15 @@ class _UpdatePluginState extends ConsumerState<_UpdatePlugin> {
       if (u.serversRemoved.isNotEmpty) l10n.pluginDiffServersRemoved(list(u.serversRemoved)),
       if (u.hostsAdded.isNotEmpty) l10n.pluginDiffHosts(list(u.hostsAdded)),
     ];
+    VoidCallback? submit;
     return FormSheet(
       icon: LucideIcons.refreshCw,
       title: l10n.updatePluginTitle(widget.plugin.name),
       subtitle: '${u.fromVersion ?? u.fromCommit.substring(0, 7)} → ${u.toVersion ?? u.toCommit.substring(0, 7)}',
       submitLabel: l10n.update,
       submitKey: const Key('pluginUpdate'),
-      onSubmit: _busy || _secrets.values.any((c) => c.text.trim().isEmpty)
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = _busy || _secrets.values.any((c) => c.text.trim().isEmpty)
           ? null
           : () async {
               setState(() => _busy = true);
@@ -312,6 +325,8 @@ class _UpdatePluginState extends ConsumerState<_UpdatePlugin> {
           Revealable(builder: (context, hidden, toggle) => TextField(
             key: Key('pluginSecret-${e.key}'),
             controller: e.value,
+            textInputAction: e.key == _secrets.keys.last ? TextInputAction.done : TextInputAction.next,
+            onSubmitted: e.key == _secrets.keys.last ? (_) => submit?.call() : null,
             obscureText: hidden,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(labelText: e.key, suffixIcon: toggle),

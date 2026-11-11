@@ -188,8 +188,9 @@ export class AiSdkGateway implements ModelGateway {
         system: req.system.join("\n\n"),
         messages: toModelMessages(req.messages),
         tools: req.tools?.length ? tools : undefined,
-        maxOutputTokens:
-          req.maxOutputTokens ?? (req.model.platformKey ? CLOUD_MAX_OUTPUT_TOKENS : undefined),
+        maxOutputTokens: req.model.platformKey
+          ? Math.min(req.maxOutputTokens ?? CLOUD_MAX_OUTPUT_TOKENS, CLOUD_MAX_OUTPUT_TOKENS)
+          : req.maxOutputTokens,
         providerOptions: reasoningOptions(req.model),
         abortSignal: req.abortSignal,
         maxRetries: 0,

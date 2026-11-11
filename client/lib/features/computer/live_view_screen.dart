@@ -17,6 +17,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/edge_fade.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/shell_header.dart';
@@ -211,7 +212,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     if (conn == null || !_controlling) return;
     final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text ?? '';
     if (!mounted) return;
-    if (text.isEmpty) return showMessage(context, context.l10n.livePasteEmpty);
+    if (text.isEmpty) return showWarning(context, context.l10n.livePasteEmpty);
     conn.setClipboard(text);
     await Future<void>.delayed(const Duration(milliseconds: 150));
     _keyCombo(0xffe3, 0x76);
@@ -232,7 +233,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     final text = await done.future.timeout(const Duration(milliseconds: 1500), onTimeout: () => null);
     conn.remoteClipboard.removeListener(changed);
     if (!mounted) return;
-    if (text == null || text.isEmpty) return showMessage(context, context.l10n.liveNothingCopied);
+    if (text == null || text.isEmpty) return showWarning(context, context.l10n.liveNothingCopied);
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) showMessage(context, context.l10n.liveCopied);
   }
@@ -246,7 +247,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     await shareFiles([XFile.fromData(png, name: name, mimeType: 'image/png')], names: [name], origin: origin);
   }
 
-  Widget _quickActions(BuildContext context) {
+  Widget _quickActions(BuildContext context, double gutter) {
     final l10n = context.l10n;
     final phone = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
     Widget action(Key key, IconData icon, String label, VoidCallback? onPressed) => TextButton.icon(
@@ -256,9 +257,11 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
       icon: Icon(icon, size: 16),
       label: Text(label),
     );
-    return SingleChildScrollView(
+    return EdgeFade(child: SingleChildScrollView(
       key: const Key('liveQuickActions'),
       scrollDirection: Axis.horizontal,
+      // Scrolls to the screen edges and carries its own gutter (- 6 lines the first button's icon up with the text above).
+      padding: EdgeInsets.fromLTRB(gutter - 6, 0, gutter, 0),
       child: Row(
         children: [
           action(const Key('liveCopy'), LucideIcons.copy, l10n.liveCopy, _controlling ? _copy : null),
@@ -267,7 +270,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
           if (phone && _controlling) action(const Key('liveKeyboard'), LucideIcons.keyboard, l10n.showKeyboard, () => _typingFocus.requestFocus()),
         ],
       ),
-    );
+    ));
   }
 
   // --- teach a task (D-120) -------------------------------------------------
@@ -606,7 +609,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
               ],
             ),
           ),
-          Padding(padding: EdgeInsets.fromLTRB(gutter - 6, 0, gutter, AppSpace.xs), child: _quickActions(context)),
+          Padding(padding: const EdgeInsets.only(bottom: AppSpace.xs), child: _quickActions(context, gutter)),
           if (_teach != null)
             _RecordingBanner(
               lastStep: _lastStep,

@@ -47,7 +47,7 @@ class ThemesScreen extends ConsumerWidget {
     await ref.read(savedThemesProvider.notifier).add(preset);
     await ref.read(appearanceProvider.notifier).applyPreset(preset);
     if (context.mounted)
-      showMessage(context, context.l10n.themeImported(preset.name));
+      showSuccess(context, context.l10n.themeImported(preset.name));
   }
 
   Future<void> _share(

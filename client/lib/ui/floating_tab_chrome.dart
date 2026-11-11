@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_tokens.dart';
 
 /// Floating bottom tab bar for phones: a slim stadium-shaped pill on a neutral surface with a
 /// hairline border. The selected tab sits on an accent-tinted indicator that glides between slots.
@@ -212,7 +213,7 @@ class _TabButton extends StatelessWidget {
                   curve: Curves.easeOutBack,
                   child: Badge(
                     isLabelVisible: spec.badge > 0,
-                    label: Text(spec.badge > 99 ? '99+' : '${spec.badge}'),
+                    label: Text(spec.badge > 99 ? '99+' : '${spec.badge}', style: const TextStyle(fontFeatures: AppText.tabular)),
                     backgroundColor: scheme.primary,
                     textColor: scheme.onPrimary,
                     child: Icon(selected ? spec.selectedIcon : spec.icon, size: 22, color: tint),

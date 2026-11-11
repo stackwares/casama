@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -19,12 +20,28 @@ class _RevealableState extends State<Revealable> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final toggle = IconButton(
-      key: const Key('revealToggle'),
-      tooltip: _hidden ? l10n.show : l10n.hide,
-      icon: Icon(_hidden ? LucideIcons.eye : LucideIcons.eyeOff, size: 20),
-      onPressed: () => setState(() => _hidden = !_hidden),
+    final toggle = FieldSuffix(
+      child: IconButton(
+        key: const Key('revealToggle'),
+        tooltip: _hidden ? l10n.show : l10n.hide,
+        icon: Icon(_hidden ? LucideIcons.eye : LucideIcons.eyeOff, size: 20),
+        onPressed: () => setState(() => _hidden = !_hidden),
+      ),
     );
     return widget.builder(context, _hidden, toggle);
   }
+}
+
+/// Keeps a field's trailing buttons (show, paste, scan) out of the keyboard's Next order on phones
+/// and tablets, so Next moves to the next field instead of landing on a button. Tab on a desktop
+/// keyboard still reaches them.
+class FieldSuffix extends StatelessWidget {
+  const FieldSuffix({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ExcludeFocusTraversal(
+    excluding: defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android,
+    child: child,
+  );
 }

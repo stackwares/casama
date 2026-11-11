@@ -4,14 +4,21 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/edge_fade.dart';
+import '../../ui/reveal_when_selected.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/tab_reselect.dart';
 import '../projects/projects_screen.dart' show projectsProvider;
 
 /// The Tasks tab, the ticket board (D-098): filters, a ticket sheet, and on tablets and desktops
@@ -85,7 +92,7 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
 
   /// Phones: a long press offers the other statuses, since columns don't fit to drag between.
   Future<void> _moveSheet(Task t, List<Task> items) async {
-    final to = await showAdaptiveSheet<TaskStatus>(context: context, builder: (_) => _MoveSheet(task: t));
+    final to = await showAdaptiveSheet<TaskStatus>(context: context, contentPadsBottom: true, builder: (_) => _MoveSheet(task: t));
     if (to == null || !mounted) return;
     await _move(t, to, items.where((x) => x.status == to).toList());
   }
@@ -115,7 +122,10 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
     final projects = ref.watch(projectsProvider);
     // A project that's gone (deleted, or another workspace's) stops filtering.
     final project = projects.hasValue ? projects.value!.where((p) => p.id == _project).firstOrNull?.id : _project;
-    return SubPage(
+    // Tapping Tasks again scrolls the tickets to the top (TabReselect); so does the iOS status bar.
+    return PrimaryScrollController(
+      controller: TabReselect.tasks,
+      child: SubPage(
       title: l10n.navTasks,
       actions: [
         _ProjectFilter(selected: project, onChanged: (id) => setState(() => _project = id)),
@@ -129,7 +139,7 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
           final shown = items.where((t) => _keep(t, me, project)).toList();
           final filters = [
             for (final (o, label) in [(_Owner.all, l10n.filterAll), (_Owner.mine, l10n.filterMine), (_Owner.bots, l10n.filterBots)])
-              ChoiceChip(key: Key('filter-${o.name}'), label: Text(label), selected: _owner == o, onSelected: (_) => setState(() => _owner = o)),
+              RevealWhenSelected(selected: _owner == o, child: ChoiceChip(key: Key('filter-${o.name}'), label: Text(label), selected: _owner == o, onSelected: (_) => setState(() => _owner = o))),
             DropdownButton<TaskPriority?>(
               key: const Key('filterPriority'),
               value: _priority,
@@ -139,7 +149,7 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
                 DropdownMenuItem<TaskPriority?>(value: null, child: Text(l10n.priority)),
                 for (final p in TaskPriority.values) DropdownMenuItem(value: p, child: Text(priorityLabel(context, p))),
               ],
-              onChanged: (p) => setState(() => _priority = p),
+              onChanged: hapticOnChanged((p) => setState(() => _priority = p), haptic: HapticsHelper.selection),
             ),
           ];
           return Column(
@@ -147,12 +157,12 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
             children: [
               if (compact)
                 // One line of filters that scrolls sideways, so the tickets get the height.
-                SingleChildScrollView(
+                EdgeFade(child: SingleChildScrollView(
                   key: const Key('ticketFilters'),
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.fromLTRB(AppSpace.gutter, 0, AppSpace.gutter, AppSpace.xs),
                   child: Row(spacing: AppSpace.xs, children: filters),
-                )
+                ))
               else
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.sm),
@@ -160,30 +170,24 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
                 ),
               if (items.isEmpty)
                 Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: barInset),
-                    child: EmptyState(icon: LucideIcons.squareKanban, title: l10n.noTickets, message: l10n.noTicketsHelp),
-                  ),
+                  child: EmptyState(icon: LucideIcons.squareKanban, title: l10n.noTickets, message: l10n.noTicketsHelp),
                 )
               else if (compact && shown.isEmpty)
                 Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: barInset),
-                    child: EmptyState(
-                      icon: LucideIcons.listFilter,
-                      title: l10n.noMatchingTickets,
-                      message: l10n.noMatchingTicketsHelp,
-                      action: TextButton(key: const Key('clearFilters'), onPressed: _clearFilters, child: Text(l10n.clearFilters)),
-                    ),
+                  child: EmptyState(
+                    icon: LucideIcons.listFilter,
+                    title: l10n.noMatchingTickets,
+                    message: l10n.noMatchingTicketsHelp,
+                    action: TextButton(key: const Key('clearFilters'), onPressed: _clearFilters, child: Text(l10n.clearFilters)),
                   ),
                 )
               else if (compact)
-                Expanded(child: _GroupedList(tasks: shown, bottom: AppSpace.xxl + barInset, onLongPress: (t) => _moveSheet(t, items)))
+                Expanded(child: _GroupedList(tasks: shown, bottom: AppSpace.xxl + barInset, onLongPress: (t) { HapticsHelper.medium(); _moveSheet(t, items); }))
               else
                 Expanded(
-                  child: ListView(
+                  child: EdgeFade(child: ListView(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpace.md),
+                    padding: EdgeInsets.fromLTRB(AppSpace.md, 0, AppSpace.md, BottomPadding.of(context, minimum: AppSpace.md)),
                     children: [
                       for (final s in BoardScreen.statuses)
                         _Column(
@@ -192,11 +196,12 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
                           onDrop: (t) => _move(t, s, shown.where((x) => x.status == s).toList()),
                         ),
                     ],
-                  ),
+                  )),
                 ),
             ],
           );
         },
+      ),
       ),
     );
   }
@@ -316,7 +321,7 @@ class _StatusHeader extends StatelessWidget {
         children: [
           Icon(LucideIcons.circleDot, size: 14, color: _statusColor(context, status)),
           const SizedBox(width: 6),
-          Expanded(child: SectionHeader(title: statusLabel(context, status), count: '$count', padding: EdgeInsets.zero)),
+          Expanded(child: SectionHeader(title: statusLabel(context, status), count: count.humanizedCount(context.l10n.localeName), padding: EdgeInsets.zero)),
         ],
       ),
     );
@@ -331,6 +336,7 @@ class _MoveSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      padding: EdgeInsets.only(bottom: BottomPadding.of(context)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -383,12 +389,13 @@ class _Column extends ConsumerWidget {
                   Icon(LucideIcons.circleDot, size: 14, color: color),
                   const SizedBox(width: 6),
                   Expanded(child: Text(statusLabel(context, status), style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700))),
-                  Text('${tasks.length}', style: context.textTheme.bodySmall),
+                  Text(tasks.length.humanizedCount(context.l10n.localeName), style: context.textTheme.bodySmall?.copyWith(fontFeatures: AppText.tabular)),
                 ],
               ),
             ),
             Expanded(
               child: ListView(
+                primary: false,
                 children: [
                   for (final t in tasks)
                     LongPressDraggable<Task>(
@@ -425,7 +432,7 @@ class _Card extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: AppSpace.sm),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => showAdaptiveSheet<void>(context: context, builder: (_) => TicketSheet(taskId: task.id)),
+        onTap: () => showAdaptiveSheet<void>(context: context, contentPadsBottom: true, builder: (_) => TicketSheet(taskId: task.id)),
         onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(AppSpace.md),
@@ -500,14 +507,14 @@ class _TicketFormState extends ConsumerState<_TicketForm> {
         if (ok != null && context.mounted) Navigator.pop(context, true);
       },
       children: [
-        TextField(key: const Key('ticketTitle'), controller: _title, decoration: InputDecoration(labelText: l10n.ticketTitle)),
+        TextField(key: const Key('ticketTitle'), controller: _title, textInputAction: TextInputAction.next, decoration: InputDecoration(labelText: l10n.ticketTitle)),
         TextField(key: const Key('ticketDetails'), controller: _details, minLines: 2, maxLines: 6, decoration: InputDecoration(labelText: l10n.ticketDetails)),
         DropdownButtonFormField<TaskPriority>(
           isExpanded: true,
           initialValue: _priority,
           decoration: InputDecoration(labelText: l10n.priority),
           items: [for (final p in TaskPriority.values) DropdownMenuItem(value: p, child: Text(priorityLabel(context, p)))],
-          onChanged: (p) => setState(() => _priority = p ?? _priority),
+          onChanged: hapticOnChanged((p) => setState(() => _priority = p ?? _priority), haptic: HapticsHelper.selection),
         ),
         DropdownButtonFormField<String?>(
           isExpanded: true,
@@ -518,14 +525,14 @@ class _TicketFormState extends ConsumerState<_TicketForm> {
             DropdownMenuItem<String?>(value: null, child: Text(l10n.unassigned)),
             for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name)),
           ],
-          onChanged: (v) => setState(() => _bot = v),
+          onChanged: hapticOnChanged((v) => setState(() => _bot = v), haptic: HapticsHelper.selection),
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.reviewRequired),
           subtitle: Text(l10n.reviewRequiredHelp),
           value: _review,
-          onChanged: (v) => setState(() => _review = v),
+          onChanged: hapticOnChanged((v) => setState(() => _review = v)),
         ),
       ],
     );
@@ -579,14 +586,15 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
     final comments = ref.watch(_commentsProvider(widget.taskId)).value ?? const <TaskComment>[];
     final me = ref.watch(backendProvider).userId;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpace.lg),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: AppSpace.md,
         children: [
           Text(task.title, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
           if (task.detailsMd.isNotEmpty) Text(task.detailsMd),
-          if (task.resultMd != null) AppCard(child: Text(task.resultMd!)),
+          if (task.resultMd.isUsable) AppCard(child: Text(task.resultMd!)),
           Wrap(
             spacing: AppSpace.md,
             runSpacing: AppSpace.sm,
@@ -599,7 +607,7 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
                   initialValue: task.status,
                   decoration: InputDecoration(labelText: l10n.ticketStatus),
                   items: [for (final s in BoardScreen.statuses) DropdownMenuItem(value: s, child: Text(statusLabel(context, s)))],
-                  onChanged: (s) => s == null ? null : _update(status: s.value),
+                  onChanged: hapticOnChanged((s) => s == null ? null : _update(status: s.value), haptic: HapticsHelper.selection),
                 ),
               ),
               SizedBox(
@@ -609,7 +617,7 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
                   initialValue: task.priority,
                   decoration: InputDecoration(labelText: l10n.priority),
                   items: [for (final p in TaskPriority.values) DropdownMenuItem(value: p, child: Text(priorityLabel(context, p)))],
-                  onChanged: (p) => p == null ? null : _update(priority: p.value),
+                  onChanged: hapticOnChanged((p) => p == null ? null : _update(priority: p.value), haptic: HapticsHelper.selection),
                 ),
               ),
               SizedBox(
@@ -623,7 +631,7 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
                     DropdownMenuItem<String?>(value: null, child: Text(l10n.unassigned)),
                     for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name)),
                   ],
-                  onChanged: (v) => v == null ? null : _update(bot: v),
+                  onChanged: hapticOnChanged((v) => v == null ? null : _update(bot: v), haptic: HapticsHelper.selection),
                 ),
               ),
             ],
@@ -649,7 +657,7 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.reviewRequired),
             value: task.reviewRequired,
-            onChanged: (v) => _update(review: v),
+            onChanged: hapticOnChanged((v) => _update(review: v)),
           ),
           SectionHeader(title: l10n.comments),
           for (final c in comments)

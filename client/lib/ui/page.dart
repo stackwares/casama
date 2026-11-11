@@ -54,11 +54,32 @@ class PageColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: maxWidth);
-        return ListView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: EdgeInsets.fromLTRB(side, top, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom), children: children);
+        final inset = AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: maxWidth);
+        final side = AppSpace.gutter + inset;
+        // The list itself is edge to edge and each section carries the side padding, so a
+        // [PageBleed] section can reach the edges.
+        return ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.fromLTRB(0, top, 0, AppSpace.xxl + MediaQuery.paddingOf(context).bottom),
+          children: [
+            for (final child in children) Padding(padding: EdgeInsets.symmetric(horizontal: child is PageBleed ? inset : side), child: child),
+          ],
+        );
       },
     );
   }
+}
+
+/// A section of a [PageColumn] (or [SubPage]) that reaches the page's edges instead of stopping at
+/// its gutters: a horizontal list, so its items slide all the way to the edge of the screen. The
+/// page skips its gutter for this child, so the list adds its own:
+/// `padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter)`.
+class PageBleed extends StatelessWidget {
+  const PageBleed({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => child;
 }
 
 /// A centered lazy list for long collections, with the page's width and gutters.

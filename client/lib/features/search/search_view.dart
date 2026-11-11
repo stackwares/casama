@@ -10,6 +10,7 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/shell_header.dart';
 import '../files/file_preview.dart';
@@ -20,6 +21,7 @@ import '../files/file_preview.dart';
 Future<void> showWorkspaceSearch(BuildContext context) => showAdaptiveSheet<void>(
       context: context,
       heightFactor: 0.9,
+      contentPadsBottom: true,
       dialogMaxWidth: 680,
       dialogMaxHeight: 720,
       builder: (_) => const SearchView(inSheet: true),
@@ -32,7 +34,7 @@ class SearchScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: ShellHeader(title: context.l10n.search, phoneFallback: '/bots'),
-    body: const SafeArea(top: false, child: SearchView()),
+    body: const SafeArea(top: false, bottom: false, child: SearchView()),
   );
 }
 
@@ -170,7 +172,8 @@ class _SearchViewState extends ConsumerState<SearchView> {
                   : r.items.isEmpty && r.files.isEmpty
                       ? Center(child: Text(l10n.searchNoResults(r.query), style: TextStyle(color: scheme.onSurfaceVariant)))
                       : ListView(
-                          padding: const EdgeInsets.only(bottom: AppSpace.xl),
+                          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: EdgeInsets.only(bottom: BottomPadding.of(context, minimum: AppSpace.xl)),
                           children: [
                             for (final entry in groups.entries) ...[
                               header(_kind(entry.key).$1, _kind(entry.key).$2),

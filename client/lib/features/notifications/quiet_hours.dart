@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
+import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/form_sheet.dart';
@@ -24,7 +26,7 @@ final botQuietProvider = FutureProvider.family<BotQuietView, String>(
 );
 
 String quietSummary(BuildContext context, QuietHoursView q) =>
-    q.enabled ? context.l10n.quietHoursRange(q.start, q.end) : context.l10n.off;
+    q.enabled ? context.l10n.quietHoursRange(formatClockTime(context, q.start), formatClockTime(context, q.end)) : context.l10n.off;
 
 Future<void> showQuietHours(BuildContext context, WidgetRef ref) async {
   final current = await ref.read(quietHoursProvider.future);
@@ -102,16 +104,16 @@ class _QuietSheetState extends State<_QuietSheet> {
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.quietHours),
           value: _enabled,
-          onChanged: (v) => setState(() => _enabled = v),
+          onChanged: hapticOnChanged((v) => setState(() => _enabled = v)),
         ),
         Row(
           spacing: AppSpace.sm,
           children: [
             Expanded(
-              child: OutlinedButton.icon(key: const Key('quietStart'), onPressed: _enabled ? () => _pick(true) : null, icon: const Icon(LucideIcons.moon, size: 18), label: Text('${l10n.from} $_start')),
+              child: OutlinedButton.icon(key: const Key('quietStart'), onPressed: _enabled ? () => _pick(true) : null, icon: const Icon(LucideIcons.moon, size: 18), label: Text('${l10n.from} ${formatClockTime(context, _start)}')),
             ),
             Expanded(
-              child: OutlinedButton.icon(key: const Key('quietEnd'), onPressed: _enabled ? () => _pick(false) : null, icon: const Icon(LucideIcons.sun, size: 18), label: Text('${l10n.until} $_end')),
+              child: OutlinedButton.icon(key: const Key('quietEnd'), onPressed: _enabled ? () => _pick(false) : null, icon: const Icon(LucideIcons.sun, size: 18), label: Text('${l10n.until} ${formatClockTime(context, _end)}')),
             ),
           ],
         ),

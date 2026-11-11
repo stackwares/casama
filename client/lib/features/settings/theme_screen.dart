@@ -9,7 +9,9 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../theme/appearance.dart';
 import '../../theme/schemes.dart';
+import '../../ui/edge_fade.dart';
 import '../../ui/page.dart';
+import '../../ui/reveal_when_selected.dart';
 import '../../ui/segmented.dart';
 import 'appearance_preview.dart';
 
@@ -113,15 +115,16 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: AppSpace.sm),
-        SizedBox(
+        PageBleed(child: SizedBox(
           height: 40,
-          child: ListView(
+          child: EdgeFade(child: ListView(
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
             children: [
               for (final f in [null, ...SchemeFamily.values])
                 Padding(
                   padding: const EdgeInsets.only(right: AppSpace.xs),
-                  child: ChoiceChip(
+                  child: RevealWhenSelected(selected: _family == f, child: ChoiceChip(
                     key: Key('family-${f?.name ?? 'all'}'),
                     selected: _family == f,
                     showCheckmark: false,
@@ -131,11 +134,11 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
                           : schemeFamilyLabel(context, f),
                     ),
                     onSelected: (_) => setState(() => _family = f),
-                  ),
+                  )),
                 ),
             ],
-          ),
-        ),
+          )),
+        )),
         const SizedBox(height: AppSpace.md),
         if (shown.isEmpty)
           Padding(

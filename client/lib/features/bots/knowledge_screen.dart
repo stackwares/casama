@@ -7,8 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
@@ -69,11 +72,11 @@ class KnowledgeScreen extends ConsumerWidget {
                             if (s.botId == null) l10n.knowledgeShared,
                             switch (s.status) {
                               KnowledgeSourceStatusEnum.ready => l10n.knowledgeReady(s.documents, s.chunks),
-                              KnowledgeSourceStatusEnum.error => s.error ?? l10n.knowledgeError,
+                              KnowledgeSourceStatusEnum.error => s.error.orPlaceholder(l10n.knowledgeError),
                               KnowledgeSourceStatusEnum.syncing => l10n.knowledgeSyncing,
                               _ => l10n.knowledgePending,
                             },
-                            if (s.status == KnowledgeSourceStatusEnum.ready && s.error != null) s.error!,
+                            if (s.status == KnowledgeSourceStatusEnum.ready && s.error.isUsable) s.error!,
                           ].join(' · '),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -195,22 +198,23 @@ class _AddSourceState extends ConsumerState<_AddSource> {
         ),
         if (_kind == CreateKnowledgeSourceRequestKindEnum.upload) ...[
           OutlinedButton.icon(key: const Key('pickKnowledgeFiles'), onPressed: _pick, icon: const Icon(LucideIcons.upload, size: 18), label: Text(l10n.knowledgePickFiles)),
-          for (final (n, b) in _files) Text('$n · ${(b.length / 1024).ceil()} KB'),
+          for (final (n, b) in _files) Text('$n · ${(b.length / 1024).ceil().humanizedCount(context.l10n.localeName)} KB'),
         ] else
           TextField(
             key: const Key('knowledgeUrl'),
             controller: _url,
+            textInputAction: TextInputAction.next,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(labelText: _kind == CreateKnowledgeSourceRequestKindEnum.website ? l10n.knowledgeWebsiteUrl : l10n.knowledgeRepoUrl),
           ),
-        TextField(key: const Key('knowledgeName'), controller: _name, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: l10n.botNameLabel)),
+        TextField(key: const Key('knowledgeName'), controller: _name, textInputAction: TextInputAction.done, onSubmitted: (_) => _valid && !_busy ? _submit() : null, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: l10n.botNameLabel)),
         if (admin)
           SwitchListTile(
             key: const Key('knowledgeShared'),
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.knowledgeShareAll),
             value: _shared,
-            onChanged: (v) => setState(() => _shared = v),
+            onChanged: hapticOnChanged((v) => setState(() => _shared = v)),
           ),
       ],
     );

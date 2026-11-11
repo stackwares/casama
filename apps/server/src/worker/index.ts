@@ -10,6 +10,8 @@ import {
   computerRates,
   createSafeFetch,
   type Embedder,
+  OPENROUTER_EMBEDDING_MODEL,
+  PLATFORM_OPENROUTER_CREDENTIAL_ID,
   FalMediaProvider,
   GeminiVideoProvider,
   FcmPushSender,
@@ -142,6 +144,8 @@ export interface WorkerOptions {
   aiGateway?: import("@casama/agent").AiGatewayConfig;
   /** Casama Cloud's shared OpenRouter key. Workspaces without their own key use it. */
   platformOpenRouterKey?: string;
+  /** Reasoning level on the shared key (DEFAULT_REASONING_EFFORT). */
+  platformReasoningEffort?: "none" | "low" | "medium" | "high" | "xhigh" | "max";
   /** The one model Casama Cloud runs on that key. */
   cloudLockedModel?: string;
   /** Paid data resale on Casama Cloud (D-138): Casama's Treg key, used only when resale is on. */
@@ -221,6 +225,7 @@ export async function startWorker(opts: WorkerOptions) {
     chatgpt,
     aiGateway: opts.aiGateway,
     platformOpenRouterKey: opts.platformOpenRouterKey,
+    platformReasoningEffort: opts.platformReasoningEffort,
   });
   const mode = opts.embeddings ?? "auto";
   const embedderFor = async (orgId: string): Promise<Embedder | null> => {
@@ -228,7 +233,17 @@ export async function startWorker(opts: WorkerOptions) {
     if (mode === "hash") return hashEmbedder();
     const cred = await credentials.embeddingCredential(orgId);
     if (cred && opts.billing) cred.model = (await getCloudModels(db)).embedding;
-    return cred ? openAiEmbedder(cred) : null;
+    if (cred) return openAiEmbedder(cred);
+    // No OpenAI key of their own: the shared OpenRouter key, on OpenAI's text-embedding-3-small
+    // (1536 dimensions, like every stored vector; $0.02 per million tokens) (D-194).
+    if (!opts.platformOpenRouterKey) return null;
+    return openAiEmbedder({
+      provider: "openrouter",
+      model: OPENROUTER_EMBEDDING_MODEL,
+      apiKey: opts.platformOpenRouterKey,
+      baseUrl: opts.providerBases?.openrouter ?? "https://openrouter.ai/api/v1",
+      credentialId: PLATFORM_OPENROUTER_CREDENTIAL_ID,
+    });
   };
   // Bot computers: the sandbox supervisor, plus personal computers through the API (D-066).
   const extra = {
@@ -259,7 +274,7 @@ export async function startWorker(opts: WorkerOptions) {
   // Bots that manage bots (D-100).
   registerBotTools(tools, {
     db,
-    lockCloudModel: Boolean(opts.billing && opts.platformOpenRouterKey),
+    lockCloudModel: Boolean(opts.platformOpenRouterKey),
   });
   registerSecretRequestTool(tools);
   registerSkillTools(tools, { db });
@@ -506,6 +521,8 @@ export async function startWorker(opts: WorkerOptions) {
       geminiLiveModel: opts.geminiLiveModel,
       serverGeminiKey: opts.serverGeminiKey,
       cloudModels: opts.billing ? () => getCloudModels(db) : undefined,
+      platformOpenRouterKey: opts.platformOpenRouterKey,
+      billPlatform: Boolean(opts.billing),
     },
     voip,
     auditForwarding: opts.auditForwarding,

@@ -4,7 +4,7 @@
  * overridden (tests use local mocks).
  */
 
-export type SttProviderId = "openai" | "deepgram";
+export type SttProviderId = "openai" | "deepgram" | "openrouter";
 export type TtsProviderId = "google" | "openai" | "elevenlabs" | "cartesia" | "fish_audio";
 /** Read-aloud model (D-187). Cheaper than gpt-4o-mini-tts and ElevenLabs Flash. */
 export const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts";
@@ -159,7 +159,12 @@ export const emptyGeminiUsage = (): GeminiLiveUsage => ({
 });
 // Dictation stays on OpenAI. Gemini 3.5 Transcribe's own page puts a file at about $0.005 a
 // minute once the transcript text is included; gpt-4o-mini-transcribe is $0.003 (D-187).
-export const STT_PROVIDERS: SttProviderId[] = ["openai", "deepgram"];
+export const STT_PROVIDERS: SttProviderId[] = ["openai", "deepgram", "openrouter"];
+/**
+ * Dictation on the server's shared OpenRouter key: Whisper Large V3 Turbo, $0.0002 a minute on
+ * OpenRouter (2026-11-11), the cheapest OpenAI transcription model there.
+ */
+export const OPENROUTER_STT_MODEL = "openai/whisper-large-v3-turbo";
 // Gemini Flash-Lite TTS first: about $0.009 a minute of speech through 2026, against about
 // $0.018 for gpt-4o-mini-tts and $0.032 for ElevenLabs Flash (D-187).
 export const TTS_PROVIDERS: TtsProviderId[] = ["google", "openai", "elevenlabs", "cartesia", "fish_audio"];
@@ -180,6 +185,8 @@ export interface VoiceBases {
   elevenlabs?: string;
   cartesia?: string;
   fish_audio?: string;
+  /** OpenRouter (https://openrouter.ai/api/v1). */
+  openrouter?: string;
 }
 
 export class VoiceError extends Error {
@@ -202,7 +209,7 @@ export async function transcribe(
   audio: Uint8Array,
   mime: string,
   opts: { bases?: VoiceBases; fetch?: typeof fetch; language?: string; model?: string } = {},
-): Promise<{ text: string; seconds: number | null }> {
+): Promise<{ text: string; seconds: number | null; costUsd?: number }> {
   const f = opts.fetch ?? fetch;
   if (provider === "deepgram") {
     const base = opts.bases?.deepgram ?? "https://api.deepgram.com";
@@ -225,7 +232,10 @@ export async function transcribe(
       seconds: j.metadata?.duration ?? null,
     };
   }
-  const base = opts.bases?.openai ?? "https://api.openai.com";
+  const openrouter = provider === "openrouter";
+  const base = openrouter
+    ? (opts.bases?.openrouter ?? "https://openrouter.ai/api/v1").replace(/\/$/, "")
+    : `${opts.bases?.openai ?? "https://api.openai.com"}/v1`;
   const form = new FormData();
   const ext = mime.includes("wav")
     ? "wav"
@@ -235,18 +245,26 @@ export async function transcribe(
         ? "ogg"
         : "webm";
   form.set("file", new Blob([new Uint8Array(audio)], { type: mime }), `audio.${ext}`);
-  form.set("model", opts.model ?? "gpt-4o-mini-transcribe");
+  form.set("model", opts.model ?? (openrouter ? OPENROUTER_STT_MODEL : "gpt-4o-mini-transcribe"));
   if (opts.language) form.set("language", opts.language);
   const res = await ok(
-    await f(`${base}/v1/audio/transcriptions`, {
+    await f(`${base}/audio/transcriptions`, {
       method: "POST",
       headers: { authorization: `Bearer ${apiKey}` },
       body: form,
     }),
-    "OpenAI",
+    openrouter ? "OpenRouter" : "OpenAI",
   );
-  const j = (await res.json()) as { text?: string; duration?: number };
-  return { text: j.text ?? "", seconds: j.duration ?? null };
+  const j = (await res.json()) as {
+    text?: string;
+    duration?: number;
+    usage?: { seconds?: number; cost?: number };
+  };
+  return {
+    text: j.text ?? "",
+    seconds: j.duration ?? j.usage?.seconds ?? null,
+    costUsd: typeof j.usage?.cost === "number" ? j.usage.cost : undefined,
+  };
 }
 
 /** Speaks text with the user's key. Gemini returns WAV; the others return MP3. */

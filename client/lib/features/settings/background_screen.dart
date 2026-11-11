@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/local_image.dart';
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -13,6 +14,8 @@ import '../../theme/app_tokens.dart';
 import '../../theme/appearance.dart';
 import '../../theme/wallpaper.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/edge_fade.dart';
+import '../../ui/reveal_when_selected.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
@@ -41,15 +44,16 @@ class BackgroundScreen extends ConsumerWidget {
         SectionHeader(title: l10n.backgroundPhoto),
         _PhotoSection(spec: spec, onChanged: set),
         SectionHeader(title: l10n.backgroundPattern),
-        SizedBox(
+        PageBleed(child: SizedBox(
           height: 112,
-          child: ListView.separated(
+          child: EdgeFade(child: ListView.separated(
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
             itemCount: WallpaperPattern.values.length,
             separatorBuilder: (_, _) => const SizedBox(width: AppSpace.xs),
             itemBuilder: (context, i) {
               final p = WallpaperPattern.values[i];
-              return _Swatch(
+              return RevealWhenSelected(selected: spec.pattern == p, child: _Swatch(
                 key: Key('pattern-${p.name}'),
                 label: p.label,
                 selected: spec.pattern == p,
@@ -66,10 +70,10 @@ class BackgroundScreen extends ConsumerWidget {
                   ),
                   child: const SizedBox.expand(),
                 ),
-              );
+              ));
             },
-          ),
-        ),
+          )),
+        )),
         SectionHeader(title: l10n.backgroundColors),
         Wrap(
           spacing: AppSpace.xs,
@@ -273,6 +277,7 @@ class _PhotoSection extends ConsumerWidget {
     final photo = await showAdaptiveSheet<PickedPhoto>(
       context: context,
       heightFactor: 0.9,
+      contentPadsBottom: true,
       builder: (_) => const PhotoPicker(),
     );
     if (photo == null) return;
@@ -328,7 +333,7 @@ class _PhotoSection extends ConsumerWidget {
           const SizedBox(height: AppSpace.xs),
           FormNote(l10n.photoHelp),
         ] else ...[
-          if ((spec.photoCredit ?? '').isNotEmpty)
+          if (spec.photoCredit.isUsable)
             Padding(
               padding: const EdgeInsets.only(
                 top: AppSpace.xs,

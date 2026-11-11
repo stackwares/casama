@@ -6,6 +6,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -94,7 +95,7 @@ class BotHistoryScreen extends ConsumerWidget {
       ..invalidate(botsProvider)
       ..invalidate(archivedBotsProvider)
       ..invalidate(botRevisionsProvider(botId));
-    showMessage(context, l10n.saved);
+    showSuccess(context, l10n.saved);
   }
 }
 
@@ -105,9 +106,9 @@ class _RevisionCard extends StatelessWidget {
   final VoidCallback onRestore;
 
   String _value(Object? v) {
-    if (v == null) return '—';
-    if (v is String) return v.isEmpty ? '—' : v;
-    if (v is Map && v['primary'] is Map) return '${(v['primary'] as Map)['model'] ?? '—'}';
+    if (v == null) return kMissingValue;
+    if (v is String) return v.orPlaceholder();
+    if (v is Map && v['primary'] is Map) return ((v['primary'] as Map)['model']?.toString()).orPlaceholder();
     return jsonEncode(v);
   }
 

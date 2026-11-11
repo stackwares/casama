@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/edge_fade.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
@@ -41,13 +45,14 @@ class AdminScreen extends ConsumerWidget {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(52),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpace.sm, 0, AppSpace.sm, AppSpace.xs),
+            padding: const EdgeInsets.only(bottom: AppSpace.xs),
             child: Align(
               alignment: AlignmentDirectional.centerStart,
-              child: TabBar(
+              child: EdgeFade(child: TabBar(
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
-                padding: EdgeInsets.zero,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+                onTap: (_) => HapticsHelper.light(),
                 tabs: [
                   Tab(height: 40, text: l10n.adminOverview),
                   Tab(height: 40, text: l10n.adminUsers),
@@ -55,7 +60,7 @@ class AdminScreen extends ConsumerWidget {
                   Tab(height: 40, text: l10n.adminServices),
                   Tab(height: 40, text: l10n.adminAbuse),
                 ],
-              ),
+              )),
             ),
           ),
         ),
@@ -120,19 +125,19 @@ class _Overview extends ConsumerWidget {
         if (o == null) return EmptyState(icon: LucideIcons.lock, message: l10n.notInstanceOwner);
         final u = updates.value;
         final stats = [
-          _Stat(icon: LucideIcons.user, label: l10n.adminUsers, value: '${o.users}'),
-          _Stat(icon: LucideIcons.boxes, label: l10n.adminWorkspaces, value: '${o.orgs}'),
-          _Stat(icon: LucideIcons.bot, label: l10n.bots, value: '${o.bots}'),
-          _Stat(icon: LucideIcons.circlePlay, label: l10n.runs24h, value: '${o.runs24h}', color: colors.info),
+          _Stat(icon: LucideIcons.user, label: l10n.adminUsers, value: o.users.humanizedCount(context.l10n.localeName)),
+          _Stat(icon: LucideIcons.boxes, label: l10n.adminWorkspaces, value: o.orgs.humanizedCount(context.l10n.localeName)),
+          _Stat(icon: LucideIcons.bot, label: l10n.bots, value: o.bots.humanizedCount(context.l10n.localeName)),
+          _Stat(icon: LucideIcons.circlePlay, label: l10n.runs24h, value: o.runs24h.humanizedCount(context.l10n.localeName), color: colors.info),
           _Stat(
             icon: LucideIcons.circleAlert,
             label: l10n.failedRuns24h,
-            value: '${o.failedRuns24h}',
+            value: o.failedRuns24h.humanizedCount(context.l10n.localeName),
             color: o.failedRuns24h > 0 ? colors.negative : colors.positive,
           ),
-          _Stat(icon: LucideIcons.banknote, label: l10n.cost24h, value: formatUsd(o.cost24hUsd), color: colors.positive),
-          _Stat(icon: LucideIcons.monitor, label: l10n.computersRunning, value: '${o.computersRunning}', color: colors.working),
-          _Stat(icon: LucideIcons.monitorSmartphone, label: l10n.devicesOnline, value: '${o.devicesOnline}'),
+          _Stat(icon: LucideIcons.banknote, label: l10n.cost24h, value: formatUsd(o.cost24hUsd, context.l10n.localeName), color: colors.positive),
+          _Stat(icon: LucideIcons.monitor, label: l10n.computersRunning, value: o.computersRunning.humanizedCount(context.l10n.localeName), color: colors.working),
+          _Stat(icon: LucideIcons.monitorSmartphone, label: l10n.devicesOnline, value: o.devicesOnline.humanizedCount(context.l10n.localeName)),
         ];
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -153,8 +158,8 @@ class _Overview extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.updateAvailable(u.latest ?? '', u.current), style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                              if (u.url != null) SelectableText(u.url!, style: context.textTheme.bodySmall),
+                              Text(l10n.updateAvailable(u.latest.orPlaceholder(), u.current), style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                              if (u.url.isUsable) SelectableText(u.url!, style: context.textTheme.bodySmall),
                             ],
                           ),
                         ),
@@ -206,7 +211,7 @@ class _Users extends ConsumerWidget {
               for (final u in items)
                 GroupedTile(
                   icon: LucideIcons.user,
-                  title: u.email ?? u.id,
+                  title: u.email.orPlaceholder(u.id),
                   subtitle: [
                     context.l10n.workspacesCount(u.orgs),
                     if (u.lastSignInAt != null) context.l10n.lastSignIn(relativeTime(u.lastSignInAt!, context)),
@@ -289,9 +294,9 @@ class _OrgsState extends ConsumerState<_Orgs> {
                     subtitle: [
                       l10n.membersCount(o.members),
                       l10n.botsCount(o.bots),
-                      l10n.cost30d(formatUsd(o.cost30dUsd)),
+                      l10n.cost30d(formatUsd(o.cost30dUsd, context.l10n.localeName)),
                       if (o.limits.isNotEmpty) o.limits.entries.map((e) => '${e.key}: ${e.value}').join(', '),
-                      if (o.suspendedAt != null) l10n.workspaceSuspended(o.suspendedReason ?? ''),
+                      if (o.suspendedAt != null) l10n.workspaceSuspended(o.suspendedReason.orPlaceholder()),
                     ].join(' · '),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -337,13 +342,15 @@ class _QuotaFormState extends State<_QuotaForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    VoidCallback? submit;
     return FormSheet(
       icon: LucideIcons.slidersHorizontal,
       title: l10n.quotasFor(widget.org.name),
       subtitle: l10n.quotasHelp,
       submitLabel: l10n.save,
       submitKey: const Key('saveQuota'),
-      onSubmit: () => Navigator.pop(context, <String, num>{
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = () => Navigator.pop(context, <String, num>{
         if (num.tryParse(_bots.text) != null) 'max_bots': num.parse(_bots.text),
         if (num.tryParse(_usd.text) != null) 'monthly_usd': num.parse(_usd.text),
       }),
@@ -351,12 +358,15 @@ class _QuotaFormState extends State<_QuotaForm> {
         TextField(
           key: const Key('maxBots'),
           controller: _bots,
+          textInputAction: TextInputAction.next,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(labelText: l10n.maxBots, prefixIcon: const Icon(LucideIcons.bot, size: 20)),
         ),
         TextField(
           key: const Key('monthlyUsd'),
           controller: _usd,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => submit?.call(),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(labelText: l10n.monthlyUsd, prefixIcon: const Icon(LucideIcons.circleDollarSign, size: 20)),
         ),
@@ -473,9 +483,14 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     InputDecoration field(String label) => InputDecoration(labelText: label);
-    Widget box(Key key, TextEditingController controller, String label) => TextField(
+    VoidCallback? submit;
+    // Next moves down the list. Images is followed by the resolution dropdown, so its key just
+    // closes the keyboard. Done on the last field saves.
+    Widget box(Key key, TextEditingController controller, String label, {TextInputAction action = TextInputAction.next, bool last = false}) => TextField(
       key: key,
       controller: controller,
+      textInputAction: last ? TextInputAction.done : action,
+      onSubmitted: last ? (_) => submit?.call() : null,
       decoration: field(label),
     );
     return FormSheet(
@@ -484,7 +499,8 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
       subtitle: l10n.cloudModelsHelp,
       submitLabel: l10n.save,
       submitKey: const Key('saveCloudModels'),
-      onSubmit: () {
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = () {
         final values = [_chat, _background, _image, _live, _realtime, _tts, _stt, _embedding, _video];
         if (values.any((c) => c.text.trim().isEmpty)) return;
         Navigator.pop(
@@ -506,7 +522,7 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
       children: [
         box(const Key('cloudChat'), _chat, 'Chat'),
         box(const Key('cloudBackground'), _background, 'Background'),
-        box(const Key('cloudImage'), _image, 'Images'),
+        box(const Key('cloudImage'), _image, 'Images', action: TextInputAction.done),
         DropdownButtonFormField<CloudModelsImageResolutionEnum>(
           key: const Key('cloudImageResolution'),
           initialValue: _resolution,
@@ -515,16 +531,16 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
             for (final r in CloudModelsImageResolutionEnum.values)
               DropdownMenuItem(value: r, child: Text(r.value)),
           ],
-          onChanged: (v) {
+          onChanged: hapticOnChanged((v) {
             if (v != null) setState(() => _resolution = v);
-          },
+          }, haptic: HapticsHelper.selection),
         ),
         box(const Key('cloudLive'), _live, 'Calls'),
         box(const Key('cloudRealtime'), _realtime, 'Call fallback'),
         box(const Key('cloudTts'), _tts, 'Read aloud'),
         box(const Key('cloudStt'), _stt, 'Dictation'),
         box(const Key('cloudEmbedding'), _embedding, 'Embeddings'),
-        box(const Key('cloudVideo'), _video, 'Video'),
+        box(const Key('cloudVideo'), _video, 'Video', last: true),
       ],
     );
   }

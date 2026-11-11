@@ -47,7 +47,7 @@ class MemoryScreen extends ConsumerWidget {
         builder: (_) => MemoryImportSheet(botId: botId),
       );
       ref.invalidate(memoriesProvider(botId));
-      if (n != null && context.mounted) showMessage(context, l10n.memoriesImported(n));
+      if (n != null && context.mounted) showSuccess(context, l10n.memoriesImported(n));
     }
 
     return SubPage(

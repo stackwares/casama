@@ -31,7 +31,7 @@ class _RunRoutineScreenState extends ConsumerState<RunRoutineScreen> {
     try {
       await ref.read(backendProvider).runRoutine(parts.first);
       if (!mounted) return;
-      showMessage(context, context.l10n.routineStarted);
+      showSuccess(context, context.l10n.routineStarted);
       GoRouter.maybeOf(context)?.go(parts.length > 1 ? '/bots/${parts[1]}/chat' : '/bots');
     } catch (e) {
       if (mounted) setState(() => _error = e);

@@ -19,6 +19,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/floating_tab_chrome.dart';
+import '../../ui/tab_reselect.dart';
 import '../../ui/glass.dart';
 import '../../ui/casama_mark.dart';
 import '../../core/billing.dart';
@@ -174,7 +175,14 @@ class HomeShell extends ConsumerWidget {
     // The wake word listens while the app is open (D-144).
     if (wakeWordSupported) ref.watch(wakeWordProvider);
     final dests = _destinations(context);
-    void go(int i) => context.go(dests[i].path);
+    void go(int i) {
+      // The tab you're already on: back to the top of its list, as on iOS and Android.
+      if (location == dests[i].path) {
+        TabReselect.scrollToTop(context, i);
+        return;
+      }
+      context.go(dests[i].path);
+    }
     final shell = _buildShell(context, ref, size, badge, child, dests, go);
     if (size == LayoutSize.phone) return shell;
     return CallbackShortcuts(
@@ -364,8 +372,8 @@ class _Rail extends StatelessWidget {
       destinations: [
         for (final d in dests)
           NavigationRailDestination(
-            icon: Badge(isLabelVisible: d.path == '/inbox' && badge > 0, label: Text('$badge'), child: Icon(d.icon)),
-            selectedIcon: Badge(isLabelVisible: d.path == '/inbox' && badge > 0, label: Text('$badge'), child: Icon(d.selectedIcon)),
+            icon: Badge(isLabelVisible: d.path == '/inbox' && badge > 0, label: Text('$badge', style: const TextStyle(fontFeatures: AppText.tabular)), child: Icon(d.icon)),
+            selectedIcon: Badge(isLabelVisible: d.path == '/inbox' && badge > 0, label: Text('$badge', style: const TextStyle(fontFeatures: AppText.tabular)), child: Icon(d.selectedIcon)),
             label: Text(d.label),
           ),
       ],
@@ -435,6 +443,7 @@ class _Sidebar extends ConsumerWidget {
             ),
             Expanded(
               child: ListView(
+                primary: false,
                 padding: const EdgeInsets.only(bottom: 12),
                 children: [
                   // Bots outside folders first, then each folder in order (D-100).

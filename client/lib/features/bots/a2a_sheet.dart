@@ -8,6 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../ui/form_sheet.dart';
 
 /// Agent-to-agent (D-140): publish a bot as an A2A agent and share its agent card.
@@ -37,12 +38,12 @@ class BotA2aSheet extends ConsumerWidget {
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.a2aPublish),
             value: a.published,
-            onChanged: a.workspaceEnabled || a.published
+            onChanged: hapticOnChanged(a.workspaceEnabled || a.published
                 ? (v) async {
                     await runGuarded(context, () => ref.read(backendProvider).setBotA2a(botId, v));
                     ref.invalidate(botA2aProvider(botId));
                   }
-                : null,
+                : null),
           ),
           if (a.published)
             InputDecorator(

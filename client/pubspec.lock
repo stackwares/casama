@@ -812,6 +812,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.27.3"
+  haptic_feedback:
+    dependency: "direct main"
+    description:
+      name: haptic_feedback
+      sha256: "36e82acb24dba60c85f046ef4ddc1df1ef4fdc190d8f6fd907a030c896de3ebb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.8.0"
   health:
     dependency: "direct main"
     description:
@@ -1217,6 +1225,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.5"
+  motor:
+    dependency: transitive
+    description:
+      name: motor
+      sha256: cbd49f21b00e568c2b1a55f134ed803614a107782f4fea7769693bca32940c58
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   native_geofence:
     dependency: "direct main"
     description:
@@ -1465,6 +1481,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.1.0"
+  phone_numbers_parser:
+    dependency: "direct main"
+    description:
+      name: phone_numbers_parser
+      sha256: "59ccb71840e41e6ec8e600b4bfd1d37cd171bb5e094b971b70831b7766c1e4a1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.0.29"
   platform:
     dependency: transitive
     description:
@@ -1530,7 +1554,7 @@ packages:
     source: hosted
     version: "5.0.6"
   pub_semver:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: pub_semver
       sha256: "261236774e8b1d69cfc6b9eabbc96c40f25e7a2d6b171f3385d4f65d5734fb24"
@@ -1705,6 +1729,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.28.0"
+  scroll_drag_detector:
+    dependency: transitive
+    description:
+      name: scroll_drag_detector
+      sha256: "287f56dd01c96aeb083b7619cc17eaae9a94df2066f9f4a921d09537dbb2b876"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0+2"
   scroll_to_index:
     dependency: transitive
     description:
@@ -1990,6 +2022,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  stupid_simple_sheet:
+    dependency: "direct main"
+    description:
+      name: stupid_simple_sheet
+      sha256: "418a2b5531d7f015f8b2161ad296760049516407dbcb08f91ac4b9062a7938f0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.9.1+1"
   supabase:
     dependency: transitive
     description:

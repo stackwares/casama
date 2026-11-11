@@ -48,7 +48,7 @@ Future<void> _menu(Ref ref, String action) async {
         router.go('/bots');
       }
     case 'newBot':
-      if (context != null && context.mounted) await showAdaptiveSheet<void>(context: context, builder: (_) => const CreateBotSheet());
+      if (context != null && context.mounted) await showAdaptiveSheet<void>(context: context, contentPadsBottom: true, builder: (_) => const CreateBotSheet());
     case 'search':
       if (context != null && context.mounted) await showWorkspaceSearch(context);
     case 'checkUpdates':

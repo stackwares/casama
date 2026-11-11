@@ -100,6 +100,42 @@ abstract class AppLocalizations {
   /// **'Casama'**
   String get appTitle;
 
+  /// No description provided for @tabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{page} · {app}'**
+  String tabTitle(String page, String app);
+
+  /// No description provided for @tabTitleBotPage.
+  ///
+  /// In en, this message translates to:
+  /// **'{page} · {bot}'**
+  String tabTitleBotPage(String page, String bot);
+
+  /// No description provided for @tabTitleChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get tabTitleChat;
+
+  /// No description provided for @tabTitleCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get tabTitleCall;
+
+  /// No description provided for @tabTitleProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Project'**
+  String get tabTitleProject;
+
+  /// No description provided for @tabTitleGroupChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Group chat'**
+  String get tabTitleGroupChat;
+
   /// No description provided for @loading.
   ///
   /// In en, this message translates to:
@@ -159,6 +195,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong'**
   String get somethingWentWrong;
+
+  /// No description provided for @errorViewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Restarting the app should fix it.'**
+  String get errorViewHint;
 
   /// No description provided for @signInTitle.
   ///
@@ -2935,7 +2977,7 @@ abstract class AppLocalizations {
   /// No description provided for @limitCredits.
   ///
   /// In en, this message translates to:
-  /// **'\${amount} credits a month'**
+  /// **'{amount} credits a month'**
   String limitCredits(String amount);
 
   /// No description provided for @viaWeb.
@@ -2977,7 +3019,7 @@ abstract class AppLocalizations {
   /// No description provided for @creditsBalance.
   ///
   /// In en, this message translates to:
-  /// **'Credits: \${amount}'**
+  /// **'Credits: {amount}'**
   String creditsBalance(String amount);
 
   /// No description provided for @manageSubscription.
@@ -3381,6 +3423,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version {version}'**
   String appVersion(String version);
+
+  /// No description provided for @whatsNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new in Casama {version}'**
+  String whatsNewTitle(String version);
+
+  /// No description provided for @whatsNewGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get whatsNewGotIt;
+
+  /// No description provided for @whatsNew080Calls.
+  ///
+  /// In en, this message translates to:
+  /// **'Call your bots and talk things through. They answer out loud, with captions.'**
+  String get whatsNew080Calls;
+
+  /// No description provided for @whatsNew080Looks.
+  ///
+  /// In en, this message translates to:
+  /// **'Make Casama yours: color schemes, fonts and wallpapers in Settings → Themes, with more in the Gallery.'**
+  String get whatsNew080Looks;
+
+  /// No description provided for @whatsNew080AboutYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell your bots about yourself once, in Settings → About you: what to call you and how you like replies.'**
+  String get whatsNew080AboutYou;
+
+  /// No description provided for @whatsNew080SignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with a passkey, Apple, Google or a code from your email.'**
+  String get whatsNew080SignIn;
 
   /// No description provided for @openAtLogin.
   ///

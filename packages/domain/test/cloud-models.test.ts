@@ -21,8 +21,9 @@ describe("Casama Cloud models", () => {
     expect(cloudModelAllowed({ billing: true, plan: "pro" }, "anthropic/claude-sonnet-5.5")).toBe(
       false,
     );
-    // A self-hosted server that set the key still offers the short list.
-    expect(cloudModelAllowed({ billing: false, plan: "selfhost" }, "openai/gpt-6-luna")).toBe(true);
+    // A self-hosted server that set the shared key is locked the same way.
+    expect(cloudModelAllowed({ billing: false, plan: "selfhost" }, CLOUD_LOCKED_MODEL)).toBe(true);
+    expect(cloudModelAllowed({ billing: false, plan: "selfhost" }, "openai/gpt-6-luna")).toBe(false);
     expect(cloudModelAllowed({ billing: false, plan: "selfhost" }, "some/unknown-model")).toBe(
       false,
     );
@@ -39,6 +40,17 @@ describe("Casama Cloud models", () => {
     });
     expect(policy.primary?.model).toBe(CLOUD_LOCKED_MODEL);
     expect(policy.cheap?.model).toBe("claude-haiku-5-5");
+  });
+
+  it("drops a bot's own thinking level on the shared key", () => {
+    const policy = lockCloudPolicy({
+      primary: {
+        credential_id: PLATFORM_OPENROUTER_CREDENTIAL_ID,
+        model: CLOUD_LOCKED_MODEL,
+        reasoning_effort: "max",
+      } as { credential_id: string; model: string; reasoning_effort?: string },
+    });
+    expect((policy.primary as { reasoning_effort?: string }).reasoning_effort).toBeUndefined();
   });
 
   it("caps a free workspace at $0.25 a day and a paid one at $10", () => {

@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
@@ -23,7 +25,7 @@ final groupChatsProvider = FutureProvider<List<Conversation>>((ref) async {
 
 /// A group chat's title, or its bots' names.
 String groupTitle(Conversation c, List<Bot> bots) =>
-    (c.title?.isNotEmpty ?? false) ? c.title! : c.botIds.map((id) => bots.where((b) => b.id == id).firstOrNull?.name ?? '').where((n) => n.isNotEmpty).join(', ');
+    c.title.isUsable ? c.title! : c.botIds.map((id) => bots.where((b) => b.id == id).firstOrNull?.name ?? '').where((n) => n.isNotEmpty).join(', ');
 
 class GroupChatScreen extends ConsumerWidget {
   const GroupChatScreen({super.key, required this.conversationId});
@@ -95,7 +97,7 @@ class _NewGroupState extends ConsumerState<_NewGroup> {
             title: Text(b.name),
             subtitle: _picked.isNotEmpty && _picked.first == b.id ? Text(l10n.groupLead) : null,
             value: _picked.contains(b.id),
-            onChanged: (v) => setState(() => v == true ? _picked.add(b.id) : _picked.remove(b.id)),
+            onChanged: hapticOnChanged((v) => setState(() => v == true ? _picked.add(b.id) : _picked.remove(b.id)), haptic: HapticsHelper.soft),
           ),
       ],
     );

@@ -4,6 +4,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/app_colors.dart';
+import '../../ui/smooth_network_image.dart';
 
 /// Apps with a bundled brand mark (assets/apps, from Simple Icons, CC0).
 const _bundledLogos = {
@@ -11,6 +12,9 @@ const _bundledLogos = {
   'google_drive', 'hubspot', 'huggingface', 'intercom', 'linear', 'mcp', 'notion', 'posthog', 'sentry', //
   'slack', 'stripe', 'supabase', 'vercel', 'webflow', 'zapier',
 };
+
+/// The bundled marks' files, so startup can parse them before the Connections screens open.
+List<String> get bundledLogoAssets => [for (final id in _bundledLogos) 'assets/apps/$id.svg'];
 
 Color brandColor(String? hex, Color fallback) {
   final v = hex == null ? null : int.tryParse(hex.replaceFirst('#', ''), radix: 16);
@@ -76,12 +80,14 @@ class AppLogo extends StatelessWidget {
     if (imageUrl != null) {
       mark = Padding(
         padding: EdgeInsets.all(size * 0.16),
-        // Decoded at the tile's size: remote logos are often 512 px or more.
-        child: Image.network(
+        // Decoded at the tile's size: remote logos are often 512 px or more. The neutral tile is the
+        // placeholder; the logo fades in, and one that can't load shows the app's initial.
+        child: SmoothNetworkImage(
           imageUrl!,
           fit: BoxFit.contain,
-          cacheWidth: (size * MediaQuery.devicePixelRatioOf(context)).ceil(),
-          errorBuilder: (_, _, _) => _initial(ink),
+          decodeWidth: (size * MediaQuery.devicePixelRatioOf(context)).ceil(),
+          placeholderColor: Colors.transparent,
+          error: _initial(scheme.onSurfaceVariant),
         ),
       );
     } else if (hasMark) {

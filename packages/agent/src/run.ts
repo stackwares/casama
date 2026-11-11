@@ -348,7 +348,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
   // Casama Cloud picks every model. A change in the admin console applies on the next run (D-188).
   const assigned = deps.billCloudModels && deps.cloudModels ? await deps.cloudModels() : null;
   const cloudLocked = assigned?.chat || deps.cloudLockedModel || CLOUD_LOCKED_MODEL;
-  if (info && deps.billCloudModels)
+  // The shared key runs the server's model everywhere; self-hosted servers that set it are protected too.
+  if (info)
     info.policy = assigned ? cloudRunPolicy(assigned) : lockCloudPolicy(info.policy, cloudLocked);
   if (!info) return { status: "missing" };
   if (TERMINAL.has(info.status)) return { status: info.status };

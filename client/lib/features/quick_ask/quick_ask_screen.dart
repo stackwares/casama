@@ -14,6 +14,8 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/bot_avatar.dart';
+import '../../ui/edge_fade.dart';
+import '../../ui/reveal_when_selected.dart';
 import '../../ui/page.dart';
 import '../../ui/glow_button.dart';
 import '../chat/chat_screen.dart' show computerForBot;
@@ -105,7 +107,7 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
       _busy = false;
       _shot = shot;
     });
-    if (shot == null) showMessage(context, context.l10n.ctxScreenshotFailed);
+    if (shot == null) showFailure(context, context.l10n.ctxScreenshotFailed);
   }
 
   @override
@@ -122,25 +124,26 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
         Text(l10n.quickAskIntro, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
         const SizedBox(height: AppSpace.lg),
         if (bots.length > 1) ...[
-          SizedBox(
+          PageBleed(child: SizedBox(
             height: 44,
-            child: ListView.separated(
+            child: EdgeFade(child: ListView.separated(
               key: const Key('quickAskBot'),
               scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
               itemCount: bots.length,
               separatorBuilder: (_, _) => const SizedBox(width: AppSpace.xs),
               itemBuilder: (context, i) {
                 final b = bots[i];
-                return ChoiceChip(
+                return RevealWhenSelected(selected: b.id == _botId, child: ChoiceChip(
                   selected: b.id == _botId,
                   showCheckmark: false,
                   avatar: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 22),
                   label: Text(b.name),
                   onSelected: (_) => setState(() => _botId = b.id),
-                );
+                ));
               },
-            ),
-          ),
+            )),
+          )),
           const SizedBox(height: AppSpace.md),
         ],
         if (_ctx != null || desktopContextSupported) ...[

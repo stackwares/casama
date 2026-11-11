@@ -8,9 +8,12 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/number_format.dart';
+import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/backend.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
@@ -38,7 +41,10 @@ class ActivityScreen extends ConsumerWidget {
         data: (items) => items.isEmpty
             ? EmptyState(icon: LucideIcons.activity, title: l10n.noRuns, message: l10n.noRunsHelp)
             : RefreshIndicator(
-                onRefresh: () async => ref.invalidate(runsProvider(botId)),
+                onRefresh: () async {
+                  HapticsHelper.medium();
+                  ref.invalidate(runsProvider(botId));
+                },
                 child: PageListView(
                   itemCount: items.length,
                   itemBuilder: (context, i) => _RunCard(run: items[i], onTap: () => context.push('/bots/$botId/runs/${items[i].id}')).appListItemEntrance(i),
@@ -122,7 +128,7 @@ class _RunCard extends StatelessWidget {
             ),
           ),
           Text(
-            formatUsd(run.costUsd),
+            formatUsd(run.costUsd, context.l10n.localeName),
             style: context.textTheme.labelLarge?.copyWith(fontFeatures: AppText.tabular, color: scheme.onSurfaceVariant),
           ),
           Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant),
@@ -231,14 +237,14 @@ class TimelineTile extends StatelessWidget {
     final colors = context.appColors;
     final payload = item.envelope.payload;
     final time = item.envelope.ts.toLocal();
-    final hh = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:${time.second.toString().padLeft(2, '0')}';
+    final hh = time.formattedTimeWithSeconds(context);
     final summary = switch (item) {
       ToolStartedItem(:final event) => '${event.payload.tool} ${jsonEncode(event.payload.argsRedacted)}',
       ToolCompletedItem(:final event) => '${event.payload.resultPreview} (${event.payload.durationMs} ms)',
       ToolFailedItem(:final event) => '${event.payload.errorCode}: ${event.payload.message}',
       ToolOutputItem(:final event) => event.payload.chunk.trim(),
       MessageDeltaItem(:final event) => event.payload.text,
-      UsageItem(:final event) => '${formatUsd(event.payload.costUsd)} · ${event.payload.tokensIn + event.payload.tokensOut} tokens',
+      UsageItem(:final event) => '${formatUsd(event.payload.costUsd, context.l10n.localeName)} · ${(event.payload.tokensIn + event.payload.tokensOut).humanizedCount(context.l10n.localeName)} tokens',
       RunFailedItem(:final event) => event.payload.message,
       CheckpointCreatedItem(:final event) => event.payload.label,
       ComputerStateItem(:final event) => event.payload.state.value,

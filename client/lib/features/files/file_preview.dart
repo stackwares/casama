@@ -10,11 +10,13 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../chat/widgets/chat_markdown.dart';
 import '../../ui/glow_button.dart';
@@ -131,10 +133,10 @@ IconData fileIconFor(String name) => switch (_ext(name)) {
   _ => LucideIcons.file,
 };
 
-String formatBytes(int n) {
-  if (n < 1024) return '$n B';
-  if (n < 1024 * 1024) return '${(n / 1024).toStringAsFixed(n < 10 * 1024 ? 1 : 0)} KB';
-  return '${(n / 1024 / 1024).toStringAsFixed(1)} MB';
+String formatBytes(int n, String locale) {
+  if (n < 1024) return '${n.humanizedCount(locale)} B';
+  if (n < 1024 * 1024) return '${(n / 1024).humanizedCount(locale, decimalDigits: n < 10 * 1024 ? 1 : 0)} KB';
+  return '${(n / 1024 / 1024).humanizedCount(locale, decimalDigits: 1)} MB';
 }
 
 /// A file's bytes from a bot's computer, by (computer id, files API path).
@@ -162,6 +164,7 @@ Future<void> showComputerFile(BuildContext context, {required String computerId,
   return showAdaptiveSheet<void>(
     context: context,
     heightFactor: 0.85,
+    contentPadsBottom: true,
     dialogMaxWidth: 760,
     dialogMaxHeight: 820,
     builder: (_) => FilePreview(computerId: computerId, path: path),
@@ -183,7 +186,7 @@ class FilePreview extends ConsumerWidget {
       await file.parent.create(recursive: true);
       await file.writeAsBytes(bytes);
       final ok = await launchUrl(Uri.file(file.path));
-      if (!ok && context.mounted) showMessage(context, context.l10n.noAppToOpen(name));
+      if (!ok && context.mounted) showWarning(context, context.l10n.noAppToOpen(name));
       return;
     }
     await _share(context, bytes, origin: origin);
@@ -193,7 +196,7 @@ class FilePreview extends ConsumerWidget {
     final name = fileNameOf(path);
     // The picker writes the file itself on every platform.
     final saved = await FilePicker.saveFile(fileName: name, bytes: bytes, mimeType: mimeFor(name));
-    if (saved != null && context.mounted) showMessage(context, context.l10n.savedFile(name));
+    if (saved != null && context.mounted) showSuccess(context, context.l10n.savedFile(name));
   }
 
   Future<void> _share(BuildContext context, Uint8List bytes, {Rect? origin}) async {
@@ -238,7 +241,7 @@ class FilePreview extends ConsumerWidget {
                       style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     Text(
-                      [path.startsWith('~/') || path.startsWith('/') ? path : 'workspace/$path', if (bytes != null) formatBytes(bytes.length)].join(' · '),
+                      [path.startsWith('~/') || path.startsWith('/') ? path : 'workspace/$path', if (bytes != null) formatBytes(bytes.length, context.l10n.localeName)].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -327,12 +330,12 @@ class _Body extends StatelessWidget {
       final text = utf8.decode(bytes.length > 400 * 1024 ? bytes.sublist(0, 400 * 1024) : bytes, allowMalformed: true);
       if (mime == 'text/markdown') {
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpace.lg),
+          padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
           child: ChatMarkdown(data: text),
         );
       }
       return SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpace.md),
+        padding: EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md, AppSpace.md, BottomPadding.of(context, minimum: AppSpace.md)),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpace.md),

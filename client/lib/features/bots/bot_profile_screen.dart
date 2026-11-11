@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -97,7 +98,7 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
     setState(() => _busy = false);
     if (ok == true) {
       ref.invalidate(botsProvider);
-      showMessage(context, l10n.saved);
+      showSuccess(context, l10n.saved);
     }
   }
 
@@ -375,7 +376,7 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
                       ),
                     ),
                 ],
-                onChanged: (v) => setState(() {
+                onChanged: hapticOnChanged((v) => setState(() {
                   _credentialId = v;
                   for (final k in keys) {
                     if (k.id == v)
@@ -385,7 +386,7 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
                               .defaultModelFor(k.provider.value) ??
                           _model;
                   }
-                }),
+                }), haptic: HapticsHelper.selection),
               ),
               ModelPickerField(
                 credentialId: _credentialId,
@@ -728,7 +729,7 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
                 ref
                   ..invalidate(botsProvider)
                   ..invalidate(archivedBotsProvider);
-                showMessage(context, l10n.botArchived(bot.name));
+                showSuccess(context, l10n.botArchived(bot.name));
                 GoRouter.maybeOf(context)?.go('/bots');
               },
             ),

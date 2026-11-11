@@ -6,8 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
+import '../../core/phone_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -112,7 +115,7 @@ class ChannelsScreen extends ConsumerWidget {
                           key: Key('channel-${c.id}'),
                           icon: channelIcon(c.kind),
                           title: c.name,
-                          subtitle: [channelKindName(c.kind), l10n.chatAppsAllowed(c.allowedSenders.length), if (c.lastError != null) c.lastError!].join(' · '),
+                          subtitle: [channelKindName(c.kind), l10n.chatAppsAllowed(c.allowedSenders.length), if (c.lastError.isUsable) c.lastError!].join(' · '),
                           onTap: () => showAdaptiveSheet<void>(
                             context: context,
                             builder: (_) => _ChannelDetail(botId: botId, channel: c),
@@ -120,10 +123,10 @@ class ChannelsScreen extends ConsumerWidget {
                           trailing: Switch(
                             key: Key('channelEnabled-${c.id}'),
                             value: c.enabled,
-                            onChanged: (v) async {
+                            onChanged: hapticOnChanged((v) async {
                               await runGuarded(context, () => ref.read(backendProvider).updateChannel(c.id, enabled: v));
                               ref.invalidate(channelsProvider(botId));
-                            },
+                            }),
                           ),
                         ),
                     ],
@@ -178,7 +181,7 @@ class _AddChannelState extends ConsumerState<_AddChannel> {
               botId: widget.botId,
               kind: _kind,
               name: _name.text.trim(),
-              config: {for (final f in fields.where((f) => !f.$2)) f.$1: _c(f.$1).text.trim(), if (_kind == ChannelKind.imessage) 'computer_id': _mac},
+              config: {for (final f in fields.where((f) => !f.$2)) f.$1: f.$1 == 'phone_number' ? _c(f.$1).text.unformattedPhoneNumber : _c(f.$1).text.trim(), if (_kind == ChannelKind.imessage) 'computer_id': _mac},
               secrets: {for (final f in fields.where((f) => f.$2)) f.$1: _c(f.$1).text.trim()},
               allowedSenders: _splitSenders(_senders.text),
             ),
@@ -206,14 +209,15 @@ class _AddChannelState extends ConsumerState<_AddChannel> {
           initialValue: _kind,
           decoration: InputDecoration(labelText: l10n.chatAppsKind),
           items: [for (final k in ChannelKind.values) DropdownMenuItem(value: k, child: Text(channelKindName(k)))],
-          onChanged: (k) => setState(() {
+          onChanged: hapticOnChanged((k) => setState(() {
             _kind = k ?? _kind;
             if (_name.text.isEmpty || ChannelKind.values.any((x) => channelKindName(x) == _name.text)) _name.text = channelKindName(_kind);
-          }),
+          }), haptic: HapticsHelper.selection),
         ),
         TextField(
           key: const Key('channelName'),
           controller: _name,
+          textInputAction: TextInputAction.next,
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(labelText: l10n.botNameLabel),
         ),
@@ -221,7 +225,10 @@ class _AddChannelState extends ConsumerState<_AddChannel> {
           Revealable(builder: (context, hidden, toggle) => TextField(
             key: Key('channelField-${f.$1}'),
             controller: _c(f.$1),
+            textInputAction: TextInputAction.next,
             obscureText: hidden && (f.$2),
+            keyboardType: f.$1 == 'phone_number' ? TextInputType.phone : null,
+            inputFormatters: f.$1 == 'phone_number' ? const [PhoneInputFormatter()] : null,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(labelText: f.$3(l10n), suffixIcon: (f.$2) ? toggle : null),
           )),
@@ -238,7 +245,7 @@ class _AddChannelState extends ConsumerState<_AddChannel> {
                 initialValue: _mac,
                 decoration: InputDecoration(labelText: l10n.chatAppsMac),
                 items: [for (final d in macs) DropdownMenuItem(value: d.computerId, child: Text(d.name))],
-                onChanged: (v) => setState(() => _mac = v),
+                onChanged: hapticOnChanged((v) => setState(() => _mac = v), haptic: HapticsHelper.selection),
               );
             },
           ),
@@ -270,8 +277,8 @@ class _SetupDone extends StatelessWidget {
       submitLabel: l10n.close,
       onSubmit: () => Navigator.pop(context),
       children: [
-        if (channel.webhookUrl != null) _Copyable(label: l10n.chatAppsWebhookUrl, value: channel.webhookUrl!, keyName: 'webhookUrl'),
-        if (channel.verifyToken != null) _Copyable(label: l10n.chatAppsVerifyToken, value: channel.verifyToken!, keyName: 'verifyToken'),
+        if (channel.webhookUrl.isUsable) _Copyable(label: l10n.chatAppsWebhookUrl, value: channel.webhookUrl!, keyName: 'webhookUrl'),
+        if (channel.verifyToken.isUsable) _Copyable(label: l10n.chatAppsVerifyToken, value: channel.verifyToken!, keyName: 'verifyToken'),
       ],
     );
   }
@@ -334,7 +341,7 @@ class _ChannelDetailState extends ConsumerState<_ChannelDetail> {
         if (r != null && context.mounted) Navigator.pop(context);
       },
       children: [
-        if (c.webhookUrl != null) _Copyable(label: l10n.chatAppsWebhookUrl, value: c.webhookUrl!, keyName: 'webhookUrl'),
+        if (c.webhookUrl.isUsable) _Copyable(label: l10n.chatAppsWebhookUrl, value: c.webhookUrl!, keyName: 'webhookUrl'),
         TextField(
           key: const Key('editSenders'),
           controller: _senders,
@@ -358,11 +365,11 @@ class _ChannelDetailState extends ConsumerState<_ChannelDetail> {
                             contentPadding: EdgeInsets.zero,
                             dense: true,
                             leading: Icon(e.direction == ChannelEventDirectionEnum.in_ ? LucideIcons.arrowDownLeft : LucideIcons.arrowUpRight, size: 18),
-                            title: Text([e.sender ?? '', e.preview ?? ''].where((s) => s.isNotEmpty).join(': '), maxLines: 2, overflow: TextOverflow.ellipsis),
+                            title: Text([e.sender, e.preview].where((s) => s.isUsable).join(': ').orPlaceholder(), maxLines: 2, overflow: TextOverflow.ellipsis),
                             subtitle: Text(switch (e.status) {
                               ChannelEventStatusEnum.ignored => l10n.chatAppsIgnored,
                               ChannelEventStatusEnum.routine => l10n.chatAppsRoutine,
-                              ChannelEventStatusEnum.failed => e.detail ?? l10n.chatAppsFailed,
+                              ChannelEventStatusEnum.failed => e.detail.orPlaceholder(l10n.chatAppsFailed),
                               ChannelEventStatusEnum.sent => l10n.chatAppsSent,
                               _ => l10n.chatAppsAnswered,
                             }),

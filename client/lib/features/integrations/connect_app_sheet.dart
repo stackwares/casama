@@ -11,6 +11,7 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/glow_button.dart';
@@ -21,6 +22,7 @@ Future<Integration?> showConnectApp(BuildContext context, CatalogApp app, {Integ
     showAdaptiveSheet<Integration>(
       context: context,
       dialogMaxWidth: 520,
+      contentPadsBottom: true,
       builder: (_) => ConnectAppSheet(app: app, reconnect: reconnect),
     );
 
@@ -203,7 +205,8 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
         child: KeyedSubtree(
           key: ValueKey(_step),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, AppSpace.lg),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
             child: switch (_step) {
               _Step.intro || _Step.connecting => _intro(context),
               _Step.waiting => _waiting(context),

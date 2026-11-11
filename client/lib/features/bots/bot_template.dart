@@ -8,8 +8,10 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -89,7 +91,7 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
           title: Text(l10n.includeMemories),
           subtitle: Text(l10n.includeMemoriesHelp),
           value: _memories,
-          onChanged: (v) => setState(() => _memories = v ?? false),
+          onChanged: hapticOnChanged((v) => setState(() => _memories = v ?? false), haptic: HapticsHelper.soft),
         ),
         OutlinedButton.icon(
           key: const Key('saveTemplateFile'),
@@ -112,9 +114,9 @@ Future<void> importBotFromFile(BuildContext context) async {
     final t = BotTemplateFile.fromJson(json as Map<String, dynamic>);
     if (t.format != BotTemplateFileFormatEnum.casamaPeriodBot) throw const FormatException();
     if (!context.mounted) return;
-    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ImportBotScreen(template: t)));
+    await Navigator.of(context).push(MaterialPageRoute(settings: const RouteSettings(name: '/import/file'), builder: (_) => ImportBotScreen(template: t)));
   } catch (_) {
-    if (context.mounted) showMessage(context, context.l10n.notABotTemplate);
+    if (context.mounted) showWarning(context, context.l10n.notABotTemplate);
   }
 }
 
@@ -150,7 +152,7 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
     if (r == null) return;
     ref.invalidate(botsProvider);
     final l10n = context.l10n;
-    showMessage(
+    showSuccess(
       context,
       r.connectionsToAdd.isEmpty ? l10n.botImported(t.name) : l10n.botImportedConnect(t.name, r.connectionsToAdd.map((c) => c.name).join(', ')),
     );
@@ -188,7 +190,7 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
                       const SizedBox(width: AppSpace.md),
                       Expanded(child: Text(t.name, style: context.textTheme.titleLarge)),
                     ]),
-                    if ((t.description ?? '').isNotEmpty) Text(t.description!),
+                    if (t.description.isUsable) Text(t.description!),
                     Text(t.personaMd, maxLines: 8, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colorScheme.onSurfaceVariant)),
                   ],
                 ),
@@ -205,13 +207,13 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
                 ],
               ),
               if ((t.routines ?? const []).isNotEmpty)
-                SwitchListTile(key: const Key('importRoutines'), title: Text(l10n.importRoutines), value: _routines, onChanged: (v) => setState(() => _routines = v)),
+                SwitchListTile(key: const Key('importRoutines'), title: Text(l10n.importRoutines), value: _routines, onChanged: hapticOnChanged((v) => setState(() => _routines = v))),
               if ((t.memories ?? const []).isNotEmpty)
                 SwitchListTile(
                   key: const Key('importMemories'),
                   title: Text(l10n.importMemories((t.memories ?? const []).length)),
                   value: _memories,
-                  onChanged: (v) => setState(() => _memories = v),
+                  onChanged: hapticOnChanged((v) => setState(() => _memories = v)),
                 ),
               SectionHeader(title: l10n.thinking0),
               DropdownButtonFormField<String>(
@@ -220,10 +222,10 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
                 isExpanded: true,
                 decoration: InputDecoration(labelText: l10n.modelKey),
                 items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text(k.label))],
-                onChanged: (v) => setState(() {
+                onChanged: hapticOnChanged((v) => setState(() {
                   _credentialId = v;
                   _model = '';
-                }),
+                }), haptic: HapticsHelper.selection),
               ),
               const SizedBox(height: AppSpace.sm),
               ModelPickerField(credentialId: _credentialId, value: _model, onChanged: (m) => setState(() => _model = m)),

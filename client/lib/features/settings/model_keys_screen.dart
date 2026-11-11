@@ -5,8 +5,10 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -121,7 +123,7 @@ Future<Credential?> connectChatGptPlan(
     context,
     cred.status == CredentialStatus.planUsageOff
         ? l10n.chatGptPlanUsageOff
-        : l10n.chatGptConnected(cred.account ?? l10n.chatGptPlan),
+        : l10n.chatGptConnected(cred.account.orPlaceholder(l10n.chatGptPlan)),
   );
   return cred;
 }
@@ -321,10 +323,11 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
             const SizedBox.shrink(),
             for (final p in moreKeyProviders) Text(providerLabel(p)),
           ],
-          onChanged: (v) => setState(() => _provider = v ?? _provider),
+          onChanged: hapticOnChanged((v) => setState(() => _provider = v ?? _provider), haptic: HapticsHelper.selection),
         ),
         TextField(
           controller: _label,
+          textInputAction: TextInputAction.next,
           decoration: InputDecoration(
             labelText: l10n.label,
             prefixIcon: const Icon(LucideIcons.tag, size: 20),
@@ -334,30 +337,34 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
           builder: (context, hidden, toggle) => TextField(
             key: const Key('apiKey'),
             controller: _key,
+            textInputAction: compatible ? TextInputAction.next : TextInputAction.done,
+            onSubmitted: compatible || _busy ? null : (_) => _add(),
             decoration: InputDecoration(
               labelText: l10n.apiKey,
               prefixIcon: const Icon(LucideIcons.keyRound, size: 20),
               helperText: l10n.storedEncrypted,
               // A hidden field on a phone often has no paste menu, so the clipboard has its own button.
-              suffixIcon: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    key: const Key('pasteApiKey'),
-                    tooltip: l10n.pasteLabel,
-                    icon: const Icon(LucideIcons.clipboardPaste, size: 18),
-                    onPressed: () async {
-                      final data = await Clipboard.getData(
-                        Clipboard.kTextPlain,
-                      );
-                      final text = data?.text?.trim();
-                      if (text != null && text.isNotEmpty) {
-                        setState(() => _key.text = text);
-                      }
-                    },
-                  ),
-                  toggle,
-                ],
+              suffixIcon: FieldSuffix(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      key: const Key('pasteApiKey'),
+                      tooltip: l10n.pasteLabel,
+                      icon: const Icon(LucideIcons.clipboardPaste, size: 18),
+                      onPressed: () async {
+                        final data = await Clipboard.getData(
+                          Clipboard.kTextPlain,
+                        );
+                        final text = data?.text?.trim();
+                        if (text != null && text.isNotEmpty) {
+                          setState(() => _key.text = text);
+                        }
+                      },
+                    ),
+                    toggle,
+                  ],
+                ),
               ),
             ),
             obscureText: hidden,
@@ -368,6 +375,8 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
         if (compatible)
           TextField(
             controller: _baseUrl,
+            textInputAction: TextInputAction.done,
+            onSubmitted: _busy ? null : (_) => _add(),
             keyboardType: TextInputType.url,
             decoration: InputDecoration(
               labelText: l10n.baseUrl,
@@ -461,10 +470,11 @@ class _KeyRowState extends ConsumerState<_KeyRow> {
     if (!mounted) return;
     setState(() => _testing = false);
     if (r == null) return;
-    showMessage(
-      context,
-      r.ok ? l10n.keyOk(r.model, r.latencyMs) : l10n.keyFailed(r.error ?? ''),
-    );
+    if (r.ok) {
+      showSuccess(context, l10n.keyOk(r.model, r.latencyMs));
+    } else {
+      showFailure(context, l10n.keyFailed(r.error.orPlaceholder()));
+    }
     ref.invalidate(credentialsProvider);
   }
 
@@ -536,10 +546,10 @@ class _KeyRowState extends ConsumerState<_KeyRow> {
         : plan
         ? [
             l10n.chatGptPlan,
-            ?k.account,
+            if (k.account.isUsable) k.account!,
             mine ? l10n.planOnlyYou : l10n.planOtherMember,
           ].join(' · ')
-        : '${providerLabel(k.provider)}${k.keyHint == null ? '' : ' · …${k.keyHint}'}';
+        : '${providerLabel(k.provider)}${k.keyHint.isUsable ? ' · …${k.keyHint}' : ''}';
     final canTest = cloud ? false : (plan ? mine : admin);
     final canRemove = cloud ? false : (mine || admin);
     return GroupedTile(
@@ -567,6 +577,7 @@ class _KeyRowState extends ConsumerState<_KeyRow> {
             PopupMenuButton<String>(
               key: Key('keyMenu-${k.id}'),
               tooltip: l10n.moreActions,
+              onOpened: unfocusBeforeModal,
               icon: const Icon(LucideIcons.ellipsis, size: 20),
               onSelected: (v) async {
                 switch (v) {

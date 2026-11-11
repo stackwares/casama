@@ -37,7 +37,7 @@ final homeWidgetSyncProvider = Provider<void>((ref) {
         'disabled' => l10n.widgetStatusOff,
         _ => l10n.botStatusIdle,
       });
-      await HomeWidget.saveWidgetData('bot_cost', l10n.costToday(formatUsd(cost)));
+      await HomeWidget.saveWidgetData('bot_cost', l10n.costToday(formatUsd(cost, l10n.localeName)));
       await HomeWidget.updateWidget(androidName: 'BotStatusWidget', iOSName: 'BotStatusWidget');
     } catch (e) {
       debugPrint('home widget update failed: $e');

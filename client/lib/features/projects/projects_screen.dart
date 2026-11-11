@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -71,7 +73,7 @@ class ProjectsScreen extends ConsumerWidget {
                           title: p.title,
                           subtitle: [
                             projectStatusLabel(context, p.status),
-                            if (p.budgetUsd != null) '${formatUsd(p.spentUsd)} / ${formatUsd(p.budgetUsd!)}' else formatUsd(p.spentUsd),
+                            if (p.budgetUsd != null) '${formatUsd(p.spentUsd, context.l10n.localeName)} / ${formatUsd(p.budgetUsd!, context.l10n.localeName)}' else formatUsd(p.spentUsd, context.l10n.localeName),
                           ].join(' · '),
                           onTap: () => context.push('/projects/${p.id}'),
                         ),
@@ -120,13 +122,15 @@ class _NewProjectState extends ConsumerState<_NewProject> {
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     _lead ??= bots.firstOrNull?.id;
     final valid = _title.text.trim().isNotEmpty && _goal.text.trim().isNotEmpty && _lead != null;
+    VoidCallback? submit;
     return FormSheet(
       icon: LucideIcons.target,
       title: l10n.newProject,
       subtitle: l10n.newProjectHelp,
       submitLabel: l10n.startPlanning,
       submitKey: const Key('createProject'),
-      onSubmit: !valid || _busy
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = !valid || _busy
           ? null
           : () async {
               final org = ref.read(currentOrgProvider);
@@ -148,7 +152,7 @@ class _NewProjectState extends ConsumerState<_NewProject> {
               if (p != null) Navigator.pop(context, p.id);
             },
       children: [
-        TextField(key: const Key('projectTitle'), controller: _title, autofocus: true, decoration: InputDecoration(labelText: l10n.projectTitle), onChanged: (_) => setState(() {})),
+        TextField(key: const Key('projectTitle'), controller: _title, textInputAction: TextInputAction.next, autofocus: true, decoration: InputDecoration(labelText: l10n.projectTitle), onChanged: (_) => setState(() {})),
         TextField(key: const Key('projectGoal'), controller: _goal, minLines: 2, maxLines: 6, decoration: InputDecoration(labelText: l10n.projectGoal), onChanged: (_) => setState(() {})),
         TextField(key: const Key('projectDone'), controller: _done, minLines: 1, maxLines: 4, decoration: InputDecoration(labelText: l10n.projectDoneWhen)),
         DropdownButtonFormField<String>(
@@ -157,11 +161,13 @@ class _NewProjectState extends ConsumerState<_NewProject> {
           isExpanded: true,
           decoration: InputDecoration(labelText: l10n.projectLead),
           items: [for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name))],
-          onChanged: (v) => setState(() => _lead = v),
+          onChanged: hapticOnChanged((v) => setState(() => _lead = v), haptic: HapticsHelper.selection),
         ),
         TextField(
           key: const Key('projectBudget'),
           controller: _budget,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => submit?.call(),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(labelText: l10n.projectBudget, prefixText: r'$ '),
         ),
@@ -241,7 +247,7 @@ class ProjectScreen extends ConsumerWidget {
               SectionHeader(title: l10n.projectBudget),
               LinearProgressIndicator(key: const Key('projectSpend'), value: (p.spentUsd / budget).clamp(0, 1).toDouble()),
               const SizedBox(height: AppSpace.xs),
-              Text('${formatUsd(p.spentUsd)} / ${formatUsd(budget)}'),
+              Text('${formatUsd(p.spentUsd, context.l10n.localeName)} / ${formatUsd(budget, context.l10n.localeName)}', style: const TextStyle(fontFeatures: AppText.tabular)),
             ],
             SectionHeader(title: l10n.milestones),
             GroupedCard(
@@ -252,7 +258,7 @@ class ProjectScreen extends ConsumerWidget {
                     icon: m.status == ProjectMilestoneStatusEnum.done ? LucideIcons.circleCheck : LucideIcons.flag,
                     iconColor: m.status == ProjectMilestoneStatusEnum.done ? colors.positive : null,
                     title: m.name,
-                    subtitle: '${m.ticketsDone}/${m.ticketsTotal}${m.requiresSignoff ? ' · ${l10n.needsSignoff}' : ''}',
+                    subtitle: '${m.ticketsDone.humanizedCount(context.l10n.localeName)}/${m.ticketsTotal.humanizedCount(context.l10n.localeName)}${m.requiresSignoff ? ' · ${l10n.needsSignoff}' : ''}',
                     trailing: m.status == ProjectMilestoneStatusEnum.awaitingSignoff
                         ? TextButton(
                             key: Key('signoff-${m.id}'),
@@ -286,7 +292,7 @@ class ProjectScreen extends ConsumerWidget {
                   GroupedTile(
                     icon: LucideIcons.activity,
                     title: '${r.trigger} · ${r.status}',
-                    subtitle: '${formatUsd(r.costUsd)} · ${relativeTime(r.createdAt, context)}',
+                    subtitle: '${formatUsd(r.costUsd, context.l10n.localeName)} · ${relativeTime(r.createdAt, context)}',
                     onTap: () => context.push('/bots/${r.botId}/runs/${r.id}'),
                   ),
               ],

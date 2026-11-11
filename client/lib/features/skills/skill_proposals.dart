@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -112,7 +113,7 @@ class SkillProposalCard extends ConsumerWidget {
                 onPressed: () async {
                   await runGuarded(context, () => backend.acceptSkillProposal(p.id));
                   ref.invalidate(skillProposalsProvider);
-                  if (context.mounted) showMessage(context, isEdit ? l10n.skillUpdated(p.name) : l10n.skillSaved(p.name));
+                  if (context.mounted) showSuccess(context, isEdit ? l10n.skillUpdated(p.name) : l10n.skillSaved(p.name));
                 },
                 child: Text(isEdit ? l10n.applyEdit : l10n.saveSkill),
               ),
@@ -159,14 +160,14 @@ class SkillStatsSheet extends ConsumerWidget {
                 key: const Key('skillStatsLine'),
                 s.uses == 0 ? l10n.skillNotUsedYet : l10n.skillStatsLine(s.uses, ((s.successRate ?? 0) * 100).round(), s.failures, s.corrections),
               ),
-              if (s.lastFailureAt != null) Text(l10n.skillLastFailure(MaterialLocalizations.of(context).formatShortDate(s.lastFailureAt!.toLocal()))),
+              if (s.lastFailureAt != null) Text(l10n.skillLastFailure(s.lastFailureAt!.toLocal().formattedDate(context))),
               if (s.revisions.isNotEmpty) Text(l10n.skillHistory, style: context.textTheme.labelLarge),
               for (final r in s.revisions)
                 ListTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(r.byBot ? LucideIcons.bot : LucideIcons.user, size: 18),
-                  title: Text(MaterialLocalizations.of(context).formatShortDate(r.createdAt.toLocal())),
+                  title: Text(r.createdAt.toLocal().formattedDate(context)),
                   subtitle: Text(r.bodyMd, maxLines: 3, overflow: TextOverflow.ellipsis),
                 ),
             ],

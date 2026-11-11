@@ -58,18 +58,22 @@ export class CredentialResolver {
   private readonly gateway?: AiGatewayConfig;
   /** Casama Cloud's OpenRouter key. Workspaces without their own key run on this. */
   private readonly platformOpenRouterKey?: string;
+  private readonly platformReasoningEffort: ModelChoice["reasoning_effort"];
   constructor(
     db: Database,
     opts: {
       chatgpt?: ChatGptConfig;
       aiGateway?: AiGatewayConfig;
       platformOpenRouterKey?: string;
+      /** Reasoning level on the shared key (DEFAULT_REASONING_EFFORT); a bot can't raise it. */
+      platformReasoningEffort?: ModelChoice["reasoning_effort"];
     } = {},
   ) {
     this.db = db;
     this.chatgpt = opts.chatgpt ?? {};
     this.gateway = opts.aiGateway;
     this.platformOpenRouterKey = opts.platformOpenRouterKey;
+    this.platformReasoningEffort = opts.platformReasoningEffort ?? DEFAULT_REASONING_EFFORT;
   }
 
   /** The shared Cloud model, when this server has one. */
@@ -109,7 +113,7 @@ export class CredentialResolver {
         apiKey: this.platformOpenRouterKey,
         ...this.viaGateway("openrouter", null),
         credentialId: choice.credential_id,
-        reasoningEffort,
+        reasoningEffort: this.platformReasoningEffort,
         platformKey: true,
         openRouterUser: orgId,
       };

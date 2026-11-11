@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
@@ -115,13 +116,15 @@ class _ConnectState extends ConsumerState<_Connect> {
     final admin = role == 'owner' || role == 'admin';
     final onePw = _provider == CreatePasswordManagerRequestProviderEnum.n1password;
     final valid = _name.text.trim().isNotEmpty && Uri.tryParse(_url.text.trim())?.hasScheme == true && (!onePw || _token.text.isNotEmpty);
+    VoidCallback? submit;
     return FormSheet(
       icon: LucideIcons.keyRound,
       title: l10n.connectPasswordManager,
       subtitle: onePw ? l10n.pmOnePasswordHelp : l10n.pmBitwardenHelp,
       submitLabel: l10n.connect,
       submitKey: const Key('connectPm'),
-      onSubmit: !valid || _busy
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = !valid || _busy
           ? null
           : () async {
               setState(() => _busy = true);
@@ -150,10 +153,10 @@ class _ConnectState extends ConsumerState<_Connect> {
           selected: {_provider},
           onSelectionChanged: (v) => setState(() => _provider = v.first),
         ),
-        TextField(key: const Key('pmName'), controller: _name, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: l10n.botNameLabel)),
-        TextField(key: const Key('pmUrl'), controller: _url, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: onePw ? l10n.pmConnectUrl : l10n.pmBwUrl)),
-        Revealable(builder: (context, hidden, toggle) => TextField(key: const Key('pmToken'), controller: _token, obscureText: hidden, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: onePw ? l10n.pmConnectToken : l10n.pmBwToken, suffixIcon: toggle))),
-        if (admin) SwitchListTile(key: const Key('pmWorkspace'), contentPadding: EdgeInsets.zero, title: Text(l10n.pmForWorkspace), value: _workspace, onChanged: (v) => setState(() => _workspace = v)),
+        TextField(key: const Key('pmName'), controller: _name, textInputAction: TextInputAction.next, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: l10n.botNameLabel)),
+        TextField(key: const Key('pmUrl'), controller: _url, textInputAction: TextInputAction.next, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: onePw ? l10n.pmConnectUrl : l10n.pmBwUrl)),
+        Revealable(builder: (context, hidden, toggle) => TextField(key: const Key('pmToken'), controller: _token, textInputAction: TextInputAction.done, onSubmitted: (_) => submit?.call(), obscureText: hidden, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: onePw ? l10n.pmConnectToken : l10n.pmBwToken, suffixIcon: toggle))),
+        if (admin) SwitchListTile(key: const Key('pmWorkspace'), contentPadding: EdgeInsets.zero, title: Text(l10n.pmForWorkspace), value: _workspace, onChanged: hapticOnChanged((v) => setState(() => _workspace = v))),
       ],
     );
   }
@@ -196,7 +199,7 @@ class _VaultsState extends ConsumerState<_Vaults> {
               title: Text(v.name),
               subtitle: v.logins == null ? null : Text(l10n.pmLogins(v.logins!)),
               value: _chosen.contains(v.id),
-              onChanged: (on) => setState(() => on == true ? _chosen.add(v.id) : _chosen.remove(v.id)),
+              onChanged: hapticOnChanged((on) => setState(() => on == true ? _chosen.add(v.id) : _chosen.remove(v.id)), haptic: HapticsHelper.soft),
             ),
         ],
       ),

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
@@ -79,7 +80,7 @@ class _TeachDraftScreenState extends ConsumerState<TeachDraftScreen> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == null) return;
-    showMessage(context, context.l10n.teachSaved(_name.text.trim()));
+    showSuccess(context, context.l10n.teachSaved(_name.text.trim()));
     final router = GoRouter.maybeOf(context);
     if (r.conversationId != null) {
       router?.go('/bots/${s.botId}/chat?c=${r.conversationId}');
@@ -133,6 +134,7 @@ class _TeachDraftScreenState extends ConsumerState<TeachDraftScreen> {
           TextField(
             key: const Key('teachName'),
             controller: _name,
+            textInputAction: TextInputAction.next,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(labelText: l10n.skillName),
           ),
@@ -140,6 +142,7 @@ class _TeachDraftScreenState extends ConsumerState<TeachDraftScreen> {
           TextField(
             key: const Key('teachDescription'),
             controller: _description,
+            textInputAction: TextInputAction.next,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(labelText: l10n.skillDescription),
           ),
@@ -166,7 +169,7 @@ class _TeachDraftScreenState extends ConsumerState<TeachDraftScreen> {
                 _ => LucideIcons.arrowDownUp,
               }, size: 18),
               title: Text(teachStepLabel(context, st)),
-              subtitle: st.url == null ? null : Text(st.url!, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: st.url.isUsable ? Text(st.url!, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
             ),
           const SizedBox(height: AppSpace.lg),
           Wrap(
@@ -186,7 +189,7 @@ class _TeachDraftScreenState extends ConsumerState<TeachDraftScreen> {
                     ? null
                     : () async {
                         final r = await runGuarded(context, () => ref.read(backendProvider).replayFromTeach(s.id, _name.text.trim(), description: _description.text.trim()));
-                        if (r != null && context.mounted) showMessage(context, l10n.replaySaved(r.name));
+                        if (r != null && context.mounted) showSuccess(context, l10n.replaySaved(r.name));
                       },
                 icon: const Icon(LucideIcons.listVideo, size: 18),
                 label: Text(l10n.saveAsReplay),
@@ -206,8 +209,8 @@ String teachStepLabel(BuildContext context, TeachStep s) {
   final l10n = context.l10n;
   return switch (s.kind) {
     TeachStepKindEnum.click => l10n.teachStepClick(s.x ?? 0, s.y ?? 0),
-    TeachStepKindEnum.type => s.secretName != null ? l10n.teachStepSecret(s.secretName!) : l10n.teachStepType(s.text ?? ''),
-    TeachStepKindEnum.key => l10n.teachStepKey(s.key ?? ''),
+    TeachStepKindEnum.type => s.secretName.isUsable ? l10n.teachStepSecret(s.secretName!) : l10n.teachStepType(s.text.orPlaceholder()),
+    TeachStepKindEnum.key => l10n.teachStepKey(s.key.orPlaceholder()),
     _ => l10n.teachStepScroll,
   };
 }

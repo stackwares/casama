@@ -70,6 +70,9 @@ Update this file in the same pull request that adds or removes a dependency.
 | home_widget, live_activities, receive_sharing_intent                  | client (mobile extras)             | BSD-3-Clause, MIT, Apache-2.0 |
 | in_app_purchase, in_app_purchase_android, url_launcher                | client (billing)                   | BSD-3-Clause                  |
 | mocktail                                                              | client (tooling)                   | MIT                           |
+| haptic_feedback                                                       | client                             | BSD-3-Clause                  |
+| stupid_simple_sheet, motor, scroll_drag_detector                      | client                             | MIT                           |
+| phone_numbers_parser                                                  | client (phone number formatting)   | MIT                           |
 
 ## Other software
 

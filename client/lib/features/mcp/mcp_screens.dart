@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -71,7 +72,7 @@ class _McpConsentScreenState extends ConsumerState<McpConsentScreen> {
                     initialValue: _org,
                     decoration: InputDecoration(labelText: l10n.workspace),
                     items: [for (final o in orgs) DropdownMenuItem(value: o.id, child: Text(o.name))],
-                    onChanged: (v) => setState(() => _org = v),
+                    onChanged: hapticOnChanged((v) => setState(() => _org = v), haptic: HapticsHelper.selection),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -141,10 +142,10 @@ class _McpSettingsSectionState extends ConsumerState<McpSettingsSection> {
           title: Text(l10n.mcpApprovals),
           subtitle: Text(l10n.mcpApprovalsHelp),
           value: approvals,
-          onChanged: (v) async {
+          onChanged: hapticOnChanged((v) async {
             await runGuarded(context, () => backend.setMcpDecideApprovals(widget.orgId, v));
             ref.invalidate(_mcpApprovalsProvider(widget.orgId));
-          },
+          }),
         ),
         if (_created != null)
           OneTimeSecretCard(key: const Key('mcpNewKey'), value: _created!.key, onDone: () => setState(() => _created = null)),

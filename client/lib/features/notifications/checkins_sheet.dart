@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/form_sheet.dart';
 
@@ -54,18 +56,19 @@ class _CheckinsSheetState extends State<_CheckinsSheet> {
           ? null
           : () => Navigator.pop(context, BotCheckins(enabled: _enabled, briefTime: _time, scanEveryHours: _every, dailyCapUsd: cap)),
       children: [
-        SwitchListTile(key: const Key('checkinsEnabled'), contentPadding: EdgeInsets.zero, title: Text(l10n.checkins), value: _enabled, onChanged: (v) => setState(() => _enabled = v)),
+        SwitchListTile(key: const Key('checkinsEnabled'), contentPadding: EdgeInsets.zero, title: Text(l10n.checkins), value: _enabled, onChanged: hapticOnChanged((v) => setState(() => _enabled = v))),
         OutlinedButton.icon(
           key: const Key('briefTime'),
           onPressed: !_enabled
               ? null
               : () async {
+                  unfocusBeforeModal();
                   final p = _time.split(':').map(int.parse).toList();
                   final t = await showTimePicker(context: context, initialTime: TimeOfDay(hour: p[0], minute: p[1]));
                   if (t != null) setState(() => _time = '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}');
                 },
           icon: const Icon(LucideIcons.sunrise, size: 18),
-          label: Text('${l10n.briefTime} $_time'),
+          label: Text('${l10n.briefTime} ${formatClockTime(context, _time)}'),
         ),
         DropdownButtonFormField<int>(
           isExpanded: true,
@@ -73,7 +76,7 @@ class _CheckinsSheetState extends State<_CheckinsSheet> {
           initialValue: _every,
           decoration: InputDecoration(labelText: l10n.scanEvery),
           items: [for (final h in const [1, 2, 3, 4, 6, 12]) DropdownMenuItem(value: h, child: Text(l10n.hours(h)))],
-          onChanged: !_enabled ? null : (v) => setState(() => _every = v ?? 3),
+          onChanged: hapticOnChanged(!_enabled ? null : (v) => setState(() => _every = v ?? 3), haptic: HapticsHelper.selection),
         ),
         TextField(
           key: const Key('dailyCap'),

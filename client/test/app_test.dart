@@ -332,7 +332,7 @@ void main() {
       expect(find.textContaining('shell.exec'), findsNothing);
       expect(find.text('42 ms'), findsOneWidget);
       // The run's cost isn't shown under the composer.
-      expect(find.textContaining('1050 tokens'), findsNothing);
+      expect(find.textContaining('1,050 tokens'), findsNothing);
 
       // Expanding the card shows the command and the streamed output.
       await tester.tap(find.text('Worked on its computer'));

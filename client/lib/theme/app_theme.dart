@@ -86,14 +86,16 @@ abstract final class AppTheme {
   );
 
   /// Every page route paints the wallpaper under its content (see [WallpaperPageTransitionsBuilder]).
+  /// The web and desktop are click and open, so pages there switch with no transition; Android and iOS
+  /// keep their own, except in a browser.
   static const _pageTransitions = PageTransitionsTheme(
     builders: {
-      TargetPlatform.android: WallpaperPageTransitionsBuilder(FadeForwardsPageTransitionsBuilder()),
-      TargetPlatform.fuchsia: WallpaperPageTransitionsBuilder(FadeForwardsPageTransitionsBuilder()),
-      TargetPlatform.iOS: WallpaperPageTransitionsBuilder(CupertinoPageTransitionsBuilder()),
-      TargetPlatform.macOS: WallpaperPageTransitionsBuilder(CupertinoPageTransitionsBuilder()),
-      TargetPlatform.linux: WallpaperPageTransitionsBuilder(FadeForwardsPageTransitionsBuilder()),
-      TargetPlatform.windows: WallpaperPageTransitionsBuilder(FadeForwardsPageTransitionsBuilder()),
+      TargetPlatform.android: kIsWeb ? _NoPageTransitionsBuilder() : WallpaperPageTransitionsBuilder(FadeForwardsPageTransitionsBuilder()),
+      TargetPlatform.iOS: kIsWeb ? _NoPageTransitionsBuilder() : WallpaperPageTransitionsBuilder(CupertinoPageTransitionsBuilder()),
+      TargetPlatform.macOS: _NoPageTransitionsBuilder(),
+      TargetPlatform.windows: _NoPageTransitionsBuilder(),
+      TargetPlatform.linux: _NoPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: _NoPageTransitionsBuilder(),
     },
   );
 
@@ -142,6 +144,13 @@ abstract final class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(color: colors.hairline, thickness: 1, space: 1),
+      // Text selection in the accent: a 30% highlight behind selected text (text over it stays
+      // readable in light and dark, whatever the scheme), the full accent for the cursor and handles.
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: scheme.primary,
+        selectionColor: scheme.primary.withValues(alpha: 0.3),
+        selectionHandleColor: scheme.primary,
+      ),
       inputDecorationTheme: base.inputDecorationTheme.copyWith(
         filled: true,
         fillColor: fieldFill,
@@ -280,4 +289,25 @@ abstract final class AppTheme {
       labelSmall: sans(theme.labelSmall, 0.2, FontWeight.w500),
     );
   }
+}
+
+/// The web and desktop: the page appears at once, with no transition, still over the wallpaper that
+/// [WallpaperPageTransitionsBuilder] paints under every other page.
+class _NoPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _NoPageTransitionsBuilder();
+
+  @override
+  Duration get transitionDuration => Duration.zero;
+
+  @override
+  Duration get reverseTransitionDuration => Duration.zero;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => Wallpaper(child: child);
 }

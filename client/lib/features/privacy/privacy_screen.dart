@@ -6,9 +6,12 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/number_format.dart';
+import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/share.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -53,7 +56,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       final bytes = await ref.read(backendProvider).exportMyData();
       final name = 'casama-export-${DateTime.now().toIso8601String().substring(0, 10)}.zip';
       await ref.read(saveExportProvider)(bytes, name, origin: origin);
-      if (mounted) showMessage(context, l10n.exportReady((bytes.length / 1024).toStringAsFixed(0)));
+      if (mounted) showSuccess(context, l10n.exportReady((bytes.length / 1024).humanizedCount(context.l10n.localeName, decimalDigits: 0)));
     });
     if (mounted) setState(() => _busy = false);
   }
@@ -75,7 +78,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
           icon: LucideIcons.circleCheck,
           iconColor: context.appColors.positive,
           title: l10n.accountDeleted,
-          subtitle: l10n.accountDeletedBody(MaterialLocalizations.of(context).formatMediumDate(r.purgeAfter.toLocal())),
+          subtitle: l10n.accountDeletedBody(r.purgeAfter.toLocal().formattedWeekdayDate(context)),
           submitLabel: l10n.close,
           showCancel: false,
           onSubmit: () => Navigator.pop(c),
@@ -133,11 +136,11 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                         items: [
                           for (final d in [30, 90, 180, 365, 730]) DropdownMenuItem(value: d, child: Text(l10n.days(d))),
                         ],
-                        onChanged: (d) async {
+                        onChanged: hapticOnChanged((d) async {
                           if (d == null) return;
                           await runGuarded(context, () => ref.read(backendProvider).setRetentionDays(org.id, d));
                           ref.invalidate(_retentionProvider);
-                        },
+                        }, haptic: HapticsHelper.selection),
                       ),
               ),
             ],

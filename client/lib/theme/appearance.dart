@@ -59,18 +59,28 @@ class AppearanceNotifier extends Notifier<Appearance> {
   static const _intensityKey = 'appearance.wallpaper.intensity';
   static const _everywhereKey = 'appearance.wallpaper.everywhere';
 
+  /// [initial]: the saved look when startup has already read it (see [readSaved]), so the first
+  /// frame draws it instead of the defaults; null reads it here.
+  AppearanceNotifier([this._initial]);
+  final Appearance? _initial;
+
   @override
   Appearance build() {
+    final initial = _initial;
+    // Read before the app started, its gallery schemes already registered: nothing to load.
+    if (initial != null) return initial;
     gallerySchemeChoices.clear();
     _load();
     return const Appearance();
   }
 
-  Future<void> _load() async {
+  /// The look saved on this device, with its gallery color schemes registered so its scheme
+  /// resolves; null when preferences can't be read. Startup reads it while the app connects.
+  static Future<Appearance?> readSaved() async {
     try {
       final p = await SharedPreferences.getInstance();
       _restoreGallery(p.getString(_galleryKey));
-      state = Appearance(
+      return Appearance(
         mode:
             ThemeMode.values.asNameMap()[p.getString(_modeKey)] ??
             ThemeMode.system,
@@ -80,11 +90,20 @@ class AppearanceNotifier extends Notifier<Appearance> {
         wallpaper: _loadWallpaper(p),
       );
     } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _load() async {
+    try {
+      final saved = await readSaved();
+      if (saved != null) state = saved;
+    } catch (_) {
       // Preferences unavailable (tests, a locked keychain): keep the defaults.
     }
   }
 
-  void _restoreGallery(String? raw) {
+  static void _restoreGallery(String? raw) {
     gallerySchemeChoices.clear();
     if (raw == null) return;
     final map = jsonDecode(raw);
@@ -115,7 +134,7 @@ class AppearanceNotifier extends Notifier<Appearance> {
       },
   });
 
-  WallpaperSpec _loadWallpaper(SharedPreferences p) {
+  static WallpaperSpec _loadWallpaper(SharedPreferences p) {
     final json = p.getString(_wallpaperKey);
     if (json != null) {
       try {

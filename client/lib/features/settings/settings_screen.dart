@@ -10,8 +10,10 @@ import '../chat/chat_detail.dart';
 import '../../core/billing.dart';
 import '../../core/mac_bridge.dart';
 import '../../core/updater.dart';
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../theme/appearance.dart';
@@ -23,6 +25,7 @@ import '../voice/wake_word.dart';
 import '../voice/wake_word_sheet.dart';
 import '../../ui/page.dart';
 import 'about_you_screen.dart';
+import 'version_indicator.dart';
 import '../../ui/app_card.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
@@ -136,7 +139,7 @@ class SettingsScreen extends ConsumerWidget {
                     key: const Key('settingsAccount'),
                     icon: LucideIcons.circleUser,
                     title: l10n.account,
-                    subtitle: backend.userEmail ?? l10n.accountRow,
+                    subtitle: backend.userEmail.orPlaceholder(l10n.accountRow),
                     onTap: () => open('/settings/account'), selected: sel('/settings/account'),
                   ),
                   GroupedTile(
@@ -202,7 +205,7 @@ class SettingsScreen extends ConsumerWidget {
                     showChevron: true,
                     title: l10n.usage,
                     trailing: Text(
-                      formatUsd(month?.totalCostUsd ?? 0),
+                      formatUsd(month?.totalCostUsd ?? 0, context.l10n.localeName),
                       style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontFeatures: AppText.tabular),
                     ),
                     subtitle: l10n.usageSubtitle,
@@ -273,7 +276,7 @@ class SettingsScreen extends ConsumerWidget {
                         title: Text(l10n.showBotSteps),
                         subtitle: Text(l10n.showBotStepsHelp),
                         value: ref.watch(showBotStepsProvider),
-                        onChanged: ref.read(showBotStepsProvider.notifier).set,
+                        onChanged: hapticOnChanged(ref.read(showBotStepsProvider.notifier).set),
                       ),
                       // Desktop downloads update themselves (the stores update theirs); Linux is told.
                       if (selfUpdating || updateNoticeOnly) const _UpdatesRows(),
@@ -285,10 +288,10 @@ class SettingsScreen extends ConsumerWidget {
                           title: Text(l10n.openAtLogin),
                           subtitle: Text(l10n.openAtLoginHelp),
                           value: on,
-                          onChanged: (v) async {
+                          onChanged: hapticOnChanged((v) async {
                             await runGuarded(context, () => setLaunchAtLogin(v));
                             ref.invalidate(launchAtLoginProvider);
-                          },
+                          }),
                         ),
                       GroupedTile(
                         icon: LucideIcons.languages,
@@ -329,6 +332,9 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                 )
               else ...[...left, ...right],
+              // The version and build, for bug reports (a tap copies it).
+              const SizedBox(height: AppSpace.md),
+              const Center(child: VersionIndicator()),
             ],
           );
         },
@@ -506,7 +512,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
             DropdownMenuItem(value: null, child: Text(l10n.automatic)),
             for (final p in const ['google', 'elevenlabs', 'openai', 'cartesia', 'fish_audio']) DropdownMenuItem(value: p, child: Text(label(p))),
           ],
-          onChanged: (v) => setState(() => _tts = v),
+          onChanged: hapticOnChanged((v) => setState(() => _tts = v), haptic: HapticsHelper.selection),
         ),
         TextField(
           controller: _voice,
@@ -522,7 +528,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
             DropdownMenuItem(value: null, child: Text(l10n.automatic)),
             for (final p in const ['openai', 'deepgram']) DropdownMenuItem(value: p, child: Text(label(p))),
           ],
-          onChanged: (v) => setState(() => _stt = v),
+          onChanged: hapticOnChanged((v) => setState(() => _stt = v), haptic: HapticsHelper.selection),
         ),
         ListTile(
           key: const Key('callToolsRow'),
@@ -585,10 +591,10 @@ class _UpdatesRows extends ConsumerWidget {
             title: Text(l10n.autoUpdates),
             subtitle: Text(l10n.autoUpdatesHelp),
             value: auto,
-            onChanged: (v) async {
+            onChanged: hapticOnChanged((v) async {
               await runGuarded(context, () => setAutoUpdateChecks(v));
               ref.invalidate(autoUpdateChecksProvider);
-            },
+            }),
           ),
       ],
     );

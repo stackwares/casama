@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
@@ -92,11 +93,11 @@ class LinksScreen extends ConsumerWidget {
                           title: link.name,
                           subtitle: [
                             switch (link.status) {
-                              BotLinkStatusEnum.active => l10n.linksActive(link.peerBotName ?? ''),
+                              BotLinkStatusEnum.active => l10n.linksActive(link.peerBotName.orPlaceholder()),
                               BotLinkStatusEnum.pending => l10n.linksPending,
                               _ => l10n.linksRevoked,
                             },
-                            if (link.remoteUrl != null) Uri.tryParse(link.remoteUrl!)?.host ?? '',
+                            if (link.remoteUrl.isUsable) Uri.tryParse(link.remoteUrl!)?.host ?? '',
                           ].where((s) => s.isNotEmpty).join(' · '),
                           onTap: () => showAdaptiveSheet<void>(
                             context: context,
@@ -174,6 +175,10 @@ class _AcceptSheetState extends State<_AcceptSheet> {
         TextField(
           key: const Key('acceptName'),
           controller: _name,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) {
+            if (ok) Navigator.pop(context, (_invite.text.trim(), _name.text.trim()));
+          },
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(labelText: l10n.linksContactName),
         ),
@@ -195,7 +200,7 @@ class _LinkSheet extends ConsumerWidget {
     return FormSheet(
       icon: LucideIcons.link,
       title: link.name,
-      subtitle: link.peerBotName != null ? l10n.linksActive(link.peerBotName!) : null,
+      subtitle: link.peerBotName.isUsable ? l10n.linksActive(link.peerBotName!) : null,
       submitLabel: l10n.close,
       onSubmit: () => Navigator.pop(context),
       children: [
@@ -210,7 +215,7 @@ class _LinkSheet extends ConsumerWidget {
             contentPadding: EdgeInsets.zero,
             leading: Icon(e.direction == LinkExchangeDirectionEnum.out_ ? LucideIcons.arrowUpRight : LucideIcons.arrowDownLeft, size: 18),
             title: Text(e.request, maxLines: 2, overflow: TextOverflow.ellipsis),
-            subtitle: Text(e.response ?? (e.status == LinkExchangeStatusEnum.failed ? l10n.linksNoAnswer : l10n.linksWorking), maxLines: 3, overflow: TextOverflow.ellipsis),
+            subtitle: Text(e.response.orPlaceholder(e.status == LinkExchangeStatusEnum.failed ? l10n.linksNoAnswer : l10n.linksWorking), maxLines: 3, overflow: TextOverflow.ellipsis),
           ),
         if (link.status != BotLinkStatusEnum.revoked)
           TextButton.icon(

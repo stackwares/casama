@@ -43,7 +43,7 @@ void main() {
     expect(lottie.lottie, isA<AssetLottie>().having((a) => a.assetName, 'asset', 'assets/mascots/giggly.json'));
     // Until the loop has loaded, the still pose stands in.
     final image = tester.widget<Image>(find.byType(Image));
-    expect(((image.image as ResizeImage).imageProvider as AssetImage).assetName, 'assets/mascots/giggly.png');
+    expect((image.image as AssetImage).assetName, 'assets/mascots/giggly.png');
   });
 
   testWidgets('small mascot avatars stay still; no mascot shows initials', (tester) async {
@@ -52,7 +52,7 @@ void main() {
       BotAvatar(name: 'Chief', size: 30),
     ])));
     final image = tester.widget<Image>(find.byType(Image));
-    expect(((image.image as ResizeImage).imageProvider as AssetImage).assetName, 'assets/mascots/wow.png');
+    expect((image.image as AssetImage).assetName, 'assets/mascots/wow.png');
     expect(find.byType(LottieBuilder), findsNothing);
     expect(find.text('C'), findsOneWidget);
   });

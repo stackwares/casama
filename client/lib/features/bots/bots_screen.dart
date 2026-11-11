@@ -11,14 +11,17 @@ import '../../core/providers.dart';
 import '../groups/group_chats.dart';
 import '../../ui/bot_activity.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/mascot.dart';
 import '../../ui/page.dart';
+import '../../ui/tab_reselect.dart';
 import '../../ui/shell_header.dart';
 import '../settings/me_avatar.dart';
 import '../settings/model_keys_screen.dart';
@@ -96,6 +99,7 @@ class BotsList extends ConsumerWidget {
             )
           : RefreshIndicator(
               onRefresh: () async {
+                HapticsHelper.medium();
                 ref.invalidate(botsProvider);
                 ref.invalidate(usageTodayProvider);
               },
@@ -164,7 +168,7 @@ class _BotCard extends StatelessWidget {
                     const SizedBox(width: AppSpace.xs),
                     Flexible(
                       child: Text(
-                        l10n.costToday(formatUsd(cost)),
+                        l10n.costToday(formatUsd(cost, context.l10n.localeName)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontFeatures: AppText.tabular),
@@ -239,7 +243,10 @@ class BotsScreen extends ConsumerWidget {
     // Phones: the person's avatar (Settings) on the left, the workspace under the title (tap to
     // switch), and "+" on the right. Tablets have both in the rail already (D-176).
     final phone = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
-    return Scaffold(
+    // Tapping Chats again scrolls this list to the top (TabReselect); so does the iOS status bar.
+    return PrimaryScrollController(
+      controller: TabReselect.chats,
+      child: Scaffold(
       appBar: ShellHeader(
         title: context.l10n.navChats,
         subtitle: org?.name,
@@ -252,6 +259,7 @@ class BotsScreen extends ConsumerWidget {
       ),
       // About you (D-169): the one-time name card for people who joined before it was asked.
       body: const BotsList(),
+    ),
     );
   }
 }
@@ -331,7 +339,7 @@ Future<void> showCreateMenu(BuildContext context, WidgetRef ref) async {
 }
 
 Future<void> showCreateBot(BuildContext context, WidgetRef ref) async {
-  await showAdaptiveSheet<void>(context: context, builder: (_) => const CreateBotSheet());
+  await showAdaptiveSheet<void>(context: context, contentPadsBottom: true, builder: (_) => const CreateBotSheet());
 }
 
 class CreateBotSheet extends ConsumerStatefulWidget {
@@ -414,11 +422,11 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
         initialValue: _credentialId,
         decoration: InputDecoration(labelText: l10n.modelKey),
         items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} · ${providerLabel(k.provider)}'))],
-        onChanged: (v) => setState(() {
+        onChanged: hapticOnChanged((v) => setState(() {
           _credentialId = v;
           _modelPicked = false;
           _fillDefaultModel(keys);
-        }),
+        }), haptic: HapticsHelper.selection),
       ),
       const SizedBox(height: 8),
       ModelPickerField(
@@ -431,7 +439,8 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
       ),
     ];
     return SingleChildScrollView(
-      padding: widget.embedded ? EdgeInsets.zero : const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.md),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: widget.embedded ? EdgeInsets.zero : EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.md)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

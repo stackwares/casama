@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/number_format.dart';
 import '../../../core/providers.dart';
 import '../../../core/widgets.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -485,7 +486,7 @@ class AttachmentTile extends ConsumerWidget {
                     ),
                     if (attachment.size > 0)
                       Text(
-                        formatBytes(attachment.size),
+                        formatBytes(attachment.size, context.l10n.localeName),
                         style: context.textTheme.labelSmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -534,9 +535,9 @@ String toolActivity(AppLocalizations l10n, String tool) {
 /// The server's lead-in for a failure it has no plain explanation for; the rest is technical.
 const _genericFailure = 'Something went wrong while the bot was working.';
 
-String formatDuration(int ms) => ms < 1000
-    ? '$ms ms'
-    : '${(ms / 1000).toStringAsFixed(ms < 10000 ? 1 : 0)} s';
+String formatDuration(int ms, String locale) => ms < 1000
+    ? '${ms.humanizedCount(locale)} ms'
+    : '${(ms / 1000).humanizedCount(locale, decimalDigits: ms < 10000 ? 1 : 0)} s';
 
 /// Consecutive tool steps in one card. Long finished runs fold to their last steps.
 class ToolGroupCard extends StatefulWidget {
@@ -594,7 +595,7 @@ class _ToolGroupCardState extends State<ToolGroupCard> {
                           ),
                         ),
                         Text(
-                          '${l10n.toolSteps(steps.length)} · ${formatDuration(totalMs)}',
+                          '${l10n.toolSteps(steps.length)} · ${formatDuration(totalMs, context.l10n.localeName)}',
                           style: context.textTheme.labelMedium?.copyWith(
                             color: context.colorScheme.onSurfaceVariant,
                             fontFeatures: AppText.tabular,
@@ -661,7 +662,7 @@ class _ToolStepRow extends StatelessWidget {
         ),
       ),
       ToolStatus.done => Text(
-        formatDuration(entry.durationMs ?? 0),
+        formatDuration(entry.durationMs ?? 0, context.l10n.localeName),
         style: context.textTheme.labelMedium?.copyWith(
           color: scheme.onSurfaceVariant,
           fontFeatures: AppText.tabular,
@@ -966,6 +967,7 @@ class CodePanel extends StatelessWidget {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: SingleChildScrollView(
+        primary: false,
         reverse: reverse,
         child: maxLines == null
             ? SelectableText(text, style: AppText.mono.copyWith(fontSize: 12.5))

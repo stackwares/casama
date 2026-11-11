@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -80,7 +81,7 @@ class CompanionScreen extends ConsumerWidget {
                   onTap: () => runGuarded(context, () => controller.save(capabilities: caps.contains(c) ? ({...caps}..remove(c)) : {...caps, c})),
                   trailing: Switch(
                     value: caps.contains(c),
-                    onChanged: (v) => runGuarded(context, () => controller.save(capabilities: v ? {...caps, c} : ({...caps}..remove(c)))),
+                    onChanged: hapticOnChanged((v) => runGuarded(context, () => controller.save(capabilities: v ? {...caps, c} : ({...caps}..remove(c))))),
                   ),
                 );
                 return ValueListenableBuilder(
@@ -119,7 +120,7 @@ class CompanionScreen extends ConsumerWidget {
                               Switch(
                                 key: const Key('companionEnabled'),
                                 value: device.enabled,
-                                onChanged: (v) => runGuarded(context, () => controller.save(enabled: v)),
+                                onChanged: hapticOnChanged((v) => runGuarded(context, () => controller.save(enabled: v))),
                               ),
                             ],
                           ),
@@ -173,7 +174,7 @@ class CompanionScreen extends ConsumerWidget {
                                 secondary: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 32),
                                 title: Text(b.name, style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
                                 value: device.allowedBotIds.contains(b.id),
-                                onChanged: (v) async {
+                                onChanged: hapticOnChanged((v) async {
                                   final ids = v == true ? {...device.allowedBotIds, b.id} : ({...device.allowedBotIds}..remove(b.id));
                                   await runGuarded(context, () async {
                                     await controller.save(botIds: ids.toList());
@@ -181,7 +182,7 @@ class CompanionScreen extends ConsumerWidget {
                                     await ref.read(backendProvider).setBotComputer(b.id, v == true ? device.computerId : null);
                                   });
                                   ref.invalidate(botsProvider);
-                                },
+                                }, haptic: HapticsHelper.soft),
                               ),
                           ],
                         ),
@@ -374,6 +375,8 @@ class _LocalMcpFormState extends State<_LocalMcpForm> {
           TextField(
             key: const Key('localMcpUrl'),
             controller: _url,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _submit(),
             keyboardType: TextInputType.url,
             decoration: InputDecoration(labelText: l10n.localMcpUrl, hintText: 'http://127.0.0.1:3845/mcp'),
           )

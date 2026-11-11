@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -273,7 +274,7 @@ class _NewComputerSheetState extends ConsumerState<NewComputerSheet> {
           initialValue: _botId,
           decoration: InputDecoration(labelText: l10n.forBot, prefixIcon: const Icon(LucideIcons.bot, size: 20)),
           items: [for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name))],
-          onChanged: (v) => setState(() => _botId = v),
+          onChanged: hapticOnChanged((v) => setState(() => _botId = v), haptic: HapticsHelper.selection),
         ),
         TextField(
           key: const Key('computerName'),

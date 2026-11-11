@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/edge_fade.dart';
+import '../../ui/reveal_when_selected.dart';
 import '../../ui/bot_avatar.dart';
 
 /// The Lucide icon a persona names (kebab-case, from the server's templates).
@@ -58,6 +62,7 @@ Future<PersonaChoice?> showPersonaGallery(BuildContext context, {String? selecte
     showAdaptiveSheet<PersonaChoice>(
       context: context,
       heightFactor: 0.9,
+      contentPadsBottom: true,
       dialogMaxWidth: 760,
       builder: (_) => _PersonaGallery(selected: selected, allowBlank: allowBlank),
     );
@@ -222,44 +227,55 @@ class _PersonaGalleryState extends ConsumerState<_PersonaGallery> {
     final preview = _preview;
     if (preview != null) return _Preview(template: preview, onBack: () => setState(() => _preview = null));
 
+    // Each part carries the sheet's side padding, so the category row can scroll to the sheet's edges.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.md, AppSpace.lg, 0),
+      padding: const EdgeInsets.only(top: AppSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.choosePersona, style: context.textTheme.headlineSmall),
-          const SizedBox(height: 2),
-          Text(l10n.choosePersonaHelp, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
-          const SizedBox(height: AppSpace.md),
-          TextField(
-            key: const Key('personaSearch'),
-            controller: _search,
-            decoration: InputDecoration(hintText: l10n.searchPersonas, prefixIcon: const Icon(LucideIcons.search, size: 20)),
-            onChanged: (_) => setState(() {}),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(l10n.choosePersona, style: context.textTheme.headlineSmall),
+                const SizedBox(height: 2),
+                Text(l10n.choosePersonaHelp, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                const SizedBox(height: AppSpace.md),
+                TextField(
+                  key: const Key('personaSearch'),
+                  controller: _search,
+                  decoration: InputDecoration(hintText: l10n.searchPersonas, prefixIcon: const Icon(LucideIcons.search, size: 20)),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: AppSpace.sm),
           SizedBox(
             height: 38,
-            child: ListView(
+            child: EdgeFade(child: ListView(
               scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg),
               children: [
                 for (final c in [null, ...categories])
                   Padding(
                     padding: const EdgeInsets.only(right: AppSpace.xs),
-                    child: ChoiceChip(
+                    child: RevealWhenSelected(selected: _category == c, child: ChoiceChip(
                       key: Key('personaCategory-${c?.name ?? 'all'}'),
                       showCheckmark: false,
                       selected: _category == c,
                       label: Text(c == null ? l10n.familyAll : _categoryLabel(context, c)),
                       onSelected: (_) => setState(() => _category = c),
-                    ),
+                    )),
                   ),
               ],
-            ),
+            )),
           ),
           const SizedBox(height: AppSpace.sm),
           Expanded(
-            child: LayoutBuilder(
+            child: Padding(padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg), child: LayoutBuilder(
               builder: (context, c) {
                 final columns = c.maxWidth > 560 ? 2 : 1;
                 final tiles = <Widget>[
@@ -283,7 +299,8 @@ class _PersonaGalleryState extends ConsumerState<_PersonaGallery> {
                   return Center(child: Text(l10n.noPersonasFound, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)));
                 }
                 return GridView.builder(
-                  padding: const EdgeInsets.only(bottom: AppSpace.lg),
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.only(bottom: BottomPadding.of(context, minimum: AppSpace.lg)),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: columns,
                     mainAxisSpacing: AppSpace.sm,
@@ -294,7 +311,7 @@ class _PersonaGalleryState extends ConsumerState<_PersonaGallery> {
                   itemBuilder: (_, i) => tiles[i],
                 );
               },
-            ),
+            )),
           ),
         ],
       ),
@@ -399,7 +416,7 @@ class _Preview extends StatelessWidget {
         ),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.sm, AppSpace.lg, AppSpace.lg),
+            padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.sm, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
             children: [
               Text(t.description, style: context.textTheme.bodyLarge),
               const SizedBox(height: AppSpace.md),
@@ -412,7 +429,7 @@ class _Preview extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.tile),
                   border: Border.all(color: context.appColors.hairline),
                 ),
-                child: SelectableText(t.persona ?? '', style: context.textTheme.bodyMedium?.copyWith(height: 1.5)),
+                child: SelectableText(t.persona.orPlaceholder(), style: context.textTheme.bodyMedium?.copyWith(height: 1.5)),
               ),
               if (t.skills.isNotEmpty || t.routines.isNotEmpty) ...[
                 const SizedBox(height: AppSpace.md),

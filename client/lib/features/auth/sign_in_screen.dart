@@ -9,8 +9,10 @@ import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/server_address.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/brand_sign_in_buttons.dart';
 import '../../ui/form_sheet.dart';
@@ -18,6 +20,7 @@ import 'floating_mascots.dart';
 import 'welcome_tagline.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/otp_code_field.dart';
+import '../../ui/progressive_fade.dart';
 import '../../ui/revealable.dart';
 import '../selfhost/local_server.dart';
 import '../selfhost/local_server_sheet.dart';
@@ -30,6 +33,7 @@ class SignInScreen extends ConsumerWidget {
       showAdaptiveSheet<void>(
         context: context,
         dialogMaxWidth: 460,
+        contentPadsBottom: true,
         builder: (_) => const SignInOptions(),
       );
 
@@ -37,28 +41,33 @@ class SignInScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
+    final statusBar = MediaQuery.paddingOf(context).top;
     return Scaffold(
       // Plain, so the bots are the only thing moving on it.
       backgroundColor: scheme.surface,
       body: Stack(
         children: [
           const Positioned.fill(child: FloatingMascots()),
-          SafeArea(
+          ProgressiveFade(child: SafeArea(
+            top: false,
+            bottom: false,
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
                 // Spaced out when it fits; scrolls when large text or a small screen doesn't.
                 child: LayoutBuilder(
                   builder: (context, constraints) => SingleChildScrollView(
+                    // Starts under the status bar, so content dissolves there as it scrolls up.
+                    padding: EdgeInsets.only(top: statusBar),
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      constraints: BoxConstraints(minHeight: (constraints.maxHeight - statusBar).clamp(0.0, double.infinity)),
                       child: IntrinsicHeight(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
+                          padding: EdgeInsets.fromLTRB(
                             AppSpace.xl,
                             0,
                             AppSpace.xl,
-                            AppSpace.lg,
+                            BottomPadding.of(context, minimum: AppSpace.lg),
                           ),
                           child: Column(
                             children: [
@@ -118,7 +127,7 @@ class SignInScreen extends ConsumerWidget {
                 ),
               ),
             ),
-          ),
+          )),
         ],
       ),
     );
@@ -185,6 +194,8 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
       } else {
         await backend.signIn(_email.text.trim(), _password.text);
       }
+      // Signed in, or signed up and the confirmation email is on its way.
+      HapticsHelper.success();
     });
     if (mounted) setState(() => _busy = false);
   }
@@ -207,7 +218,11 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
         _code.clear();
         _codeInvalid = false;
         _startResendCountdown();
-        if (resent) showMessage(context, context.l10n.magicLinkSent);
+        if (resent) {
+          showSuccess(context, context.l10n.magicLinkSent);
+        } else {
+          HapticsHelper.success();
+        }
       }
     });
   }
@@ -234,6 +249,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
       return true;
     });
     if (!mounted) return;
+    if (ok == true) HapticsHelper.success();
     setState(() {
       _busy = false;
       _codeInvalid = ok != true;
@@ -268,7 +284,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
   Future<void> _forgotPassword() async {
     final email = _email.text.trim();
     if (!_validEmail(email)) {
-      showMessage(context, context.l10n.invalidEmail);
+      showWarning(context, context.l10n.invalidEmail);
       return;
     }
     setState(() => _busy = true);
@@ -280,6 +296,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     setState(() {
       _busy = false;
       if (ok == true) {
+        HapticsHelper.success();
         _resetting = true;
         _sentTo = email;
         _code.clear();
@@ -384,6 +401,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
               onPressed: _busy || _resendIn > 0 ? null : _magicLink,
               child: Text(
                 _resendIn > 0 ? l10n.resendLinkIn(_resendIn) : l10n.resendLink,
+                style: const TextStyle(fontFeatures: AppText.tabular),
               ),
             ),
             TextButton(
@@ -415,11 +433,12 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
       if (next.value == true && mounted) Navigator.of(context).maybePop();
     });
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: EdgeInsets.fromLTRB(
         AppSpace.xl,
         0,
         AppSpace.xl,
-        AppSpace.lg + MediaQuery.viewInsetsOf(context).bottom,
+        BottomPadding.of(context, minimum: AppSpace.lg) + MediaQuery.viewInsetsOf(context).bottom,
       ),
       child: Form(
         key: _form,
@@ -574,6 +593,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
                                       validator: (v) => (v ?? '').length >= 6
                                           ? null
                                           : l10n.passwordTooShort,
+                                      textInputAction: TextInputAction.done,
                                       onFieldSubmitted: (_) => _submit(),
                                     ),
                               ),

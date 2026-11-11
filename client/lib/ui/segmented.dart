@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../core/haptics.dart';
 import '../theme/app_colors.dart';
 
 /// One sliding segmented control for the whole app, whatever the platform, on the app's surfaces.
@@ -23,7 +24,10 @@ class AppSegmentedControl<T extends Object> extends StatelessWidget {
       child: CupertinoSlidingSegmentedControl<T>(
         groupValue: values.contains(groupValue) ? groupValue : null,
         onValueChanged: (v) {
-          if (v != null) onValueChanged?.call(v);
+          final changed = onValueChanged;
+          if (v == null || changed == null) return;
+          HapticsHelper.selection();
+          changed(v);
         },
         backgroundColor: scheme.surfaceContainerHigh,
         thumbColor: dark ? scheme.surfaceContainerHighest : Colors.white,

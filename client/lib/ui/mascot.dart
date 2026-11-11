@@ -62,10 +62,6 @@ class MascotImage extends StatelessWidget {
   final bool animate;
   final String? semanticLabel;
 
-  /// Pixel size the still poses are rendered at (see scripts/casama-mascot-render.mjs). Enough for
-  /// a 96pt avatar on a 3x screen; never decode above it.
-  static const assetPx = 320;
-
   @override
   Widget build(BuildContext context) => _mascotArt(
     context,
@@ -118,16 +114,12 @@ Widget _mascotArt(
 }) {
   final moving = animate && !MediaQuery.disableAnimationsOf(context);
   final drawn = size * _zoom;
-  final px = (drawn * MediaQuery.devicePixelRatioOf(context)).round().clamp(
-    16,
-    MascotImage.assetPx,
-  );
+  // Decoded once at the art's own 320 px and shared by every size it is drawn at, so the copy
+  // decoded while the app connects (precacheStartupAssets) is the one every screen paints.
   final stillImage = Image.asset(
     still,
     width: drawn,
     height: drawn,
-    cacheWidth: px,
-    cacheHeight: px,
     gaplessPlayback: true,
     filterQuality: FilterQuality.medium,
     excludeFromSemantics: true,

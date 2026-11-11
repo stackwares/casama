@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/phone_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
@@ -64,11 +65,12 @@ class _OutboundCallScreenState extends ConsumerState<OutboundCallScreen> {
           key: const Key('takeOverPhone'),
           controller: phone,
           keyboardType: TextInputType.phone,
+          inputFormatters: const [PhoneInputFormatter()],
           decoration: InputDecoration(labelText: l10n.outCallYourPhone, helperText: l10n.outCallYourPhoneHelp),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(d), child: Text(l10n.cancel)),
-          FilledButton(key: const Key('confirmTakeOver'), onPressed: () => Navigator.pop(d, phone.text.trim()), child: Text(l10n.outCallTakeOver)),
+          FilledButton(key: const Key('confirmTakeOver'), onPressed: () => Navigator.pop(d, phone.text.unformattedPhoneNumber), child: Text(l10n.outCallTakeOver)),
         ],
       ),
     );
@@ -93,7 +95,7 @@ class _OutboundCallScreenState extends ConsumerState<OutboundCallScreen> {
             _ => l10n.outCallFailed,
           };
     return SubPage(
-      title: c?.number ?? l10n.outCall,
+      title: c == null ? l10n.outCall : c.number.formattedPhoneNumber,
       subtitle: status,
       body: c == null
           ? (_error != null ? EmptyState(icon: LucideIcons.phoneOff, title: l10n.outCall, message: '$_error') : const Center(child: CircularProgressIndicator()))

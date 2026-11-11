@@ -5,7 +5,9 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/mascot.dart';
+import '../../ui/progressive_fade.dart';
 import 'about_you_screen.dart';
 
 /// This session already finished the name step, so it hides at once instead of waiting for the
@@ -104,25 +106,31 @@ class _NamePageState extends ConsumerState<_NamePage> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final canSave = !_busy && _name.text.trim().isNotEmpty;
+    final statusBar = MediaQuery.paddingOf(context).top;
     return Scaffold(
       key: const Key('nameStep'),
       backgroundColor: scheme.surface,
-      body: SafeArea(
+      body: ProgressiveFade(child: SafeArea(
+        top: false,
+        bottom: false,
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 440),
             // Spaced out when it fits; scrolls when the keyboard or large text doesn't.
             child: LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                // Starts under the status bar, so content dissolves there as it scrolls up.
+                padding: EdgeInsets.only(top: statusBar),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  constraints: BoxConstraints(minHeight: (constraints.maxHeight - statusBar).clamp(0.0, double.infinity)),
                   child: IntrinsicHeight(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
+                      padding: EdgeInsets.fromLTRB(
                         AppSpace.xl,
                         0,
                         AppSpace.xl,
-                        AppSpace.md,
+                        BottomPadding.of(context, minimum: AppSpace.md),
                       ),
                       child: Column(
                         children: [
@@ -243,7 +251,7 @@ class _NamePageState extends ConsumerState<_NamePage> {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 }

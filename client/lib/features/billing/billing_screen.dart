@@ -8,6 +8,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/billing.dart';
+import '../../core/display_text.dart';
+import '../../core/number_format.dart';
+import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -97,7 +100,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   Future<void> _restore() => _run(() async {
     await ref.read(storeProvider).restore(orgId: _orgId);
-    if (mounted) showMessage(context, context.l10n.restoreStarted);
+    if (mounted) showSuccess(context, context.l10n.restoreStarted);
   });
 
   Future<void> _manage(BillingSummary b) => _run(() async {
@@ -259,7 +262,7 @@ String _limitsText(BuildContext context, Map<String, num> limits) {
   return [
     if (limits['max_bots'] != null) l10n.limitBots(limits['max_bots']!.toInt()),
     if (limits['computer_hours'] != null) l10n.limitComputerHours(limits['computer_hours']!.toInt()),
-    if (limits['monthly_credits_usd'] != null) l10n.limitCredits(limits['monthly_credits_usd']!.toStringAsFixed(0)),
+    if (limits['monthly_credits_usd'] != null) l10n.limitCredits(limits['monthly_credits_usd']!.humanizedCurrency(context.l10n.localeName, 'USD', decimalDigits: 0)),
   ].join(' · ');
 }
 
@@ -315,8 +318,8 @@ class _CurrentPlan extends StatelessWidget {
                     if (until != null)
                       Text(
                         b.cancelAtPeriodEnd
-                            ? l10n.planEndsOn(MaterialLocalizations.of(context).formatMediumDate(until.toLocal()))
-                            : l10n.planRenewsOn(MaterialLocalizations.of(context).formatMediumDate(until.toLocal())),
+                            ? l10n.planEndsOn(until.toLocal().formattedWeekdayDate(context))
+                            : l10n.planRenewsOn(until.toLocal().formattedWeekdayDate(context)),
                         style: muted,
                       ),
                   ],
@@ -337,7 +340,7 @@ class _CurrentPlan extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.creditsBalance(b.creditsUsd.toStringAsFixed(2)),
+                        l10n.creditsBalance(b.creditsUsd.humanizedCurrency(context.l10n.localeName, 'USD', decimalDigits: 2)),
                         key: const Key('creditsBalance'),
                         style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontFeatures: AppText.tabular),
                       ),
@@ -375,12 +378,12 @@ class _BilledItems extends ConsumerWidget {
     if (usage == null) return const SizedBox.shrink();
     (String, IconData) describe(BillingUsageItem i) {
       final (what, icon) = switch (i.kind) {
-        'computer_seconds' => (l10n.usageComputerHours((i.quantity / 3600).toStringAsFixed(2)), LucideIcons.monitor),
-        'stream_seconds' => (l10n.usageLiveViewMinutes((i.quantity / 60).toStringAsFixed(0)), LucideIcons.monitorPlay),
+        'computer_seconds' => (l10n.usageComputerHours((i.quantity / 3600).humanizedCount(context.l10n.localeName, decimalDigits: 2)), LucideIcons.monitor),
+        'stream_seconds' => (l10n.usageLiveViewMinutes((i.quantity / 60).humanizedCount(context.l10n.localeName, decimalDigits: 0)), LucideIcons.monitorPlay),
         'tokens_in' || 'tokens_out' => (l10n.usageTokens(i.quantity.toInt()), LucideIcons.sparkles),
         _ => (i.kind, LucideIcons.receiptText),
       };
-      return (i.instance == null ? what : '$what · ${i.instance}', icon);
+      return (i.instance.isUsable ? '$what · ${i.instance}' : what, icon);
     }
 
     return Column(
@@ -398,7 +401,7 @@ class _BilledItems extends ConsumerWidget {
                   icon: describe(i).$2,
                   title: describe(i).$1,
                   trailing: Text(
-                    '\$${i.costUsd.toStringAsFixed(2)}',
+                    i.costUsd.humanizedCurrency(context.l10n.localeName, 'USD', decimalDigits: 2),
                     style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontFeatures: AppText.tabular, color: scheme.onSurface),
                   ),
                 ),
@@ -425,7 +428,7 @@ class _UsageRow extends ConsumerWidget {
             key: const Key('billingUsage'),
             icon: LucideIcons.chartColumn,
             title: l10n.usage,
-            subtitle: usage == null ? l10n.billingUsageRow : l10n.billingUsageSoFar('\$${usage.totalUsd.toStringAsFixed(2)}'),
+            subtitle: usage == null ? l10n.billingUsageRow : l10n.billingUsageSoFar(usage.totalUsd.humanizedCurrency(context.l10n.localeName, 'USD', decimalDigits: 2)),
             showChevron: true,
             onTap: () => context.push('/settings/usage'),
           ),

@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
@@ -50,7 +52,7 @@ class _SharingScreenState extends ConsumerState<SharingScreen> {
       _private = a.visibility == BotAccessVisibilityEnum.private;
       _entries
         ..clear()
-        ..addAll(a.entries.map((e) => (userId: e.userId, role: e.role?.value, label: e.email ?? e.role?.value ?? '', access: e.access.value)));
+        ..addAll(a.entries.map((e) => (userId: e.userId, role: e.role?.value, label: e.email.isUsable ? e.email! : (e.role?.value).orPlaceholder(), access: e.access.value)));
     });
   }
 
@@ -78,7 +80,7 @@ class _SharingScreenState extends ConsumerState<SharingScreen> {
       _busy = false;
       if (r != null) _dirty = false;
     });
-    if (r != null) showMessage(context, context.l10n.sharingSaved);
+    if (r != null) showSuccess(context, context.l10n.sharingSaved);
   }
 
   @override
@@ -106,12 +108,12 @@ class _SharingScreenState extends ConsumerState<SharingScreen> {
                     title: Text(l10n.sharingPrivate),
                     subtitle: Text(_private ? l10n.sharingPrivateOn : l10n.sharingPrivateOff),
                     value: _private,
-                    onChanged: canAdmin
+                    onChanged: hapticOnChanged(canAdmin
                         ? (v) => setState(() {
                               _private = v;
                               _dirty = true;
                             })
-                        : null,
+                        : null),
                   ),
                 ]),
                 SectionHeader(title: l10n.sharingPeople),
@@ -127,10 +129,10 @@ class _SharingScreenState extends ConsumerState<SharingScreen> {
                                 key: Key('access-${e.userId ?? e.role}'),
                                 value: e.access,
                                 items: [for (final v in ['chat', 'edit', 'admin']) DropdownMenuItem(value: v, child: Text(accessLabel(v)))],
-                                onChanged: (v) => setState(() {
+                                onChanged: hapticOnChanged((v) => setState(() {
                                   _entries[i] = (userId: e.userId, role: e.role, label: e.label, access: v ?? e.access);
                                   _dirty = true;
-                                }),
+                                }), haptic: HapticsHelper.selection),
                               ),
                               IconButton(
                                 key: Key('remove-${e.userId ?? e.role}'),
@@ -156,9 +158,9 @@ class _SharingScreenState extends ConsumerState<SharingScreen> {
                       ActionChip(
                         key: Key('add-${m.userId}'),
                         avatar: const Icon(LucideIcons.plus, size: 16),
-                        label: Text(m.email ?? m.userId),
+                        label: Text(m.email.orPlaceholder(m.userId)),
                         onPressed: () => setState(() {
-                          _entries.add((userId: m.userId, role: null, label: m.email ?? m.userId, access: 'chat'));
+                          _entries.add((userId: m.userId, role: null, label: m.email.orPlaceholder(m.userId), access: 'chat'));
                           _dirty = true;
                         }),
                       ),

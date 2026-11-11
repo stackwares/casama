@@ -81,6 +81,17 @@ final autoUpdateChecksProvider = FutureProvider<bool?>((ref) async => selfUpdati
 /// This app's version ("0.8.0").
 final appVersionProvider = FutureProvider<String>((ref) async => (await PackageInfo.fromPlatform()).version);
 
+/// This build's version and build number, "0.8.0 (8)", for the line at the foot of Settings (just
+/// "0.8.0" where a platform reports no build number). Null when it can't be read (widget tests).
+final appVersionLabelProvider = FutureProvider<String?>((ref) async {
+  try {
+    final info = await PackageInfo.fromPlatform();
+    return info.buildNumber.isEmpty ? info.version : '${info.version} (${info.buildNumber})';
+  } catch (_) {
+    return null;
+  }
+});
+
 /// A newer release than this one (Linux only), as its version and page.
 final newerReleaseProvider = FutureProvider<({String version, Uri page})?>((ref) async {
   if (!updateNoticeOnly) return null;

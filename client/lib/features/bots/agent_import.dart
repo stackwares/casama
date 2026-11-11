@@ -11,6 +11,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
@@ -54,7 +55,7 @@ Future<void> importAgentFolder(BuildContext context, WidgetRef ref, {Future<Map<
     return backend.startAgentImport(org.id, zip: zip);
   });
   if (plan == null || !context.mounted) return;
-  await Navigator.of(context).push(MaterialPageRoute(builder: (_) => AgentImportReviewScreen(plan: plan)));
+  await Navigator.of(context).push(MaterialPageRoute(settings: const RouteSettings(name: '/import/agent'), builder: (_) => AgentImportReviewScreen(plan: plan)));
 }
 
 Future<Uint8List?> _pickZip() async {
@@ -145,7 +146,7 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
     }
     if (!mounted) return;
     setState(() => _busy = false);
-    showMessage(context, message);
+    showSuccess(context, message);
     GoRouter.maybeOf(context)?.go('/bots/${r.botId}/chat');
   }
 
@@ -156,7 +157,7 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
     title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
     subtitle: subtitle == null ? null : Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
     value: value,
-    onChanged: (v) => setState(() => onChanged(v ?? false)),
+    onChanged: hapticOnChanged((v) => setState(() => onChanged(v ?? false)), haptic: HapticsHelper.soft),
   );
 
   @override
@@ -210,7 +211,7 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
             title: Text(l10n.agentImportLeftovers(p.leftovers.length)),
             subtitle: Text(p.leftovers.take(5).map((f) => f.path).join(', ')),
             value: _copyFiles,
-            onChanged: (v) => setState(() => _copyFiles = v),
+            onChanged: hapticOnChanged((v) => setState(() => _copyFiles = v)),
           ),
         if (p.skipped.isNotEmpty) FormNote(l10n.agentImportSkipped(p.skipped.map((s) => '${s.path} (${s.reason})').take(8).join(', ')), icon: LucideIcons.shieldCheck),
         SectionHeader(title: l10n.thinking0),
@@ -220,10 +221,10 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
           isExpanded: true,
           decoration: InputDecoration(labelText: l10n.modelKey),
           items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text(k.label))],
-          onChanged: (v) => setState(() {
+          onChanged: hapticOnChanged((v) => setState(() {
             _credentialId = v;
             _model = '';
-          }),
+          }), haptic: HapticsHelper.selection),
         ),
         const SizedBox(height: AppSpace.sm),
         ModelPickerField(credentialId: _credentialId, value: _model, onChanged: (m) => setState(() => _model = m)),
@@ -350,7 +351,7 @@ class _MemoryImportSheetState extends ConsumerState<MemoryImportSheet> {
               title: Text(items[i].content),
               subtitle: Text(items[i].kind == ImportedMemoryItemKindEnum.preference ? l10n.memoryPreference : l10n.memoryFact),
               value: _keep.contains(i),
-              onChanged: (v) => setState(() => v == true ? _keep.add(i) : _keep.remove(i)),
+              onChanged: hapticOnChanged((v) => setState(() => v == true ? _keep.add(i) : _keep.remove(i)), haptic: HapticsHelper.soft),
             ),
       ],
     );

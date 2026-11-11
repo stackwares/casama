@@ -1,4 +1,4 @@
-import { DEFAULT_MODELS, FEATURED_MODELS } from "./models.ts";
+import { DEFAULT_MODELS } from "./models.ts";
 
 /** OpenRouter keeps 5.5% when credits are bought. */
 export const OPENROUTER_CREDIT_FEE = 1.055;
@@ -32,16 +32,18 @@ export function cloudModelDailyCap(plan: string | null | undefined): number {
 type CloudChoice = { credential_id: string; model: string };
 
 /**
- * On Casama Cloud, every choice that uses Casama's key runs [model] (the deployment's model).
- * A workspace's own key is left as the user set it.
+ * Every choice that uses the server's shared key runs [model] (the deployment's model) at the
+ * server's reasoning level, on Casama Cloud and on self-hosted servers alike. A workspace's own
+ * key is left as the user set it.
  */
 export function lockCloudPolicy<
   T extends { primary?: CloudChoice; fallbacks?: CloudChoice[]; cheap?: CloudChoice },
 >(policy: T, model = CLOUD_LOCKED_MODEL): T {
-  const lock = <C extends CloudChoice>(c: C | undefined): C | undefined =>
-    c?.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID && c.model !== model
-      ? { ...c, model }
-      : c;
+  const lock = <C extends CloudChoice>(c: C | undefined): C | undefined => {
+    if (c?.credential_id !== PLATFORM_OPENROUTER_CREDENTIAL_ID) return c;
+    const { reasoning_effort: _ignored, ...rest } = c as C & { reasoning_effort?: unknown };
+    return { ...rest, model } as C;
+  };
   return {
     ...policy,
     primary: lock(policy.primary),
@@ -51,17 +53,17 @@ export function lockCloudPolicy<
 }
 
 /**
- * Models a call on Casama's key may use. Casama Cloud (billing on) runs only the model Casama
- * assigns. A self-hosted server that set the key gets the short recommended list.
+ * Models a call on the server's shared key may use: only the model the server assigns, on Casama
+ * Cloud and self-hosted alike, so nobody can run up the server owner's bill with a pricier model.
+ * People who want another model add their own key.
  */
 export function cloudModelIds(opts: {
   billing: boolean;
   plan: string | null | undefined;
-  /** The model this deployment assigns on Casama Cloud. */
+  /** The model this deployment assigns. */
   locked?: string;
 }): readonly string[] {
-  if (opts.billing) return [opts.locked || CLOUD_LOCKED_MODEL];
-  return (FEATURED_MODELS.openrouter ?? []).map((m) => m.id);
+  return [opts.locked || CLOUD_LOCKED_MODEL];
 }
 
 export function cloudModelAllowed(

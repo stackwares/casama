@@ -19,9 +19,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/providers.dart';
 import '../../core/share.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/edge_fade.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
@@ -337,16 +339,17 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+                padding: const EdgeInsetsDirectional.only(end: AppSpace.sm),
                 child: Row(
                   children: [
                     Expanded(
                       child: Align(
                         alignment: AlignmentDirectional.centerStart,
-                        child: TabBar(
+                        child: EdgeFade(child: TabBar(
                           isScrollable: true,
                           tabAlignment: TabAlignment.start,
-                          padding: EdgeInsets.zero,
+                          padding: const EdgeInsetsDirectional.only(start: AppSpace.sm),
+                          onTap: (_) => HapticsHelper.light(),
                           tabs: [
                             for (final t in tabIds)
                               switch (t) {
@@ -368,7 +371,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                 ),
                               },
                           ],
-                        ),
+                        )),
                       ),
                     ),
                     _AdvancedTabsToggle(open: advanced),
@@ -933,7 +936,7 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                   Expanded(
                     child: LayoutBuilder(
                       // Starts at the left; long paths scroll so the current folder stays visible.
-                      builder: (context, bar) => SingleChildScrollView(
+                      builder: (context, bar) => EdgeFade(child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         reverse: true,
                         child: ConstrainedBox(
@@ -963,7 +966,7 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                             ],
                           ),
                         ),
-                      ),
+                      )),
                     ),
                   ),
                   IconButton(
@@ -1036,7 +1039,7 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                               GroupedTile(
                                 icon: fileIconFor(e.name),
                                 title: e.name,
-                                subtitle: formatBytes(e.size),
+                                subtitle: formatBytes(e.size, context.l10n.localeName),
                                 onTap: () => showComputerFile(
                                   context,
                                   computerId: widget.computerId,

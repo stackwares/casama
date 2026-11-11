@@ -7,16 +7,19 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/backend.dart';
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/otp_code_field.dart';
 import '../../ui/page.dart';
+import '../../ui/progressive_fade.dart';
 import '../../ui/revealable.dart';
 
 /// A new password twice, and the emailed code when the session is too old to change it without
@@ -72,7 +75,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (done) {
-      showMessage(context, context.l10n.passwordSaved);
+      showSuccess(context, context.l10n.passwordSaved);
       widget.onDone();
     }
   }
@@ -92,6 +95,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
               builder: (context, hidden, toggle) => TextFormField(
                 key: const Key('newPassword'),
                 controller: _password,
+                textInputAction: TextInputAction.next,
                 autofocus: true,
                 obscureText: hidden,
                 autofillHints: const [AutofillHints.newPassword],
@@ -115,11 +119,12 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
                   suffixIcon: toggle,
                 ),
                 validator: (v) => v == _password.text ? null : l10n.passwordsDontMatch,
+                textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _submit(),
               ),
             ),
             if (_needsCode) ...[
-              FormNote(l10n.passwordCodeSent(ref.read(backendProvider).userEmail ?? ''), icon: LucideIcons.mailCheck),
+              FormNote(l10n.passwordCodeSent(ref.read(backendProvider).userEmail.orPlaceholder()), icon: LucideIcons.mailCheck),
               OtpCodeField(
                 key: const Key('reauthCode'),
                 controller: _code,
@@ -159,11 +164,16 @@ class NewPasswordScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
+    final statusBar = MediaQuery.paddingOf(context).top;
     return Scaffold(
-      body: SafeArea(
+      body: ProgressiveFade(child: SafeArea(
+        top: false,
+        bottom: false,
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpace.lg),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            // Starts under the status bar, so content dissolves there as it scrolls up.
+            padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg + statusBar, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: Column(
@@ -201,7 +211,7 @@ class NewPasswordScreen extends ConsumerWidget {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 }
@@ -232,7 +242,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     final value = email?.trim() ?? '';
     if (value.isEmpty || !mounted) return;
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) {
-      showMessage(context, l10n.invalidEmail);
+      showWarning(context, l10n.invalidEmail);
       return;
     }
     if (value.toLowerCase() == backend.userEmail?.toLowerCase()) return;
@@ -242,7 +252,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     });
     if (ok == true && mounted) {
       setState(() {});
-      showMessage(context, l10n.changeEmailSent(value));
+      showSuccess(context, l10n.changeEmailSent(value));
     }
   }
 
@@ -290,7 +300,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             GroupedTile(
               key: const Key('accountEmail'),
               icon: LucideIcons.mail,
-              title: backend.userEmail ?? l10n.email,
+              title: backend.userEmail.orPlaceholder(l10n.email),
               subtitle: pending == null ? l10n.changeEmailRow : l10n.changeEmailPending(pending),
               onTap: _changeEmail,
             ),
@@ -352,7 +362,7 @@ Future<void> maybeSuggestPasskey(BuildContext context, WidgetRef ref) async {
   );
   if (!add || !context.mounted) return;
   final added = await runGuarded(context, () => ref.read(backendProvider).addPasskey());
-  if (added == true && context.mounted) showMessage(context, context.l10n.passkeyAdded);
+  if (added == true && context.mounted) showSuccess(context, context.l10n.passkeyAdded);
 }
 
 /// Wraps the signed-in shell to run [maybeSuggestPasskey] once, a moment after it first shows.

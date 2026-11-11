@@ -166,6 +166,7 @@ if (env.MODE === "api") {
       .then((l) => !!l && l.expiresAt > new Date() && l.features.includes("audit_forwarding"))
       .catch(() => false),
     platformOpenRouterKey: env.CLOUD_MODEL_UPSTREAM_KEY,
+    platformReasoningEffort: env.DEFAULT_REASONING_EFFORT,
     cloudLockedModel: defaultModelFor("openrouter", modelOverrides(env)),
     aiGateway: env.AI_GATEWAY_URL
       ? {

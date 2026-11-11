@@ -12,6 +12,7 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
@@ -97,10 +98,17 @@ class _ProviderKeyFormState extends ConsumerState<_ProviderKeyForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final k = widget.kind;
-    Widget field(TextEditingController c, String label, IconData icon, {bool secret = false, Key? key}) => Revealable(
+    Widget field(TextEditingController c, String label, IconData icon, {bool secret = false, Key? key, bool last = false}) => Revealable(
           builder: (context, hidden, toggle) => TextField(
             key: key,
             controller: c,
+            // Next moves down the form; Done on the last field connects.
+            textInputAction: last ? TextInputAction.done : TextInputAction.next,
+            onSubmitted: last
+                ? (_) {
+                    if (_valid) _save();
+                  }
+                : null,
             obscureText: secret && hidden,
             autocorrect: false,
             enableSuggestions: false,
@@ -108,19 +116,21 @@ class _ProviderKeyFormState extends ConsumerState<_ProviderKeyForm> {
               labelText: label,
               prefixIcon: Icon(icon, size: 20),
               // Show (for keys and secrets) next to paste.
-              suffixIcon: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (secret) toggle,
-                  IconButton(
-                    tooltip: l10n.pasteLabel,
-                    icon: const Icon(LucideIcons.clipboardPaste, size: 18),
-                    onPressed: () async {
-                      final d = await Clipboard.getData(Clipboard.kTextPlain);
-                      if (d?.text != null) setState(() => c.text = d!.text!.trim());
-                    },
-                  ),
-                ],
+              suffixIcon: FieldSuffix(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (secret) toggle,
+                    IconButton(
+                      tooltip: l10n.pasteLabel,
+                      icon: const Icon(LucideIcons.clipboardPaste, size: 18),
+                      onPressed: () async {
+                        final d = await Clipboard.getData(Clipboard.kTextPlain);
+                        if (d?.text != null) setState(() => c.text = d!.text!.trim());
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
             onChanged: (_) => setState(() {}),
@@ -144,9 +154,9 @@ class _ProviderKeyFormState extends ConsumerState<_ProviderKeyForm> {
         if (_pipedream) ...[
           field(_project, l10n.projectId, LucideIcons.folder),
           field(_client, l10n.pipedreamClientId, LucideIcons.idCard),
-          field(_key, l10n.pipedreamClientSecret, LucideIcons.keyRound, secret: true, key: const Key('providerKey')),
+          field(_key, l10n.pipedreamClientSecret, LucideIcons.keyRound, secret: true, key: const Key('providerKey'), last: true),
         ] else
-          field(_key, l10n.apiKey, LucideIcons.keyRound, secret: true, key: const Key('providerKey')),
+          field(_key, l10n.apiKey, LucideIcons.keyRound, secret: true, key: const Key('providerKey'), last: true),
         FormNote(l10n.storedEncrypted, icon: LucideIcons.shieldCheck),
       ],
     );
@@ -155,7 +165,7 @@ class _ProviderKeyFormState extends ConsumerState<_ProviderKeyForm> {
 
 /// Picks an app from Composio's or Pipedream's directory and opens its sign-in page.
 Future<void> showProviderAppPicker(BuildContext context, Integration integration) =>
-    showAdaptiveSheet<void>(context: context, heightFactor: 0.88, builder: (_) => _ProviderAppPicker(integration: integration));
+    showAdaptiveSheet<void>(context: context, heightFactor: 0.88, contentPadsBottom: true, builder: (_) => _ProviderAppPicker(integration: integration));
 
 class _ProviderAppPicker extends ConsumerStatefulWidget {
   const _ProviderAppPicker({required this.integration});
@@ -223,7 +233,8 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
                 final items = snap.data!;
                 if (items.isEmpty) return Center(child: Text(l10n.noThemesFound, style: context.textTheme.bodyMedium));
                 return ListView.separated(
-                  padding: const EdgeInsets.only(bottom: AppSpace.lg),
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.only(bottom: BottomPadding.of(context, minimum: AppSpace.lg)),
                   itemCount: items.length,
                   separatorBuilder: (_, _) => Divider(height: 1, color: context.appColors.hairline),
                   itemBuilder: (_, i) {

@@ -4,10 +4,12 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/billing.dart';
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../settings/model_keys_screen.dart';
 import '../../core/widgets.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/bottom_padding.dart';
 
 /// The model Casama Cloud runs. Null on a self-hosted server, where the person chooses.
 String? casamaLockedModel(
@@ -61,6 +63,7 @@ class ModelPickerField extends ConsumerWidget {
               final picked = await showAdaptiveSheet<String>(
                 context: context,
                 heightFactor: 0.85,
+                contentPadsBottom: true,
                 builder: (_) =>
                     _ModelSheet(credentialId: credentialId!, current: shown),
               );
@@ -182,7 +185,7 @@ class _ModelSheetState extends ConsumerState<_ModelSheet> {
                   () => Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                     child: Text(
-                      l10n.modelListFallback(list.error ?? ''),
+                      l10n.modelListFallback(list.error.orPlaceholder('')),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
@@ -204,6 +207,8 @@ class _ModelSheetState extends ConsumerState<_ModelSheet> {
                   ),
               ];
               return ListView.builder(
+                padding: EdgeInsets.only(bottom: BottomPadding.of(context)),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 itemCount: rows.length,
                 itemBuilder: (_, i) => rows[i](),
               );

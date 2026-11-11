@@ -21,8 +21,11 @@ import 'features/companion/companion_controller.dart';
 import 'features/companion/companion_overlay.dart';
 import 'features/companion/desktop_shell.dart';
 import 'core/router.dart';
+import 'core/route_title.dart';
 import 'core/theme.dart';
+import 'ui/app_scroll_behavior.dart';
 import 'theme/appearance.dart';
+import 'ui/text_scale.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'features/devices/device_sync.dart';
 
@@ -54,19 +57,28 @@ class CasamaApp extends ConsumerWidget {
       if (prev?.value == true && next.value == false) unawaited(cacheClear(ref.read(localCacheProvider)));
     });
     final appearance = ref.watch(appearanceProvider);
+    final router = ref.watch(routerProvider);
     return MaterialApp.router(
       onGenerateTitle: (c) => AppLocalizations.of(c).appTitle,
       theme: AppTheme.light(appearance),
       darkTheme: AppTheme.dark(appearance),
       themeMode: appearance.mode,
       themeAnimationDuration: const Duration(milliseconds: 250),
-      routerConfig: ref.watch(routerProvider),
+      routerConfig: router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
-      builder: (context, child) => _DismissKeyboard(
-        child: CompanionOverlay(
-          child: _FirstRunSteps(push: ref.read(pushProvider), child: child ?? const SizedBox.shrink()),
+      // Scrollbars on vertical lists on every platform, phones included.
+      scrollBehavior: const AppScrollBehavior(),
+      builder: (context, child) => RouteTitle(
+        router: router,
+        child: limitTextScale(
+          context,
+          _DismissKeyboard(
+            child: CompanionOverlay(
+              child: _FirstRunSteps(push: ref.read(pushProvider), child: child ?? const SizedBox.shrink()),
+            ),
+          ),
         ),
       ),
     );

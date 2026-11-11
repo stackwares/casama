@@ -5,11 +5,15 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/edge_fade.dart';
+import '../../ui/reveal_when_selected.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
@@ -28,9 +32,12 @@ Future<void> openSkillCatalog(BuildContext context) async {
   if (GoRouter.maybeOf(context) != null) {
     await context.push('/settings/skills/catalog');
   } else {
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const SkillCatalogScreen()));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: '/settings/skills/catalog'),
+        builder: (_) => const SkillCatalogScreen(),
+      ),
+    );
   }
 }
 
@@ -88,13 +95,13 @@ class _SkillCatalogScreenState extends ConsumerState<SkillCatalogScreen> {
         onRetry: () => ref.invalidate(skillCatalogProvider),
         data: (cat) => PageColumn(
           maxWidth: kWidePageMaxWidth,
-          children: [_browse(context, cat)],
+          children: _browse(context, cat),
         ),
       ),
     );
   }
 
-  Widget _browse(BuildContext context, SkillCatalog cat) {
+  List<Widget> _browse(BuildContext context, SkillCatalog cat) {
     final l10n = context.l10n;
     final installed = ref.watch(skillsProvider).value ?? const <SkillView>[];
     // Loaded up front, so Install knows which bots it could go to.
@@ -125,9 +132,7 @@ class _SkillCatalogScreenState extends ConsumerState<SkillCatalogScreen> {
           ),
       ],
     );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+    return [
         TextField(
           key: const Key('catalogSearch'),
           controller: _search,
@@ -146,15 +151,16 @@ class _SkillCatalogScreenState extends ConsumerState<SkillCatalogScreen> {
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: AppSpace.sm),
-        SizedBox(
+        PageBleed(child: SizedBox(
           height: 38,
-          child: ListView(
+          child: EdgeFade(child: ListView(
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
             children: [
               for (final c in [null, ...categories])
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: AppSpace.xs),
-                  child: ChoiceChip(
+                  child: RevealWhenSelected(selected: _category == c, child: ChoiceChip(
                     key: Key('category-${c ?? 'all'}'),
                     showCheckmark: false,
                     avatar: c == null
@@ -169,11 +175,11 @@ class _SkillCatalogScreenState extends ConsumerState<SkillCatalogScreen> {
                       c == null ? l10n.all : skillCategoryLabel(context, c),
                     ),
                     onSelected: (_) => setState(() => _category = c),
-                  ),
+                  )),
                 ),
             ],
-          ),
-        ),
+          )),
+        )),
         if (shown.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpace.xl),
@@ -194,7 +200,7 @@ class _SkillCatalogScreenState extends ConsumerState<SkillCatalogScreen> {
             SectionHeader(
               key: Key('section-$c'),
               title: skillCategoryLabel(context, c),
-              count: '${shown.where((s) => s.category == c).length}',
+              count: shown.where((s) => s.category == c).length.humanizedCount(context.l10n.localeName),
             ),
             grid([
               for (final s in shown)
@@ -202,8 +208,7 @@ class _SkillCatalogScreenState extends ConsumerState<SkillCatalogScreen> {
             ]),
           ],
         const SizedBox(height: AppSpace.xl),
-      ],
-    );
+    ];
   }
 
   Future<void> _openDetail(CatalogSkill s) => showAdaptiveSheet<void>(
@@ -242,6 +247,7 @@ Future<void> installCatalogSkill(
   } else {
     final picked = await showAdaptiveSheet<_Target>(
       context: context,
+      contentPadsBottom: true,
       builder: (_) => _TargetPicker(skill: s, bots: bots, taken: taken),
     );
     if (picked == null) return;
@@ -256,7 +262,7 @@ Future<void> installCatalogSkill(
   });
   if (ok == true && context.mounted) {
     ref.invalidate(skillsProvider);
-    showMessage(context, l10n.skillInstalled(skillTitle(s.name)));
+    showSuccess(context, l10n.skillInstalled(skillTitle(s.name)));
   }
 }
 
@@ -537,8 +543,9 @@ class _TargetPicker extends StatelessWidget {
     }
 
     return SafeArea(
+      bottom: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpace.lg),
+        padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: AppSpace.md,

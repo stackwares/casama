@@ -9,14 +9,17 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/otp_code_field.dart';
 import '../../ui/page.dart';
+import '../../ui/progressive_fade.dart';
 
 /// The person's authenticator apps (refreshed after changes).
 final twoStepFactorsProvider = FutureProvider<List<TwoStepFactor>>(
@@ -81,7 +84,7 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
       if (ok == true) _enrolling = null;
     });
     if (ok == true) {
-      showMessage(context, context.l10n.twoStepNowOn);
+      showSuccess(context, context.l10n.twoStepNowOn);
       ref.invalidate(twoStepFactorsProvider);
     }
   }
@@ -260,7 +263,7 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
                 title: Text(l10n.requireTwoStep),
                 subtitle: Text(l10n.requireTwoStepHelp),
                 value: require,
-                onChanged: (v) async {
+                onChanged: hapticOnChanged((v) async {
                   await runGuarded(
                     context,
                     () =>
@@ -268,7 +271,7 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
                   );
                   ref.invalidate(_requireTwoStepProvider);
                   ref.invalidate(organizationsProvider);
-                },
+                }),
               ),
             ],
           ),
@@ -321,13 +324,19 @@ class _TwoStepPromptScreenState extends ConsumerState<TwoStepPromptScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
+    final statusBar = MediaQuery.paddingOf(context).top;
     return Scaffold(
-      body: SafeArea(
+      body: ProgressiveFade(child: SafeArea(
+        top: false,
+        bottom: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final minHeight = constraints.maxHeight - AppSpace.lg * 2;
+            final bottom = BottomPadding.of(context, minimum: AppSpace.lg);
+            final minHeight = constraints.maxHeight - AppSpace.lg - statusBar - bottom;
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpace.lg),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              // Starts under the status bar, so content dissolves there as it scrolls up.
+              padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg + statusBar, AppSpace.lg, bottom),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   minHeight: minHeight < 0 ? 0 : minHeight,
@@ -421,7 +430,7 @@ class _TwoStepPromptScreenState extends ConsumerState<TwoStepPromptScreen> {
             );
           },
         ),
-      ),
+      )),
     );
   }
 }

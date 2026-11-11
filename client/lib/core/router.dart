@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/bots/bot_history_screen.dart';
+import '../features/whats_new/whats_new.dart';
 import '../features/bots/bot_profile_screen.dart';
 import '../features/bots/bot_template.dart';
 import '../features/mcp/mcp_screens.dart';
@@ -66,6 +68,17 @@ import 'providers.dart';
 import 'telemetry.dart';
 import '../features/devices/device_connections_screen.dart';
 
+/// The page's screen name for analytics (PostHog's `$screen`): its route as a template, such as
+/// /bots/:botId/chat, never the ids in its address. A nested route's own path is relative ("keys" for
+/// /settings/keys), and [GoRouterState.fullPath] is the template of the page on top, the same for every
+/// page under it, so this keeps as many of its segments as this page's own address has: on
+/// `/bots/<id>/chat` the tab underneath is "/bots".
+String _screenName(GoRouterState state) {
+  final depth = state.matchedLocation.split('/').where((s) => s.isNotEmpty).length;
+  final template = (state.fullPath ?? '').split('/').where((s) => s.isNotEmpty);
+  return '/${template.take(depth).join('/')}';
+}
+
 /// Every route is a [MaterialPage], so pages slide or fade the way each platform expects and the
 /// theme's page transitions paint the wallpaper under each one. (go_router's own fallback here is
 /// a page with no transition at all.)
@@ -74,10 +87,14 @@ GoRouterPageBuilder _page(
 ) =>
     (context, state) => MaterialPage<void>(
       key: state.pageKey,
-      name: state.name,
+      name: state.name ?? _screenName(state),
       arguments: state.extra,
       child: build(context, state),
     );
+
+/// The web and desktop are click and open: pages and tabs switch there with no transition.
+bool _switchesInstantly(BuildContext context) =>
+    kIsWeb || const {TargetPlatform.macOS, TargetPlatform.windows, TargetPlatform.linux}.contains(Theme.of(context).platform);
 
 /// The tab pages (Chats, Inbox, Tasks). They paint no wallpaper of their own: the shell's page
 /// already paints one behind every tab, and the shell's screens are see-through. Switching tabs
@@ -88,12 +105,12 @@ GoRouterPageBuilder _page(
 GoRouterPageBuilder _tab(
   Widget Function(BuildContext context, GoRouterState state) build,
 ) => (context, state) {
-  final duration = MediaQuery.disableAnimationsOf(context)
+  final duration = MediaQuery.disableAnimationsOf(context) || _switchesInstantly(context)
       ? Duration.zero
       : const Duration(milliseconds: 180);
   return CustomTransitionPage<void>(
     key: state.pageKey,
-    name: state.name,
+    name: state.name ?? _screenName(state),
     arguments: state.extra,
     transitionDuration: duration,
     reverseTransitionDuration: duration,
@@ -239,7 +256,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state, child) => MaterialPage(
           key: state.pageKey,
           child: PasskeySuggestion(
-            child: HomeShell(location: state.uri.path, child: child),
+            child: WhatsNewGate(
+              child: HomeShell(location: state.uri.path, child: child),
+            ),
           ),
         ),
         routes: [

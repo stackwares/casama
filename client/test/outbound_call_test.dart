@@ -55,6 +55,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.setTel!.fromNumber, '+14155550000');
     expect(backend.setTel!.allowPersonalNumbers, isFalse);
-    expect(find.textContaining('+14155550000'), findsOneWidget);
+    expect(find.textContaining('+1 415-555-0000'), findsOneWidget);
   });
 }

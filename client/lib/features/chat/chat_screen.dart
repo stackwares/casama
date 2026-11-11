@@ -9,12 +9,15 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/voice.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../groups/group_chats.dart';
+import '../../ui/edge_fade.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/adaptive_modal.dart';
@@ -56,7 +59,7 @@ Future<void> confirmRestore(BuildContext context, WidgetRef ref, String computer
     await ref.read(backendProvider).restoreCheckpoint(computerId, checkpointId);
     return true;
   });
-  if (done == true && context.mounted) showMessage(context, l10n.restored);
+  if (done == true && context.mounted) showSuccess(context, l10n.restored);
 }
 
 /// Phones close the keyboard after sending so the reply has the screen.
@@ -136,12 +139,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _addFiles(List<(String, Uint8List, String?)> files) async {
     final computerId = _computerId();
     if (computerId == null) {
-      showMessage(context, context.l10n.noComputerForFiles);
+      showWarning(context, context.l10n.noComputerForFiles);
       return;
     }
     for (final (name, bytes, mime) in files) {
       if (bytes.length > _maxFileBytes) {
-        showMessage(context, context.l10n.fileTooLarge(name));
+        showWarning(context, context.l10n.fileTooLarge(name));
         continue;
       }
       final stamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[^0-9]'), '').substring(0, 14);
@@ -155,7 +158,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       } catch (_) {
         if (!mounted) return;
         setState(() => item.failed = true);
-        showMessage(context, context.l10n.uploadFailed(name));
+        showFailure(context, context.l10n.uploadFailed(name));
       }
     }
   }
@@ -363,7 +366,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final ok = await dictation.start();
       if (!mounted) return;
       if (!ok) {
-        showMessage(context, context.l10n.micPermissionNeeded);
+        showWarning(context, context.l10n.micPermissionNeeded);
         return;
       }
       setState(() => _recording = true);
@@ -647,12 +650,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               ? null
                               : SizedBox(
                                   height: 64,
-                                  child: ListView.separated(
+                                  child: EdgeFade(child: ListView.separated(
                                     scrollDirection: Axis.horizontal,
                                     itemCount: _pending.length,
                                     separatorBuilder: (_, _) => const SizedBox(width: AppSpace.xs),
                                     itemBuilder: (context, i) => _PendingChip(item: _pending[i], onRemove: () => setState(() => _pending.removeAt(i))),
-                                  ),
+                                  )),
                                 ),
                         ),
                         // Spend per run lives in the run timeline and Usage, not under the composer.
@@ -675,7 +678,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       computerId: computer?.id,
       open: (path) {
         if (computer == null) {
-          showMessage(context, context.l10n.noComputerForFiles);
+          showWarning(context, context.l10n.noComputerForFiles);
           return;
         }
         showComputerFile(context, computerId: computer.id, path: path);
@@ -889,7 +892,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     await ref.read(backendProvider).deleteUserFact(factId);
                     return true;
                   });
-                  if (ok == true && context.mounted) showMessage(context, l10n.removedFromProfile);
+                  if (ok == true && context.mounted) showSuccess(context, l10n.removedFromProfile);
                 },
                 onDetails: () => showErrorDetails(context, entry: n, botId: widget.botId),
               );
@@ -949,6 +952,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     await showAdaptiveSheet<void>(
       context: context,
       heightFactor: 0.7,
+      contentPadsBottom: true,
       builder: (sheetContext) => _ConversationsSheet(
         botId: widget.botId,
         currentId: currentId,
@@ -1018,7 +1022,7 @@ class _PendingChip extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
                             ),
-                            Text(formatBytes(item.bytes.length), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                            Text(formatBytes(item.bytes.length, context.l10n.localeName), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
                           ],
                         ),
                       ),
@@ -1376,7 +1380,7 @@ class _ConversationsSheet extends ConsumerWidget {
             data: (items) => items.isEmpty
                 ? EmptyState(icon: LucideIcons.messagesSquare, message: l10n.noConversations)
                 : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(AppSpace.sm, 0, AppSpace.sm, AppSpace.md),
+                    padding: EdgeInsets.fromLTRB(AppSpace.sm, 0, AppSpace.sm, BottomPadding.of(context, minimum: AppSpace.md)),
                     itemCount: items.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 2),
                     itemBuilder: (context, i) {
@@ -1386,7 +1390,7 @@ class _ConversationsSheet extends ConsumerWidget {
                         selected: current,
                         leading: Icon(current ? LucideIcons.messageCircle : LucideIcons.messageCircle, size: 20),
                         title: Text(
-                          c.title ?? l10n.untitledChat,
+                          c.title.orPlaceholder(l10n.untitledChat),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.textTheme.bodyLarge?.copyWith(fontWeight: current ? FontWeight.w700 : FontWeight.w500),

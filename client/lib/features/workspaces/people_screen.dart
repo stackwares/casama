@@ -3,10 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
+import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
@@ -46,7 +50,7 @@ class PeopleScreen extends ConsumerWidget {
           _PendingInvitesSection(orgId: org.id),
         ] else
           FormNote(l10n.askAdminToInvite),
-        SectionHeader(title: l10n.members, count: members.isEmpty ? null : '${members.length}'),
+        SectionHeader(title: l10n.members, count: members.isEmpty ? null : members.length.humanizedCount(context.l10n.localeName)),
         GroupedCard(
           children: [
             for (final m in members)
@@ -54,7 +58,7 @@ class PeopleScreen extends ConsumerWidget {
                 key: Key('member-${m.userId}'),
                 icon: LucideIcons.user,
                 // About you (D-169): the name they go by and their pronouns, then the email.
-                title: [m.name ?? m.email ?? m.userId, if (m.pronouns != null) '(${m.pronouns})'].join(' '),
+                title: [m.name.orPlaceholder(m.email.orPlaceholder(m.userId)), if (m.pronouns.isUsable) '(${m.pronouns})'].join(' '),
                 subtitle: m.name != null ? m.email : null,
                 trailing: Text(_roleLabel(context, m.role.value), style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
               ),
@@ -162,10 +166,10 @@ class _InviteLinkCard extends ConsumerWidget {
                 title: Text(l10n.askBeforeJoining),
                 subtitle: Text(l10n.askBeforeJoiningHelp),
                 value: approval,
-                onChanged: (v) async {
+                onChanged: hapticOnChanged((v) async {
                   await runGuarded(context, () => ref.read(backendProvider).updateDefaultInvite(org.id, requiresApproval: v));
                   ref.invalidate(_defaultInviteProvider(org.id));
-                },
+                }),
               ),
               Align(
                 alignment: AlignmentDirectional.centerStart,
@@ -289,15 +293,16 @@ class _EmailInviteCardState extends ConsumerState<_EmailInviteCard> {
     ref.invalidate(_pendingProvider(widget.orgId));
     final unsent = sent.where((i) => !i.emailSent && i.acceptToken != null).toList();
     if (unsent.isEmpty) {
-      showMessage(context, l10n.invitesSent(sent.length));
+      showSuccess(context, l10n.invitesSent(sent.length));
       return;
     }
     // No email on this server: hand over the links to send another way.
     final base = (ref.read(_defaultInviteProvider(widget.orgId)).value?.url ?? '').replaceFirst(RegExp(r'/join/.*$'), '');
     await showAdaptiveSheet<void>(
       context: context,
+      contentPadsBottom: true,
       builder: (c) => SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpace.lg),
+        padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(c, minimum: AppSpace.lg)),
         child: Column(
           key: const Key('unsentInvites'),
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -356,7 +361,7 @@ class _EmailInviteCardState extends ConsumerState<_EmailInviteCard> {
                   contentPadding: EdgeInsets.zero,
                   title: Text(l10n.inviteAsAdmin),
                   value: _admin,
-                  onChanged: (v) => setState(() => _admin = v),
+                  onChanged: hapticOnChanged((v) => setState(() => _admin = v)),
                 ),
               ),
               const SizedBox(width: AppSpace.sm),
@@ -392,15 +397,15 @@ class _RequestsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHeader(title: l10n.waitingToJoin, count: '${list.length}'),
+        SectionHeader(title: l10n.waitingToJoin, count: list.length.humanizedCount(context.l10n.localeName)),
         GroupedCard(
           children: [
             for (final r in list)
               GroupedTile(
                 key: Key('request-${r.id}'),
                 icon: LucideIcons.userPlus,
-                title: r.displayName ?? r.email ?? r.userId,
-                subtitle: [if (r.displayName != null && r.email != null) r.email!, relativeTime(r.createdAt, context)].join(' · '),
+                title: r.displayName.orPlaceholder(r.email.orPlaceholder(r.userId)),
+                subtitle: [if (r.displayName.isUsable && r.email.isUsable) r.email!, relativeTime(r.createdAt, context)].join(' · '),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -428,7 +433,7 @@ class _PendingInvitesSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHeader(title: l10n.pendingInvites, count: '${list.length}'),
+        SectionHeader(title: l10n.pendingInvites, count: list.length.humanizedCount(context.l10n.localeName)),
         GroupedCard(
           children: [
             for (final i in list)
@@ -439,12 +444,13 @@ class _PendingInvitesSection extends ConsumerWidget {
                 subtitle: i.expiresAt.isBefore(DateTime.now()) ? l10n.inviteExpired : l10n.inviteExpires(relativeTime(i.expiresAt, context)),
                 trailing: PopupMenuButton<String>(
                   key: Key('pendingMenu-${i.id}'),
+                  onOpened: unfocusBeforeModal,
                   icon: const Icon(LucideIcons.ellipsis),
                   onSelected: (v) async {
                     final backend = ref.read(backendProvider);
                     if (v == 'resend') {
                       final r = await runGuarded(context, () => backend.resendInvite(orgId, i.id));
-                      if (r != null && context.mounted) showMessage(context, r.emailSent ? l10n.inviteSent(i.email) : l10n.inviteRenewed);
+                      if (r != null && context.mounted) showSuccess(context, r.emailSent ? l10n.inviteSent(i.email) : l10n.inviteRenewed);
                     } else {
                       await runGuarded(context, () => backend.revokeInvite(orgId, i.id));
                     }
@@ -483,10 +489,10 @@ class _DomainCard extends ConsumerWidget {
             title: Text(l10n.joinByDomainSwitch(mine)),
             subtitle: Text(l10n.joinByDomainHelp),
             value: on,
-            onChanged: (v) async {
+            onChanged: hapticOnChanged((v) async {
               await runGuarded(context, () => ref.read(backendProvider).setJoinDomain(orgId, v));
               ref.invalidate(_domainsProvider(orgId));
-            },
+            }),
           )
         else
           Padding(padding: const EdgeInsets.all(AppSpace.md), child: FormNote(l10n.joinByDomainUnavailable)),
@@ -551,7 +557,7 @@ class _CustomLinksState extends ConsumerState<_CustomLinks> {
                     DropdownMenuItem(value: 'member', child: Text(l10n.roleMember)),
                     DropdownMenuItem(value: 'admin', child: Text(l10n.roleAdmin)),
                   ],
-                  onChanged: (v) => setState(() => _role = v ?? _role),
+                  onChanged: hapticOnChanged((v) => setState(() => _role = v ?? _role), haptic: HapticsHelper.selection),
                 ),
                 DropdownButtonFormField<int?>(
                   isExpanded: true,
@@ -561,7 +567,7 @@ class _CustomLinksState extends ConsumerState<_CustomLinks> {
                     for (final d in [1, 7, 30]) DropdownMenuItem(value: d, child: Text(l10n.linkDays(d))),
                     DropdownMenuItem(value: null, child: Text(l10n.linkNever)),
                   ],
-                  onChanged: (v) => setState(() => _days = v),
+                  onChanged: hapticOnChanged((v) => setState(() => _days = v), haptic: HapticsHelper.selection),
                 ),
                 DropdownButtonFormField<int?>(
                   isExpanded: true,
@@ -571,7 +577,7 @@ class _CustomLinksState extends ConsumerState<_CustomLinks> {
                     for (final u in [1, 5, 25]) DropdownMenuItem(value: u, child: Text('$u')),
                     DropdownMenuItem(value: null, child: Text(l10n.linkUnlimited)),
                   ],
-                  onChanged: (v) => setState(() => _uses = v),
+                  onChanged: hapticOnChanged((v) => setState(() => _uses = v), haptic: HapticsHelper.selection),
                 ),
               ];
               // Side by side where there's room, stacked on phones.
@@ -610,7 +616,7 @@ class _CustomLinksState extends ConsumerState<_CustomLinks> {
                     title: '${l.kind == InviteLinkKindEnum.code ? l10n.inviteCode : l10n.inviteLink} · ${l.role == InviteLinkRoleEnum.admin ? l10n.roleAdmin : l10n.roleMember}',
                     subtitle: [
                       l10n.linkMade(relativeTime(l.createdAt, context)),
-                      l10n.linkUses('${l.uses}${l.maxUses == null ? '' : '/${l.maxUses}'}'),
+                      l10n.linkUses('${l.uses.humanizedCount(context.l10n.localeName)}${l.maxUses == null ? '' : '/${l.maxUses!.humanizedCount(context.l10n.localeName)}'}'),
                       if (l.revokedAt != null) l10n.linkRevoked,
                     ].join(' · '),
                     trailing: l.revokedAt != null

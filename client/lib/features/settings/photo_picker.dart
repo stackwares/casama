@@ -9,6 +9,8 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
+import '../../ui/smooth_network_image.dart';
 
 /// A photo someone chose in [PhotoPicker].
 class PickedPhoto {
@@ -134,7 +136,8 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
                   );
                 return LayoutBuilder(
                   builder: (context, c) => GridView.builder(
-                    padding: const EdgeInsets.only(bottom: AppSpace.lg),
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.only(bottom: BottomPadding.of(context, minimum: AppSpace.lg)),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: (c.maxWidth / 160).floor().clamp(2, 5),
                       mainAxisSpacing: AppSpace.xs,
@@ -154,10 +157,9 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
                             child: Stack(
                               fit: StackFit.expand,
                               children: [
-                                Image.network(
+                                SmoothNetworkImage(
                                   p.thumbUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => const SizedBox(),
+                                  placeholderColor: _hex(p.color) ?? scheme.surfaceContainer,
                                 ),
                                 Align(
                                   alignment: Alignment.bottomLeft,

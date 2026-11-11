@@ -6,6 +6,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../l10n/generated/app_localizations.dart';
+import '../ui/bottom_padding.dart';
+import 'date_format.dart';
+import 'haptics.dart';
 
 extension L10nContext on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this);
@@ -59,11 +62,32 @@ String errorText(BuildContext context, Object error) {
 }
 
 void showError(BuildContext context, Object error) {
+  HapticsHelper.error();
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorText(context, error))));
 }
 
 void showMessage(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+}
+
+/// [showMessage] for something that just worked (saved, sent, imported), with a success haptic.
+void showSuccess(BuildContext context, String message) {
+  HapticsHelper.success();
+  showMessage(context, message);
+}
+
+/// [showMessage] for something the person has to fix or can't do here (an invalid email, a file
+/// too large, a missing permission), with a warning haptic.
+void showWarning(BuildContext context, String message) {
+  HapticsHelper.warning();
+  showMessage(context, message);
+}
+
+/// [showMessage] for a failure that already has its own words (an upload that didn't go through),
+/// with an error haptic. For an error object, use [showError].
+void showFailure(BuildContext context, String message) {
+  HapticsHelper.error();
+  showMessage(context, message);
 }
 
 /// Renders an AsyncValue with loading, error (with retry) and data states.
@@ -145,7 +169,7 @@ class EmptyState extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 380),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            padding: EdgeInsets.fromLTRB(32, 24, 32, BottomPadding.of(context, minimum: 24)),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -208,5 +232,5 @@ String relativeTime(DateTime t, BuildContext context) {
   if (d.inMinutes < 60) return l10n.minutesAgo(d.inMinutes);
   if (d.inHours < 24) return l10n.hoursAgo(d.inHours);
   if (d.inDays < 7) return l10n.daysAgo(d.inDays);
-  return MaterialLocalizations.of(context).formatShortDate(t.toLocal());
+  return t.toLocal().formattedDate(context);
 }
