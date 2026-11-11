@@ -44,7 +44,7 @@ if [[ "$(uname -s)" == "Linux" ]] && docker info 2>/dev/null | grep -q runsc; th
   runtime=runsc
 else
   runtime=""
-  [[ "$(uname -s)" == "Linux" ]] && echo "Note: gVisor (runsc) not found; computers use runc. See docs/SELF_HOST.md."
+  [[ "$(uname -s)" == "Linux" ]] && echo "Note: gVisor (runsc) not found; computers use runc. See docs-site/self-hosting/computers.md."
 fi
 
 # ---------------------------------------------------------------- secrets and .env
@@ -134,7 +134,7 @@ METRICS_TOKEN=$(rand 24)
 GRAFANA_ADMIN_PASSWORD=$(rand 12)
 SANDBOX_RUNTIME=$runtime
 
-# Optional (see docs/SELF_HOST.md): email, error reporting, telemetry, Cloud Connect.
+# Optional (see docs-site/self-hosting/configuration.md): email, error reporting, telemetry, Cloud Connect.
 EMAIL_AUTOCONFIRM=true
 INSTANCE_ADMIN_EMAILS=
 RESEND_API_KEY=
@@ -180,9 +180,12 @@ for _ in $(seq 1 90); do
 
 Kasama is running at $public
 
-  1. Open the Kasama app (or the CLI: kasama login --server $public) and create an account.
+  1. Open the Kasama app, tap Sign in or create account > More options > Server, enter
+     $public, and create an account with an email and password.
+     (CLI: kasama config --api-url $public && kasama signup --email you@example.com)
      The first account is the instance owner (admin console in Settings).
   2. Add a model key (or a local Ollama endpoint) and create your first bot.
+  Docs: docs-site/self-hosting/index.md
   3. Back up $ENV_FILE and the database: kasama selfhost backup
 
 Logs: docker compose -f $COMPOSE_DIR/docker-compose.yml --env-file $ENV_FILE logs -f api worker

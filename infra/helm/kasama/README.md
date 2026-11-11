@@ -1,7 +1,7 @@
 # Kasama Helm chart
 
 Runs Kasama's API, worker, sandbox supervisor (computers as pods) and optionally the web app on
-Kubernetes (D-147). Supabase (Postgres, Auth, Realtime) runs separately: Supabase Cloud or the
+Kubernetes. Supabase (Postgres, Auth, Realtime) runs separately: Supabase Cloud or the
 Supabase Helm chart.
 
 ```sh
@@ -19,4 +19,5 @@ helm install kasama infra/helm/kasama -n kasama --create-namespace \
   if you have them). The supervisor can only touch pods there.
 - Point Supabase Auth's sign-up hook at `https://<apiHost>/hooks/auth/before-user-created` to use
   the sign-up allowlist and abuse controls.
+- More on operating it: [Operations](../../../docs-site/self-hosting/operations.md).
 - Check the chart: `scripts/check-helm.sh` (runs `helm lint` and `helm template` in Docker).

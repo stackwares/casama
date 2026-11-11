@@ -51,7 +51,7 @@ x-kasama: &kasama
     CONTENT_KMS_REGION: ${CONTENT_KMS_REGION:-}
     SIGNUP_ALLOWED_EMAILS: ${SIGNUP_ALLOWED_EMAILS:-}
     AUTH_HOOK_SECRET: ${AUTH_HOOK_SECRET:-}
-    # Optional settings (empty = not set); see docs/SELF_HOST.md (audit 2026-11: these were read by
+    # Optional settings (empty = not set); see docs-site/self-hosting/configuration.md (audit 2026-11: these were read by
     # the server but never passed through).
     ACCOUNT_DELETION_GRACE_DAYS: ${ACCOUNT_DELETION_GRACE_DAYS:-}
     TELEMETRY_URL: ${TELEMETRY_URL:-}
@@ -126,7 +126,7 @@ services:
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
       GOTRUE_SITE_URL: ${KASAMA_PUBLIC_URL}
-      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-kasama://app/login-callback}
       GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
       # Kasama's sign-up hook (abuse controls, D-094; the sign-up allowlist, D-145). Turn it on with
       # SIGNUP_HOOK_ENABLED=true and the same AUTH_HOOK_SECRET ("v1,whsec_…") here and on the API.

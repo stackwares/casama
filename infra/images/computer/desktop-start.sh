@@ -13,4 +13,9 @@ export NO_AT_BRIDGE=0 GTK_MODULES=gail:atk-bridge
 xsetroot -solid '#23303f' || true
 openbox >/dev/null 2>&1 &
 tint2 >/dev/null 2>&1 &
+# The desktop's browser can't send the egress proxy's credentials, so it goes through a local relay
+# that adds them (no "proxy requires a username and password" dialog). Restarted if it ever exits.
+if [ -n "${AGENT_BROWSER_PROXY_USERNAME:-}" ]; then
+  (while true; do node /usr/local/lib/kasama/proxy-relay.mjs >/dev/null 2>&1; sleep 1; done) &
+fi
 exec computerd

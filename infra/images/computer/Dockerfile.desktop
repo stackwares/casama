@@ -43,6 +43,7 @@ COPY infra/images/computer/openbox-menu.xml /etc/xdg/openbox/menu.xml
 COPY infra/images/computer/tint2rc /etc/xdg/tint2/tint2rc
 RUN chmod +x /usr/local/bin/desktop-start
 COPY infra/images/computer/kasama-open-browser.sh /usr/local/bin/kasama-open-browser
+COPY infra/images/computer/kasama-proxy-relay.mjs /usr/local/lib/kasama/proxy-relay.mjs
 RUN chmod +x /usr/local/bin/kasama-open-browser
 COPY infra/images/computer/kasama-browser.desktop /usr/share/applications/kasama-browser.desktop
 # The bot's browser runs as a visible window here, so a person taking over sees what the bot sees.

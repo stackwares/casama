@@ -1,7 +1,7 @@
 # One-click deploy templates
 
 The full stack (with sandboxed computers) needs a machine with Docker: use `./install.sh` on a VPS
-(see [docs/SELF_HOST.md](../docs/SELF_HOST.md)) or the Coolify template, which runs the same compose file.
+(see [Self-hosting](../docs-site/self-hosting/index.md)) or the Coolify template, which runs the same compose file.
 
 Platforms without a Docker socket (Render, Railway, DigitalOcean App Platform) run the **API and
 worker only**. They use a Supabase project for Postgres and Auth (Supabase Cloud's free tier or your
