@@ -168,7 +168,8 @@ services:
       GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
-      GOTRUE_SITE_URL: ${CASAMA_PUBLIC_URL}
+      # Where email links land when the app didn't ask for a place (set it to your web app).
+      GOTRUE_SITE_URL: ${AUTH_SITE_URL:-${CASAMA_PUBLIC_URL}}
       GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-casama://app/login-callback}
       GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
       # Casama's sign-up hook (abuse controls, D-094; the sign-up allowlist, D-145). Turn it on with
