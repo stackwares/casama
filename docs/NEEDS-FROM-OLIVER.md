@@ -115,7 +115,7 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 
 | Decision                      | Default used                                                              |
 | ----------------------------- | ------------------------------------------------------------------------- |
-| Final product name and domain | "Casama", placeholder addresses `security@casama.ai`, `conduct@casama.ai` |
+| Final product name and domain | Done (D-170): Casama on casama.ai. Mail on Zoho: hello@ (primary), support@, security@, privacy@, billing@, admin@ |
 
 ## Sandbox providers without a public HTTP API (D-139)
 

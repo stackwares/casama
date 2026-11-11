@@ -4,4 +4,4 @@ Casama adopts the [Contributor Covenant, version 2.1](https://www.contributor-co
 
 In short: be respectful, assume good intent, and keep discussion about the work. Harassment, personal attacks and discrimination are not tolerated in any project space, online or offline.
 
-Report incidents to **conduct@casama.ai** (placeholder address; maintainers will publish the final one before the public launch). Reports are handled confidentially by the maintainers listed in [GOVERNANCE.md](GOVERNANCE.md).
+Report incidents to **hello@casama.ai**. Reports are handled confidentially by the maintainers listed in [GOVERNANCE.md](GOVERNANCE.md).

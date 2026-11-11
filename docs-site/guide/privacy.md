@@ -159,6 +159,11 @@ input and output, with secrets and model keys removed. Workspaces can opt out wi
 - A deletion can't be undone from the app once requested.
 - The `llm_tracing` opt-out has no switch in the app.
 
+## Questions about your data
+
+Email [privacy@casama.ai](mailto:privacy@casama.ai) for privacy questions or requests about data
+held by Casama Cloud. On a self-hosted server, ask whoever runs it.
+
 ## Related
 
 - [Workspaces and teams](/guide/workspaces)

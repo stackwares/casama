@@ -5,7 +5,7 @@ so we take security reports seriously and appreciate them.
 
 ## Reporting a vulnerability
 
-Email **security@casama.ai** (placeholder until launch), or use GitHub's
+Email **security@casama.ai**, or use GitHub's
 [private vulnerability reporting](https://github.com/stackwares/casama/security/advisories/new).
 Please don't open public issues or discussions for vulnerabilities.
 

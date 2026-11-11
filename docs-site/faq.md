@@ -81,3 +81,13 @@ Yes: connect MCP servers, write [plugins](/develop/plugins) (skills plus tool se
 
 Read the [contributing guide](https://github.com/stackwares/casama/blob/main/CONTRIBUTING.md). Bug
 reports, docs fixes and code are all welcome.
+
+### How do I reach the Casama team?
+
+| For                              | Email                                         |
+| -------------------------------- | --------------------------------------------- |
+| Anything else, or not sure       | [hello@casama.ai](mailto:hello@casama.ai)       |
+| Help with the apps or your account | [support@casama.ai](mailto:support@casama.ai) |
+| Plans, invoices and refunds      | [billing@casama.ai](mailto:billing@casama.ai)   |
+| Your data and privacy requests   | [privacy@casama.ai](mailto:privacy@casama.ai)   |
+| Security issues                  | [security@casama.ai](mailto:security@casama.ai) (see `SECURITY.md`) |
