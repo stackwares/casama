@@ -44,9 +44,14 @@ class ThemePreset {
   factory ThemePreset.fromAppearance(Appearance a, {required String id, required String name}) =>
       ThemePreset(id: id, name: name, schemeId: a.schemeId, headingFont: a.headingFont, bodyFont: a.bodyFont, wallpaper: a.wallpaper, fewerEffects: a.fewerEffects);
 
-  /// Whether [a] currently looks like this preset.
+  /// Whether [a] currently looks like this preset. "Show in the whole app" is a preference, not part
+  /// of the look, so turning it off keeps the theme.
   bool matches(Appearance a) =>
-      a.schemeId == schemeId && a.headingFont == headingFont && a.bodyFont == bodyFont && a.wallpaper == wallpaper && (mode == null || a.mode == mode);
+      a.schemeId == schemeId &&
+      a.headingFont == headingFont &&
+      a.bodyFont == bodyFont &&
+      a.wallpaper.copyWith(everywhere: true) == wallpaper.copyWith(everywhere: true) &&
+      (mode == null || a.mode == mode);
 
   Map<String, Object?> toJson() => {
     'v': 1,
@@ -77,7 +82,7 @@ class ThemePreset {
     return photo != null && !photo.startsWith('https://') ? wallpaper.copyWith(clearPhoto: true) : wallpaper;
   }
 
-  /// A short text people can paste into Settings → Themes → Import.
+  /// A short text people can paste into Settings → Appearance → Import a theme.
   String toCode() => codePrefix + base64Url.encode(utf8.encode(jsonEncode(toJson()..remove('id'))));
 
   /// The theme in [code], or null when it isn't one.
@@ -140,7 +145,9 @@ const builtInPresets = [
     id: 'casama',
     name: 'Casama',
     schemeId: 'casama',
-    wallpaper: WallpaperSpec(pattern: WallpaperPattern.clouds, palette: WallpaperPalette.casama),
+    // Exactly the out-of-the-box look, so a new install shows Casama in use rather than a custom
+    // look. Clouds on the theme's own colors: orchid, rose and periwinkle with Casama's scheme.
+    wallpaper: WallpaperSpec(),
     builtIn: true,
   ),
   ThemePreset(
@@ -231,8 +238,10 @@ class SavedThemesNotifier extends Notifier<List<ThemePreset>> {
     return preset;
   }
 
+  /// Adds [preset], or replaces the saved theme with the same id (using a gallery theme again).
   Future<void> add(ThemePreset preset) async {
-    state = [...state, preset];
+    final i = state.indexWhere((t) => t.id == preset.id);
+    state = i < 0 ? [...state, preset] : ([...state]..[i] = preset);
     await _persist();
   }
 

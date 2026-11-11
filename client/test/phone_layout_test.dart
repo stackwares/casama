@@ -40,6 +40,11 @@ const routes = [
   '/computer',
   '/settings',
   '/settings/keys',
+  '/settings/appearance',
+  '/settings/appearance/customize',
+  '/settings/appearance/customize?tab=background',
+  '/settings/appearance/customize?tab=fonts',
+  // Older addresses lead to the same pages.
   '/settings/themes',
   '/settings/theme',
   '/settings/fonts',

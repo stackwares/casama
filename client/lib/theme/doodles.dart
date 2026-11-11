@@ -13,7 +13,7 @@ class Doodle {
   final List<DoodleShape> shapes;
 
   static const maxDoodles = 24;
-  static const maxShapes = 16;
+  static const maxShapes = 24;
   static const maxPathLength = 1500;
 
   /// The stroke outline on the 24 × 24 grid, built once per doodle.
@@ -75,14 +75,19 @@ sealed class DoodleShape {
   static final _pointsChars = RegExp(r'^[0-9.,eE+\-\s]+$');
 
   static DoodleShape? fromJson(Object? raw) {
-    if (raw is! List || raw.length != 2 || raw[0] is! String || raw[1] is! Map) {
+    if (raw is! List ||
+        raw.length != 2 ||
+        raw[0] is! String ||
+        raw[1] is! Map) {
       return null;
     }
     final a = (raw[1] as Map).cast<Object?, Object?>();
     double? number(String key, {required bool size, bool optional = false}) {
       final v = a[key];
       if (v == null) return optional ? 0 : null;
-      final n = v is num ? v.toDouble() : (v is String ? double.tryParse(v) : null);
+      final n = v is num
+          ? v.toDouble()
+          : (v is String ? double.tryParse(v) : null);
       if (n == null || !n.isFinite) return null;
       if (size ? (n < 0 || n > 26) : (n < -2 || n > 26)) return null;
       return n;
@@ -124,7 +129,8 @@ sealed class DoodleShape {
         final rx = a['rx'] == null ? null : number('rx', size: true);
         final ry = a['ry'] == null ? null : number('ry', size: true);
         if (x == null || y == null || w == null || h == null) return null;
-        if ((a['rx'] != null && rx == null) || (a['ry'] != null && ry == null)) {
+        if ((a['rx'] != null && rx == null) ||
+            (a['ry'] != null && ry == null)) {
           return null;
         }
         return DoodleRect(x, y, w, h, rx: rx ?? ry ?? 0, ry: ry ?? rx ?? 0);
@@ -137,7 +143,9 @@ sealed class DoodleShape {
         return DoodleLine(x1, y1, x2, y2);
       case 'polyline' || 'polygon':
         final p = a['points'];
-        if (p is! String || p.length > Doodle.maxPathLength || !_pointsChars.hasMatch(p)) {
+        if (p is! String ||
+            p.length > Doodle.maxPathLength ||
+            !_pointsChars.hasMatch(p)) {
           return null;
         }
         final values = [
@@ -149,10 +157,9 @@ sealed class DoodleShape {
             values.any((v) => v == null || v < -2 || v > 26)) {
           return null;
         }
-        return DoodlePoly(
-          [for (final v in values) v!],
-          closed: raw[0] == 'polygon',
-        );
+        return DoodlePoly([
+          for (final v in values) v!,
+        ], closed: raw[0] == 'polygon');
     }
     return null;
   }
@@ -208,7 +215,11 @@ class DoodleEllipse extends DoodleShape {
 
   @override
   void addTo(ui.Path path) => path.addOval(
-    ui.Rect.fromCenter(center: ui.Offset(cx, cy), width: rx * 2, height: ry * 2),
+    ui.Rect.fromCenter(
+      center: ui.Offset(cx, cy),
+      width: rx * 2,
+      height: ry * 2,
+    ),
   );
 
   @override

@@ -2324,7 +2324,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNew080Looks =>
-      'Make Casama yours: color schemes, fonts and wallpapers in Settings → Themes, with more in the Gallery.';
+      'Make Casama yours: themes, color schemes, fonts and wallpapers in Settings → Appearance, with more from the gallery.';
 
   @override
   String get whatsNew080AboutYou =>
@@ -3042,7 +3042,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeCodeCopied =>
-      'Theme code copied. Anyone can paste it into Themes → Import.';
+      'Theme code copied. Anyone can paste it into Appearance → Import a theme.';
 
   @override
   String get shareTheme => 'Share code';
@@ -7470,4 +7470,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fewerEffectsHelp =>
       'No celebrations, bouncing tabs or animated bots. The Plain themes turn this on.';
+
+  @override
+  String get customize => 'Customize';
+
+  @override
+  String get customizeColors => 'Colors';
+
+  @override
+  String get appearanceCustomLook => 'Custom look';
+
+  @override
+  String get appearanceCustomHelp =>
+      'Your own changes. Save them to keep this look.';
+
+  @override
+  String get appearanceFromGallery => 'From the gallery';
+
+  @override
+  String appearanceShowAll(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Show all $countString';
+  }
+
+  @override
+  String appearanceSwitched(String name) {
+    return 'Switched to $name';
+  }
+
+  @override
+  String appearanceSaved(String name) {
+    return 'Saved $name to your themes';
+  }
+
+  @override
+  String get appearanceAboutTheme => 'About this theme';
 }

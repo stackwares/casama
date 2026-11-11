@@ -41,7 +41,7 @@ extension WallpaperPaletteColors on WallpaperPalette {
   }
 }
 
-/// What Settings → Background chose.
+/// What Customize → Background chose.
 @immutable
 class WallpaperSpec {
   const WallpaperSpec({

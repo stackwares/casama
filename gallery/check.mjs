@@ -153,12 +153,12 @@ function numberOf(v) {
   return undefined;
 }
 
-// A wallpaper's own doodles: 1 to 24, each 1 to 16 Lucide-style elements on a 24 × 24 grid.
+// A wallpaper's own doodles: 1 to 24, each 1 to 24 Lucide-style elements on a 24 × 24 grid.
 function doodleFields(raw, errors) {
   if (!Array.isArray(raw) || raw.length < 1 || raw.length > 24) return errors.push("doodles must be 1 to 24 drawings");
   raw.forEach((doodle, i) => {
     const at = `doodles[${i}]`;
-    if (!Array.isArray(doodle) || doodle.length < 1 || doodle.length > 16) return errors.push(`${at} must be 1 to 16 elements`);
+    if (!Array.isArray(doodle) || doodle.length < 1 || doodle.length > 24) return errors.push(`${at} must be 1 to 24 elements`);
     doodle.forEach((element, j) => {
       const where = `${at}[${j}]`;
       if (!Array.isArray(element) || element.length !== 2 || !isRecord(element[1])) return errors.push(`${where} must be [tag, attributes]`);

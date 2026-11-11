@@ -23,12 +23,15 @@ import '../../ui/reveal_when_selected.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 import '../skills/skill_visuals.dart';
+import 'colors_panel.dart' show SchemeDots;
+import 'gallery_looks.dart';
 import 'gallery_previews.dart';
-import 'theme_screen.dart' show SchemeDots;
 
 export 'gallery_previews.dart' show galleryHost;
 
-/// Settings → Gallery: themes, color schemes, wallpapers and skills from the open gallery (D-184).
+/// The Gallery page: themes, color schemes, wallpapers and skills from the open gallery (D-184).
+/// Skills and links into the gallery open it; looks also show beside the built-in ones in
+/// Appearance and Customize (D-203).
 /// Every look is drawn as a small Casama chat in its own colors, so people choose by seeing.
 class GalleryScreen extends ConsumerStatefulWidget {
   const GalleryScreen({
@@ -98,7 +101,14 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     super.dispose();
   }
 
-  Future<GalleryPage> _load() => ref.read(backendProvider).gallery();
+  // Items that need something this app can't draw (a newer gallery feature) stay hidden.
+  Future<GalleryPage> _load() async {
+    final page = await ref.read(backendProvider).gallery();
+    return GalleryPage(
+      available: page.available,
+      items: [for (final item in page.items) if (item.supported) item],
+    );
+  }
 
   void _retry() {
     final page = _load();
@@ -1532,55 +1542,6 @@ class _Swatches extends StatelessWidget {
   }
 }
 
-/// Applies a gallery theme, scheme or wallpaper on this device.
-Future<void> applyGalleryItem(WidgetRef ref, GalleryItem item) async {
-  final notifier = ref.read(appearanceProvider.notifier);
-  final current = ref.read(appearanceProvider);
-  final everywhere = current.wallpaper.everywhere;
-  switch (item.type) {
-    case 'scheme':
-      final choice = galleryChoiceOf(item);
-      if (choice != null) await notifier.applyGalleryScheme(choice);
-    case 'wallpaper':
-      final spec = galleryWallpaperOf(item);
-      if (spec != null) {
-        await notifier.setWallpaper(spec.copyWith(everywhere: everywhere));
-      }
-    case 'theme':
-      final choice = galleryChoiceOf(item);
-      final look = GalleryLook.of(item, current);
-      final wallpaper = (galleryWallpaperOf(item) ?? current.wallpaper)
-          .copyWith(everywhere: everywhere);
-      await notifier.apply(
-        schemeId: look.scheme.id,
-        gallery: choice != null && choice.id.startsWith('gallery:')
-            ? choice
-            : null,
-        headingFont: look.headingFont,
-        bodyFont: look.bodyFont,
-        wallpaper: wallpaper,
-      );
-      await ref
-          .read(savedThemesProvider.notifier)
-          .add(
-            ThemePreset(
-              id: 'gallery-${item.id}',
-              name: item.name,
-              schemeId: look.scheme.id,
-              headingFont: look.headingFont,
-              bodyFont: look.bodyFont,
-              wallpaper: wallpaper,
-            ),
-          );
-  }
-}
-
-Uri galleryShareUri(String code) => Uri.https(
-  'github.com',
-  '/stackwares/casama-gallery/issues/new',
-  {'title': 'Share a theme', 'body': '```\n$code\n```\n'},
-);
-
 Uri _reportUri(
   GalleryItem item,
 ) => Uri.https('github.com', '/stackwares/casama-gallery/issues/new', {
@@ -1588,3 +1549,15 @@ Uri _reportUri(
   'body':
       'Please look at ${item.name} (${item.type}/${item.id}), by ${item.authorName}.\n',
 });
+
+/// The gallery's page for [item] (its picture, author, license and Use), from wherever a gallery
+/// look is shown.
+Future<void> showGalleryDetail(BuildContext context, GalleryItem item) =>
+    showAdaptiveSheet<void>(
+      context: context,
+      dialogMaxWidth: 620,
+      builder: (_) => _GalleryDetail(
+        item: item,
+        brightness: Theme.of(context).brightness,
+      ),
+    );

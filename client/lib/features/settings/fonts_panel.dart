@@ -13,16 +13,16 @@ import '../../ui/segmented.dart';
 
 enum _Role { heading, body }
 
-/// Settings → Fonts: one font for headlines and one for everything else, from a short suggested
+/// Customize → Fonts: one font for headlines and one for everything else, from a short suggested
 /// list or any Google Font. Each name is drawn in its own face; picking one applies it right away.
-class FontsScreen extends ConsumerStatefulWidget {
-  const FontsScreen({super.key});
+class FontsPanel extends ConsumerStatefulWidget {
+  const FontsPanel({super.key});
 
   @override
-  ConsumerState<FontsScreen> createState() => _FontsScreenState();
+  ConsumerState<FontsPanel> createState() => _FontsPanelState();
 }
 
-class _FontsScreenState extends ConsumerState<FontsScreen> {
+class _FontsPanelState extends ConsumerState<FontsPanel> {
   final _search = TextEditingController();
   var _role = _Role.heading;
   late final List<String> _all = allGoogleFonts()..sort();
@@ -46,8 +46,7 @@ class _FontsScreenState extends ConsumerState<FontsScreen> {
     void pick(String family) => _role == _Role.heading ? notifier.setFonts(heading: family) : notifier.setFonts(body: family);
     final isDefault = appearance.headingFont == defaultHeadingFont && appearance.bodyFont == defaultBodyFont;
 
-    return SubPage(
-      title: l10n.fonts,
+    return PageColumn(
       children: [
         // The pair as it will look.
         Container(

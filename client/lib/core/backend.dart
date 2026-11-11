@@ -49,6 +49,7 @@ class GalleryItem {
     this.description,
     this.document,
     this.skillMd,
+    this.requires = const [],
   });
 
   final String id;
@@ -89,8 +90,19 @@ class GalleryItem {
       description: j['description'] as String?,
       document: document is Map ? document.cast<String, Object?>() : null,
       skillMd: j['skill_md'] as String?,
+      requires: [for (final r in (j['requires'] as List? ?? const [])) '$r'],
     );
   }
+
+  /// What the item needs that older apps couldn't draw, as the gallery's checker worked it out:
+  /// `mesh`, `doodles`, `scheme-colors` (D-201).
+  final List<String> requires;
+
+  /// What this app draws from the gallery. Items needing anything else are hidden.
+  static const supportedFeatures = {'mesh', 'doodles', 'scheme-colors'};
+
+  /// Whether this app can draw the item.
+  bool get supported => requires.every(supportedFeatures.contains);
 }
 
 class GalleryPage {

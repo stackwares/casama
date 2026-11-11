@@ -40,13 +40,11 @@ import '../features/routines/routines_screen.dart';
 import '../features/settings/secrets_screen.dart';
 import '../features/memory/memory_screen.dart';
 import '../features/settings/model_keys_screen.dart';
-import '../features/settings/background_screen.dart';
 import '../features/settings/gallery_screen.dart';
-import '../features/settings/fonts_screen.dart';
-import '../features/settings/themes_screen.dart';
+import '../features/settings/appearance_screen.dart';
+import '../features/settings/customize_screen.dart';
 import '../features/usage/usage_screen.dart';
 import '../features/settings/settings_screen.dart';
-import '../features/settings/theme_screen.dart';
 import '../features/skills/skill_catalog_screen.dart';
 import '../features/skills/skills_screen.dart';
 import '../features/timeline/timeline_screen.dart';
@@ -510,25 +508,42 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                 ),
               ),
+              // Everything about how the app looks is Appearance and its Customize page; the
+              // older addresses for themes, colors, fonts and background still lead there.
+              GoRoute(
+                path: 'appearance',
+                pageBuilder: _page((_, _) => const AppearanceScreen()),
+                routes: [
+                  GoRoute(
+                    path: 'customize',
+                    pageBuilder: _page(
+                      (_, s) => CustomizeScreen(
+                        initial: LookPart.named(s.uri.queryParameters['tab']),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               GoRoute(
                 path: 'themes',
-                pageBuilder: _page((_, _) => const ThemesScreen()),
+                redirect: (_, _) => '/settings/appearance',
               ),
               GoRoute(
                 path: 'theme',
-                pageBuilder: _page((_, _) => const ThemeScreen()),
+                redirect: (_, _) => '/settings/appearance/customize?tab=colors',
               ),
               GoRoute(
                 path: 'fonts',
-                pageBuilder: _page((_, _) => const FontsScreen()),
+                redirect: (_, _) => '/settings/appearance/customize?tab=fonts',
+              ),
+              GoRoute(
+                path: 'background',
+                redirect: (_, _) =>
+                    '/settings/appearance/customize?tab=background',
               ),
               GoRoute(
                 path: 'usage',
                 pageBuilder: _page((_, _) => const UsageScreen()),
-              ),
-              GoRoute(
-                path: 'background',
-                pageBuilder: _page((_, _) => const BackgroundScreen()),
               ),
               GoRoute(
                 path: 'gallery',

@@ -331,7 +331,7 @@ function numberOf(v: unknown): number | undefined {
 }
 
 /**
- * A wallpaper's own doodles: 1 to 24, each 1 to 16 elements on a 24 × 24 grid, drawn as strokes.
+ * A wallpaper's own doodles: 1 to 24, each 1 to 24 elements on a 24 × 24 grid, drawn as strokes.
  * Tags and attributes are a fixed list; numbers may be numbers or numeric strings.
  */
 export function checkDoodles(raw: unknown, errors: string[]): void {
@@ -341,8 +341,8 @@ export function checkDoodles(raw: unknown, errors: string[]): void {
   }
   raw.forEach((doodle, i) => {
     const at = `doodles[${i}]`;
-    if (!Array.isArray(doodle) || doodle.length < 1 || doodle.length > 16) {
-      errors.push(`${at} must be 1 to 16 elements`);
+    if (!Array.isArray(doodle) || doodle.length < 1 || doodle.length > 24) {
+      errors.push(`${at} must be 1 to 24 elements`);
       return;
     }
     doodle.forEach((element, j) => {

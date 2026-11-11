@@ -9,14 +9,11 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:casama_app/features/chat/chat_screen.dart';
 import 'package:casama_app/features/chat/chat_detail.dart';
 import 'package:casama_app/theme/fonts.dart';
-import 'package:casama_app/features/settings/background_screen.dart';
+import 'package:casama_app/features/settings/appearance_screen.dart';
 import 'package:casama_app/features/settings/gallery_screen.dart';
 import 'package:casama_app/features/settings/photo_picker.dart';
-import 'package:casama_app/features/settings/fonts_screen.dart';
-import 'package:casama_app/features/settings/themes_screen.dart';
 import 'package:casama_app/features/usage/usage_screen.dart';
-import 'package:casama_app/features/settings/settings_screen.dart';
-import 'package:casama_app/features/settings/theme_screen.dart';
+import 'package:casama_app/features/settings/customize_screen.dart';
 import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'package:casama_app/theme/app_theme.dart';
 import 'package:casama_app/theme/appearance.dart';
@@ -134,10 +131,10 @@ void main() {
       tester.view.physicalSize = const Size(500, 1400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(_app(FakeBackend(), const SettingsScreen()));
+      await tester.pumpWidget(_app(FakeBackend(), const AppearanceScreen()));
       await tester.pumpAndSettle();
       ThemeData theme() =>
-          Theme.of(tester.element(find.byType(SettingsScreen)));
+          Theme.of(tester.element(find.byType(AppearanceScreen)));
       final lightSurface = theme().colorScheme.surface;
       // Casama's own scheme is the default: orchid primary from the app icon.
       expect(theme().colorScheme.primary, casamaScheme.light.primary);
@@ -148,9 +145,9 @@ void main() {
       expect(theme().colorScheme.surface.computeLuminance(), lessThan(0.05));
 
       // Picking another scheme recolors the app.
-      await tester.pumpWidget(_app(FakeBackend(), const ThemeScreen()));
+      await tester.pumpWidget(_app(FakeBackend(), const CustomizeScreen()));
       await tester.pumpAndSettle();
-      final casamaPrimary = Theme.of(tester.element(find.byType(ThemeScreen)))
+      final casamaPrimary = Theme.of(tester.element(find.byType(CustomizeScreen)))
           .colorScheme
           .primary;
       await tester.enterText(find.byKey(const Key('themeSearch')), 'mandy');
@@ -158,17 +155,18 @@ void main() {
       await tester.tap(find.byKey(const Key('scheme-mandyRed')));
       await tester.pumpAndSettle();
       expect(
-        Theme.of(tester.element(find.byType(ThemeScreen))).colorScheme.primary,
+        Theme.of(tester.element(find.byType(CustomizeScreen))).colorScheme.primary,
         isNot(casamaPrimary),
       );
 
       // The background pattern and its reach are carried by the theme.
-      await tester.pumpWidget(_app(FakeBackend(), const BackgroundScreen()));
+      // The same page, on its Background tab.
+      await tester.tap(find.text('Background'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('pattern-doodles')));
       await tester.pumpAndSettle();
       WallpaperTheme wallpaper() =>
-          Theme.of(tester.element(find.byType(BackgroundScreen)))
+          Theme.of(tester.element(find.byType(CustomizeScreen)))
               .extension<WallpaperTheme>()!;
       expect(wallpaper().spec.pattern, WallpaperPattern.doodles);
       await tester.ensureVisible(find.byKey(const Key('wallpaperEverywhere')));
@@ -227,10 +225,10 @@ void main() {
     tester.view.physicalSize = const Size(700, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(_app(FakeBackend(), const ThemesScreen()));
+    await tester.pumpWidget(_app(FakeBackend(), const AppearanceScreen()));
     await tester.pumpAndSettle();
     final container = ProviderScope.containerOf(
-      tester.element(find.byType(ThemesScreen)),
+      tester.element(find.byType(AppearanceScreen)),
     );
     await tester.ensureVisible(find.byKey(const Key('preset-editorial')));
     await tester.tap(find.byKey(const Key('preset-editorial')));
@@ -242,7 +240,7 @@ void main() {
     // The theme's text styles follow the preset's fonts.
     await tester.pumpAndSettle();
     expect(
-      Theme.of(tester.element(find.byType(ThemesScreen)))
+      Theme.of(tester.element(find.byType(AppearanceScreen)))
           .textTheme
           .headlineSmall
           ?.fontFamily,
@@ -283,10 +281,12 @@ void main() {
       tester.view.physicalSize = const Size(700, 1600);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(_app(FakeBackend(), const FontsScreen()));
+      await tester.pumpWidget(
+        _app(FakeBackend(), const CustomizeScreen(initial: LookPart.fonts)),
+      );
       await tester.pumpAndSettle();
       final container = ProviderScope.containerOf(
-        tester.element(find.byType(FontsScreen)),
+        tester.element(find.byType(CustomizeScreen)),
       );
       await tester.ensureVisible(find.byKey(const Key('font-Fraunces')));
       await tester.tap(find.byKey(const Key('font-Fraunces')));

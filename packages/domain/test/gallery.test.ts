@@ -201,8 +201,8 @@ describe("gallery", () => {
       expect(errorsOf(Array(25).fill([["circle", { cx: 1, cy: 1, r: 1 }]]))).toEqual([
         "doodles must be 1 to 24 drawings",
       ]);
-      expect(errorsOf([Array(17).fill(["circle", { cx: 1, cy: 1, r: 1 }])])).toEqual([
-        "doodles[0] must be 1 to 16 elements",
+      expect(errorsOf([Array(25).fill(["circle", { cx: 1, cy: 1, r: 1 }])])).toEqual([
+        "doodles[0] must be 1 to 24 elements",
       ]);
       expect(errorsOf([[["image", { href: "x" }]]])[0]).toMatch(/tag must be one of/);
       expect(errorsOf([[["circle", { cx: 1, cy: 1, r: 1, fill: "red" }]]])).toEqual([

@@ -214,8 +214,10 @@ class AppearanceNotifier extends Notifier<Appearance> {
     });
   }
 
-  /// A whole look at once, from a preset or a saved theme (light/dark only when the theme sets it). The look changes in one
-  /// step, then it's saved. [gallery] is registered first when the scheme comes from the gallery.
+  /// A whole look at once, from a preset, a saved theme or the gallery (light/dark only when the
+  /// theme sets it). "Show in the whole app" stays as it is: it's this person's preference, not
+  /// part of a look. The look changes in one step, then it's saved. [gallery] is registered first
+  /// when the scheme comes from the gallery.
   Future<void> apply({
     required String schemeId,
     ThemeChoice? gallery,
@@ -226,6 +228,7 @@ class AppearanceNotifier extends Notifier<Appearance> {
     bool? fewerEffects,
   }) async {
     if (gallery != null) gallerySchemeChoices[gallery.id] = gallery;
+    wallpaper = wallpaper.copyWith(everywhere: state.wallpaper.everywhere);
     state = state.copyWith(
       schemeId: themeChoiceById(schemeId).id,
       headingFont: headingFont,

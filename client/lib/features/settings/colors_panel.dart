@@ -1,9 +1,10 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/backend.dart';
+import '../../core/haptics.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -12,8 +13,8 @@ import '../../theme/schemes.dart';
 import '../../ui/edge_fade.dart';
 import '../../ui/page.dart';
 import '../../ui/reveal_when_selected.dart';
-import '../../ui/segmented.dart';
-import 'appearance_preview.dart';
+import 'gallery_looks.dart';
+import 'gallery_previews.dart';
 
 String schemeFamilyLabel(BuildContext context, SchemeFamily f) {
   final l10n = context.l10n;
@@ -29,18 +30,26 @@ String schemeFamilyLabel(BuildContext context, SchemeFamily f) {
   };
 }
 
-/// Settings → Color scheme: every FlexColorScheme scheme plus Casama's own, with a live preview,
-/// search and color families. Picking one applies it right away.
-class ThemeScreen extends ConsumerStatefulWidget {
-  const ThemeScreen({super.key});
+/// Customize → Colors: every FlexColorScheme scheme, Casama's own and the gallery's, with search
+/// and color families. Picking one applies it right away; the preview above shows it.
+class ColorsPanel extends ConsumerStatefulWidget {
+  const ColorsPanel({super.key});
 
   @override
-  ConsumerState<ThemeScreen> createState() => _ThemeScreenState();
+  ConsumerState<ColorsPanel> createState() => _ColorsPanelState();
 }
 
-class _ThemeScreenState extends ConsumerState<ThemeScreen> {
+/// The filter chip that shows only the gallery's schemes.
+const _galleryFilter = 'gallery';
+
+class _ColorsPanelState extends ConsumerState<ColorsPanel> {
   final _search = TextEditingController();
-  SchemeFamily? _family;
+
+  /// Null shows every scheme; [_galleryFilter] the gallery's; a [SchemeFamily] one family.
+  Object? _filter;
+
+  List<GalleryItem>? _galleryItems;
+  var _gallery = const <ThemeChoice>[];
 
   @override
   void dispose() {
@@ -48,14 +57,40 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
     super.dispose();
   }
 
-  List<ThemeChoice> get _shown {
+  /// The gallery's color schemes, built once per list.
+  List<ThemeChoice> _galleryChoices(List<GalleryItem>? items) {
+    if (!identical(items, _galleryItems)) {
+      _galleryItems = items;
+      _gallery = [
+        for (final item in items ?? const <GalleryItem>[])
+          if (item.type == 'scheme') ?galleryChoiceOf(item),
+      ];
+    }
+    return _gallery;
+  }
+
+  List<ThemeChoice> _shown(List<ThemeChoice> gallery) {
     final q = _search.text.trim().toLowerCase();
+    // Casama's own first, then the gallery's, then everything else by family.
+    final all = switch (_filter) {
+      null => [
+        for (final c in themeChoices)
+          if (c.family == SchemeFamily.brand) c,
+        ...gallery,
+        for (final c in themeChoices)
+          if (c.family != SchemeFamily.brand) c,
+      ],
+      _galleryFilter => gallery,
+      final f => [
+        for (final c in themeChoices)
+          if (c.family == f) c,
+      ],
+    };
     return [
-      for (final c in themeChoices)
-        if ((_family == null || c.family == _family) &&
-            (q.isEmpty ||
-                c.name.toLowerCase().contains(q) ||
-                c.description.toLowerCase().contains(q)))
+      for (final c in all)
+        if (q.isEmpty ||
+            c.name.toLowerCase().contains(q) ||
+            c.description.toLowerCase().contains(q))
           c,
     ];
   }
@@ -65,38 +100,17 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
     final l10n = context.l10n;
     final appearance = ref.watch(appearanceProvider);
     final notifier = ref.read(appearanceProvider.notifier);
-    final shown = _shown;
-    return SubPage(
-      title: l10n.colorScheme,
+    final gallery = _galleryChoices(ref.watch(galleryLooksProvider).value);
+    final shown = _shown(gallery);
+    final filters = <(Object?, String)>[
+      (null, l10n.familyAll),
+      (SchemeFamily.brand, schemeFamilyLabel(context, SchemeFamily.brand)),
+      if (gallery.isNotEmpty) (_galleryFilter, l10n.gallery),
+      for (final f in SchemeFamily.values)
+        if (f != SchemeFamily.brand) (f, schemeFamilyLabel(context, f)),
+    ];
+    return PageColumn(
       children: [
-        const AppearancePreview(),
-        const SizedBox(height: AppSpace.sm),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: OutlinedButton.icon(
-            key: const Key('gallerySchemes'),
-            onPressed: () => context.push('/settings/gallery?type=scheme'),
-            icon: const Icon(LucideIcons.layoutGrid, size: 18),
-            label: Text(l10n.gallery),
-          ),
-        ),
-        const SizedBox(height: AppSpace.md),
-        AppSegmentedControl<ThemeMode>(
-          values: const [ThemeMode.light, ThemeMode.system, ThemeMode.dark],
-          labels: {
-            ThemeMode.light: l10n.themeLight,
-            ThemeMode.system: l10n.themeSystem,
-            ThemeMode.dark: l10n.themeDark,
-          },
-          icons: const {
-            ThemeMode.light: LucideIcons.sun,
-            ThemeMode.system: LucideIcons.sunMoon,
-            ThemeMode.dark: LucideIcons.moon,
-          },
-          groupValue: appearance.mode,
-          onValueChanged: notifier.setMode,
-        ),
-        const SizedBox(height: AppSpace.lg),
         TextField(
           key: const Key('themeSearch'),
           controller: _search,
@@ -121,19 +135,19 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
             children: [
-              for (final f in [null, ...SchemeFamily.values])
+              for (final (f, label) in filters)
                 Padding(
                   padding: const EdgeInsets.only(right: AppSpace.xs),
-                  child: RevealWhenSelected(selected: _family == f, child: ChoiceChip(
-                    key: Key('family-${f?.name ?? 'all'}'),
-                    selected: _family == f,
+                  child: RevealWhenSelected(selected: _filter == f, child: ChoiceChip(
+                    key: Key('family-${switch (f) {
+                      null => 'all',
+                      SchemeFamily() => f.name,
+                      _ => '$f',
+                    }}'),
+                    selected: _filter == f,
                     showCheckmark: false,
-                    label: Text(
-                      f == null
-                          ? l10n.familyAll
-                          : schemeFamilyLabel(context, f),
-                    ),
-                    onSelected: (_) => setState(() => _family = f),
+                    label: Text(label),
+                    onSelected: (_) => setState(() => _filter = f),
                   )),
                 ),
             ],
@@ -166,11 +180,20 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
                   childAspectRatio: 0.92,
                 ),
                 itemCount: shown.length,
-                itemBuilder: (context, i) => _SchemeTile(
-                  choice: shown[i],
-                  selected: shown[i].id == appearance.schemeId,
-                  onTap: () => notifier.setScheme(shown[i].id),
-                ),
+                itemBuilder: (context, i) {
+                  final choice = shown[i];
+                  return _SchemeTile(
+                    choice: choice,
+                    selected: choice.id == appearance.schemeId,
+                    onTap: () {
+                      HapticsHelper.selection();
+                      // A gallery scheme is kept with its colors so it survives a restart.
+                      choice.id.startsWith('gallery:')
+                          ? notifier.applyGalleryScheme(choice)
+                          : notifier.setScheme(choice.id);
+                    },
+                  );
+                },
               );
             },
           ),

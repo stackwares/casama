@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/backend.dart';
+import '../../core/haptics.dart';
 import '../../core/local_image.dart';
 import '../../core/display_text.dart';
 import '../../core/providers.dart';
@@ -19,31 +20,76 @@ import '../../ui/reveal_when_selected.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
-import 'appearance_preview.dart';
+import 'gallery_looks.dart';
+import 'gallery_previews.dart';
 import 'photo_picker.dart';
 
-/// Settings → Background: the wallpaper behind every screen, Telegram style. A doodle pattern,
-/// soft gradient colors, how strong the pattern is, and whether it shows everywhere.
-class BackgroundScreen extends ConsumerWidget {
-  const BackgroundScreen({super.key});
+/// A section header's usual spacing, for the one that only sometimes comes first.
+const _sectionPadding = EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.lg, AppSpace.xxs, AppSpace.xs);
+
+/// Customize → Background: the wallpaper behind every screen, Telegram style. Ready-made ones from
+/// the gallery, then a doodle pattern, soft gradient colors, how strong the pattern is, a photo,
+/// and whether it shows everywhere. The preview above shows each change.
+class BackgroundPanel extends ConsumerWidget {
+  const BackgroundPanel({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final spec = ref.watch(appearanceProvider).wallpaper;
+    final appearance = ref.watch(appearanceProvider);
+    final spec = appearance.wallpaper;
     final notifier = ref.read(appearanceProvider.notifier);
     void set(WallpaperSpec s) => notifier.setWallpaper(s);
     WallpaperTheme preview(WallpaperSpec s) =>
         WallpaperTheme.of(s.copyWith(everywhere: true), scheme);
+    final gallery = [
+      for (final item in ref.watch(galleryLooksProvider).value ?? const <GalleryItem>[])
+        if (item.type == 'wallpaper') item,
+    ];
+    const first = EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.xs, AppSpace.xxs, AppSpace.xs);
 
-    return SubPage(
-      title: l10n.background,
+    return PageColumn(
       children: [
-        AppearancePreview(wallpaper: preview(spec), height: 220),
-        SectionHeader(title: l10n.backgroundPhoto),
-        _PhotoSection(spec: spec, onChanged: set),
-        SectionHeader(title: l10n.backgroundPattern),
+        if (gallery.isNotEmpty) ...[
+          SectionHeader(title: l10n.appearanceFromGallery, padding: first),
+          PageBleed(child: SizedBox(
+            height: 142,
+            child: EdgeFade(child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
+              itemCount: gallery.length,
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpace.xs),
+              itemBuilder: (context, i) {
+                final item = gallery[i];
+                final selected = galleryInUse(item, appearance);
+                return RevealWhenSelected(selected: selected, child: _Swatch(
+                  key: Key('gallery-wallpaper-${item.id}'),
+                  label: item.name,
+                  selected: selected,
+                  height: 112,
+                  onTap: () async {
+                    HapticsHelper.selection();
+                    try {
+                      await useGalleryLook(ref, item);
+                    } catch (e) {
+                      if (context.mounted) showError(context, e);
+                    }
+                  },
+                  child: GalleryWallpaperPreview(
+                    item: item,
+                    scheme: appearance.scheme,
+                    brightness: Theme.of(context).brightness,
+                  ),
+                ));
+              },
+            )),
+          )),
+        ],
+        SectionHeader(
+          title: l10n.backgroundPattern,
+          padding: gallery.isEmpty ? first : _sectionPadding,
+        ),
         PageBleed(child: SizedBox(
           height: 112,
           child: EdgeFade(child: ListView.separated(
@@ -136,6 +182,8 @@ class BackgroundScreen extends ConsumerWidget {
             ],
           ),
         ),
+        SectionHeader(title: l10n.backgroundPhoto),
+        _PhotoSection(spec: spec, onChanged: set),
         const SizedBox(height: AppSpace.md),
         FormSwitch(
           key: const Key('wallpaperEverywhere'),
@@ -148,6 +196,7 @@ class BackgroundScreen extends ConsumerWidget {
         const SizedBox(height: AppSpace.md),
         Center(
           child: TextButton.icon(
+            key: const Key('resetBackground'),
             onPressed: spec == const WallpaperSpec()
                 ? null
                 : () => set(const WallpaperSpec()),
@@ -315,12 +364,6 @@ class _PhotoSection extends ConsumerWidget {
                 icon: const Icon(LucideIcons.images, size: 18),
                 label: Text(l10n.browsePhotos),
               ),
-            OutlinedButton.icon(
-              key: const Key('galleryWallpapers'),
-              onPressed: () => context.push('/settings/gallery?type=wallpaper'),
-              icon: const Icon(LucideIcons.layoutGrid, size: 18),
-              label: Text(l10n.gallery),
-            ),
             if (photo != null)
               TextButton.icon(
                 key: const Key('removePhoto'),

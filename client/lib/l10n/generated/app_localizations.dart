@@ -3547,7 +3547,7 @@ abstract class AppLocalizations {
   /// No description provided for @whatsNew080Looks.
   ///
   /// In en, this message translates to:
-  /// **'Make Casama yours: color schemes, fonts and wallpapers in Settings → Themes, with more in the Gallery.'**
+  /// **'Make Casama yours: themes, color schemes, fonts and wallpapers in Settings → Appearance, with more from the gallery.'**
   String get whatsNew080Looks;
 
   /// No description provided for @whatsNew080AboutYou.
@@ -4777,7 +4777,7 @@ abstract class AppLocalizations {
   /// No description provided for @themeCodeCopied.
   ///
   /// In en, this message translates to:
-  /// **'Theme code copied. Anyone can paste it into Themes → Import.'**
+  /// **'Theme code copied. Anyone can paste it into Appearance → Import a theme.'**
   String get themeCodeCopied;
 
   /// No description provided for @shareTheme.
@@ -11883,6 +11883,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No celebrations, bouncing tabs or animated bots. The Plain themes turn this on.'**
   String get fewerEffectsHelp;
+
+  /// No description provided for @customize.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get customize;
+
+  /// No description provided for @customizeColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors'**
+  String get customizeColors;
+
+  /// No description provided for @appearanceCustomLook.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom look'**
+  String get appearanceCustomLook;
+
+  /// No description provided for @appearanceCustomHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own changes. Save them to keep this look.'**
+  String get appearanceCustomHelp;
+
+  /// No description provided for @appearanceFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'From the gallery'**
+  String get appearanceFromGallery;
+
+  /// No description provided for @appearanceShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {count}'**
+  String appearanceShowAll(int count);
+
+  /// No description provided for @appearanceSwitched.
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to {name}'**
+  String appearanceSwitched(String name);
+
+  /// No description provided for @appearanceSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name} to your themes'**
+  String appearanceSaved(String name);
+
+  /// No description provided for @appearanceAboutTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'About this theme'**
+  String get appearanceAboutTheme;
 }
 
 class _AppLocalizationsDelegate

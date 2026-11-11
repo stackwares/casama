@@ -41,8 +41,8 @@ pattern, in one of two ways:
 
 - `glyphs`: 1 to 24 Lucide icon names (`["cloud", "star", "moon"]`) from `assets/lucide/icon-nodes.json`.
   The checker turns them into `doodles` in `index.json`.
-- `doodles`: 1 to 24 drawings of your own. Each is a list of 1 to 16 elements in Lucide's node format,
-  `[tag, attributes]`, on a 24 × 24 grid, drawn as 2-unit strokes with round ends and no fill. Tags:
+- `doodles`: 1 to 24 drawings of your own. Each is a list of 1 to 24 elements in Lucide's node format,
+  `[tag, attributes]`, on a 24 × 24 grid, drawn as strokes with round ends and no fill (Lucide's style; the app draws them a touch heavier, like its built-in patterns). Tags:
   `path` (`d`), `circle` (`cx`, `cy`, `r`), `ellipse` (`cx`, `cy`, `rx`, `ry`), `rect` (`x`, `y`,
   `width`, `height`, optional `rx`, `ry`), `line` (`x1`, `y1`, `x2`, `y2`), `polyline` and `polygon`
   (`points`). Numbers may be numbers or numeric strings; positions stay between -2 and 26, sizes between

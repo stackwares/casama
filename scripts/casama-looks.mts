@@ -35,14 +35,11 @@ function contrast(a: string, b: string) {
   return (hi + 0.05) / (lo + 0.05);
 }
 const color = (hex: string) => `Color(0xFF${hex.slice(1).toUpperCase()})`;
-const num = (v: number) => (Number.isInteger(v) ? `${v}` : `${v}`);
+const num = (v: number) => `${v}`;
 const dartString = (s: string) =>
   `'${s.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\$/g, "\\$")}'`;
 const number = (v: unknown) => (typeof v === "number" ? v : Number.parseFloat(String(v)));
-const dartDouble = (v: unknown) => {
-  const n = number(v);
-  return Number.isInteger(n) ? `${n}` : `${n}`;
-};
+const dartDouble = (v: unknown) => `${number(v)}`;
 
 // ------------------------------------------------------------------ meshes
 function meshDart(id: string, raw: Record<string, unknown>) {
@@ -131,7 +128,7 @@ function patternDart(id: string, raw: Record<string, unknown>) {
   } else errors.push(`${where}: give glyphs or doodles`);
   if (doodles.length < 1 || doodles.length > 24) errors.push(`${where}: 1 to 24 doodles`);
   const items = doodles.map((d, i) => {
-    if (d.length < 1 || d.length > 16) errors.push(`${where}: doodle ${i} needs 1 to 16 shapes`);
+    if (d.length < 1 || d.length > 24) errors.push(`${where}: doodle ${i} needs 1 to 24 shapes`);
     return `Doodle([${d.map((n) => shapeDart(where, n)).join(", ")}])`;
   });
   return `  ${id}(${dartString(raw.name as string)}, [${items.join(", ")}])`;
