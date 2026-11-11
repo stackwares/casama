@@ -54,7 +54,8 @@ Future<T?> showAdaptiveSheet<T>({
     builder: (context) {
       final size = MediaQuery.sizeOf(context);
       final width = math.min(dialogMaxWidth, size.width - 80);
-      final maxHeight = math.min(dialogMaxHeight, size.height * 0.85);
+      // Tall windows get taller dialogs (up to 90% of the window), so long forms rarely scroll.
+      final maxHeight = math.min(math.max(dialogMaxHeight, size.height * 0.9 - 40), size.height * 0.9);
       return Dialog(
         clipBehavior: Clip.antiAlias,
         child: SizedBox(

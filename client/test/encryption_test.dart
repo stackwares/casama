@@ -23,7 +23,16 @@ void main() {
     expect(backend.encryptionActions, ['set:true']);
     expect(find.textContaining('Turning on'), findsOneWidget);
 
+    // Rotating asks first; cancelling changes nothing.
     await tester.tap(find.byKey(const Key('rotateKey')));
+    await tester.pumpAndSettle();
+    expect(find.text('Rotate the key?'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(backend.encryptionActions.last, 'set:true');
+    await tester.tap(find.byKey(const Key('rotateKey')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirmRotateKey')));
     await tester.pumpAndSettle();
     expect(backend.encryptionActions.last, 'rotate');
     expect(find.textContaining('Last rotated'), findsOneWidget);

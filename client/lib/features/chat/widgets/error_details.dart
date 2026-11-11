@@ -18,6 +18,27 @@ import '../chat_controller.dart';
 import '../../../ui/glow_button.dart';
 import 'chat_widgets.dart' show CodePanel;
 
+const _keyErrors = {
+  'model_credential_not_found',
+  'model_auth_failed',
+  'chatgpt_needs_reconnect',
+  'chatgpt_plan_usage_off',
+  'chatgpt_plan_not_yours',
+  'chatgpt_not_eligible',
+};
+
+/// A one-tap fix for a failure people can fix themselves: no model, or a missing or rejected key.
+/// With no key at all, "no model" also leads to Model keys rather than a model list that's empty.
+({String label, String route})? errorFix(BuildContext context, WidgetRef ref, NoticeEntry entry, String botId) {
+  final code = entry.errorCode;
+  if (entry.kind != NoticeKind.failed || code == null) return null;
+  final keys = (route: '/settings/keys', label: context.l10n.addModelKeyTitle);
+  if (_keyErrors.contains(code)) return keys;
+  if (code != 'no_model_configured') return null;
+  final hasKeys = ref.read(credentialsProvider).value?.isNotEmpty ?? false;
+  return hasKeys ? (route: '/bots/$botId/settings', label: context.l10n.chooseModel) : keys;
+}
+
 /// Opens what went wrong in a run: the error, the steps that failed, and ways to copy, export or
 /// open the full timeline.
 Future<void> showErrorDetails(BuildContext context, {required NoticeEntry entry, required String botId}) => showAdaptiveSheet<void>(
@@ -155,7 +176,17 @@ class ErrorDetails extends ConsumerWidget {
                   label: Text(l10n.exportLabel),
                 ),
               ),
-              if (runId != null)
+              if (errorFix(context, ref, entry, botId) case final fix?)
+                GlowButton.icon(
+                  key: const Key('errorFix'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.push(fix.route);
+                  },
+                  icon: const Icon(LucideIcons.keyRound, size: 18),
+                  label: Text(fix.label),
+                )
+              else if (runId != null)
                 GlowButton.icon(
                   onPressed: () {
                     Navigator.of(context).pop();

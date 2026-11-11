@@ -11,6 +11,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/backend.dart';
 import '../../core/server_address.dart';
+import '../../core/server_config_cache.dart';
 import '../../core/supabase_backend.dart';
 
 /// Device triggers (D-151): events this device reports (arrive and leave named places, watched-app
@@ -81,16 +82,17 @@ class DeviceEventQueue {
 Future<Backend?> backgroundBackend() async {
   try {
     final config = await ServerAddress.load();
-    final connection = await KasamaClient.connect(config.apiUrl);
+    // The settings the app saved (D-158): a background wake may have little or no network.
+    final server = await ServerConfigCache.read(config.apiUrl) ?? (await KasamaClient.connect(config.apiUrl)).config;
     try {
       Supabase.instance.client;
     } catch (_) {
-      await Supabase.initialize(url: connection.config.supabaseUrl, publishableKey: connection.config.supabaseAnonKey);
+      await Supabase.initialize(url: server.supabaseUrl, publishableKey: server.supabaseAnonKey);
     }
     final supabase = Supabase.instance.client;
     if (supabase.auth.currentSession == null) return null;
-    final api = await SupabaseBackend.connectApi(config.apiUrl, supabase);
-    return SupabaseBackend(supabase, api, config: connection.config);
+    final api = await SupabaseBackend.connectApi(config.apiUrl, supabase, config: server);
+    return SupabaseBackend(supabase, api, config: server);
   } catch (_) {
     return null;
   }

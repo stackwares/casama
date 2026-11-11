@@ -11,5 +11,5 @@ store's required sizes; the demo clip is docs/media/demo-app-flow.mp4.
 - Age rating: 4+ / Everyone (no user-generated content shared publicly)
 - In-app purchases (Kasama Cloud only): Pro monthly `com.kasama.pro.monthly`, Pro yearly
   `com.kasama.pro.yearly`; Play subscription `kasama_pro` with base plans `monthly`, `yearly`.
-- Review notes: the app works with self-hosted servers (sign-in → Use a different server). Provide a
+- Review notes: the app works with self-hosted servers (sign-in → More options → Server). Provide a
   demo account on Kasama Cloud for review.

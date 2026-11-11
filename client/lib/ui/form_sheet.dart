@@ -66,60 +66,112 @@ class FormSheet extends StatelessWidget {
       onPressed: busy ? null : () => Navigator.of(context).maybePop(),
       child: Text(cancelLabel ?? MaterialLocalizations.of(context).cancelButtonLabel),
     );
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(AppSpace.xl, compact ? 0 : AppSpace.xs, AppSpace.xl, AppSpace.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final actions = compact
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: tint.withValues(alpha: context.isDark ? 0.2 : 0.12),
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(icon, color: tint, size: 22),
-                ),
-                const SizedBox(width: AppSpace.md),
-              ],
-              Expanded(
-                child: Column(
+              SizedBox(height: 50, child: submit),
+              if (showCancel) ...[const SizedBox(height: AppSpace.xxs), SizedBox(height: 46, child: cancel)],
+            ],
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (showCancel) ...[cancel, const SizedBox(width: AppSpace.xs)],
+              submit,
+            ],
+          );
+    // The fields scroll; the actions stay pinned under them, so the main button is always in view
+    // (short windows, long forms, a phone keyboard). A hairline shows only when there's more above.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: _EdgeScroll(
+            padding: EdgeInsets.fromLTRB(AppSpace.xl, compact ? 0 : AppSpace.xs, AppSpace.xl, AppSpace.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3, height: 1.2)),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 4),
-                      Text(subtitle!, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+                    if (icon != null) ...[
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: tint.withValues(alpha: context.isDark ? 0.2 : 0.12),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(icon, color: tint, size: 22),
+                      ),
+                      const SizedBox(width: AppSpace.md),
                     ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(title, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3, height: 1.2)),
+                          if (subtitle != null) ...[
+                            const SizedBox(height: 4),
+                            Text(subtitle!, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+                          ],
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          if (children.isNotEmpty) ...[
-            const SizedBox(height: AppSpace.xl),
-            Column(crossAxisAlignment: CrossAxisAlignment.stretch, spacing: AppSpace.md, children: children),
-          ],
-          if (footer != null) ...[const SizedBox(height: AppSpace.sm), footer!],
-          const SizedBox(height: AppSpace.xl),
-          if (compact) ...[
-            SizedBox(height: 50, child: submit),
-            if (showCancel) ...[const SizedBox(height: AppSpace.xxs), SizedBox(height: 46, child: cancel)],
-          ] else
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (showCancel) ...[cancel, const SizedBox(width: AppSpace.xs)],
-                submit,
+                if (children.isNotEmpty) ...[
+                  const SizedBox(height: AppSpace.xl),
+                  Column(crossAxisAlignment: CrossAxisAlignment.stretch, spacing: AppSpace.md, children: children),
+                ],
+                if (footer != null) ...[const SizedBox(height: AppSpace.sm), footer!],
               ],
             ),
-        ],
+          ),
+        ),
+        Padding(padding: const EdgeInsets.fromLTRB(AppSpace.xl, AppSpace.sm, AppSpace.xl, AppSpace.lg), child: actions),
+      ],
+    );
+  }
+}
+
+/// Scrolls [child] and draws a hairline at its bottom edge while more content is below.
+class _EdgeScroll extends StatefulWidget {
+  const _EdgeScroll({required this.child, required this.padding});
+  final Widget child;
+  final EdgeInsets padding;
+
+  @override
+  State<_EdgeScroll> createState() => _EdgeScrollState();
+}
+
+class _EdgeScrollState extends State<_EdgeScroll> {
+  var _more = false;
+
+  bool _onMetrics(ScrollMetrics m) {
+    final more = m.extentAfter > 0.5;
+    if (more != _more) WidgetsBinding.instance.addPostFrameCallback((_) => mounted ? setState(() => _more = more) : null);
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      position: DecorationPosition.foreground,
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: _more ? context.appColors.hairline : Colors.transparent)),
+      ),
+      child: NotificationListener<ScrollMetricsNotification>(
+        onNotification: (n) => _onMetrics(n.metrics),
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (n) => _onMetrics(n.metrics),
+          child: SingleChildScrollView(padding: widget.padding, child: widget.child),
+        ),
       ),
     );
   }

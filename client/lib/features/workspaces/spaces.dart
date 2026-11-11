@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../mcp/mcp_screens.dart';
@@ -10,6 +12,7 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
+import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -17,6 +20,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/revealable.dart';
 
 /// Icons a workspace can have (D-099).
 const spaceIcons = <String, IconData>{
@@ -472,56 +476,58 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
               spacing: AppSpace.sm,
               children: [
                 FormNote(l10n.inviteLinksHelp),
-                Wrap(
-                  spacing: AppSpace.md,
-                  runSpacing: AppSpace.sm,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    DropdownButton<String>(
-                      key: const Key('linkRole'),
-                      value: _role,
-                      items: [
-                        DropdownMenuItem(value: 'member', child: Text(l10n.roleMember)),
-                        DropdownMenuItem(value: 'admin', child: Text(l10n.roleAdmin)),
-                      ],
-                      onChanged: (v) => setState(() => _role = v ?? _role),
-                    ),
-                    DropdownButton<int?>(
-                      value: _days,
-                      items: [
-                        for (final d in [1, 7, 30]) DropdownMenuItem(value: d, child: Text('${l10n.linkExpires}: ${l10n.linkDays('$d')}')),
-                        DropdownMenuItem(value: null, child: Text('${l10n.linkExpires}: ${l10n.linkNever}')),
-                      ],
-                      onChanged: (v) => setState(() => _days = v),
-                    ),
-                    DropdownButton<int?>(
-                      value: _uses,
-                      items: [
-                        for (final u in [1, 5, 25]) DropdownMenuItem(value: u, child: Text('${l10n.linkMaxUses}: $u')),
-                        DropdownMenuItem(value: null, child: Text('${l10n.linkMaxUses}: ${l10n.linkUnlimited}')),
-                      ],
-                      onChanged: (v) => setState(() => _uses = v),
-                    ),
-                    FilledButton.icon(
-                      key: const Key('createInviteLink'),
-                      icon: const Icon(LucideIcons.link, size: 18),
-                      label: Text(l10n.createInviteLink),
-                      onPressed: () async {
-                        final created = await runGuarded(context, () => ref.read(backendProvider).createInviteLink(org.id, role: _role, expiresInDays: _days, maxUses: _uses));
-                        if (created == null || !context.mounted) return;
-                        setState(() => _created = created);
-                        ref.invalidate(_linksProvider(org.id));
-                        try {
-                          await Clipboard.setData(ClipboardData(text: created.url));
-                          if (context.mounted) showMessage(context, l10n.linkCopied);
-                        } catch (_) {
-                          // The link stays on screen to copy by hand.
-                        }
-                      },
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, box) {
+                    final fields = [
+                      DropdownButtonFormField<String>(
+                        key: const Key('linkRole'),
+                        initialValue: _role,
+                        decoration: InputDecoration(labelText: l10n.inviteRole),
+                        items: [
+                          DropdownMenuItem(value: 'member', child: Text(l10n.roleMember)),
+                          DropdownMenuItem(value: 'admin', child: Text(l10n.roleAdmin)),
+                        ],
+                        onChanged: (v) => setState(() => _role = v ?? _role),
+                      ),
+                      DropdownButtonFormField<int?>(
+                        initialValue: _days,
+                        decoration: InputDecoration(labelText: l10n.linkExpires),
+                        items: [
+                          for (final d in [1, 7, 30]) DropdownMenuItem(value: d, child: Text(l10n.linkDays(d))),
+                          DropdownMenuItem(value: null, child: Text(l10n.linkNever)),
+                        ],
+                        onChanged: (v) => setState(() => _days = v),
+                      ),
+                      DropdownButtonFormField<int?>(
+                        initialValue: _uses,
+                        decoration: InputDecoration(labelText: l10n.linkMaxUses),
+                        items: [
+                          for (final u in [1, 5, 25]) DropdownMenuItem(value: u, child: Text('$u')),
+                          DropdownMenuItem(value: null, child: Text(l10n.linkUnlimited)),
+                        ],
+                        onChanged: (v) => setState(() => _uses = v),
+                      ),
+                    ];
+                    // Side by side where there's room, stacked on phones.
+                    if (box.maxWidth < 520) return Column(spacing: AppSpace.sm, children: fields);
+                    return Row(spacing: AppSpace.sm, children: [for (final f in fields) Expanded(child: f)]);
+                  },
                 ),
-                if (_created != null) SelectableText(_created!.url, key: const Key('createdLink')),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: FilledButton.icon(
+                    key: const Key('createInviteLink'),
+                    icon: const Icon(LucideIcons.link, size: 18),
+                    label: Text(l10n.createInviteLink),
+                    onPressed: () async {
+                      final created = await runGuarded(context, () => ref.read(backendProvider).createInviteLink(org.id, role: _role, expiresInDays: _days, maxUses: _uses));
+                      if (created == null || !context.mounted) return;
+                      setState(() => _created = created);
+                      ref.invalidate(_linksProvider(org.id));
+                    },
+                  ),
+                ),
+                if (_created != null) _NewInviteLink(key: ValueKey(_created!.url), url: _created!.url),
               ],
             ),
           ),
@@ -539,6 +545,14 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
                         : TextButton(
                             key: Key('revoke-${l.id}'),
                             onPressed: () async {
+                              final ok = await showConfirm(
+                                context: context,
+                                title: l10n.revokeLink,
+                                message: l10n.inviteLinksHelp,
+                                confirmLabel: l10n.revokeLink,
+                                destructive: true,
+                              );
+                              if (!ok || !context.mounted) return;
                               await runGuarded(context, () => ref.read(backendProvider).revokeInviteLink(org.id, l.id));
                               ref.invalidate(_linksProvider(org.id));
                             },
@@ -645,7 +659,7 @@ class EncryptionSection extends ConsumerWidget {
         SwitchListTile(
           key: const Key('encryption'),
           title: Text(l10n.encryption),
-          subtitle: Text('$status\n${l10n.encryptionHelp}'),
+          subtitle: Text('$status\n${l10n.encryptionHelp}${on ? '\n${l10n.encryptionKeyManaged}' : ''}'),
           isThreeLine: true,
           value: on,
           onChanged: s.available || on ? toggle : null,
@@ -657,6 +671,15 @@ class EncryptionSection extends ConsumerWidget {
             title: l10n.encryptionRotate,
             subtitle: s.rotatedAt != null ? l10n.encryptionRotated(MaterialLocalizations.of(context).formatMediumDate(s.rotatedAt!.toLocal())) : l10n.encryptionRotateHelp,
             onTap: () async {
+              final ok = await showConfirm(
+                context: context,
+                title: l10n.encryptionRotateTitle,
+                message: l10n.encryptionRotateBody,
+                confirmLabel: l10n.encryptionRotate,
+                icon: LucideIcons.rotateCw,
+                confirmKey: const Key('confirmRotateKey'),
+              );
+              if (!ok || !context.mounted) return;
               await runGuarded(context, () => ref.read(backendProvider).rotateEncryptionKey(orgId));
               ref.invalidate(_encryptionProvider(orgId));
             },
@@ -778,13 +801,13 @@ class _MemoryBackendSheetState extends ConsumerState<_MemoryBackendSheet> {
           selected: {_provider},
           onSelectionChanged: (v) => setState(() => _provider = v.first),
         ),
-        TextField(
+        Revealable(builder: (context, hidden, toggle) => TextField(
           key: const Key('memoryApiKey'),
           controller: _key,
-          obscureText: true,
+          obscureText: hidden,
           onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(labelText: l10n.chApiKey),
-        ),
+          decoration: InputDecoration(labelText: l10n.chApiKey, suffixIcon: toggle),
+        )),
         if (_provider == SetMemoryBackendRequestProviderEnum.honcho)
           TextField(
             key: const Key('memoryWorkspace'),
@@ -938,13 +961,13 @@ class _PhoneCallsSheetState extends ConsumerState<_PhoneCallsSheet> {
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(labelText: l10n.twilioSid),
         ),
-        TextField(
+        Revealable(builder: (context, hidden, toggle) => TextField(
           key: const Key('twilioToken'),
           controller: _token,
-          obscureText: true,
+          obscureText: hidden,
           onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(labelText: l10n.twilioToken),
-        ),
+          decoration: InputDecoration(labelText: l10n.twilioToken, suffixIcon: toggle),
+        )),
         TextField(
           key: const Key('twilioFrom'),
           controller: _from,
@@ -1045,13 +1068,13 @@ class _PaymentsSheetState extends ConsumerState<_PaymentsSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    Widget field(String key, TextEditingController c, String label, {bool secret = false}) => TextField(
+    Widget field(String key, TextEditingController c, String label, {bool secret = false}) => Revealable(builder: (context, hidden, toggle) => TextField(
       key: Key(key),
       controller: c,
-      obscureText: secret,
+      obscureText: hidden && (secret),
       onChanged: (_) => setState(() {}),
-      decoration: InputDecoration(labelText: label),
-    );
+      decoration: InputDecoration(labelText: label, suffixIcon: (secret) ? toggle : null),
+    ));
     return FormSheet(
       icon: LucideIcons.creditCard,
       title: l10n.payments,
@@ -1170,13 +1193,13 @@ class _SecretStoreSheetState extends ConsumerState<_SecretStoreSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final valid = [_site, _project, _clientId, _clientSecret].every((c) => c.text.trim().isNotEmpty);
-    Widget field(String key, TextEditingController c, String label, {bool secret = false}) => TextField(
+    Widget field(String key, TextEditingController c, String label, {bool secret = false}) => Revealable(builder: (context, hidden, toggle) => TextField(
       key: Key(key),
       controller: c,
-      obscureText: secret,
+      obscureText: hidden && (secret),
       onChanged: (_) => setState(() {}),
-      decoration: InputDecoration(labelText: label),
-    );
+      decoration: InputDecoration(labelText: label, suffixIcon: (secret) ? toggle : null),
+    ));
     return FormSheet(
       icon: LucideIcons.vault,
       title: l10n.secretStore,
@@ -1225,6 +1248,101 @@ class _SecretStoreSheetState extends ConsumerState<_SecretStoreSheet> {
             child: Text(l10n.secretStoreBack),
           ),
       ],
+    );
+  }
+}
+
+/// A link just created: shown once in full, with copy and share.
+class _NewInviteLink extends StatefulWidget {
+  const _NewInviteLink({super.key, required this.url});
+  final String url;
+
+  @override
+  State<_NewInviteLink> createState() => _NewInviteLinkState();
+}
+
+class _NewInviteLinkState extends State<_NewInviteLink> {
+  var _copied = false;
+  Timer? _reset;
+
+  @override
+  void dispose() {
+    _reset?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _copy() async {
+    try {
+      await Clipboard.setData(ClipboardData(text: widget.url));
+    } catch (_) {
+      return; // The link stays on screen, selectable.
+    }
+    if (!mounted) return;
+    HapticFeedback.selectionClick();
+    setState(() => _copied = true);
+    _reset?.cancel();
+    _reset = Timer(const Duration(seconds: 2), () => mounted ? setState(() => _copied = false) : null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    return Container(
+      key: const Key('createdLink'),
+      padding: const EdgeInsets.all(AppSpace.md),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: context.isDark ? 0.14 : 0.07),
+        borderRadius: BorderRadius.circular(AppRadius.tile),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpace.sm,
+        children: [
+          Row(
+            children: [
+              Icon(LucideIcons.circleCheck, size: 18, color: scheme.primary),
+              const SizedBox(width: AppSpace.xs),
+              Expanded(child: Text(l10n.inviteLinkReady, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700))),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm, vertical: 10),
+            decoration: BoxDecoration(
+              color: scheme.surface,
+              borderRadius: BorderRadius.circular(AppRadius.row),
+              border: Border.all(color: context.appColors.hairline),
+            ),
+            child: SelectableText(widget.url, maxLines: 1, style: AppText.mono.copyWith(fontSize: 13, color: scheme.onSurface)),
+          ),
+          Wrap(
+            spacing: AppSpace.xs,
+            runSpacing: AppSpace.xs,
+            alignment: WrapAlignment.end,
+            children: [
+              Builder(
+                builder: (button) => OutlinedButton.icon(
+                  key: const Key('shareInviteLink'),
+                  onPressed: () => shareText(widget.url, origin: shareOrigin(button)),
+                  icon: const Icon(LucideIcons.share2, size: 18),
+                  label: Text(l10n.shareLinkLabel),
+                ),
+              ),
+              FilledButton.icon(
+                key: const Key('copyInviteLink'),
+                onPressed: _copy,
+                icon: AnimatedSwitcher(
+                  duration: AppMotion.fast,
+                  child: Icon(_copied ? LucideIcons.check : LucideIcons.copy, key: ValueKey(_copied), size: 18),
+                ),
+                label: Text(_copied ? l10n.copied : l10n.copyLink),
+              ),
+            ],
+          ),
+          FormNote(l10n.inviteLinkOnce),
+        ],
+      ),
     );
   }
 }

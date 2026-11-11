@@ -31,7 +31,15 @@ class ChatComposer extends StatelessWidget {
     this.attachments,
     this.hasAttachments = false,
     this.uploading = false,
+    this.keyHandler,
+    this.allowSendWhileRunning = true,
   });
+
+  /// Off where a message can't join a run in progress (group chats start one run per bot).
+  final bool allowSendWhileRunning;
+
+  /// Asked first about each key (group chats' @-mention suggestions take Tab, Enter and arrows).
+  final KeyEventResult Function(KeyEvent event)? keyHandler;
 
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -54,12 +62,15 @@ class ChatComposer extends StatelessWidget {
   final bool uploading;
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    final first = keyHandler?.call(event) ?? KeyEventResult.ignored;
+    if (first != KeyEventResult.ignored) return first;
     if (!_enterSends || event is! KeyDownEvent) return KeyEventResult.ignored;
     final enter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter;
     if (!enter || HardwareKeyboard.instance.isShiftPressed) return KeyEventResult.ignored;
     // An input method still composing (Japanese, Chinese…) owns Enter.
     if (controller.value.composing.isValid) return KeyEventResult.ignored;
-    if (!running && !uploading && (controller.text.trim().isNotEmpty || hasAttachments)) onSend();
+    // While the bot works, Enter still sends: the message joins what it's doing.
+    if ((!running || allowSendWhileRunning) && !uploading && (controller.text.trim().isNotEmpty || hasAttachments)) onSend();
     return KeyEventResult.handled;
   }
 
@@ -154,7 +165,8 @@ class ChatComposer extends StatelessWidget {
                           scale: a,
                           child: FadeTransition(opacity: a, child: child),
                         ),
-                        child: running
+                        // Working: Stop, until there's something typed; then Send (it joins the task).
+                        child: running && (!canSend || !allowSendWhileRunning)
                             ? _RoundButton(
                                 key: const Key('stopButton'),
                                 tooltip: l10n.stop,

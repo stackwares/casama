@@ -76,9 +76,18 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
   _HubTab? _tab;
   final _search = TextEditingController();
   CatalogAppCategoryEnum? _category;
+  // Back from a sign-in in the browser (or another app): show what changed meanwhile.
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: () => ref.invalidate(integrationsProvider));
+  }
 
   @override
   void dispose() {
+    _lifecycle.dispose();
     _search.dispose();
     super.dispose();
   }
@@ -90,7 +99,10 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
 
   Future<void> _connect(CatalogApp app) async {
     final i = await showConnectApp(context, app);
-    if (i != null && mounted) setState(() => _tab = _HubTab.connected);
+    if (!mounted) return;
+    // However the sheet closed, the list catches up (a sign-in may have finished in the browser).
+    ref.invalidate(integrationsProvider);
+    if (i != null) setState(() => _tab = _HubTab.connected);
   }
 
   @override
@@ -107,18 +119,22 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
       body: AsyncView(
         value: connections,
         onRetry: () => ref.invalidate(integrationsProvider),
+        // A catalog: wide windows show more apps per row rather than one narrow column.
         data: (items) => PageColumn(
+          maxWidth: kWidePageMaxWidth,
           children: [
-            AppSegmentedControl<_HubTab>(
-              values: _HubTab.values,
-              labels: {_HubTab.connected: items.isEmpty ? l10n.connectedTab : '${l10n.connectedTab} · ${items.length}', _HubTab.browse: l10n.browseTab},
-              icons: const {_HubTab.connected: LucideIcons.plug, _HubTab.browse: LucideIcons.layoutGrid},
-              groupValue: tab,
-              onValueChanged: (t) => setState(() => _tab = t),
+            _Readable(
+              child: AppSegmentedControl<_HubTab>(
+                values: _HubTab.values,
+                labels: {_HubTab.connected: items.isEmpty ? l10n.connectedTab : '${l10n.connectedTab} · ${items.length}', _HubTab.browse: l10n.browseTab},
+                icons: const {_HubTab.connected: LucideIcons.plug, _HubTab.browse: LucideIcons.layoutGrid},
+                groupValue: tab,
+                onValueChanged: (t) => setState(() => _tab = t),
+              ),
             ),
             const SizedBox(height: AppSpace.md),
             if (tab == _HubTab.connected)
-              _Connected(items: items, onBrowse: () => setState(() => _tab = _HubTab.browse))
+              _Readable(child: _Connected(items: items, onBrowse: () => setState(() => _tab = _HubTab.browse)))
             else
               catalog.when(
                 loading: () => const Padding(
@@ -208,7 +224,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
         else
           LayoutBuilder(
             builder: (context, c) {
-              final columns = c.maxWidth > 900 ? 3 : (c.maxWidth > 560 ? 2 : 1);
+              final columns = c.maxWidth > 1120 ? 4 : (c.maxWidth > 820 ? 3 : (c.maxWidth > 560 ? 2 : 1));
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -220,12 +236,15 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
             },
           ),
         SectionHeader(title: l10n.moreWays),
-        GroupedCard(
+        _Readable(
+          start: true,
+          child: GroupedCard(
           children: [
             GroupedTile(key: const Key('setupComposio'), icon: LucideIcons.blocks, title: 'Composio', subtitle: l10n.composioHelp, onTap: () => showProviderSetup(context, ProviderKind.composio)),
             GroupedTile(key: const Key('setupPipedream'), icon: LucideIcons.cable, title: 'Pipedream', subtitle: l10n.pipedreamHelp, onTap: () => showProviderSetup(context, ProviderKind.pipedream)),
             GroupedTile(icon: LucideIcons.squareTerminal, title: l10n.customServer, subtitle: l10n.customServerHelp, onTap: _addCustom),
           ],
+        ),
         ),
       ],
     );
@@ -733,4 +752,19 @@ class BotIntegrationsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Lists and controls keep a readable width, centered, on the wide catalog page.
+class _Readable extends StatelessWidget {
+  const _Readable({required this.child, this.start = false});
+  final Widget child;
+
+  /// Aligned with the section header above it instead of centered.
+  final bool start;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: start ? AlignmentDirectional.centerStart : Alignment.center,
+    child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: kPageMaxWidth), child: child),
+  );
 }

@@ -97,6 +97,22 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
     }
   }
 
+  Future<void> _rename(TwoStepFactor f) async {
+    final l10n = context.l10n;
+    final name = await showTextPrompt(
+      context,
+      title: l10n.twoStepRenameTitle,
+      label: l10n.twoStepNameLabel,
+      hint: l10n.twoStepNameHint,
+      initial: f.name.split(' · ').first,
+      submitLabel: l10n.save,
+      icon: LucideIcons.smartphone,
+    );
+    if (name == null || name.trim().isEmpty || !mounted) return;
+    await runGuarded(context, () => ref.read(backendProvider).renameTwoStep(f.id, name.trim()));
+    ref.invalidate(twoStepFactorsProvider);
+  }
+
   Future<void> _remove(TwoStepFactor f) async {
     final l10n = context.l10n;
     final ok = await showConfirm(
@@ -137,10 +153,22 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
                       GroupedTile(
                         icon: LucideIcons.smartphone,
                         title: f.name.split(' · ').first,
-                        trailing: TextButton(
-                          key: Key('removeFactor-${f.id}'),
-                          onPressed: () => _remove(f),
-                          child: Text(l10n.twoStepRemove),
+                        onTap: () => _rename(f),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              key: Key('renameFactor-${f.id}'),
+                              tooltip: l10n.twoStepRename,
+                              icon: const Icon(LucideIcons.pencil, size: 18),
+                              onPressed: () => _rename(f),
+                            ),
+                            TextButton(
+                              key: Key('removeFactor-${f.id}'),
+                              onPressed: () => _remove(f),
+                              child: Text(l10n.twoStepRemove),
+                            ),
+                          ],
                         ),
                       ),
                   ],

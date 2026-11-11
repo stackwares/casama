@@ -8,6 +8,8 @@ import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
+import '../groups/group_chats.dart';
+import '../../ui/bot_activity.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -91,30 +93,7 @@ class BotsList extends ConsumerWidget {
                     itemCount: items.length + 1,
                     separatorBuilder: (_, _) => const SizedBox(height: AppSpace.xs),
                     itemBuilder: (context, i) => i == items.length
-                        ? Wrap(
-                            alignment: WrapAlignment.center,
-                            children: [
-                              TextButton.icon(
-                                key: const Key('importBotFile'),
-                                icon: const Icon(LucideIcons.fileDown, size: 18),
-                                label: Text(l10n.importBot),
-                                onPressed: () => importBotFromFile(context),
-                              ),
-                              TextButton.icon(
-                                key: const Key('importAgentList'),
-                                icon: const Icon(LucideIcons.folderInput, size: 18),
-                                label: Text(l10n.importAgent),
-                                onPressed: () => importAgentFolder(context, ref),
-                              ),
-                              if (archived.isNotEmpty)
-                                TextButton.icon(
-                                  key: const Key('archivedBots'),
-                                  icon: const Icon(LucideIcons.archive, size: 18),
-                                  label: Text('${l10n.archivedBots} (${archived.length})'),
-                                  onPressed: () => showArchivedBots(context),
-                                ),
-                            ],
-                          )
+                        ? _GroupChatsSection(bots: items)
                         : _BotCard(
                       key: Key('bot-${items[i].id}'),
                       bot: items[i],
@@ -182,9 +161,57 @@ class _BotCard extends StatelessWidget {
               ],
             ),
           ),
-          Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+          // What's waiting from this bot, or that it is working; otherwise the chevron.
+          Consumer(
+            builder: (context, ref, _) {
+              final count = ref.watch(botBadgeProvider(bot.id));
+              final working = bot.status == BotStatusEnum.working;
+              if (count == 0 && !working) return Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7));
+              return Padding(padding: const EdgeInsets.only(right: AppSpace.xs), child: BotActivity(count: count, working: working));
+            },
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Group chats (D-118) under the bots on phones: stacked faces, and a way to start one.
+class _GroupChatsSection extends ConsumerWidget {
+  const _GroupChatsSection({required this.bots});
+  final List<Bot> bots;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final groups = ref.watch(groupChatsProvider).value ?? const <Conversation>[];
+    if (groups.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.groupChats),
+        if (groups.isNotEmpty)
+          GroupedCard(
+            children: [
+              for (final g in groups)
+                Builder(
+                  builder: (context) {
+                    final members = [for (final id in g.botIds) ?bots.where((b) => b.id == id).firstOrNull];
+                    return GroupedTile(
+                      key: Key('group-${g.id}'),
+                      icon: LucideIcons.users,
+                      leading: GroupAvatar(bots: members, size: 36, ringColor: scheme.surfaceContainerLow),
+                      title: groupTitle(g, bots),
+                      subtitle: l10n.groupBotCount(g.botIds.length),
+                      trailing: members.any((b) => b.status == BotStatusEnum.working) ? const BotActivity(count: 0, working: true) : null,
+                      onTap: () => context.go('/groups/${g.id}'),
+                    );
+                  },
+                ),
+            ],
+          ),
+      ],
     );
   }
 }
@@ -202,11 +229,71 @@ class BotsScreen extends ConsumerWidget {
         onTitleTap: () => showSpacesSheet(context, ref),
         actions: [
           const WorkspaceSwitcher(compact: true),
-          HeaderIconButton(icon: LucideIcons.plus, tooltip: context.l10n.newBot, onPressed: () => showCreateBot(context, ref)),
+          HeaderIconButton(key: const Key('createMenu'), icon: LucideIcons.plus, tooltip: context.l10n.createMenuTitle, onPressed: () => showCreateMenu(context, ref)),
         ],
       ),
       body: const BotsList(),
     );
+  }
+}
+
+/// The "+" menu: everything that adds to the chat list, so the list itself stays just chats.
+/// New bot leads; a group chat, importing a bot file or an agent folder, and archived bots follow.
+Future<void> showCreateMenu(BuildContext context, WidgetRef ref) async {
+  final l10n = context.l10n;
+  final archived = ref.read(archivedBotsProvider).value ?? const <Bot>[];
+  final bots = ref.read(botsProvider).value ?? const <Bot>[];
+  final picked = await showAdaptiveSheet<String>(
+    context: context,
+    dialogMaxWidth: 440,
+    builder: (sheet) {
+      Widget row(String id, IconData icon, String title, String subtitle, {bool primary = false}) => GroupedTile(
+        key: Key('create-$id'),
+        icon: icon,
+        iconColor: primary ? null : sheet.colorScheme.onSurfaceVariant,
+        title: title,
+        subtitle: subtitle,
+        showChevron: false,
+        onTap: () => Navigator.of(sheet).pop(id),
+      );
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpace.md, 0, AppSpace.md, AppSpace.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SheetTitle(l10n.createMenuTitle),
+            GroupedCard(
+              children: [
+                row('bot', LucideIcons.bot, l10n.newBot, l10n.createBotHelp, primary: true),
+                if (bots.length >= 2) row('group', LucideIcons.usersRound, l10n.newGroupChat, l10n.createGroupHelp),
+              ],
+            ),
+            const SizedBox(height: AppSpace.sm),
+            GroupedCard(
+              children: [
+                row('importBot', LucideIcons.fileDown, l10n.importBot, l10n.importBotHelp),
+                row('importAgent', LucideIcons.folderInput, l10n.importAgent, l10n.importAgentHelp),
+                if (archived.isNotEmpty) row('archived', LucideIcons.archive, '${l10n.archivedBots} (${archived.length})', l10n.archivedBotsHelp),
+              ],
+            ),
+          ],
+        ),
+      );
+    },
+  );
+  if (!context.mounted) return;
+  switch (picked) {
+    case 'bot':
+      await showCreateBot(context, ref);
+    case 'group':
+      await showNewGroupChat(context, ref);
+    case 'importBot':
+      await importBotFromFile(context);
+    case 'importAgent':
+      await importAgentFolder(context, ref);
+    case 'archived':
+      await showArchivedBots(context);
   }
 }
 

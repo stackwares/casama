@@ -10,6 +10,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/revealable.dart';
 
 /// A bot's plugins (D-121): Agent Plugins 1.0 packages from GitHub, with what each one added.
 final pluginsProvider = FutureProvider.autoDispose.family<List<Plugin>, String>((ref, botId) => ref.watch(backendProvider).plugins(botId));
@@ -233,13 +234,13 @@ class _AddPluginState extends ConsumerState<_AddPlugin> {
         if (p != null) ...[
           _PreviewList(preview: p),
           for (final s in p.secrets)
-            TextField(
+            Revealable(builder: (context, hidden, toggle) => TextField(
               key: Key('pluginSecret-${s.name}'),
               controller: _secrets[s.name],
-              obscureText: true,
+              obscureText: hidden,
               onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(labelText: s.name, helperText: s.description.isEmpty ? null : s.description),
-            ),
+              decoration: InputDecoration(labelText: s.name, helperText: s.description.isEmpty ? null : s.description, suffixIcon: toggle),
+            )),
         ],
       ],
     );
@@ -308,13 +309,13 @@ class _UpdatePluginState extends ConsumerState<_UpdatePlugin> {
       children: [
         for (final l in lines.isEmpty ? [l10n.pluginDiffNone] : lines) Text(l),
         for (final e in _secrets.entries)
-          TextField(
+          Revealable(builder: (context, hidden, toggle) => TextField(
             key: Key('pluginSecret-${e.key}'),
             controller: e.value,
-            obscureText: true,
+            obscureText: hidden,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(labelText: e.key),
-          ),
+            decoration: InputDecoration(labelText: e.key, suffixIcon: toggle),
+          )),
       ],
     );
   }

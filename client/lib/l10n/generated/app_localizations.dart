@@ -238,6 +238,102 @@ abstract class AppLocalizations {
   /// **'Continue with Apple'**
   String get continueWithApple;
 
+  /// No description provided for @continueWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with email'**
+  String get continueWithEmail;
+
+  /// No description provided for @moreSignInOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreSignInOptions;
+
+  /// No description provided for @usePasswordInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a password instead'**
+  String get usePasswordInstead;
+
+  /// No description provided for @checkInboxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your inbox'**
+  String get checkInboxTitle;
+
+  /// No description provided for @checkInboxBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a sign-in link and a 6-digit code to {email}. Tap the link, or type the code here.'**
+  String checkInboxBody(String email);
+
+  /// No description provided for @emailCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get emailCodeLabel;
+
+  /// No description provided for @resendLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get resendLink;
+
+  /// No description provided for @resendLinkIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again in {seconds}s'**
+  String resendLinkIn(int seconds);
+
+  /// No description provided for @useDifferentEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different email'**
+  String get useDifferentEmail;
+
+  /// No description provided for @authWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'That email and password don\'t match. Try again, or sign in with an email link instead.'**
+  String get authWrongPassword;
+
+  /// No description provided for @authEmailNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your email first: open the link we sent you.'**
+  String get authEmailNotConfirmed;
+
+  /// No description provided for @authCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is wrong or has expired. Check the latest email, or send a new one.'**
+  String get authCodeInvalid;
+
+  /// No description provided for @authTooManyTries.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Wait a minute and try again.'**
+  String get authTooManyTries;
+
+  /// No description provided for @authAccountExists.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s already an account with this email. Sign in instead.'**
+  String get authAccountExists;
+
+  /// No description provided for @authSignupDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This server isn\'t taking new sign-ups.'**
+  String get authSignupDisabled;
+
+  /// No description provided for @useMagicLinkInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Email me a link instead'**
+  String get useMagicLinkInstead;
+
   /// No description provided for @invalidEmail.
   ///
   /// In en, this message translates to:
@@ -1624,6 +1720,54 @@ abstract class AppLocalizations {
   /// **'Open live view'**
   String get openLiveView;
 
+  /// No description provided for @liveExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Full screen'**
+  String get liveExpand;
+
+  /// No description provided for @liveCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get liveCopy;
+
+  /// No description provided for @liveScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot'**
+  String get liveScreenshot;
+
+  /// No description provided for @liveCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied from the computer.'**
+  String get liveCopied;
+
+  /// No description provided for @liveNothingCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was copied. Select something on the computer first.'**
+  String get liveNothingCopied;
+
+  /// No description provided for @livePasteEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your clipboard is empty.'**
+  String get livePasteEmpty;
+
+  /// No description provided for @liveMinimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the side panel'**
+  String get liveMinimize;
+
+  /// No description provided for @liveShownFullScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'The live view is open full screen.'**
+  String get liveShownFullScreen;
+
   /// No description provided for @paused.
   ///
   /// In en, this message translates to:
@@ -2182,6 +2326,12 @@ abstract class AppLocalizations {
   /// **'Can\'t reach your Kasama server'**
   String get cannotReachServer;
 
+  /// No description provided for @connectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach your Kasama server. Check your connection and try again.'**
+  String get connectionFailed;
+
   /// No description provided for @cannotReachServerHelp.
   ///
   /// In en, this message translates to:
@@ -2698,6 +2848,120 @@ abstract class AppLocalizations {
   /// **'or'**
   String get orLabel;
 
+  /// No description provided for @notificationsPrimerBubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t miss a thing!'**
+  String get notificationsPrimerBubble;
+
+  /// No description provided for @notificationsPrimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on notifications'**
+  String get notificationsPrimerTitle;
+
+  /// No description provided for @notificationsPrimerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bots tell you when they need a decision from you, or when their work is ready.'**
+  String get notificationsPrimerBody;
+
+  /// No description provided for @notificationsTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get notificationsTurnOn;
+
+  /// No description provided for @createMenuTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get createMenuTitle;
+
+  /// No description provided for @createBotHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A teammate with its own instructions, memory and tools'**
+  String get createBotHelp;
+
+  /// No description provided for @createGroupHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Several bots in one chat; @mention who should answer'**
+  String get createGroupHelp;
+
+  /// No description provided for @importBotHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'From a Kasama bot file someone shared'**
+  String get importBotHelp;
+
+  /// No description provided for @importAgentHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring a bot over from OpenClaw or Hermes Agent: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.'**
+  String get importAgentHelp;
+
+  /// No description provided for @archivedBotsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring back a bot you archived'**
+  String get archivedBotsHelp;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get checkForUpdates;
+
+  /// No description provided for @autoUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Update automatically'**
+  String get autoUpdates;
+
+  /// No description provided for @autoUpdatesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Download new versions in the background and install them when you quit.'**
+  String get autoUpdatesHelp;
+
+  /// No description provided for @upToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Kasama is up to date'**
+  String get upToDate;
+
+  /// No description provided for @updateReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Kasama {version} is available'**
+  String updateReady(String version);
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String appVersion(String version);
+
+  /// No description provided for @openAtLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Open at login'**
+  String get openAtLogin;
+
+  /// No description provided for @openAtLoginHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Kasama when you log in to this Mac, ready for the quick-ask shortcut.'**
+  String get openAtLoginHelp;
+
+  /// No description provided for @signInCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in or create account'**
+  String get signInCta;
+
   /// No description provided for @signInTagline.
   ///
   /// In en, this message translates to:
@@ -3177,6 +3441,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.'**
   String get modelKeysIntro;
+
+  /// No description provided for @modelKeysFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Keys belong to one workspace. These are for {workspace}.'**
+  String modelKeysFor(String workspace);
 
   /// No description provided for @yourKeys.
   ///
@@ -4978,6 +5248,30 @@ abstract class AppLocalizations {
   /// **'Authenticator apps'**
   String get twoStepAuthenticators;
 
+  /// No description provided for @twoStepRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get twoStepRename;
+
+  /// No description provided for @twoStepRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename authenticator'**
+  String get twoStepRenameTitle;
+
+  /// No description provided for @twoStepNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get twoStepNameLabel;
+
+  /// No description provided for @twoStepNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: Work phone'**
+  String get twoStepNameHint;
+
   /// No description provided for @twoStepRemove.
   ///
   /// In en, this message translates to:
@@ -5485,8 +5779,8 @@ abstract class AppLocalizations {
   /// No description provided for @linkDays.
   ///
   /// In en, this message translates to:
-  /// **'In {days} days'**
-  String linkDays(String days);
+  /// **'{days, plural, =1{In 1 day} other{In {days} days}}'**
+  String linkDays(int days);
 
   /// No description provided for @linkMaxUses.
   ///
@@ -5523,6 +5817,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invite link copied.'**
   String get linkCopied;
+
+  /// No description provided for @inviteRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get inviteRole;
+
+  /// No description provided for @inviteLinkReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your new invite link'**
+  String get inviteLinkReady;
+
+  /// No description provided for @inviteLinkOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy or share it now. For security, the full link isn\'t shown again.'**
+  String get inviteLinkOnce;
+
+  /// No description provided for @shareLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get shareLinkLabel;
 
   /// No description provided for @joiningWorkspace.
   ///
@@ -5967,12 +6285,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved by a bot'**
   String get savedByBot;
-
-  /// No description provided for @checkForUpdates.
-  ///
-  /// In en, this message translates to:
-  /// **'Check for updates'**
-  String get checkForUpdates;
 
   /// No description provided for @attachSkill.
   ///
@@ -6760,6 +7072,48 @@ abstract class AppLocalizations {
   /// **'New group chat'**
   String get newGroupChat;
 
+  /// No description provided for @groupChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Group chats'**
+  String get groupChats;
+
+  /// No description provided for @groupWhoAnswers.
+  ///
+  /// In en, this message translates to:
+  /// **'{names} will answer'**
+  String groupWhoAnswers(String names);
+
+  /// No description provided for @groupEveryoneAnswers.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone will answer'**
+  String get groupEveryoneAnswers;
+
+  /// No description provided for @groupMentionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'@mention a bot, or @everyone'**
+  String get groupMentionHint;
+
+  /// No description provided for @routineRan.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine “{name}” ran'**
+  String routineRan(String name);
+
+  /// No description provided for @groupBotCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 bot} other{{count} bots}}'**
+  String groupBotCount(int count);
+
+  /// No description provided for @botWaitingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 thing waiting for you} other{{count} things waiting for you}}'**
+  String botWaitingCount(int count);
+
   /// No description provided for @newGroupChatHelp.
   ///
   /// In en, this message translates to:
@@ -7233,12 +7587,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import an agent'**
   String get importAgent;
-
-  /// No description provided for @importAgentHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Bring a bot over from OpenClaw or Hermes Agent: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.'**
-  String get importAgentHelp;
 
   /// No description provided for @importAgentPickFolder.
   ///
@@ -8391,6 +8739,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rotate key'**
   String get encryptionRotate;
+
+  /// No description provided for @encryptionKeyManaged.
+  ///
+  /// In en, this message translates to:
+  /// **'Kasama creates and keeps this workspace\'s key for you, wrapped with the server\'s own key. There\'s nothing to save or copy.'**
+  String get encryptionKeyManaged;
+
+  /// No description provided for @encryptionRotateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate the key?'**
+  String get encryptionRotateTitle;
+
+  /// No description provided for @encryptionRotateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace key is wrapped again with the server\'s current key. Your content stays readable and nothing needs re-encrypting. Do this after changing the server\'s key, or on a schedule.'**
+  String get encryptionRotateBody;
 
   /// No description provided for @encryptionRotateHelp.
   ///

@@ -8,9 +8,11 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:share_plus/share_plus.dart' show XFile;
 
 import '../../core/live.dart';
 import '../../core/providers.dart';
+import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -24,9 +26,14 @@ import '../teach/teach_recorder.dart';
 
 /// Watch a computer's desktop live and take control (deep link: /computer/live?c=&takeover=).
 class LiveViewScreen extends ConsumerStatefulWidget {
-  const LiveViewScreen({super.key, required this.computerId, this.takeoverId});
+  const LiveViewScreen({super.key, required this.computerId, this.takeoverId, this.embedded = false, this.onExpand});
   final String computerId;
   final String? takeoverId;
+
+  /// Inside the computer side panel on large screens: no page header, a compact bar, and a button
+  /// that opens the full-screen view ([onExpand]).
+  final bool embedded;
+  final VoidCallback? onExpand;
 
   @override
   ConsumerState<LiveViewScreen> createState() => _LiveViewScreenState();
@@ -46,9 +53,12 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   Timer? _pingTimer;
   final _transform = TransformationController();
   final _focus = FocusNode();
-  final _typing = TextEditingController();
+  // The phone keyboard types into a hidden field that always holds one invisible character, so
+  // Backspace on an "empty" field still registers (and reaches the computer).
+  static const _sentinel = '\u200b';
+  final _typing = TextEditingController(text: _sentinel);
   final _typingFocus = FocusNode();
-  var _typed = '';
+  var _typed = _sentinel;
   // Teach a task (D-120): a recording while we hold control.
   TeachSession? _teach;
   TeachRecorder? _recorder;
@@ -185,6 +195,80 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   }
 
   bool get _controlling => _lease?.you == true && (_conn?.isHost.value ?? false);
+
+  // --- quick actions -------------------------------------------------------
+
+  void _keyCombo(int modifier, int key) {
+    _send(NekoInput.key(modifier, down: true));
+    _send(NekoInput.key(key, down: true));
+    _send(NekoInput.key(key, down: false));
+    _send(NekoInput.key(modifier, down: false));
+  }
+
+  /// This device's clipboard onto the computer's, then Ctrl+V there.
+  Future<void> _paste() async {
+    final conn = _conn;
+    if (conn == null || !_controlling) return;
+    final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text ?? '';
+    if (!mounted) return;
+    if (text.isEmpty) return showMessage(context, context.l10n.livePasteEmpty);
+    conn.setClipboard(text);
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    _keyCombo(0xffe3, 0x76);
+  }
+
+  /// Ctrl+C on the computer, then what it copied onto this device's clipboard.
+  Future<void> _copy() async {
+    final conn = _conn;
+    if (conn == null || !_controlling) return;
+    final before = conn.remoteClipboard.value;
+    final done = Completer<String?>();
+    void changed() {
+      if (!done.isCompleted && conn.remoteClipboard.value != before) done.complete(conn.remoteClipboard.value);
+    }
+
+    conn.remoteClipboard.addListener(changed);
+    _keyCombo(0xffe3, 0x63);
+    final text = await done.future.timeout(const Duration(milliseconds: 1500), onTimeout: () => null);
+    conn.remoteClipboard.removeListener(changed);
+    if (!mounted) return;
+    if (text == null || text.isEmpty) return showMessage(context, context.l10n.liveNothingCopied);
+    await Clipboard.setData(ClipboardData(text: text));
+    if (mounted) showMessage(context, context.l10n.liveCopied);
+  }
+
+  /// A screenshot of the computer, saved or shared from this device.
+  Future<void> _screenshot(BuildContext button) async {
+    final origin = shareOrigin(button);
+    final png = await runGuarded(context, () => ref.read(backendProvider).screenshot(widget.computerId)) ?? _shot;
+    if (png == null || !mounted) return;
+    final name = 'computer-${DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.]'), '-')}.png';
+    await shareFiles([XFile.fromData(png, name: name, mimeType: 'image/png')], names: [name], origin: origin);
+  }
+
+  Widget _quickActions(BuildContext context) {
+    final l10n = context.l10n;
+    final phone = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
+    Widget action(Key key, IconData icon, String label, VoidCallback? onPressed) => TextButton.icon(
+      key: key,
+      style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 10)),
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+    );
+    return SingleChildScrollView(
+      key: const Key('liveQuickActions'),
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          action(const Key('liveCopy'), LucideIcons.copy, l10n.liveCopy, _controlling ? _copy : null),
+          action(const Key('livePaste'), LucideIcons.clipboardPaste, l10n.pasteLabel, _controlling ? _paste : null),
+          Builder(builder: (b) => action(const Key('liveScreenshot'), LucideIcons.camera, l10n.liveScreenshot, () => _screenshot(b))),
+          if (phone && _controlling) action(const Key('liveKeyboard'), LucideIcons.keyboard, l10n.showKeyboard, () => _typingFocus.requestFocus()),
+        ],
+      ),
+    );
+  }
 
   // --- teach a task (D-120) -------------------------------------------------
 
@@ -330,7 +414,10 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
 
   /// Soft keyboard on phones: diff the hidden field and send key presses.
   void _onTyped(String value) {
-    if (!_controlling) return;
+    if (!_controlling) {
+      _resetTyping();
+      return;
+    }
     if (value.length < _typed.length) {
       for (var i = 0; i < _typed.length - value.length; i++) {
         _recorder?.backspace();
@@ -339,6 +426,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
       }
     } else {
       for (final ch in value.substring(_typed.length).runes) {
+        if (ch == 0x200b) continue;
         final sym = ch == 10 ? 0xff0d : (ch < 0x100 ? ch : 0x01000000 | ch);
         ch == 10 ? _recorder?.key('Enter') : _recorder?.char(String.fromCharCode(ch));
         _send(NekoInput.key(sym, down: true));
@@ -346,6 +434,13 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
       }
     }
     _typed = value;
+    // After Return, or once the sentinel itself was deleted, start the buffer over.
+    if (value.isEmpty || value.contains('\n') || value.length > 200) _resetTyping();
+  }
+
+  void _resetTyping() {
+    _typed = _sentinel;
+    _typing.value = const TextEditingValue(text: _sentinel, selection: TextSelection.collapsed(offset: 1));
   }
 
   // --- build ---------------------------------------------------------------
@@ -353,7 +448,6 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
     final conn = _conn;
     final state = conn?.state.value ?? (_error != null ? LiveState.fallback : LiveState.connecting);
     final takeovers = ref.watch(takeoversProvider).value ?? const <TakeoverRequest>[];
@@ -376,10 +470,17 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
               : Image.memory(_shot!, gaplessPlayback: true, fit: BoxFit.fill))
         : RTCVideoView(conn!.renderer!, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain);
 
+    final minimize = !widget.embedded && AppBreakpoints.of(MediaQuery.sizeOf(context).width) != WindowSize.compact && Navigator.of(context).canPop();
+    final page = Column(
+      children: _body(context, state: state, takeover: takeover, holder: holder, size: size, video: video),
+    );
+    if (widget.embedded) return Material(type: MaterialType.transparency, child: page);
     return Scaffold(
       appBar: ShellHeader(
         title: l10n.liveView,
         actions: [
+          if (minimize)
+            HeaderIconButton(key: const Key('liveMinimize'), tooltip: l10n.liveMinimize, icon: LucideIcons.minimize2, onPressed: () => Navigator.of(context).maybePop()),
           if (_rtt != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -406,12 +507,26 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
             HeaderIconButton(key: const Key('teachStart'), tooltip: l10n.teachTask, icon: LucideIcons.graduationCap, onPressed: _startTeach),
         ],
       ),
-      body: Column(
-        children: [
+      body: page,
+    );
+  }
+
+  List<Widget> _body(
+    BuildContext context, {
+    required LiveState state,
+    required TakeoverRequest? takeover,
+    required String holder,
+    required Size size,
+    required Widget video,
+  }) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final gutter = widget.embedded ? AppSpace.sm : AppSpace.gutter;
+    return [
           if (takeover != null)
             Container(
               key: const Key('takeoverBanner'),
-              margin: const EdgeInsets.fromLTRB(AppSpace.gutter, AppSpace.xs, AppSpace.gutter, 0),
+              margin: EdgeInsets.fromLTRB(gutter, AppSpace.xs, gutter, 0),
               padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
               decoration: BoxDecoration(
                 color: context.appColors.waiting.withValues(alpha: context.isDark ? 0.18 : 0.1),
@@ -425,7 +540,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
                   Expanded(child: Text(l10n.botAsksForHelp(takeover.reason), style: theme.textTheme.bodyMedium?.copyWith(height: 1.35))),
                   TextButton(
                     onPressed: () async {
-                      await runGuarded(context, () => ref.read(backendProvider).dismissTakeover(takeover!.id));
+                      await runGuarded(context, () => ref.read(backendProvider).dismissTakeover(takeover.id));
                       ref.invalidate(takeoversProvider);
                     },
                     child: Text(l10n.dismiss),
@@ -434,7 +549,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
               ),
             ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpace.gutter, AppSpace.sm, AppSpace.gutter, AppSpace.sm),
+            padding: EdgeInsets.fromLTRB(gutter, AppSpace.sm, gutter, AppSpace.sm),
             child: Row(
               children: [
                 Container(
@@ -479,9 +594,19 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
                     icon: const Icon(LucideIcons.mousePointer2, size: 18),
                     label: Text(l10n.takeControl),
                   ),
+                if (widget.embedded && widget.onExpand != null) ...[
+                  const SizedBox(width: 4),
+                  IconButton(
+                    key: const Key('liveExpand'),
+                    tooltip: l10n.liveExpand,
+                    onPressed: widget.onExpand,
+                    icon: const Icon(LucideIcons.maximize2, size: 18),
+                  ),
+                ],
               ],
             ),
           ),
+          Padding(padding: EdgeInsets.fromLTRB(gutter - 6, 0, gutter, AppSpace.xs), child: _quickActions(context)),
           if (_teach != null)
             _RecordingBanner(
               lastStep: _lastStep,
@@ -491,7 +616,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
             )
           else if (_lease?.you == true)
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpace.gutter, 0, AppSpace.gutter, AppSpace.sm),
+              padding: EdgeInsets.fromLTRB(gutter, 0, gutter, AppSpace.sm),
               child: FormNote(l10n.takeoverPrivacy, icon: LucideIcons.lock),
             ),
           Expanded(
@@ -541,12 +666,21 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
             height: 1,
             child: Opacity(
               opacity: 0,
-              child: TextField(focusNode: _typingFocus, controller: _typing, onChanged: _onTyped, autocorrect: false, enableSuggestions: false),
+              // Multi-line, so the keyboard's Enter types Return on the computer instead of closing.
+              child: TextField(
+                key: const Key('liveTyping'),
+                focusNode: _typingFocus,
+                controller: _typing,
+                onChanged: _onTyped,
+                autocorrect: false,
+                enableSuggestions: false,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
+                maxLines: null,
+              ),
             ),
           ),
-        ],
-      ),
-    );
+    ];
   }
 }
 

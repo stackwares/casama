@@ -3,15 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 import 'package:kasama_sdk/kasama_sdk.dart' show WelcomeChat;
 import 'package:kasama_app/features/computer/computer_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:kasama_app/app.dart';
 import 'package:kasama_app/core/backend.dart';
 import 'package:kasama_app/core/providers.dart';
+import 'package:kasama_app/features/auth/floating_mascots.dart';
 import 'package:kasama_app/features/auth/sign_in_screen.dart';
+import 'package:kasama_app/ui/mascot.dart';
 import 'package:kasama_app/features/chat/chat_controller.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
+import 'package:kasama_app/features/chat/widgets/chat_widgets.dart' show ToolGroupCard;
 import 'package:kasama_app/features/timeline/timeline_screen.dart';
 import 'package:kasama_app/l10n/generated/app_localizations.dart';
 import 'package:kasama_app/ui/floating_tab_chrome.dart';
@@ -31,8 +35,85 @@ Future<void> setSize(WidgetTester tester, Size size) async {
 }
 
 void main() {
+  testWidgets('the sign-in screen shows the bots and one button that opens the ways in', (tester) async {
+    await setSize(tester, const Size(390, 844));
+    await tester.pumpWidget(harness(FakeBackend()..signedIn = false, const SignInScreen()));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(FloatingMascots), findsOneWidget);
+    expect(find.byType(MascotImage), findsAtLeastNWidgets(10));
+    expect(find.byKey(const Key('email')), findsNothing);
+    await tester.tap(find.byKey(const Key('openSignIn')));
+    await tester.pumpAndSettle();
+    // Google up front; email folded away until asked for.
+    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.byKey(const Key('email')), findsNothing);
+    expect(find.byKey(const Key('ssoSignIn')), findsNothing);
+    await tester.tap(find.byKey(const Key('continueWithEmail')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('email')), findsOneWidget);
+  });
+
+  testWidgets('email sign-in sends a magic link first, with a password one tap away', (tester) async {
+    final backend = FakeBackend()..signedIn = false;
+    await tester.pumpWidget(harness(backend, const SignInScreen()));
+    await tester.tap(find.byKey(const Key('openSignIn')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('continueWithEmail')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('password')), findsNothing);
+    await tester.tap(find.byKey(const Key('sendMagicLink')));
+    await tester.pump();
+    expect(find.text('Enter a valid email address'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('email')), 'ana@example.com');
+    await tester.tap(find.byKey(const Key('sendMagicLink')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(backend.magicLinkEmail, 'ana@example.com');
+    // The next step: the code from the email, typed here; another email waits a minute.
+    expect(find.byKey(const Key('checkInbox')), findsOneWidget);
+    expect(find.textContaining('ana@example.com'), findsOneWidget);
+    expect(tester.widget<TextButton>(find.byKey(const Key('resendLink'))).onPressed, isNull);
+    // A wrong code says so plainly, not in Supabase's words.
+    backend.verifyCodeError = const AuthException('Token has expired or is invalid', code: 'otp_expired');
+    await tester.enterText(find.byKey(const Key('emailCode')), '111111');
+    await tester.pump();
+    expect(find.text('That code is wrong or has expired. Check the latest email, or send a new one.'), findsOneWidget);
+    backend.verifyCodeError = null;
+    await tester.enterText(find.byKey(const Key('emailCode')), '123456');
+    await tester.pump();
+    expect(backend.verifiedCode, '123456');
+    await tester.pump(const Duration(seconds: 61));
+    expect(tester.widget<TextButton>(find.byKey(const Key('resendLink'))).onPressed, isNotNull);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.tap(find.byKey(const Key('changeEmail')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byKey(const Key('usePassword')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('password')), findsOneWidget);
+    expect(find.byKey(const Key('submit')), findsOneWidget);
+  });
+
+  testWidgets('a quick second tap on Google opens one browser, not two', (tester) async {
+    final backend = FakeBackend()..signedIn = false;
+    await tester.pumpWidget(harness(backend, const SignInScreen()));
+    await tester.tap(find.byKey(const Key('openSignIn')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('googleSignIn')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('googleSignIn')));
+    await tester.pump(const Duration(seconds: 3));
+    expect(backend.providerSignIns, ['google']);
+  });
+
   testWidgets('sign-in validates email and password', (tester) async {
     await tester.pumpWidget(harness(FakeBackend()..signedIn = false, const SignInScreen()));
+    await tester.tap(find.byKey(const Key('openSignIn')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('continueWithEmail')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('usePassword')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('submit')));
     await tester.pump();
     expect(find.text('Enter a valid email address'), findsOneWidget);
@@ -40,6 +121,44 @@ void main() {
     await tester.tap(find.byKey(const Key('toggleMode')));
     await tester.pump();
     expect(find.text('Create your account'), findsOneWidget);
+  });
+
+  testWidgets('while the bot works, typing turns Stop into Send and the message goes out', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('messageInput')), 'Research example.com');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('sendButton')));
+    await tester.pump();
+    expect(find.byKey(const Key('stopButton')), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('messageInput')), 'only the pricing page');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byKey(const Key('stopButton')), findsNothing);
+    await tester.tap(find.byKey(const Key('sendButton')));
+    await tester.pump();
+    expect(backend.sent, ['Research example.com', 'only the pricing page']);
+    expect(find.text('only the pricing page'), findsOneWidget);
+  });
+
+  testWidgets('the password can be shown and hidden again', (tester) async {
+    await tester.pumpWidget(harness(FakeBackend()..signedIn = false, const SignInScreen()));
+    await tester.tap(find.byKey(const Key('openSignIn')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('continueWithEmail')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('usePassword')));
+    await tester.pumpAndSettle();
+    bool hidden() => tester.widget<EditableText>(find.descendant(of: find.byKey(const Key('password')), matching: find.byType(EditableText))).obscureText;
+    expect(hidden(), isTrue);
+    await tester.tap(find.byKey(const Key('revealToggle')));
+    await tester.pump();
+    expect(hidden(), isFalse);
+    await tester.tap(find.byKey(const Key('revealToggle')));
+    await tester.pump();
+    expect(hidden(), isTrue);
   });
 
   testWidgets('chat streams text, folds tool steps into cards, and can stop a run', (tester) async {
@@ -77,7 +196,8 @@ void main() {
     expect(find.text('Ran a command'), findsOneWidget);
     expect(find.textContaining('ls -la'), findsOneWidget);
     expect(find.text('42 ms'), findsOneWidget);
-    expect(find.textContaining('\$0.0021 · 1050 tokens'), findsOneWidget);
+    // The run's cost isn't shown under the composer.
+    expect(find.textContaining('1050 tokens'), findsNothing);
 
     // Expanding the card shows the streamed output.
     await tester.tap(find.text('Ran a command'));
@@ -102,6 +222,28 @@ void main() {
     expect(find.byKey(const Key('sendButton')), findsOneWidget);
   });
 
+  testWidgets('a finished reply that is only a card shows the card (welcome chat)', (tester) async {
+    final container = ProviderContainer(overrides: [backendProvider.overrideWithValue(FakeBackend())]);
+    addTearDown(container.dispose);
+    final c = container.read(chatControllerProvider(botId).notifier);
+    final card = {
+      'type': 'ui',
+      'surface_id': 'ui_scope',
+      'messages': [
+        {
+          'version': '1.0',
+          'createSurface': {'surfaceId': 'ui_scope', 'catalogId': 'basic'},
+        },
+      ],
+    };
+    c.apply(ev(1, 'message.completed', {'message_id': 'w2', 'content': [card]}));
+    // A later ui.shown for the same surface (model replies send both) does not duplicate it.
+    c.apply(ev(2, 'ui.shown', {'surface_id': 'ui_scope', 'messages': card['messages']}));
+    final entries = container.read(chatControllerProvider(botId)).entries;
+    expect(entries.whereType<UiEntry>().map((u) => u.surfaceId), ['ui_scope']);
+    expect(entries.whereType<MessageEntry>(), isEmpty);
+  });
+
   testWidgets('a failed run shows the reason and orphaned partial text is dropped on completion', (tester) async {
     final container = ProviderContainer(overrides: [backendProvider.overrideWithValue(FakeBackend())]);
     addTearDown(container.dispose);
@@ -123,6 +265,60 @@ void main() {
     c.apply(ev(5, 'run.failed', {'error_code': 'budget_exceeded', 'message': 'This run reached its budget of \$1.'}));
     final last = container.read(chatControllerProvider(botId)).entries.last as NoticeEntry;
     expect(last.kind, NoticeKind.failed);
+  });
+
+  testWidgets('a card shows on its own, without a ui.show step row', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('messageInput')), 'set me up');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('sendButton')));
+    await tester.pump();
+    final card = [
+      {
+        'version': '1.0',
+        'createSurface': {'surfaceId': 'ui_q', 'catalogId': 'https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json'},
+      },
+      {
+        'version': '1.0',
+        'updateComponents': {
+          'surfaceId': 'ui_q',
+          'components': [
+            {'id': 'root', 'component': 'Text', 'text': 'Question one?'},
+          ],
+        },
+      },
+    ];
+    backend.runEventsController
+      ..add(ev(1, 'tool.started', {'call_id': 'u1', 'tool': 'ui.show', 'args_redacted': <String, dynamic>{}}))
+      ..add(ev(2, 'ui.shown', {'surface_id': 'ui_q', 'messages': card}))
+      ..add(ev(3, 'tool.completed', {'call_id': 'u1', 'result_preview': 'shown', 'duration_ms': 2, 'artifact_path': null}));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Question one?'), findsOneWidget);
+    expect(find.byType(ToolGroupCard), findsNothing);
+  });
+
+  testWidgets('a run that failed for want of a model offers to add a key, in the chat and its details', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('messageInput')), 'who are you?');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('sendButton')));
+    await tester.pump();
+    backend.runEventsController.add(
+      ev(1, 'run.failed', {'error_code': 'no_model_configured', 'message': 'This bot has no model.'}),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('noticeFix')), findsOneWidget);
+    expect(find.text('Add a model key'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('errorDetails')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('errorFix')), findsOneWidget);
   });
 
   testWidgets('timeline filters events and offers restore on checkpoints', (tester) async {
@@ -179,11 +375,18 @@ void main() {
     expect(panelWidth(), 420);
     await tester.drag(find.byKey(const Key('computerPanelResize')), const Offset(-120, 0));
     await tester.pumpAndSettle();
-    expect(panelWidth(), inInclusiveRange(500, 540)); // minus the drag start threshold
-    // Never narrower than 360.
+    // The edge follows the pointer exactly, with no start threshold eating the first pixels.
+    expect(panelWidth(), 540);
+    // Grabbing again right away keeps dragging (it isn't a double click), and never below 360.
     await tester.drag(find.byKey(const Key('computerPanelResize')), const Offset(600, 0));
     await tester.pumpAndSettle();
     expect(panelWidth(), 360);
+    // A double click puts the default width back.
+    await tester.tap(find.byKey(const Key('computerPanelResize')));
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.tap(find.byKey(const Key('computerPanelResize')));
+    await tester.pumpAndSettle();
+    expect(panelWidth(), 420);
   });
 
   testWidgets('onboarding advances after creating a workspace', (tester) async {

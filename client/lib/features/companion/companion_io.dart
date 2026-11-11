@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kasama_computerd/computerd.dart';
 
 import 'companion.dart';
+import '../../core/distribution.dart';
 
 Companion createCompanion() => IoCompanion();
 DeviceTokenStore createTokenStore() => _TokenStore();
@@ -131,7 +132,7 @@ class IoCompanion implements Companion {
   @override
   ValueListenable<CompanionActivity?> get activity => _activity;
   @override
-  bool get supported => Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+  bool get supported => !isMacAppStoreBuild && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
   static String _secret() {
     final r = Random.secure();

@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show kDoubleTapTimeout;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,8 @@ import '../../core/backend.dart';
 import '../search/search_view.dart';
 import '../groups/group_chats.dart';
 import '../../core/providers.dart';
+import '../../ui/bot_activity.dart';
+import '../settings/settings_screen.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -42,6 +45,10 @@ class ComputerPanelOpen extends Notifier<bool> {
 }
 
 final computerPanelProvider = NotifierProvider<ComputerPanelOpen, bool>(ComputerPanelOpen.new);
+
+/// From this content width a settings page opens beside the settings list.
+const double _settingsSplitWidth = 1000;
+const double _settingsListWidth = 360;
 
 /// The computer panel's width on wide screens: dragged by its edge, kept on this device.
 class ComputerPanelWidth extends Notifier<double> {
@@ -105,7 +112,7 @@ class HomeShell extends ConsumerWidget {
   String? get _botId => RegExp(r'^/bots/([^/]+)').firstMatch(location)?.group(1);
 
   /// Screens opened from a tab (a chat, a settings page): on phones they take the whole screen.
-  bool get _isDetail => _botId != null || location.startsWith('/computer/') || RegExp(r'^/settings/.+').hasMatch(location) || location.startsWith('/approvals/') || location.startsWith('/quick-ask');
+  bool get _isDetail => _botId != null || location.startsWith('/groups/') || location == '/pages' || location.startsWith('/computer/') || RegExp(r'^/settings/.+').hasMatch(location) || location.startsWith('/approvals/') || location.startsWith('/quick-ask');
 
   List<_Dest> _destinations(BuildContext context, {bool phone = false}) {
     final l10n = context.l10n;
@@ -201,8 +208,22 @@ class HomeShell extends ConsumerWidget {
     final inChat = _botId != null && location.contains('/chat');
     final panelOpen = ref.watch(computerPanelProvider);
     final Widget content;
-    if (_index == 0 && _botId == null) {
+    // Only the bare Bots page asks to pick a bot; group chats and Pages live under the same tab.
+    if (_index == 0 && _botId == null && (location == '/bots' || location == '/')) {
       content = _SelectBotPlaceholder(onCreate: () => showCreateBot(context, ref));
+    } else if (location.startsWith('/settings/') && MediaQuery.sizeOf(context).width - _Sidebar.width >= _settingsSplitWidth) {
+      // Wide windows: a settings page opens beside the settings list (like System Settings), so
+      // moving between pages is one click and the page doesn't float in a sea of empty space.
+      content = Row(
+        children: [
+          SizedBox(
+            width: _settingsListWidth,
+            child: SettingsScreen(key: const Key('settingsPane'), pane: true, current: location),
+          ),
+          VerticalDivider(width: 1, thickness: 1, color: context.appColors.hairline),
+          Expanded(child: child),
+        ],
+      );
     } else {
       content = child;
     }
@@ -335,7 +356,7 @@ class _Sidebar extends ConsumerWidget {
                     icon: const Icon(LucideIcons.search),
                     onPressed: () => showWorkspaceSearch(context),
                   ),
-                  IconButton(tooltip: l10n.newBot, visualDensity: VisualDensity.compact, iconSize: 20, icon: const Icon(LucideIcons.plus), onPressed: () => showCreateBot(context, ref)),
+                  IconButton(key: const Key('createMenu'), tooltip: l10n.createMenuTitle, visualDensity: VisualDensity.compact, iconSize: 20, icon: const Icon(LucideIcons.plus), onPressed: () => showCreateMenu(context, ref)),
                 ],
               ),
             ),
@@ -343,32 +364,6 @@ class _Sidebar extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 12),
                 children: [
-                  // Group chats (D-118).
-                  for (final g in groups)
-                    _SidebarItem(
-                      key: Key('sidebar-group-${g.id}'),
-                      height: 44,
-                      leading: Icon(LucideIcons.users, size: 20, color: scheme.onSurfaceVariant),
-                      label: groupTitle(g, bots),
-                      selected: location == '/groups/${g.id}',
-                      onTap: () => context.go('/groups/${g.id}'),
-                    ),
-                  _SidebarItem(
-                    key: const Key('newGroupChat'),
-                    height: 40,
-                    leading: Icon(LucideIcons.usersRound, size: 18, color: scheme.onSurfaceVariant),
-                    label: l10n.newGroupChat,
-                    selected: false,
-                    onTap: () => showNewGroupChat(context, ref),
-                  ),
-                  _SidebarItem(
-                    key: const Key('sidebarPages'),
-                    height: 40,
-                    leading: Icon(LucideIcons.fileText, size: 18, color: scheme.onSurfaceVariant),
-                    label: l10n.pages,
-                    selected: location == '/pages',
-                    onTap: () => context.go('/pages'),
-                  ),
                   // Bots outside folders first, then each folder in order (D-100).
                   for (final (folder, group) in groupBotsByFolder(bots, folders)) ...[
                     if (folder != null)
@@ -397,14 +392,50 @@ class _Sidebar extends ConsumerWidget {
                         label: b.name,
                         subtitle: b.status == BotStatusEnum.idle ? null : botStatusLabel(context, b.status),
                         selected: b.id == selectedBotId,
+                        trailing: BotActivity(count: ref.watch(botBadgeProvider(b.id)), working: b.status == BotStatusEnum.working),
                         onTap: () => context.go('/bots/${b.id}/chat'),
                       ),
                   ],
+                  // Group chats (D-118): their own section under the bots, with stacked faces.
+                  _SectionHeader(
+                    title: l10n.groupChats,
+                    action: IconButton(
+                      key: const Key('newGroupChat'),
+                      tooltip: l10n.newGroupChat,
+                      visualDensity: VisualDensity.compact,
+                      iconSize: 20,
+                      icon: const Icon(LucideIcons.plus),
+                      onPressed: () => showNewGroupChat(context, ref),
+                    ),
+                  ),
+                  for (final g in groups)
+                    Builder(
+                      builder: (context) {
+                        final members = [for (final id in g.botIds) ?bots.where((b) => b.id == id).firstOrNull];
+                        return _SidebarItem(
+                          key: Key('sidebar-group-${g.id}'),
+                          height: 48,
+                          leading: GroupAvatar(bots: members, ringColor: scheme.surfaceContainerLow),
+                          label: groupTitle(g, bots),
+                          subtitle: l10n.groupBotCount(g.botIds.length),
+                          selected: location == '/groups/${g.id}',
+                          trailing: BotActivity(count: 0, working: members.any((b) => b.status == BotStatusEnum.working)),
+                          onTap: () => context.go('/groups/${g.id}'),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
             Divider(height: 1, color: context.appColors.hairline),
             const SizedBox(height: 6),
+            _SidebarItem(
+              key: const Key('sidebarPages'),
+              leading: Icon(LucideIcons.fileText, size: 21, color: location == '/pages' ? scheme.primary : scheme.onSurfaceVariant),
+              label: l10n.pages,
+              selected: location == '/pages',
+              onTap: () => context.go('/pages'),
+            ),
             for (var i = 0; i < dests.length; i++)
               if (dests[i].path != '/bots')
                 _SidebarItem(
@@ -413,7 +444,7 @@ class _Sidebar extends ConsumerWidget {
                   label: dests[i].label,
                   subtitle: dests[i].path == '/settings' ? ref.watch(backendProvider).userEmail : null,
                   selected: i == index,
-                  trailing: dests[i].path == '/inbox' && badge > 0 ? _CountPill(badge) : null,
+                  trailing: dests[i].path == '/inbox' && badge > 0 ? CountPill(badge) : null,
                   onTap: () => onSelected(i),
                 ),
             const SizedBox(height: 8),
@@ -490,17 +521,25 @@ class _SidebarItem extends StatelessWidget {
   }
 }
 
-class _CountPill extends StatelessWidget {
-  const _CountPill(this.count);
-  final int count;
+/// A sidebar section title with an optional action (like "+" for a new group chat).
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, this.action});
+  final String title;
+  final Widget? action;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-    decoration: BoxDecoration(color: context.colorScheme.primary, borderRadius: BorderRadius.circular(AppRadius.pill)),
-    child: Text(
-      count > 99 ? '99+' : '$count',
-      style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onPrimary, fontWeight: FontWeight.w800, fontFeatures: AppText.tabular),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(24, 14, 12, 2),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: context.textTheme.labelMedium?.copyWith(color: context.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700, letterSpacing: 0.2),
+          ),
+        ),
+        ?action,
+      ],
     ),
   );
 }
@@ -536,9 +575,47 @@ class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
   var _hover = false;
   var _dragging = false;
 
+  // The edge follows the pointer exactly: width at grab time minus how far the pointer has moved
+  // since, so no movement is lost between frames. Raw pointer events start at once (no drag slop).
+  double _startX = 0;
+  double _startWidth = 0;
+  var _moved = false;
+  // When the last click (a press and release without dragging) ended, for double clicks.
+  DateTime? _lastClick;
+
   double _max(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
     return (w * 0.6).clamp(ComputerPanelWidth.min, (w - 280 - 420).clamp(ComputerPanelWidth.min, double.infinity));
+  }
+
+  void _down(PointerDownEvent e, double width) {
+    // A double click on the edge (two clicks, no dragging) puts the default width back.
+    if (_lastClick != null && DateTime.now().difference(_lastClick!) < kDoubleTapTimeout) {
+      _lastClick = null;
+      ref.read(computerPanelWidthProvider.notifier)
+        ..set(ComputerPanelWidth.defaultWidth)
+        ..save();
+      return;
+    }
+    _moved = false;
+    _startX = e.position.dx;
+    _startWidth = width;
+    setState(() => _dragging = true);
+    ref.read(_panelDraggingProvider.notifier).set(true);
+  }
+
+  void _move(PointerMoveEvent e, double max) {
+    if (!_dragging) return;
+    if ((e.position.dx - _startX).abs() > 3) _moved = true;
+    ref.read(computerPanelWidthProvider.notifier).set((_startWidth - (e.position.dx - _startX)).clamp(ComputerPanelWidth.min, max));
+  }
+
+  void _up() {
+    if (!_dragging) return;
+    _lastClick = _moved ? null : DateTime.now();
+    setState(() => _dragging = false);
+    ref.read(_panelDraggingProvider.notifier).set(false);
+    ref.read(computerPanelWidthProvider.notifier).save();
   }
 
   @override
@@ -546,7 +623,6 @@ class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
     final scheme = context.colorScheme;
     final max = _max(context);
     final width = ref.watch(computerPanelWidthProvider).clamp(ComputerPanelWidth.min, max);
-    final notifier = ref.read(computerPanelWidthProvider.notifier);
     final active = _hover || _dragging;
     return Glass(
       border: Border(
@@ -561,28 +637,18 @@ class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
               left: 0,
               top: 0,
               bottom: 0,
-              width: 10,
+              width: 14,
               child: MouseRegion(
                 cursor: SystemMouseCursors.resizeColumn,
                 onEnter: (_) => setState(() => _hover = true),
                 onExit: (_) => setState(() => _hover = false),
-                child: GestureDetector(
+                child: Listener(
                   key: const Key('computerPanelResize'),
                   behavior: HitTestBehavior.opaque,
-                  onHorizontalDragStart: (_) {
-                    setState(() => _dragging = true);
-                    ref.read(_panelDraggingProvider.notifier).set(true);
-                  },
-                  onHorizontalDragUpdate: (d) => notifier.set((width - d.delta.dx).clamp(ComputerPanelWidth.min, max)),
-                  onHorizontalDragEnd: (_) {
-                    setState(() => _dragging = false);
-                    ref.read(_panelDraggingProvider.notifier).set(false);
-                    notifier.save();
-                  },
-                  onDoubleTap: () {
-                    notifier.set(ComputerPanelWidth.defaultWidth);
-                    notifier.save();
-                  },
+                  onPointerDown: (e) => _down(e, width),
+                  onPointerMove: (e) => _move(e, max),
+                  onPointerUp: (_) => _up(),
+                  onPointerCancel: (_) => _up(),
                   child: Center(
                     child: AnimatedOpacity(
                       opacity: active ? 1 : 0,

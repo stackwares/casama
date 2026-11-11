@@ -132,6 +132,7 @@ class _ApprovalCardState extends ConsumerState<ApprovalCard> {
     setState(() => _busy = false);
     if (ok == true) {
       ref.invalidate(approvalsProvider);
+      ref.invalidate(notificationsProvider);
       showMessage(context, approve ? l10n.approved : l10n.denied);
       widget.onDecided?.call();
     }

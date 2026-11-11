@@ -20,6 +20,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
+import '../../ui/cover_image.dart';
 import '../../ui/shell_header.dart';
 import '../files/file_preview.dart';
 import '../home/home_shell.dart';
@@ -29,6 +30,7 @@ import 'widgets/bot_ui.dart';
 import 'widgets/chat_widgets.dart';
 import 'widgets/composer.dart';
 import 'widgets/error_details.dart';
+import 'widgets/shared_files.dart';
 
 /// The computer a bot uses: its private computer, else the team computer.
 Computer? computerForBot(List<Computer> computers, String botId, {String? defaultComputerId}) {
@@ -81,6 +83,8 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _input = TextEditingController();
+  // Group chats: @-mention suggestions for what's typed in [_input].
+  late final _mentions = MentionController(_input);
 
   /// Interactive UIs bots show in this chat (D-086); what the person does goes back as a message.
   late final _botUi = BotUiHost(onAction: _onUiAction);
@@ -101,6 +105,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   static const _maxFileBytes = 25 * 1024 * 1024;
 
   bool get _uploading => _pending.any((p) => p.ref == null && !p.failed);
+
+  /// File links found in each reply (by entry: a changed reply is a new entry).
+  final _sharedFiles = Expando<List<AttachmentRef>>();
+
+  /// Rows built for the thread, with their inputs: while a reply streams, only its own row is
+  /// built again on each word (see [_Row.inputs]).
+  final _rowCache = <Key, (Object, Widget)>{};
+
+  Widget _rowWidget(_Row row) {
+    final inputs = row.inputs;
+    if (inputs == null) return row.build();
+    final hit = _rowCache[row.key];
+    if (hit != null && hit.$1 == inputs) return hit.$2;
+    final built = row.build();
+    _rowCache[row.key] = (inputs, built);
+    return built;
+  }
 
   String? _computerId() {
     final bot = ref.read(botProvider(widget.botId));
@@ -163,6 +184,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
+    // What this chat shows (a routine's result, a reply) is read once the chat is open, including
+    // notifications that arrive while it is.
+    ref.listenManual(notificationsProvider, (_, next) {
+      final botId = widget.botId;
+      final fresh = [
+        for (final n in next.value ?? const <NotificationView>[])
+          if (n.readAt == null && !n.isRequest && n.botId == botId && (n.link?.startsWith('/bots/$botId/chat') ?? false)) n,
+      ];
+      if (fresh.isEmpty) return;
+      // A routine just posted in the chat on screen (D-155): show its reply here.
+      final controller = ref.read(chatControllerProvider(botId).notifier);
+      final chat = ref.read(chatControllerProvider(botId));
+      final conv = chat.conversationId;
+      if (conv != null && !chat.running && fresh.any((n) => n.link!.contains('c=$conv'))) {
+        Future.microtask(() => controller.open(conv));
+      }
+      Future.microtask(() => ref.read(notificationsProvider.notifier).markBotChatRead(botId));
+    }, fireImmediately: true);
     Future.microtask(() {
       final c = ref.read(chatControllerProvider(widget.botId).notifier)..group = widget.group;
       return c.open(widget.conversationId);
@@ -173,6 +212,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void didUpdateWidget(ChatScreen old) {
     super.didUpdateWidget(old);
     if (old.botId != widget.botId || old.conversationId != widget.conversationId || old.focusMessageId != widget.focusMessageId) {
+      _rowCache.clear();
       _stickToBottom = true;
       _focusPending = widget.focusMessageId;
       Future.microtask(() => ref.read(chatControllerProvider(widget.botId).notifier).open(widget.conversationId));
@@ -191,6 +231,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void dispose() {
     _botUi.dispose();
+    _mentions.dispose();
     _input.dispose();
     _scroll.dispose();
     _focus.dispose();
@@ -322,7 +363,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final bot = ref.watch(botProvider(widget.botId));
-    final chat = ref.watch(chatControllerProvider(widget.botId));
+    // Only what the screen around the thread shows. A streamed word changes none of it, so it
+    // rebuilds the thread alone (the Consumer below), not the header and the composer.
+    final chat = ref.watch(chatControllerProvider(widget.botId).select((c) => _chatFrame(c, group: widget.group)));
     final controller = ref.read(chatControllerProvider(widget.botId).notifier);
     final computer = computerForBot(ref.watch(computersProvider).value ?? const [], widget.botId, defaultComputerId: bot?.defaultComputerId);
     ref.listen(chatControllerProvider(widget.botId), (prev, next) {
@@ -361,7 +404,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         actions: [
           // Phones keep the header light: new chat lives in the conversations sheet there.
           if (layout != LayoutSize.phone)
-            HeaderIconButton(icon: LucideIcons.squarePen, tooltip: l10n.newChat, onPressed: chat.running || chat.entries.isEmpty ? null : controller.newChat),
+            HeaderIconButton(icon: LucideIcons.squarePen, tooltip: l10n.newChat, onPressed: chat.running || chat.empty ? null : controller.newChat),
           HeaderIconButton(icon: LucideIcons.history, tooltip: l10n.conversations, onPressed: () => _showConversations(context, chat.conversationId)),
           HeaderIconButton(
             key: const Key('callButton'),
@@ -392,37 +435,45 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               thread = const Center(
                 child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)),
               );
-            } else if (chat.entries.isEmpty && bot?.setupStatus == BotSetupStatusEnum.pending) {
+            } else if (chat.empty && bot?.setupStatus == BotSetupStatusEnum.pending) {
               thread = _SetupCard(bot: bot!, side: side);
-            } else if (chat.entries.isEmpty) {
+            } else if (chat.empty) {
               thread = _EmptyThread(name: name, avatar: bot?.avatarUrl, side: side, onAsk: _send);
             } else {
-              final rows = _buildRows(context, chat, name, computer, bot?.avatarUrl);
-              final focusId = _focusPending ?? _highlight;
-              final focusIndex = focusId == null ? -1 : rows.indexWhere((r) => r.key == ValueKey(focusId));
-              if (_focusPending != null && focusIndex >= 0) _scrollToFocus(_focusPending!, focusIndex, rows.length);
-              thread = ListView.builder(
-                controller: _scroll,
-                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: EdgeInsets.fromLTRB(side, AppSpace.md, side, AppSpace.xl),
-                itemCount: rows.length,
-                itemBuilder: (context, i) {
-                  final child = rows[i].fresh ? rows[i].build().appMessageEntrance() : rows[i].build();
-                  final focused = i == focusIndex;
-                  return Padding(
-                    key: focused ? _focusKey : rows[i].key,
-                    padding: EdgeInsets.only(top: i == 0 ? 0 : rows[i].gap),
-                    child: !focused
-                        ? child
-                        : AnimatedContainer(
-                            key: const Key('focusedMessage'),
-                            duration: const Duration(milliseconds: 400),
-                            decoration: BoxDecoration(
-                              color: _highlight == focusId ? context.colorScheme.primary.withValues(alpha: 0.10) : Colors.transparent,
-                              borderRadius: AppRadius.cardAll,
-                            ),
-                            child: child,
-                          ),
+              thread = Consumer(
+                builder: (context, ref, _) {
+                  final chat = ref.watch(chatControllerProvider(widget.botId));
+                  final rows = _buildRows(context, chat, name, computer, bot?.avatarUrl);
+                  final keys = {for (final r in rows) r.key};
+                  _rowCache.removeWhere((k, _) => !keys.contains(k));
+                  final focusId = _focusPending ?? _highlight;
+                  final focusIndex = focusId == null ? -1 : rows.indexWhere((r) => r.key == ValueKey(focusId));
+                  if (_focusPending != null && focusIndex >= 0) _scrollToFocus(_focusPending!, focusIndex, rows.length);
+                  return ListView.builder(
+                    controller: _scroll,
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.fromLTRB(side, AppSpace.md, side, AppSpace.xl),
+                    itemCount: rows.length,
+                    itemBuilder: (context, i) {
+                      final row = _rowWidget(rows[i]);
+                      final child = rows[i].fresh ? row.appMessageEntrance() : row;
+                      final focused = i == focusIndex;
+                      return Padding(
+                        key: focused ? _focusKey : rows[i].key,
+                        padding: EdgeInsets.only(top: i == 0 ? 0 : rows[i].gap),
+                        child: !focused
+                            ? child
+                            : AnimatedContainer(
+                                key: const Key('focusedMessage'),
+                                duration: const Duration(milliseconds: 400),
+                                decoration: BoxDecoration(
+                                  color: _highlight == focusId ? context.colorScheme.primary.withValues(alpha: 0.10) : Colors.transparent,
+                                  borderRadius: AppRadius.cardAll,
+                                ),
+                                child: child,
+                              ),
+                      );
+                    },
                   );
                 },
               );
@@ -509,7 +560,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         if (widget.group)
                           MentionPicker(
                             botIds: ref.watch(groupChatsProvider).value?.where((g) => g.id == widget.conversationId).firstOrNull?.botIds.toList() ?? const [],
-                            input: _input,
+                            controller: _mentions,
+                            lastSpeakerId: chat.lastSpeakerId,
                           ),
                         _SkillPicker(
                           botId: widget.botId,
@@ -524,6 +576,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         ChatComposer(
                           controller: _input,
                           focusNode: _focus,
+                          keyHandler: widget.group ? _mentions.handleKey : null,
+                          allowSendWhileRunning: !widget.group,
                           hint: l10n.messageHint(name),
                           running: chat.running,
                           onSend: _send,
@@ -546,18 +600,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                   ),
                                 ),
                         ),
-                        AnimatedSize(
-                          duration: AppMotion.of(context, AppMotion.fast),
-                          child: chat.tokens > 0
-                              ? Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Text(
-                                    l10n.runCost(formatUsd(chat.costUsd), chat.tokens),
-                                    style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant, fontFeatures: AppText.tabular),
-                                  ),
-                                )
-                              : const SizedBox(width: double.infinity),
-                        ),
+                        // Spend per run lives in the run timeline and Usage, not under the composer.
                       ],
                     ),
                   ),
@@ -630,7 +673,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   /// and a working indicator while the bot thinks between steps.
   List<_Row> _buildRows(BuildContext context, ChatState chat, String name, Computer? computer, String? avatar) {
     final rows = <_Row>[];
-    final entries = chat.entries;
+    // A shown card is its own row; its ui.show step would only repeat it (the timeline keeps it).
+    final entries = [for (final e in chat.entries) if (!(e is ToolEntry && e.tool == 'ui.show')) e];
     var lastSide = '';
     final freshFrom = entries.length - 1;
 
@@ -646,6 +690,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             lastSide.isEmpty ? 0 : AppSpace.xl,
             () => BotTurnHeader(name: speaker?.name ?? name, avatar: speaker?.avatarUrl ?? avatar),
             header: true,
+            inputs: (speaker?.name ?? name, speaker?.avatarUrl ?? avatar),
           ),
         );
       }
@@ -678,18 +723,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 onBranch: chat.running ? null : (d) => runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).switchBranch(e.id, d)),
               ),
               fresh: fresh,
+              inputs: (e, chat.running),
             ),
           );
           lastSide = 'user';
         case final MessageEntry m:
-          botSide(m.id, m.botId);
+          botSide(m.id, m.botId ?? (m.streaming ? chat.activeBotId : null));
           rows.add(
             _Row(
               ValueKey(m.id),
               rows.last.header ? 0 : AppSpace.sm,
               () => AssistantMessage(entry: m, status: workingStatus(), onSpeak: !m.streaming ? () => _speak(m.id) : null),
+              // The status only shows while the reply is still empty.
+              inputs: (m, m.text.isEmpty && m.streaming ? workingStatus() : null),
             ),
           );
+          // Files the reply links to (a report, a chart) show under it: images inline, others as cards.
+          final shared = m.streaming ? const <AttachmentRef>[] : (_sharedFiles[m] ??= sharedFilesIn(m.text));
+          if (shared.isNotEmpty) rows.add(_Row(ValueKey('files-${m.id}'), AppSpace.xs, () => SharedFiles(files: shared), inputs: shared));
         case ToolEntry():
           final group = <ToolEntry>[e];
           // Consecutive steps share one card; the computer starting up in between doesn't split it.
@@ -705,7 +756,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             }
           }
           botSide(e.callId);
-          rows.add(_Row(ValueKey('tools-${e.callId}'), rows.last.header ? 0 : AppSpace.sm, () => ToolGroupCard(steps: group)));
+          rows.add(_Row(ValueKey('tools-${e.callId}'), rows.last.header ? 0 : AppSpace.sm, () => ToolGroupCard(steps: group), inputs: _Same(group)));
           // A published page opens from Pages, in the browser (D-119).
           if (group.any((t) => t.tool == 'pages.publish' && t.status == ToolStatus.done)) {
             rows.add(
@@ -732,6 +783,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               AppSpace.sm,
               () => ApprovalPrompt(entry: a, botName: name),
               fresh: fresh,
+              inputs: (a, name),
             ),
           );
         case final TakeoverEntry t:
@@ -742,14 +794,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               AppSpace.sm,
               () => TakeoverPrompt(entry: t, botName: name, onOpen: () => context.push('/computer/live?c=${t.computerId}')),
               fresh: fresh,
+              inputs: (t, name),
             ),
           );
         case final SecretEntry k:
           botSide('secret-${k.requestId}');
-          rows.add(_Row(ValueKey('secret-${k.requestId}'), AppSpace.sm, () => SecretPrompt(entry: k, botName: name), fresh: fresh));
+          rows.add(_Row(ValueKey('secret-${k.requestId}'), AppSpace.sm, () => SecretPrompt(entry: k, botName: name), fresh: fresh, inputs: (k, name)));
         case final DeviceAccessEntry d:
           botSide('device-${d.kind.value}-$i');
-          rows.add(_Row(ValueKey('device-${d.kind.value}-$i'), AppSpace.sm, () => DeviceAccessPrompt(entry: d, botName: name), fresh: fresh));
+          rows.add(_Row(ValueKey('device-${d.kind.value}-$i'), AppSpace.sm, () => DeviceAccessPrompt(entry: d, botName: name), fresh: fresh, inputs: (d, name)));
         case final UiEntry u:
           botSide(u.surfaceId);
           rows.add(
@@ -758,6 +811,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               AppSpace.sm,
               () => BotUiCard(host: _botUi, surfaceId: u.surfaceId, messages: u.messages, answered: chat.answeredUi.contains(u.surfaceId)),
               fresh: fresh,
+              inputs: (u, chat.answeredUi.contains(u.surfaceId)),
             ),
           );
         case final NoticeEntry n:
@@ -769,15 +823,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp),
                 onDetails: () => showErrorDetails(context, entry: n, botId: widget.botId),
               );
-              if (!(last && n.kind == NoticeKind.failed && chat.lastUserText != null && !chat.running)) return line;
+              if (!(last && n.kind == NoticeKind.failed && !chat.running)) return line;
+              final fix = errorFix(context, ref, n, widget.botId);
+              final canRetry = chat.lastUserText != null;
+              if (fix == null && !canRetry) return line;
               return Column(
                 children: [
                   line,
                   const SizedBox(height: AppSpace.xs),
-                  TextButton.icon(
-                    onPressed: () => runGuarded(context, ref.read(chatControllerProvider(widget.botId).notifier).retry),
-                    icon: const Icon(LucideIcons.rotateCw, size: 18),
-                    label: Text(context.l10n.retry),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: AppSpace.xs,
+                    children: [
+                      if (fix != null)
+                        FilledButton.tonalIcon(
+                          key: const Key('noticeFix'),
+                          onPressed: () => context.push(fix.route),
+                          icon: const Icon(LucideIcons.keyRound, size: 18),
+                          label: Text(fix.label),
+                        ),
+                      if (canRetry)
+                        TextButton.icon(
+                          onPressed: () => runGuarded(context, ref.read(chatControllerProvider(widget.botId).notifier).retry),
+                          icon: const Icon(LucideIcons.rotateCw, size: 18),
+                          label: Text(context.l10n.retry),
+                        ),
+                    ],
                   ),
                 ],
               );
@@ -796,7 +867,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final replying = last is MessageEntry && last.role == 'assistant' && last.streaming;
     final toolRunning = last is ToolEntry && last.status == ToolStatus.running;
     if (chat.running && !waitingOnPerson && !replying && !toolRunning) {
-      botSide('working');
+      botSide('working', chat.activeBotId);
       rows.add(_Row(const ValueKey('working'), rows.last.header ? 0 : AppSpace.md, () => WorkingIndicator(status: workingStatus() ?? context.l10n.thinking)));
     }
     return rows;
@@ -858,7 +929,7 @@ class _PendingChip extends StatelessWidget {
           ),
           clipBehavior: Clip.antiAlias,
           child: image
-              ? Image.memory(item.bytes, fit: BoxFit.cover, gaplessPlayback: true)
+              ? Image(image: CoverMemoryImage.sized(item.bytes, const Size.square(64), MediaQuery.devicePixelRatioOf(context)), fit: BoxFit.cover, gaplessPlayback: true)
               : Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
@@ -952,17 +1023,53 @@ class _AttachButton extends StatelessWidget {
   }
 }
 
+/// The parts of [ChatState] the chat screen shows outside the thread (a record: equal by value).
+typedef _ChatFrame = ({bool loading, bool offline, bool running, bool empty, String? conversationId, String? lastSpeakerId});
+
+_ChatFrame _chatFrame(ChatState c, {required bool group}) => (
+  loading: c.loading,
+  offline: c.offline,
+  running: c.running,
+  empty: c.entries.isEmpty,
+  conversationId: c.conversationId,
+  // Group chats suggest @-mentions starting with whoever spoke last.
+  lastSpeakerId: group ? c.entries.whereType<MessageEntry>().where((m) => m.role == 'assistant' && m.botId != null).lastOrNull?.botId : null,
+);
+
 class _Row {
-  _Row(this.key, this.gap, this.build, {this.fresh = false, this.header = false});
+  _Row(this.key, this.gap, this.build, {this.fresh = false, this.header = false, this.inputs});
   final Key key;
   final double gap;
   final Widget Function() build;
+
+  /// Everything [build] reads, compared with `==` (entries by identity, since an entry that
+  /// changes is replaced). A row whose inputs are unchanged gets back the widget built last time,
+  /// which Flutter skips entirely; null means always build.
+  final Object? inputs;
 
   /// The bot's name above its turn; the first row after it needs no gap.
   final bool header;
 
   /// Animates in (the newest entries while a run streams).
   final bool fresh;
+}
+
+/// A list compared by its elements' identity: a tool card's steps.
+class _Same {
+  const _Same(this.items);
+  final List<Object> items;
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! _Same || other.items.length != items.length) return false;
+    for (var i = 0; i < items.length; i++) {
+      if (!identical(other.items[i], items[i])) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hashAll(items.map(identityHashCode));
 }
 
 /// The first open: the bot's mark and one line of what it can do, centered above starter requests

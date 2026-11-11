@@ -63,10 +63,10 @@ void main() {
         builder: (_, _) => Consumer(builder: (context, ref, _) {
           ref0 = ref;
           ctx0 = context;
-          return const Text('chat');
+          return const Scaffold(body: Text('chat'));
         }),
       ),
-      GoRoute(path: '/settings/keys', builder: (_, s) => Text('keys ${s.uri.queryParameters['provider']}')),
+      GoRoute(path: '/settings/keys', builder: (_, s) => Scaffold(body: Text('keys ${s.uri.queryParameters['provider']}'))),
     ]);
     await tester.pumpWidget(routed(backend, router));
     await tester.pumpAndSettle();
@@ -76,7 +76,15 @@ void main() {
       isTrue,
     );
     await tester.pumpAndSettle();
-    expect(find.text('keys chatgpt'), findsOneWidget);
+    // Where ChatGPT sign-in can't run (no desktop loopback), it explains and opens Model keys.
+    expect(find.text('keys null'), findsOneWidget);
+    expect(find.textContaining('open the desktop app'), findsOneWidget);
+    router.go('/chat');
+    await tester.pumpAndSettle();
+    // "Use a local model" opens the form on the OpenAI-compatible provider.
+    await handleLocalUiAction(ctx0, ref0, const BotUiAction(surfaceId: 's', name: 'app:route', context: {'path': '/settings/keys', 'provider': 'openai_compatible'}, sourceComponentId: 'b'));
+    await tester.pumpAndSettle();
+    expect(find.text('keys openai_compatible'), findsOneWidget);
   });
 }
 

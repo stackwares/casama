@@ -63,6 +63,9 @@ void main() {
     onChangeServer = (url) async => switchedTo = url;
     addTearDown(() => onChangeServer = null);
     await tester.pumpWidget(harness(backend, const SignInScreen()));
+    await tester.tap(find.byKey(const Key('openSignIn')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('moreSignInOptions')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('ssoSignIn')));

@@ -13,6 +13,13 @@ class FakeLiveConnection implements LiveConnection {
   final _state = ValueNotifier(LiveState.live);
   final _host = ValueNotifier(false);
   final _size = ValueNotifier<Size?>(const Size(1280, 800));
+  final clipboardSet = <String>[];
+  final remote = ValueNotifier<String?>(null);
+
+  @override
+  ValueListenable<String?> get remoteClipboard => remote;
+  @override
+  void setClipboard(String text) => clipboardSet.add(text);
 
   void goFallback() => _state.value = LiveState.fallback;
 

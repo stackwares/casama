@@ -18,11 +18,65 @@ final signedInProvider = StreamProvider<bool>((ref) async* {
   yield* backend.signedInChanges;
 });
 
-final organizationsProvider = FutureProvider<List<OrganizationWithRole>>((ref) async {
-  final signedIn = ref.watch(signedInProvider).value ?? false;
-  if (!signedIn) return const [];
-  return ref.watch(backendProvider).organizations();
-});
+/// Workspaces. At launch they come from the offline cache at once and the server's replace them;
+/// offline, the saved ones stay (D-158). After a change (an invalidate: a workspace created, joined
+/// or left) the server's are awaited, so a stale list never shows.
+class OrganizationsNotifier extends AsyncNotifier<List<OrganizationWithRole>> {
+  var _launched = false;
+  var _generation = 0;
+
+  @override
+  Future<List<OrganizationWithRole>> build() async {
+    final signedIn = ref.watch(signedInProvider).value ?? false;
+    if (!signedIn) return const [];
+    final backend = ref.watch(backendProvider);
+    final cache = ref.watch(localCacheProvider);
+    // By user: one cache serves every server this device has signed in to.
+    final user = backend.userId;
+    final key = user == null ? null : 'orgs:$user';
+    final gen = ++_generation;
+    final fresh = backend.organizations().then((v) {
+      if (key != null) unawaited(cacheWrite(cache, key, [for (final o in v) o.toJson()]));
+      return v;
+    });
+    // Handled here too, so an offline failure doesn't count as unhandled while the cache is read.
+    fresh.ignore();
+    Future<List<OrganizationWithRole>?> saved() async {
+      if (key == null) return null;
+      final cached = await cacheRead(cache, key);
+      if (cached is! List || cached.isEmpty) return null;
+      try {
+        return [for (final j in cached) OrganizationWithRole.fromJson(Map<String, dynamic>.from(j as Map))];
+      } catch (_) {
+        return null;
+      }
+    }
+
+    if (!_launched) {
+      _launched = true;
+      final cached = await saved();
+      if (cached != null) {
+        unawaited(
+          fresh
+              .then((v) {
+                if (ref.mounted && gen == _generation) state = AsyncData(v);
+              })
+              .catchError((_) {}),
+        );
+        return cached;
+      }
+    }
+    try {
+      return await fresh;
+    } catch (_) {
+      final cached = await saved();
+      if (cached != null) return cached;
+      rethrow;
+    }
+  }
+}
+
+final organizationsProvider = AsyncNotifierProvider<OrganizationsNotifier, List<OrganizationWithRole>>(OrganizationsNotifier.new);
 
 /// The selected workspace id (defaults to the first one), remembered on this device (D-099).
 class SelectedOrg extends Notifier<String?> {
@@ -188,7 +242,7 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
       final current = state.value ?? const <NotificationView>[];
       if (current.any((c) => c.id == n.id)) return;
       state = AsyncData([n, ...current]);
-      if (n.kind == 'approval') ref.invalidate(approvalsProvider);
+      if (n.kind == 'approval' || n.kind == 'approval_request') ref.invalidate(approvalsProvider);
       if (n.kind == 'takeover') ref.invalidate(takeoversProvider);
     });
     ref.onDispose(sub.cancel);
@@ -203,16 +257,27 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
     final current = state.value ?? const <NotificationView>[];
     final now = DateTime.now();
     state = AsyncData([
-      for (final n in current) n.id == id && n.readAt == null ? NotificationView(id: n.id, kind: n.kind, title: n.title, body: n.body, link: n.link, createdAt: n.createdAt, readAt: now) : n,
+      for (final n in current) n.id == id ? n.read(now) : n,
     ]);
     await ref.read(backendProvider).markNotificationRead(id);
+  }
+
+  /// Marks read what a bot's chat already shows (its replies and results), once the chat is open.
+  Future<void> markBotChatRead(String botId) async {
+    final unread = [
+      for (final n in state.value ?? const <NotificationView>[])
+        if (n.readAt == null && !n.isRequest && n.botId == botId && (n.link?.startsWith('/bots/$botId/chat') ?? false)) n.id,
+    ];
+    for (final id in unread) {
+      await markRead(id);
+    }
   }
 
   Future<void> markAllRead() async {
     await ref.read(backendProvider).markNotificationsRead();
     final now = DateTime.now();
     state = AsyncData([
-      for (final n in state.value ?? const <NotificationView>[]) NotificationView(id: n.id, kind: n.kind, title: n.title, body: n.body, link: n.link, createdAt: n.createdAt, readAt: n.readAt ?? now),
+      for (final n in state.value ?? const <NotificationView>[]) n.read(now),
     ]);
   }
 }
@@ -229,8 +294,17 @@ final ringingCallsProvider = FutureProvider<List<PhoneCall>>((ref) async {
 /// Badge count for the inbox: pending approvals plus unread notifications (approval notices are not double counted).
 final inboxBadgeProvider = Provider<int>((ref) {
   final approvals = (ref.watch(approvalsProvider).value?.length ?? 0) + (ref.watch(takeoversProvider).value?.length ?? 0);
-  final unread = (ref.watch(notificationsProvider).value ?? const <NotificationView>[]).where((n) => n.readAt == null && n.kind != 'approval' && n.kind != 'takeover').length;
+  final unread = (ref.watch(notificationsProvider).value ?? const <NotificationView>[]).where((n) => n.readAt == null && !n.isRequest).length;
   return approvals + unread;
+});
+
+/// What waits for the person from one bot: its pending approvals and takeovers, and its unread
+/// notifications (shown as a count next to the bot in the sidebar).
+final botBadgeProvider = Provider.family<int, String>((ref, botId) {
+  final approvals = (ref.watch(approvalsProvider).value ?? const <Approval>[]).where((a) => a.botId == botId).length;
+  final takeovers = (ref.watch(takeoversProvider).value ?? const <TakeoverRequest>[]).where((t) => t.botId == botId).length;
+  final unread = (ref.watch(notificationsProvider).value ?? const <NotificationView>[]).where((n) => n.readAt == null && !n.isRequest && n.botId == botId).length;
+  return approvals + takeovers + unread;
 });
 
 final routinesProvider = FutureProvider.family<List<Routine>, String>((ref, botId) => ref.watch(backendProvider).routines(botId));

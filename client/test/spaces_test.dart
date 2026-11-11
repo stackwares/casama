@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kasama_app/features/workspaces/spaces.dart';
 
@@ -67,7 +68,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('createdLink')), findsOneWidget);
     expect(backend.links, hasLength(1));
+    // The new link can be copied (the button says so) and shared.
+    String? clipboard;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') clipboard = (call.arguments as Map)['text'] as String?;
+      return null;
+    });
+    expect(find.byKey(const Key('shareInviteLink')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('copyInviteLink')));
+    await tester.pump();
+    expect(find.text('Copied'), findsOneWidget);
+    expect(clipboard, contains('/join/'));
+    await tester.pump(const Duration(seconds: 3));
+    // Revoking asks first.
     await tester.tap(find.byKey(const Key('revoke-l1')));
+    await tester.pumpAndSettle();
+    expect(backend.links, hasLength(1));
+    await tester.tap(find.widgetWithText(FilledButton, 'Revoke').last);
     await tester.pumpAndSettle();
     expect(backend.links, isEmpty);
   });

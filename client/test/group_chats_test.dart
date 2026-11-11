@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kasama_app/features/groups/group_chats.dart';
@@ -41,14 +42,16 @@ void main() {
     backend.extraBots.add(backend.bot(id: 'bot-b', name: 'Bea'));
     final input = TextEditingController();
     addTearDown(input.dispose);
+    final mentions = MentionController(input);
+    addTearDown(mentions.dispose);
     await tester.pumpWidget(
       harness(
         backend,
         Scaffold(
           body: Column(
             children: [
-              MentionPicker(botIds: const [botId, 'bot-b'], input: input),
-              TextField(controller: input),
+              MentionPicker(botIds: const [botId, 'bot-b'], controller: mentions),
+              Focus(onKeyEvent: (_, e) => mentions.handleKey(e), child: TextField(controller: input)),
             ],
           ),
         ),
@@ -67,5 +70,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('mention-everyone')), findsOneWidget);
     expect(find.byKey(const Key('mention-Ada')), findsOneWidget);
+  });
+
+  testWidgets('Tab completes the highlighted bot, arrows move, and the line says who will answer', (tester) async {
+    final backend = FakeBackend();
+    backend.extraBots.add(backend.bot(id: 'bot-b', name: 'Bea'));
+    final input = TextEditingController();
+    addTearDown(input.dispose);
+    final mentions = MentionController(input);
+    addTearDown(mentions.dispose);
+    await tester.pumpWidget(
+      harness(
+        backend,
+        Scaffold(
+          body: Column(
+            children: [
+              MentionPicker(botIds: const [botId, 'bot-b'], controller: mentions),
+              Focus(onKeyEvent: (_, e) => mentions.handleKey(e), child: TextField(key: const Key('in'), controller: input)),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    // No mention: the lead (first bot) answers.
+    expect(find.textContaining('Ada will answer', findRichText: true), findsOneWidget);
+    await tester.tap(find.byKey(const Key('in')));
+    await tester.enterText(find.byKey(const Key('in')), 'hey @');
+    await tester.pumpAndSettle();
+    // everyone, Ada, Bea: the arrow moves the highlight to Ada, Tab picks it.
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pumpAndSettle();
+    expect(input.text, 'hey @Ada ');
+    await tester.enterText(find.byKey(const Key('in')), 'hey @Be');
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pumpAndSettle();
+    expect(input.text, 'hey @Bea ');
+    expect(find.textContaining('Bea will answer', findRichText: true), findsOneWidget);
   });
 }

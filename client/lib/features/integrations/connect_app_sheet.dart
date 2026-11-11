@@ -67,6 +67,10 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
   @override
   void dispose() {
     _poll?.cancel();
+    // Closed while the person is still signing in (in another tab or app): keep checking for a few
+    // minutes, so the connection still shows up once the sign-in finishes.
+    final flow = _flowId;
+    if (flow != null && _step == _Step.waiting) finishInBackground(ProviderScope.containerOf(context, listen: false), flow);
     _lifecycle.dispose();
     _key.dispose();
     super.dispose();
@@ -589,4 +593,21 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
       ],
     );
   }
+}
+
+/// Polls a connect flow after its sheet closed, for up to three minutes, and refreshes the
+/// workspace's connections once it finishes.
+void finishInBackground(ProviderContainer container, String flowId, {Duration every = const Duration(seconds: 3), int tries = 60}) {
+  var left = tries;
+  Timer.periodic(every, (t) async {
+    if (--left < 0) return t.cancel();
+    try {
+      final s = await container.read(backendProvider).connectStatus(flowId);
+      if (s.status == ConnectFlowStatusStatusEnum.pending) return;
+      t.cancel();
+      if (s.status == ConnectFlowStatusStatusEnum.connected) container.invalidate(integrationsProvider);
+    } catch (_) {
+      // Try again on the next tick.
+    }
+  });
 }

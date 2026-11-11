@@ -354,7 +354,7 @@ void main() {
     expect(find.text('Approved'), findsWidgets);
   });
 
-  testWidgets('blank bots start unnamed (Chief if left empty) and default to GPT-6 Luna; the model comes from a searchable picker', (tester) async {
+  testWidgets('blank bots start unnamed (Chief if left empty) and default to Muse Ember; the model comes from a searchable picker', (tester) async {
     await setSize(tester, const Size(600, 1000));
     final backend = FakeBackend();
     final router = GoRouter(routes: [
@@ -380,8 +380,8 @@ void main() {
     expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Bot name')).controller!.text, '');
     expect(find.text('Chief'), findsOneWidget);
     // The picker shows the model's name with its id underneath.
-    expect(find.text('OpenAI: GPT-6 Luna'), findsOneWidget);
-    expect(find.text('openai/gpt-6-luna'), findsOneWidget);
+    expect(find.text('Meta: Muse Ember'), findsOneWidget);
+    expect(find.text('meta/muse-ember'), findsOneWidget);
 
     // A template fills in its name; going back to Blank empties the field again.
     await tester.tap(find.byKey(const Key('personaPicker')));

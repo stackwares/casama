@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kasama_app/core/backend.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
+import 'package:kasama_app/features/chat/widgets/bot_ui.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -90,5 +91,21 @@ void main() {
     expect(backend.sent.last, 'pro');
     // Answered: still visible, marked as sent.
     expect(find.text('Sent'), findsOneWidget);
+  });
+
+  test('the message for an action reads like the screen: picked labels, or the button tapped', () {
+    const picks = BotUiAction(
+      surfaceId: 's',
+      name: 'welcome.focus',
+      context: {'focus': ['research', 'email_calendar'], 'other': ''},
+      sourceComponentId: 'go',
+      label: 'Continue',
+      optionLabels: {'research': 'Research', 'email_calendar': 'Email and calendar'},
+    );
+    expect(uiActionSummary(picks), 'Research, Email and calendar');
+    const next = BotUiAction(surfaceId: 's', name: 'welcome.next', context: {}, sourceComponentId: 'next', label: 'Done, next');
+    expect(uiActionSummary(next), 'Done, next');
+    const empty = BotUiAction(surfaceId: 's', name: 'welcome.task', context: {'text': ''}, sourceComponentId: 'go', label: 'Go');
+    expect(uiActionSummary(empty), 'Go');
   });
 }

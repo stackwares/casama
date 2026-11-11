@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kasama_app/core/live.dart';
 import 'package:kasama_app/core/providers.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
+import 'package:kasama_app/features/computer/computer_screen.dart';
 import 'package:kasama_app/features/computer/computers_screen.dart';
 import 'package:kasama_app/features/computer/live_view_screen.dart';
 import 'package:kasama_app/features/inbox/inbox_screen.dart';
@@ -193,4 +195,82 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.computerUpdates, ['desktop', 'desktops:3']);
   });
+
+  testWidgets('side panel: the live view plays inline, opens full screen and comes back', (tester) async {
+    await setSize(tester, const Size(1300, 900));
+    final backend = _AwakeDesktop();
+    final live = FakeLiveConnector();
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, _) => const Scaffold(body: SizedBox(width: 420, child: ComputerScreen(embedded: true)))),
+      GoRoute(path: '/computer/live', builder: (_, s) => LiveViewScreen(computerId: s.uri.queryParameters['c']!)),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [backendProvider.overrideWithValue(backend), liveConnectorProvider.overrideWithValue(live)],
+      child: MaterialApp.router(routerConfig: router, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    // Inline: the stream is open in the panel, with control and a full-screen button.
+    expect(find.byKey(const Key('liveSurface')), findsOneWidget);
+    expect(find.byKey(const Key('takeControl')), findsOneWidget);
+    expect(live.session?.mode, StreamMode.control);
+
+    await tester.tap(find.byKey(const Key('liveExpand')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    // Full screen: one stream (the panel steps aside), and a way back to the panel.
+    expect(find.byKey(const Key('liveSurface')), findsOneWidget);
+    expect(find.byKey(const Key('liveMinimize')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('liveMinimize')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const Key('liveExpand')), findsOneWidget);
+  });
+  testWidgets('live view quick actions: paste and copy go through the clipboard; Enter on the phone keyboard sends Return', (tester) async {
+    await setSize(tester, const Size(900, 900));
+    String? deviceClipboard = 'from my phone';
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') deviceClipboard = (call.arguments as Map)['text'] as String?;
+      if (call.method == 'Clipboard.getData') return {'text': deviceClipboard};
+      return null;
+    });
+    final backend = FakeBackend();
+    final live = FakeLiveConnector();
+    await tester.pumpWidget(liveHarness(backend, live, const LiveViewScreen(computerId: computerId)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.byKey(const Key('takeControl')));
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('livePaste')));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(live.connection.clipboardSet, ['from my phone']);
+    // Ctrl+V: Control down, v down, v up, Control up.
+    final keys = live.connection.sent.where((f) => f[0] == NekoInput.opKeyDown).map((f) => (f[5] << 8) | f[6]).toList();
+    expect(keys, containsAllInOrder([0xffe3, 0x76]));
+
+    await tester.tap(find.byKey(const Key('liveCopy')));
+    await tester.pump(const Duration(milliseconds: 50));
+    live.connection.remote.value = 'copied on the computer';
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump();
+    expect(deviceClipboard, 'copied on the computer');
+
+    // The phone keyboard: Enter types Return, and Backspace still works on an "empty" field.
+    live.connection.sent.clear();
+    final field = tester.widget<TextField>(find.byKey(const Key('liveTyping')));
+    field.onChanged!('\u200bhi\n');
+    field.onChanged!('');
+    final downs = live.connection.sent.where((f) => f[0] == NekoInput.opKeyDown).map((f) => (f[5] << 8) | f[6]).toList();
+    expect(downs, [0x68, 0x69, 0xff0d, 0xff08]);
+  });
+}
+
+class _AwakeDesktop extends FakeBackend {
+  @override
+  Future<List<Computer>> computers(String orgId) async => [
+    for (final c in await super.computers(orgId)) c.copyWith(profile: ComputerProfileEnum.desktop, state: ComputerState.running),
+  ];
 }

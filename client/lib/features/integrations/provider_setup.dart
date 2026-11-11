@@ -15,6 +15,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/revealable.dart';
 import '../../ui/glow_button.dart';
 import 'app_logo.dart';
 
@@ -96,25 +97,34 @@ class _ProviderKeyFormState extends ConsumerState<_ProviderKeyForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final k = widget.kind;
-    Widget field(TextEditingController c, String label, IconData icon, {bool secret = false, Key? key}) => TextField(
-          key: key,
-          controller: c,
-          obscureText: secret,
-          autocorrect: false,
-          enableSuggestions: false,
-          decoration: InputDecoration(
-            labelText: label,
-            prefixIcon: Icon(icon, size: 20),
-            suffixIcon: IconButton(
-              tooltip: l10n.pasteLabel,
-              icon: const Icon(LucideIcons.clipboardPaste, size: 18),
-              onPressed: () async {
-                final d = await Clipboard.getData(Clipboard.kTextPlain);
-                if (d?.text != null) setState(() => c.text = d!.text!.trim());
-              },
+    Widget field(TextEditingController c, String label, IconData icon, {bool secret = false, Key? key}) => Revealable(
+          builder: (context, hidden, toggle) => TextField(
+            key: key,
+            controller: c,
+            obscureText: secret && hidden,
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: InputDecoration(
+              labelText: label,
+              prefixIcon: Icon(icon, size: 20),
+              // Show (for keys and secrets) next to paste.
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (secret) toggle,
+                  IconButton(
+                    tooltip: l10n.pasteLabel,
+                    icon: const Icon(LucideIcons.clipboardPaste, size: 18),
+                    onPressed: () async {
+                      final d = await Clipboard.getData(Clipboard.kTextPlain);
+                      if (d?.text != null) setState(() => c.text = d!.text!.trim());
+                    },
+                  ),
+                ],
+              ),
             ),
+            onChanged: (_) => setState(() {}),
           ),
-          onChanged: (_) => setState(() {}),
         );
     return FormSheet(
       icon: k.icon,

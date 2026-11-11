@@ -3,8 +3,15 @@ import 'package:flutter/material.dart';
 import '../theme/app_tokens.dart';
 import 'shell_header.dart';
 
-/// Widest a settings-style page grows before it centers.
+/// Widest a settings-style page grows before it centers. Rows of labels and switches stay at a
+/// readable length; wide windows get more columns (see [kWidePageMaxWidth]), not longer rows.
 const double kPageMaxWidth = 680;
+
+/// Widest a browsing page (catalogs, galleries) or a two-column page grows before it centers.
+const double kWidePageMaxWidth = 1240;
+
+/// Window content width from which a page shows its sections in two columns.
+const double kTwoColumnMinWidth = 1100;
 
 /// Side padding for a list in [width]: phone gutters, centered at [maxWidth] on wide windows.
 double pageSide(double width, {double maxWidth = kPageMaxWidth}) => AppSpace.gutter + AppBreakpoints.centeringInset(width, maxWidth: maxWidth);

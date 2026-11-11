@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
+import '../settings/model_keys_screen.dart';
 import '../integrations/connect_app_sheet.dart';
 import 'widgets/bot_ui.dart';
 
@@ -21,7 +22,16 @@ Future<bool> handleLocalUiAction(BuildContext context, WidgetRef ref, BotUiActio
       final path = ctx['path'];
       if (path is String && path.startsWith('/')) {
         final provider = ctx['provider'];
-        unawaited(GoRouter.maybeOf(context)?.push(provider is String ? '$path?provider=$provider' : path) ?? Future<void>.value());
+        // "Continue with ChatGPT" signs in right here where the app can (desktop, D-091).
+        if (provider == 'chatgpt' && ref.read(backendProvider).canConnectChatGpt) {
+          final cred = await connectChatGptPlan(context, ref);
+          if (cred != null) ref.invalidate(credentialsProvider);
+          return true;
+        }
+        // Elsewhere ChatGPT sign-in can't run; say so and offer a key instead.
+        if (provider == 'chatgpt') showMessage(context, context.l10n.chatGptDesktopOnly);
+        final target = provider is String && provider != 'chatgpt' ? '$path?provider=$provider' : path;
+        unawaited(GoRouter.maybeOf(context)?.push(target) ?? Future<void>.value());
       }
     case 'app:connect':
       final id = ctx['app'];

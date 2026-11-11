@@ -24,6 +24,24 @@
   "confirmEmailSent": "Check your email to confirm your account, then sign in.",
   "continueWithGoogle": "Continue with Google",
   "continueWithApple": "Continue with Apple",
+  "continueWithEmail": "Continue with email",
+  "moreSignInOptions": "More options",
+  "usePasswordInstead": "Use a password instead",
+  "checkInboxTitle": "Check your inbox",
+  "checkInboxBody": "We sent a sign-in link and a 6-digit code to {email}. Tap the link, or type the code here.",
+  "@checkInboxBody": { "placeholders": { "email": { "type": "String" } } },
+  "emailCodeLabel": "6-digit code",
+  "resendLink": "Send again",
+  "resendLinkIn": "Send again in {seconds}s",
+  "@resendLinkIn": { "placeholders": { "seconds": { "type": "int" } } },
+  "useDifferentEmail": "Use a different email",
+  "authWrongPassword": "That email and password don't match. Try again, or sign in with an email link instead.",
+  "authEmailNotConfirmed": "Confirm your email first: open the link we sent you.",
+  "authCodeInvalid": "That code is wrong or has expired. Check the latest email, or send a new one.",
+  "authTooManyTries": "Too many tries. Wait a minute and try again.",
+  "authAccountExists": "There's already an account with this email. Sign in instead.",
+  "authSignupDisabled": "This server isn't taking new sign-ups.",
+  "useMagicLinkInstead": "Email me a link instead",
   "invalidEmail": "Enter a valid email address",
   "passwordTooShort": "Use at least 6 characters",
   "signOut": "Sign out",
@@ -459,6 +477,14 @@
   "newComputer": "New computer",
   "newComputerHelp": "A private computer belongs to one bot. Its files stay separate from the team computer.",
   "openLiveView": "Open live view",
+  "liveExpand": "Full screen",
+  "liveCopy": "Copy",
+  "liveScreenshot": "Screenshot",
+  "liveCopied": "Copied from the computer.",
+  "liveNothingCopied": "Nothing was copied. Select something on the computer first.",
+  "livePasteEmpty": "Your clipboard is empty.",
+  "liveMinimize": "Back to the side panel",
+  "liveShownFullScreen": "The live view is open full screen.",
   "paused": "Paused",
   "pausedUserInControl": "Paused: a person is in control of the screen",
   "privateComputer": "Private computer",
@@ -670,6 +696,7 @@
   },
   "connectingToServer": "Connecting to Kasama…",
   "cannotReachServer": "Can't reach your Kasama server",
+  "connectionFailed": "Couldn't reach your Kasama server. Check your connection and try again.",
   "cannotReachServerHelp": "Check your connection, or that the server at {url} is running.",
   "@cannotReachServerHelp": {
     "placeholders": {
@@ -896,6 +923,39 @@
   "untitledChat": "New conversation",
   "listening": "Listening…",
   "orLabel": "or",
+  "notificationsPrimerBubble": "Don't miss a thing!",
+  "notificationsPrimerTitle": "Turn on notifications",
+  "notificationsPrimerBody": "Your bots tell you when they need a decision from you, or when their work is ready.",
+  "notificationsTurnOn": "Turn on",
+  "createMenuTitle": "Add",
+  "createBotHelp": "A teammate with its own instructions, memory and tools",
+  "createGroupHelp": "Several bots in one chat; @mention who should answer",
+  "importBotHelp": "From a Kasama bot file someone shared",
+  "importAgentHelp": "From an OpenClaw or Hermes Agent folder",
+  "archivedBotsHelp": "Bring back a bot you archived",
+  "checkForUpdates": "Check for updates",
+  "autoUpdates": "Update automatically",
+  "autoUpdatesHelp": "Download new versions in the background and install them when you quit.",
+  "upToDate": "Kasama is up to date",
+  "updateReady": "Kasama {version} is available",
+  "@updateReady": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appVersion": "Version {version}",
+  "@appVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "openAtLogin": "Open at login",
+  "openAtLoginHelp": "Start Kasama when you log in to this Mac, ready for the quick-ask shortcut.",
+  "signInCta": "Sign in or create account",
   "signInTagline": "Your AI teammates, each with its own computer, memory and tools.",
   "noBotsHelp": "A bot is a teammate with its own computer. Create one to start chatting.",
   "newBotSubtitle": "A teammate with its own computer and memory.",
@@ -1063,6 +1123,14 @@
   "editMemory": "Edit memory",
   "editMemoryHelp": "The bot uses this the next time it's relevant.",
   "modelKeysIntro": "Bots think with your own model provider keys. Keys are stored encrypted and never shown again.",
+  "modelKeysFor": "Keys belong to one workspace. These are for {workspace}.",
+  "@modelKeysFor": {
+    "placeholders": {
+      "workspace": {
+        "type": "String"
+      }
+    }
+  },
   "yourKeys": "Your keys",
   "keyWorking": "Working",
   "keyFailing": "Failing",
@@ -1578,6 +1646,10 @@
   "twoStepVerify": "Verify",
   "twoStepNowOn": "Two-step sign-in is on.",
   "twoStepAuthenticators": "Authenticator apps",
+  "twoStepRename": "Rename",
+  "twoStepRenameTitle": "Rename authenticator",
+  "twoStepNameLabel": "Name",
+  "twoStepNameHint": "For example: Work phone",
   "twoStepRemove": "Remove",
   "twoStepRemoveConfirm": "Remove this authenticator app? If it's your only one, you'll sign in with just your password.",
   "twoStepPromptTitle": "Enter your code",
@@ -1669,11 +1741,11 @@
   "createInviteLink": "Create a link",
   "linkExpires": "Expires",
   "linkNever": "Never",
-  "linkDays": "In {days} days",
+  "linkDays": "{days, plural, =1{In 1 day} other{In {days} days}}",
   "@linkDays": {
     "placeholders": {
       "days": {
-        "type": "String"
+        "type": "int"
       }
     }
   },
@@ -1690,6 +1762,10 @@
   "linkRevoked": "Revoked",
   "revokeLink": "Revoke",
   "linkCopied": "Invite link copied.",
+  "inviteRole": "Role",
+  "inviteLinkReady": "Your new invite link",
+  "inviteLinkOnce": "Copy or share it now. For security, the full link isn't shown again.",
+  "shareLinkLabel": "Share",
   "joiningWorkspace": "Joining the workspace…",
   "joinedWorkspace": "You joined {name}.",
   "@joinedWorkspace": {
@@ -2076,6 +2152,41 @@
   "newApiKey": "New API key",
   "apiKeyName": "Name",
   "newGroupChat": "New group chat",
+  "groupChats": "Group chats",
+  "groupWhoAnswers": "{names} will answer",
+  "@groupWhoAnswers": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "groupEveryoneAnswers": "Everyone will answer",
+  "groupMentionHint": "@mention a bot, or @everyone",
+  "routineRan": "Routine \u201c{name}\u201d ran",
+  "@routineRan": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupBotCount": "{count, plural, =1{1 bot} other{{count} bots}}",
+  "@groupBotCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "botWaitingCount": "{count, plural, =1{1 thing waiting for you} other{{count} things waiting for you}}",
+  "@botWaitingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "newGroupChatHelp": "Pick 2 to 10 bots. The first one leads: @everyone asks it for a plan. @Name wakes one bot.",
   "groupTitle": "Name (optional)",
   "groupPickBots": "Bots",
@@ -2748,6 +2859,9 @@
   "encryptionConfirm": "Content will be encrypted with this workspace's key. If the workspace is deleted, its key is destroyed and the content can't be recovered. Exact-word search stops matching encrypted text.",
   "encryptionTurnOn": "Turn on",
   "encryptionRotate": "Rotate key",
+  "encryptionKeyManaged": "Kasama creates and keeps this workspace's key for you, wrapped with the server's own key. There's nothing to save or copy.",
+  "encryptionRotateTitle": "Rotate the key?",
+  "encryptionRotateBody": "The workspace key is wrapped again with the server's current key. Your content stays readable and nothing needs re-encrypting. Do this after changing the server's key, or on a schedule.",
   "encryptionRotateHelp": "Rewraps the workspace key with the server's current key",
   "encryptionRotated": "Last rotated {date}",
   "@encryptionRotated": {

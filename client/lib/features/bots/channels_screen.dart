@@ -14,6 +14,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/revealable.dart';
 
 /// Chat apps (D-134): Telegram, email, SMS, Slack, WhatsApp, Messenger, Feishu and iMessage. Only
 /// allowed senders get answers; everyone else is logged in the activity list.
@@ -216,13 +217,13 @@ class _AddChannelState extends ConsumerState<_AddChannel> {
           decoration: InputDecoration(labelText: l10n.botNameLabel),
         ),
         for (final f in _fields[_kind]!)
-          TextField(
+          Revealable(builder: (context, hidden, toggle) => TextField(
             key: Key('channelField-${f.$1}'),
             controller: _c(f.$1),
-            obscureText: f.$2,
+            obscureText: hidden && (f.$2),
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(labelText: f.$3(l10n)),
-          ),
+            decoration: InputDecoration(labelText: f.$3(l10n), suffixIcon: (f.$2) ? toggle : null),
+          )),
         if (_kind == ChannelKind.imessage)
           Builder(
             builder: (context) {

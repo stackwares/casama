@@ -10,6 +10,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/revealable.dart';
 
 /// Password managers (D-128): 1Password or Bitwarden, for the workspace or just you, and the
 /// vaults bots may use. Bots never see passwords.
@@ -151,7 +152,7 @@ class _ConnectState extends ConsumerState<_Connect> {
         ),
         TextField(key: const Key('pmName'), controller: _name, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: l10n.botNameLabel)),
         TextField(key: const Key('pmUrl'), controller: _url, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: onePw ? l10n.pmConnectUrl : l10n.pmBwUrl)),
-        TextField(key: const Key('pmToken'), controller: _token, obscureText: true, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: onePw ? l10n.pmConnectToken : l10n.pmBwToken)),
+        Revealable(builder: (context, hidden, toggle) => TextField(key: const Key('pmToken'), controller: _token, obscureText: hidden, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: onePw ? l10n.pmConnectToken : l10n.pmBwToken, suffixIcon: toggle))),
         if (admin) SwitchListTile(key: const Key('pmWorkspace'), contentPadding: EdgeInsets.zero, title: Text(l10n.pmForWorkspace), value: _workspace, onChanged: (v) => setState(() => _workspace = v)),
       ],
     );

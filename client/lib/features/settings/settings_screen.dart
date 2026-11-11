@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/backend.dart';
 import '../../core/billing.dart';
+import '../../core/mac_bridge.dart';
+import '../../core/updater.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -37,7 +40,14 @@ import '../companion/companion.dart';
 import '../../ui/glow_button.dart';
 
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.pane = false, this.current = ''});
+
+  /// The list beside an open settings page on wide windows: one column, the open page highlighted,
+  /// and rows swap the page next to it instead of stacking a new one.
+  final bool pane;
+
+  /// The location of the page open next to the pane.
+  final String current;
 
   Future<void> _invite(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
@@ -78,15 +88,16 @@ class SettingsScreen extends ConsumerWidget {
     final scheme = context.colorScheme;
     final email = backend.userEmail ?? '';
     final colors = context.appColors;
+    void open(String path) => pane ? context.go(path) : context.push(path);
+    bool sel(String path) => pane && current.startsWith(path);
     return Scaffold(
       appBar: ShellHeader(title: l10n.settings),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: kPageMaxWidth);
-          return ListView(
-            padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom),
-            children: [
-              AppCard(
+          // Wide windows: the groups sit in two columns instead of one long, narrow list.
+          final twoColumns = !pane && constraints.maxWidth >= kTwoColumnMinWidth;
+          final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: twoColumns ? kWidePageMaxWidth : kPageMaxWidth);
+          final profile = AppCard(
                 padding: const EdgeInsets.all(AppSpace.md),
                 child: Row(
                   children: [
@@ -121,7 +132,8 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-              ).appCardEntrance(),
+              ).appCardEntrance();
+          final left = <Widget>[
               SectionHeader(title: l10n.workspace),
               GroupedCard(
                 children: [
@@ -145,13 +157,13 @@ class SettingsScreen extends ConsumerWidget {
                     title: l10n.workspaceSettings,
                     subtitle: l10n.workspaceSettingsHelp,
                     showChevron: true,
-                    onTap: () => context.push('/settings/workspace'),
+                    onTap: () => open('/settings/workspace'), selected: sel('/settings/workspace'),
                   ),
                   GroupedTile(
                     key: const Key('settingsUsage'),
                     icon: LucideIcons.banknote,
                     iconColor: colors.positive,
-                    onTap: () => context.push('/settings/usage'),
+                    onTap: () => open('/settings/usage'), selected: sel('/settings/usage'),
                     showChevron: true,
                     title: l10n.usage,
                     trailing: Text(
@@ -167,31 +179,31 @@ class SettingsScreen extends ConsumerWidget {
                       iconColor: colors.warning,
                       title: l10n.billing,
                       subtitle: billing!.planName,
-                      onTap: () => context.push('/settings/billing'),
+                      onTap: () => open('/settings/billing'), selected: sel('/settings/billing'),
                     ),
                 ],
               ),
               SectionHeader(title: l10n.settingsBotsSection),
               GroupedCard(
                 children: [
-                  GroupedTile(icon: LucideIcons.keyRound, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => context.push('/settings/keys')),
-                  GroupedTile(icon: LucideIcons.bookOpen, title: l10n.skills, subtitle: l10n.skillsRowHelp, onTap: () => context.push('/settings/skills')),
+                  GroupedTile(icon: LucideIcons.keyRound, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys')),
+                  GroupedTile(icon: LucideIcons.bookOpen, title: l10n.skills, subtitle: l10n.skillsRowHelp, onTap: () => open('/settings/skills'), selected: sel('/settings/skills')),
                   GroupedTile(
                     key: const Key('settingsIntegrations'),
                     icon: LucideIcons.puzzle,
                     title: l10n.integrations,
                     subtitle: l10n.integrationsRowHelp,
-                    onTap: () => context.push('/settings/integrations'),
+                    onTap: () => open('/settings/integrations'), selected: sel('/settings/integrations'),
                   ),
-                  GroupedTile(key: const Key('settingsSecrets'), icon: LucideIcons.lock, title: l10n.secrets, subtitle: l10n.secretsRowHelp, onTap: () => context.push('/settings/secrets')),
-                  GroupedTile(key: const Key('settingsComputers'), icon: LucideIcons.monitor, title: l10n.computers, subtitle: l10n.computersRowHelp, onTap: () => context.push('/settings/computers')),
+                  GroupedTile(key: const Key('settingsSecrets'), icon: LucideIcons.lock, title: l10n.secrets, subtitle: l10n.secretsRowHelp, onTap: () => open('/settings/secrets'), selected: sel('/settings/secrets')),
+                  GroupedTile(key: const Key('settingsComputers'), icon: LucideIcons.monitor, title: l10n.computers, subtitle: l10n.computersRowHelp, onTap: () => open('/settings/computers'), selected: sel('/settings/computers')),
                   // Device connections (D-149): data this device shares with your bots.
                   GroupedTile(
                     key: const Key('settingsDevices'),
                     icon: LucideIcons.smartphone,
                     title: l10n.deviceConnections,
                     subtitle: l10n.deviceConnectionsRowHelp,
-                    onTap: () => context.push('/settings/devices'),
+                    onTap: () => open('/settings/devices'), selected: sel('/settings/devices'),
                   ),
                   if (ref.watch(companionProvider).supported)
                     GroupedTile(
@@ -199,7 +211,7 @@ class SettingsScreen extends ConsumerWidget {
                       icon: LucideIcons.laptop,
                       title: l10n.useThisComputer,
                       subtitle: l10n.companionRowHelp,
-                      onTap: () => context.push('/settings/companion'),
+                      onTap: () => open('/settings/companion'), selected: sel('/settings/companion'),
                     ),
                   // Wake word (D-144): desktop and Android.
                   if (wakeWordSupported)
@@ -212,6 +224,8 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                 ],
               ),
+          ];
+          final right = <Widget>[
               SectionHeader(title: l10n.appearance),
               const _AppearanceCard(),
               SectionHeader(title: l10n.settingsMoreSection),
@@ -229,11 +243,26 @@ class SettingsScreen extends ConsumerWidget {
                     icon: LucideIcons.smartphone,
                     title: l10n.twoStepSignIn,
                     subtitle: org?.requireMfa == true && org?.role != OrgRole.member && !backend.twoStepVerified ? l10n.twoStepNeededForAdmin : l10n.twoStepHelp,
-                    onTap: () => context.push('/settings/two-step'),
+                    onTap: () => open('/settings/two-step'), selected: sel('/settings/two-step'),
                   ),
-                  GroupedTile(key: const Key('settingsPrivacy'), icon: LucideIcons.shieldCheck, title: l10n.privacy, subtitle: l10n.privacyRowHelp, onTap: () => context.push('/settings/privacy')),
+                  GroupedTile(key: const Key('settingsPrivacy'), icon: LucideIcons.shieldCheck, title: l10n.privacy, subtitle: l10n.privacyRowHelp, onTap: () => open('/settings/privacy'), selected: sel('/settings/privacy')),
                   if (ref.watch(adminOverviewProvider).value != null)
-                    GroupedTile(key: const Key('settingsAdmin'), icon: LucideIcons.shieldUser, title: l10n.adminConsole, subtitle: l10n.adminRowHelp, onTap: () => context.push('/settings/admin')),
+                    GroupedTile(key: const Key('settingsAdmin'), icon: LucideIcons.shieldUser, title: l10n.adminConsole, subtitle: l10n.adminRowHelp, onTap: () => open('/settings/admin'), selected: sel('/settings/admin')),
+                  // Desktop downloads update themselves (the stores update theirs); Linux is told.
+                  if (selfUpdating || updateNoticeOnly) const _UpdatesRows(),
+                  // Mac: start with the system, ready for the quick-ask shortcut and the menu bar icon.
+                  if (ref.watch(launchAtLoginProvider).value case final on?)
+                    SwitchListTile(
+                      key: const Key('openAtLogin'),
+                      secondary: Icon(LucideIcons.power, color: scheme.onSurfaceVariant),
+                      title: Text(l10n.openAtLogin),
+                      subtitle: Text(l10n.openAtLoginHelp),
+                      value: on,
+                      onChanged: (v) async {
+                        await runGuarded(context, () => setLaunchAtLogin(v));
+                        ref.invalidate(launchAtLoginProvider);
+                      },
+                    ),
                   GroupedTile(
                     icon: LucideIcons.languages,
                     title: l10n.language,
@@ -256,6 +285,21 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+          ];
+          return ListView(
+            padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom),
+            children: [
+              profile,
+              if (twoColumns)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: left)),
+                    const SizedBox(width: AppSpace.xl),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: right)),
+                  ],
+                )
+              else ...[...left, ...right],
             ],
           );
         },
@@ -894,3 +938,54 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
     );
   }
 }
+
+/// Updates for the desktop downloads: the version, "Check for updates" and automatic updates; on
+/// Linux, a newer release when there is one.
+class _UpdatesRows extends ConsumerWidget {
+  const _UpdatesRows();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final version = ref.watch(appVersionProvider).value ?? '';
+    if (updateNoticeOnly) {
+      final newer = ref.watch(newerReleaseProvider).value;
+      return GroupedTile(
+        key: const Key('settingsUpdates'),
+        icon: LucideIcons.download,
+        title: newer == null ? l10n.upToDate : l10n.updateReady(newer.version),
+        subtitle: l10n.appVersion(version),
+        showChevron: newer != null,
+        onTap: newer == null ? null : () => launchUrl(newer.page, mode: LaunchMode.externalApplication),
+      );
+    }
+    final auto = ref.watch(autoUpdateChecksProvider).value;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GroupedTile(
+          key: const Key('settingsCheckUpdates'),
+          icon: LucideIcons.download,
+          title: l10n.checkForUpdates,
+          subtitle: l10n.appVersion(version),
+          showChevron: false,
+          onTap: () => runGuarded(context, checkForUpdatesNow),
+        ),
+        if (auto != null)
+          SwitchListTile(
+            key: const Key('autoUpdates'),
+            secondary: Icon(LucideIcons.refreshCw, color: scheme.onSurfaceVariant),
+            title: Text(l10n.autoUpdates),
+            subtitle: Text(l10n.autoUpdatesHelp),
+            value: auto,
+            onChanged: (v) async {
+              await runGuarded(context, () => setAutoUpdateChecks(v));
+              ref.invalidate(autoUpdateChecksProvider);
+            },
+          ),
+      ],
+    );
+  }
+}
+

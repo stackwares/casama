@@ -35,7 +35,7 @@ class FakeBackend implements Backend {
   List<RunEventItem> storedEvents = [];
 
   @override
-  String? defaultModelFor(String provider) => const {'openrouter': 'openai/gpt-6-luna', 'openai': 'gpt-6-luna'}[provider];
+  String? defaultModelFor(String provider) => const {'openrouter': 'meta/muse-ember', 'openai': 'gpt-6-luna'}[provider];
 
   @override
   Stream<bool> get signedInChanges => _auth.stream;
@@ -53,10 +53,19 @@ class FakeBackend implements Backend {
 
   @override
   Future<bool> signUp(String email, String password) async => true;
+  String? magicLinkEmail;
   @override
-  Future<void> sendMagicLink(String email) async {}
+  Future<void> sendMagicLink(String email) async => magicLinkEmail = email;
+  String? verifiedCode;
+  Object? verifyCodeError;
   @override
-  Future<void> signInWithProvider(String provider) async {}
+  Future<void> verifyEmailCode(String email, String code) async {
+    if (verifyCodeError != null) throw verifyCodeError!;
+    verifiedCode = code;
+  }
+  final providerSignIns = <String>[];
+  @override
+  Future<void> signInWithProvider(String provider) async => providerSignIns.add(provider);
   @override
   Future<void> signOut() async {
     signedIn = false;
@@ -197,6 +206,7 @@ class FakeBackend implements Backend {
   @override
   Future<ModelOptionList> models(String credentialId) async => ModelOptionList(
     items: [
+      ModelOption(id: 'meta/muse-ember', name: 'Meta: Muse Ember', featured: true),
       ModelOption(id: 'openai/gpt-6-luna', name: 'OpenAI: GPT-6 Luna', featured: true),
       ModelOption(id: 'anthropic/claude-sonnet-5.5', name: 'Anthropic: Claude Sonnet 5.5', featured: true),
       ModelOption(id: 'acme/other', name: 'Acme: Other'),
@@ -1983,6 +1993,11 @@ class FakeBackend implements Backend {
 
   @override
   Future<void> removeTwoStep(String factorId) async => twoStep.removeWhere((f) => f.id == factorId);
+  @override
+  Future<void> renameTwoStep(String factorId, String name) async {
+    final i = twoStep.indexWhere((f) => f.id == factorId);
+    if (i >= 0) twoStep[i] = TwoStepFactor(id: factorId, name: '$name · 1', createdAt: twoStep[i].createdAt);
+  }
   @override
   Future<bool> requireTwoStep(String orgId) async => requireTwoStepValue;
   @override

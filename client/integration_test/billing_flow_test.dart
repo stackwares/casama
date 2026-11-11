@@ -22,6 +22,11 @@ void main() {
     final (app, backend) = await bootstrap(AppConfig.fromEnvironment);
     if (backend.isSignedIn) await backend.signOut();
     await tester.pumpWidget(app);
+    await waitFor(tester, find.byKey(const Key('openSignIn')));
+    await tap(tester, find.byKey(const Key('openSignIn')));
+    await waitFor(tester, find.byKey(const Key('continueWithEmail')));
+    await tap(tester, find.byKey(const Key('continueWithEmail')));
+    await tap(tester, find.byKey(const Key('usePassword')));
     await waitFor(tester, find.byKey(const Key('email')));
     await tap(tester, find.byKey(const Key('toggleMode')));
     await tester.enterText(find.byKey(const Key('email')), 'billing-${Random().nextInt(1 << 30)}@example.com');

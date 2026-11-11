@@ -113,6 +113,12 @@ abstract class LiveConnection {
   void requestControl();
   void releaseControl();
   void send(Uint8List input);
+
+  /// The computer's clipboard text as Neko last reported it (only while in control).
+  ValueListenable<String?> get remoteClipboard;
+
+  /// Puts [text] on the computer's clipboard (only while in control).
+  void setClipboard(String text);
   /// Round trip over the data channel in ms (null if no answer).
   Future<double?> ping();
   Future<void> close();
@@ -138,6 +144,7 @@ class _WebRtcConnection implements LiveConnection {
   final _state = ValueNotifier(LiveState.connecting);
   final _host = ValueNotifier(false);
   final _size = ValueNotifier<Size?>(null);
+  final _clipboard = ValueNotifier<String?>(null);
   final _pongs = <Completer<void>>[];
   String? _sessionId;
   StreamSubscription<dynamic>? _sub;
@@ -249,6 +256,8 @@ class _WebRtcConnection implements LiveConnection {
         case 'control/host':
           final hostId = payload['host_id'] as String?;
           _host.value = payload['has_host'] == true && hostId != null && hostId == _sessionId;
+        case 'clipboard/updated':
+          if (payload['text'] is String) _clipboard.value = payload['text'] as String;
         case 'screen/updated':
           if (payload['width'] != null) {
             _size.value = Size((payload['width'] as num).toDouble(), (payload['height'] as num).toDouble());
@@ -268,6 +277,12 @@ class _WebRtcConnection implements LiveConnection {
 
   @override
   void requestControl() => _sendJson('control/request');
+
+  @override
+  ValueListenable<String?> get remoteClipboard => _clipboard;
+
+  @override
+  void setClipboard(String text) => _sendJson('clipboard/set', {'text': text});
   @override
   void releaseControl() {
     _sendJson('control/release');

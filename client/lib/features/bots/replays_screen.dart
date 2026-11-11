@@ -11,6 +11,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/revealable.dart';
 
 /// Step replay (D-127): recorded steps a bot runs without thinking through each one.
 final replaysProvider = FutureProvider.autoDispose.family<List<Replay>, String>((ref, botId) => ref.watch(backendProvider).replays(botId));
@@ -104,12 +105,12 @@ class _RunReplayState extends State<_RunReplay> {
       onSubmit: () async => Navigator.pop(context, {for (final e in _fields.entries) e.key: e.value.text}),
       children: [
         for (final p in widget.replay.params)
-          TextField(
+          Revealable(builder: (context, hidden, toggle) => TextField(
             key: Key('replayParam-${p.name}'),
             controller: _fields[p.name],
-            obscureText: p.secret ?? false,
-            decoration: InputDecoration(labelText: p.name, helperText: p.description),
-          ),
+            obscureText: hidden && (p.secret ?? false),
+            decoration: InputDecoration(labelText: p.name, helperText: p.description, suffixIcon: (p.secret ?? false) ? toggle : null),
+          )),
       ],
     );
   }

@@ -131,7 +131,7 @@ class UiEntry extends ChatEntry {
   final List<Object?> messages;
 }
 
-enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled, userControl, botControl, modelFallback, info }
+enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled, userControl, botControl, modelFallback, info, routine }
 
 class NoticeEntry extends ChatEntry {
   const NoticeEntry({required this.kind, required this.text, this.refId, this.errorCode, this.at});
@@ -156,8 +156,12 @@ class ChatState {
     this.lastUserText,
     this.answeredUi = const {},
     this.offline = false,
+    this.activeBotId,
   });
   final String? conversationId;
+
+  /// In a group chat, the bot whose run is on screen: it heads "thinking" and the streaming reply.
+  final String? activeBotId;
 
   /// Showing saved messages because the server couldn't be reached (D-112).
   final bool offline;
@@ -186,6 +190,7 @@ class ChatState {
     String? lastUserText,
     Set<String>? answeredUi,
     bool? offline,
+    String? activeBotId,
   }) => ChatState(
     conversationId: conversationId ?? this.conversationId,
     entries: entries ?? this.entries,
@@ -197,6 +202,7 @@ class ChatState {
     lastUserText: lastUserText ?? this.lastUserText,
     answeredUi: answeredUi ?? this.answeredUi,
     offline: offline ?? this.offline,
+    activeBotId: clearActiveRun ? null : (activeBotId ?? this.activeBotId),
   );
 }
 
@@ -220,7 +226,10 @@ class ChatController extends Notifier<ChatState> {
         offline: offline,
         entries: [
           for (final m in messages) ...[
-            if (m.text.isNotEmpty || m.attachments.isNotEmpty || m.ui.isEmpty)
+            // A routine's run starts with its instructions; the chat shows that it ran instead.
+            if (m.routineName != null)
+              NoticeEntry(kind: NoticeKind.routine, text: m.routineName!, at: m.createdAt)
+            else if (m.text.isNotEmpty || m.attachments.isNotEmpty || m.ui.isEmpty)
               MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments, siblingIndex: m.siblingIndex, siblingCount: m.siblingCount, botId: m.botId),
             for (final u in m.ui) UiEntry(surfaceId: u.surfaceId, messages: u.messages),
           ],
@@ -306,7 +315,10 @@ class ChatController extends Notifier<ChatState> {
 
   Future<void> send(String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const []}) async {
     final trimmed = text.trim();
-    if ((trimmed.isEmpty && attachments.isEmpty && uiAction == null) || state.running) return;
+    if (trimmed.isEmpty && attachments.isEmpty && uiAction == null) return;
+    // While the bot works, a plain message joins its run (it decides what to do with it); group
+    // chats and card answers wait for the run to end.
+    if (state.running && (group || uiAction != null)) return;
     var conversationId = state.conversationId;
     if (conversationId == null) {
       conversationId = (await _backend.createConversation(botId)).id;
@@ -320,6 +332,8 @@ class ChatController extends Notifier<ChatState> {
       answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
     );
     final sent = await _backend.send(conversationId, trimmed, attachments: attachments, uiAction: uiAction, skills: skills);
+    // Joined the run already on screen: keep following it.
+    if (sent.joined == true && state.activeRunId == sent.runId) return;
     unawaited(ref.read(runActivitiesProvider).started(sent.runId, ref.read(botProvider(botId))?.name ?? ''));
     _attach(sent.runId);
   }
@@ -337,6 +351,14 @@ class ChatController extends Notifier<ChatState> {
   void _attach(String runId) {
     _sub?.cancel();
     state = state.copyWith(activeRunId: runId, lastRunId: runId, costUsd: 0, tokens: 0);
+    // Group chats (D-118): the run may belong to any member (an @mention, the last speaker).
+    if (group) {
+      unawaited(
+        _backend.run(runId).then((r) {
+          if (state.activeRunId == runId) state = state.copyWith(activeBotId: r.botId);
+        }).catchError((_) {}),
+      );
+    }
     _sub = _backend
         .watchRun(runId)
         .listen(
@@ -347,6 +369,14 @@ class ChatController extends Notifier<ChatState> {
             ref.invalidate(usageTodayProvider);
             final conv = state.conversationId;
             if (group && conv != null) unawaited(Future<void>.delayed(const Duration(milliseconds: 300), () => open(conv)));
+            // A message sent too late for that run gets a follow-up run; follow it too.
+            if (!group && conv != null) {
+              unawaited(
+                _backend.activeRun(conv).then((next) {
+                  if (next != null && next != runId && state.activeRunId == null && state.conversationId == conv) _attach(next);
+                }).catchError((_) {}),
+              );
+            }
           },
         );
   }
@@ -369,7 +399,7 @@ class ChatController extends Notifier<ChatState> {
         final id = event.payload.messageId;
         final i = indexWhere((x) => x is MessageEntry && x.id == id);
         if (i < 0) {
-          entries.add(MessageEntry(id: id, role: 'assistant', text: event.payload.text, streaming: true));
+          entries.add(MessageEntry(id: id, role: 'assistant', text: event.payload.text, streaming: true, botId: state.activeBotId));
         } else {
           final m = entries[i] as MessageEntry;
           entries[i] = m.copyWith(text: m.text + event.payload.text);
@@ -380,11 +410,17 @@ class ChatController extends Notifier<ChatState> {
         final i = indexWhere((x) => x is MessageEntry && x.id == id);
         if (i < 0) {
           // A reply that is only an interactive UI has no text bubble.
-          if (text.isNotEmpty) entries.add(MessageEntry(id: id, role: 'assistant', text: text));
+          if (text.isNotEmpty) entries.add(MessageEntry(id: id, role: 'assistant', text: text, botId: state.activeBotId));
         } else if (text.isEmpty) {
           entries.removeAt(i);
         } else {
           entries[i] = (entries[i] as MessageEntry).copyWith(text: text, streaming: false);
+        }
+        // Scripted replies (the welcome chat) carry their cards only in the finished message.
+        for (final u in uiPartsOf(event.payload.content)) {
+          if (indexWhere((x) => x is UiEntry && x.surfaceId == u.surfaceId) < 0) {
+            entries.add(UiEntry(surfaceId: u.surfaceId, messages: u.messages));
+          }
         }
       case UiShownItem(:final event):
         if (indexWhere((x) => x is UiEntry && x.surfaceId == event.payload.surfaceId) < 0) {

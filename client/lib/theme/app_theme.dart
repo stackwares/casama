@@ -1,5 +1,6 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
@@ -39,7 +40,24 @@ const _subThemes = FlexSubThemesData(
 );
 
 abstract final class AppTheme {
-  static ThemeData light([Appearance appearance = const Appearance()]) => _finish(
+  // A theme takes milliseconds to build, and a rebuilt theme is a new object: handed to
+  // MaterialApp it counts as a change, which animates the theme and rebuilds every widget that
+  // reads it. The same appearance gives back the same theme.
+  static final _built = <(Brightness, TargetPlatform, String, String, String, WallpaperSpec), ThemeData>{};
+
+  static ThemeData _cached(Brightness brightness, Appearance a, ThemeData Function() build) {
+    final key = (brightness, defaultTargetPlatform, a.schemeId, a.headingFont, a.bodyFont, a.wallpaper);
+    final hit = _built[key];
+    if (hit != null) return hit;
+    if (_built.length >= 8) _built.clear();
+    return _built[key] = build();
+  }
+
+  static ThemeData light([Appearance appearance = const Appearance()]) => _cached(Brightness.light, appearance, () => _light(appearance));
+
+  static ThemeData dark([Appearance appearance = const Appearance()]) => _cached(Brightness.dark, appearance, () => _dark(appearance));
+
+  static ThemeData _light(Appearance appearance) => _finish(
     FlexThemeData.light(
       colors: appearance.scheme.data.light,
       keyColors: const FlexKeyColors(useKeyColors: true, useSecondary: true, useTertiary: true, keepPrimary: true, keepSecondary: true, keepTertiary: true),
@@ -53,7 +71,7 @@ abstract final class AppTheme {
     appearance,
   );
 
-  static ThemeData dark([Appearance appearance = const Appearance()]) => _finish(
+  static ThemeData _dark(Appearance appearance) => _finish(
     FlexThemeData.dark(
       colors: appearance.scheme.data.dark,
       keyColors: const FlexKeyColors(useKeyColors: true, useSecondary: true, useTertiary: true, keepPrimary: true, keepSecondary: true, keepTertiary: true),
@@ -143,13 +161,21 @@ abstract final class AppTheme {
         dragHandleColor: scheme.onSurfaceVariant.withValues(alpha: 0.4),
         showDragHandle: true,
       ),
+      // Dialogs lift off the page: a real shadow (Material's default barely shows over a dark
+      // wallpaper), a hairline edge, and a firmer dim behind them.
       dialogTheme: base.dialogTheme.copyWith(
         backgroundColor: isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
         surfaceTintColor: Colors.transparent,
+        elevation: 18,
+        shadowColor: Colors.black.withValues(alpha: isDark ? 0.7 : 0.3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28), side: BorderSide(color: colors.hairline)),
+        barrierColor: Colors.black.withValues(alpha: isDark ? 0.55 : 0.32),
       ),
       popupMenuTheme: base.popupMenuTheme.copyWith(
         color: isDark ? scheme.surfaceContainerHigh : scheme.surfaceBright,
         surfaceTintColor: Colors.transparent,
+        elevation: 10,
+        shadowColor: Colors.black.withValues(alpha: isDark ? 0.6 : 0.25),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
           side: BorderSide(color: colors.hairline),

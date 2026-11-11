@@ -71,6 +71,8 @@ dependencies:
   native_geofence: ^1.5.1
   geolocator: ^14.0.1
   notification_listener_service: ^1.0.0
+  auto_updater: ^1.0.0
+  package_info_plus: ^10.2.2
 dev_dependencies:
   integration_test:
     sdk: flutter

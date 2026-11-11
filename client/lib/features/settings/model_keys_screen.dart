@@ -13,6 +13,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/glow_button.dart';
+import '../../ui/revealable.dart';
 
 /// A provider's name as people know it, with what it is for when that isn't obvious.
 String providerLabel(ProviderId p) => switch (p) {
@@ -120,15 +121,18 @@ String? _providerHint(BuildContext context, ProviderId p) => switch (p) {
 
 /// Form to add a model key; the key goes to Vault and is never shown again.
 class AddKeyForm extends ConsumerStatefulWidget {
-  const AddKeyForm({super.key, required this.onAdded});
+  const AddKeyForm({super.key, required this.onAdded, this.initialProvider});
   final VoidCallback onAdded;
+
+  /// The provider picked when the form opens (from a link such as "Use a local model").
+  final ProviderId? initialProvider;
 
   @override
   ConsumerState<AddKeyForm> createState() => _AddKeyFormState();
 }
 
 class _AddKeyFormState extends ConsumerState<AddKeyForm> {
-  var _provider = ProviderId.openrouter;
+  late var _provider = keyProviders.contains(widget.initialProvider) ? widget.initialProvider! : ProviderId.openrouter;
   final _label = TextEditingController(text: 'Main');
   final _key = TextEditingController();
   final _baseUrl = TextEditingController();
@@ -215,14 +219,14 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
           controller: _label,
           decoration: InputDecoration(labelText: l10n.label, prefixIcon: const Icon(LucideIcons.tag, size: 20)),
         ),
-        TextField(
+        Revealable(builder: (context, hidden, toggle) => TextField(
           key: const Key('apiKey'),
           controller: _key,
-          decoration: InputDecoration(labelText: l10n.apiKey, prefixIcon: const Icon(LucideIcons.keyRound, size: 20), helperText: l10n.storedEncrypted),
-          obscureText: true,
+          decoration: InputDecoration(labelText: l10n.apiKey, prefixIcon: const Icon(LucideIcons.keyRound, size: 20), helperText: l10n.storedEncrypted, suffixIcon: toggle),
+          obscureText: hidden,
           autocorrect: false,
           enableSuggestions: false,
-        ),
+        )),
         if (compatible)
           TextField(
             controller: _baseUrl,
@@ -242,16 +246,22 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
 }
 
 class ModelKeysScreen extends ConsumerWidget {
-  const ModelKeysScreen({super.key});
+  const ModelKeysScreen({super.key, this.provider});
+
+  /// A provider id to start the add form on, such as `openai_compatible`.
+  final String? provider;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final keys = ref.watch(credentialsProvider);
+    final org = ref.watch(currentOrgProvider);
     return SubPage(
       title: l10n.modelKeys,
       children: [
         FormNote(l10n.modelKeysIntro),
+        // Keys are per workspace; say which, so a new workspace's empty list isn't a surprise.
+        if (org != null) ...[const SizedBox(height: AppSpace.xs), FormNote(l10n.modelKeysFor(org.name), icon: LucideIcons.building2)],
         SectionHeader(title: l10n.yourKeys),
         AsyncView(
           value: keys,
@@ -263,7 +273,10 @@ class ModelKeysScreen extends ConsumerWidget {
         SectionHeader(title: l10n.addKey),
         AppCard(
           padding: const EdgeInsets.all(AppSpace.lg),
-          child: AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
+          child: AddKeyForm(
+            initialProvider: ProviderId.values.where((p) => p.value == provider).firstOrNull,
+            onAdded: () => ref.invalidate(credentialsProvider),
+          ),
         ),
       ],
     );

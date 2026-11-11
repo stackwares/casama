@@ -92,9 +92,13 @@ class GroupedTile extends StatelessWidget {
     this.destructive = false,
     this.showChevron,
     this.leading,
+    this.selected = false,
   });
 
   final IconData icon;
+
+  /// The row whose page is open next to the list (Settings on wide windows).
+  final bool selected;
 
   /// Replaces the icon tile (an avatar or a logo).
   final Widget? leading;
@@ -113,7 +117,9 @@ class GroupedTile extends StatelessWidget {
     final scheme = context.colorScheme;
     final tint = destructive ? scheme.error : (iconColor ?? scheme.primary);
     final chevron = showChevron ?? (onTap != null && trailing == null);
-    return InkWell(
+    return Material(
+      color: selected ? scheme.primary.withValues(alpha: context.isDark ? 0.18 : 0.1) : Colors.transparent,
+      child: InkWell(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
@@ -148,9 +154,10 @@ class GroupedTile extends StatelessWidget {
               ),
             ),
             if (trailing != null) ...[const SizedBox(width: AppSpace.xs), trailing!],
-            if (chevron) Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+            if (chevron) Icon(LucideIcons.chevronRight, color: selected ? scheme.primary : scheme.onSurfaceVariant.withValues(alpha: 0.7)),
           ],
         ),
+      ),
       ),
     );
   }

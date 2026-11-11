@@ -1,15 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:xterm/xterm.dart';
+
+import 'live_view_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
@@ -55,7 +58,7 @@ class ComputerScreen extends ConsumerWidget {
       data: (list) {
         final c = botId == null ? computerForBot(list, '') : computerForBot(list, botId!);
         if (c == null) return EmptyState(icon: LucideIcons.laptop, message: l10n.somethingWentWrong);
-        return ComputerPanel(computer: c);
+        return ComputerPanel(computer: c, embedded: embedded);
       },
     );
     if (embedded) return body;
@@ -70,8 +73,12 @@ class ComputerScreen extends ConsumerWidget {
 bool computerWaking(ComputerState s) => s == ComputerState.provisioning || s == ComputerState.starting;
 
 class ComputerPanel extends ConsumerStatefulWidget {
-  const ComputerPanel({super.key, required this.computer});
+  const ComputerPanel({super.key, required this.computer, this.embedded = false});
   final Computer computer;
+
+  /// In the side panel next to the chat (large screens): desktop computers show the live view
+  /// right here, with a button to open it full screen.
+  final bool embedded;
 
   @override
   ConsumerState<ComputerPanel> createState() => _ComputerPanelState();
@@ -249,7 +256,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                 child: TabBarView(
                   children: [
                     computer.profile == ComputerProfileEnum.desktop
-                        ? _LiveEntry(computer: computer)
+                        ? (widget.embedded ? _InlineLive(computer: computer) : _LiveEntry(computer: computer))
                         : Column(
                             children: [
                               _DesktopSwitch(computer: computer),
@@ -318,6 +325,65 @@ class _LiveEntry extends ConsumerWidget {
         label: Text(awake ? l10n.openLiveView : l10n.wakeAndWatch),
       ),
     );
+  }
+}
+
+/// The live view inside the side panel. Asleep, it offers to wake the computer here; while the
+/// full-screen view is open it steps aside, so there is one stream, not two.
+class _InlineLive extends ConsumerStatefulWidget {
+  const _InlineLive({required this.computer});
+  final Computer computer;
+
+  @override
+  ConsumerState<_InlineLive> createState() => _InlineLiveState();
+}
+
+class _InlineLiveState extends ConsumerState<_InlineLive> {
+  var _expanded = false;
+  var _waking = false;
+
+  Future<void> _expand() async {
+    setState(() => _expanded = true);
+    await GoRouter.of(context).push('/computer/live?c=${widget.computer.id}');
+    if (!mounted) return;
+    setState(() => _expanded = false);
+    ref.invalidate(computersProvider);
+  }
+
+  Future<void> _wake() async {
+    setState(() => _waking = true);
+    await runGuarded(context, () => ref.read(backendProvider).startComputer(widget.computer.id));
+    if (!mounted) return;
+    setState(() => _waking = false);
+    ref.invalidate(computersProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final c = widget.computer;
+    final awake = c.state == ComputerState.running || c.state == ComputerState.idle;
+    if (_expanded) {
+      return EmptyState(
+        icon: LucideIcons.maximize2,
+        message: l10n.liveShownFullScreen,
+        action: OutlinedButton.icon(onPressed: () => Navigator.of(context).maybePop(), icon: const Icon(LucideIcons.minimize2, size: 18), label: Text(l10n.liveMinimize)),
+      );
+    }
+    if (!awake) {
+      final waking = _waking || computerWaking(c.state);
+      return EmptyState(
+        icon: LucideIcons.moon,
+        message: l10n.liveViewWakesHelp,
+        action: GlowButton.icon(
+          key: const Key('openLiveView'),
+          onPressed: waking ? null : _wake,
+          icon: waking ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(LucideIcons.sunrise),
+          label: Text(waking ? l10n.stateStarting : l10n.wakeAndWatch),
+        ),
+      );
+    }
+    return LiveViewScreen(key: ValueKey(c.id), computerId: c.id, embedded: true, onExpand: _expand);
   }
 }
 
@@ -488,7 +554,17 @@ class _TerminalTabState extends ConsumerState<TerminalTab> with AutomaticKeepAli
         ),
       );
     }
-    return Padding(padding: const EdgeInsets.all(8), child: TerminalView(_terminal, autofocus: true));
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: TerminalView(
+        _terminal,
+        autofocus: true,
+        // xterm's default (an email keyboard) becomes an <input type="email"> on the web, and
+        // browsers drop spaces typed into those. Plain text there; the email keyboard elsewhere
+        // still keeps autocorrect and capitals away.
+        keyboardType: kIsWeb ? TextInputType.text : TextInputType.emailAddress,
+      ),
+    );
   }
 }
 

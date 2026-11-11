@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
@@ -7,8 +9,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'app.dart';
 import 'core/local_cache.dart';
 import 'core/config.dart';
+import 'core/desktop_window.dart';
 import 'core/providers.dart';
 import 'core/server_address.dart';
+import 'core/server_config_cache.dart';
 import 'core/supabase_backend.dart';
 import 'core/telemetry.dart';
 import 'core/theme.dart';
@@ -16,13 +20,20 @@ import 'l10n/generated/app_localizations.dart';
 import 'ui/glow_button.dart';
 
 /// Connects to the API and Supabase and returns the app widget with its backend.
-Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config) async {
-  // Supabase settings come from the API, so a build only needs the API URL.
-  final connection = await KasamaClient.connect(config.apiUrl);
-  await Supabase.initialize(url: connection.config.supabaseUrl, publishableKey: connection.config.supabaseAnonKey);
+///
+/// Supabase settings come from the API, so a build only needs the API URL. They are saved, and a
+/// later launch starts from the saved ones at once (no network wait, and it opens offline with the
+/// offline cache) while the server's are fetched in the background (D-158). If the server has
+/// moved to another Supabase project since, [onServerMoved] reconnects.
+Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onServerMoved}) async {
+  final saved = await ServerConfigCache.read(config.apiUrl);
+  final server = saved ?? (await KasamaClient.connect(config.apiUrl)).config;
+  if (saved == null) unawaited(ServerConfigCache.write(config.apiUrl, server));
+  await Supabase.initialize(url: server.supabaseUrl, publishableKey: server.supabaseAnonKey);
   final supabase = Supabase.instance.client;
-  final api = await SupabaseBackend.connectApi(config.apiUrl, supabase);
-  final backend = SupabaseBackend(supabase, api, config: connection.config);
+  final api = await SupabaseBackend.connectApi(config.apiUrl, supabase, config: server);
+  final backend = SupabaseBackend(supabase, api, config: server);
+  if (saved != null) unawaited(_refreshServerConfig(config.apiUrl, api, backend, saved, onServerMoved));
   final app = ProviderScope(
     overrides: [backendProvider.overrideWithValue(backend), localCacheProvider.overrideWithValue(openLocalCache())],
     child: const KasamaApp(),
@@ -30,19 +41,32 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config) async {
   return (app as Widget, backend);
 }
 
+/// Replaces the saved server settings with the server's; offline, the saved ones stay.
+Future<void> _refreshServerConfig(String apiUrl, KasamaClient api, SupabaseBackend backend, PublicConfig saved, VoidCallback? onServerMoved) async {
+  try {
+    final fresh = (await api.system.getConfig()).data;
+    if (fresh == null) return;
+    await ServerConfigCache.write(apiUrl, fresh);
+    backend.config = fresh;
+    if (ServerConfigCache.moved(saved, fresh)) onServerMoved?.call();
+  } catch (_) {}
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Desktop: a window sized for the sidebar, chat and computer panel, or where it was last.
+  await setUpDesktopWindow();
   // Draw at once; connecting happens behind the startup gate (never block runApp on the network).
   await Telemetry.run(const StartupGate(config: AppConfig.fromEnvironment));
 }
 
 /// Connects to the server, showing progress and a retry when it cannot be reached.
 class StartupGate extends StatefulWidget {
-  const StartupGate({super.key, required this.config, this.connect = _connectApp});
+  const StartupGate({super.key, required this.config, this.connect});
   final AppConfig config;
-  final Future<Widget> Function(AppConfig) connect;
 
-  static Future<Widget> _connectApp(AppConfig c) async => (await bootstrap(c)).$1;
+  /// Builds the connected app (tests pass their own); defaults to [bootstrap].
+  final Future<Widget> Function(AppConfig)? connect;
 
   @override
   State<StartupGate> createState() => _StartupGateState();
@@ -65,7 +89,8 @@ class _StartupGateState extends State<StartupGate> {
     setState(() => _error = null);
     try {
       _config = await ServerAddress.load(fallback: widget.config);
-      final app = await widget.connect(_config).timeout(const Duration(seconds: 20));
+      final connect = widget.connect ?? (c) async => (await bootstrap(c, onServerMoved: _reconnect)).$1;
+      final app = await connect(_config).timeout(const Duration(seconds: 20));
       if (mounted) setState(() => _app = app);
     } catch (e) {
       if (mounted) setState(() => _error = e);
@@ -74,6 +99,11 @@ class _StartupGateState extends State<StartupGate> {
 
   Future<void> _switchServer(String url) async {
     await ServerAddress.save(url);
+    await _reconnect();
+  }
+
+  /// Starts over with a fresh Supabase client (another server, or the server moved projects).
+  Future<void> _reconnect() async {
     try {
       await Supabase.instance.dispose();
     } catch (_) {}

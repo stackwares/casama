@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../l10n/generated/app_localizations.dart';
 
@@ -10,11 +11,48 @@ extension L10nContext on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this);
 }
 
+/// Supabase Auth's messages are for developers ("Invalid login credentials", "For security
+/// purposes, you can only request this after 49 seconds"): the common ones, said plainly.
+String _authErrorText(BuildContext context, sb.AuthException e) {
+  final l10n = context.l10n;
+  switch (e.code) {
+    case 'invalid_credentials':
+      return l10n.authWrongPassword;
+    case 'email_not_confirmed':
+      return l10n.authEmailNotConfirmed;
+    case 'otp_expired':
+      return l10n.authCodeInvalid;
+    case 'over_email_send_rate_limit' || 'over_request_rate_limit':
+      return l10n.authTooManyTries;
+    case 'user_already_exists' || 'email_exists':
+      return l10n.authAccountExists;
+    case 'signup_disabled':
+      return l10n.authSignupDisabled;
+  }
+  if (e.statusCode == '429') return l10n.authTooManyTries;
+  if (e is sb.AuthRetryableFetchException) return l10n.connectionFailed;
+  return e.message;
+}
+
 /// A readable message for an error from the API, Supabase or the network.
 String errorText(BuildContext context, Object error) {
+  if (error is sb.AuthException) return _authErrorText(context, error);
   final problem = problemOf(error);
   if (problem != null) return problem.detail ?? problem.title;
-  if (error is DioException) return error.message ?? context.l10n.somethingWentWrong;
+  if (error is DioException) {
+    // No answer at all (offline, server restarting, blocked): the library's text is for developers
+    // (a browser even reports it as a CORS problem), so say it plainly.
+    final noAnswer = error.response == null &&
+        const {
+          DioExceptionType.connectionError,
+          DioExceptionType.connectionTimeout,
+          DioExceptionType.sendTimeout,
+          DioExceptionType.receiveTimeout,
+          DioExceptionType.unknown,
+        }.contains(error.type);
+    if (noAnswer) return context.l10n.connectionFailed;
+    return error.message ?? context.l10n.somethingWentWrong;
+  }
   final s = error.toString();
   final m = RegExp(r'message: ([^,)]+)').firstMatch(s);
   return m?.group(1) ?? s.replaceFirst('Exception: ', '');

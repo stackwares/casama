@@ -98,6 +98,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (loc == '/two-step') return '/bots';
       final orgs = ref.read(organizationsProvider);
       if (orgs.isLoading) return loc == '/sign-in' ? '/bots' : null;
+      // Workspaces that couldn't load (offline with none saved) don't mean there are none: never
+      // start the welcome flow, which would make a new one, over a failed request (D-158). An
+      // error can carry an earlier empty list (from before sign-in finished), so look at the list.
+      if (orgs.hasError && (orgs.value ?? const []).isEmpty) return loc == '/sign-in' ? '/bots' : null;
       final hasOrg = (orgs.value ?? const []).isNotEmpty;
       final bots = ref.read(botsProvider).value;
       // New people land in the welcome chat (D-129); the wizard stays at /onboarding.
@@ -203,6 +207,9 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          // Back from a sign-in email, Google, Apple or SSO (kasama://app/login-callback): Supabase
+          // takes the session from the link; once signed in this just goes home.
+          GoRoute(path: '/login-callback', redirect: (_, _) => '/bots'),
           GoRoute(
             path: '/quick-ask',
             pageBuilder: _page(
@@ -269,7 +276,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/settings',
             pageBuilder: _page((_, _) => const SettingsScreen()),
             routes: [
-              GoRoute(path: 'keys', pageBuilder: _page((_, _) => const ModelKeysScreen())),
+              GoRoute(path: 'keys', pageBuilder: _page((_, s) => ModelKeysScreen(provider: s.uri.queryParameters['provider']))),
               GoRoute(path: 'themes', pageBuilder: _page((_, _) => const ThemesScreen())),
               GoRoute(path: 'theme', pageBuilder: _page((_, _) => const ThemeScreen())),
               GoRoute(path: 'fonts', pageBuilder: _page((_, _) => const FontsScreen())),

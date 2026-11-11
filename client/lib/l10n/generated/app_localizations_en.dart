@@ -83,6 +83,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueWithApple => 'Continue with Apple';
 
   @override
+  String get continueWithEmail => 'Continue with email';
+
+  @override
+  String get moreSignInOptions => 'More options';
+
+  @override
+  String get usePasswordInstead => 'Use a password instead';
+
+  @override
+  String get checkInboxTitle => 'Check your inbox';
+
+  @override
+  String checkInboxBody(String email) {
+    return 'We sent a sign-in link and a 6-digit code to $email. Tap the link, or type the code here.';
+  }
+
+  @override
+  String get emailCodeLabel => '6-digit code';
+
+  @override
+  String get resendLink => 'Send again';
+
+  @override
+  String resendLinkIn(int seconds) {
+    return 'Send again in ${seconds}s';
+  }
+
+  @override
+  String get useDifferentEmail => 'Use a different email';
+
+  @override
+  String get authWrongPassword =>
+      'That email and password don\'t match. Try again, or sign in with an email link instead.';
+
+  @override
+  String get authEmailNotConfirmed =>
+      'Confirm your email first: open the link we sent you.';
+
+  @override
+  String get authCodeInvalid =>
+      'That code is wrong or has expired. Check the latest email, or send a new one.';
+
+  @override
+  String get authTooManyTries => 'Too many tries. Wait a minute and try again.';
+
+  @override
+  String get authAccountExists =>
+      'There\'s already an account with this email. Sign in instead.';
+
+  @override
+  String get authSignupDisabled => 'This server isn\'t taking new sign-ups.';
+
+  @override
+  String get useMagicLinkInstead => 'Email me a link instead';
+
+  @override
   String get invalidEmail => 'Enter a valid email address';
 
   @override
@@ -880,6 +936,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openLiveView => 'Open live view';
 
   @override
+  String get liveExpand => 'Full screen';
+
+  @override
+  String get liveCopy => 'Copy';
+
+  @override
+  String get liveScreenshot => 'Screenshot';
+
+  @override
+  String get liveCopied => 'Copied from the computer.';
+
+  @override
+  String get liveNothingCopied =>
+      'Nothing was copied. Select something on the computer first.';
+
+  @override
+  String get livePasteEmpty => 'Your clipboard is empty.';
+
+  @override
+  String get liveMinimize => 'Back to the side panel';
+
+  @override
+  String get liveShownFullScreen => 'The live view is open full screen.';
+
+  @override
   String get paused => 'Paused';
 
   @override
@@ -1218,6 +1299,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cannotReachServer => 'Can\'t reach your Kasama server';
 
   @override
+  String get connectionFailed =>
+      'Couldn\'t reach your Kasama server. Check your connection and try again.';
+
+  @override
   String cannotReachServerHelp(String url) {
     return 'Check your connection, or that the server at $url is running.';
   }
@@ -1548,6 +1633,73 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orLabel => 'or';
 
   @override
+  String get notificationsPrimerBubble => 'Don\'t miss a thing!';
+
+  @override
+  String get notificationsPrimerTitle => 'Turn on notifications';
+
+  @override
+  String get notificationsPrimerBody =>
+      'Your bots tell you when they need a decision from you, or when their work is ready.';
+
+  @override
+  String get notificationsTurnOn => 'Turn on';
+
+  @override
+  String get createMenuTitle => 'Add';
+
+  @override
+  String get createBotHelp =>
+      'A teammate with its own instructions, memory and tools';
+
+  @override
+  String get createGroupHelp =>
+      'Several bots in one chat; @mention who should answer';
+
+  @override
+  String get importBotHelp => 'From a Kasama bot file someone shared';
+
+  @override
+  String get importAgentHelp =>
+      'Bring a bot over from OpenClaw or Hermes Agent: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.';
+
+  @override
+  String get archivedBotsHelp => 'Bring back a bot you archived';
+
+  @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String get autoUpdates => 'Update automatically';
+
+  @override
+  String get autoUpdatesHelp =>
+      'Download new versions in the background and install them when you quit.';
+
+  @override
+  String get upToDate => 'Kasama is up to date';
+
+  @override
+  String updateReady(String version) {
+    return 'Kasama $version is available';
+  }
+
+  @override
+  String appVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get openAtLogin => 'Open at login';
+
+  @override
+  String get openAtLoginHelp =>
+      'Start Kasama when you log in to this Mac, ready for the quick-ask shortcut.';
+
+  @override
+  String get signInCta => 'Sign in or create account';
+
+  @override
   String get signInTagline =>
       'Your AI teammates, each with its own computer, memory and tools.';
 
@@ -1833,6 +1985,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get modelKeysIntro =>
       'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.';
+
+  @override
+  String modelKeysFor(String workspace) {
+    return 'Keys belong to one workspace. These are for $workspace.';
+  }
 
   @override
   String get yourKeys => 'Your keys';
@@ -2853,6 +3010,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get twoStepAuthenticators => 'Authenticator apps';
 
   @override
+  String get twoStepRename => 'Rename';
+
+  @override
+  String get twoStepRenameTitle => 'Rename authenticator';
+
+  @override
+  String get twoStepNameLabel => 'Name';
+
+  @override
+  String get twoStepNameHint => 'For example: Work phone';
+
+  @override
   String get twoStepRemove => 'Remove';
 
   @override
@@ -3124,8 +3293,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkNever => 'Never';
 
   @override
-  String linkDays(String days) {
-    return 'In $days days';
+  String linkDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'In $days days',
+      one: 'In 1 day',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -3147,6 +3322,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkCopied => 'Invite link copied.';
+
+  @override
+  String get inviteRole => 'Role';
+
+  @override
+  String get inviteLinkReady => 'Your new invite link';
+
+  @override
+  String get inviteLinkOnce =>
+      'Copy or share it now. For security, the full link isn\'t shown again.';
+
+  @override
+  String get shareLinkLabel => 'Share';
 
   @override
   String get joiningWorkspace => 'Joining the workspace…';
@@ -3409,9 +3597,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedByBot => 'Saved by a bot';
-
-  @override
-  String get checkForUpdates => 'Check for updates';
 
   @override
   String get attachSkill => 'Attach a skill';
@@ -3865,6 +4050,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newGroupChat => 'New group chat';
 
   @override
+  String get groupChats => 'Group chats';
+
+  @override
+  String groupWhoAnswers(String names) {
+    return '$names will answer';
+  }
+
+  @override
+  String get groupEveryoneAnswers => 'Everyone will answer';
+
+  @override
+  String get groupMentionHint => '@mention a bot, or @everyone';
+
+  @override
+  String routineRan(String name) {
+    return 'Routine “$name” ran';
+  }
+
+  @override
+  String groupBotCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bots',
+      one: '1 bot',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String botWaitingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count things waiting for you',
+      one: '1 thing waiting for you',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get newGroupChatHelp =>
       'Pick 2 to 10 bots. The first one leads: @everyone asks it for a plan. @Name wakes one bot.';
 
@@ -4166,10 +4392,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importAgent => 'Import an agent';
-
-  @override
-  String get importAgentHelp =>
-      'Bring a bot over from OpenClaw or Hermes Agent: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.';
 
   @override
   String get importAgentPickFolder => 'Pick its folder';
@@ -4911,6 +5133,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get encryptionRotate => 'Rotate key';
+
+  @override
+  String get encryptionKeyManaged =>
+      'Kasama creates and keeps this workspace\'s key for you, wrapped with the server\'s own key. There\'s nothing to save or copy.';
+
+  @override
+  String get encryptionRotateTitle => 'Rotate the key?';
+
+  @override
+  String get encryptionRotateBody =>
+      'The workspace key is wrapped again with the server\'s current key. Your content stays readable and nothing needs re-encrypting. Do this after changing the server\'s key, or on a schedule.';
 
   @override
   String get encryptionRotateHelp =>

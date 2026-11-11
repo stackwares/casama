@@ -31,7 +31,7 @@ void main() {
         final codec = await ui.instantiateImageCodec((await rootBundle.load(m.animatedAsset)).buffer.asUint8List());
         expect(codec.frameCount, greaterThan(60), reason: m.name);
         final frame = await codec.getNextFrame();
-        expect(frame.image.width, 192);
+        expect(frame.image.width, MascotImage.assetPx);
         expect(frame.duration.inMilliseconds, inInclusiveRange(60, 100));
         expect((await rootBundle.load(m.stillAsset)).lengthInBytes, greaterThan(1000));
       }

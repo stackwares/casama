@@ -7,11 +7,12 @@ import 'package:archive/archive.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import '../../core/distribution.dart';
 
 /// One-click local server (SPEC: Ops extras; D-147): on a desktop, the app checks for Docker,
 /// downloads the self-host bundle, runs its installer for this machine only (`install.sh --local`),
 /// waits until the API answers, and connects to it.
-bool get localServerSupported => !kIsWeb && (defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.linux || defaultTargetPlatform == TargetPlatform.windows);
+bool get localServerSupported => !kIsWeb && !isMacAppStoreBuild && (defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.linux || defaultTargetPlatform == TargetPlatform.windows);
 
 /// The self-host bundle (the repository archive with install.sh and infra/).
 const selfhostBundleUrl = String.fromEnvironment('KASAMA_SELFHOST_BUNDLE', defaultValue: 'https://github.com/kasama-dev/kasama/archive/refs/heads/main.tar.gz');

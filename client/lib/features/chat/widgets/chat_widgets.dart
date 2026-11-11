@@ -16,6 +16,7 @@ import '../../files/file_preview.dart';
 import '../../settings/totp_scan.dart';
 import '../../../ui/app_card.dart';
 import '../../../ui/bot_avatar.dart';
+import '../../../ui/cover_image.dart';
 import '../../../ui/motion.dart';
 import '../chat_controller.dart';
 import 'chat_markdown.dart';
@@ -174,7 +175,8 @@ class AssistantMessage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ChatMarkdown(data: entry.text, selectable: false),
-            if (entry.streaming) ...[const SizedBox(height: AppSpace.xs), _TypingDots(color: scheme.primary)],
+            // Its own layer: the dots animate every frame without repainting the reply's text.
+            if (entry.streaming) ...[const SizedBox(height: AppSpace.xs), RepaintBoundary(child: _TypingDots(color: scheme.primary))],
           ],
         ),
       ),
@@ -269,52 +271,26 @@ class WorkingIndicator extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w500),
     );
-    Widget placeholder = _Placeholder(color: scheme.onSurface);
     if (!still) {
       sparkle = Pulse(from: 0.8, to: 1.1, fadeFrom: 0.55, duration: const Duration(milliseconds: 700), child: sparkle);
       text = Shimmer(key: ValueKey(status), color: scheme.primary.withValues(alpha: 0.7), child: text);
-      placeholder = Shimmer(color: scheme.surface.withValues(alpha: 0.6), child: placeholder);
     }
     return Semantics(
       liveRegion: true,
       label: status,
+      // One line, no skeleton: it comes and goes between steps without pushing the chat around.
       child: ExcludeSemantics(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                sparkle,
-                const SizedBox(width: AppSpace.xs),
-                Flexible(
-                  child: AnimatedSwitcher(duration: AppMotion.of(context, AppMotion.fast), child: text),
-                ),
-              ],
+            sparkle,
+            const SizedBox(width: AppSpace.xs),
+            Flexible(
+              child: AnimatedSwitcher(duration: AppMotion.of(context, AppMotion.fast), child: text),
             ),
-            const SizedBox(height: AppSpace.sm),
-            placeholder,
           ],
         ),
       ),
     );
-  }
-}
-
-class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.color});
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget bar(double f) => FractionallySizedBox(
-      widthFactor: f,
-      child: Container(
-        height: 12,
-        margin: const EdgeInsets.only(bottom: AppSpace.xs),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
-      ),
-    );
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [bar(0.92), bar(0.74), bar(0.48)]);
   }
 }
 
@@ -345,8 +321,9 @@ class AttachmentTile extends ConsumerWidget {
               color: scheme.surfaceContainerHigh,
               child: bytes == null
                   ? Center(child: Icon(LucideIcons.image, color: scheme.onSurfaceVariant))
-                  : Image.memory(
-                      bytes,
+                  // Decoded at thumbnail size, not the photo's full resolution.
+                  : Image(
+                      image: CoverMemoryImage.sized(bytes, const Size(168, 126), MediaQuery.devicePixelRatioOf(context)),
                       fit: BoxFit.cover,
                       gaplessPlayback: true,
                       errorBuilder: (_, _, _) => Icon(LucideIcons.imageOff, color: scheme.onSurfaceVariant),
@@ -722,6 +699,7 @@ class NoticeLine extends StatelessWidget {
       NoticeKind.botControl => (LucideIcons.bot, l10n.botBackInControl, muted),
       NoticeKind.modelFallback => (LucideIcons.arrowRightLeft, l10n.modelFallbackNotice(entry.text), colors.warning),
       NoticeKind.info => (LucideIcons.info, entry.text, colors.warning),
+      NoticeKind.routine => (LucideIcons.alarmClock, l10n.routineRan(entry.text), muted),
     };
     final failed = entry.kind == NoticeKind.failed;
     final restorable = entry.kind == NoticeKind.checkpoint && entry.refId != null && onRestore != null;
@@ -789,7 +767,11 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
       _busy = false;
       if (ok == true) _localDecision = approve ? 'approved' : 'denied';
     });
-    if (ok == true) ref.invalidate(approvalsProvider);
+    if (ok == true) {
+      ref.invalidate(approvalsProvider);
+      // The server marked its notification read; the inbox list catches up.
+      ref.invalidate(notificationsProvider);
+    }
   }
 
   @override
@@ -806,7 +788,7 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
       accent: accent,
       icon: high ? LucideIcons.shieldAlert : LucideIcons.shieldCheck,
       title: l10n.needsApprovalFor(widget.botName, e.tool),
-      badge: StatusLabel(text: high ? l10n.riskHigh : l10n.riskMedium, color: accent, pill: true),
+      badge: StatusLabel(text: high ? l10n.riskHigh : (e.risk == 'low' ? l10n.riskLow : l10n.riskMedium), color: accent, pill: true),
       subtitle: action,
       body: CodePanel(text: const JsonEncoder.withIndent('  ').convert(e.args), maxLines: 8, maxHeight: 180),
       footer: decision != null

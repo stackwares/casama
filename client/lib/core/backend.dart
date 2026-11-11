@@ -25,6 +25,15 @@ class UiPart {
   final List<Object?> messages;
 }
 
+/// The interactive UIs (A2UI surfaces) stored in a message's content parts.
+List<UiPart> uiPartsOf(Object? content) => content is! List
+    ? const []
+    : [
+        for (final p in content.whereType<Map>())
+          if (p['type'] == 'ui' && p['surface_id'] is String && p['messages'] is List)
+            UiPart(surfaceId: p['surface_id'] as String, messages: List<Object?>.from(p['messages'] as List)),
+      ];
+
 class ChatMessageView {
   const ChatMessageView({
     required this.id,
@@ -38,7 +47,11 @@ class ChatMessageView {
     this.siblingIndex = 1,
     this.siblingCount = 1,
     this.botId,
+    this.routineName,
   });
+
+  /// Set on the message a routine posts to start its run (D-155): shown as a line, not a bubble.
+  final String? routineName;
 
   /// For the offline cache (D-112): text, attachments and versions; bot UIs are left out.
   Map<String, Object?> toJson() => {
@@ -51,6 +64,7 @@ class ChatMessageView {
     'sibling_index': siblingIndex,
     'sibling_count': siblingCount,
     'bot_id': botId,
+    'routine_name': routineName,
   };
   static ChatMessageView fromJson(Map<String, dynamic> j) => ChatMessageView(
     id: j['id'] as String,
@@ -62,6 +76,7 @@ class ChatMessageView {
     siblingIndex: (j['sibling_index'] as num?)?.toInt() ?? 1,
     siblingCount: (j['sibling_count'] as num?)?.toInt() ?? 1,
     botId: j['bot_id'] as String?,
+    routineName: j['routine_name'] as String?,
   );
 
   final String id;
@@ -112,7 +127,32 @@ class NotificationView {
     this.whyData = const [],
     this.urgency,
     this.heldReason,
+    this.botId,
   });
+
+  /// The bot it is about, when there is one (per-bot badges in the sidebar).
+  final String? botId;
+
+  /// The same notification, read at [at].
+  NotificationView read(DateTime at) => NotificationView(
+    id: id,
+    kind: kind,
+    title: title,
+    body: body,
+    link: link,
+    createdAt: createdAt,
+    readAt: readAt ?? at,
+    whyRule: whyRule,
+    whyData: whyData,
+    urgency: urgency,
+    heldReason: heldReason,
+    botId: botId,
+  );
+
+  /// Requests the person answers (approvals, takeovers): counted from the pending list, not as
+  /// unread notifications, and marked read on the server once answered anywhere.
+  bool get isRequest => kind == 'approval_request' || kind == 'approval' || kind == 'takeover';
+
   /// Attention rules (D-153): why a proactive message was sent, and whether it waited for the brief.
   final String? whyRule;
   final List<String> whyData;
@@ -199,7 +239,11 @@ abstract class Backend {
   String? get userId;
   Future<void> signIn(String email, String password);
   Future<bool> signUp(String email, String password);
+  /// Emails a sign-in link that also carries a 6-digit code, for another device or the desktop app.
   Future<void> sendMagicLink(String email);
+
+  /// Signs in with the 6-digit code from a sign-in email.
+  Future<void> verifyEmailCode(String email, String code);
   Future<void> signInWithProvider(String provider);
   Future<void> signOut();
 
@@ -566,6 +610,9 @@ abstract class Backend {
   /// Signing in: passes the second step with a code.
   Future<void> passTwoStep(String code);
   Future<void> removeTwoStep(String factorId);
+
+  /// Renames one of your authenticator apps.
+  Future<void> renameTwoStep(String factorId, String name);
   Future<bool> requireTwoStep(String orgId);
   Future<bool> setRequireTwoStep(String orgId, bool value);
 

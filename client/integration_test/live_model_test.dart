@@ -15,11 +15,16 @@ const _key = String.fromEnvironment('KASAMA_LIVE_OPENROUTER_KEY');
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('live: onboard with an OpenRouter key and chat with GPT-6 Luna', (tester) async {
+  testWidgets('live: onboard with an OpenRouter key and chat with Muse Ember', (tester) async {
     expect(_key, isNotEmpty, reason: 'run through scripts/live-check.sh');
     final (app, backend) = await bootstrap(AppConfig.fromEnvironment);
     if (backend.isSignedIn) await backend.signOut();
     await tester.pumpWidget(app);
+    await waitFor(tester, find.byKey(const Key('openSignIn')));
+    await tap(tester, find.byKey(const Key('openSignIn')));
+    await waitFor(tester, find.byKey(const Key('continueWithEmail')));
+    await tap(tester, find.byKey(const Key('continueWithEmail')));
+    await tap(tester, find.byKey(const Key('usePassword')));
     await waitFor(tester, find.byKey(const Key('email')));
     await tap(tester, find.byKey(const Key('toggleMode')));
     await tester.enterText(find.byKey(const Key('email')), 'live-chat-${Random().nextInt(1 << 30)}@example.com');
@@ -33,9 +38,9 @@ void main() {
     await tap(tester, find.byKey(const Key('addKey')));
     await waitFor(tester, find.byKey(const Key('botName')).hitTestable());
 
-    // The model is preselected: GPT-6 Luna for an OpenRouter key.
+    // The model is preselected: Muse Ember for an OpenRouter key.
     await tester.pump(const Duration(milliseconds: 300));
-    expect(tester.widget<TextField>(find.byKey(const Key('model'))).controller!.text, 'openai/gpt-6-luna');
+    expect(tester.widget<TextField>(find.byKey(const Key('model'))).controller!.text, 'meta/muse-ember');
     await tap(tester, find.byKey(const Key('createBot')));
 
     await waitFor(tester, find.byKey(const Key('messageInput')).hitTestable());

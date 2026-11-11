@@ -64,15 +64,19 @@ class MascotImage extends StatelessWidget {
   /// the cloud itself fills the box (the overflow is transparent).
   static const _zoom = 1.14;
 
+  /// Pixel size the assets are rendered at (see scripts/kasama-mascot-render.mjs). Enough for a
+  /// 96pt avatar on a 3x screen; never decode above it.
+  static const assetPx = 320;
+
   @override
   Widget build(BuildContext context) {
     final moving = animate && !MediaQuery.disableAnimationsOf(context);
     final drawn = size * _zoom;
     final px = (drawn * MediaQuery.devicePixelRatioOf(context)).round().clamp(
       16,
-      192,
+      assetPx,
     );
-    return SizedBox(
+    final image = SizedBox(
       width: size,
       height: size,
       child: OverflowBox(
@@ -91,6 +95,9 @@ class MascotImage extends StatelessWidget {
         ),
       ),
     );
+    // A playing animation repaints on each of its frames: on its own layer, it doesn't repaint
+    // the screen around it with it.
+    return moving ? RepaintBoundary(child: image) : image;
   }
 }
 

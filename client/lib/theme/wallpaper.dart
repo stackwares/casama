@@ -2,6 +2,7 @@
 // ignore_for_file: prefer_initializing_formals
 
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -298,6 +299,21 @@ class WallpaperTheme extends ThemeExtension<WallpaperTheme> {
   /// Plain background, for pages when the wallpaper is set to chats only.
   final Color surface;
 
+  // Equal values compare equal, so a rebuilt theme with the same wallpaper isn't a theme change
+  // (which would animate the whole app) and the wallpaper isn't repainted.
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! WallpaperTheme || other.spec != spec || other.ink != ink || other.surface != surface || other.colors.length != colors.length) return false;
+    for (var i = 0; i < colors.length; i++) {
+      if (other.colors[i] != colors[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(spec, ink, surface, Object.hashAll(colors));
+
   @override
   WallpaperTheme copyWith({WallpaperSpec? spec, List<Color>? colors, Color? ink, Color? surface}) =>
       WallpaperTheme(spec: spec ?? this.spec, colors: colors ?? this.colors, ink: ink ?? this.ink, surface: surface ?? this.surface);
@@ -316,7 +332,7 @@ class WallpaperTheme extends ThemeExtension<WallpaperTheme> {
 
 /// Paints the wallpaper behind [child]. Pages get it from [WallpaperPageTransitionsBuilder];
 /// chats use `force` so they keep it when the wallpaper is set to chats only.
-class Wallpaper extends StatelessWidget {
+class Wallpaper extends StatefulWidget {
   const Wallpaper({super.key, required this.child, this.force = false, this.specOverride});
   final Widget child;
   final bool force;
@@ -325,7 +341,50 @@ class Wallpaper extends StatelessWidget {
   final WallpaperTheme? specOverride;
 
   @override
+  State<Wallpaper> createState() => _WallpaperState();
+}
+
+class _WallpaperState extends State<Wallpaper> {
+  // The layer paints in window coordinates, measured when it paints. Behind its repaint boundary a
+  // page transition only moves the cached picture, so repaint once a transition settles; otherwise
+  // the picture keeps the mid-animation position (a misaligned photo and an undimmed strip).
+  var _epoch = 0;
+  final _watched = <Animation<double>>[];
+
+  void _settled(AnimationStatus s) {
+    if ((s == AnimationStatus.completed || s == AnimationStatus.dismissed) && mounted) setState(() => _epoch++);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    final now = [?route?.animation, ?route?.secondaryAnimation];
+    if (now.length == _watched.length && now.indexed.every((e) => identical(e.$2, _watched[e.$1]))) return;
+    for (final a in _watched) {
+      a.removeStatusListener(_settled);
+    }
+    _watched
+      ..clear()
+      ..addAll(now);
+    for (final a in _watched) {
+      a.addStatusListener(_settled);
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final a in _watched) {
+      a.removeStatusListener(_settled);
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final specOverride = widget.specOverride;
+    final child = widget.child;
+    final force = widget.force;
     final theme = specOverride ?? Theme.of(context).extension<WallpaperTheme>();
     if (theme == null) return child;
     final plain = !force && !theme.spec.everywhere;
@@ -337,6 +396,7 @@ class Wallpaper extends StatelessWidget {
             child: _PhotoLoader(
               source: plain ? null : theme.spec.photo,
               builder: (photo) => _WallpaperLayer(
+                epoch: _epoch,
                 theme: theme,
                 plain: plain,
                 photo: photo,
@@ -398,7 +458,13 @@ class _PhotoLoaderState extends State<_PhotoLoader> {
       if (_info != null) setState(() => _info = null);
       return;
     }
-    final stream = imageProviderFor(source).resolve(createLocalImageConfiguration(context));
+    // Decoded no larger than this display (a 24-megapixel photo is ~100 MB as pixels otherwise).
+    final display = View.maybeOf(context)?.display.size;
+    final longest = display == null ? 2560 : math.max(display.width, display.height).round().clamp(1024, 2560);
+    final provider = ResizeImage.resizeIfNeeded(longest, longest, imageProviderFor(source));
+    final stream = (provider is ResizeImage ? ResizeImage(provider.imageProvider, width: longest, height: longest, policy: ResizeImagePolicy.fit) : provider).resolve(
+      createLocalImageConfiguration(context),
+    );
     if (stream.key == _stream?.key) return;
     _stop();
     _stream = stream;
@@ -428,8 +494,11 @@ class _PhotoLoaderState extends State<_PhotoLoader> {
 }
 
 class _WallpaperLayer extends LeafRenderObjectWidget {
-  const _WallpaperLayer({required this.theme, required this.plain, required this.screen, required this.textDirection, this.photo});
+  const _WallpaperLayer({required this.theme, required this.plain, required this.screen, required this.textDirection, this.photo, this.epoch = 0});
   final WallpaperTheme theme;
+
+  /// Bumped to repaint after the page moved (see [_WallpaperState]).
+  final int epoch;
   final bool plain;
   final ui.Image? photo;
 
@@ -439,16 +508,24 @@ class _WallpaperLayer extends LeafRenderObjectWidget {
   final TextDirection textDirection;
 
   @override
-  RenderObject createRenderObject(BuildContext context) => _RenderWallpaper(theme: theme, plain: plain, screen: screen, textDirection: textDirection, photo: photo);
+  RenderObject createRenderObject(BuildContext context) => _RenderWallpaper(
+    theme: theme,
+    plain: plain,
+    screen: screen,
+    textDirection: textDirection,
+    photo: photo,
+  )..pixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
 
   @override
   void updateRenderObject(BuildContext context, _RenderWallpaper renderObject) {
     renderObject
+      ..pixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1
       ..theme = theme
       ..plain = plain
       ..photo = photo
       ..screen = screen
-      ..textDirection = textDirection;
+      ..textDirection = textDirection
+      ..epoch = epoch;
   }
 }
 
@@ -488,10 +565,25 @@ class _RenderWallpaper extends RenderBox {
     markNeedsPaint();
   }
 
+  int _epoch = 0;
+  set epoch(int v) {
+    if (v == _epoch) return;
+    _epoch = v;
+    markNeedsPaint();
+  }
+
   TextDirection _textDirection;
   set textDirection(TextDirection v) {
     if (v == _textDirection) return;
     _textDirection = v;
+    markNeedsPaint();
+  }
+
+  /// The screen's pixel density, so the pattern tile is drawn sharp.
+  double _pixelRatio = 1;
+  set pixelRatio(double v) {
+    if (v == _pixelRatio) return;
+    _pixelRatio = v;
     markNeedsPaint();
   }
 
@@ -520,43 +612,56 @@ class _RenderWallpaper extends RenderBox {
     final spec = _theme.spec;
     final photo = _photo;
     if (photo != null) {
-      _paintPhoto(canvas, world, photo, spec, _theme.surface);
+      _paintPhoto(canvas, world, rect, photo, spec, _theme.surface);
     } else {
-      _paintGradient(canvas, world, _theme.colors);
+      _paintGradient(canvas, world, _theme.colors, cover: world.expandToInclude(rect));
     }
     if (spec.pattern != WallpaperPattern.none && spec.intensity > 0) {
       final dark = _theme.surface.computeLuminance() < 0.2;
       final alpha = (dark ? 0.16 : 0.22) * spec.intensity;
-      _paintPattern(canvas, rect, world.topLeft, spec.pattern, _theme.ink.withValues(alpha: alpha.clamp(0, 1)));
+      _paintPattern(canvas, rect, world.topLeft, spec.pattern, _theme.ink.withValues(alpha: alpha.clamp(0, 1)), _pixelRatio);
     }
     canvas.restore();
   }
 
   /// The photo covering the whole window, blurred and dimmed toward the surface color so text on
   /// top stays readable.
-  static void _paintPhoto(Canvas canvas, Rect world, ui.Image photo, WallpaperSpec spec, Color surface) {
+  static void _paintPhoto(Canvas canvas, Rect world, Rect painted, ui.Image photo, WallpaperSpec spec, Color surface) {
     final sigma = spec.photoBlur * 40;
-    // Drawn a little larger than the window so the blur doesn't fade at the edges.
-    final target = world.inflate(sigma * 2);
-    final src = Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble());
-    final fitted = applyBoxFit(BoxFit.cover, src.size, target.size);
-    final from = Alignment.center.inscribe(fitted.source, src);
-    final paint = Paint()
-      ..filterQuality = FilterQuality.medium
-      ..isAntiAlias = false;
-    if (sigma > 0.5) paint.imageFilter = ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma, tileMode: TileMode.clamp);
-    canvas.drawImageRect(photo, from, target, paint);
+    // Drawn a little larger than the window so the blur doesn't fade at the edges, and always over
+    // everything painted (a frame painted mid-transition may sit partly outside the window).
+    final cover = world.expandToInclude(painted);
+    final target = cover.inflate(sigma * 2);
+    if (sigma > 0.5) {
+      final blurred = _blurredPhoto(photo, sigma, target.size);
+      canvas.drawImageRect(
+        blurred,
+        Offset.zero & Size(blurred.width.toDouble(), blurred.height.toDouble()),
+        target,
+        Paint()
+          ..filterQuality = FilterQuality.low
+          ..isAntiAlias = false,
+      );
+    } else {
+      final src = Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble());
+      final fitted = applyBoxFit(BoxFit.cover, src.size, target.size);
+      final paint = Paint()
+        ..filterQuality = FilterQuality.medium
+        ..isAntiAlias = false;
+      canvas.drawImageRect(photo, Alignment.center.inscribe(fitted.source, src), target, paint);
+    }
     if (spec.photoDim > 0) {
-      canvas.drawRect(world, Paint()..color = surface.withValues(alpha: spec.photoDim * 0.85));
+      canvas.drawRect(cover, Paint()..color = surface.withValues(alpha: spec.photoDim * 0.85));
     }
   }
 
-  static void _paintGradient(Canvas canvas, Rect world, List<Color> c) {
+  static void _paintGradient(Canvas canvas, Rect world, List<Color> c, {Rect? cover}) {
+    final base = cover ?? world;
     if (c.length < 4) {
-      canvas.drawRect(world, Paint()..color = c.isEmpty ? Colors.transparent : c.first);
+      canvas.drawRect(base, Paint()..color = c.isEmpty ? Colors.transparent : c.first);
       return;
     }
-    canvas.drawRect(world, Paint()..color = c[0]);
+    canvas.drawRect(base, Paint()..color = c[0]);
     final r = world.longestSide * 0.85;
     // Three soft blobs on the base, like Telegram's gradient wallpapers.
     for (final (color, at) in [(c[1], const Offset(0.85, 0.12)), (c[2], const Offset(0.15, 0.55)), (c[3], const Offset(0.7, 0.92))]) {
@@ -568,8 +673,63 @@ class _RenderWallpaper extends RenderBox {
     }
   }
 
+  // The blurred photo, made once at a fraction of the window's size and then only stretched: a
+  // Gaussian blur over the whole window on every frame is the most a page could cost the GPU, and
+  // a blurred picture loses nothing at low resolution. Pages share it.
+  static ({ui.Image photo, double sigma, int width, int height, ui.Image image})? _blur;
+
+  static ui.Image _blurredPhoto(ui.Image photo, double sigma, Size target) {
+    // Small enough to be cheap, large enough that the blur still spans 4 pixels.
+    final scale = (sigma / 4).clamp(1.0, 8.0);
+    // Sizes in steps of 16 pixels, so resizing a window doesn't redo it on every frame.
+    int step(double v) => math.max(16, ((v / scale) / 16).ceil() * 16);
+    final width = step(target.width), height = step(target.height);
+    final cached = _blur;
+    if (cached != null && cached.sigma == sigma && cached.width == width && cached.height == height && cached.photo.isCloneOf(photo)) return cached.image;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final src = Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble());
+    final size = Size(width.toDouble(), height.toDouble());
+    final fitted = applyBoxFit(BoxFit.cover, src.size, size);
+    canvas.drawImageRect(
+      photo,
+      Alignment.center.inscribe(fitted.source, src),
+      Offset.zero & size,
+      Paint()
+        ..filterQuality = FilterQuality.medium
+        ..imageFilter = ui.ImageFilter.blur(sigmaX: sigma / scale, sigmaY: sigma / scale, tileMode: TileMode.clamp),
+    );
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(width, height);
+    picture.dispose();
+    // The old picture may still be on screen in a layer, which keeps its own reference.
+    cached?.photo.dispose();
+    _blur = (photo: photo.clone(), sigma: sigma, width: width, height: height, image: image);
+    return image;
+  }
+
   static const _tile = 260.0;
   static final Map<(WallpaperPattern, int), ui.Picture> _tiles = {};
+  static final Map<(WallpaperPattern, int), ui.Image> _masks = {};
+
+  /// The pattern tile as a white mask at the screen's density, tinted when drawn: the pattern is
+  /// then one draw of a repeating image rather than hundreds of rotated glyphs on every frame.
+  static ui.Image _maskFor(WallpaperPattern pattern, double pixelRatio) {
+    final px = (_tile * pixelRatio).ceil();
+    final key = (pattern, px);
+    final cached = _masks[key];
+    if (cached != null) return cached;
+    if (_masks.length >= 4) _masks.clear();
+    final recorder = ui.PictureRecorder();
+    Canvas(recorder)
+      ..scale(px / _tile)
+      ..clipRect(const Rect.fromLTWH(0, 0, _tile, _tile))
+      ..drawPicture(_tileFor(pattern, const Color(0xFFFFFFFF)));
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(px, px);
+    picture.dispose();
+    return _masks[key] = image;
+  }
 
   static ui.Picture _tileFor(WallpaperPattern pattern, Color ink) {
     final key = (pattern, ink.toARGB32());
@@ -614,19 +774,22 @@ class _RenderWallpaper extends RenderBox {
     return _tiles[key] = recorder.endRecording();
   }
 
-  static void _paintPattern(Canvas canvas, Rect rect, Offset origin, WallpaperPattern pattern, Color ink) {
-    final tile = _tileFor(pattern, ink);
-    final startX = origin.dx + ((rect.left - origin.dx) / _tile).floor() * _tile;
-    final startY = origin.dy + ((rect.top - origin.dy) / _tile).floor() * _tile;
-    for (var y = startY; y < rect.bottom; y += _tile) {
-      for (var x = startX; x < rect.right; x += _tile) {
-        canvas.save();
-        canvas.translate(x, y);
-        // Each tile shows only its own square; the wrapped copies fill in across the seams.
-        canvas.clipRect(const Rect.fromLTWH(0, 0, _tile, _tile));
-        canvas.drawPicture(tile);
-        canvas.restore();
-      }
-    }
+  static void _paintPattern(Canvas canvas, Rect rect, Offset origin, WallpaperPattern pattern, Color ink, double pixelRatio) {
+    final mask = _maskFor(pattern, pixelRatio);
+    // Image pixels to canvas: scaled to one tile, and anchored at the window's origin so panes join.
+    final s = _tile / mask.width;
+    final matrix = Float64List(16)
+      ..[0] = s
+      ..[5] = s
+      ..[10] = 1
+      ..[12] = origin.dx
+      ..[13] = origin.dy
+      ..[15] = 1;
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = ImageShader(mask, TileMode.repeated, TileMode.repeated, matrix, filterQuality: FilterQuality.low)
+        ..colorFilter = ColorFilter.mode(ink, BlendMode.srcIn),
+    );
   }
 }

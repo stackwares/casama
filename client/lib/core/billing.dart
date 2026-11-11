@@ -7,6 +7,7 @@ import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 
 import 'providers.dart';
+import 'distribution.dart';
 
 /// Where a purchase can happen (D-070).
 enum PurchaseChannel { web, appStore, googlePlay }
@@ -26,6 +27,10 @@ List<PurchaseChannel> purchaseChannels({
       return us ? const [PurchaseChannel.appStore, PurchaseChannel.web] : const [PurchaseChannel.appStore];
     case TargetPlatform.android:
       return const [PurchaseChannel.googlePlay];
+    // The Mac App Store build buys through StoreKit, with the same storefront rule as iOS.
+    case TargetPlatform.macOS when isMacAppStoreBuild:
+      final us = storefront == 'USA' || storefront == 'US';
+      return us ? const [PurchaseChannel.appStore, PurchaseChannel.web] : const [PurchaseChannel.appStore];
     default:
       return const [PurchaseChannel.web];
   }
@@ -152,6 +157,7 @@ StorePurchases defaultStore() {
   return switch (defaultTargetPlatform) {
     TargetPlatform.iOS => InAppPurchaseStore('app_store'),
     TargetPlatform.android => InAppPurchaseStore('google_play'),
+    TargetPlatform.macOS when isMacAppStoreBuild => InAppPurchaseStore('app_store'),
     _ => const NoStore(),
   };
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/distribution.dart';
 
 /// Desktop context (SPEC: Desktop context; D-152): what the quick-ask hotkey attaches, read only at
 /// the moment it's pressed — the front app and window title, the selected text, the browser tab —
@@ -21,7 +22,7 @@ class DesktopContext {
 typedef Run = Future<ProcessResult> Function(String exe, List<String> args);
 Future<ProcessResult> _run(String exe, List<String> args) => Process.run(exe, args);
 
-bool get desktopContextSupported => !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+bool get desktopContextSupported => !kIsWeb && !isMacAppStoreBuild && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
 const _browsers = {'Google Chrome', 'Arc', 'Brave Browser', 'Microsoft Edge', 'Chromium', 'Vivaldi', 'Opera'};
 

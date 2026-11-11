@@ -76,7 +76,13 @@ class AppLogo extends StatelessWidget {
     if (imageUrl != null) {
       mark = Padding(
         padding: EdgeInsets.all(size * 0.16),
-        child: Image.network(imageUrl!, fit: BoxFit.contain, errorBuilder: (_, _, _) => _initial(ink)),
+        // Decoded at the tile's size: remote logos are often 512 px or more.
+        child: Image.network(
+          imageUrl!,
+          fit: BoxFit.contain,
+          cacheWidth: (size * MediaQuery.devicePixelRatioOf(context)).ceil(),
+          errorBuilder: (_, _, _) => _initial(ink),
+        ),
       );
     } else if (hasMark) {
       mark = Padding(

@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../features/voice/phone_calls.dart' show kasamaBackgroundMessage;
 import 'backend.dart';
@@ -75,6 +76,13 @@ class PushRegistrar {
   final _subs = <StreamSubscription<Object?>>[];
   var _started = false;
 
+  /// Whether to show our own "Turn on notifications" page first (phones and Macs, never asked, not
+  /// snoozed): the system prompt comes from its button, with the reason in view.
+  final needsAsk = ValueNotifier(false);
+
+  static const _askedKey = 'push.asked';
+  static const _snoozedKey = 'push.snoozedUntil';
+
   Future<void> start() async {
     if (_started || !PushConfig.enabled) return;
     if (!kIsWeb && defaultTargetPlatform != TargetPlatform.iOS && defaultTargetPlatform != TargetPlatform.android && defaultTargetPlatform != TargetPlatform.macOS) {
@@ -87,8 +95,49 @@ class PushRegistrar {
       // Phone calls (D-135): on Android a call push rings even when the app is closed.
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) FirebaseMessaging.onBackgroundMessage(kasamaBackgroundMessage);
       final messaging = FirebaseMessaging.instance;
+      final status = (await messaging.getNotificationSettings()).authorizationStatus;
+      if (status == AuthorizationStatus.authorized || status == AuthorizationStatus.provisional) {
+        await _register(messaging);
+        return;
+      }
+      // Never asked here (Android reports "denied" until it asks): our page first, unless snoozed.
+      final prefs = await SharedPreferences.getInstance();
+      final snoozed = DateTime.tryParse(prefs.getString(_snoozedKey) ?? '');
+      if (prefs.getBool(_askedKey) != true && (snoozed == null || snoozed.isBefore(DateTime.now()))) {
+        needsAsk.value = true;
+      }
+    } catch (e) {
+      // Push is best effort; the in-app inbox still has every notification.
+      debugPrint('push registration failed: $e');
+    }
+  }
+
+  /// "Turn on": the system prompt, then this device's push registration.
+  Future<bool> enable() async {
+    needsAsk.value = false;
+    try {
+      (await SharedPreferences.getInstance()).setBool(_askedKey, true).ignore();
+      final messaging = FirebaseMessaging.instance;
       final settings = await messaging.requestPermission();
-      if (settings.authorizationStatus == AuthorizationStatus.denied) return;
+      if (settings.authorizationStatus == AuthorizationStatus.denied) return false;
+      await _register(messaging);
+      return true;
+    } catch (e) {
+      debugPrint('push registration failed: $e');
+      return false;
+    }
+  }
+
+  /// "Not now": asked again in a week.
+  Future<void> snooze() async {
+    needsAsk.value = false;
+    try {
+      await (await SharedPreferences.getInstance()).setString(_snoozedKey, DateTime.now().add(const Duration(days: 7)).toIso8601String());
+    } catch (_) {}
+  }
+
+  Future<void> _register(FirebaseMessaging messaging) async {
+    try {
       // The worker sends with FCM HTTP v1 `message.token`, so register the classic token
       // (firebase_messaging 17 deprecates it in favour of installation-ID direct send; see DECISIONS D-051).
       // ignore: deprecated_member_use
@@ -113,6 +162,7 @@ class PushRegistrar {
   }
 
   void dispose() {
+    needsAsk.dispose();
     for (final s in _subs) {
       unawaited(s.cancel());
     }

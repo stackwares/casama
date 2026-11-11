@@ -21,10 +21,12 @@ class SupabaseBackend implements Backend {
 
   final sb.SupabaseClient supabase;
   final KasamaClient api;
-  final PublicConfig? config;
+
+  /// The server's public settings: saved ones at launch, replaced once the server's arrive (D-158).
+  PublicConfig? config;
 
   /// Used when the server is older than the default-model setting (D-064).
-  static const _fallbackModels = {'openrouter': 'openai/gpt-6-luna', 'openai': 'gpt-6-luna'};
+  static const _fallbackModels = {'openrouter': 'meta/muse-ember', 'openai': 'gpt-6-luna'};
 
   @override
   String? defaultModelFor(String provider) => config?.defaultModels[provider] ?? _fallbackModels[provider];
@@ -34,9 +36,11 @@ class SupabaseBackend implements Backend {
   int catchUpEvents = 0;
 
   /// Builds the API client so it always uses the current Supabase access token.
-  static Future<KasamaClient> connectApi(String apiUrl, sb.SupabaseClient supabase) {
+  /// Pass the [config] already loaded from this server, so it isn't fetched a second time.
+  static Future<KasamaClient> connectApi(String apiUrl, sb.SupabaseClient supabase, {PublicConfig? config}) {
     return KasamaClient.connect(
       apiUrl,
+      config: config,
       sessions: CallbackSessionStore(() async {
         final s = supabase.auth.currentSession;
         if (s == null) return null;
@@ -64,27 +68,37 @@ class SupabaseBackend implements Backend {
   @override
   String? get userId => supabase.auth.currentUser?.id;
 
+  /// Where sign-in emails and Google, Apple and SSO send people back to: the app itself (the
+  /// kasama:// scheme, which Supabase picks up), or on the web the page they came from.
+  static const authRedirect = 'kasama://app/login-callback';
+  static String? get _authRedirect => kIsWeb ? null : authRedirect;
+
   @override
   Future<void> signIn(String email, String password) => supabase.auth.signInWithPassword(email: email, password: password);
 
   /// A sign-up proof when the server asks for one (D-094); the puzzle runs off the UI thread.
   Future<Map<String, Object?>?> _signupData() async {
-    final proof = await signupProof(api.api, api.config, solve: (c, d) => compute(_solvePuzzle, (c, d)));
+    final proof = await signupProof(api.api, config ?? api.config, solve: (c, d) => compute(_solvePuzzle, (c, d)));
     return proof == null ? null : {'signup_proof': proof};
   }
 
   @override
   Future<bool> signUp(String email, String password) async {
-    final r = await supabase.auth.signUp(email: email, password: password, data: await _signupData());
+    final r = await supabase.auth.signUp(email: email, password: password, data: await _signupData(), emailRedirectTo: _authRedirect);
     return r.session != null;
   }
 
   @override
-  Future<void> sendMagicLink(String email) async => supabase.auth.signInWithOtp(email: email, data: await _signupData());
+  Future<void> sendMagicLink(String email) async =>
+      supabase.auth.signInWithOtp(email: email, data: await _signupData(), emailRedirectTo: _authRedirect);
+
+  @override
+  Future<void> verifyEmailCode(String email, String code) =>
+      supabase.auth.verifyOTP(email: email, token: code.trim(), type: sb.OtpType.email);
 
   @override
   Future<void> signInWithProvider(String provider) async {
-    await supabase.auth.signInWithOAuth(provider == 'apple' ? sb.OAuthProvider.apple : sb.OAuthProvider.google);
+    await supabase.auth.signInWithOAuth(provider == 'apple' ? sb.OAuthProvider.apple : sb.OAuthProvider.google, redirectTo: _authRedirect);
   }
 
   @override
@@ -396,12 +410,7 @@ class SupabaseBackend implements Backend {
     ];
   }
 
-  static List<UiPart> _ui(Object? content) => content is! List
-      ? const []
-      : [
-          for (final p in content.whereType<Map>())
-            if (p['type'] == 'ui' && p['surface_id'] is String && p['messages'] is List) UiPart(surfaceId: p['surface_id'] as String, messages: List<Object?>.from(p['messages'] as List)),
-        ];
+  static List<UiPart> _ui(Object? content) => uiPartsOf(content);
 
   static String? _uiAction(Object? content) {
     if (content is! List) return null;
@@ -434,8 +443,17 @@ class SupabaseBackend implements Backend {
           attachments: _files(r['content']),
           ui: _ui(r['content']),
           uiActionSurface: _uiAction(r['content']),
+          routineName: _routineName(r['content']),
         ),
     ];
+  }
+
+  static String? _routineName(Object? content) {
+    if (content is! List) return null;
+    for (final p in content.whereType<Map>()) {
+      if (p['routine'] case {'name': final String name}) return name;
+    }
+    return null;
   }
 
   @override
@@ -689,6 +707,7 @@ class SupabaseBackend implements Backend {
       whyData: payload['why'] is Map && (payload['why'] as Map)['data'] is List ? [for (final d in (payload['why'] as Map)['data'] as List) '$d'] : const [],
       urgency: (row['urgency'] ?? payload['urgency']) as String?,
       heldReason: row['held_reason'] as String?,
+      botId: payload['bot_id'] as String?,
     );
   }
 
@@ -1515,6 +1534,11 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<void> renameTwoStep(String factorId, String name) async {
+    await api.privacy.renameTwoStepFactor(id: factorId, renameTwoStepFactorRequest: RenameTwoStepFactorRequest(name: name));
+  }
+
+  @override
   Future<void> removeTwoStep(String factorId) async {
     await supabase.auth.mfa.unenroll(factorId);
     await supabase.auth.refreshSession();
@@ -1538,7 +1562,7 @@ class SupabaseBackend implements Backend {
   )).data!.runEventRetentionDays;
   @override
   Future<void> signInWithSso(String email) async {
-    await supabase.auth.signInWithSSO(domain: email.split('@').last.trim().toLowerCase());
+    await supabase.auth.signInWithSSO(domain: email.split('@').last.trim().toLowerCase(), redirectTo: _authRedirect);
   }
 
   // --- billing (Phase 7) ---------------------------------------------------

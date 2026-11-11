@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 /// Small motion toolkit on plain animation controllers: no timers, so nothing is left running when
 /// a widget goes away, and every effect respects the system's reduce-motion setting.
@@ -67,9 +68,60 @@ class _EntranceState extends State<Entrance> with SingleTickerProviderStateMixin
         final v = _t.value;
         Widget out = FractionalTranslation(translation: Offset.lerp(widget.offset, Offset.zero, v)!, child: child);
         if (widget.scale != 1) out = Transform.scale(scale: widget.scale + (1 - widget.scale) * v, child: out);
-        return Opacity(opacity: v, child: out);
+        return _Fade(opacity: v, child: out);
       },
     );
+  }
+}
+
+/// [Opacity] that paints straight through once opaque. Flutter's [Opacity] keeps its own layer at
+/// any opacity above zero, so every list row that ever faded in would carry one for good, and
+/// every frame would composite it.
+class _Fade extends SingleChildRenderObjectWidget {
+  const _Fade({required this.opacity, super.child});
+  final double opacity;
+
+  @override
+  _RenderFade createRenderObject(BuildContext context) => _RenderFade(opacity);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderFade renderObject) => renderObject.opacity = opacity;
+}
+
+class _RenderFade extends RenderProxyBox {
+  _RenderFade(double opacity) : _alpha = Color.getAlphaFromOpacity(opacity);
+
+  int _alpha;
+  set opacity(double value) {
+    final alpha = Color.getAlphaFromOpacity(value);
+    if (alpha == _alpha) return;
+    final composited = alwaysNeedsCompositing;
+    _alpha = alpha;
+    if (composited != alwaysNeedsCompositing) markNeedsCompositingBitsUpdate();
+    markNeedsPaint();
+  }
+
+  @override
+  bool get alwaysNeedsCompositing => child != null && _alpha > 0 && _alpha < 255;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null || _alpha == 0) {
+      layer = null;
+      return;
+    }
+    if (_alpha == 255) {
+      layer = null;
+      context.paintChild(child, offset);
+      return;
+    }
+    layer = context.pushOpacity(offset, _alpha, super.paint, oldLayer: layer as OpacityLayer?);
+  }
+
+  @override
+  void visitChildrenForSemantics(RenderObjectVisitor visitor) {
+    if (child != null && _alpha > 0) visitor(child!);
   }
 }
 
