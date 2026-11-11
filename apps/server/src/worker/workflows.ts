@@ -674,7 +674,7 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
   { name: "maintenance" },
 );
 
-/** Every minute: computers idle for 10 minutes are archived to object storage and stopped. */
+/** Every minute: computers idle for 5 minutes (IDLE_SLEEP_MS, D-178) are archived to object storage and stopped. */
 export const computersIdleWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
     const computers = rt().computers;

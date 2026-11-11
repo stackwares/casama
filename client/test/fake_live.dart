@@ -48,6 +48,10 @@ class FakeLiveConnection implements LiveConnection {
     if (_host.value) sent.add(input);
   }
 
+  var presences = 0;
+  @override
+  void presence() => presences++;
+
   @override
   Future<double?> ping() async => 12.0;
   @override
@@ -57,9 +61,12 @@ class FakeLiveConnection implements LiveConnection {
 class FakeLiveConnector implements LiveConnector {
   final connection = FakeLiveConnection();
   StreamSession? session;
+  var connects = 0;
   @override
   Future<LiveConnection> connect(StreamSession session) async {
     this.session = session;
+    connects++;
+    connection.closed = false;
     return connection;
   }
 }

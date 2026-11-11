@@ -18,6 +18,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/share.dart';
+import '../../core/user_activity.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
@@ -754,12 +755,15 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _sub;
   var _connected = false;
+  // An open terminal keeps the computer awake only while the person is here (D-195).
+  PresenceBeat? _presence;
 
   @override
   bool get wantKeepAlive => true;
 
   @override
   void dispose() {
+    _presence?.dispose();
     _sub?.cancel();
     _channel?.sink.close();
     super.dispose();
@@ -783,11 +787,15 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
             : utf8.decode(msg as List<int>, allowMalformed: true),
       ),
       onDone: () {
+        _presence?.dispose();
+        _presence = null;
         if (!mounted) return;
         _terminal.write('\r\n${context.l10n.terminalDisconnected}\r\n');
         setState(() => _connected = false);
       },
     );
+    _presence?.dispose();
+    _presence = PresenceBeat(() => channel.sink.add(jsonEncode({'event': 'presence'})));
     setState(() {
       _channel = channel;
       _connected = true;

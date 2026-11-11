@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart' show XFile;
 import '../../core/live.dart';
 import '../../core/providers.dart';
 import '../../core/share.dart';
+import '../../core/user_activity.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -65,11 +66,21 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   TeachRecorder? _recorder;
   TeachStep? _lastStep;
   var _stepQueue = Future<void>.value();
+  // Activity-based keep-awake (D-195): presence while the person is here, "Still watching?" after
+  // a long quiet spell, and a paused stream when nobody answers.
+  late final PresenceBeat _presence;
+  late final RecentInput _idle;
+  var _stillWatching = false;
+  var _powerPaused = false;
+  Timer? _answerTimer;
+  Timer? _idleRecheck;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _presence = PresenceBeat(() => _conn?.presence());
+    _idle = RecentInput(KeepAwake.stillWatchingAfter, onQuiet: _checkStillWatching, onActive: _keepWatching);
     _connect();
     _refreshLease();
     _leaseTimer = Timer.periodic(const Duration(seconds: 5), (_) => _tickLease());
@@ -89,6 +100,10 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     _leaseTimer?.cancel();
     _shotTimer?.cancel();
     _pingTimer?.cancel();
+    _answerTimer?.cancel();
+    _idleRecheck?.cancel();
+    _presence.dispose();
+    _idle.dispose();
     unawaited(_conn?.close());
     _transform.dispose();
     _focus.dispose();
@@ -100,15 +115,79 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // No video while the app is in the background; reconnect when it returns.
-    if (state == AppLifecycleState.paused) {
-      unawaited(_conn?.close());
-      _conn = null;
-      _shotTimer?.cancel();
-      if (mounted) setState(() {});
-    } else if (state == AppLifecycleState.resumed && _conn == null) {
+    // No video while nobody can see it (app in the background, a hidden browser tab, a minimised
+    // window); reconnect when it's back, unless it was paused to save power.
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      _closeStream();
+    } else if (state == AppLifecycleState.resumed && _conn == null && !_powerPaused) {
       _connect();
     }
+  }
+
+  /// Closes the stream and stops everything that would keep the computer awake for it.
+  void _closeStream() {
+    unawaited(_conn?.close());
+    _conn = null;
+    _shotTimer?.cancel();
+    _shotTimer = null;
+    _pingTimer?.cancel();
+    _pingTimer = null;
+    _refresh();
+  }
+
+  // --- still watching? (D-195) ---------------------------------------------
+
+  /// After [KeepAwake.stillWatchingAfter] without input: asks, unless a bot is working here.
+  Future<void> _checkStillWatching() async {
+    _idleRecheck?.cancel();
+    if (_disposed || _idle.active || _stillWatching || _powerPaused || _conn == null) return;
+    if (await _botWorking()) {
+      _idleRecheck = Timer(const Duration(minutes: 1), _checkStillWatching);
+      return;
+    }
+    if (_disposed || !mounted || _idle.active || _conn == null) return;
+    setState(() => _stillWatching = true);
+    _answerTimer?.cancel();
+    _answerTimer = Timer(KeepAwake.answerWindow, _pauseToSavePower);
+  }
+
+  /// Whether a bot is working on this computer now (fresh bot statuses; false when unknown).
+  Future<bool> _botWorking() async {
+    try {
+      final org = ref.read(currentOrgProvider);
+      if (org == null) return false;
+      final computer = (ref.read(computersProvider).value ?? const <Computer>[]).where((c) => c.id == widget.computerId).firstOrNull;
+      final bots = await ref.read(backendProvider).bots(org.id);
+      return bots.any(
+        (b) =>
+            b.status == BotStatusEnum.working &&
+            (b.defaultComputerId == widget.computerId || computer?.ownerBotId == b.id || (b.defaultComputerId == null && computer?.kind != ComputerKindEnum.private)),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Any input (including the Keep watching button) answers the question.
+  void _keepWatching() {
+    _answerTimer?.cancel();
+    _idleRecheck?.cancel();
+    if (_stillWatching && !_disposed && mounted) setState(() => _stillWatching = false);
+  }
+
+  void _pauseToSavePower() {
+    if (_disposed || !mounted) return;
+    _closeStream();
+    setState(() {
+      _stillWatching = false;
+      _powerPaused = true;
+    });
+  }
+
+  /// Resume after a pause to save power: reconnecting wakes the computer.
+  void _resume() {
+    setState(() => _powerPaused = false);
+    _connect();
   }
 
   Future<void> _connect() async {
@@ -125,6 +204,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
       conn.isHost.addListener(_refresh);
       conn.screenSize.addListener(_refresh);
       setState(() => _conn = conn);
+      _pingTimer?.cancel();
       _pingTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
         final rtt = await _conn?.ping();
         if (mounted && rtt != null) setState(() => _rtt = rtt);
@@ -386,6 +466,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
 
   void _send(Uint8List data) {
     _lastInput = DateTime.now();
+    UserActivity.instance.mark();
     _conn?.send(data);
   }
 
@@ -623,46 +704,54 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
               child: FormNote(l10n.takeoverPrivacy, icon: LucideIcons.lock),
             ),
           Expanded(
-            child: Container(
-              color: Colors.black,
-              child: Focus(
-                focusNode: _focus,
-                onKeyEvent: _key,
-                child: InteractiveViewer(
-                  transformationController: _transform,
-                  minScale: 1,
-                  maxScale: 5,
-                  panEnabled: !_controlling,
-                  child: Center(
-                    child: AspectRatio(
-                      aspectRatio: size.width / size.height,
-                      child: LayoutBuilder(
-                        builder: (context, box) {
-                          final s = Size(box.maxWidth, box.maxHeight);
-                          return Listener(
-                            key: const Key('liveSurface'),
-                            onPointerHover: (e) => _pointer(e, s),
-                            onPointerMove: (e) => _pointer(e, s),
-                            onPointerDown: (e) {
-                              _focus.requestFocus();
-                              _pointer(e, s, down: true);
-                            },
-                            onPointerUp: (e) => _pointer(e, s, down: false),
-                            onPointerSignal: (e) {
-                              if (e is PointerScrollEvent && _controlling) {
-                                _send(NekoInput.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round()));
-                                _recorder?.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round());
-                              }
-                            },
-                            child: video,
-                          );
-                        },
+            child: _powerPaused
+                ? _PausedToSavePower(onResume: _resume)
+                : Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        color: Colors.black,
+                        child: Focus(
+                          focusNode: _focus,
+                          onKeyEvent: _key,
+                          child: InteractiveViewer(
+                            transformationController: _transform,
+                            minScale: 1,
+                            maxScale: 5,
+                            panEnabled: !_controlling,
+                            child: Center(
+                              child: AspectRatio(
+                                aspectRatio: size.width / size.height,
+                                child: LayoutBuilder(
+                                  builder: (context, box) {
+                                    final s = Size(box.maxWidth, box.maxHeight);
+                                    return Listener(
+                                      key: const Key('liveSurface'),
+                                      onPointerHover: (e) => _pointer(e, s),
+                                      onPointerMove: (e) => _pointer(e, s),
+                                      onPointerDown: (e) {
+                                        _focus.requestFocus();
+                                        _pointer(e, s, down: true);
+                                      },
+                                      onPointerUp: (e) => _pointer(e, s, down: false),
+                                      onPointerSignal: (e) {
+                                        if (e is PointerScrollEvent && _controlling) {
+                                          _send(NekoInput.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round()));
+                                          _recorder?.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round());
+                                        }
+                                      },
+                                      child: video,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      if (_stillWatching) _StillWatching(onKeepWatching: _keepWatching),
+                    ],
                   ),
-                ),
-              ),
-            ),
           ),
           // Hidden field that brings up the phone keyboard.
           SizedBox(
@@ -684,6 +773,67 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
             ),
           ),
     ];
+  }
+}
+
+/// "Still watching?" over a dimmed view after a long quiet spell (D-195).
+class _StillWatching extends StatelessWidget {
+  const _StillWatching({required this.onKeepWatching});
+  final VoidCallback onKeepWatching;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ColoredBox(
+      key: const Key('stillWatching'),
+      color: Colors.black.withValues(alpha: 0.6),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpace.gutter),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: AppCard(
+              padding: const EdgeInsets.all(AppSpace.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(LucideIcons.eye, size: 28, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(height: AppSpace.sm),
+                  Text(l10n.liveStillWatching, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
+                  const SizedBox(height: AppSpace.xs),
+                  Text(l10n.liveStillWatchingHelp, style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
+                  const SizedBox(height: AppSpace.md),
+                  FilledButton(key: const Key('keepWatching'), onPressed: onKeepWatching, child: Text(l10n.liveKeepWatching)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The stream closed because nobody answered "Still watching?"; Resume wakes the computer again.
+class _PausedToSavePower extends StatelessWidget {
+  const _PausedToSavePower({required this.onResume});
+  final VoidCallback onResume;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return EmptyState(
+      key: const Key('livePausedToSavePower'),
+      icon: LucideIcons.moon,
+      title: l10n.livePausedToSavePower,
+      message: l10n.livePausedToSavePowerHelp,
+      action: GlowButton.icon(
+        key: const Key('liveResume'),
+        onPressed: onResume,
+        icon: const Icon(LucideIcons.play, size: 18),
+        label: Text(l10n.liveResume),
+      ),
+    );
   }
 }
 

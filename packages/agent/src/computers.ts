@@ -2,7 +2,10 @@ import type { Database } from "@casama/db";
 import type { CheckpointRef, SandboxHandle, SandboxProvider, SnapshotRef } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 
-/** Idle computers sleep after 5 minutes (D-178); waking restores their files. */
+/**
+ * Idle computers sleep after 5 minutes (D-178); waking restores their files. Only bots, running
+ * commands and a person's input or presence keep them awake (D-195, apps/server/src/api/keep-awake.ts).
+ */
 export const IDLE_SLEEP_MS = 5 * 60_000;
 export const CHECKPOINT_KEEP = 20;
 export const CHECKPOINT_MAX_AGE_DAYS = 7;
@@ -308,7 +311,11 @@ export class ComputerService {
         where t.computer_id = ${c.id}::uuid and t.status in ('pending', 'taken') and t.expires_at > now())`);
   }
 
-  /** Sleeps running computers with no activity, open terminals or running commands for idleMs. */
+  /**
+   * Sleeps running computers with no activity or running commands for idleMs. An open terminal
+   * alone no longer counts (D-195): its keystrokes and the app's presence beat touch the computer,
+   * so a terminal someone is using, or a command they watch, stays awake through last_active_at.
+   */
   async sleepIdle(idleMs = IDLE_SLEEP_MS) {
     const rows = await this.db.execute<ComputerRow>(sql`
       select * from public.computers
@@ -320,7 +327,7 @@ export class ComputerService {
         .catch(() => null);
       if (h) {
         const health = await h.health().catch(() => null);
-        if (health && (health.openTerminals > 0 || health.runningExecs > 0)) {
+        if (health && health.runningExecs > 0) {
           await this.touch(c.id);
           continue;
         }

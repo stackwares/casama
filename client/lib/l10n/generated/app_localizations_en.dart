@@ -1231,6 +1231,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveShownFullScreen => 'The live view is open full screen.';
 
   @override
+  String get liveStillWatching => 'Still watching?';
+
+  @override
+  String get liveStillWatchingHelp =>
+      'The computer sleeps when nobody\'s watching, to save power.';
+
+  @override
+  String get liveKeepWatching => 'Keep watching';
+
+  @override
+  String get livePausedToSavePower => 'Paused to save power';
+
+  @override
+  String get livePausedToSavePowerHelp =>
+      'Nobody was watching, so the computer can rest. Resume wakes it again.';
+
+  @override
+  String get liveResume => 'Resume';
+
+  @override
   String get paused => 'Paused';
 
   @override
@@ -1764,6 +1784,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get connectionsNoComposioKey =>
       'Add COMPOSIO_API_KEY to this server to use Casama\'s account.';
+
+  @override
+  String get connectionsGoogleTitle => 'Google apps';
+
+  @override
+  String get connectionsGoogleComposio => 'Through Composio';
+
+  @override
+  String get connectionsGoogleComposioHelp =>
+      'Gmail, Calendar, Drive and the rest work right away. Google\'s own servers need Developer Preview enrollment.';
+
+  @override
+  String get connectionsGoogleDirect => 'Google\'s own servers';
+
+  @override
+  String get connectionsGoogleDirectHelp =>
+      'Uses this server\'s Google client. Only works once your Google Cloud project is enrolled in Google Workspace Developer Preview.';
 
   @override
   String get notInstanceOwner =>

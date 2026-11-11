@@ -2068,6 +2068,42 @@ abstract class AppLocalizations {
   /// **'The live view is open full screen.'**
   String get liveShownFullScreen;
 
+  /// No description provided for @liveStillWatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Still watching?'**
+  String get liveStillWatching;
+
+  /// No description provided for @liveStillWatchingHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The computer sleeps when nobody\'s watching, to save power.'**
+  String get liveStillWatchingHelp;
+
+  /// No description provided for @liveKeepWatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep watching'**
+  String get liveKeepWatching;
+
+  /// No description provided for @livePausedToSavePower.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused to save power'**
+  String get livePausedToSavePower;
+
+  /// No description provided for @livePausedToSavePowerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody was watching, so the computer can rest. Resume wakes it again.'**
+  String get livePausedToSavePowerHelp;
+
+  /// No description provided for @liveResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get liveResume;
+
   /// No description provided for @paused.
   ///
   /// In en, this message translates to:
@@ -2763,6 +2799,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add COMPOSIO_API_KEY to this server to use Casama\'s account.'**
   String get connectionsNoComposioKey;
+
+  /// No description provided for @connectionsGoogleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google apps'**
+  String get connectionsGoogleTitle;
+
+  /// No description provided for @connectionsGoogleComposio.
+  ///
+  /// In en, this message translates to:
+  /// **'Through Composio'**
+  String get connectionsGoogleComposio;
+
+  /// No description provided for @connectionsGoogleComposioHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Gmail, Calendar, Drive and the rest work right away. Google\'s own servers need Developer Preview enrollment.'**
+  String get connectionsGoogleComposioHelp;
+
+  /// No description provided for @connectionsGoogleDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Google\'s own servers'**
+  String get connectionsGoogleDirect;
+
+  /// No description provided for @connectionsGoogleDirectHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses this server\'s Google client. Only works once your Google Cloud project is enrolled in Google Workspace Developer Preview.'**
+  String get connectionsGoogleDirectHelp;
 
   /// No description provided for @notInstanceOwner.
   ///

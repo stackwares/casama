@@ -121,6 +121,10 @@ abstract class LiveConnection {
   void setClipboard(String text);
   /// Round trip over the data channel in ms (null if no answer).
   Future<double?> ping();
+
+  /// Tells the server a person is watching, which keeps the computer awake (D-195). The server
+  /// keeps it to itself; the computer never sees it.
+  void presence();
   Future<void> close();
 }
 
@@ -283,6 +287,8 @@ class _WebRtcConnection implements LiveConnection {
 
   @override
   void setClipboard(String text) => _sendJson('clipboard/set', {'text': text});
+  @override
+  void presence() => _sendJson('presence');
   @override
   void releaseControl() {
     _sendJson('control/release');

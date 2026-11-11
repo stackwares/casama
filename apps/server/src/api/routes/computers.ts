@@ -9,6 +9,7 @@ import { desc, eq, sql } from "drizzle-orm";
 import { WebSocket, WebSocketServer } from "ws";
 import { enforceLimit } from "../../billing/limits.ts";
 import { ApiError } from "../errors.ts";
+import { isPresence, throttledTouch } from "../keep-awake.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
 
@@ -375,7 +376,10 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
   });
 }
 
-/** WebSocket terminal: client <-> API <-> supervisor <-> computerd. Keeps the computer awake while open. */
+/**
+ * WebSocket terminal: client <-> API <-> supervisor <-> computerd. Keystrokes and the app's
+ * presence beat keep the computer awake (D-195); an open terminal nobody uses does not.
+ */
 export function attachTerminal(server: Server, deps: AppDeps) {
   const wss = new WebSocketServer({ noServer: true });
   server.on("upgrade", async (req: IncomingMessage, socket: Duplex, head: Buffer) => {
@@ -405,8 +409,11 @@ export function attachTerminal(server: Server, deps: AppDeps) {
       wss.handleUpgrade(req, socket, head, (client) => {
         const upstream = new WebSocket(target.url, { headers: target.headers });
         const pending: Array<{ data: unknown; binary: boolean }> = [];
-        const keepAlive = setInterval(() => void svc.touch(id).catch(() => {}), 60_000);
+        const touch = throttledTouch(() => svc.touch(id));
         client.on("message", (data, binary) => {
+          // Text frames are JSON control messages (resize) or the presence beat, which stays here.
+          if (!binary && isPresence(data)) return touch();
+          if (binary || !isResize(data)) touch();
           if (upstream.readyState === WebSocket.OPEN) upstream.send(data as Buffer, { binary });
           else pending.push({ data, binary });
         });
@@ -419,7 +426,6 @@ export function attachTerminal(server: Server, deps: AppDeps) {
             client.readyState === WebSocket.OPEN && client.send(data as Buffer, { binary }),
         );
         const close = () => {
-          clearInterval(keepAlive);
           client.close();
           upstream.close();
         };
@@ -432,6 +438,15 @@ export function attachTerminal(server: Server, deps: AppDeps) {
       reject("503 Service Unavailable");
     }
   });
+}
+
+/** computerd's terminal resize message, `{"type":"resize",...}`: not a person typing. */
+function isResize(data: unknown) {
+  try {
+    return (JSON.parse(String(data)) as { type?: unknown }).type === "resize";
+  } catch {
+    return false;
+  }
 }
 
 export type { ComputerRow };

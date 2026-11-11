@@ -13,6 +13,7 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
 import { WebSocket, WebSocketServer } from "ws";
 import { ApiError } from "../errors.ts";
+import { isPresence, throttledTouch } from "../keep-awake.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
 
@@ -330,9 +331,10 @@ export function attachStream(server: Server, deps: AppDeps) {
         const pending: Array<{ data: unknown; binary: boolean }> = [];
         let isHost = false;
         const holdsLease = async () => (await activeLease(db, id))?.holder_id === claims.sub;
-        // Keep the computer awake, and drop control when the lease ends.
+        // Only a person keeps the computer awake (D-195): their input or the app's presence beat.
+        const touch = throttledTouch(() => svc.touch(id));
+        // Drop control when the lease ends.
         const tick = setInterval(async () => {
-          void svc.touch(id).catch(() => {});
           if (isHost && !(await holdsLease().catch(() => false))) {
             isHost = false;
             if (upstream.readyState === WebSocket.OPEN)
@@ -345,6 +347,8 @@ export function attachStream(server: Server, deps: AppDeps) {
         };
         client.on("message", async (data, binary) => {
           if (binary) return; // input travels on the WebRTC data channel, never here
+          // Presence: the person is watching. It stays here; Neko doesn't know it.
+          if (isPresence(data)) return touch();
           let event = "";
           try {
             event = (JSON.parse(String(data)) as { event?: string }).event ?? "";
@@ -359,6 +363,8 @@ export function attachStream(server: Server, deps: AppDeps) {
               isHost = true;
             }
             if (event === "control/release") isHost = false;
+            // Control messages (taking control, clipboard, keyboard layout, screen size) are input.
+            touch();
           }
           forward(data, false);
         });

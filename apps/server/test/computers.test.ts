@@ -3,9 +3,11 @@ import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
 import { dockerAvailable, type SandboxStack, startSandboxStack } from "@casama/sandbox/testing";
 import { serve } from "@hono/node-server";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { WebSocket } from "ws";
+import { TOUCH_THROTTLE_MS } from "../src/api/keep-awake.ts";
 import { attachTerminal } from "../src/api/routes/computers.ts";
+import { fakeComputer, proxyServer, settle } from "./fake-upstream.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 const enabled = (await dockerAvailable()) && process.env.SKIP_DOCKER_TESTS !== "1";
@@ -297,5 +299,58 @@ describe.skipIf(!enabled)("computers (Phase 2 gate)", () => {
         })
       ).status,
     ).toBe(404);
+  });
+});
+
+/** Activity-based keep-awake (D-195): an open terminal alone no longer keeps the computer awake. */
+describe("terminal keep-awake", () => {
+  const CID = "11111111-2222-4333-8444-666666666666";
+
+  it("touches on keystrokes or presence, throttled; resize and an idle terminal don't; presence isn't forwarded", async () => {
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    const fake = await fakeComputer();
+    const tx = {
+      execute: async () => [],
+      select: () => ({ from: () => ({ where: async () => [{ id: CID }] }) }),
+    };
+    const db = { transaction: async (fn: (t: typeof tx) => unknown) => fn(tx) };
+    const proxy = await proxyServer((s) =>
+      attachTerminal(s, {
+        computers: fake.computers,
+        db,
+        verifyToken: async () => ({ sub: "user-1" }),
+      } as never),
+    );
+    try {
+      const ws = await proxy.connect(`/v1/computers/${CID}/terminal?access_token=t`);
+      ws.send(JSON.stringify({ type: "resize", cols: 100, rows: 30 }));
+      await settle();
+      vi.advanceTimersByTime(180_000);
+      await settle();
+      expect(fake.touch).not.toHaveBeenCalled();
+
+      ws.send(Buffer.from("ls\n"), { binary: true });
+      await settle();
+      expect(fake.touch).toHaveBeenCalledTimes(1);
+      ws.send(Buffer.from("pwd\n"), { binary: true });
+      ws.send(JSON.stringify({ event: "presence" }));
+      await settle();
+      expect(fake.touch).toHaveBeenCalledTimes(1);
+      vi.setSystemTime(Date.now() + TOUCH_THROTTLE_MS);
+      ws.send(JSON.stringify({ event: "presence" }));
+      await settle();
+      expect(fake.touch).toHaveBeenCalledTimes(2);
+
+      expect(fake.received.map((r) => r.data)).toEqual([
+        JSON.stringify({ type: "resize", cols: 100, rows: 30 }),
+        "ls\n",
+        "pwd\n",
+      ]);
+      ws.close();
+    } finally {
+      vi.useRealTimers();
+      proxy.close();
+      fake.close();
+    }
   });
 });

@@ -4,8 +4,10 @@ import { fileURLToPath } from "node:url";
 import { dockerAvailable, type SandboxStack, startSandboxStack } from "@casama/sandbox/testing";
 import { connectLive, type LiveClient } from "@casama/sandbox/testing-stream";
 import { serve } from "@hono/node-server";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { attachStream } from "../src/api/routes/live.ts";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { TOUCH_THROTTLE_MS } from "../src/api/keep-awake.ts";
+import { attachStream, signStreamToken } from "../src/api/routes/live.ts";
+import { fakeComputer, proxyServer, settle } from "./fake-upstream.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 const enabled = (await dockerAvailable()) && process.env.SKIP_DOCKER_TESTS !== "1";
@@ -259,4 +261,59 @@ describe.skipIf(!enabled)("live computer (Phase 5 gate)", () => {
     expect(file.status).toBe(200);
     expect((await file.text()).trim()).toBe("Hello from Casama");
   }, 180_000);
+});
+
+/** Activity-based keep-awake (D-195): an open stream alone no longer keeps the computer awake. */
+describe("live view keep-awake", () => {
+  const CID = "11111111-2222-4333-8444-555555555555";
+  const SECRET = "stream-secret";
+
+  it("touches only on presence or control input, throttled, and never forwards presence", async () => {
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    const fake = await fakeComputer();
+    const proxy = await proxyServer((s) =>
+      attachStream(s, {
+        live: { tokenSecret: SECRET },
+        computers: fake.computers,
+        db: {},
+      } as never),
+    );
+    try {
+      const token = signStreamToken(SECRET, {
+        sub: "user-1",
+        cid: CID,
+        mode: "control",
+        exp: Date.now() + 3_600_000,
+      });
+      const ws = await proxy.connect(`/v1/computers/${CID}/stream?token=${token}`);
+      ws.send(JSON.stringify({ event: "signal/request", payload: {} }));
+      await settle();
+      // Open for two minutes with only signaling: no touch (it used to touch every 5 s).
+      vi.advanceTimersByTime(120_000);
+      await settle();
+      expect(fake.touch).not.toHaveBeenCalled();
+
+      ws.send(JSON.stringify({ event: "presence" }));
+      await settle();
+      expect(fake.touch).toHaveBeenCalledTimes(1);
+      // Throttled: more presence and input within 30 s doesn't touch again.
+      ws.send(JSON.stringify({ event: "presence" }));
+      ws.send(JSON.stringify({ event: "clipboard/set", payload: { text: "hi" } }));
+      await settle();
+      expect(fake.touch).toHaveBeenCalledTimes(1);
+      vi.setSystemTime(Date.now() + TOUCH_THROTTLE_MS);
+      ws.send(JSON.stringify({ event: "clipboard/set", payload: { text: "again" } }));
+      await settle();
+      expect(fake.touch).toHaveBeenCalledTimes(2);
+      expect(fake.touch).toHaveBeenCalledWith(CID);
+
+      const events = fake.received.map((r) => JSON.parse(r.data).event);
+      expect(events).toEqual(["signal/request", "clipboard/set", "clipboard/set"]);
+      ws.close();
+    } finally {
+      vi.useRealTimers();
+      proxy.close();
+      fake.close();
+    }
+  });
 });
