@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -162,6 +163,19 @@ class _SharingScreenState extends ConsumerState<SharingScreen> {
                         }),
                       ),
                   ]),
+                ],
+                // Someone who isn't in the workspace yet: invite them first (D-167).
+                if (canAdmin && (ref.watch(currentOrgProvider)?.role ?? OrgRole.member) != OrgRole.member) ...[
+                  const SizedBox(height: AppSpace.xs),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton.icon(
+                      key: const Key('sharingInvite'),
+                      icon: const Icon(LucideIcons.userPlus, size: 18),
+                      label: Text(l10n.inviteSomeoneNew),
+                      onPressed: () => context.push('/settings/people'),
+                    ),
+                  ),
                 ],
                 if (canAdmin) ...[
                   const SizedBox(height: AppSpace.lg),

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Typefaces (D-087). These four ship with the app, with every weight, and work offline. Any other
-/// Google Font downloads the first time it's picked and is cached after that.
-const bundledFonts = {'Google Sans', 'Noto Serif', 'Fraunces', 'Figtree'};
+/// Typefaces (D-087, D-163). These ship with the app, with the weights the theme uses, and work
+/// offline. Any other Google Font downloads the first time it's picked and is cached after that.
+const bundledFonts = {'Libre Baskerville', 'Lato', 'Google Sans', 'Noto Serif', 'Fraunces', 'Figtree'};
 
-const defaultBodyFont = 'Google Sans';
-const defaultHeadingFont = 'Noto Serif';
+const defaultBodyFont = 'Lato';
+const defaultHeadingFont = 'Libre Baskerville';
 
 /// A short list for interface and body text; the picker can also search every Google Font.
 const curatedBodyFonts = [
+  'Lato',
   'Google Sans',
   'Figtree',
   'Inter',
@@ -32,12 +33,12 @@ const curatedBodyFonts = [
   'Noto Sans',
   'Source Sans 3',
   'Open Sans',
-  'Lato',
   'Roboto',
 ];
 
 /// Headline faces: serifs and characterful display sans.
 const curatedHeadingFonts = [
+  'Libre Baskerville',
   'Noto Serif',
   'Fraunces',
   'Playfair Display',
@@ -50,7 +51,6 @@ const curatedHeadingFonts = [
   'Merriweather',
   'EB Garamond',
   'Crimson Pro',
-  'Libre Baskerville',
   'Bricolage Grotesque',
   'Space Grotesk',
   'Fredoka',

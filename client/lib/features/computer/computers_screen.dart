@@ -268,6 +268,7 @@ class _NewComputerSheetState extends ConsumerState<NewComputerSheet> {
       onSubmit: _botId == null || _name.text.trim().isEmpty ? null : _create,
       children: [
         DropdownButtonFormField<String>(
+          isExpanded: true,
           key: const Key('computerBot'),
           initialValue: _botId,
           decoration: InputDecoration(labelText: l10n.forBot, prefixIcon: const Icon(LucideIcons.bot, size: 20)),

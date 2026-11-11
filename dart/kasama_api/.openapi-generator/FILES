@@ -155,8 +155,10 @@ lib/src/model/create_connect_key_request.dart
 lib/src/model/create_conversation_request.dart
 lib/src/model/create_credential_request.dart
 lib/src/model/create_integration_request.dart
+lib/src/model/create_invite_code_request.dart
 lib/src/model/create_invite_link_request.dart
 lib/src/model/create_invite_request.dart
+lib/src/model/create_invites_request.dart
 lib/src/model/create_knowledge_source_request.dart
 lib/src/model/create_knowledge_source_request_documents_inner.dart
 lib/src/model/create_knowledge_source_request_files_inner.dart
@@ -181,6 +183,7 @@ lib/src/model/credential_status.dart
 lib/src/model/credential_test_result.dart
 lib/src/model/credit_entry.dart
 lib/src/model/credit_pack.dart
+lib/src/model/decide_join_request.dart
 lib/src/model/delete_account_request.dart
 lib/src/model/delete_integration200_response.dart
 lib/src/model/delete_result.dart
@@ -247,7 +250,17 @@ lib/src/model/integration_tools_inner.dart
 lib/src/model/invite.dart
 lib/src/model/invite_link.dart
 lib/src/model/invite_link_list.dart
+lib/src/model/invite_list.dart
+lib/src/model/invite_preview.dart
+lib/src/model/invite_preview_workspace.dart
 lib/src/model/invite_role.dart
+lib/src/model/join_domains.dart
+lib/src/model/join_request.dart
+lib/src/model/join_request_body.dart
+lib/src/model/join_request_list.dart
+lib/src/model/join_result.dart
+lib/src/model/joinable_workspace.dart
+lib/src/model/joinable_workspace_list.dart
 lib/src/model/knowledge_source.dart
 lib/src/model/knowledge_source_list.dart
 lib/src/model/lease.dart
@@ -314,6 +327,8 @@ lib/src/model/password_manager_vault_list.dart
 lib/src/model/payment_request.dart
 lib/src/model/payment_request_list.dart
 lib/src/model/payment_settings.dart
+lib/src/model/pending_invite.dart
+lib/src/model/pending_invite_list.dart
 lib/src/model/phone_call.dart
 lib/src/model/phone_call_list.dart
 lib/src/model/plan.dart
@@ -406,6 +421,7 @@ lib/src/model/set_bot_access_request_entries_inner.dart
 lib/src/model/set_device_grant_request.dart
 lib/src/model/set_encryption_request.dart
 lib/src/model/set_git_sync_request.dart
+lib/src/model/set_join_domain_request.dart
 lib/src/model/set_local_mcp_servers_request.dart
 lib/src/model/set_memory_backend_request.dart
 lib/src/model/set_org_limits_request.dart
@@ -479,6 +495,7 @@ lib/src/model/ui_shown_event_payload.dart
 lib/src/model/update_channel_request.dart
 lib/src/model/update_computer_request.dart
 lib/src/model/update_credential_request.dart
+lib/src/model/update_default_invite_request.dart
 lib/src/model/update_integration_request.dart
 lib/src/model/update_local_device_request.dart
 lib/src/model/update_memory_request.dart
@@ -510,6 +527,7 @@ lib/src/model/voice_tool_request.dart
 lib/src/model/voice_tool_result.dart
 lib/src/model/voice_transcript_request.dart
 lib/src/model/voice_transcript_request_turns_inner.dart
+lib/src/model/voice_transcript_request_usage.dart
 lib/src/model/wallpaper_download_request.dart
 lib/src/model/wallpaper_photo.dart
 lib/src/model/wallpaper_photo_list.dart

@@ -55,7 +55,7 @@ class PageColumn extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: maxWidth);
-        return ListView(padding: EdgeInsets.fromLTRB(side, top, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom), children: children);
+        return ListView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: EdgeInsets.fromLTRB(side, top, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom), children: children);
       },
     );
   }
@@ -76,6 +76,7 @@ class PageListView extends StatelessWidget {
         final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: maxWidth);
         final offset = header == null ? 0 : 1;
         return ListView.separated(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom),
           itemCount: itemCount + offset,
           separatorBuilder: (_, i) => SizedBox(height: header != null && i == 0 ? AppSpace.md : AppSpace.xs),

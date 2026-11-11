@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:kasama_api/src/model/voice_transcript_request_turns_inner.dart';
+import 'package:kasama_api/src/model/voice_transcript_request_usage.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -26,6 +27,10 @@ class VoiceTranscriptRequest {
     required  this.turns,
 
     required  this.seconds,
+
+     this.provider,
+
+     this.usage,
   });
 
   @JsonKey(
@@ -66,19 +71,48 @@ class VoiceTranscriptRequest {
 
 
 
+      /// Which live-call provider the call used, for the usage estimate
+  @JsonKey(
+    
+    name: r'provider',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final VoiceTranscriptRequestProviderEnum? provider;
+
+
+
+  @JsonKey(
+    
+    name: r'usage',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final VoiceTranscriptRequestUsage? usage;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is VoiceTranscriptRequest &&
       other.conversationId == conversationId &&
       other.turns == turns &&
-      other.seconds == seconds;
+      other.seconds == seconds &&
+      other.provider == provider &&
+      other.usage == usage;
 
     @override
     int get hashCode =>
         conversationId.hashCode +
         turns.hashCode +
-        seconds.hashCode;
+        seconds.hashCode +
+        provider.hashCode +
+        usage.hashCode;
 
   factory VoiceTranscriptRequest.fromJson(Map<String, dynamic> json) => _$VoiceTranscriptRequestFromJson(json);
 
@@ -90,4 +124,22 @@ class VoiceTranscriptRequest {
   }
 
 }
+
+/// Which live-call provider the call used, for the usage estimate
+enum VoiceTranscriptRequestProviderEnum {
+    /// Which live-call provider the call used, for the usage estimate
+@JsonValue(r'gemini')
+gemini(r'gemini'),
+    /// Which live-call provider the call used, for the usage estimate
+@JsonValue(r'openai')
+openai(r'openai');
+
+const VoiceTranscriptRequestProviderEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
 

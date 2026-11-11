@@ -25,6 +25,12 @@ abstract class _$CreatedInviteLinkCWProxy {
 
   CreatedInviteLink createdAt(DateTime createdAt);
 
+  CreatedInviteLink kind(CreatedInviteLinkKindEnum? kind);
+
+  CreatedInviteLink requiresApproval(bool? requiresApproval);
+
+  CreatedInviteLink isDefault(bool? isDefault);
+
   CreatedInviteLink token(String token);
 
   CreatedInviteLink url(String url);
@@ -47,6 +53,9 @@ abstract class _$CreatedInviteLinkCWProxy {
     int uses,
     DateTime? revokedAt,
     DateTime createdAt,
+    CreatedInviteLinkKindEnum? kind,
+    bool? requiresApproval,
+    bool? isDefault,
     String token,
     String url,
   });
@@ -89,6 +98,16 @@ class _$CreatedInviteLinkCWProxyImpl implements _$CreatedInviteLinkCWProxy {
   CreatedInviteLink createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   @override
+  CreatedInviteLink kind(CreatedInviteLinkKindEnum? kind) => call(kind: kind);
+
+  @override
+  CreatedInviteLink requiresApproval(bool? requiresApproval) =>
+      call(requiresApproval: requiresApproval);
+
+  @override
+  CreatedInviteLink isDefault(bool? isDefault) => call(isDefault: isDefault);
+
+  @override
   CreatedInviteLink token(String token) => call(token: token);
 
   @override
@@ -113,6 +132,9 @@ class _$CreatedInviteLinkCWProxyImpl implements _$CreatedInviteLinkCWProxy {
     Object? uses = const $CopyWithPlaceholder(),
     Object? revokedAt = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
+    Object? kind = const $CopyWithPlaceholder(),
+    Object? requiresApproval = const $CopyWithPlaceholder(),
+    Object? isDefault = const $CopyWithPlaceholder(),
     Object? token = const $CopyWithPlaceholder(),
     Object? url = const $CopyWithPlaceholder(),
   }) {
@@ -153,6 +175,18 @@ class _$CreatedInviteLinkCWProxyImpl implements _$CreatedInviteLinkCWProxy {
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
+      kind: kind == const $CopyWithPlaceholder()
+          ? _value.kind
+          // ignore: cast_nullable_to_non_nullable
+          : kind as CreatedInviteLinkKindEnum?,
+      requiresApproval: requiresApproval == const $CopyWithPlaceholder()
+          ? _value.requiresApproval
+          // ignore: cast_nullable_to_non_nullable
+          : requiresApproval as bool?,
+      isDefault: isDefault == const $CopyWithPlaceholder()
+          ? _value.isDefault
+          // ignore: cast_nullable_to_non_nullable
+          : isDefault as bool?,
       token: token == const $CopyWithPlaceholder() || token == null
           ? _value.token
           // ignore: cast_nullable_to_non_nullable
@@ -220,6 +254,15 @@ CreatedInviteLink _$CreatedInviteLinkFromJson(Map<String, dynamic> json) =>
             'created_at',
             (v) => DateTime.parse(v as String),
           ),
+          kind: $checkedConvert(
+            'kind',
+            (v) => $enumDecodeNullable(_$CreatedInviteLinkKindEnumEnumMap, v),
+          ),
+          requiresApproval: $checkedConvert(
+            'requires_approval',
+            (v) => v as bool?,
+          ),
+          isDefault: $checkedConvert('is_default', (v) => v as bool?),
           token: $checkedConvert('token', (v) => v as String),
           url: $checkedConvert('url', (v) => v as String),
         );
@@ -232,6 +275,8 @@ CreatedInviteLink _$CreatedInviteLinkFromJson(Map<String, dynamic> json) =>
         'maxUses': 'max_uses',
         'revokedAt': 'revoked_at',
         'createdAt': 'created_at',
+        'requiresApproval': 'requires_approval',
+        'isDefault': 'is_default',
       },
     );
 
@@ -246,6 +291,9 @@ Map<String, dynamic> _$CreatedInviteLinkToJson(CreatedInviteLink instance) =>
       'uses': instance.uses,
       'revoked_at': instance.revokedAt?.toIso8601String(),
       'created_at': instance.createdAt.toIso8601String(),
+      'kind': ?_$CreatedInviteLinkKindEnumEnumMap[instance.kind],
+      'requires_approval': ?instance.requiresApproval,
+      'is_default': ?instance.isDefault,
       'token': instance.token,
       'url': instance.url,
     };
@@ -253,4 +301,9 @@ Map<String, dynamic> _$CreatedInviteLinkToJson(CreatedInviteLink instance) =>
 const _$CreatedInviteLinkRoleEnumEnumMap = {
   CreatedInviteLinkRoleEnum.admin: 'admin',
   CreatedInviteLinkRoleEnum.member: 'member',
+};
+
+const _$CreatedInviteLinkKindEnumEnumMap = {
+  CreatedInviteLinkKindEnum.link: 'link',
+  CreatedInviteLinkKindEnum.code: 'code',
 };

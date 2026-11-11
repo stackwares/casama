@@ -20,13 +20,24 @@ export const VoiceSessionRequest = z
 
 export const VoiceSession = z
   .object({
-    provider: z.literal("openai"),
+    provider: z.enum(["gemini", "openai"]).openapi({
+      description:
+        "gemini: Gemini Live over a WebSocket; openai: OpenAI Realtime over WebRTC. Gemini is used when the workspace has a Google AI key",
+    }),
     model: z.string(),
-    client_secret: z.string().openapi({ description: "Ephemeral key, valid for about 10 minutes" }),
+    client_secret: z.string().openapi({
+      description:
+        "Short-lived credential: Gemini's single-use token (the access_token query parameter) or OpenAI's ephemeral key",
+    }),
     expires_at: ts,
-    connect_url: z
-      .string()
-      .openapi({ description: "POST the WebRTC offer SDP here with the ephemeral key" }),
+    connect_url: z.string().openapi({
+      description:
+        "gemini: open a WebSocket here with ?access_token=<client_secret>; openai: POST the WebRTC offer SDP here with the ephemeral key",
+    }),
+    setup: z.record(z.string(), z.unknown()).nullable().openapi({
+      description:
+        "gemini: send {setup: <this>} as the first message (add sessionResumption to reconnect); null for openai",
+    }),
     conversation_id: Uuid,
     tools: z.number().int(),
     /** The bot opens the conversation (an answered phone call). */
@@ -79,5 +90,21 @@ export const VoiceTranscriptRequest = z
       .int()
       .min(0)
       .max(24 * 3600),
+    provider: z
+      .enum(["gemini", "openai"])
+      .optional()
+      .openapi({ description: "Which live-call provider the call used, for the usage estimate" }),
+    usage: z
+      .object({
+        input_audio_tokens: z.number().int().min(0),
+        input_text_tokens: z.number().int().min(0),
+        output_audio_tokens: z.number().int().min(0),
+        output_text_tokens: z.number().int().min(0),
+      })
+      .optional()
+      .openapi({
+        description:
+          "Gemini Live: the call's token counts from usageMetadata, so usage records the real cost instead of a per-minute estimate",
+      }),
   })
   .openapi("VoiceTranscriptRequest");

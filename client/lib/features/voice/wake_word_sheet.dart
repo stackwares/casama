@@ -69,6 +69,7 @@ class _WakeWordSheetState extends ConsumerState<WakeWordSheet> {
           decoration: InputDecoration(labelText: l10n.wakeWordPhrase, helperText: l10n.wakeWordPhraseHelp),
         ),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           key: const Key('wakeBot'),
           initialValue: _bot,
           decoration: InputDecoration(labelText: l10n.wakeWordBot),

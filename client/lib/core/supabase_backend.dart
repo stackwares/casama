@@ -8,8 +8,10 @@ import 'dart:async';
 import 'package:kasama_sdk/kasama_sdk.dart' hide AuthException;
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'apple_sign_in.dart';
 import 'backend.dart';
 import 'chatgpt_connect.dart';
 
@@ -98,7 +100,52 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> signInWithProvider(String provider) async {
+    // iOS and macOS use Apple's system sheet. If that sheet isn't available (an unsigned local Mac
+    // build has no Sign in with Apple entitlement), the browser flow still works.
+    if (provider == 'apple' && nativeAppleSignIn && await _signInWithAppleNative()) return;
     await supabase.auth.signInWithOAuth(provider == 'apple' ? sb.OAuthProvider.apple : sb.OAuthProvider.google, redirectTo: _authRedirect);
+  }
+
+  /// True when the system sheet finished (signed in, or the person cancelled). False when the
+  /// sheet never opened, so the caller opens the browser instead.
+  Future<bool> _signInWithAppleNative() async {
+    if (!await SignInWithApple.isAvailable()) return false;
+    final rawNonce = supabase.auth.generateRawNonce();
+    final AuthorizationCredentialAppleID credential;
+    try {
+      credential = await SignInWithApple.getAppleIDCredential(
+        scopes: const [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
+        nonce: appleNonceHash(rawNonce),
+      );
+    } on SignInWithAppleAuthorizationException catch (error) {
+      if (error.code == AuthorizationErrorCode.canceled) return true;
+      if (appleSheetUnavailable(error)) return false;
+      rethrow;
+    } on SignInWithAppleNotSupportedException {
+      return false;
+    }
+    final idToken = credential.identityToken;
+    if (idToken == null) throw const sb.AuthException('Apple did not return a sign-in token. Try again.');
+    await supabase.auth.signInWithIdToken(provider: sb.OAuthProvider.apple, idToken: idToken, nonce: rawNonce);
+    await _saveAppleName(credential.givenName, credential.familyName);
+    return true;
+  }
+
+  /// Apple sends the name once, on the first authorization, and not inside the token. Saving it
+  /// must not turn a finished sign-in into an error; the profile copies it from this metadata.
+  Future<void> _saveAppleName(String? given, String? family) async {
+    final name = appleFullName(given, family);
+    if (name == null) return;
+    try {
+      await supabase.auth.updateUser(sb.UserAttributes(data: {
+        'full_name': name,
+        'display_name': name,
+        if (given != null && given.trim().isNotEmpty) 'given_name': given.trim(),
+        if (family != null && family.trim().isNotEmpty) 'family_name': family.trim(),
+      }));
+    } catch (_) {
+      // Already signed in. If this write fails, the profile keeps the email prefix.
+    }
   }
 
   @override
@@ -139,6 +186,50 @@ class SupabaseBackend implements Backend {
     id: orgId,
     createInviteRequest: CreateInviteRequest(email: email, role: admin ? InviteRole.admin : InviteRole.member),
   )).data!;
+
+  // --- joining (D-165) ------------------------------------------------------
+
+  @override
+  Future<CreatedInviteLink> defaultInvite(String orgId) async => (await api.workspaces.getDefaultInvite(id: orgId)).data!;
+  @override
+  Future<CreatedInviteLink> updateDefaultInvite(String orgId, {bool? requiresApproval, bool reset = false}) async => (await api.workspaces.updateDefaultInvite(
+    id: orgId,
+    updateDefaultInviteRequest: UpdateDefaultInviteRequest(requiresApproval: requiresApproval, reset: reset ? true : null),
+  )).data!;
+  @override
+  Future<CreatedInviteLink> createInviteCode(String orgId, {String role = 'member'}) async => (await api.workspaces.createInviteCode(
+    id: orgId,
+    createInviteCodeRequest: CreateInviteCodeRequest(role: CreateInviteCodeRequestRoleEnum.values.firstWhere((r) => r.value == role)),
+  )).data!;
+  @override
+  Future<InvitePreview> previewInvite(String invite) async => (await api.workspaces.previewInvite(invite: invite)).data!;
+  @override
+  Future<JoinResult> joinWithInvite(String invite) async => (await api.workspaces.joinWithInvite(joinRequestBody: JoinRequestBody(invite: invite))).data!;
+  @override
+  Future<List<JoinRequest>> joinRequests(String orgId) async => (await api.workspaces.listJoinRequests(id: orgId)).data!.items;
+  @override
+  Future<JoinRequest> decideJoinRequest(String orgId, String requestId, bool approve) async =>
+      (await api.workspaces.decideJoinRequest(id: orgId, requestId: requestId, decideJoinRequest: DecideJoinRequest(approve: approve))).data!;
+  @override
+  Future<List<PendingInvite>> pendingInvites(String orgId) async => (await api.workspaces.listInvites(id: orgId)).data!.items;
+  @override
+  Future<List<Invite>> inviteMany(String orgId, List<String> emails, {bool admin = false}) async => (await api.workspaces.createInvites(
+    id: orgId,
+    createInvitesRequest: CreateInvitesRequest(emails: emails, role: admin ? CreateInvitesRequestRoleEnum.admin : CreateInvitesRequestRoleEnum.member),
+  )).data!.items;
+  @override
+  Future<Invite> resendInvite(String orgId, String inviteId) async => (await api.workspaces.resendInvite(id: orgId, inviteId: inviteId)).data!;
+  @override
+  Future<void> revokeInvite(String orgId, String inviteId) async => api.workspaces.revokeInvite(id: orgId, inviteId: inviteId);
+  @override
+  Future<JoinDomains> joinDomains(String orgId) async => (await api.workspaces.getJoinDomains(id: orgId)).data!;
+  @override
+  Future<JoinDomains> setJoinDomain(String orgId, bool enabled, {String? domain}) async =>
+      (await api.workspaces.setJoinDomain(id: orgId, setJoinDomainRequest: SetJoinDomainRequest(enabled: enabled, domain: domain))).data!;
+  @override
+  Future<List<JoinableWorkspace>> joinableWorkspaces() async => (await api.workspaces.listJoinableWorkspaces()).data!.items;
+  @override
+  Future<OrganizationWithRole> joinByDomain(String orgId) async => (await api.workspaces.joinByDomain(id: orgId)).data!;
 
   // --- keys -----------------------------------------------------------------
 
@@ -1661,17 +1752,34 @@ class SupabaseBackend implements Backend {
   )).data!;
 
   @override
-  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds) async => api.voice.saveVoiceTranscript(
+  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds, {String? provider, Map<String, int>? usage}) async => api.voice.saveVoiceTranscript(
     voiceTranscriptRequest: VoiceTranscriptRequest(
       conversationId: conversationId,
       seconds: seconds,
+      provider: VoiceTranscriptRequestProviderEnum.values.where((p) => p.value == provider).firstOrNull,
+      usage: usage == null
+          ? null
+          : VoiceTranscriptRequestUsage(
+              inputAudioTokens: usage['input_audio_tokens'] ?? 0,
+              inputTextTokens: usage['input_text_tokens'] ?? 0,
+              outputAudioTokens: usage['output_audio_tokens'] ?? 0,
+              outputTextTokens: usage['output_text_tokens'] ?? 0,
+            ),
       turns: [for (final (role, text) in turns) VoiceTranscriptRequestTurnsInner(role: VoiceTranscriptRequestTurnsInnerRoleEnum.values.firstWhere((r) => r.value == role), text: text)],
     ),
   );
 
   @override
   Future<void> updateBotVoice(String botId, Map<String, Object?> voice) async {
-    await supabase.from('bots').update({'voice': voice}).eq('id', botId);
+    final merged = {...await loadBotVoice(botId), ...voice}..removeWhere((_, v) => v == null);
+    await supabase.from('bots').update({'voice': merged}).eq('id', botId);
+  }
+
+  @override
+  Future<Map<String, Object?>> loadBotVoice(String botId) async {
+    final row = await supabase.from('bots').select('voice').eq('id', botId).maybeSingle();
+    final v = row?['voice'];
+    return v is Map ? v.cast<String, Object?>() : <String, Object?>{};
   }
 
   // --- computer management and live view (Phase 5) -------------------------

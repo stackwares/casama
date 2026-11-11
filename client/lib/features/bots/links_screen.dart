@@ -219,6 +219,16 @@ class _LinkSheet extends ConsumerWidget {
             icon: const Icon(LucideIcons.unlink, size: 18),
             label: Text(l10n.linksRevoke),
             onPressed: () async {
+              final ok = await showConfirm(
+                context: context,
+                title: l10n.unlinkTitle(link.name),
+                message: l10n.unlinkBody,
+                confirmLabel: l10n.linksRevoke,
+                destructive: true,
+                icon: LucideIcons.unlink,
+                confirmKey: const Key('confirmUnlink'),
+              );
+              if (!ok || !context.mounted) return;
               await runGuarded(context, () => ref.read(backendProvider).revokeBotLink(link.id));
               ref.invalidate(botLinksProvider(botId));
               if (context.mounted) Navigator.pop(context);

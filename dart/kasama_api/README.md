@@ -324,13 +324,28 @@ Class | Method | HTTP request | Description
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**acceptInvite**](doc/WorkspacesApi.md#acceptinvite) | **POST** /v1/invites/{token}/accept | Join an organization with an invite token
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**acceptInviteLink**](doc/WorkspacesApi.md#acceptinvitelink) | **POST** /v1/invite-links/{token}/accept | Join a workspace with an invite link
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createInvite**](doc/WorkspacesApi.md#createinvite) | **POST** /v1/orgs/{id}/invites | Invite someone by email (owners and admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**createInviteCode**](doc/WorkspacesApi.md#createinvitecode) | **POST** /v1/orgs/{id}/invite-codes | A short invite code to read out or type, valid for 48 hours (admins)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createInviteLink**](doc/WorkspacesApi.md#createinvitelink) | **POST** /v1/orgs/{id}/invite-links | Create a shareable invite link (admins); the token is shown once
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**createInvites**](doc/WorkspacesApi.md#createinvites) | **POST** /v1/orgs/{id}/invites/batch | Invite several people by email at once (admins)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createOrg**](doc/WorkspacesApi.md#createorg) | **POST** /v1/orgs | Create an organization; the caller becomes its owner
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**decideJoinRequest**](doc/WorkspacesApi.md#decidejoinrequest) | **POST** /v1/orgs/{id}/join-requests/{request_id} | Approve or decline a request to join (admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**getDefaultInvite**](doc/WorkspacesApi.md#getdefaultinvite) | **GET** /v1/orgs/{id}/default-invite | The workspace&#39;s standing invite link (admins); made on first use
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**getJoinDomains**](doc/WorkspacesApi.md#getjoindomains) | **GET** /v1/orgs/{id}/join-domains | Email domains whose verified addresses can join without an invite (admins)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**getMe**](doc/WorkspacesApi.md#getme) | **GET** /v1/me | The signed-in user and their organizations
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**joinByDomain**](doc/WorkspacesApi.md#joinbydomain) | **POST** /v1/orgs/{id}/join | Join a workspace open to your verified email domain
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**joinWithInvite**](doc/WorkspacesApi.md#joinwithinvite) | **POST** /v1/join | Join with an invite link, code or email invite (or ask to join)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**listInviteLinks**](doc/WorkspacesApi.md#listinvitelinks) | **GET** /v1/orgs/{id}/invite-links | 
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**listInvites**](doc/WorkspacesApi.md#listinvites) | **GET** /v1/orgs/{id}/invites | Email invites not yet accepted (admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**listJoinRequests**](doc/WorkspacesApi.md#listjoinrequests) | **GET** /v1/orgs/{id}/join-requests | People waiting to join (admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**listJoinableWorkspaces**](doc/WorkspacesApi.md#listjoinableworkspaces) | **GET** /v1/me/joinable-workspaces | Workspaces open to the signed-in person&#39;s verified email domain
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**listMembers**](doc/WorkspacesApi.md#listmembers) | **GET** /v1/orgs/{id}/members | The people in a workspace
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**listOrgs**](doc/WorkspacesApi.md#listorgs) | **GET** /v1/orgs | 
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**previewInvite**](doc/WorkspacesApi.md#previewinvite) | **GET** /v1/join/preview | What an invite link, code or email invite opens, before joining (no sign-in needed)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**resendInvite**](doc/WorkspacesApi.md#resendinvite) | **POST** /v1/orgs/{id}/invites/{invite_id}/resend | Send an email invite again with a new link, valid 7 more days (admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**revokeInvite**](doc/WorkspacesApi.md#revokeinvite) | **DELETE** /v1/orgs/{id}/invites/{invite_id} | 
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**revokeInviteLink**](doc/WorkspacesApi.md#revokeinvitelink) | **DELETE** /v1/orgs/{id}/invite-links/{link_id} | 
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**setJoinDomain**](doc/WorkspacesApi.md#setjoindomain) | **PUT** /v1/orgs/{id}/join-domains | Let people with a verified address at your own email domain join (admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**updateDefaultInvite**](doc/WorkspacesApi.md#updatedefaultinvite) | **PATCH** /v1/orgs/{id}/default-invite | Make the standing link ask an admin first, or reset it (admins)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**updateOrg**](doc/WorkspacesApi.md#updateorg) | **PATCH** /v1/orgs/{id} | Rename a workspace or change its icon and color (admins)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**workspaceBadges**](doc/WorkspacesApi.md#workspacebadges) | **GET** /v1/me/badges | Pending approvals and unread notifications per workspace
 
@@ -438,8 +453,10 @@ Class | Method | HTTP request | Description
  - [CreateConversationRequest](doc/CreateConversationRequest.md)
  - [CreateCredentialRequest](doc/CreateCredentialRequest.md)
  - [CreateIntegrationRequest](doc/CreateIntegrationRequest.md)
+ - [CreateInviteCodeRequest](doc/CreateInviteCodeRequest.md)
  - [CreateInviteLinkRequest](doc/CreateInviteLinkRequest.md)
  - [CreateInviteRequest](doc/CreateInviteRequest.md)
+ - [CreateInvitesRequest](doc/CreateInvitesRequest.md)
  - [CreateKnowledgeSourceRequest](doc/CreateKnowledgeSourceRequest.md)
  - [CreateKnowledgeSourceRequestDocumentsInner](doc/CreateKnowledgeSourceRequestDocumentsInner.md)
  - [CreateKnowledgeSourceRequestFilesInner](doc/CreateKnowledgeSourceRequestFilesInner.md)
@@ -464,6 +481,7 @@ Class | Method | HTTP request | Description
  - [CredentialTestResult](doc/CredentialTestResult.md)
  - [CreditEntry](doc/CreditEntry.md)
  - [CreditPack](doc/CreditPack.md)
+ - [DecideJoinRequest](doc/DecideJoinRequest.md)
  - [DeleteAccountRequest](doc/DeleteAccountRequest.md)
  - [DeleteIntegration200Response](doc/DeleteIntegration200Response.md)
  - [DeleteResult](doc/DeleteResult.md)
@@ -530,7 +548,17 @@ Class | Method | HTTP request | Description
  - [Invite](doc/Invite.md)
  - [InviteLink](doc/InviteLink.md)
  - [InviteLinkList](doc/InviteLinkList.md)
+ - [InviteList](doc/InviteList.md)
+ - [InvitePreview](doc/InvitePreview.md)
+ - [InvitePreviewWorkspace](doc/InvitePreviewWorkspace.md)
  - [InviteRole](doc/InviteRole.md)
+ - [JoinDomains](doc/JoinDomains.md)
+ - [JoinRequest](doc/JoinRequest.md)
+ - [JoinRequestBody](doc/JoinRequestBody.md)
+ - [JoinRequestList](doc/JoinRequestList.md)
+ - [JoinResult](doc/JoinResult.md)
+ - [JoinableWorkspace](doc/JoinableWorkspace.md)
+ - [JoinableWorkspaceList](doc/JoinableWorkspaceList.md)
  - [KnowledgeSource](doc/KnowledgeSource.md)
  - [KnowledgeSourceList](doc/KnowledgeSourceList.md)
  - [Lease](doc/Lease.md)
@@ -597,6 +625,8 @@ Class | Method | HTTP request | Description
  - [PaymentRequest](doc/PaymentRequest.md)
  - [PaymentRequestList](doc/PaymentRequestList.md)
  - [PaymentSettings](doc/PaymentSettings.md)
+ - [PendingInvite](doc/PendingInvite.md)
+ - [PendingInviteList](doc/PendingInviteList.md)
  - [PhoneCall](doc/PhoneCall.md)
  - [PhoneCallList](doc/PhoneCallList.md)
  - [Plan](doc/Plan.md)
@@ -689,6 +719,7 @@ Class | Method | HTTP request | Description
  - [SetDeviceGrantRequest](doc/SetDeviceGrantRequest.md)
  - [SetEncryptionRequest](doc/SetEncryptionRequest.md)
  - [SetGitSyncRequest](doc/SetGitSyncRequest.md)
+ - [SetJoinDomainRequest](doc/SetJoinDomainRequest.md)
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
  - [SetMemoryBackendRequest](doc/SetMemoryBackendRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
@@ -762,6 +793,7 @@ Class | Method | HTTP request | Description
  - [UpdateChannelRequest](doc/UpdateChannelRequest.md)
  - [UpdateComputerRequest](doc/UpdateComputerRequest.md)
  - [UpdateCredentialRequest](doc/UpdateCredentialRequest.md)
+ - [UpdateDefaultInviteRequest](doc/UpdateDefaultInviteRequest.md)
  - [UpdateIntegrationRequest](doc/UpdateIntegrationRequest.md)
  - [UpdateLocalDeviceRequest](doc/UpdateLocalDeviceRequest.md)
  - [UpdateMemoryRequest](doc/UpdateMemoryRequest.md)
@@ -793,6 +825,7 @@ Class | Method | HTTP request | Description
  - [VoiceToolResult](doc/VoiceToolResult.md)
  - [VoiceTranscriptRequest](doc/VoiceTranscriptRequest.md)
  - [VoiceTranscriptRequestTurnsInner](doc/VoiceTranscriptRequestTurnsInner.md)
+ - [VoiceTranscriptRequestUsage](doc/VoiceTranscriptRequestUsage.md)
  - [WallpaperDownloadRequest](doc/WallpaperDownloadRequest.md)
  - [WallpaperPhoto](doc/WallpaperPhoto.md)
  - [WallpaperPhotoList](doc/WallpaperPhotoList.md)

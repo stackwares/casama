@@ -15,6 +15,7 @@ import 'package:kasama_app/features/auth/sign_in_screen.dart';
 import 'package:kasama_app/ui/mascot.dart';
 import 'package:kasama_app/features/chat/chat_controller.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
+import 'package:kasama_app/features/chat/chat_detail.dart';
 import 'package:kasama_app/features/chat/widgets/chat_widgets.dart' show ToolGroupCard;
 import 'package:kasama_app/features/timeline/timeline_screen.dart';
 import 'package:kasama_app/l10n/generated/app_localizations.dart';
@@ -44,7 +45,8 @@ void main() {
     expect(find.byKey(const Key('email')), findsNothing);
     await tester.tap(find.byKey(const Key('openSignIn')));
     await tester.pumpAndSettle();
-    // Google up front; email folded away until asked for.
+    // Apple and Google up front; email folded away until asked for.
+    expect(find.text('Continue with Apple'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
     expect(find.byKey(const Key('email')), findsNothing);
     expect(find.byKey(const Key('ssoSignIn')), findsNothing);
@@ -54,6 +56,8 @@ void main() {
   });
 
   testWidgets('email sign-in sends a magic link first, with a password one tap away', (tester) async {
+    // The code step is taller than the default test window.
+    await setSize(tester, const Size(500, 1100));
     final backend = FakeBackend()..signedIn = false;
     await tester.pumpWidget(harness(backend, const SignInScreen()));
     await tester.tap(find.byKey(const Key('openSignIn')));
@@ -164,7 +168,8 @@ void main() {
   testWidgets('chat streams text, folds tool steps into cards, and can stop a run', (tester) async {
     await setSize(tester, const Size(500, 900));
     final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    // The steps show when they're turned on (D-162); simple chats are in simple_chat_test.dart.
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId), overrides: [showBotStepsProvider.overrideWith(StepsShown.new)]));
     await tester.pumpAndSettle();
     expect(find.text('Say hello to Ada.'), findsOneWidget);
 
@@ -426,4 +431,10 @@ void main() {
 class _NoWelcome extends FakeBackend {
   @override
   Future<WelcomeChat> startWelcome({String? firstName}) => Completer<WelcomeChat>().future;
+}
+
+/// Chats showing the bot's steps (the detailed view, D-162).
+class StepsShown extends ShowBotSteps {
+  @override
+  bool build() => true;
 }

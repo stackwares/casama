@@ -130,6 +130,23 @@ Helm, a platform like Render, or a custom setup.
 | `SUPERVISOR_URL`            | (unset: no computers)         | The sandbox supervisor's address. Compose uses `http://kasama-supervisor:8788`.                               |
 | `SUPERVISOR_TOKEN`          | (unset)                       | Token for the supervisor.                                                                                      |
 
+## Invite links
+
+Invite links are `<PUBLIC_APP_URL>/join/<token>`. With the web app running, it shows the invite;
+without it, Caddy sends `/join/*` to a small page from the API with **Open in Kasama**. To have
+links open the installed apps directly, publish the app-link files:
+
+| Name                  | Default            | What it does                                                                                     |
+| --------------------- | ------------------ | ------------------------------------------------------------------------------------------------ |
+| `APPLE_APP_IDS`       | (empty: no file)   | iOS app ids (`TEAMID.com.kasama.app`, comma-separated) for `/.well-known/apple-app-site-association`. |
+| `ANDROID_APP_PACKAGE` | `com.kasama.app`   | Android package for `/.well-known/assetlinks.json`.                                              |
+| `ANDROID_CERT_SHA256` | (empty: no file)   | SHA-256 fingerprints of the Android signing certificates, comma-separated.                       |
+| `APP_STORE_URL`       | (empty)            | App Store page linked from the invite page.                                                      |
+| `PLAY_STORE_URL`      | (empty)            | Google Play page linked from the invite page.                                                    |
+
+The apps only claim links for a domain built into them, so on your own domain links open the
+invite page, whose **Open in Kasama** button opens the app and points it at your server.
+
 ## Email
 
 Supabase Auth sends sign-in links, confirmations and password resets through SMTP. Kasama itself
@@ -191,14 +208,46 @@ hooks):
 
 3. Run `kasama selfhost up`.
 
-The allowlist applies to every sign-in method, Google included. Others see "limited to approved
-email addresses". An allowlist without a hook secret refuses every sign-up rather than allowing
-everyone.
+The allowlist applies to every sign-in method, Google and Apple included. Others see "limited to
+approved email addresses". An allowlist without a hook secret refuses every sign-up rather than
+allowing everyone.
 
 ::: warning
 `SIGNUP_HOOK_URI` must be empty or an `https://` address. A plain `http://` address stops Supabase
 Auth from starting, even with the hook turned off.
 :::
+
+## Apple and Google sign-in
+
+The sign-in screen offers **Continue with Apple** and **Continue with Google**. A new server has
+both turned off, so people sign in with email until you set these. They are the accounts people
+use to enter Kasama. A Google client for Gmail, Calendar and Drive is a different setup, under
+[Integrations](#integrations) below.
+
+| Name                     | Default | What it does                                                                                                                                                          |
+| ------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APPLE_AUTH_ENABLED`     | `false` | `true` turns on Continue with Apple.                                                                                                                                  |
+| `APPLE_AUTH_CLIENT_IDS`  | (empty) | Comma-separated. The Services ID first, then the app id `com.kasama.app`. The first is the browser flow. The app id is the system sheet on iPhone and Mac.           |
+| `APPLE_AUTH_SECRET`      | (empty) | Apple's client secret, a signed token. It expires within six months. Make a new one from the same key before it does, or browser sign-in starts failing.             |
+| `GOOGLE_AUTH_ENABLED`    | `false` | `true` turns on Continue with Google.                                                                                                                                 |
+| `GOOGLE_AUTH_CLIENT_ID`  | (empty) | The web client id from Google Cloud.                                                                                                                                  |
+| `GOOGLE_AUTH_SECRET`     | (empty) | That client's secret.                                                                                                                                                 |
+
+Apple and Google both send people back to `https://<your domain>/auth/v1/callback`. Register that
+exact address. On Apple it is the return URL of the Services ID. On Google it is an authorized
+redirect URI of the web client.
+
+1. In the Apple Developer account, turn on Sign in with Apple for the app id `com.kasama.app`.
+   Create a Services ID and a key. Put the Services ID first in `APPLE_AUTH_CLIENT_IDS`, then
+   `com.kasama.app`.
+2. In Google Cloud, create a web OAuth client (not an iOS or Android client) and copy its id and
+   secret.
+3. Add the values to `infra/compose/.env` and run `kasama selfhost up`.
+
+iPhone and Mac use Apple's system sheet, so they need `com.kasama.app` in the client id list.
+Android, Windows, Linux and the web open the browser, which is what the secret is for. Keep
+`kasama://app/login-callback` in `ADDITIONAL_REDIRECT_URLS`. If the web app is served from another
+address, add that address too.
 
 ## Models and AI Gateway
 
@@ -480,6 +529,7 @@ pull` refuses to overwrite a changed file, so commit it on a local branch or re-
 | `TURN_TLS_PORT`            | (empty)             | Also offer a `turns:` address on this port. The bundled relay doesn't serve TLS.              |
 | `CONTENT_KMS_ENDPOINT`     | (AWS's)             | A custom KMS endpoint, for example a VPC endpoint.                                            |
 | `APNS_VOIP_TOPIC`          | `com.kasama.app.voip` | The app's VoIP push topic.                                                                  |
+| `GEMINI_LIVE_MODEL`        | `gemini-3.8-live`   | The Gemini Live model for live and phone calls (used when a workspace has a Google AI key).   |
 
 **Supervisor:**
 

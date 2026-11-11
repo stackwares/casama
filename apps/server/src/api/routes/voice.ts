@@ -1,6 +1,6 @@
 /** Voice (Phase 6, D-065): dictation, read aloud, live-call sessions, tool forwarding, transcripts. */
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { callGreeting, callNotAnswered, VOICE_PRICES } from "@kasama/agent";
+import { callGreeting, callNotAnswered, geminiLiveCost, VOICE_PRICES } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
 import { contentKeys, type JwtClaims, schema, withUserSession } from "@kasama/db";
 import { eq, sql } from "drizzle-orm";
@@ -124,11 +124,12 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const s = unwrap(await deps.workflows.voiceSession(bot.orgId, bot.id, greeting));
     return c.json(
       {
-        provider: "openai" as const,
+        provider: s.provider,
         model: s.model,
         client_secret: s.clientSecret,
         expires_at: s.expiresAt,
         connect_url: s.connectUrl,
+        setup: s.setup,
         conversation_id: conv.id,
         tools: s.tools,
         speak_first: !!greeting,
@@ -142,6 +143,38 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const body = c.req.valid("json");
     const bot = await visibleBot(claims, body.bot_id);
     await visibleConversation(claims, body.conversation_id, bot.id);
+    // start_task: a bigger job becomes an ordinary chat run in the call's conversation, with the
+    // bot's full tools; the call doesn't wait for it.
+    if (body.name === "start_task") {
+      const task = String(body.arguments?.task ?? "").trim();
+      if (!task) throw new ApiError(400, "task_required", "Describe the task to start.");
+      const runId = await withUserSession(db, claims, async (tx) => {
+        const [r] = await tx.execute<{ id: string }>(sql`
+          insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
+          values (${bot.orgId}::uuid, ${bot.id}::uuid, ${body.conversation_id}::uuid, ${claims.sub}::uuid, 'chat')
+          returning id`);
+        const id = (r as { id: string }).id;
+        await tx.execute(sql`
+          insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+          values (${bot.orgId}::uuid, ${body.conversation_id}::uuid, 'user', ${claims.sub}::uuid,
+                  ${contentKeys.sealJson(bot.orgId, [{ type: "text", text: task, voice: true }])}::jsonb, ${id}::uuid)`);
+        await tx.execute(
+          sql`update public.conversations set last_message_at = now() where id = ${body.conversation_id}::uuid`,
+        );
+        return id;
+      });
+      await deps.workflows.startRun(runId);
+      return c.json(
+        {
+          status: "completed" as const,
+          run_id: runId,
+          output:
+            "Started in the background. The result will appear in this chat; tell the user, and carry on the conversation.",
+          approval_id: null,
+        },
+        200,
+      );
+    }
     const [run] = await db.execute<{ id: string }>(sql`
       insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger, voice_call)
       values (${bot.orgId}::uuid, ${bot.id}::uuid, ${body.conversation_id}::uuid, ${claims.sub}::uuid, 'voice',
@@ -208,7 +241,11 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.saveVoiceTranscript, async (c) => {
     const claims = requireClaims(c.get("claims"));
-    const { conversation_id, turns, seconds } = c.req.valid("json");
+    const { conversation_id, turns, seconds, provider, usage } = c.req.valid("json");
+    const perMinute =
+      provider === "gemini" ? VOICE_PRICES.geminiLivePerMinute : VOICE_PRICES.realtimePerMinute;
+    // Gemini reports what the call used; price that rather than estimating by the minute.
+    const cost = usage ? geminiLiveCost(usage) : (seconds / 60) * perMinute;
     const [conv] = await withUserSession(db, claims, (tx) =>
       tx.select().from(conversations).where(eq(conversations.id, conversation_id)),
     );
@@ -223,8 +260,9 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       sql`update public.conversations set last_message_at = now() where id = ${conv.id}::uuid`,
     );
     if (seconds > 0)
-      await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd)
-        values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${(seconds / 60) * VOICE_PRICES.realtimePerMinute})`);
+      await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, meta)
+        values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${cost},
+                ${JSON.stringify({ provider: provider ?? "openai", ...(usage ? { tokens: usage } : { estimated: true }) })}::jsonb)`);
     return c.json({ saved: turns.length }, 200);
   });
 

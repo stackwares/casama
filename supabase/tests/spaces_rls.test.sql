@@ -20,7 +20,7 @@ reset role;
 
 select pg_temp.login('00000000-0000-0000-0000-0000000000c2');
 select is((select count(*)::int from public.invite_links), 0, 'outsiders do not see links');
-select lives_ok($$ select public.accept_invite_link('hash-1') $$, 'a signed-in person joins with the link');
+select lives_ok($$ select public.use_invite_link('hash-1') $$, 'a signed-in person joins with the link');
 select ok(exists(select 1 from public.memberships m join public.organizations o on o.id = m.org_id
                  where o.slug = 'home' and m.user_id = '00000000-0000-0000-0000-0000000000c2' and m.role = 'member'),
           'they joined with the link''s role');
@@ -29,7 +29,7 @@ select is((select name from public.organizations where slug = 'home'), 'Home', '
 reset role;
 
 select pg_temp.login('00000000-0000-0000-0000-0000000000c3');
-select throws_ok($$ select public.accept_invite_link('hash-1') $$, 'P0002', null, 'a used-up link stops working');
+select throws_ok($$ select public.use_invite_link('hash-1') $$, 'P0002', null, 'a used-up link stops working');
 reset role;
 select * from finish();
 rollback;

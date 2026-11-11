@@ -105,6 +105,10 @@ class PluginDeviceCollector implements DeviceCollector {
     if (s?.extras?.any((e) => e.value == 'cycle') ?? false) hc.HealthDataType.MENSTRUATION_FLOW,
   ];
 
+  /// [_healthTypes] this phone's health store has: some exist only on Android (Health Connect's
+  /// sleep sessions) or only on iOS, and asking for one the platform lacks fails the whole request.
+  List<hc.HealthDataType> _availableHealthTypes(DeviceKindSettings? s) => _healthTypes(s).where(_health.isDataTypeAvailable).toList();
+
   Future<void> _healthInit() async {
     if (_healthReady) return;
     await _health.configure();
@@ -143,7 +147,7 @@ class PluginDeviceCollector implements DeviceCollector {
     switch (kind) {
       case DeviceKind.health:
         await _healthInit();
-        final types = _healthTypes(settings);
+        final types = _availableHealthTypes(settings);
         return _health.requestAuthorization(types, permissions: [for (final _ in types) hc.HealthDataAccess.READ]);
       case DeviceKind.calendar:
         final has = await _calendar.hasPermissions();
@@ -162,7 +166,7 @@ class PluginDeviceCollector implements DeviceCollector {
     switch (kind) {
       case DeviceKind.health:
         await _healthInit();
-        final raw = await _health.getHealthDataFromTypes(types: _healthTypes(settings), startTime: from.subtract(const Duration(hours: 18)), endTime: to);
+        final raw = await _health.getHealthDataFromTypes(types: _availableHealthTypes(settings), startTime: from.subtract(const Duration(hours: 18)), endTime: to);
         final points = <HealthPoint>[];
         for (final p in raw) {
           final t = _pointType(p.type);

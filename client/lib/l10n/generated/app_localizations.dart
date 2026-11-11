@@ -1966,6 +1966,12 @@ abstract class AppLocalizations {
   /// **'Call ended'**
   String get callEnded;
 
+  /// No description provided for @callEndedIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended the call after 2 minutes of silence.'**
+  String get callEndedIdle;
+
   /// No description provided for @callFailed.
   ///
   /// In en, this message translates to:
@@ -2013,6 +2019,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Read-aloud voice and dictation provider'**
   String get voiceSettingsHelp;
+
+  /// No description provided for @callTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools on calls'**
+  String get callTools;
+
+  /// No description provided for @callToolsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls already include memory, web search, notes to you, routines and tickets, and hand bigger jobs to the chat. Add connected-app tools the bot should use live; each one adds a little to every call\'s cost.'**
+  String get callToolsHelp;
+
+  /// No description provided for @callToolsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'This bot has no connected apps yet. Connect one under Integrations.'**
+  String get callToolsNone;
+
+  /// No description provided for @callToolsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Only the built-in voice tools} =1{1 connected-app tool added} other{{count} connected-app tools added}}'**
+  String callToolsCount(int count);
 
   /// No description provided for @readAloudProvider.
   ///
@@ -4803,6 +4833,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'One-click sign-in for {app} needs a one-time setup by whoever runs this Kasama server.'**
   String adminSetupNeeded(String app);
+
+  /// No description provided for @connectThroughHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Or connect {app} through one of these. Sign in once, then ask your bot to use {app}.'**
+  String connectThroughHub(String app);
 
   /// No description provided for @adminSetupRedirect.
   ///
@@ -9807,6 +9843,570 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Photos from Unsplash'**
   String get photosFromUnsplash;
+
+  /// No description provided for @showBotSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the bot\'s steps'**
+  String get showBotSteps;
+
+  /// No description provided for @showBotStepsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Each step it takes, with commands and technical errors. Off, chats show what it\'s doing in a few words and its answer.'**
+  String get showBotStepsHelp;
+
+  /// No description provided for @toolLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Got its tools ready'**
+  String get toolLoad;
+
+  /// No description provided for @activityReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting ready…'**
+  String get activityReady;
+
+  /// No description provided for @activitySearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching the web…'**
+  String get activitySearching;
+
+  /// No description provided for @activityBrowsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Browsing the web…'**
+  String get activityBrowsing;
+
+  /// No description provided for @activityComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Working on its computer…'**
+  String get activityComputer;
+
+  /// No description provided for @activityFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Going through files…'**
+  String get activityFiles;
+
+  /// No description provided for @activityImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Making an image…'**
+  String get activityImage;
+
+  /// No description provided for @activityMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking what it knows…'**
+  String get activityMemory;
+
+  /// No description provided for @activityApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Using your apps…'**
+  String get activityApps;
+
+  /// No description provided for @activityScheduling.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up a schedule…'**
+  String get activityScheduling;
+
+  /// No description provided for @activityWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working on it…'**
+  String get activityWorking;
+
+  /// No description provided for @runFailedPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again, or open Details to see why.'**
+  String get runFailedPlain;
+
+  /// No description provided for @newKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy your new key'**
+  String get newKeyTitle;
+
+  /// No description provided for @newKeyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s shown only this once. Paste it into the app you\'re connecting, then tap Done.'**
+  String get newKeyHelp;
+
+  /// No description provided for @copyKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy key'**
+  String get copyKey;
+
+  /// No description provided for @keyCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Key copied'**
+  String get keyCopied;
+
+  /// No description provided for @revokeApiKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke “{name}”?'**
+  String revokeApiKeyTitle(String name);
+
+  /// No description provided for @revokeApiKeyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps using this key stop connecting right away. This can\'t be undone; to reconnect, make a new key.'**
+  String get revokeApiKeyBody;
+
+  /// No description provided for @unlinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink “{name}”?'**
+  String unlinkTitle(String name);
+
+  /// No description provided for @unlinkBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The bots stop talking to each other right away. Linking them again needs a new invite.'**
+  String get unlinkBody;
+
+  /// No description provided for @alreadyMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already in this workspace.'**
+  String get alreadyMember;
+
+  /// No description provided for @askAdminToInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Only owners and admins can invite people. Ask one of them for an invite link.'**
+  String get askAdminToInvite;
+
+  /// No description provided for @askBeforeJoining.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask me before people join'**
+  String get askBeforeJoining;
+
+  /// No description provided for @askBeforeJoiningHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'People who use the link ask to join, and an admin approves them here.'**
+  String get askBeforeJoiningHelp;
+
+  /// No description provided for @askToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask to join'**
+  String get askToJoin;
+
+  /// No description provided for @customLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom links'**
+  String get customLinks;
+
+  /// No description provided for @customLinksHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Links with their own role, expiry or number of uses.'**
+  String get customLinksHelp;
+
+  /// No description provided for @emailAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Email addresses'**
+  String get emailAddresses;
+
+  /// No description provided for @emailAddressesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste one or more, separated by commas or new lines.'**
+  String get emailAddressesHelp;
+
+  /// No description provided for @getCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a code'**
+  String get getCode;
+
+  /// No description provided for @getNewCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a new code'**
+  String get getNewCode;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get getStarted;
+
+  /// No description provided for @inviteAsAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite as admins'**
+  String get inviteAsAdmin;
+
+  /// No description provided for @inviteByEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite by email'**
+  String get inviteByEmail;
+
+  /// No description provided for @inviteExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get inviteExpired;
+
+  /// No description provided for @inviteExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {when}'**
+  String inviteExpires(String when);
+
+  /// No description provided for @inviteInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This invite doesn\'t work'**
+  String get inviteInvalid;
+
+  /// No description provided for @inviteInvalidHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'It may have expired, been used up or been turned off. Ask for a new one.'**
+  String get inviteInvalidHelp;
+
+  /// No description provided for @inviteLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link'**
+  String get inviteLink;
+
+  /// No description provided for @inviteLinkApprovalHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with this link can ask to join. You approve them below.'**
+  String get inviteLinkApprovalHelp;
+
+  /// No description provided for @inviteLinkHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with this link can join as a member. Share it in a chat or email.'**
+  String get inviteLinkHelp;
+
+  /// No description provided for @inviteLinkOrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link or code'**
+  String get inviteLinkOrCode;
+
+  /// No description provided for @inviteOtherServer.
+  ///
+  /// In en, this message translates to:
+  /// **'This invite is for {host}, and this app is connected to a different server.'**
+  String inviteOtherServer(String host);
+
+  /// No description provided for @invitePeopleTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite people to {name}'**
+  String invitePeopleTo(String name);
+
+  /// No description provided for @inviteRenewed.
+  ///
+  /// In en, this message translates to:
+  /// **'The invite works for 7 more days. Send them the new link.'**
+  String get inviteRenewed;
+
+  /// No description provided for @inviteSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with {email} to accept.'**
+  String inviteSentTo(String email);
+
+  /// No description provided for @inviteShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Join {workspace} on Kasama: {url}'**
+  String inviteShareText(String workspace, String url);
+
+  /// No description provided for @invitedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} invited you to join'**
+  String invitedBy(String name);
+
+  /// No description provided for @invitedToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re invited to join'**
+  String get invitedToJoin;
+
+  /// No description provided for @invitesSent.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Invite sent.} other{{count} invites sent.}}'**
+  String invitesSent(int count);
+
+  /// No description provided for @joinAsAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll join as an admin'**
+  String get joinAsAdmin;
+
+  /// No description provided for @joinAsMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll join as a member'**
+  String get joinAsMember;
+
+  /// No description provided for @joinByDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Join by email domain'**
+  String get joinByDomain;
+
+  /// No description provided for @joinByDomainHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'They can join from the workspace list without an invite, once their email address is verified.'**
+  String get joinByDomainHelp;
+
+  /// No description provided for @joinByDomainSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with a verified @{domain} email can join'**
+  String joinByDomainSwitch(String domain);
+
+  /// No description provided for @joinByDomainUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available when you sign in with a verified work email (not gmail.com and the like).'**
+  String get joinByDomainUnavailable;
+
+  /// No description provided for @joinNeedsApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'An admin approves new people before they join.'**
+  String get joinNeedsApproval;
+
+  /// No description provided for @joinRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent'**
+  String get joinRequestSent;
+
+  /// No description provided for @joinRequestSentHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'An admin of {name} will look at it. You\'ll get a notification when you\'re in.'**
+  String joinRequestSentHelp(String name);
+
+  /// No description provided for @joinWithLinkOrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with a link or code'**
+  String get joinWithLinkOrCode;
+
+  /// No description provided for @joinWorkspaceNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Join {name}'**
+  String joinWorkspaceNamed(String name);
+
+  /// No description provided for @joinedBotsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'These bots are here to help. Say hello to one to get started.'**
+  String get joinedBotsHelp;
+
+  /// No description provided for @joinedNoBots.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no bots here yet. Make one, or look around first.'**
+  String get joinedNoBots;
+
+  /// No description provided for @memberCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String memberCount(int count);
+
+  /// No description provided for @members.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get members;
+
+  /// No description provided for @openToDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to @{domain}'**
+  String openToDomain(String domain);
+
+  /// No description provided for @openWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}'**
+  String openWorkspace(String name);
+
+  /// No description provided for @pendingInvites.
+  ///
+  /// In en, this message translates to:
+  /// **'Invites not accepted yet'**
+  String get pendingInvites;
+
+  /// No description provided for @people.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get people;
+
+  /// No description provided for @peopleHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite people and decide who gets in.'**
+  String get peopleHelp;
+
+  /// No description provided for @peopleRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite people, approve requests, see members'**
+  String get peopleRow;
+
+  /// No description provided for @qrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code'**
+  String get qrCode;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @resendInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get resendInvite;
+
+  /// No description provided for @resetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset link'**
+  String get resetLink;
+
+  /// No description provided for @resetLinkHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The current link stops working right away and you get a new one. People already in stay in.'**
+  String get resetLinkHelp;
+
+  /// No description provided for @revokeInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel invite'**
+  String get revokeInvite;
+
+  /// No description provided for @scanToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan to join {name}'**
+  String scanToJoin(String name);
+
+  /// No description provided for @sendInvitesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Send {count} invites'**
+  String sendInvitesCount(int count);
+
+  /// No description provided for @sendInvitesYourself.
+  ///
+  /// In en, this message translates to:
+  /// **'Send these invites yourself'**
+  String get sendInvitesYourself;
+
+  /// No description provided for @sendInvitesYourselfHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Email isn\'t set up on this server. Send each person their link, and they sign in with that address to join.'**
+  String get sendInvitesYourselfHelp;
+
+  /// No description provided for @signInToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to join'**
+  String get signInToJoin;
+
+  /// No description provided for @startOwnWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Start my own workspace instead'**
+  String get startOwnWorkspace;
+
+  /// No description provided for @switchToServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to {host}'**
+  String switchToServer(String host);
+
+  /// No description provided for @waitingToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to join'**
+  String get waitingToJoin;
+
+  /// No description provided for @welcomeToWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to {name}'**
+  String welcomeToWorkspace(String name);
+
+  /// No description provided for @workspacesYouCanJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspaces you can join'**
+  String get workspacesYouCanJoin;
+
+  /// No description provided for @yourTeamIsHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Your team is already here'**
+  String get yourTeamIsHere;
+
+  /// No description provided for @yourTeamIsHereHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'People at {domain} use these workspaces. Join one, or start your own.'**
+  String yourTeamIsHereHelp(String domain);
+
+  /// No description provided for @inviteCodeCardHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy to read out or type. Works for 48 hours. People enter it under Join with a link or code.'**
+  String get inviteCodeCardHelp;
+
+  /// No description provided for @inviteSomeoneNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite someone new to the workspace'**
+  String get inviteSomeoneNew;
+
+  /// No description provided for @oauthNeedsHttps.
+  ///
+  /// In en, this message translates to:
+  /// **'{app} only signs in on a secure (https) address, and this Kasama server is at {address}. Serve Kasama over https to use sign-in.'**
+  String oauthNeedsHttps(String app, String address);
 }
 
 class _AppLocalizationsDelegate

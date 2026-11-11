@@ -87,6 +87,18 @@ if [[ -f "$ENV_FILE" ]]; then
     echo "SAML_PRIVATE_KEY=$(saml_key)" >>"$ENV_FILE"
   fi
   grep -q "^WORKER_DB_PASSWORD=" "$ENV_FILE" || echo "WORKER_DB_PASSWORD=$(rand 24)" >>"$ENV_FILE"
+  if ! grep -q "^APPLE_AUTH_ENABLED=" "$ENV_FILE"; then
+    cat >>"$ENV_FILE" <<'EOF'
+
+# Continue with Apple and Google. Off until set. See docs-site/self-hosting/configuration.md.
+APPLE_AUTH_ENABLED=false
+APPLE_AUTH_CLIENT_IDS=
+APPLE_AUTH_SECRET=
+GOOGLE_AUTH_ENABLED=false
+GOOGLE_AUTH_CLIENT_ID=
+GOOGLE_AUTH_SECRET=
+EOF
+  fi
 else
   if [[ -z "$domain" && "$local" -eq 0 ]]; then
     if [[ -t 0 ]]; then
@@ -135,6 +147,13 @@ GRAFANA_ADMIN_PASSWORD=$(rand 12)
 SANDBOX_RUNTIME=$runtime
 
 # Optional (see docs-site/self-hosting/configuration.md): email, error reporting, telemetry, Cloud Connect.
+# Continue with Apple and Google. Off until set.
+APPLE_AUTH_ENABLED=false
+APPLE_AUTH_CLIENT_IDS=
+APPLE_AUTH_SECRET=
+GOOGLE_AUTH_ENABLED=false
+GOOGLE_AUTH_CLIENT_ID=
+GOOGLE_AUTH_SECRET=
 EMAIL_AUTOCONFIRM=true
 INSTANCE_ADMIN_EMAILS=
 RESEND_API_KEY=

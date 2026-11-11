@@ -34,6 +34,7 @@ import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerDeviceDataRoutes } from "./routes/device-data.ts";
 import { registerEncryptionRoutes } from "./routes/encryption.ts";
 import { registerKnowledgeRoutes } from "./routes/knowledge.ts";
+import { registerJoiningRoutes } from "./routes/joining.ts";
 import { registerLinkRoutes } from "./routes/links.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
@@ -219,6 +220,7 @@ export function createApp(deps: AppDeps) {
 
   registerSystemRoutes(app, deps);
   registerWorkspaceRoutes(app, deps);
+  registerJoiningRoutes(app, deps);
   registerBotRoutes(app, deps);
   registerChatGptRoutes(app, deps);
   registerComputerRoutes(app, deps);

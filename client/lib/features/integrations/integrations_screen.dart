@@ -623,6 +623,7 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
       footer: missing == null || _name.text.isEmpty ? null : FormNote(missing),
       children: [
         DropdownButtonFormField<IntegrationKind>(
+          isExpanded: true,
           key: const Key('integrationKind'),
           initialValue: _kind,
           decoration: InputDecoration(labelText: l10n.integrationType, prefixIcon: Icon(integrationKindIcon(_kind), size: 20)),

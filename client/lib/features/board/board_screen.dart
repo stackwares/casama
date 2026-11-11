@@ -298,12 +298,14 @@ class _TicketFormState extends ConsumerState<_TicketForm> {
         TextField(key: const Key('ticketTitle'), controller: _title, decoration: InputDecoration(labelText: l10n.ticketTitle)),
         TextField(key: const Key('ticketDetails'), controller: _details, minLines: 2, maxLines: 6, decoration: InputDecoration(labelText: l10n.ticketDetails)),
         DropdownButtonFormField<TaskPriority>(
+          isExpanded: true,
           initialValue: _priority,
           decoration: InputDecoration(labelText: l10n.priority),
           items: [for (final p in TaskPriority.values) DropdownMenuItem(value: p, child: Text(priorityLabel(context, p)))],
           onChanged: (p) => setState(() => _priority = p ?? _priority),
         ),
         DropdownButtonFormField<String?>(
+          isExpanded: true,
           key: const Key('ticketBot'),
           initialValue: _bot,
           decoration: InputDecoration(labelText: l10n.assignee),
@@ -431,7 +433,7 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
                   key: const Key('openThread'),
                   onPressed: () {
                     Navigator.of(context).maybePop();
-                    context.go('/bots/${task.assigneeBotId}/chat');
+                    context.push('/bots/${task.assigneeBotId}/chat');
                   },
                   icon: const Icon(LucideIcons.messageCircle, size: 18),
                   label: Text(l10n.openThread),

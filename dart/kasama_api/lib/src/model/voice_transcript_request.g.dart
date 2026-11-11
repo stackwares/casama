@@ -13,6 +13,10 @@ abstract class _$VoiceTranscriptRequestCWProxy {
 
   VoiceTranscriptRequest seconds(int seconds);
 
+  VoiceTranscriptRequest provider(VoiceTranscriptRequestProviderEnum? provider);
+
+  VoiceTranscriptRequest usage(VoiceTranscriptRequestUsage? usage);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `VoiceTranscriptRequest(...).copyWith.fieldName(value)`.
@@ -25,6 +29,8 @@ abstract class _$VoiceTranscriptRequestCWProxy {
     String conversationId,
     List<VoiceTranscriptRequestTurnsInner> turns,
     int seconds,
+    VoiceTranscriptRequestProviderEnum? provider,
+    VoiceTranscriptRequestUsage? usage,
   });
 }
 
@@ -47,6 +53,15 @@ class _$VoiceTranscriptRequestCWProxyImpl
   @override
   VoiceTranscriptRequest seconds(int seconds) => call(seconds: seconds);
 
+  @override
+  VoiceTranscriptRequest provider(
+    VoiceTranscriptRequestProviderEnum? provider,
+  ) => call(provider: provider);
+
+  @override
+  VoiceTranscriptRequest usage(VoiceTranscriptRequestUsage? usage) =>
+      call(usage: usage);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `VoiceTranscriptRequest(...).copyWith.fieldName(value)`.
@@ -60,6 +75,8 @@ class _$VoiceTranscriptRequestCWProxyImpl
     Object? conversationId = const $CopyWithPlaceholder(),
     Object? turns = const $CopyWithPlaceholder(),
     Object? seconds = const $CopyWithPlaceholder(),
+    Object? provider = const $CopyWithPlaceholder(),
+    Object? usage = const $CopyWithPlaceholder(),
   }) {
     return VoiceTranscriptRequest(
       conversationId:
@@ -76,6 +93,14 @@ class _$VoiceTranscriptRequestCWProxyImpl
           ? _value.seconds
           // ignore: cast_nullable_to_non_nullable
           : seconds as int,
+      provider: provider == const $CopyWithPlaceholder()
+          ? _value.provider
+          // ignore: cast_nullable_to_non_nullable
+          : provider as VoiceTranscriptRequestProviderEnum?,
+      usage: usage == const $CopyWithPlaceholder()
+          ? _value.usage
+          // ignore: cast_nullable_to_non_nullable
+          : usage as VoiceTranscriptRequestUsage?,
     );
   }
 }
@@ -109,6 +134,17 @@ VoiceTranscriptRequest _$VoiceTranscriptRequestFromJson(
           .toList(),
     ),
     seconds: $checkedConvert('seconds', (v) => (v as num).toInt()),
+    provider: $checkedConvert(
+      'provider',
+      (v) =>
+          $enumDecodeNullable(_$VoiceTranscriptRequestProviderEnumEnumMap, v),
+    ),
+    usage: $checkedConvert(
+      'usage',
+      (v) => v == null
+          ? null
+          : VoiceTranscriptRequestUsage.fromJson(v as Map<String, dynamic>),
+    ),
   );
   return val;
 }, fieldKeyMap: const {'conversationId': 'conversation_id'});
@@ -119,4 +155,11 @@ Map<String, dynamic> _$VoiceTranscriptRequestToJson(
   'conversation_id': instance.conversationId,
   'turns': instance.turns.map((e) => e.toJson()).toList(),
   'seconds': instance.seconds,
+  'provider': ?_$VoiceTranscriptRequestProviderEnumEnumMap[instance.provider],
+  'usage': ?instance.usage?.toJson(),
+};
+
+const _$VoiceTranscriptRequestProviderEnumEnumMap = {
+  VoiceTranscriptRequestProviderEnum.gemini: 'gemini',
+  VoiceTranscriptRequestProviderEnum.openai: 'openai',
 };

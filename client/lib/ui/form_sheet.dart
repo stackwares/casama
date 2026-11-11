@@ -170,7 +170,7 @@ class _EdgeScrollState extends State<_EdgeScroll> {
         onNotification: (n) => _onMetrics(n.metrics),
         child: NotificationListener<ScrollNotification>(
           onNotification: (n) => _onMetrics(n.metrics),
-          child: SingleChildScrollView(padding: widget.padding, child: widget.child),
+          child: SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: widget.padding, child: widget.child),
         ),
       ),
     );
@@ -359,6 +359,7 @@ Future<Choice<T>?> showChoiceSheet<T>(
     builder: (context) {
       final scheme = context.colorScheme;
       return SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.fromLTRB(AppSpace.xl, 0, AppSpace.xl, AppSpace.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

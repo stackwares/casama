@@ -9,7 +9,20 @@
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { callInstructions, hashStreamToken, TwilioClient, twilioSignature } from "@kasama/agent";
+import {
+  addGeminiUsage,
+  base64ToPcm16,
+  callInstructions,
+  emptyGeminiUsage,
+  geminiLiveCost,
+  hashStreamToken,
+  mulawToPcm16,
+  pcm16ToBase64,
+  pcm16ToMulaw,
+  resamplePcm16,
+  TwilioClient,
+  twilioSignature,
+} from "@kasama/agent";
 import { routes } from "@kasama/contracts";
 import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
@@ -293,6 +306,7 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
   let ai: WebSocket | null = null;
   let streamSid = "";
   let started = false;
+  let gemini = false;
   const close = () => {
     bridges.delete(id);
     if (ai && ai.readyState <= WebSocket.OPEN) ai.close();
@@ -357,6 +371,12 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
         );
         return close();
       }
+      if (s.provider === "gemini") {
+        gemini = true;
+        ai = geminiBridge(deps, id, s, twilio, () => streamSid, close);
+        bridges.set(id, close);
+        return;
+      }
       const wsUrl = `${(deps.env.OPENAI_REALTIME_URL ?? "wss://api.openai.com/v1/realtime").replace(/\/$/, "")}?model=${encodeURIComponent(s.model)}`;
       ai = new WebSocket(wsUrl, { headers: { authorization: `Bearer ${s.clientSecret}` } });
       bridges.set(id, close);
@@ -396,7 +416,135 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
         }
       });
     } else if (m.event === "media" && ai?.readyState === WebSocket.OPEN && m.media?.payload) {
-      ai.send(JSON.stringify({ type: "input_audio_buffer.append", audio: m.media.payload }));
+      if (gemini) {
+        // 8 kHz μ-law from the phone → 16 kHz PCM for Gemini.
+        const pcm = resamplePcm16(
+          mulawToPcm16(Buffer.from(m.media.payload, "base64")),
+          8000,
+          16000,
+        );
+        ai.send(
+          JSON.stringify({
+            realtimeInput: {
+              audio: { data: pcm16ToBase64(pcm), mimeType: "audio/pcm;rate=16000" },
+            },
+          }),
+        );
+      } else ai.send(JSON.stringify({ type: "input_audio_buffer.append", audio: m.media.payload }));
     } else if (m.event === "stop") close();
   });
+}
+
+/**
+ * The phone side of a call on Gemini Live: Twilio's 8 kHz μ-law becomes 16 kHz PCM for Gemini, and
+ * Gemini's 24 kHz PCM becomes μ-law for the phone. Transcripts are saved a turn at a time.
+ */
+function geminiBridge(
+  deps: AppDeps,
+  id: string,
+  s: { connectUrl: string; clientSecret: string; setup: Record<string, unknown> | null },
+  twilio: WebSocket,
+  streamSid: () => string,
+  close: () => void,
+) {
+  const { db } = deps;
+  const ai = new WebSocket(`${s.connectUrl}?access_token=${encodeURIComponent(s.clientSecret)}`);
+  let bot = "";
+  let callee = "";
+  // What the call used, from Gemini's usageMetadata, recorded once when the stream ends.
+  let usage = emptyGeminiUsage();
+  let startedAt: number | null = null;
+  let recorded = false;
+  const recordUsage = async () => {
+    if (recorded || startedAt === null) return;
+    recorded = true;
+    const seconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+    await db.execute(sql`
+      insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, meta)
+      select org_id, bot_id, 'voice_seconds', ${seconds}, ${geminiLiveCost(usage)},
+             ${JSON.stringify({ provider: "gemini", phone_call: id, tokens: usage })}::jsonb
+      from public.outbound_calls where id = ${id}::uuid`);
+  };
+  const flush = async () => {
+    const [b, c] = [bot, callee];
+    bot = "";
+    callee = "";
+    if (c) await appendLine(db, id, "callee", c);
+    if (b) await appendLine(db, id, "bot", b);
+  };
+  const toPhone = (payload: string) => {
+    if (twilio.readyState === WebSocket.OPEN)
+      twilio.send(JSON.stringify({ event: "media", streamSid: streamSid(), media: { payload } }));
+  };
+  ai.on("open", () => ai.send(JSON.stringify({ setup: s.setup ?? {} })));
+  ai.on("close", () => {
+    void recordUsage();
+    close();
+  });
+  ai.on("error", close);
+  ai.on("message", async (data) => {
+    let e: {
+      setupComplete?: unknown;
+      usageMetadata?: unknown;
+      serverContent?: {
+        modelTurn?: { parts?: Array<{ inlineData?: { data?: string } }> };
+        interrupted?: boolean;
+        turnComplete?: boolean;
+        inputTranscription?: { text?: string };
+        outputTranscription?: { text?: string };
+      };
+      toolCall?: { functionCalls?: Array<{ id?: string; name?: string }> };
+    };
+    try {
+      e = JSON.parse(String(data));
+    } catch {
+      return;
+    }
+    if (e.usageMetadata) usage = addGeminiUsage(usage, e.usageMetadata);
+    if (e.setupComplete) {
+      startedAt = Date.now();
+      // The bot speaks first: it placed the call.
+      ai.send(
+        JSON.stringify({
+          clientContent: {
+            turns: [
+              { role: "user", parts: [{ text: "(The call has connected. Start speaking.)" }] },
+            ],
+            turnComplete: true,
+          },
+        }),
+      );
+      return;
+    }
+    const sc = e.serverContent;
+    if (sc) {
+      for (const part of sc.modelTurn?.parts ?? []) {
+        if (!part.inlineData?.data) continue;
+        const pcm = resamplePcm16(base64ToPcm16(part.inlineData.data), 24000, 8000);
+        toPhone(Buffer.from(pcm16ToMulaw(pcm)).toString("base64"));
+      }
+      if (sc.inputTranscription?.text) callee += sc.inputTranscription.text;
+      if (sc.outputTranscription?.text) bot += sc.outputTranscription.text;
+      if (sc.interrupted && twilio.readyState === WebSocket.OPEN)
+        // Barge-in: the other person talks over the bot, so drop its queued audio.
+        twilio.send(JSON.stringify({ event: "clear", streamSid: streamSid() }));
+      if (sc.turnComplete || sc.interrupted) await flush();
+    }
+    for (const call of e.toolCall?.functionCalls ?? []) {
+      ai.send(
+        JSON.stringify({
+          toolResponse: {
+            functionResponses: [{ id: call.id, name: call.name, response: { result: "ok" } }],
+          },
+        }),
+      );
+      // end_call: let the goodbye finish playing, then leave the stream (Twilio hangs up).
+      if (call.name === "end_call")
+        setTimeout(async () => {
+          await flush();
+          close();
+        }, 2500);
+    }
+  });
+  return ai;
 }

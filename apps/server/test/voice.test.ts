@@ -32,6 +32,7 @@ async function mockVoiceProviders() {
         res.writeHead(200, { "content-type": "audio/mpeg" });
         return res.end(Buffer.from("ID3-fake-mp3"));
       }
+      if (path === "/v1beta/auth_tokens") return json({ name: "auth_tokens/gemini-test-token" });
       if (path === "/v1/realtime/client_secrets")
         return json({
           value: "ek_test_ephemeral",
@@ -69,7 +70,12 @@ describe("voice (Phase 6)", () => {
     h = await startHarness({
       worker: {
         fixtures: FIXTURES,
-        providerBases: { openai: mock.url, deepgram: mock.url, elevenlabs: mock.url },
+        providerBases: {
+          openai: mock.url,
+          gemini: mock.url,
+          deepgram: mock.url,
+          elevenlabs: mock.url,
+        },
       },
     });
     owner = await h.user("voice-owner@example.com");
@@ -250,6 +256,130 @@ describe("voice (Phase 6)", () => {
     expect(own.status).toBe("completed");
   }, 60_000);
 
+  it("with a Google AI key, live calls use Gemini Live with a locked, single-use token", async () => {
+    expect((await addKey("google", "gemini-voice-key")).status).toBe(201);
+    const res = await h.request("/v1/voice/session", {
+      method: "POST",
+      token: owner.token,
+      json: { bot_id: botId, conversation_id: convId },
+    });
+    expect(res.status).toBe(200);
+    const s = await j(res);
+    expect(s).toMatchObject({
+      provider: "gemini",
+      model: "gemini-3.8-live",
+      client_secret: "auth_tokens/gemini-test-token",
+      conversation_id: convId,
+    });
+    expect(s.connect_url).toMatch(
+      /^ws:\/\/127\.0\.0\.1:\d+\/ws\/google\.ai\.generativelanguage\.v1beta\.GenerativeService\.BidiGenerateContentConstrained$/,
+    );
+    const mint = mock.calls.findLast((c) => c.path === "/v1beta/auth_tokens");
+    expect(mint?.headers["x-goog-api-key"]).toBe("gemini-voice-key");
+    const body = JSON.parse(Buffer.from(mint?.body ?? "{}", "latin1").toString("utf8"));
+    // Single use, and the bot's instructions, tools and voice can't be changed by the client.
+    expect(body.uses).toBe(1);
+    expect(body.fieldMask.split(",")).toEqual(
+      expect.arrayContaining(["model", "systemInstruction", "tools", "generationConfig"]),
+    );
+    const setup = body.bidiGenerateContentSetup;
+    expect(setup.model).toBe("models/gemini-3.8-live");
+    expect(setup.systemInstruction.parts[0].text).toContain("You love plants.");
+    const fns = setup.tools[0].functionDeclarations as Array<{
+      name: string;
+      parameters: Record<string, unknown>;
+    }>;
+    expect(fns.map((f) => f.name)).toContain("memory__search");
+    // Function schemas are in Gemini's OpenAPI subset (no JSON Schema-only keywords).
+    expect(JSON.stringify(fns)).not.toMatch(/"additionalProperties"|"\$schema"/);
+    expect(setup.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName).toBe(
+      "Kore",
+    );
+    // The app sends the same setup first.
+    expect(s.setup).toEqual(setup);
+    // Cost controls: a small conversational tool set plus start_task (no shell, browser or
+    // computer tools), a 32k-token context cap, and turns without the silence between speech.
+    const names = fns.map((f) => f.name);
+    expect(names).toContain("start_task");
+    expect(names.some((n) => /^(shell|browser|files|desktop)__/.test(n))).toBe(false);
+    expect(names.length).toBeLessThanOrEqual(20);
+    expect(setup.contextWindowCompression).toEqual({
+      triggerTokens: 32000,
+      slidingWindow: { targetTokens: 16000 },
+    });
+    expect(setup.realtimeInputConfig.turnCoverage).toBe("TURN_INCLUDES_ONLY_ACTIVITY");
+  }, 60_000);
+
+  it("connected-app tools a bot chose for calls join the voice set", async () => {
+    const [i] = await h.handle.db.execute<{ id: string }>(sql`
+      insert into public.integrations (org_id, kind, name, status, tools_cache, tools_cached_at)
+      values (${orgId}::uuid, 'mcp', 'garden', 'ok', ${JSON.stringify([
+        {
+          name: "log_watering",
+          description: "Log that a plant was watered",
+          inputSchema: { type: "object", properties: { plant: { type: "string" } } },
+        },
+        {
+          name: "delete_garden",
+          description: "Delete everything",
+          inputSchema: { type: "object" },
+        },
+      ])}::jsonb, now()) returning id`);
+    await h.handle.db.execute(sql`
+      insert into public.bot_integrations (org_id, bot_id, integration_id)
+      values (${orgId}::uuid, ${botId}::uuid, ${i?.id}::uuid)`);
+    await h.handle.db.execute(sql`
+      update public.bots set voice = voice || '{"call_tools": ["mcp.garden.log_watering"]}'::jsonb
+      where id = ${botId}::uuid`);
+    const res = await h.request("/v1/voice/session", {
+      method: "POST",
+      token: owner.token,
+      json: { bot_id: botId, conversation_id: convId },
+    });
+    expect(res.status).toBe(200);
+    const mint = mock.calls.findLast((c) => c.path === "/v1beta/auth_tokens");
+    const body = JSON.parse(Buffer.from(mint?.body ?? "{}", "latin1").toString("utf8"));
+    const names = body.bidiGenerateContentSetup.tools[0].functionDeclarations.map(
+      (f: { name: string }) => f.name,
+    );
+    // Only the chosen tool, not the connection's others.
+    expect(names).toContain("mcp__garden__log_watering");
+    expect(names).not.toContain("mcp__garden__delete_garden");
+    expect(names).toContain("start_task");
+  }, 60_000);
+
+  it("start_task hands a bigger job to a normal run in the call's chat", async () => {
+    const r = await j(
+      await h.request("/v1/voice/tool", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          bot_id: botId,
+          conversation_id: convId,
+          call_id: "c9",
+          name: "start_task",
+          arguments: { task: "Compare three fern fertilizers and save a table to ferns.md" },
+        },
+      }),
+    );
+    expect(r.status).toBe("completed");
+    expect(r.output).toContain("Started in the background");
+    const [run] = await h.handle.db.execute<{ trigger: string; conversation_id: string }>(
+      sql`select trigger, conversation_id from public.runs where id = ${r.run_id}::uuid`,
+    );
+    expect(run).toMatchObject({ trigger: "chat", conversation_id: convId });
+    const msgs = await h.handle.db.execute<{ content: unknown }>(
+      sql`select content from public.messages where run_id = ${r.run_id}::uuid and role = 'user'`,
+    );
+    expect(JSON.stringify(msgs)).toContain("Compare three fern fertilizers");
+    const empty = await h.request("/v1/voice/tool", {
+      method: "POST",
+      token: owner.token,
+      json: { bot_id: botId, conversation_id: convId, call_id: "c10", name: "start_task" },
+    });
+    expect(empty.status).toBe(400);
+  }, 60_000);
+
   it("saves the call transcript and its duration", async () => {
     const res = await j(
       await h.request("/v1/voice/transcript", {
@@ -274,5 +404,32 @@ describe("voice (Phase 6)", () => {
       sql`select sum(quantity)::text as q from public.usage_ledger where kind = 'voice_seconds'`,
     );
     expect(Number(u?.q)).toBe(90);
+
+    // A Gemini call reports its token counts, and usage records what they cost.
+    await j(
+      await h.request("/v1/voice/transcript", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          conversation_id: convId,
+          seconds: 60,
+          provider: "gemini",
+          turns: [{ role: "user", text: "Thanks!" }],
+          usage: {
+            input_audio_tokens: 1500,
+            input_text_tokens: 4000,
+            output_audio_tokens: 1500,
+            output_text_tokens: 0,
+          },
+        },
+      }),
+    );
+    const [g] = await h.handle.db.execute<{ cost: string; meta: { tokens?: unknown } }>(
+      sql`select cost_usd::text as cost, meta from public.usage_ledger
+          where kind = 'voice_seconds' and meta->>'provider' = 'gemini' order by created_at desc limit 1`,
+    );
+    // 1,500 × $3 + 4,000 × $0.75 + 1,500 × $12 per million tokens.
+    expect(Number(g?.cost)).toBeCloseTo(0.0255, 6);
+    expect(g?.meta.tokens).toMatchObject({ input_audio_tokens: 1500 });
   }, 60_000);
 });

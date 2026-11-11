@@ -40,6 +40,10 @@ void main() {
     expect(find.text('Thursday at 7pm works.'), findsOneWidget);
     await tester.tap(find.byKey(const Key('revokeLink')));
     await tester.pumpAndSettle();
+    // Unlinking asks first (D-164).
+    expect(backend.linkActions.last, isNot('revoke:lk-2'));
+    await tester.tap(find.byKey(const Key('confirmUnlink')));
+    await tester.pumpAndSettle();
     expect(backend.linkActions.last, 'revoke:lk-2');
     expect(find.text('Unlinked'), findsOneWidget);
   });

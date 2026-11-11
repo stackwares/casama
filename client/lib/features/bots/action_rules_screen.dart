@@ -159,6 +159,7 @@ class _AddRuleState extends ConsumerState<_AddRule> {
             },
       children: [
         DropdownButtonFormField<String>(
+          isExpanded: true,
           key: const Key('ruleCategory'),
           initialValue: _category,
           decoration: InputDecoration(labelText: l10n.whenTheBot),
@@ -166,6 +167,7 @@ class _AddRuleState extends ConsumerState<_AddRule> {
           onChanged: (v) => setState(() => _category = v ?? 'send'),
         ),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           key: const Key('ruleKind'),
           initialValue: _rule,
           decoration: InputDecoration(labelText: l10n.itShould),

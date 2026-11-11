@@ -41,25 +41,24 @@ afterAll(async () => {
 });
 
 describe("Google permissions", () => {
-  it("Kasama's Google apps ask only for non-restricted scopes; the inbox is separate", () => {
+  it("Kasama's Google apps ask only for non-restricted scopes; Gmail (the inbox) is the exception", () => {
     const google = APP_CATALOG.filter((a) => a.category === "google");
     const scopes = google.filter((a) => !a.inbox).flatMap((a) => a.scopes ?? []);
-    expect(scopes.sort()).toEqual([
-      "https://www.googleapis.com/auth/calendar.events",
-      "https://www.googleapis.com/auth/drive.file",
-      "https://www.googleapis.com/auth/gmail.send",
-    ]);
-    expect(google.find((a) => a.inbox)?.scopes).toEqual([
+    const restricted = [/gmail\./, /mail\.google\.com/, /^.*\/drive$/, /drive\.readonly/];
+    expect(scopes.filter((s) => restricted.some((r) => r.test(s)))).toEqual([]);
+    expect(google.filter((a) => a.inbox).map((a) => a.id)).toEqual(["gmail"]);
+    expect(google.find((a) => a.id === "gmail")?.scopes).toEqual([
       "https://www.googleapis.com/auth/gmail.modify",
+      "https://www.googleapis.com/auth/gmail.compose",
     ]);
   });
 
-  it("on Kasama Cloud the inbox goes through Composio, or is hidden without a key; self-hosted keeps its own client", () => {
-    const inbox = (o: { cloud: boolean; composio: boolean }) =>
-      catalogFor(APP_CATALOG, o).find((a) => a.id === "gmail_inbox");
-    expect(inbox({ cloud: true, composio: false })).toBeUndefined();
-    expect(inbox({ cloud: true, composio: true })?.auth).toEqual(["managed"]);
-    expect(inbox({ cloud: false, composio: false })?.auth).toEqual(["oauth"]);
+  it("on Kasama Cloud Gmail goes through Composio, or is hidden without a key; self-hosted keeps its own client", () => {
+    const gmail = (o: { cloud: boolean; composio: boolean }) =>
+      catalogFor(APP_CATALOG, o).find((a) => a.id === "gmail");
+    expect(gmail({ cloud: true, composio: false })).toBeUndefined();
+    expect(gmail({ cloud: true, composio: true })?.auth).toEqual(["managed"]);
+    expect(gmail({ cloud: false, composio: false })?.auth).toEqual(["oauth"]);
   });
 
   it("connecting the inbox through Composio's managed sign-in returns the sign-in page", async () => {
@@ -73,7 +72,7 @@ describe("Google permissions", () => {
       await h.request("/v1/apps/connect", {
         method: "POST",
         token: owner.token,
-        json: { org_id: orgId, app_id: "gmail_inbox", method: "managed" },
+        json: { org_id: orgId, app_id: "gmail", method: "managed" },
       }),
     );
     expect(r).toMatchObject({

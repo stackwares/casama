@@ -55,6 +55,8 @@ class FakeCall implements VoiceCall {
   @override
   void setMuted(bool m) => muted = m;
   @override
+  Map<String, int>? usage;
+  @override
   Future<void> hangUp() async {
     hungUp = true;
     _state.value = CallState.ended;

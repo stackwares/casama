@@ -201,6 +201,7 @@ class _AddChannelState extends ConsumerState<_AddChannel> {
       onSubmit: !_valid || _busy ? null : _submit,
       children: [
         DropdownButtonFormField<ChannelKind>(
+          isExpanded: true,
           key: const Key('channelKind'),
           initialValue: _kind,
           decoration: InputDecoration(labelText: l10n.chatAppsKind),
@@ -232,6 +233,7 @@ class _AddChannelState extends ConsumerState<_AddChannel> {
               final macs = (devices.value ?? const <LocalDevice>[]).where((d) => d.platform == LocalDevicePlatformEnum.macos && d.computerId != null).toList();
               if (devices.hasValue && macs.isEmpty) return FormNote(l10n.chatAppsNoMac);
               return DropdownButtonFormField<String>(
+                isExpanded: true,
                 key: const Key('channelMac'),
                 initialValue: _mac,
                 decoration: InputDecoration(labelText: l10n.chatAppsMac),

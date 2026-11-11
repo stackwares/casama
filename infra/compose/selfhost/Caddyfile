@@ -7,7 +7,7 @@
 	handle @supabase {
 		reverse_proxy kong:8000
 	}
-	@api path /v1/* /hooks/* /connect/* /telemetry/* /openapi.json /docs /docs/* /healthz /readyz
+	@api path /v1/* /hooks/* /connect/* /telemetry/* /openapi.json /docs /docs/* /healthz /readyz /.well-known/apple-app-site-association /.well-known/assetlinks.json
 	handle @api {
 		reverse_proxy api:8787
 	}
@@ -17,9 +17,17 @@
 	# Without the web app (compose profile: web) the root answers with a short note.
 	# Only the root page: health checks and API paths must see the real error (install.sh waits on /readyz).
 	handle_errors 502 {
-		@root path /
-		respond @root "Kasama is running. Point the Kasama app or CLI at this address, or start the web app (compose profile: web)." 200
-		respond "Kasama isn't ready yet (or this part isn't running)." 502
+		# Invite links (D-167) open the API's join page when the web app isn't running.
+		@join path /join/* /invites/*
+		handle @join {
+			rewrite /invites/* /join/{path.1}
+			reverse_proxy api:8787
+		}
+		handle {
+			@root path /
+			respond @root "Kasama is running. Point the Kasama app or CLI at this address, or start the web app (compose profile: web)." 200
+			respond "Kasama isn't ready yet (or this part isn't running)." 502
+		}
 	}
 	header {
 		Strict-Transport-Security "max-age=63072000; includeSubDomains"

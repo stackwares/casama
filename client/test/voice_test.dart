@@ -95,4 +95,25 @@ void main() {
     expect(backend.savedTurns, [('user', 'What do you know about my plants?'), ('assistant', 'You water the fern on Fridays.')]);
     expect(find.text('chat $convId'), findsOneWidget);
   });
+
+  testWidgets('a call with two minutes of silence hangs up, and reported token counts are saved', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend();
+    final calls = FakeCallConnector();
+    calls.call.usage = {'input_audio_tokens': 1500, 'input_text_tokens': 4000, 'output_audio_tokens': 1500, 'output_text_tokens': 0};
+    await tester.pumpWidget(voiceHarness(backend, calls: calls, home: const CallScreen(botId: botId, conversationId: convId, idleLimit: Duration(seconds: 2))));
+    await tester.pumpAndSettle();
+    calls.call.say('user', 'Hi');
+    await tester.pump(const Duration(seconds: 1));
+    expect(calls.call.hungUp, isFalse);
+    // While the bot speaks it isn't idle, however long that takes.
+    calls.call.speakingNow.value = true;
+    await tester.pump(const Duration(seconds: 3));
+    expect(calls.call.hungUp, isFalse);
+    calls.call.speakingNow.value = false;
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(calls.call.hungUp, isTrue);
+    expect(backend.lastVoiceUsage?['input_text_tokens'], 4000);
+  });
 }

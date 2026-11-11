@@ -33,7 +33,9 @@ import { integrationOut, isAdmin, requireClaims } from "./autonomy.ts";
 const { integrations } = schema;
 
 type OAuthClient = { client_id: string; client_secret?: string };
-const GOOGLE_APPS = new Set(["gmail", "gmail_inbox", "google_calendar", "google_drive"]);
+/** Google's MCP servers share the server's one Google client (GOOGLE_OAUTH_CLIENT_ID). */
+const isGoogleApp = (a: { id: string; category?: string }) =>
+  a.category === "google" || a.id === "gmail_inbox";
 
 export interface AppsOptions {
   /** Outbound fetch (tests point vendors at local fakes). */
@@ -43,7 +45,10 @@ export interface AppsOptions {
 }
 
 /** Admin-registered OAuth clients: MCP_OAUTH_CLIENTS (JSON by app id), and Google's own pair. */
-export function preregisteredClients(env: AppDeps["env"]): Record<string, OAuthClient> {
+export function preregisteredClients(
+  env: AppDeps["env"],
+  catalog: CatalogApp[] = APP_CATALOG,
+): Record<string, OAuthClient> {
   let out: Record<string, OAuthClient> = {};
   if (env.MCP_OAUTH_CLIENTS) {
     try {
@@ -53,13 +58,27 @@ export function preregisteredClients(env: AppDeps["env"]): Record<string, OAuthC
     }
   }
   if (env.GOOGLE_OAUTH_CLIENT_ID) {
-    for (const id of GOOGLE_APPS)
+    for (const { id } of catalog.filter(isGoogleApp))
       out[id] ??= {
         client_id: env.GOOGLE_OAUTH_CLIENT_ID,
         client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
       };
   }
   return out;
+}
+
+/**
+ * Where vendors send people back after signing in. Vendors only accept https or localhost, so a
+ * server reached on a private network address over http (local development) comes back to
+ * localhost on the same port: the sign-in then finishes in a browser on that machine.
+ */
+export function oauthRedirectFor(apiBase: string): string {
+  const u = new URL(apiBase);
+  const privateIp =
+    /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.)/.test(u.hostname) ||
+    u.hostname.endsWith(".local");
+  if (u.protocol === "http:" && privateIp) u.hostname = "localhost";
+  return `${u.origin}/oauth/callback`;
 }
 
 /** The catalog a server offers: on Kasama Cloud, inbox apps only through Composio, or not at all (D-130). */
@@ -81,19 +100,25 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
   const cloud = env.BILLING_ENABLED;
   const catalog = catalogFor(fullCatalog, { cloud, composio: !!env.COMPOSIO_API_KEY });
   const findApp = (id: string) => catalog.find((a) => a.id === id) ?? appByIdOrNull(id);
-  const clients = preregisteredClients(env);
+  const clients = preregisteredClients(env, [...fullCatalog, ...APP_CATALOG]);
 
   const apiBase = (c: Context) =>
     (env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
-  const redirectUri = (c: Context) => `${apiBase(c)}/oauth/callback`;
+  const redirectUri = (c: Context) => env.OAUTH_REDIRECT_URL ?? oauthRedirectFor(apiBase(c));
   const cimdUrl = (c: Context) => `${apiBase(c)}/oauth/client.json`;
+  /** OAuth 2.1 servers only accept a return address on https, or on this machine (loopback). */
+  const secureRedirect = (c: Context) => {
+    const u = new URL(redirectUri(c));
+    return u.protocol === "https:" || ["localhost", "127.0.0.1", "[::1]"].includes(u.hostname);
+  };
   const oauthAvailable = (a: CatalogApp, c: Context) =>
     a.auth.includes("oauth") &&
     (a.oauthClient === "preregistered"
       ? !!clients[a.id]
       : a.oauthClient === "cimd"
         ? apiBase(c).startsWith("https://")
-        : true);
+        : // Self-registration (dcr) is refused for a plain-http address such as a LAN IP.
+          secureRedirect(c));
 
   const vault = async (value: string, description: string) => {
     const [r] = await db.execute<{ id: string }>(
@@ -323,9 +348,13 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       const info = await discoverOAuthServerInfo(a.url, { fetchFn: fetchImpl as never });
       const metadata = info.authorizationServerMetadata;
       const resource = info.resourceMetadata?.resource;
-      const scopes =
-        (info.resourceMetadata?.scopes_supported as string[] | undefined)?.join(" ") ??
-        (a.scopes?.length ? a.scopes.join(" ") : undefined);
+      // Google's servers announce every scope they accept (Gmail's include full mailbox access),
+      // so Google apps ask only for the catalog's; other apps follow what the server announces.
+      const announced = (info.resourceMetadata?.scopes_supported as string[] | undefined)?.join(
+        " ",
+      );
+      const chosen = a.scopes?.length ? a.scopes.join(" ") : undefined;
+      const scopes = isGoogleApp(a) ? (chosen ?? announced) : (announced ?? chosen);
       let client: OAuthClient | undefined = clients[a.id];
       if (!client && a.oauthClient === "cimd") client = { client_id: cimdUrl(c) };
       if (!client) {
@@ -359,10 +388,10 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
         },
       );
       // Google only issues a refresh token when asked for offline access.
-      if (GOOGLE_APPS.has(a.id)) {
+      // Each Google app is its own connection with only its own scopes (no incremental grants,
+      // which would widen every token to all the Google apps connected before).
+      if (isGoogleApp(a)) {
         authorizationUrl.searchParams.set("access_type", "offline");
-        // Incremental authorization (D-130): adding the inbox later keeps the scopes already granted.
-        authorizationUrl.searchParams.set("include_granted_scopes", "true");
         authorizationUrl.searchParams.set("prompt", "consent");
       }
       const [flow] = await db.execute<{ id: string }>(sql`

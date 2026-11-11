@@ -37,6 +37,12 @@ class InviteLink {
     required  this.revokedAt,
 
     required  this.createdAt,
+
+     this.kind,
+
+     this.requiresApproval,
+
+     this.isDefault,
   });
 
   @JsonKey(
@@ -147,6 +153,42 @@ class InviteLink {
 
 
 
+  @JsonKey(
+    
+    name: r'kind',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final InviteLinkKindEnum? kind;
+
+
+
+  @JsonKey(
+    
+    name: r'requires_approval',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? requiresApproval;
+
+
+
+  @JsonKey(
+    
+    name: r'is_default',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? isDefault;
+
+
+
 
 
     @override
@@ -159,7 +201,10 @@ class InviteLink {
       other.maxUses == maxUses &&
       other.uses == uses &&
       other.revokedAt == revokedAt &&
-      other.createdAt == createdAt;
+      other.createdAt == createdAt &&
+      other.kind == kind &&
+      other.requiresApproval == requiresApproval &&
+      other.isDefault == isDefault;
 
     @override
     int get hashCode =>
@@ -171,7 +216,10 @@ class InviteLink {
         (maxUses == null ? 0 : maxUses.hashCode) +
         uses.hashCode +
         (revokedAt == null ? 0 : revokedAt.hashCode) +
-        createdAt.hashCode;
+        createdAt.hashCode +
+        kind.hashCode +
+        requiresApproval.hashCode +
+        isDefault.hashCode;
 
   factory InviteLink.fromJson(Map<String, dynamic> json) => _$InviteLinkFromJson(json);
 
@@ -192,6 +240,22 @@ admin(r'admin'),
 member(r'member');
 
 const InviteLinkRoleEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+
+enum InviteLinkKindEnum {
+@JsonValue(r'link')
+link(r'link'),
+@JsonValue(r'code')
+code(r'code');
+
+const InviteLinkKindEnum(this.value);
 
 final String value;
 

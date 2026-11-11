@@ -7,6 +7,7 @@ import type { CatalogApp } from "@kasama/domain";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { oauthRedirectFor } from "../src/api/routes/apps.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 /**
@@ -39,7 +40,8 @@ async function startVendor() {
       return json(res, 200, {
         resource: `${base}/mcp`,
         authorization_servers: [base],
-        scopes_supported: ["read"],
+        // Like Google's servers: every scope it accepts, including far more than needed.
+        scopes_supported: ["read", "everything"],
       });
     if (p === "/.well-known/oauth-authorization-server")
       return json(res, 200, {
@@ -146,7 +148,25 @@ beforeAll(async () => {
     name: "Locked",
     oauthClient: "preregistered",
   };
-  h = await startHarness({ apps: { catalog: [acme, locked] } });
+  // A Google app: the server's one Google client, only the catalog's scopes, and a localhost
+  // redirect (Google refuses LAN addresses).
+  const gmailLike: CatalogApp = {
+    ...acme,
+    id: "gmail_test",
+    name: "Gmail test",
+    category: "google",
+    auth: ["oauth"],
+    oauthClient: "preregistered",
+    scopes: ["read"],
+  };
+  h = await startHarness({
+    apps: { catalog: [acme, locked, gmailLike] },
+    env: {
+      GOOGLE_OAUTH_CLIENT_ID: "google-client",
+      GOOGLE_OAUTH_CLIENT_SECRET: "google-secret",
+      OAUTH_REDIRECT_URL: "http://localhost:8787/oauth/callback",
+    },
+  });
   owner = await h.user("apps-owner@example.com");
   orgId = (
     await j(
@@ -226,6 +246,50 @@ describe("built-in app connections", () => {
     expect(again.status).toBe(400);
   });
 
+  it("Google apps use the Google client, ask only for their own scopes and come back to localhost", async () => {
+    const start = await j(
+      await h.request("/v1/apps/connect", {
+        method: "POST",
+        token: owner.token,
+        json: { org_id: orgId, app_id: "gmail_test", method: "oauth" },
+      }),
+    );
+    expect(start.status).toBe("authorize");
+    const authorize = new URL(start.authorize_url);
+    expect(authorize.searchParams.get("client_id")).toBe("google-client");
+    expect(authorize.searchParams.get("scope")).toBe("read");
+    expect(authorize.searchParams.get("redirect_uri")).toBe("http://localhost:8787/oauth/callback");
+    expect(authorize.searchParams.get("access_type")).toBe("offline");
+    expect(authorize.searchParams.get("prompt")).toBe("consent");
+    expect(authorize.searchParams.has("include_granted_scopes")).toBe(false);
+  });
+
+  it("comes back to localhost when the API is on a private network address", () => {
+    expect(oauthRedirectFor("http://192.168.31.77:8787")).toBe(
+      "http://localhost:8787/oauth/callback",
+    );
+    expect(oauthRedirectFor("http://172.16.125.206:8787")).toBe(
+      "http://localhost:8787/oauth/callback",
+    );
+    expect(oauthRedirectFor("http://10.0.2.2:8787")).toBe("http://localhost:8787/oauth/callback");
+    expect(oauthRedirectFor("https://api.kasama.dev")).toBe(
+      "https://api.kasama.dev/oauth/callback",
+    );
+    expect(oauthRedirectFor("http://127.0.0.1:8787")).toBe("http://127.0.0.1:8787/oauth/callback");
+  });
+
+  it("other apps follow the scopes the server announces", async () => {
+    const start = await j(
+      await h.request("/v1/apps/connect", {
+        method: "POST",
+        token: owner.token,
+        json: { org_id: orgId, app_id: "acme", method: "oauth" },
+      }),
+    );
+    const authorize = new URL(start.authorize_url);
+    expect(authorize.searchParams.get("scope")).toBe("read everything");
+  });
+
   it("connects with an API key, names the second connection apart, and removes it cleanly", async () => {
     const bad = await j(
       await h.request("/v1/apps/connect", {
@@ -286,5 +350,48 @@ describe("built-in app connections", () => {
       json: { org_id: orgId, app_id: "acme", method: "none" },
     });
     expect(res.status).toBe(403);
+  });
+});
+
+describe("sign-in on a plain-http server address", () => {
+  it("isn't offered where providers would refuse it, and says why", async () => {
+    // A LAN address while testing on a phone: OAuth 2.1 providers only accept https or loopback.
+    const lan = await startHarness({
+      apps: {
+        catalog: [
+          {
+            id: "selfreg",
+            name: "SelfReg",
+            url: "https://mcp.selfreg.example/mcp",
+            auth: ["oauth", "api_key"],
+            oauthClient: "dcr",
+          } as never,
+        ],
+      },
+      env: { OAUTH_REDIRECT_URL: "http://192.168.1.20:8787/oauth/callback" },
+    });
+    try {
+      const user = await lan.user("lan-owner@example.com");
+      const org = (
+        await j(
+          await lan.request("/v1/orgs", {
+            method: "POST",
+            token: user.token,
+            json: { name: "LAN" },
+          }),
+        )
+      ).id;
+      const cat = await j(await lan.request("/v1/apps", { token: user.token }));
+      expect(cat.apps.find((a: { id: string }) => a.id === "selfreg").oauth_available).toBe(false);
+      const start = await lan.request("/v1/apps/connect", {
+        method: "POST",
+        token: user.token,
+        json: { org_id: org, app_id: "selfreg", method: "oauth" },
+      });
+      expect(start.status).toBe(400);
+      expect(JSON.stringify(await j(start))).toContain("https");
+    } finally {
+      await lan.stop();
+    }
   });
 });

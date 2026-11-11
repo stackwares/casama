@@ -398,8 +398,27 @@ class AttachmentTile extends ConsumerWidget {
   if (tool.startsWith('notify')) return (l10n.toolNotify, LucideIcons.bellRing);
   if (tool.startsWith('http')) return (l10n.toolHttp, LucideIcons.globe);
   if (tool.startsWith('media')) return (l10n.toolMedia, LucideIcons.sparkles);
+  if (tool == 'tools.load') return (l10n.toolLoad, LucideIcons.packageOpen);
   return (l10n.toolOther(tool), LucideIcons.wrench);
 }
+
+/// What the bot is doing while a step runs, in everyday words ("Searching the web…"), for the
+/// working line. No tool names, commands or queries (D-162).
+String toolActivity(AppLocalizations l10n, String tool) {
+  if (tool == 'tools.load' || tool.startsWith('skills')) return l10n.activityReady;
+  if (tool.startsWith('web') || tool.contains('search')) return l10n.activitySearching;
+  if (tool.startsWith('browser')) return l10n.activityBrowsing;
+  if (tool.startsWith('files')) return l10n.activityFiles;
+  if (tool.startsWith('media')) return l10n.activityImage;
+  if (tool.startsWith('memory') || tool.startsWith('knowledge')) return l10n.activityMemory;
+  if (tool.startsWith('routines') || tool.startsWith('tasks')) return l10n.activityScheduling;
+  if (tool.startsWith('shell') || tool.startsWith('desktop') || tool.startsWith('computer') || tool.startsWith('checkpoint')) return l10n.activityComputer;
+  if (tool.startsWith('http') || tool.contains('.') && !tool.startsWith('ui.') && !tool.startsWith('notify')) return l10n.activityApps;
+  return l10n.activityWorking;
+}
+
+/// The server's lead-in for a failure it has no plain explanation for; the rest is technical.
+const _genericFailure = 'Something went wrong while the bot was working.';
 
 String toolSummary(ToolEntry t) {
   final a = t.args;
@@ -675,8 +694,12 @@ class CodePanel extends StatelessWidget {
 
 /// A short note in the thread (memory saved, checkpoint, computer state, run ended), centered.
 class NoticeLine extends StatelessWidget {
-  const NoticeLine({super.key, required this.entry, this.onRestore, this.onDetails});
+  const NoticeLine({super.key, required this.entry, this.onRestore, this.onDetails, this.plain = false});
   final NoticeEntry entry;
+
+  /// Simple chats (D-162): a failure without a plain explanation reads as one sentence; the
+  /// technical part stays in Details.
+  final bool plain;
   final void Function(String checkpointId)? onRestore;
 
   /// Failures open their details (error, failed steps, copy and export).
@@ -693,7 +716,7 @@ class NoticeLine extends StatelessWidget {
       NoticeKind.skill => (LucideIcons.bookOpen, l10n.skillLoaded(entry.text), muted),
       NoticeKind.checkpoint => (LucideIcons.rotateCcw, l10n.checkpointSaved(entry.text), muted),
       NoticeKind.computer => (LucideIcons.monitor, l10n.computerState(entry.text), muted),
-      NoticeKind.failed => (LucideIcons.circleAlert, l10n.runFailed(entry.text), colors.negative),
+      NoticeKind.failed => (LucideIcons.circleAlert, plain && entry.text.startsWith(_genericFailure) ? l10n.runFailedPlain : l10n.runFailed(entry.text), colors.negative),
       NoticeKind.cancelled => (LucideIcons.circleStop, l10n.runCancelled, muted),
       NoticeKind.userControl => (LucideIcons.hand, l10n.pausedUserInControl, colors.warning),
       NoticeKind.botControl => (LucideIcons.bot, l10n.botBackInControl, muted),

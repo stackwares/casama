@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kasama_app/features/workspaces/spaces.dart';
 
@@ -13,12 +12,6 @@ class _Host extends StatelessWidget {
 }
 
 void main() {
-  test('reads tokens from pasted invite links', () {
-    expect(inviteTokenFrom('https://app.example.com/join/kjoin_abcdefghijklmnopqrst'), 'kjoin_abcdefghijklmnopqrst');
-    expect(inviteTokenFrom('kjoin_abcdefghijklmnopqrst'), 'kjoin_abcdefghijklmnopqrst');
-    expect(inviteTokenFrom('hello'), isNull);
-  });
-
   testWidgets('the switcher lists workspaces with badges and creates a new one', (tester) async {
     await setSize(tester, const Size(900, 1200));
     final backend = FakeBackend();
@@ -41,51 +34,5 @@ void main() {
     expect(backend.createdOrgs, 1);
     expect(backend.orgIcon, 'house');
     expect(backend.orgColor, '#22aa66');
-  });
-
-  testWidgets('joins a workspace from a pasted link', (tester) async {
-    await setSize(tester, const Size(900, 1200));
-    final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const _Host()));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('workspaceSwitcher')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('joinWorkspace')));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('inviteLinkField')), 'https://app.example.com/join/kjoin_abcdefghijklmnopqrst');
-    await tester.tap(find.byKey(const Key('joinWorkspaceSubmit')));
-    await tester.pumpAndSettle();
-    expect(backend.joined, ['kjoin_abcdefghijklmnopqrst']);
-    expect(find.text('You joined Friends.'), findsOneWidget);
-  });
-
-  testWidgets('workspace settings create, show and revoke invite links', (tester) async {
-    await setSize(tester, const Size(900, 1400));
-    final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const WorkspaceSettingsScreen()));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('createInviteLink')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('createdLink')), findsOneWidget);
-    expect(backend.links, hasLength(1));
-    // The new link can be copied (the button says so) and shared.
-    String? clipboard;
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
-      if (call.method == 'Clipboard.setData') clipboard = (call.arguments as Map)['text'] as String?;
-      return null;
-    });
-    expect(find.byKey(const Key('shareInviteLink')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('copyInviteLink')));
-    await tester.pump();
-    expect(find.text('Copied'), findsOneWidget);
-    expect(clipboard, contains('/join/'));
-    await tester.pump(const Duration(seconds: 3));
-    // Revoking asks first.
-    await tester.tap(find.byKey(const Key('revoke-l1')));
-    await tester.pumpAndSettle();
-    expect(backend.links, hasLength(1));
-    await tester.tap(find.widgetWithText(FilledButton, 'Revoke').last);
-    await tester.pumpAndSettle();
-    expect(backend.links, isEmpty);
   });
 }

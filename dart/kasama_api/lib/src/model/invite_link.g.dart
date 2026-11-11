@@ -25,6 +25,12 @@ abstract class _$InviteLinkCWProxy {
 
   InviteLink createdAt(DateTime createdAt);
 
+  InviteLink kind(InviteLinkKindEnum? kind);
+
+  InviteLink requiresApproval(bool? requiresApproval);
+
+  InviteLink isDefault(bool? isDefault);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `InviteLink(...).copyWith.fieldName(value)`.
@@ -43,6 +49,9 @@ abstract class _$InviteLinkCWProxy {
     int uses,
     DateTime? revokedAt,
     DateTime createdAt,
+    InviteLinkKindEnum? kind,
+    bool? requiresApproval,
+    bool? isDefault,
   });
 }
 
@@ -80,6 +89,16 @@ class _$InviteLinkCWProxyImpl implements _$InviteLinkCWProxy {
   @override
   InviteLink createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
+  @override
+  InviteLink kind(InviteLinkKindEnum? kind) => call(kind: kind);
+
+  @override
+  InviteLink requiresApproval(bool? requiresApproval) =>
+      call(requiresApproval: requiresApproval);
+
+  @override
+  InviteLink isDefault(bool? isDefault) => call(isDefault: isDefault);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `InviteLink(...).copyWith.fieldName(value)`.
@@ -99,6 +118,9 @@ class _$InviteLinkCWProxyImpl implements _$InviteLinkCWProxy {
     Object? uses = const $CopyWithPlaceholder(),
     Object? revokedAt = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
+    Object? kind = const $CopyWithPlaceholder(),
+    Object? requiresApproval = const $CopyWithPlaceholder(),
+    Object? isDefault = const $CopyWithPlaceholder(),
   }) {
     return InviteLink(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -137,6 +159,18 @@ class _$InviteLinkCWProxyImpl implements _$InviteLinkCWProxy {
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
+      kind: kind == const $CopyWithPlaceholder()
+          ? _value.kind
+          // ignore: cast_nullable_to_non_nullable
+          : kind as InviteLinkKindEnum?,
+      requiresApproval: requiresApproval == const $CopyWithPlaceholder()
+          ? _value.requiresApproval
+          // ignore: cast_nullable_to_non_nullable
+          : requiresApproval as bool?,
+      isDefault: isDefault == const $CopyWithPlaceholder()
+          ? _value.isDefault
+          // ignore: cast_nullable_to_non_nullable
+          : isDefault as bool?,
     );
   }
 }
@@ -192,6 +226,12 @@ InviteLink _$InviteLinkFromJson(Map<String, dynamic> json) => $checkedCreate(
         'created_at',
         (v) => DateTime.parse(v as String),
       ),
+      kind: $checkedConvert(
+        'kind',
+        (v) => $enumDecodeNullable(_$InviteLinkKindEnumEnumMap, v),
+      ),
+      requiresApproval: $checkedConvert('requires_approval', (v) => v as bool?),
+      isDefault: $checkedConvert('is_default', (v) => v as bool?),
     );
     return val;
   },
@@ -202,6 +242,8 @@ InviteLink _$InviteLinkFromJson(Map<String, dynamic> json) => $checkedCreate(
     'maxUses': 'max_uses',
     'revokedAt': 'revoked_at',
     'createdAt': 'created_at',
+    'requiresApproval': 'requires_approval',
+    'isDefault': 'is_default',
   },
 );
 
@@ -216,9 +258,17 @@ Map<String, dynamic> _$InviteLinkToJson(InviteLink instance) =>
       'uses': instance.uses,
       'revoked_at': instance.revokedAt?.toIso8601String(),
       'created_at': instance.createdAt.toIso8601String(),
+      'kind': ?_$InviteLinkKindEnumEnumMap[instance.kind],
+      'requires_approval': ?instance.requiresApproval,
+      'is_default': ?instance.isDefault,
     };
 
 const _$InviteLinkRoleEnumEnumMap = {
   InviteLinkRoleEnum.admin: 'admin',
   InviteLinkRoleEnum.member: 'member',
+};
+
+const _$InviteLinkKindEnumEnumMap = {
+  InviteLinkKindEnum.link: 'link',
+  InviteLinkKindEnum.code: 'code',
 };

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../voice/call_tools_sheet.dart';
+import '../chat/chat_detail.dart';
 import '../../core/backend.dart';
 import '../../core/billing.dart';
 import '../../core/mac_bridge.dart';
@@ -48,33 +49,6 @@ class SettingsScreen extends ConsumerWidget {
 
   /// The location of the page open next to the pane.
   final String current;
-
-  Future<void> _invite(BuildContext context, WidgetRef ref) async {
-    final l10n = context.l10n;
-    final email = await showTextPrompt(
-      context,
-      title: l10n.inviteMember,
-      subtitle: l10n.inviteMemberHelp,
-      label: l10n.email,
-      hint: 'name@company.com',
-      submitLabel: l10n.sendInvite,
-      icon: LucideIcons.userPlus,
-      fieldIcon: LucideIcons.atSign,
-      keyboardType: TextInputType.emailAddress,
-    );
-    if (email == null || email.isEmpty || !context.mounted) return;
-    final org = ref.read(currentOrgProvider)!;
-    final invite = await runGuarded(context, () => ref.read(backendProvider).invite(org.id, email));
-    if (invite == null || !context.mounted) return;
-    if (invite.acceptToken != null) {
-      await showAdaptiveSheet<void>(
-        context: context,
-        builder: (_) => _InviteCode(email: email, code: invite.acceptToken!),
-      );
-    } else {
-      showMessage(context, l10n.inviteSent(email));
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -150,7 +124,14 @@ class SettingsScreen extends ConsumerWidget {
                           )
                         : null,
                   ),
-                  if (isAdmin) GroupedTile(icon: LucideIcons.userPlus, title: l10n.inviteMember, onTap: () => _invite(context, ref)),
+                  GroupedTile(
+                    key: const Key('settingsPeople'),
+                    icon: isAdmin ? LucideIcons.userPlus : LucideIcons.users,
+                    title: l10n.people,
+                    subtitle: isAdmin ? l10n.peopleRow : null,
+                    showChevron: true,
+                    onTap: () => open('/settings/people'), selected: sel('/settings/people'),
+                  ),
                   GroupedTile(
                     key: const Key('settingsWorkspace'),
                     icon: LucideIcons.palette,
@@ -231,6 +212,15 @@ class SettingsScreen extends ConsumerWidget {
               SectionHeader(title: l10n.settingsMoreSection),
               GroupedCard(
                 children: [
+                  // Off by default: chats show what the bot is doing, not each step (D-162).
+                  SwitchListTile(
+                    key: const Key('showBotSteps'),
+                    secondary: Icon(LucideIcons.listTree, color: scheme.onSurfaceVariant),
+                    title: Text(l10n.showBotSteps),
+                    subtitle: Text(l10n.showBotStepsHelp),
+                    value: ref.watch(showBotStepsProvider),
+                    onChanged: ref.read(showBotStepsProvider.notifier).set,
+                  ),
                   GroupedTile(
                     key: const Key('settingsQuietHours'),
                     icon: LucideIcons.moon,
@@ -584,10 +574,11 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
             spacing: AppSpace.md,
             children: [
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 key: ValueKey('botKey-${keys.length}'),
                 initialValue: keys.any((k) => k.id == _credentialId) ? _credentialId : null,
                 decoration: InputDecoration(labelText: l10n.modelKey, prefixIcon: const Icon(LucideIcons.keyRound, size: 20)),
-                items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} · ${providerLabel(k.provider)}'))],
+                items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} · ${providerLabel(k.provider)}', maxLines: 1, overflow: TextOverflow.ellipsis))],
                 onChanged: (v) => setState(() {
                   _credentialId = v;
                   for (final k in keys) {
@@ -823,41 +814,6 @@ class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
   }
 }
 
-class _InviteCode extends StatelessWidget {
-  const _InviteCode({required this.email, required this.code});
-  final String email;
-  final String code;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return FormSheet(
-      icon: LucideIcons.mailCheck,
-      title: l10n.inviteReady,
-      subtitle: l10n.inviteCodeHelp(email),
-      submitLabel: l10n.copyCode,
-      submitIcon: LucideIcons.copy,
-      cancelLabel: l10n.close,
-      onSubmit: () {
-        Clipboard.setData(ClipboardData(text: code));
-        Navigator.pop(context);
-        showMessage(context, l10n.copied);
-      },
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 14),
-          decoration: BoxDecoration(
-            color: context.appColors.codeBackground,
-            borderRadius: AppRadius.tileAll,
-            border: Border.all(color: context.appColors.hairline),
-          ),
-          child: SelectableText(code, style: AppText.mono.copyWith(fontSize: 15, fontWeight: FontWeight.w600)),
-        ),
-      ],
-    );
-  }
-}
-
 /// A bot's read-aloud and dictation providers (each uses the workspace's own key).
 class VoiceSettingsDialog extends ConsumerStatefulWidget {
   const VoiceSettingsDialog({super.key, required this.botId});
@@ -872,6 +828,26 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
   String? _stt;
   final _voice = TextEditingController();
   var _busy = false;
+  var _callTools = <String>[];
+  var _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start from the bot's current settings rather than Automatic.
+    ref.read(backendProvider).loadBotVoice(widget.botId).then((v) {
+      if (!mounted) return;
+      setState(() {
+        _tts = v['tts_provider'] as String?;
+        _stt = v['stt_provider'] as String?;
+        _voice.text = (v['tts_voice'] as String?) ?? '';
+        _callTools = [for (final t in (v['call_tools'] as List?) ?? const []) '$t'];
+        _loaded = true;
+      });
+    }).catchError((_) {
+      if (mounted) setState(() => _loaded = true);
+    });
+  }
 
   @override
   void dispose() {
@@ -882,7 +858,8 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
   Future<void> _save() async {
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).updateBotVoice(widget.botId, {'tts_provider': ?_tts, 'stt_provider': ?_stt, if (_voice.text.trim().isNotEmpty) 'tts_voice': _voice.text.trim()});
+      // Null clears a setting (Automatic); the bot's other voice settings are kept.
+      await ref.read(backendProvider).updateBotVoice(widget.botId, {'tts_provider': _tts, 'stt_provider': _stt, 'tts_voice': _voice.text.trim().isEmpty ? null : _voice.text.trim()});
       return true;
     });
     if (!mounted) return;
@@ -911,6 +888,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
       onSubmit: _save,
       children: [
         DropdownButtonFormField<String?>(
+          isExpanded: true,
           key: const Key('ttsProvider'),
           initialValue: _tts,
           decoration: InputDecoration(labelText: l10n.readAloudProvider, prefixIcon: const Icon(LucideIcons.volume2, size: 20)),
@@ -925,6 +903,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
           decoration: InputDecoration(labelText: l10n.voiceId, helperText: l10n.voiceIdHelp, prefixIcon: const Icon(LucideIcons.audioLines, size: 20)),
         ),
         DropdownButtonFormField<String?>(
+          isExpanded: true,
           key: const Key('sttProvider'),
           initialValue: _stt,
           decoration: InputDecoration(labelText: l10n.dictationProvider, prefixIcon: const Icon(LucideIcons.mic, size: 20)),
@@ -933,6 +912,22 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
             for (final p in const ['openai', 'deepgram']) DropdownMenuItem(value: p, child: Text(label(p))),
           ],
           onChanged: (v) => setState(() => _stt = v),
+        ),
+        ListTile(
+          key: const Key('callToolsRow'),
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(LucideIcons.wrench, size: 20),
+          title: Text(l10n.callTools),
+          subtitle: Text(l10n.callToolsCount(_callTools.length)),
+          trailing: const Icon(LucideIcons.chevronRight, size: 18),
+          enabled: _loaded,
+          onTap: () async {
+            final chosen = await showAdaptiveSheet<List<String>>(
+              context: context,
+              builder: (_) => CallToolsSheet(botId: widget.botId, initial: _callTools),
+            );
+            if (chosen != null && mounted) setState(() => _callTools = chosen);
+          },
         ),
       ],
     );

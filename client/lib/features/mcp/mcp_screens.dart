@@ -9,6 +9,8 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/one_time_secret.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
@@ -64,6 +66,7 @@ class _McpConsentScreenState extends ConsumerState<McpConsentScreen> {
                   Text(l10n.connectAiAppAsk(snap.data!.clientName), style: context.textTheme.titleMedium),
                   Text(l10n.connectAiAppHelp(snap.data!.redirectHost), style: TextStyle(color: context.colorScheme.onSurfaceVariant)),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     key: const Key('mcpOrg'),
                     initialValue: _org,
                     decoration: InputDecoration(labelText: l10n.workspace),
@@ -144,14 +147,7 @@ class _McpSettingsSectionState extends ConsumerState<McpSettingsSection> {
           },
         ),
         if (_created != null)
-          AppCard(
-            key: const Key('mcpNewKey'),
-            padding: const EdgeInsets.all(AppSpace.md),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, spacing: AppSpace.xs, children: [
-              Text(l10n.apiKeyOnce, style: TextStyle(color: context.appColors.warning)),
-              SelectableText(_created!.key, style: AppText.mono.copyWith(fontSize: 12)),
-            ]),
-          ),
+          OneTimeSecretCard(key: const Key('mcpNewKey'), value: _created!.key, onDone: () => setState(() => _created = null)),
         GroupedCard(
           children: [
             for (final k in keys)
@@ -161,7 +157,20 @@ class _McpSettingsSectionState extends ConsumerState<McpSettingsSection> {
                 title: k.name,
                 subtitle: '…${k.hint}',
                 trailing: TextButton(
+                  key: Key('revokeMcpKey-${k.id}'),
+                  style: TextButton.styleFrom(foregroundColor: context.colorScheme.error),
                   onPressed: () async {
+                    // Apps using the key lose access at once, and it can't be undone: ask first.
+                    final ok = await showConfirm(
+                      context: context,
+                      title: l10n.revokeApiKeyTitle(k.name),
+                      message: l10n.revokeApiKeyBody,
+                      confirmLabel: l10n.revokeLink,
+                      destructive: true,
+                      icon: LucideIcons.keyRound,
+                      confirmKey: const Key('confirmRevokeMcpKey'),
+                    );
+                    if (!ok || !context.mounted) return;
                     await runGuarded(context, () => backend.revokeMcpKey(widget.orgId, k.id));
                     ref.invalidate(_mcpKeysProvider(widget.orgId));
                   },

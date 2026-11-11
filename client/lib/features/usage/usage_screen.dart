@@ -529,5 +529,5 @@ Future<void> askBotAbout(BuildContext context, String text) async {
     await backend.send(c.id, text);
     return c;
   });
-  if (conv != null && context.mounted) context.go('/bots/${bot.id}/chat?c=${conv.id}');
+  if (conv != null && context.mounted) context.push('/bots/${bot.id}/chat?c=${conv.id}');
 }

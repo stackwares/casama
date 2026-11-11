@@ -38,7 +38,7 @@ below it can.
 | Role | What it can do |
 | --- | --- |
 | **Member** | Create bots and manage the ones they created; use team bots; answer approvals for bots they can use; see usage and the plan; manage their own quiet hours, two-step sign-in and data |
-| **Admin** | Invite people (by email or link) as members or admins; rename the workspace and change its look; manage every team bot; add workspace action rules; set run history retention; require two-step sign-in; manage workspace settings such as bots talking to each other, phone calls, where secrets and memory are kept, AI app connections and workspace files; buy plans and credits and create Cloud Connect keys on Kasama Cloud |
+| **Admin** | Invite people (by link, code or email) as members or admins; approve requests to join; open the workspace to their email domain; rename the workspace and change its look; manage every team bot; add workspace action rules; set run history retention; require two-step sign-in; manage workspace settings such as bots talking to each other, phone calls, where secrets and memory are kept, AI app connections and workspace files; buy plans and credits and create Cloud Connect keys on Kasama Cloud |
 | **Owner** | Everything above, plus turn on encryption, set up payments, and make other people owners |
 
 A workspace always has at least one owner. Private bots are visible only to the person who created
@@ -46,42 +46,90 @@ them and the people they share them with. See [Sharing](/guide/sharing).
 
 ## Invite people
 
-### By invite link
+Owners and admins invite people from **Settings → People**. The workspace switcher has a shortcut,
+**Invite people to** your workspace. Members can open **People** too, to see who's in the
+workspace.
 
-Links work for anyone you send them to, after they sign in.
+### The invite link
 
-1. Open **Settings → Workspace settings**.
-2. Under **Invite links**, choose the **Role** (**Member** or **Admin**), when it **Expires** (in 1,
-   7 or 30 days, or **Never**) and how many **Uses** (1, 5, 25 or **Unlimited**).
-3. Tap **Create a link**.
-4. Copy or share it now. For security, the full link isn't shown again.
+Every workspace has one standing invite link. Anyone who opens it can join as a member.
 
-The list shows each link's role, how many times it was used, and whether it's **Revoked**. Tap
-**Revoke** to stop a link working.
+1. Open **Settings → People**.
+2. Under **Invite link**, tap **Copy link** or **Share**. To invite someone in the room, or to move
+   from your computer to your phone, tap **QR code** and let them scan it.
 
-To join with a link, open it, or open the workspace switcher, tap **Join with a link** and paste
-it. If you open a link before signing in, Kasama joins you right after you sign in. Joining a
-workspace you're already in does nothing.
+The link stays the same, so you can copy it again whenever you need it. To stop it working, tap
+**Reset link**. The old link stops at once and you get a new one; people already in stay in.
+
+Turn on **Ask me before people join** to make the link safe to post somewhere semi-public. People
+who use it then ask to join, and their request waits under **Waiting to join**, where an owner or
+admin taps **Approve** or **Decline**. Admins get a notification for each request.
+
+### An invite code
+
+For reading out on a call or typing on another device, tap **Get a code**. You get a short code
+such as `7F3Q-9XWD`. It works for 48 hours and isn't fussy about how it's typed: lower case,
+spaces, or the letter O for a zero all work. Codes leave out letters that look alike.
 
 ### By email
 
-1. Open **Settings** and tap **Invite a member**.
-2. Enter their email and tap **Send invite**.
+1. Under **Invite by email**, paste one or more addresses, separated by commas or new lines.
+2. Turn on **Invite as admins** if they should be admins.
+3. Tap **Send invite** (or **Send 3 invites**).
 
 What happens next depends on whether the server can send email:
 
-- **With email set up**, they get an email with a link to accept. It expires in 7 days. See
-  [Limits](#limits).
-- **Without email**, the app shows **Invite ready** with a code (it starts with `kinv_`). Tap
-  **Copy code** and send it to them yourself. They paste it under **or join with an invite code**
-  when setting up, or run `kasama invite accept <code>`.
+- **With email set up**, each person gets an email with a link. It works for 7 days, only for the
+  address it was sent to.
+- **Without email**, the app lists each person with their link. Copy it and send it to them
+  yourself.
 
-Email invites work once, expire after 7 days, and only for the email address they were sent to.
-The app invites people as members. To invite an admin by email, use the CLI:
+Invites that haven't been accepted are listed under **Invites not accepted yet**. Open the menu next
+to one to **Send again** (a new link, valid 7 more days) or **Cancel invite**.
+
+From the CLI:
 
 ```sh
 kasama org invite ada@example.com --org <slug> --role admin
 ```
+
+### Join by email domain
+
+If you signed in with a verified work email, turn on **Anyone with a verified @example.com email
+can join** under **Join by email domain**. People with a verified address at that domain then see
+the workspace without an invite: new people are offered it before their first workspace is made,
+and everyone else finds it under **Workspaces you can join** in the workspace switcher. Admins get a
+notification when someone joins this way.
+
+You can only open a workspace to your own domain, and never to shared ones such as gmail.com or
+outlook.com.
+
+### Custom links
+
+Under **Custom links**, make a link with its own **Role** (**Member** or **Admin**), **Expires** (1,
+7 or 30 days, or **Never**) and **Uses** (1, 5, 25 or **Unlimited**). Copy or share it right away:
+for security, a custom link isn't shown again. The list shows each link and code with its role,
+uses and whether it's **Revoked**; tap **Revoke** to stop one.
+
+### Joining
+
+Open the link. Kasama shows the workspace first: its name, who invited you, how many members it
+has and the role you'd get. Tap **Join** (or **Ask to join** when an admin approves new people).
+After joining, you land on a welcome page with the workspace's bots.
+
+- **Not signed in yet:** tap **Sign in to join**. Kasama remembers the invite and shows it again
+  after you sign in, even if the app restarted.
+- **Got a code or a link in a message:** open the workspace switcher, tap **Join with a link or
+  code** and paste or type it. On phones you can also scan the QR code. On Android and desktop, a
+  link you copied fills in by itself.
+- **The link is for another server:** the app offers to switch to it.
+
+The person who made the invite gets a notification when you join.
+
+**Opening links in the app.** When the app is installed, an invite link opens it directly once the
+server publishes the app's link files (see [Configuration](/self-hosting/configuration)).
+Otherwise the link opens a page in the browser with **Open in Kasama**. On a self-hosted server
+without the web app, that page comes from the API.
 
 ## Require two-step sign-in for admins
 
@@ -161,12 +209,10 @@ See [Configuration](/self-hosting/configuration).
 
 ## Limits
 
-- The app has no member list yet. Changing someone's role, removing a member or leaving a
-  workspace isn't available in the app or the CLI.
-- An email invite's code can be pasted in the app only while setting up your first workspace.
-  If you already belong to a workspace, accept it with `kasama invite accept <code>`.
-- The emailed invite link opens an address the app doesn't handle yet. Until it does, the
-  invitee can accept with `kasama invite accept <code>`, using the code at the end of the link.
+- **People** lists members, but changing someone's role, removing a member or leaving a
+  workspace isn't available in the app or the CLI yet.
+- Joining by email domain needs a verified email address, and accepts members only.
+- Wrong invites are limited to 10 tries in 10 minutes per person (or address, when signed out).
 - Signing in with SSO doesn't add anyone to a workspace. Invite people as usual.
 - SSO setup and audit log export have no screens in the app; use the API.
 

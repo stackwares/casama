@@ -220,7 +220,7 @@ Every tenant table carries `org_id`, has RLS enabled, and is created by a SQL mi
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | organizations      | name, slug, plan, region                                                                                                                                              | One per workspace                                                                                                         |
 | memberships        | org\_id, user\_id, role (owner, admin, member)                                                                                                                        | Drives every RLS policy                                                                                                   |
-| profiles           | user\_id, display\_name, avatar\_url, locale, timezone                                                                                                                | Timezone used for routines                                                                                                |
+| profiles           | user\_id, display\_name, preferred\_name, pronouns, avatar\_url, locale, timezone                                                                                   | Timezone used for routines; the rest is About you (D-169)                                                                 |
 | invites            | org\_id, email, role, token\_hash, expires\_at                                                                                                                        | Token stored hashed                                                                                                       |
 | bots               | name, avatar\_url, persona\_md, model\_policy jsonb, autonomy, visibility (private, team), default\_computer\_id, budget jsonb, status                                | model\_policy = primary, fallbacks, cheap model                                                                           |
 | conversations      | bot\_id, channel\_id, external\_thread\_id, title, summary, last\_message\_at                                                                                         | One per chat or external thread                                                                                           |
@@ -917,6 +917,7 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 | Device triggers        | Routines start when the user wakes up, arrives at or leaves a named place, needs to leave for an event, finishes a workout, or gets a notification from a watched app                           | Arriving at Home on a test device starts the routine within 2 min; no GPS trail is stored                                                                                            | 4    |
 | Desktop context        | Quick ask attaches the selection, front window, browser tab or a screenshot; bots search the user's files, watch folders and write an end-of-day recap                                          | The hotkey on selected text in any app sends it with the window title; a PDF dropped in Downloads starts a "file it" routine                                                         | 4    |
 | Attention rules        | Proactive messages wait while the user is asleep, focused, driving or in a meeting unless urgent, and each says why it was sent                                                                 | A non-urgent suggestion during a calendar meeting arrives in the next brief instead of as a push                                                                                     | 4    |
+| About you              | Each person keeps one profile every bot reads: what to call them, pronouns, about me, how they like replies, and facts bots learn in chat                                                       | A name set in About you is used by a bot in another workspace; a fact learned in a personal space never reaches a team space unless the person turns it on there                     | 4    |
 
 ### Local MCP servers on the user's computer
 
@@ -1096,7 +1097,7 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 ### Welcome chat
 
 - First run (signed in, no invite): the app creates a personal workspace ("<first name>'s space") and a personal bot (named from the product-name constant, with a mascot avatar; renamable in chat) and opens its chat. Joining by invite link skips this. The three-step wizard stays behind "Set up manually".
-- The opening is scripted: normal bot messages with A2UI cards, stored like any message, with no model call. First "What should I help with first?" (up to three of Email and calendar, Work projects, Coding, Research, Sales and customers, Personal errands, Something else with free text), then "Just me, my team or my business?". Both can be skipped, which gives a general intro.
+- The opening is scripted: normal bot messages with A2UI cards, stored like any message, with no model call. First "What should I call you?" (About you, D-169), then "What should I help with first?" (up to three of Email and calendar, Work projects, Coding, Research, Sales and customers, Personal errands, Something else with free text), then "Just me, my team or my business?". Both can be skipped, which gives a general intro.
 - Then a scripted intro written for the picks (ARB strings in Kasama's own words) and one main connection card, with "More apps" below it:
 
   | Pick                | Main connection                                                  | First value without a connection               |
@@ -1114,6 +1115,20 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - The setup interview (D-105) then runs in the same chat with two or three questions, followed by a "What I learned" card listing the memories saved (up to 10) to edit or delete. Then the chat is open.
 - The picks are saved as memories, shape the personal bot's instructions, choose which starter bots it suggests and set what check-ins cover. "My team" or "My business" adds an invite-link card and suggests shared bots.
 - Wave 4 adds the picks "Health and habits" and phone connections.
+
+### About you
+
+Bots should know who they are talking to without the person filling in a form. Each person keeps one profile that every bot they use can read, built mostly from what they already said (D-169).
+
+- **Prefilled, then one question:** the name comes from Apple or Google sign-in (D-167), timezone and language from the device. The welcome chat opens with "What should I call you?", the sign-in first name filled in, so confirming is one tap. Nothing else is asked up front.
+- **Profile fields:** preferred name and pronouns (optional) on `profiles`, which teammates already see; "About me" (free text, up to 1,500 characters), "How I like replies" (up to 600) and "Learn about me from chats" (on by default) on `user_about`, private to the person. Settings → About you edits all of it; the Settings card shows the name instead of only the email.
+- **Learned facts:** memory extraction marks each fact as about the person (their job, family, places, tastes, how they like things written) or about the work. Facts about the person go to their own `user_facts` (private to them under RLS, at most 200, the oldest unpinned dropped first) instead of the bot's memory, which other members can read. Facts about the work stay in the bot's memory as before. The bot's `memory.write` takes `about: "person"` for the same split. A chip under the reply says "Saved to your profile" with Undo. With learning off, facts about the person are dropped.
+- **Sensitive topics** (health, religion, politics, sexuality, money troubles) are saved only when the person asks the bot to remember them, never inferred.
+- **Imports:** the ChatGPT or Claude memory import (Import an agent) can save to About you instead of one bot.
+- **Where it applies:** the preferred name, pronouns and "How I like replies" go into every run that acts for the person, in every workspace. "About me" and learned facts apply only in personal spaces (where the person is the only member) unless they turn on "Use what I've shared about me" for a team space (`profile_spaces`); the default in team spaces is off. A space with a second member stops using them automatically.
+- **Whose profile:** the person the run acts for (the sender, the routine's creator or a parent run's person, D-095). Runs for nobody (linked agents) get no profile.
+- **Prompt:** a short "Who you're talking with" block after the skills index and date, so the cached prefix doesn't change. The personal bot's instructions no longer hold the person's name.
+- **Privacy:** About you is in the data export and is deleted with the account. Profile text is not covered by encryption at rest (it has no workspace key); the docs say so.
 
 ### Google sign-in and permissions
 
@@ -1387,6 +1402,7 @@ Build these only after v1 launch unless the product owner reprioritizes. (Reprio
 - [x] Channel gate: a Telegram message and an email each get replies in the same thread; unknown senders are ignored
 - [x] Wave 3: phone-call voice, encryption at rest, memory backends, paid data services, additional `SandboxProvider` adapters (Boat, boxd, CreateOS, Novita, Railway-backed runners, Kubernetes, Incus, Alibaba Wuying) passing the contract suite, agent-to-agent (A2A), calls for you, payments, linked agents, voice upgrades, and the ops extras (boxd, CreateOS and Alibaba Wuying deferred for lack of public APIs, D-139)
 - [x] Wave 4: device connections, health data, device triggers, desktop context, attention rules
+- [x] About you: one profile per person that every bot reads (D-169)
 
 ## Open decisions and risks
 

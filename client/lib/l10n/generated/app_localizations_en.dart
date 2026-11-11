@@ -1074,6 +1074,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callEnded => 'Call ended';
 
   @override
+  String get callEndedIdle => 'Ended the call after 2 minutes of silence.';
+
+  @override
   String get callFailed => 'The call could not connect.';
 
   @override
@@ -1100,6 +1103,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceSettingsHelp => 'Read-aloud voice and dictation provider';
+
+  @override
+  String get callTools => 'Tools on calls';
+
+  @override
+  String get callToolsHelp =>
+      'Calls already include memory, web search, notes to you, routines and tickets, and hand bigger jobs to the chat. Add connected-app tools the bot should use live; each one adds a little to every call\'s cost.';
+
+  @override
+  String get callToolsNone =>
+      'This bot has no connected apps yet. Connect one under Integrations.';
+
+  @override
+  String callToolsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count connected-app tools added',
+      one: '1 connected-app tool added',
+      zero: 'Only the built-in voice tools',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get readAloudProvider => 'Read-aloud provider';
@@ -2743,6 +2769,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String adminSetupNeeded(String app) {
     return 'One-click sign-in for $app needs a one-time setup by whoever runs this Kasama server.';
+  }
+
+  @override
+  String connectThroughHub(String app) {
+    return 'Or connect $app through one of these. Sign in once, then ask your bot to use $app.';
   }
 
   @override
@@ -5741,4 +5772,361 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get photosFromUnsplash => 'Photos from Unsplash';
+
+  @override
+  String get showBotSteps => 'Show the bot\'s steps';
+
+  @override
+  String get showBotStepsHelp =>
+      'Each step it takes, with commands and technical errors. Off, chats show what it\'s doing in a few words and its answer.';
+
+  @override
+  String get toolLoad => 'Got its tools ready';
+
+  @override
+  String get activityReady => 'Getting ready…';
+
+  @override
+  String get activitySearching => 'Searching the web…';
+
+  @override
+  String get activityBrowsing => 'Browsing the web…';
+
+  @override
+  String get activityComputer => 'Working on its computer…';
+
+  @override
+  String get activityFiles => 'Going through files…';
+
+  @override
+  String get activityImage => 'Making an image…';
+
+  @override
+  String get activityMemory => 'Checking what it knows…';
+
+  @override
+  String get activityApps => 'Using your apps…';
+
+  @override
+  String get activityScheduling => 'Setting up a schedule…';
+
+  @override
+  String get activityWorking => 'Working on it…';
+
+  @override
+  String get runFailedPlain =>
+      'Something went wrong. Try again, or open Details to see why.';
+
+  @override
+  String get newKeyTitle => 'Copy your new key';
+
+  @override
+  String get newKeyHelp =>
+      'It\'s shown only this once. Paste it into the app you\'re connecting, then tap Done.';
+
+  @override
+  String get copyKey => 'Copy key';
+
+  @override
+  String get keyCopied => 'Key copied';
+
+  @override
+  String revokeApiKeyTitle(String name) {
+    return 'Revoke “$name”?';
+  }
+
+  @override
+  String get revokeApiKeyBody =>
+      'Apps using this key stop connecting right away. This can\'t be undone; to reconnect, make a new key.';
+
+  @override
+  String unlinkTitle(String name) {
+    return 'Unlink “$name”?';
+  }
+
+  @override
+  String get unlinkBody =>
+      'The bots stop talking to each other right away. Linking them again needs a new invite.';
+
+  @override
+  String get alreadyMember => 'You\'re already in this workspace.';
+
+  @override
+  String get askAdminToInvite =>
+      'Only owners and admins can invite people. Ask one of them for an invite link.';
+
+  @override
+  String get askBeforeJoining => 'Ask me before people join';
+
+  @override
+  String get askBeforeJoiningHelp =>
+      'People who use the link ask to join, and an admin approves them here.';
+
+  @override
+  String get askToJoin => 'Ask to join';
+
+  @override
+  String get customLinks => 'Custom links';
+
+  @override
+  String get customLinksHelp =>
+      'Links with their own role, expiry or number of uses.';
+
+  @override
+  String get emailAddresses => 'Email addresses';
+
+  @override
+  String get emailAddressesHelp =>
+      'Paste one or more, separated by commas or new lines.';
+
+  @override
+  String get getCode => 'Get a code';
+
+  @override
+  String get getNewCode => 'Get a new code';
+
+  @override
+  String get getStarted => 'Get started';
+
+  @override
+  String get inviteAsAdmin => 'Invite as admins';
+
+  @override
+  String get inviteByEmail => 'Invite by email';
+
+  @override
+  String get inviteExpired => 'Expired';
+
+  @override
+  String inviteExpires(String when) {
+    return 'Expires $when';
+  }
+
+  @override
+  String get inviteInvalid => 'This invite doesn\'t work';
+
+  @override
+  String get inviteInvalidHelp =>
+      'It may have expired, been used up or been turned off. Ask for a new one.';
+
+  @override
+  String get inviteLink => 'Invite link';
+
+  @override
+  String get inviteLinkApprovalHelp =>
+      'Anyone with this link can ask to join. You approve them below.';
+
+  @override
+  String get inviteLinkHelp =>
+      'Anyone with this link can join as a member. Share it in a chat or email.';
+
+  @override
+  String get inviteLinkOrCode => 'Invite link or code';
+
+  @override
+  String inviteOtherServer(String host) {
+    return 'This invite is for $host, and this app is connected to a different server.';
+  }
+
+  @override
+  String invitePeopleTo(String name) {
+    return 'Invite people to $name';
+  }
+
+  @override
+  String get inviteRenewed =>
+      'The invite works for 7 more days. Send them the new link.';
+
+  @override
+  String inviteSentTo(String email) {
+    return 'Sign in with $email to accept.';
+  }
+
+  @override
+  String inviteShareText(String workspace, String url) {
+    return 'Join $workspace on Kasama: $url';
+  }
+
+  @override
+  String invitedBy(String name) {
+    return '$name invited you to join';
+  }
+
+  @override
+  String get invitedToJoin => 'You\'re invited to join';
+
+  @override
+  String invitesSent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count invites sent.',
+      one: 'Invite sent.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get joinAsAdmin => 'You\'ll join as an admin';
+
+  @override
+  String get joinAsMember => 'You\'ll join as a member';
+
+  @override
+  String get joinByDomain => 'Join by email domain';
+
+  @override
+  String get joinByDomainHelp =>
+      'They can join from the workspace list without an invite, once their email address is verified.';
+
+  @override
+  String joinByDomainSwitch(String domain) {
+    return 'Anyone with a verified @$domain email can join';
+  }
+
+  @override
+  String get joinByDomainUnavailable =>
+      'Available when you sign in with a verified work email (not gmail.com and the like).';
+
+  @override
+  String get joinNeedsApproval =>
+      'An admin approves new people before they join.';
+
+  @override
+  String get joinRequestSent => 'Request sent';
+
+  @override
+  String joinRequestSentHelp(String name) {
+    return 'An admin of $name will look at it. You\'ll get a notification when you\'re in.';
+  }
+
+  @override
+  String get joinWithLinkOrCode => 'Join with a link or code';
+
+  @override
+  String joinWorkspaceNamed(String name) {
+    return 'Join $name';
+  }
+
+  @override
+  String get joinedBotsHelp =>
+      'These bots are here to help. Say hello to one to get started.';
+
+  @override
+  String get joinedNoBots =>
+      'There are no bots here yet. Make one, or look around first.';
+
+  @override
+  String memberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get members => 'Members';
+
+  @override
+  String openToDomain(String domain) {
+    return 'Open to @$domain';
+  }
+
+  @override
+  String openWorkspace(String name) {
+    return 'Open $name';
+  }
+
+  @override
+  String get pendingInvites => 'Invites not accepted yet';
+
+  @override
+  String get people => 'People';
+
+  @override
+  String get peopleHelp => 'Invite people and decide who gets in.';
+
+  @override
+  String get peopleRow => 'Invite people, approve requests, see members';
+
+  @override
+  String get qrCode => 'QR code';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get resendInvite => 'Send again';
+
+  @override
+  String get resetLink => 'Reset link';
+
+  @override
+  String get resetLinkHelp =>
+      'The current link stops working right away and you get a new one. People already in stay in.';
+
+  @override
+  String get revokeInvite => 'Cancel invite';
+
+  @override
+  String scanToJoin(String name) {
+    return 'Scan to join $name';
+  }
+
+  @override
+  String sendInvitesCount(int count) {
+    return 'Send $count invites';
+  }
+
+  @override
+  String get sendInvitesYourself => 'Send these invites yourself';
+
+  @override
+  String get sendInvitesYourselfHelp =>
+      'Email isn\'t set up on this server. Send each person their link, and they sign in with that address to join.';
+
+  @override
+  String get signInToJoin => 'Sign in to join';
+
+  @override
+  String get startOwnWorkspace => 'Start my own workspace instead';
+
+  @override
+  String switchToServer(String host) {
+    return 'Switch to $host';
+  }
+
+  @override
+  String get waitingToJoin => 'Waiting to join';
+
+  @override
+  String welcomeToWorkspace(String name) {
+    return 'Welcome to $name';
+  }
+
+  @override
+  String get workspacesYouCanJoin => 'Workspaces you can join';
+
+  @override
+  String get yourTeamIsHere => 'Your team is already here';
+
+  @override
+  String yourTeamIsHereHelp(String domain) {
+    return 'People at $domain use these workspaces. Join one, or start your own.';
+  }
+
+  @override
+  String get inviteCodeCardHelp =>
+      'Easy to read out or type. Works for 48 hours. People enter it under Join with a link or code.';
+
+  @override
+  String get inviteSomeoneNew => 'Invite someone new to the workspace';
+
+  @override
+  String oauthNeedsHttps(String app, String address) {
+    return '$app only signs in on a secure (https) address, and this Kasama server is at $address. Serve Kasama over https to use sign-in.';
+  }
 }

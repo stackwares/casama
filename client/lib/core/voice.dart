@@ -10,6 +10,8 @@ import 'package:just_audio/just_audio.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:record/record.dart';
 
+import 'gemini_live.dart';
+
 /// Records a short clip for dictation.
 abstract class Dictation {
   Future<bool> start();
@@ -149,6 +151,10 @@ abstract class VoiceCall {
   void sendToolResult(String callId, String output);
   void setMuted(bool muted);
   Future<void> hangUp();
+
+  /// The call's token counts as the provider reported them (Gemini Live), so usage can record the
+  /// real cost; null when the provider doesn't report them.
+  Map<String, int>? get usage;
 }
 
 abstract class VoiceCallConnector {
@@ -280,6 +286,8 @@ class _RealtimeCall implements VoiceCall {
   ValueListenable<bool> get speaking => _ev.speaking;
   @override
   Stream<CallToolRequest> get toolCalls => _ev.tools.stream;
+  @override
+  Map<String, int>? get usage => null;
 
   @override
   void sendToolResult(String callId, String output) {
@@ -313,4 +321,14 @@ class _RealtimeCall implements VoiceCall {
 
 final dictationProvider = Provider<Dictation>((ref) => RecordDictation());
 final speechPlayerProvider = Provider<SpeechPlayer>((ref) => JustAudioPlayer());
-final voiceCallConnectorProvider = Provider<VoiceCallConnector>((ref) => OpenAiRealtimeConnector());
+/// Picks the call client for the provider the server chose: Gemini Live (when the workspace has a
+/// Google AI key) or OpenAI Realtime.
+class RealtimeVoiceConnector implements VoiceCallConnector {
+  @override
+  Future<VoiceCall> connect(VoiceSession session) => switch (session.provider) {
+        VoiceSessionProviderEnum.gemini => GeminiLiveCall.open(session),
+        _ => _RealtimeCall.open(session),
+      };
+}
+
+final voiceCallConnectorProvider = Provider<VoiceCallConnector>((ref) => RealtimeVoiceConnector());

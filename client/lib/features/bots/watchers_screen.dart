@@ -64,7 +64,7 @@ class WatchersScreen extends ConsumerWidget {
                             l10n.firedTimes(w.firedCount),
                             if (w.lastError != null) w.lastError!,
                           ].join(' · '),
-                          onTap: w.conversationId == null ? null : () => context.go('/bots/$botId/chat?c=${w.conversationId}'),
+                          onTap: w.conversationId == null ? null : () => context.push('/bots/$botId/chat?c=${w.conversationId}'),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

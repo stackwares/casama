@@ -721,13 +721,18 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             if (def && !loaded.some((t) => t.name === n)) loaded.push(def);
           }
           const content = await step(`tools-load-done-${i}-${call.callId}`, async () => {
+            // Weak models call tools.load again instead of the tool they just loaded, or with no
+            // groups at all: say what is already available and which groups exist.
+            const ready = loaded.map((t) => t.name);
             const text = names.names.length
-              ? `Loaded ${names.names.length} tools: ${names.names.join(", ")}.${names.unknown.length ? ` Not found: ${names.unknown.join(", ")}.` : ""}`
-              : `Nothing loaded. Not found: ${names.unknown.join(", ") || "(none given)"}. Use groups from the index.`;
+              ? `Loaded ${names.names.length} tools: ${names.names.join(", ")}. Call them directly now, with their arguments filled in.${names.unknown.length ? ` Not found: ${names.unknown.join(", ")}.` : ""}`
+              : `Nothing loaded${names.unknown.length ? ` (not found: ${names.unknown.join(", ")})` : " (no groups given)"}. ${ready.length ? `Already loaded, call them directly: ${ready.join(", ")}. ` : ""}Groups: ${[...lazy.groups.keys()].join(", ")}.`;
             await completeToolEvent(deps, info, call, text, bus);
             return text;
           });
           turn.push({ role: "tool", callId: call.callId, name: call.name, content });
+          // A load that loaded nothing counts toward the loop guard like a failed step.
+          failStreak = names.names.length ? 0 : failStreak + 1;
           continue;
         }
         // A bot asking for a secret waits here, durably; it only learns that the value was saved.

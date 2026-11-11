@@ -12,9 +12,9 @@ Add keys in **Settings** → **Model keys** → **Add key**.
 | ---------------------------- | --------------------------------------------------------------------------------- |
 | Dictation                    | An OpenAI or Deepgram key                                                          |
 | Read aloud                   | An ElevenLabs, OpenAI, Cartesia or Fish Audio key                                  |
-| Live calls                   | An OpenAI key (OpenAI Realtime)                                                    |
-| Bot rings your phone         | An OpenAI key for the call, plus push set up on the server for iOS and Android     |
-| Bot calls a business for you | An OpenAI key and the workspace's Twilio account                                   |
+| Live calls                   | A Google AI (Gemini) key for Gemini Live, or an OpenAI key for OpenAI Realtime     |
+| Bot rings your phone         | A live-call key (Gemini or OpenAI), plus push set up on the server for iOS and Android |
+| Bot calls a business for you | A live-call key (Gemini or OpenAI) and the workspace's Twilio account              |
 | Wake word                    | No key: it runs on your device                                                     |
 
 Every minute, second or character of voice is recorded in [Usage](/guide/usage). The provider bills
@@ -45,13 +45,31 @@ replaying it doesn't call the provider again.
 
 ## Call a bot live
 
+Live calls use **Gemini Live** when the workspace has a Google AI key, and **OpenAI Realtime**
+otherwise. Gemini Live costs much less per minute (roughly $0.02 against $0.06 or more), so add a
+Google AI key under **Model keys** if you call bots often. The bot's voice on Gemini is one of
+Gemini's built-in voices (Kore by default).
+
 1. In a chat, tap **Start a voice call** (the phone icon in the header).
 2. Wait for **Live**, then talk. Use **Mute** and **Hang up** as on a phone call.
 
 What to know:
 
-- The bot keeps its persona and tools. Each tool call runs with the bot's normal approvals. If an
-  action needs your approval, the bot tells you, and you approve it in the app.
+- The bot keeps its persona and a small set of tools suited to talking: memory, knowledge, web
+  search, notes to you, routines, watchers, tickets, usage and your device data. Each tool call runs
+  with the bot's normal approvals. If an action needs your approval, the bot tells you, and you
+  approve it in the app.
+- For bigger jobs, anything that needs its computer, files, the browser or connected apps, the bot
+  starts the task in the chat and tells you. It runs in the background with all the bot's tools, and
+  the result appears in the conversation.
+- To let the bot use specific connected-app tools live, such as creating a GitHub issue while you
+  talk, open the bot's settings → **Voice** → **Tools on calls** and tick them. Each tool you add
+  goes with every call, so it adds a little to each call's cost; pick only the ones you'll use by
+  voice.
+- A call with no speech from either side for 2 minutes ends by itself, so a forgotten call doesn't
+  keep running.
+- On Gemini Live, **Usage** records what the call actually cost, from the token counts Gemini
+  reports; other calls are estimated by the minute.
 - You can interrupt. When you start speaking, the bot stops talking and listens.
 - The call's transcript is saved to the conversation.
 - Screen tools, such as clicking around the bot's desktop, aren't offered during a call.
@@ -148,7 +166,10 @@ Each call's minutes, rounded up, are recorded in [Usage](/guide/usage). Twilio b
 
 ## Limits
 
-- Live calls need OpenAI. Other realtime voice providers aren't supported.
+- Live calls run on Gemini Live or OpenAI Realtime; other realtime voice providers aren't
+  supported. With both keys, Gemini is used.
+- On Gemini Live, use headphones on desktop computers if the bot seems to hear itself: echo
+  cancellation depends on the device.
 - The wake word isn't available on iOS or on the web, and on Android it listens only while the app
   is open.
 - When a bot calls a business, you can follow the live transcript but can't listen to the audio yet.

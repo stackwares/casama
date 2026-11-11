@@ -95,8 +95,10 @@ import 'package:kasama_api/src/model/create_connect_key_request.dart';
 import 'package:kasama_api/src/model/create_conversation_request.dart';
 import 'package:kasama_api/src/model/create_credential_request.dart';
 import 'package:kasama_api/src/model/create_integration_request.dart';
+import 'package:kasama_api/src/model/create_invite_code_request.dart';
 import 'package:kasama_api/src/model/create_invite_link_request.dart';
 import 'package:kasama_api/src/model/create_invite_request.dart';
+import 'package:kasama_api/src/model/create_invites_request.dart';
 import 'package:kasama_api/src/model/create_knowledge_source_request.dart';
 import 'package:kasama_api/src/model/create_knowledge_source_request_documents_inner.dart';
 import 'package:kasama_api/src/model/create_knowledge_source_request_files_inner.dart';
@@ -120,6 +122,7 @@ import 'package:kasama_api/src/model/credential_list.dart';
 import 'package:kasama_api/src/model/credential_test_result.dart';
 import 'package:kasama_api/src/model/credit_entry.dart';
 import 'package:kasama_api/src/model/credit_pack.dart';
+import 'package:kasama_api/src/model/decide_join_request.dart';
 import 'package:kasama_api/src/model/delete_account_request.dart';
 import 'package:kasama_api/src/model/delete_integration200_response.dart';
 import 'package:kasama_api/src/model/delete_result.dart';
@@ -184,6 +187,16 @@ import 'package:kasama_api/src/model/integration_tools_inner.dart';
 import 'package:kasama_api/src/model/invite.dart';
 import 'package:kasama_api/src/model/invite_link.dart';
 import 'package:kasama_api/src/model/invite_link_list.dart';
+import 'package:kasama_api/src/model/invite_list.dart';
+import 'package:kasama_api/src/model/invite_preview.dart';
+import 'package:kasama_api/src/model/invite_preview_workspace.dart';
+import 'package:kasama_api/src/model/join_domains.dart';
+import 'package:kasama_api/src/model/join_request.dart';
+import 'package:kasama_api/src/model/join_request_body.dart';
+import 'package:kasama_api/src/model/join_request_list.dart';
+import 'package:kasama_api/src/model/join_result.dart';
+import 'package:kasama_api/src/model/joinable_workspace.dart';
+import 'package:kasama_api/src/model/joinable_workspace_list.dart';
 import 'package:kasama_api/src/model/knowledge_source.dart';
 import 'package:kasama_api/src/model/knowledge_source_list.dart';
 import 'package:kasama_api/src/model/lease.dart';
@@ -249,6 +262,8 @@ import 'package:kasama_api/src/model/password_manager_vault_list.dart';
 import 'package:kasama_api/src/model/payment_request.dart';
 import 'package:kasama_api/src/model/payment_request_list.dart';
 import 'package:kasama_api/src/model/payment_settings.dart';
+import 'package:kasama_api/src/model/pending_invite.dart';
+import 'package:kasama_api/src/model/pending_invite_list.dart';
 import 'package:kasama_api/src/model/phone_call.dart';
 import 'package:kasama_api/src/model/phone_call_list.dart';
 import 'package:kasama_api/src/model/plan.dart';
@@ -333,6 +348,7 @@ import 'package:kasama_api/src/model/set_bot_access_request_entries_inner.dart';
 import 'package:kasama_api/src/model/set_device_grant_request.dart';
 import 'package:kasama_api/src/model/set_encryption_request.dart';
 import 'package:kasama_api/src/model/set_git_sync_request.dart';
+import 'package:kasama_api/src/model/set_join_domain_request.dart';
 import 'package:kasama_api/src/model/set_local_mcp_servers_request.dart';
 import 'package:kasama_api/src/model/set_memory_backend_request.dart';
 import 'package:kasama_api/src/model/set_org_limits_request.dart';
@@ -403,6 +419,7 @@ import 'package:kasama_api/src/model/ui_shown_event_payload.dart';
 import 'package:kasama_api/src/model/update_channel_request.dart';
 import 'package:kasama_api/src/model/update_computer_request.dart';
 import 'package:kasama_api/src/model/update_credential_request.dart';
+import 'package:kasama_api/src/model/update_default_invite_request.dart';
 import 'package:kasama_api/src/model/update_integration_request.dart';
 import 'package:kasama_api/src/model/update_local_device_request.dart';
 import 'package:kasama_api/src/model/update_memory_request.dart';
@@ -433,6 +450,7 @@ import 'package:kasama_api/src/model/voice_tool_request.dart';
 import 'package:kasama_api/src/model/voice_tool_result.dart';
 import 'package:kasama_api/src/model/voice_transcript_request.dart';
 import 'package:kasama_api/src/model/voice_transcript_request_turns_inner.dart';
+import 'package:kasama_api/src/model/voice_transcript_request_usage.dart';
 import 'package:kasama_api/src/model/wallpaper_download_request.dart';
 import 'package:kasama_api/src/model/wallpaper_photo.dart';
 import 'package:kasama_api/src/model/wallpaper_photo_list.dart';
@@ -673,10 +691,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateCredentialRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateIntegrationRequest':
           return CreateIntegrationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateInviteCodeRequest':
+          return CreateInviteCodeRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateInviteLinkRequest':
           return CreateInviteLinkRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateInviteRequest':
           return CreateInviteRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateInvitesRequest':
+          return CreateInvitesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateKnowledgeSourceRequest':
           return CreateKnowledgeSourceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateKnowledgeSourceRequestDocumentsInner':
@@ -726,6 +748,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreditEntry.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreditPack':
           return CreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecideJoinRequest':
+          return DecideJoinRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteAccountRequest':
           return DeleteAccountRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteIntegration200Response':
@@ -860,9 +884,29 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return InviteLink.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InviteLinkList':
           return InviteLinkList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InviteList':
+          return InviteList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InvitePreview':
+          return InvitePreview.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InvitePreviewWorkspace':
+          return InvitePreviewWorkspace.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InviteRole':
           
           
+        case 'JoinDomains':
+          return JoinDomains.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'JoinRequest':
+          return JoinRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'JoinRequestBody':
+          return JoinRequestBody.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'JoinRequestList':
+          return JoinRequestList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'JoinResult':
+          return JoinResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'JoinableWorkspace':
+          return JoinableWorkspace.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'JoinableWorkspaceList':
+          return JoinableWorkspaceList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'KnowledgeSource':
           return KnowledgeSource.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'KnowledgeSourceList':
@@ -996,6 +1040,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PaymentRequestList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PaymentSettings':
           return PaymentSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PendingInvite':
+          return PendingInvite.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PendingInviteList':
+          return PendingInviteList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PhoneCall':
           return PhoneCall.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PhoneCallList':
@@ -1188,6 +1236,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetEncryptionRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetGitSyncRequest':
           return SetGitSyncRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetJoinDomainRequest':
+          return SetJoinDomainRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetLocalMcpServersRequest':
           return SetLocalMcpServersRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetMemoryBackendRequest':
@@ -1337,6 +1387,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateComputerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateCredentialRequest':
           return UpdateCredentialRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateDefaultInviteRequest':
+          return UpdateDefaultInviteRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateIntegrationRequest':
           return UpdateIntegrationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateLocalDeviceRequest':
@@ -1400,6 +1452,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return VoiceTranscriptRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'VoiceTranscriptRequestTurnsInner':
           return VoiceTranscriptRequestTurnsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'VoiceTranscriptRequestUsage':
+          return VoiceTranscriptRequestUsage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WallpaperDownloadRequest':
           return WallpaperDownloadRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WallpaperPhoto':

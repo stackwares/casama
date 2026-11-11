@@ -25,6 +25,8 @@ class CreateInviteLinkRequest {
      this.expiresInDays,
 
      this.maxUses,
+
+     this.requiresApproval,
   });
 
   @JsonKey(
@@ -67,19 +69,33 @@ class CreateInviteLinkRequest {
 
 
 
+  @JsonKey(
+    
+    name: r'requires_approval',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? requiresApproval;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is CreateInviteLinkRequest &&
       other.role == role &&
       other.expiresInDays == expiresInDays &&
-      other.maxUses == maxUses;
+      other.maxUses == maxUses &&
+      other.requiresApproval == requiresApproval;
 
     @override
     int get hashCode =>
         role.hashCode +
         expiresInDays.hashCode +
-        maxUses.hashCode;
+        maxUses.hashCode +
+        requiresApproval.hashCode;
 
   factory CreateInviteLinkRequest.fromJson(Map<String, dynamic> json) => _$CreateInviteLinkRequestFromJson(json);
 

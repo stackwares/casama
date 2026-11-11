@@ -38,6 +38,12 @@ class CreatedInviteLink {
 
     required  this.createdAt,
 
+     this.kind,
+
+     this.requiresApproval,
+
+     this.isDefault,
+
     required  this.token,
 
     required  this.url,
@@ -151,6 +157,42 @@ class CreatedInviteLink {
 
 
 
+  @JsonKey(
+    
+    name: r'kind',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final CreatedInviteLinkKindEnum? kind;
+
+
+
+  @JsonKey(
+    
+    name: r'requires_approval',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? requiresApproval;
+
+
+
+  @JsonKey(
+    
+    name: r'is_default',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? isDefault;
+
+
+
       /// Shown once
   @JsonKey(
     
@@ -190,6 +232,9 @@ class CreatedInviteLink {
       other.uses == uses &&
       other.revokedAt == revokedAt &&
       other.createdAt == createdAt &&
+      other.kind == kind &&
+      other.requiresApproval == requiresApproval &&
+      other.isDefault == isDefault &&
       other.token == token &&
       other.url == url;
 
@@ -204,6 +249,9 @@ class CreatedInviteLink {
         uses.hashCode +
         (revokedAt == null ? 0 : revokedAt.hashCode) +
         createdAt.hashCode +
+        kind.hashCode +
+        requiresApproval.hashCode +
+        isDefault.hashCode +
         token.hashCode +
         url.hashCode;
 
@@ -226,6 +274,22 @@ admin(r'admin'),
 member(r'member');
 
 const CreatedInviteLinkRoleEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+
+enum CreatedInviteLinkKindEnum {
+@JsonValue(r'link')
+link(r'link'),
+@JsonValue(r'code')
+code(r'code');
+
+const CreatedInviteLinkKindEnum(this.value);
 
 final String value;
 

@@ -44,6 +44,12 @@ export const InviteLink = z
     uses: z.number().int(),
     revoked_at: z.iso.datetime({ offset: true }).nullable(),
     created_at: z.iso.datetime({ offset: true }),
+    /** link: a long token in a URL; code: a short code to type, valid for 48 hours (D-167). */
+    kind: z.enum(["link", "code"]).optional(),
+    /** People who use it ask to join and an admin approves. */
+    requires_approval: z.boolean().optional(),
+    /** The workspace's standing link, which admins can copy again. */
+    is_default: z.boolean().optional(),
   })
   .openapi("InviteLink");
 
@@ -57,8 +63,109 @@ export const CreateInviteLinkRequest = z
     role: z.enum(["admin", "member"]).optional(),
     expires_in_days: z.number().int().min(1).max(365).optional(),
     max_uses: z.number().int().min(1).max(10000).optional(),
+    requires_approval: z.boolean().optional(),
   })
   .openapi("CreateInviteLinkRequest");
+
+export const UpdateDefaultInviteRequest = z
+  .object({
+    requires_approval: z.boolean().optional(),
+    /** Revoke the standing link and make a new one. */
+    reset: z.boolean().optional(),
+  })
+  .openapi("UpdateDefaultInviteRequest");
+
+export const CreateInviteCodeRequest = z
+  .object({ role: z.enum(["admin", "member"]).optional() })
+  .openapi("CreateInviteCodeRequest");
+
+export const InvitePreview = z
+  .object({
+    kind: z.enum(["link", "code", "email"]),
+    workspace: z.object({
+      name: z.string(),
+      icon: z.string().nullable(),
+      color: z.string().nullable(),
+      member_count: z.number().int(),
+    }),
+    role: z.enum(["owner", "admin", "member"]),
+    inviter_name: z.string().nullable(),
+    requires_approval: z.boolean(),
+    /** For an email invite: the address it was sent to, partly hidden (a•••@example.com). */
+    email_hint: z.string().nullable(),
+    /** Only when signed in. */
+    already_member: z.boolean().nullable(),
+  })
+  .openapi("InvitePreview");
+
+export const JoinRequestBody = z
+  .object({
+    invite: z.string().trim().min(6).max(512).openapi({
+      description: "An invite link, its token, an email invite token, or a short invite code",
+    }),
+  })
+  .openapi("JoinRequestBody");
+
+export const JoinRequest = z
+  .object({
+    id: Uuid,
+    org_id: Uuid,
+    user_id: Uuid,
+    email: z.string().nullable(),
+    display_name: z.string().nullable(),
+    role: z.enum(["admin", "member"]),
+    status: z.enum(["pending", "approved", "declined"]),
+    created_at: z.iso.datetime({ offset: true }),
+  })
+  .openapi("JoinRequest");
+
+export const DecideJoinRequest = z.object({ approve: z.boolean() }).openapi("DecideJoinRequest");
+
+export const PendingInvite = z
+  .object({
+    id: Uuid,
+    email: z.string(),
+    role: z.enum(["owner", "admin", "member"]),
+    expires_at: z.iso.datetime({ offset: true }),
+    created_at: z.iso.datetime({ offset: true }),
+  })
+  .openapi("PendingInvite");
+
+export const CreateInvitesRequest = z
+  .object({
+    emails: z.array(z.email()).min(1).max(50),
+    role: z.enum(["admin", "member"]).optional(),
+  })
+  .openapi("CreateInvitesRequest");
+
+export const JoinDomains = z
+  .object({
+    items: z.array(z.string()),
+    /** The admin's own verified email domain, if they have one. */
+    my_domain: z.string().nullable(),
+    /** Whether my_domain can be used (verified, and not a shared domain such as gmail.com). */
+    can_use: z.boolean(),
+  })
+  .openapi("JoinDomains");
+
+export const SetJoinDomainRequest = z
+  .object({
+    enabled: z.boolean(),
+    /** When turning off: the domain to remove (defaults to your own). */
+    domain: z.string().max(253).optional(),
+  })
+  .openapi("SetJoinDomainRequest");
+
+export const JoinableWorkspace = z
+  .object({
+    id: Uuid,
+    name: z.string(),
+    icon: z.string().nullable(),
+    color: z.string().nullable(),
+    member_count: z.number().int(),
+    domain: z.string(),
+  })
+  .openapi("JoinableWorkspace");
 
 export const WorkspaceBadge = z
   .object({ org_id: Uuid, approvals: z.number().int(), unread: z.number().int() })
@@ -164,3 +271,13 @@ export const PublicConfig = z
     trace_url_template: z.string().nullable().optional(),
   })
   .openapi("PublicConfig");
+
+export const JoinResult = z
+  .object({
+    /** joined: now a member; member: already one; requested: waiting for an admin. */
+    status: z.enum(["joined", "member", "requested"]),
+    /** Set when joined or already a member. */
+    organization: OrganizationWithRole.optional(),
+    workspace_name: z.string(),
+  })
+  .openapi("JoinResult");

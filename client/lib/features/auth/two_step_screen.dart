@@ -15,10 +15,13 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
+import '../../ui/otp_code_field.dart';
 import '../../ui/page.dart';
 
 /// The person's authenticator apps (refreshed after changes).
-final twoStepFactorsProvider = FutureProvider<List<TwoStepFactor>>((ref) => ref.watch(backendProvider).twoStepFactors());
+final twoStepFactorsProvider = FutureProvider<List<TwoStepFactor>>(
+  (ref) => ref.watch(backendProvider).twoStepFactors(),
+);
 
 final _requireTwoStepProvider = FutureProvider<bool?>((ref) async {
   final org = ref.watch(currentOrgProvider);
@@ -26,39 +29,19 @@ final _requireTwoStepProvider = FutureProvider<bool?>((ref) async {
   return ref.watch(backendProvider).requireTwoStep(org.id);
 });
 
-/// A 6-digit code field.
-class _CodeField extends StatelessWidget {
-  const _CodeField({required this.controller, required this.onSubmit, this.fieldKey});
-  final TextEditingController controller;
-  final VoidCallback onSubmit;
-  final Key? fieldKey;
-
-  @override
-  Widget build(BuildContext context) => TextField(
-        key: fieldKey,
-        controller: controller,
-        autofocus: true,
-        keyboardType: TextInputType.number,
-        autofillHints: const [AutofillHints.oneTimeCode],
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
-        style: const TextStyle(fontSize: 22, letterSpacing: 6),
-        textAlign: TextAlign.center,
-        decoration: InputDecoration(labelText: context.l10n.twoStepCode),
-        onSubmitted: (_) => onSubmit(),
-      );
-}
-
 /// Settings → Two-step sign-in: authenticator apps, and the workspace requirement for admins.
 class TwoStepSettingsScreen extends ConsumerStatefulWidget {
   const TwoStepSettingsScreen({super.key});
 
   @override
-  ConsumerState<TwoStepSettingsScreen> createState() => _TwoStepSettingsScreenState();
+  ConsumerState<TwoStepSettingsScreen> createState() =>
+      _TwoStepSettingsScreenState();
 }
 
 class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
   TwoStepEnrollment? _enrolling;
   final _code = TextEditingController();
+  var _codeInvalid = false;
   var _busy = false;
 
   @override
@@ -69,26 +52,32 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
 
   Future<void> _start() async {
     setState(() => _busy = true);
-    final e = await runGuarded(context, () => ref.read(backendProvider).startTwoStep());
+    final e = await runGuarded(
+      context,
+      () => ref.read(backendProvider).startTwoStep(),
+    );
     if (!mounted) return;
     setState(() {
       _busy = false;
       _enrolling = e;
       _code.clear();
+      _codeInvalid = false;
     });
   }
 
   Future<void> _verify() async {
     final e = _enrolling;
-    if (e == null || _code.text.length != 6) return;
+    final code = _code.text;
+    if (e == null || code.length != OtpCodeField.length || _busy) return;
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).verifyTwoStep(e.factorId, _code.text);
+      await ref.read(backendProvider).verifyTwoStep(e.factorId, code);
       return true;
     });
     if (!mounted) return;
     setState(() {
       _busy = false;
+      _codeInvalid = ok != true;
       if (ok == true) _enrolling = null;
     });
     if (ok == true) {
@@ -109,7 +98,10 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
       icon: LucideIcons.smartphone,
     );
     if (name == null || name.trim().isEmpty || !mounted) return;
-    await runGuarded(context, () => ref.read(backendProvider).renameTwoStep(f.id, name.trim()));
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).renameTwoStep(f.id, name.trim()),
+    );
     ref.invalidate(twoStepFactorsProvider);
   }
 
@@ -123,7 +115,10 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
       destructive: true,
     );
     if (!ok || !mounted) return;
-    await runGuarded(context, () => ref.read(backendProvider).removeTwoStep(f.id));
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).removeTwoStep(f.id),
+    );
     ref.invalidate(twoStepFactorsProvider);
   }
 
@@ -176,10 +171,14 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
               if (enrolling == null)
                 OutlinedButton.icon(
                   key: const Key('startTwoStep'),
-                  style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
                   onPressed: _busy ? null : _start,
                   icon: const Icon(LucideIcons.plus, size: 20),
-                  label: Text(items.isEmpty ? l10n.twoStepSetUp : l10n.twoStepAddAnother),
+                  label: Text(
+                    items.isEmpty ? l10n.twoStepSetUp : l10n.twoStepAddAnother,
+                  ),
                 )
               else
                 AppCard(
@@ -193,7 +192,11 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
                         child: Container(
                           color: Colors.white,
                           padding: const EdgeInsets.all(AppSpace.sm),
-                          child: SvgPicture.string(enrolling.qrSvg, width: 180, height: 180),
+                          child: SvgPicture.string(
+                            enrolling.qrSvg,
+                            width: 180,
+                            height: 180,
+                          ),
                         ),
                       ),
                       Row(
@@ -201,23 +204,43 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
                           Expanded(
                             child: SelectableText(
                               '${l10n.twoStepKey}: ${enrolling.secret}',
-                              style: const TextStyle(fontFamily: 'JetBrains Mono'),
+                              style: const TextStyle(
+                                fontFamily: 'JetBrains Mono',
+                              ),
                             ),
                           ),
                           IconButton(
                             tooltip: l10n.copy,
                             icon: const Icon(LucideIcons.copy, size: 18),
                             onPressed: () async {
-                              await Clipboard.setData(ClipboardData(text: enrolling.secret));
-                              if (context.mounted) showMessage(context, l10n.copied);
+                              await Clipboard.setData(
+                                ClipboardData(text: enrolling.secret),
+                              );
+                              if (context.mounted) {
+                                showMessage(context, l10n.copied);
+                              }
                             },
                           ),
                         ],
                       ),
-                      _CodeField(fieldKey: const Key('enrollCode'), controller: _code, onSubmit: _verify),
+                      OtpCodeField(
+                        key: const Key('enrollCode'),
+                        controller: _code,
+                        label: l10n.twoStepCode,
+                        invalid: _codeInvalid,
+                        onChanged: (_) {
+                          if (_codeInvalid) {
+                            setState(() => _codeInvalid = false);
+                          }
+                        },
+                        onCompleted: (_) => _verify(),
+                        onSubmitted: _verify,
+                      ),
                       GlowButton.icon(
                         key: const Key('verifyTwoStep'),
-                        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                        ),
                         onPressed: _busy ? null : _verify,
                         icon: const Icon(LucideIcons.check, size: 20),
                         label: Text(l10n.twoStepVerify),
@@ -238,7 +261,11 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
                 subtitle: Text(l10n.requireTwoStepHelp),
                 value: require,
                 onChanged: (v) async {
-                  await runGuarded(context, () => ref.read(backendProvider).setRequireTwoStep(org.id, v));
+                  await runGuarded(
+                    context,
+                    () =>
+                        ref.read(backendProvider).setRequireTwoStep(org.id, v),
+                  );
                   ref.invalidate(_requireTwoStepProvider);
                   ref.invalidate(organizationsProvider);
                 },
@@ -256,11 +283,13 @@ class TwoStepPromptScreen extends ConsumerStatefulWidget {
   const TwoStepPromptScreen({super.key});
 
   @override
-  ConsumerState<TwoStepPromptScreen> createState() => _TwoStepPromptScreenState();
+  ConsumerState<TwoStepPromptScreen> createState() =>
+      _TwoStepPromptScreenState();
 }
 
 class _TwoStepPromptScreenState extends ConsumerState<TwoStepPromptScreen> {
   final _code = TextEditingController();
+  var _codeInvalid = false;
   var _busy = false;
 
   @override
@@ -270,55 +299,127 @@ class _TwoStepPromptScreenState extends ConsumerState<TwoStepPromptScreen> {
   }
 
   Future<void> _submit() async {
-    if (_code.text.length != 6) return;
+    final code = _code.text;
+    if (code.length != OtpCodeField.length || _busy) return;
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).passTwoStep(_code.text);
+      await ref.read(backendProvider).passTwoStep(code);
       return true;
     });
     if (!mounted) return;
-    setState(() => _busy = false);
+    setState(() {
+      _busy = false;
+      _codeInvalid = ok != true;
+    });
     if (ok == true) {
       ref.invalidate(organizationsProvider);
       context.go('/bots');
-    } else {
-      _code.clear();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = context.colorScheme;
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Padding(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final minHeight = constraints.maxHeight - AppSpace.lg * 2;
+            return SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpace.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: AppSpace.md,
-                children: [
-                  const Icon(LucideIcons.shieldCheck, size: 40),
-                  Text(l10n.twoStepPromptTitle, textAlign: TextAlign.center, style: context.textTheme.headlineSmall),
-                  Text(l10n.twoStepPromptBody, textAlign: TextAlign.center),
-                  _CodeField(fieldKey: const Key('signInCode'), controller: _code, onSubmit: _submit),
-                  GlowButton(
-                    key: const Key('submitCode'),
-                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-                    onPressed: _busy ? null : _submit,
-                    child: Text(l10n.twoStepVerify),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: minHeight < 0 ? 0 : minHeight,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: AppSpace.md,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              LucideIcons.shieldCheck,
+                              size: 32,
+                              color: scheme.primary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          l10n.twoStepPromptTitle,
+                          textAlign: TextAlign.center,
+                          style: context.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        Text(
+                          l10n.twoStepPromptBody,
+                          textAlign: TextAlign.center,
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            height: 1.4,
+                          ),
+                        ),
+                        OtpCodeField(
+                          key: const Key('signInCode'),
+                          controller: _code,
+                          label: l10n.twoStepCode,
+                          invalid: _codeInvalid,
+                          onChanged: (_) {
+                            if (_codeInvalid) {
+                              setState(() => _codeInvalid = false);
+                            }
+                          },
+                          onCompleted: (_) => _submit(),
+                          onSubmitted: _submit,
+                        ),
+                        GlowButton(
+                          key: const Key('submitCode'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(50),
+                          ),
+                          onPressed: _busy ? null : _submit,
+                          child: _busy
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: scheme.onPrimary,
+                                  ),
+                                )
+                              : Text(l10n.twoStepVerify),
+                        ),
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            foregroundColor: scheme.onSurfaceVariant,
+                          ),
+                          onPressed: _busy
+                              ? null
+                              : () => runGuarded(
+                                  context,
+                                  ref.read(backendProvider).signOut,
+                                ),
+                          child: Text(l10n.signOut),
+                        ),
+                      ],
+                    ),
                   ),
-                  TextButton(
-                    onPressed: () => runGuarded(context, ref.read(backendProvider).signOut),
-                    child: Text(l10n.signOut),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

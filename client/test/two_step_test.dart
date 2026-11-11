@@ -21,12 +21,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('JBSWY3DPEHPK3PXP'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('enrollCode')), '000000');
-    await tester.tap(find.byKey(const Key('verifyTwoStep')));
     await tester.pumpAndSettle();
     expect(backend.twoStep, isEmpty);
 
     await tester.enterText(find.byKey(const Key('enrollCode')), '123456');
-    await tester.tap(find.byKey(const Key('verifyTwoStep')));
     await tester.pumpAndSettle();
     expect(backend.twoStep.single.id, 'f-new');
     expect(find.text('Add another authenticator'), findsOneWidget);
@@ -54,7 +52,10 @@ void main() {
     final router = GoRouter(
       initialLocation: '/two-step',
       routes: [
-        GoRoute(path: '/two-step', builder: (_, _) => const TwoStepPromptScreen()),
+        GoRoute(
+          path: '/two-step',
+          builder: (_, _) => const TwoStepPromptScreen(),
+        ),
         GoRoute(path: '/bots', builder: (_, _) => const Text('bots home')),
       ],
     );
@@ -71,7 +72,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Enter your code'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('signInCode')), '123456');
-    await tester.tap(find.byKey(const Key('submitCode')));
     await tester.pumpAndSettle();
     expect(backend.twoStepVerified, isTrue);
     expect(find.text('bots home'), findsOneWidget);

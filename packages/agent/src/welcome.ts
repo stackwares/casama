@@ -682,7 +682,7 @@ export async function handleWelcomeAction(
       ]);
       s.step = "first_value";
       if (calendarOrMail)
-        return scripted(catchupMessage(await hasConnection(db, c.orgId, ["gmail_inbox"])));
+        return scripted(catchupMessage(await hasConnection(db, c.orgId, ["gmail", "gmail_inbox"])));
       return scripted(firstTaskMessage(s));
     }
     case "welcome.nocatchup":

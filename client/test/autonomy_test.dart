@@ -232,6 +232,41 @@ void main() {
     expect(find.byKey(const Key('appConnected')), findsOneWidget);
   });
 
+  testWidgets('apps: an app that needs setup offers a hub like Composio instead', (tester) async {
+    await setSize(tester, const Size(700, 1400));
+    final backend = FakeBackend();
+    backend.catalog
+      ..add(FakeBackend.catalogApp('slack', 'Slack', [CatalogAppAuthEnum.oauth], oauthAvailable: false))
+      ..add(FakeBackend.catalogApp('composio', 'Composio', [CatalogAppAuthEnum.oauth], popular: false));
+    await tester.pumpWidget(harness(backend, const IntegrationsScreen()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('featured-slack')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('needs a one-time setup'), findsOneWidget);
+    expect(find.textContaining('Or connect Slack through one of these'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('connectVia_composio')));
+    await tester.pumpAndSettle();
+    expect(find.text('Continue with Composio'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('connectAppSubmit')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(backend.connectCalls.single, ('composio', 'oauth', null));
+    await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('apps: on a plain-http server address, sign-in says it needs https', (tester) async {
+    await setSize(tester, const Size(700, 1400));
+    final backend = FakeBackend()..catalogRedirectUri = 'http://192.168.1.20:8787/oauth/callback';
+    backend.catalog.add(FakeBackend.catalogApp('slack', 'Slack', [CatalogAppAuthEnum.oauth], oauthAvailable: false));
+    await tester.pumpWidget(harness(backend, const IntegrationsScreen()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('featured-slack')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('only signs in on a secure (https) address'), findsOneWidget);
+    expect(find.textContaining('http://192.168.1.20:8787'), findsOneWidget);
+    expect(find.textContaining('needs a one-time setup'), findsNothing);
+  });
+
   testWidgets('apps: a connection tools can be set to always ask, and it can be disconnected', (tester) async {
     await setSize(tester, const Size(700, 1400));
     final backend = FakeBackend();

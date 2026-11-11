@@ -53,7 +53,7 @@ class ReplaysScreen extends ConsumerWidget {
                             final params = await showAdaptiveSheet<Map<String, String>>(context: context, builder: (_) => _RunReplay(replay: r));
                             if (params == null || !context.mounted) return;
                             final started = await runGuarded(context, () => backend.runReplay(r.id, params));
-                            if (started != null && context.mounted) GoRouter.maybeOf(context)?.go('/bots/$botId/chat?c=${started.conversationId}');
+                            if (started != null && context.mounted) GoRouter.maybeOf(context)?.push('/bots/$botId/chat?c=${started.conversationId}');
                           },
                           trailing: IconButton(
                             key: Key('deleteReplay-${r.id}'),

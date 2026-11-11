@@ -54,8 +54,11 @@ export interface Workflows {
     phone?: boolean,
   ): Promise<
     VoiceResult<{
+      provider: "gemini" | "openai";
       model: string;
       clientSecret: string;
+      /** Gemini Live: the setup message the client sends first (the token locks most of it). */
+      setup: Record<string, unknown> | null;
       expiresAt: string;
       connectUrl: string;
       tools: number;

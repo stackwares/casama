@@ -17,6 +17,8 @@ abstract class _$VoiceSessionCWProxy {
 
   VoiceSession connectUrl(String connectUrl);
 
+  VoiceSession setup(Map<String, Object?>? setup);
+
   VoiceSession conversationId(String conversationId);
 
   VoiceSession tools(int tools);
@@ -37,6 +39,7 @@ abstract class _$VoiceSessionCWProxy {
     String clientSecret,
     DateTime expiresAt,
     String connectUrl,
+    Map<String, Object?>? setup,
     String conversationId,
     int tools,
     bool speakFirst,
@@ -68,6 +71,9 @@ class _$VoiceSessionCWProxyImpl implements _$VoiceSessionCWProxy {
   VoiceSession connectUrl(String connectUrl) => call(connectUrl: connectUrl);
 
   @override
+  VoiceSession setup(Map<String, Object?>? setup) => call(setup: setup);
+
+  @override
   VoiceSession conversationId(String conversationId) =>
       call(conversationId: conversationId);
 
@@ -92,6 +98,7 @@ class _$VoiceSessionCWProxyImpl implements _$VoiceSessionCWProxy {
     Object? clientSecret = const $CopyWithPlaceholder(),
     Object? expiresAt = const $CopyWithPlaceholder(),
     Object? connectUrl = const $CopyWithPlaceholder(),
+    Object? setup = const $CopyWithPlaceholder(),
     Object? conversationId = const $CopyWithPlaceholder(),
     Object? tools = const $CopyWithPlaceholder(),
     Object? speakFirst = const $CopyWithPlaceholder(),
@@ -119,6 +126,10 @@ class _$VoiceSessionCWProxyImpl implements _$VoiceSessionCWProxy {
           ? _value.connectUrl
           // ignore: cast_nullable_to_non_nullable
           : connectUrl as String,
+      setup: setup == const $CopyWithPlaceholder()
+          ? _value.setup
+          // ignore: cast_nullable_to_non_nullable
+          : setup as Map<String, Object?>?,
       conversationId:
           conversationId == const $CopyWithPlaceholder() ||
               conversationId == null
@@ -162,6 +173,7 @@ VoiceSession _$VoiceSessionFromJson(Map<String, dynamic> json) =>
             'client_secret',
             'expires_at',
             'connect_url',
+            'setup',
             'conversation_id',
             'tools',
             'speak_first',
@@ -179,6 +191,7 @@ VoiceSession _$VoiceSessionFromJson(Map<String, dynamic> json) =>
             (v) => DateTime.parse(v as String),
           ),
           connectUrl: $checkedConvert('connect_url', (v) => v as String),
+          setup: $checkedConvert('setup', (v) => v as Map<String, dynamic>?),
           conversationId: $checkedConvert(
             'conversation_id',
             (v) => v as String,
@@ -204,11 +217,13 @@ Map<String, dynamic> _$VoiceSessionToJson(VoiceSession instance) =>
       'client_secret': instance.clientSecret,
       'expires_at': instance.expiresAt.toIso8601String(),
       'connect_url': instance.connectUrl,
+      'setup': instance.setup,
       'conversation_id': instance.conversationId,
       'tools': instance.tools,
       'speak_first': instance.speakFirst,
     };
 
 const _$VoiceSessionProviderEnumEnumMap = {
+  VoiceSessionProviderEnum.gemini: 'gemini',
   VoiceSessionProviderEnum.openai: 'openai',
 };

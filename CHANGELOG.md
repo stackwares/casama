@@ -22,6 +22,14 @@ The first public release. Highlights:
 - Memory with optional external backends; knowledge sources (files, websites, GitHub, connections);
   a skill catalog, GitHub import and self-improving skills.
 
+### Voice
+
+- Live voice calls run on Gemini Live when the workspace has a Google AI key (much cheaper per
+  minute), with OpenAI Realtime as the fallback; phone calls through Twilio use it too.
+- Cheaper calls: a small voice tool set with bigger jobs handed to the chat, a capped context,
+  silence left out of turns, idle calls hung up after 2 minutes, and the real per-call cost
+  recorded in usage. Each bot can add chosen connected-app tools to its calls.
+
 ### Computers
 
 - A sandboxed Linux computer per bot (headless or desktop) that sleeps when idle, with checkpoints

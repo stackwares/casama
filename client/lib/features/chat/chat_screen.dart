@@ -25,6 +25,7 @@ import '../../ui/shell_header.dart';
 import '../files/file_preview.dart';
 import '../home/home_shell.dart';
 import 'chat_controller.dart';
+import 'chat_detail.dart';
 import 'local_actions.dart';
 import 'widgets/bot_ui.dart';
 import 'widgets/chat_widgets.dart';
@@ -379,6 +380,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     });
     final name = bot?.name ?? '';
+    // Simple chats by default: what the bot is doing in a few words, not each step (D-162).
+    final showSteps = ref.watch(showBotStepsProvider);
     final layout = layoutFor(MediaQuery.sizeOf(context).width);
     final status = chat.running ? l10n.botStatusWorking : (bot?.status == BotStatusEnum.waiting ? l10n.botStatusWaiting : _modelLabel(bot));
 
@@ -443,7 +446,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               thread = Consumer(
                 builder: (context, ref, _) {
                   final chat = ref.watch(chatControllerProvider(widget.botId));
-                  final rows = _buildRows(context, chat, name, computer, bot?.avatarUrl);
+                  final rows = _buildRows(context, chat, name, computer, bot?.avatarUrl, showSteps: showSteps);
                   final keys = {for (final r in rows) r.key};
                   _rowCache.removeWhere((k, _) => !keys.contains(k));
                   final focusId = _focusPending ?? _highlight;
@@ -671,7 +674,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   /// Turns the chat into rows: one bot header per turn, consecutive tool steps grouped in a card,
   /// and a working indicator while the bot thinks between steps.
-  List<_Row> _buildRows(BuildContext context, ChatState chat, String name, Computer? computer, String? avatar) {
+  List<_Row> _buildRows(BuildContext context, ChatState chat, String name, Computer? computer, String? avatar, {bool showSteps = false}) {
     final rows = <_Row>[];
     // A shown card is its own row; its ui.show step would only repeat it (the timeline keeps it).
     final entries = [for (final e in chat.entries) if (!(e is ToolEntry && e.tool == 'ui.show')) e];
@@ -699,7 +702,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     String? workingStatus() {
       for (final e in entries.reversed) {
-        if (e is ToolEntry && e.status == ToolStatus.running) return '${toolLabel(context.l10n, e.tool).$1}…';
+        if (e is ToolEntry && e.status == ToolStatus.running) return toolActivity(context.l10n, e.tool);
         if (e is MessageEntry) break;
       }
       return null;
@@ -755,10 +758,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               break;
             }
           }
-          botSide(e.callId);
-          rows.add(_Row(ValueKey('tools-${e.callId}'), rows.last.header ? 0 : AppSpace.sm, () => ToolGroupCard(steps: group), inputs: _Same(group)));
+          final published = group.any((t) => t.tool == 'pages.publish' && t.status == ToolStatus.done);
+          // Simple chats leave the steps out; the working line says what's happening (D-162).
+          if (showSteps || published) botSide(e.callId);
+          if (showSteps) {
+            rows.add(_Row(ValueKey('tools-${e.callId}'), rows.last.header ? 0 : AppSpace.sm, () => ToolGroupCard(steps: group), inputs: _Same(group)));
+          }
           // A published page opens from Pages, in the browser (D-119).
-          if (group.any((t) => t.tool == 'pages.publish' && t.status == ToolStatus.done)) {
+          if (published) {
             rows.add(
               _Row(
                 ValueKey('pages-${e.callId}'),
@@ -816,9 +823,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           );
         case final NoticeEntry n:
           final last = i == entries.length - 1;
+          // Skills, checkpoints and model switches are details of how it works.
+          if (!showSteps && (n.kind == NoticeKind.skill || n.kind == NoticeKind.checkpoint || n.kind == NoticeKind.modelFallback)) continue;
           rows.add(
             _Row(ValueKey('notice-$i'), AppSpace.sm, () {
               final line = NoticeLine(
+                plain: !showSteps,
                 entry: n,
                 onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp),
                 onDetails: () => showErrorDetails(context, entry: n, botId: widget.botId),
@@ -866,7 +876,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         (last is UiEntry && !chat.answeredUi.contains(last.surfaceId));
     final replying = last is MessageEntry && last.role == 'assistant' && last.streaming;
     final toolRunning = last is ToolEntry && last.status == ToolStatus.running;
-    if (chat.running && !waitingOnPerson && !replying && !toolRunning) {
+    // With the steps hidden, the working line also shows while a step runs.
+    if (chat.running && !waitingOnPerson && !replying && (!toolRunning || !showSteps)) {
       botSide('working', chat.activeBotId);
       rows.add(_Row(const ValueKey('working'), rows.last.header ? 0 : AppSpace.md, () => WorkingIndicator(status: workingStatus() ?? context.l10n.thinking)));
     }
@@ -1206,7 +1217,7 @@ class _MoreMenu extends StatelessWidget {
       style: const MenuStyle(minimumSize: WidgetStatePropertyAll(Size(menuWidth, 0)), maximumSize: WidgetStatePropertyAll(Size(menuWidth, double.infinity))),
       menuChildren: [
         item(LucideIcons.activity, l10n.activity, () => context.push('/bots/$botId/activity')),
-        if (showComputer) item(LucideIcons.monitor, l10n.navComputer, () => context.go('/computer')),
+        if (showComputer) item(LucideIcons.monitor, l10n.navComputer, () => context.push('/computer')),
         item(LucideIcons.brain, l10n.memory, () => context.push('/bots/$botId/memory')),
         item(LucideIcons.clock, l10n.routines, () => context.push('/bots/$botId/routines')),
         item(LucideIcons.puzzle, l10n.botIntegrations, () => context.push('/bots/$botId/integrations')),

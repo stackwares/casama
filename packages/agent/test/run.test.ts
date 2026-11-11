@@ -569,6 +569,48 @@ describe("lazy tool loading (D-106)", () => {
     expect(planLazyTools(all, 500)).toBeNull();
   });
 
+  it("a model that keeps loading nothing is stopped by the loop guard, told what exists", async () => {
+    const empty: FixtureFile[] = [
+      fixtures[0] as FixtureFile,
+      {
+        name: "empty-loads",
+        turns: [
+          {
+            when: { lastRole: "user", lastUserIncludes: "load nothing" },
+            events: [
+              { type: "tool_call", call: { callId: "e0", name: "tools__load", args: {} } },
+              finish(1),
+            ],
+          },
+          {
+            when: { lastRole: "tool", lastToolName: "tools.load" },
+            events: [
+              { type: "tool_call", call: { callId: "e1", name: "tools__load", args: {} } },
+              finish(1),
+            ],
+          },
+        ],
+      },
+    ];
+    const botId = await makeBot({ budget: { per_run_usd: 1000, daily_usd: 1000 } });
+    const { runId } = await startRun(botId, "Please load nothing");
+    const result = await runAgent(
+      runId,
+      deps(new ReplayGateway(empty), { tools: manyTools(), lazyToolsThreshold: 5 }),
+    );
+    expect(result.status).toBe("failed");
+    const evs = await events(runId);
+    expect(evs.filter((e) => e.type === "tool.started").length).toBeLessThanOrEqual(5);
+    const done = evs.find((e) => e.type === "tool.completed") as
+      | { payload: { result_preview?: string } }
+      | undefined;
+    expect(JSON.stringify(done?.payload)).toContain("Groups: ");
+    expect(evs.at(-1)).toMatchObject({
+      type: "run.failed",
+      payload: { error_code: "stuck_looping" },
+    });
+  });
+
   it("starts with core tools and the index, then loads a group for the rest of the run", async () => {
     const lazyFixtures: FixtureFile[] = [
       fixtures[0] as FixtureFile,

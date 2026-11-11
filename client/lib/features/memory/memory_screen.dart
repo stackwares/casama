@@ -109,10 +109,20 @@ class _MemoryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    StatusLabel(text: label, color: color, pill: true, icon: icon),
-                    if (m.pinned) ...[const SizedBox(width: 6), StatusLabel(text: l10n.pinned, color: scheme.primary, pill: true, icon: LucideIcons.pin)],
-                    const Spacer(),
+                    // The labels wrap on narrow phones; the time stays on the right.
+                    Expanded(
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          StatusLabel(text: label, color: color, pill: true, icon: icon),
+                          if (m.pinned) StatusLabel(text: l10n.pinned, color: scheme.primary, pill: true, icon: LucideIcons.pin),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
                     Text(relativeTime(m.updatedAt, context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
                   ],
                 ),

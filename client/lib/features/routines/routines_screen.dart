@@ -199,7 +199,7 @@ class _RoutineCard extends ConsumerWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(l10n.routineStarted),
-                        action: router == null ? null : SnackBarAction(label: l10n.viewRun, onPressed: () => router.go('/bots/${r.botId}/runs/$runId')),
+                        action: router == null ? null : SnackBarAction(label: l10n.viewRun, onPressed: () => router.push('/bots/${r.botId}/runs/$runId')),
                       ),
                     );
                   }
@@ -350,6 +350,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
               Text(l10n.calendarTriggerNeedsCalendar, key: const Key('noCalendar'))
             else ...[
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 key: const Key('routineCalendar'),
                 initialValue: _calendarId,
                 decoration: InputDecoration(labelText: l10n.calendarTriggerCalendar),
@@ -384,6 +385,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
             Text(l10n.messageTriggerHelp),
             const SizedBox(height: AppSpace.sm),
             DropdownButtonFormField<MessageTriggerConfigChannelKindEnum?>(
+              isExpanded: true,
               key: const Key('messageKind'),
               initialValue: _msgKind,
               decoration: InputDecoration(labelText: l10n.chatAppsKind),

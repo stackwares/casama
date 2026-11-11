@@ -161,14 +161,22 @@ class _Overview extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpace.md),
                 ],
-                GridView.count(
-                  crossAxisCount: columns,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: AppSpace.sm,
-                  crossAxisSpacing: AppSpace.sm,
-                  childAspectRatio: 1.35,
-                  children: stats,
+                // Rows of tiles at their natural height (equal within a row), rather than a fixed
+                // ratio that cuts them off on narrow phones, with other fonts or larger text.
+                Column(
+                  spacing: AppSpace.sm,
+                  children: [
+                    for (var r = 0; r < stats.length; r += columns)
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          spacing: AppSpace.sm,
+                          children: [
+                            for (var c = r; c < r + columns; c++) Expanded(child: c < stats.length ? stats[c] : const SizedBox()),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: AppSpace.md),
                 FormNote(l10n.kasamaVersion(o.version), icon: LucideIcons.badgeCheck),

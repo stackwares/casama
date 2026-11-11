@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
@@ -62,8 +63,10 @@ class KasamaApp extends ConsumerWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
-      builder: (context, child) => CompanionOverlay(
-        child: _NotificationsAsk(push: ref.read(pushProvider), child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => _DismissKeyboard(
+        child: CompanionOverlay(
+          child: _NotificationsAsk(push: ref.read(pushProvider), child: child ?? const SizedBox.shrink()),
+        ),
       ),
     );
   }
@@ -87,3 +90,22 @@ class _NotificationsAsk extends StatelessWidget {
   );
 }
 
+/// Phones: a tap outside the text field being typed in puts the keyboard away, as people expect
+/// (Flutter keeps it open on touch). Buttons and other fields still get their taps first, so this
+/// only fires on empty space and plain content. Mouse clicks are left alone: desktop fields
+/// already handle that, and moving focus there would break shortcuts.
+class _DismissKeyboard extends StatelessWidget {
+  const _DismissKeyboard({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.translucent,
+    onTapUp: (details) {
+      if (details.kind != PointerDeviceKind.touch) return;
+      final focus = FocusManager.instance.primaryFocus;
+      if (focus?.context?.findAncestorWidgetOfExactType<EditableText>() != null) focus!.unfocus();
+    },
+    child: child,
+  );
+}

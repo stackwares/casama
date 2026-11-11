@@ -350,11 +350,16 @@ export function registerComputerTools(registry: ToolRegistry) {
       const asked =
         args.path ?? `screenshots/${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
       // On a team computer relative paths are in the bot's folder (D-148).
-      const path = (await needComputer(ctx)).resolvePath?.(asked) ?? asked;
-      await browser(
-        ctx,
-        `screenshot ${shq(path.startsWith("/") ? path : `/home/kasama/workspace/${path}`)}`,
+      const h = await needComputer(ctx);
+      const path = h.resolvePath?.(asked) ?? asked;
+      const full = path.startsWith("/") ? path : `/home/kasama/workspace/${path}`;
+      // agent-browser doesn't create folders, and the bot's screenshots folder may not exist yet.
+      await collectExec(
+        h.exec(`mkdir -p ${shq(full.slice(0, full.lastIndexOf("/")) || "/")}`, {
+          timeoutMs: 10_000,
+        }),
       );
+      await browser(ctx, `screenshot ${shq(full)}`);
       return {
         content: `Saved screenshot to ${path}.`,
         preview: `saved ${path}`,

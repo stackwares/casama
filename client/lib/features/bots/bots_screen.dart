@@ -131,7 +131,7 @@ class _BotCard extends StatelessWidget {
       borderColor: selected ? scheme.primary.withValues(alpha: 0.5) : null,
       child: Row(
         children: [
-          BotAvatar(name: bot.name, avatar: bot.avatarUrl, size: 46, status: bot.status, ringColor: scheme.surfaceContainerLow),
+          BotAvatar(name: bot.name, avatar: bot.avatarUrl, size: 46, animate: true, status: bot.status, ringColor: scheme.surfaceContainerLow),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -427,6 +427,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
             AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
           ] else ...[
             DropdownButtonFormField<String>(
+              isExpanded: true,
               key: ValueKey('key-$_credentialId-${keys.length}'),
               initialValue: _credentialId,
               decoration: InputDecoration(labelText: l10n.modelKey),

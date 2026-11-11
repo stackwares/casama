@@ -21,12 +21,16 @@ import 'talking_avatar.dart';
 
 /// A live voice call with a bot (/bots/:id/call?c=conversation).
 class CallScreen extends ConsumerStatefulWidget {
-  const CallScreen({super.key, required this.botId, this.conversationId, this.callId});
+  const CallScreen({super.key, required this.botId, this.conversationId, this.callId, this.idleLimit = const Duration(minutes: 2)});
   final String botId;
   final String? conversationId;
 
   /// An answered phone call (D-135).
   final String? callId;
+
+  /// A call with no speech from either side for this long hangs up, so a forgotten call doesn't
+  /// keep streaming (and costing).
+  final Duration idleLimit;
 
   @override
   ConsumerState<CallScreen> createState() => _CallScreenState();
@@ -35,6 +39,7 @@ class CallScreen extends ConsumerStatefulWidget {
 class _CallScreenState extends ConsumerState<CallScreen> {
   VoiceCall? _call;
   String? _conversationId;
+  String? _provider;
   Object? _error;
   var _muted = false;
   var _ending = false;
@@ -42,6 +47,25 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   var _avatar = false;
   StreamSubscription<CallToolRequest>? _toolSub;
   final _activeTools = <String>[];
+  Timer? _idleTimer;
+  Duration _idleTick = const Duration(seconds: 10);
+  var _quietTicks = 0;
+
+  void _activity() => _quietTicks = 0;
+
+  void _checkIdle() {
+    final call = _call;
+    if (call == null || _ending || call.state.value != CallState.live) return;
+    if (call.speaking.value || _activeTools.isNotEmpty) {
+      _activity();
+      return;
+    }
+    _quietTicks++;
+    if (_idleTick * _quietTicks >= widget.idleLimit) {
+      showMessage(context, context.l10n.callEndedIdle);
+      unawaited(_hangUp());
+    }
+  }
 
   @override
   void initState() {
@@ -58,6 +82,9 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   @override
   void dispose() {
+    _idleTimer?.cancel();
+    _call?.transcript.removeListener(_activity);
+    _call?.speaking.removeListener(_activity);
     unawaited(_toolSub?.cancel());
     // Stop listening first: hanging up changes the call's state while this widget is going away.
     _call?.state.removeListener(_refresh);
@@ -72,6 +99,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       final backend = ref.read(backendProvider);
       final session = await backend.voiceSession(widget.botId, conversationId: widget.conversationId, callId: widget.callId);
       _conversationId = session.conversationId;
+      _provider = session.provider.value;
       final call = await ref.read(voiceCallConnectorProvider).connect(session);
       if (!mounted) {
         await call.hangUp();
@@ -80,6 +108,12 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       call.state.addListener(_refresh);
       call.transcript.addListener(_refresh);
       call.replyLatencyMs.addListener(_refresh);
+      // Speech either way keeps the call going; long silence ends it.
+      call.transcript.addListener(_activity);
+      call.speaking.addListener(_activity);
+      _activity();
+      _idleTick = widget.idleLimit < const Duration(seconds: 50) ? widget.idleLimit ~/ 5 : const Duration(seconds: 10);
+      _idleTimer = Timer.periodic(_idleTick, (_) => _checkIdle());
       // Tool calls run as agent runs with the bot's approvals, then go back to the model.
       _toolSub = call.toolCalls.listen((t) async {
         setState(() => _activeTools.add(t.name));
@@ -106,13 +140,15 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   Future<void> _hangUp() async {
     final call = _call;
     _ending = true;
+    _idleTimer?.cancel();
     if (call != null) {
       final turns = [for (final t in call.transcript.value) (t.role, t.text)];
+      final usage = call.usage;
       await call.hangUp();
       final conv = _conversationId;
       if (!mounted) return;
       if (conv != null && (turns.isNotEmpty || DateTime.now().difference(_started).inSeconds > 0)) {
-        await runGuarded(context, () => ref.read(backendProvider).saveVoiceTranscript(conv, turns, DateTime.now().difference(_started).inSeconds));
+        await runGuarded(context, () => ref.read(backendProvider).saveVoiceTranscript(conv, turns, DateTime.now().difference(_started).inSeconds, provider: _provider, usage: usage));
       }
     }
     if (!mounted) return;

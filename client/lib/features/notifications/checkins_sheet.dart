@@ -68,6 +68,7 @@ class _CheckinsSheetState extends State<_CheckinsSheet> {
           label: Text('${l10n.briefTime} $_time'),
         ),
         DropdownButtonFormField<int>(
+          isExpanded: true,
           key: const Key('scanEvery'),
           initialValue: _every,
           decoration: InputDecoration(labelText: l10n.scanEvery),

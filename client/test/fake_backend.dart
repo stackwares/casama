@@ -154,6 +154,122 @@ class FakeBackend implements Backend {
   @override
   Future<Invite> invite(String orgId, String email, {bool admin = false}) async => throw UnimplementedError();
 
+  // --- joining (D-165) ---
+  var defaultApproval = false;
+  var defaultResets = 0;
+  final joinRequestList = <JoinRequest>[];
+  final decided = <String>[];
+  final pendingInviteList = <PendingInvite>[];
+  final invitedEmails = <String>[];
+  final revokedInvites = <String>[];
+  final resentInvites = <String>[];
+  var joinDomainList = <String>[];
+  var myDomain = 'acme.dev';
+  var joinableList = <JoinableWorkspace>[];
+  final domainJoins = <String>[];
+  var codesMade = 0;
+  CreatedInviteLink _created(String token, {bool isDefault = false, InviteLinkKindEnum kind = InviteLinkKindEnum.link}) => CreatedInviteLink.fromJson({
+    'id': isDefault ? 'default' : 'code$codesMade',
+    'org_id': orgId,
+    'role': 'member',
+    'token_hint': token.substring(0, 4),
+    'expires_at': null,
+    'max_uses': null,
+    'uses': 0,
+    'revoked_at': null,
+    'created_at': DateTime(2026).toIso8601String(),
+    'kind': kind.value,
+    'requires_approval': isDefault && defaultApproval,
+    'is_default': isDefault,
+    'token': token,
+    'url': 'https://app.example.com/join/$token',
+  });
+  String get _defaultToken => 'kjoin_default${defaultResets}abcdefghijk';
+  @override
+  Future<CreatedInviteLink> defaultInvite(String orgId) async => _created(_defaultToken, isDefault: true);
+  @override
+  Future<CreatedInviteLink> updateDefaultInvite(String orgId, {bool? requiresApproval, bool reset = false}) async {
+    if (reset) defaultResets++;
+    defaultApproval = requiresApproval ?? defaultApproval;
+    return _created(_defaultToken, isDefault: true);
+  }
+
+  @override
+  Future<CreatedInviteLink> createInviteCode(String orgId, {String role = 'member'}) async {
+    codesMade++;
+    return _created('7F3Q-9XWD', kind: InviteLinkKindEnum.code);
+  }
+
+  final friendsOrg = OrganizationWithRole(id: '99999999-0000-4000-8000-000000000001', name: 'Friends', slug: 'friends', plan: 'selfhost', region: 'local', createdAt: DateTime(2026), role: OrgRole.member);
+  @override
+  Future<InvitePreview> previewInvite(String invite) async {
+    if (invite.contains('bad')) throw Exception('invite_invalid');
+    return InvitePreview.fromJson({
+      'kind': invite.contains('kinv_') ? 'email' : (invite.contains('kjoin_') ? 'link' : 'code'),
+      'workspace': {'name': 'Friends', 'icon': 'heart', 'color': '#ec4899', 'member_count': 4},
+      'role': 'member',
+      'inviter_name': 'Sam',
+      'requires_approval': invite.contains('gate'),
+      'email_hint': invite.contains('kinv_') ? 'm•••@example.com' : null,
+      'already_member': false,
+    });
+  }
+
+  @override
+  Future<JoinResult> joinWithInvite(String invite) async {
+    joined.add(invite);
+    if (invite.contains('gate')) return JoinResult(status: JoinResultStatusEnum.requested, organization: null, workspaceName: 'Friends');
+    if (!extraOrgs.any((o) => o.id == friendsOrg.id)) extraOrgs.add(friendsOrg);
+    return JoinResult(status: JoinResultStatusEnum.joined, organization: friendsOrg, workspaceName: 'Friends');
+  }
+
+  @override
+  Future<List<JoinRequest>> joinRequests(String orgId) async => joinRequestList.where((r) => !decided.contains(r.id)).toList();
+  @override
+  Future<JoinRequest> decideJoinRequest(String orgId, String requestId, bool approve) async {
+    decided.add('$requestId:${approve ? 'approve' : 'decline'}');
+    decided.add(requestId);
+    return joinRequestList.firstWhere((r) => r.id == requestId);
+  }
+
+  @override
+  Future<List<PendingInvite>> pendingInvites(String orgId) async => pendingInviteList.where((i) => !revokedInvites.contains(i.id)).toList();
+  @override
+  Future<List<Invite>> inviteMany(String orgId, List<String> emails, {bool admin = false}) async {
+    invitedEmails.addAll(emails);
+    return [
+      for (final (i, e) in emails.indexed)
+        Invite(id: 'inv$i', orgId: orgId, email: e, role: admin ? OrgRole.admin : OrgRole.member, expiresAt: DateTime(2026, 2), emailSent: true),
+    ];
+  }
+
+  @override
+  Future<Invite> resendInvite(String orgId, String inviteId) async {
+    resentInvites.add(inviteId);
+    return Invite(id: inviteId, orgId: orgId, email: 'x@example.com', role: OrgRole.member, expiresAt: DateTime(2026, 2), emailSent: true);
+  }
+
+  @override
+  Future<void> revokeInvite(String orgId, String inviteId) async => revokedInvites.add(inviteId);
+  @override
+  Future<JoinDomains> joinDomains(String orgId) async => JoinDomains(items: List.of(joinDomainList), myDomain: myDomain, canUse: myDomain != 'gmail.com');
+  @override
+  Future<JoinDomains> setJoinDomain(String orgId, bool enabled, {String? domain}) async {
+    joinDomainList = enabled ? [myDomain] : [];
+    return joinDomains(orgId);
+  }
+
+  @override
+  Future<List<JoinableWorkspace>> joinableWorkspaces() async => List.of(joinableList);
+  @override
+  Future<OrganizationWithRole> joinByDomain(String orgId) async {
+    domainJoins.add(orgId);
+    joinableList = joinableList.where((w) => w.id != orgId).toList();
+    hasOrg = true;
+    if (!extraOrgs.any((o) => o.id == friendsOrg.id)) extraOrgs.add(friendsOrg);
+    return friendsOrg;
+  }
+
   @override
   Future<List<Credential>> credentials(String orgId) async => noKeys
       ? const []
@@ -258,7 +374,8 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<List<McpKey>> mcpKeys(String orgId) async => const [];
+  Future<List<McpKey>> mcpKeys(String orgId) async => storedMcpKeys;
+  List<McpKey> storedMcpKeys = const [];
   @override
   Future<CreatedMcpKey> createMcpKey(String orgId, String name) async {
     mcpActions.add('key:$name');
@@ -1685,7 +1802,7 @@ class FakeBackend implements Backend {
   Future<void> setBotIntegration(String botId, String integrationId, bool enabled) async => enabled ? attached.add(integrationId) : attached.remove(integrationId);
 
   // Built-in apps
-  static CatalogApp catalogApp(String id, String name, List<CatalogAppAuthEnum> auth, {bool popular = true, String color = '635BFF'}) => CatalogApp(
+  static CatalogApp catalogApp(String id, String name, List<CatalogAppAuthEnum> auth, {bool popular = true, String color = '635BFF', bool? oauthAvailable}) => CatalogApp(
     id: id,
     name: name,
     description: '$name for your bots.',
@@ -1697,7 +1814,7 @@ class FakeBackend implements Backend {
     apiKey: auth.contains(CatalogAppAuthEnum.apiKey) ? CatalogAppApiKey(label: 'Secret key', url: 'https://dashboard.$id.com/keys', steps: const ['Open the dashboard.', 'Copy the key.']) : null,
     capabilities: const ['Look up customers', 'Create invoices'],
     popular: popular,
-    oauthAvailable: auth.contains(CatalogAppAuthEnum.oauth),
+    oauthAvailable: oauthAvailable ?? auth.contains(CatalogAppAuthEnum.oauth),
   );
   final catalog = [
     catalogApp('stripe', 'Stripe', [CatalogAppAuthEnum.oauth, CatalogAppAuthEnum.apiKey]),
@@ -1732,7 +1849,8 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<AppCatalog> appCatalog() async => AppCatalog(apps: catalog, redirectUri: 'http://localhost/oauth/callback');
+  Future<AppCatalog> appCatalog() async => AppCatalog(apps: catalog, redirectUri: catalogRedirectUri);
+  String catalogRedirectUri = 'http://localhost/oauth/callback';
   @override
   Future<ConnectAppResponse> connectApp(String orgId, {required String appId, required String method, String? apiKey, String? integrationId}) async {
     connectCalls.add((appId, method, apiKey));
@@ -2180,6 +2298,7 @@ class FakeBackend implements Backend {
   final ringing = <PhoneCall>[];
   final callActions = <String>[];
   String? sessionCallId;
+  Map<String, int>? lastVoiceUsage;
   @override
   Future<List<PhoneCall>> ringingCalls() async => List.of(ringing);
   @override
@@ -2210,6 +2329,7 @@ class FakeBackend implements Backend {
       clientSecret: 'ek_test',
       expiresAt: DateTime.now().add(const Duration(minutes: 10)),
       connectUrl: 'https://example.invalid/v1/realtime/calls',
+      setup: null,
       conversationId: conversationId ?? convId,
       tools: 3,
       speakFirst: callId != null,
@@ -2223,13 +2343,17 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds) async {
+  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds, {String? provider, Map<String, int>? usage}) async {
+    lastVoiceUsage = usage;
     savedTurns = turns;
     savedSeconds = seconds;
   }
 
   @override
-  Future<void> updateBotVoice(String botId, Map<String, Object?> voice) async => botVoice = voice;
+  Future<void> updateBotVoice(String botId, Map<String, Object?> voice) async =>
+      botVoice = {...?botVoice, ...voice}..removeWhere((_, v) => v == null);
+  @override
+  Future<Map<String, Object?>> loadBotVoice(String botId) async => {...?botVoice};
 
   // --- Phase 5 ---------------------------------------------------------------
 

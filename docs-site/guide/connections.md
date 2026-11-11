@@ -33,11 +33,11 @@ Each app tile shows how it connects: **One click**, **API key**, **No sign-in** 
 | Developer    | GitHub, Sentry, Linear, Vercel, Supabase, Neon, Cloudflare Docs, Context7              |
 | Data         | PostHog, Hugging Face, Airtable, Exa                                                   |
 | Productivity | Notion, Jira & Confluence, Asana, monday.com, Box, Slack                               |
-| Google       | Gmail, Gmail inbox, Google Calendar, Google Drive                                      |
+| Google       | Gmail, Google Calendar, Drive, Docs, Sheets, Slides, Contacts                          |
 | Payments     | Stripe                                                                                 |
 | Design       | Figma, Webflow                                                                         |
 | Sales        | HubSpot, Intercom                                                                      |
-| Automation   | Zapier                                                                                 |
+| Automation   | Zapier, Composio, Pipedream                                                            |
 
 Cloudflare Docs works without signing in. Hugging Face, Context7 and Exa work without signing in
 and also take an optional API key.
@@ -50,9 +50,15 @@ shows the redirect address to register, which is `<your API address>/oauth/callb
 
 | App                                          | What the server needs                                     |
 | -------------------------------------------- | --------------------------------------------------------- |
-| Gmail, Gmail inbox, Google Calendar, Drive   | `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` |
+| Gmail, Calendar, Drive, Docs, Sheets, Slides, Contacts | `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` |
 | GitHub, Slack, Asana, HubSpot, Box, Figma    | An entry in `MCP_OAUTH_CLIENTS`                           |
-| Vercel                                       | A public `https` API address                              |
+
+Until that's done, the connect sheet offers another way in: connect **Composio**, **Pipedream**
+or **Zapier** with one click (no API key), then ask your bot to use the app through it.
+
+Vendors only send people back to `https` or `localhost` addresses. A server on a private network
+address over `http` (local development) uses `http://localhost:<port>/oauth/callback`, so finish
+the sign-in in a browser on that machine. Set `OAUTH_REDIRECT_URL` to use another address.
 
 `MCP_OAUTH_CLIENTS` is JSON keyed by app id:
 
@@ -87,30 +93,40 @@ On a run's timeline, tools from a connection are named after it, such as `mcp.gi
 
 ## Google permissions
 
-Kasama asks Google for as little as it can:
+Kasama uses Google's own MCP servers and asks for as little as it can:
 
-| Connection          | Google scope       | What a bot can do                                       |
-| ------------------- | ------------------ | ------------------------------------------------------- |
-| **Gmail**           | `gmail.send`       | Send email from your address (asks first)               |
-| **Gmail inbox**     | `gmail.modify`     | Search and read email, draft replies, label and archive |
-| **Google Calendar** | `calendar.events`  | See your schedule, create and move events               |
-| **Google Drive**    | `drive.file`       | Only files you pick or that the bot creates             |
+| Connection          | Google scopes                                               | What a bot can do                                  |
+| ------------------- | ----------------------------------------------------------- | -------------------------------------------------- |
+| **Gmail**           | `gmail.modify`, `gmail.compose`                             | Search and read email, draft replies, label threads |
+| **Google Calendar** | `calendar.events`, `calendar.calendarlist.readonly`, `calendar.events.freebusy` | See your schedule, create and move events, find free time |
+| **Google Drive**    | `drive.file`                                                | Only files you pick or that the bot creates        |
+| **Google Docs**     | `documents`                                                 | Read and edit documents                            |
+| **Google Sheets**   | `spreadsheets`                                              | Read and update spreadsheets                       |
+| **Google Slides**   | `presentations`                                             | Read and edit presentations                        |
+| **Google Contacts** | `contacts.readonly`, `directory.readonly`                   | Look up people                                     |
 
-Sending and reading are separate on purpose. Turn on **Gmail inbox** only for inbox features such
-as catch-ups, triage and replies. When you add a Google connection later, Google keeps the scopes
-you already granted.
+Google's Gmail server can't send email: the bot writes drafts and you send them from Gmail. Each
+Google app is its own connection with its own consent.
 
-On Kasama Cloud, **Gmail inbox** connects through Composio's Google sign-in: the sheet shows
-**Sign in through Composio**. Self-hosted servers use their own Google client for it.
-
-::: tip
-Google's MCP servers for Gmail, Calendar and Drive are in Developer Preview at Google.
+::: warning Google Developer Preview
+Google's MCP servers are in Developer Preview. Tool calls only work once your server's Google
+Cloud project is enrolled in the
+[Workspace Developer Preview Program](https://developers.google.com/workspace/preview), which
+needs a Google Workspace account. When you set up the Google client, turn on **Use this client
+for an AI-powered agent**, enable each product's API and MCP API (for example `gmail.googleapis.com`
+and `gmailmcp.googleapis.com`), and add your redirect address.
 :::
+
+On Kasama Cloud, Gmail connects through Composio's Google sign-in until Google's servers are
+generally available.
 
 ## Composio and Pipedream
 
-Composio and Pipedream Connect each sign in to hundreds or thousands of apps for you, so you never
-handle those apps' keys.
+Composio and Pipedream each sign in to hundreds or thousands of apps for you, so you never handle
+those apps' keys. The quickest way is the **Composio** or **Pipedream** tile in the catalog: one
+click, sign in with your account there, and each app is connected the first time a bot needs it.
+
+If you'd rather use your own API key or Pipedream Connect project:
 
 1. Open **Settings** → **Integrations** → **Browse**, and scroll to **More ways to connect**.
 2. Tap **Composio** or **Pipedream**.

@@ -41,17 +41,53 @@ export function createSafeFetch(
       },
     },
   });
-  const f = ((input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+  const f = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     const host = new URL(url).hostname.replace(/^\[|\]$/g, "");
-    if (isIP(host) && denied(host))
-      return Promise.reject(new BlockedAddressError(`blocked address ${host}`));
-    return undiciFetch(
-      input as never,
-      { ...(init as object), dispatcher: agent } as never,
-    ) as unknown as Promise<Response>;
+    if (isIP(host) && denied(host)) throw new BlockedAddressError(`blocked address ${host}`);
+    // A Request object (SDKs build them) is Node's built-in class, which npm undici doesn't
+    // recognise: pass its parts instead.
+    const fromRequest: RequestInit =
+      typeof input === "string" || input instanceof URL
+        ? {}
+        : {
+            method: input.method,
+            headers: input.headers,
+            body: input.body,
+            signal: input.signal,
+            redirect: input.redirect,
+            ...(input.body ? { duplex: "half" } : {}),
+          };
+    const res = await undiciFetch(url, {
+      ...fromRequest,
+      ...(init as object),
+      dispatcher: agent,
+    } as never);
+    return asNativeResponse(res as unknown as Response);
   }) as typeof fetch;
   return f;
+}
+
+/**
+ * npm undici's Response is a different class from Node's built-in one, so `instanceof Response`
+ * is false for it. Libraries check that (the MCP SDK's OAuth code then read an error response as
+ * the text "[object Response]" and hid the real error), so hand back a built-in Response.
+ */
+export function asNativeResponse(res: Response): Response {
+  if (res instanceof Response) return res;
+  return wrap(res);
+}
+
+function wrap(res: Response): Response {
+  const empty = [101, 103, 204, 205, 304].includes(res.status);
+  const out = new Response(empty ? null : res.body, {
+    status: res.status,
+    statusText: res.statusText,
+    headers: [...res.headers],
+  });
+  Object.defineProperty(out, "url", { value: res.url });
+  Object.defineProperty(out, "redirected", { value: res.redirected });
+  return out;
 }
 
 /** The default guarded fetch (no exemptions). */

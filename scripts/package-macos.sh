@@ -12,8 +12,15 @@ app="build/macos/Build/Products/Release/kasama_app.app"
 out="../dist/Kasama-$version-macos.dmg"
 mkdir -p ../dist
 if [[ -n "${SIGN_IDENTITY:-}" ]]; then
-  codesign --deep --force --options runtime --timestamp --entitlements macos/Runner/Release.entitlements \
+  # Sign in with Apple is added only on this signed build. Release.entitlements is also what an
+  # unsigned local build is signed with, and this entitlement keeps those builds from launching.
+  entitlements=$(mktemp)
+  cp macos/Runner/Release.entitlements "$entitlements"
+  /usr/libexec/PlistBuddy -c "Add :com.apple.developer.applesignin array" "$entitlements"
+  /usr/libexec/PlistBuddy -c "Add :com.apple.developer.applesignin:0 string Default" "$entitlements"
+  codesign --deep --force --options runtime --timestamp --entitlements "$entitlements" \
     --sign "$SIGN_IDENTITY" "$app"
+  rm -f "$entitlements"
 fi
 rm -f "$out"
 staging=$(mktemp -d)

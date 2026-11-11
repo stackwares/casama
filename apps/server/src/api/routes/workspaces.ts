@@ -1,14 +1,15 @@
 import { randomBytes } from "node:crypto";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { PRODUCT_NAME, routes } from "@kasama/contracts";
+import { routes } from "@kasama/contracts";
 import { type JwtClaims, pgErrorCode, pgErrorMessage, schema, withUserSession } from "@kasama/db";
 import { withSpan } from "@kasama/observability";
 import { eq, sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
-import { iso, newToken, randomSuffix, sha256Hex, slugify } from "../util.ts";
+import { iso, randomSuffix, sha256Hex, slugify } from "../util.ts";
+import { createEmailInvite } from "./joining.ts";
 
-const { organizations, memberships, profiles, invites } = schema;
+const { organizations, memberships, profiles } = schema;
 
 function requireClaims(claims: JwtClaims | undefined): JwtClaims {
   if (!claims) throw new ApiError(401, "unauthorized", "Missing or invalid bearer token");
@@ -115,55 +116,18 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     const claims = requireClaims(c.get("claims"));
     const { id: orgId } = c.req.valid("param");
     const body = c.req.valid("json");
-    const role = body.role ?? "member";
-    const token = newToken();
-
-    const result = await withUserSession(db, claims, async (tx) => {
-      const [org] = await tx.select().from(organizations).where(eq(organizations.id, orgId));
-      if (!org) throw new ApiError(404, "org_not_found", "Organization not found");
-      const [{ allowed } = { allowed: false }] = await tx.execute<{ allowed: boolean }>(
+    const [org] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(organizations).where(eq(organizations.id, orgId)),
+    );
+    if (!org) throw new ApiError(404, "org_not_found", "Organization not found");
+    const [{ allowed } = { allowed: false }] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ allowed: boolean }>(
         sql`select public.has_role(${orgId}::uuid, 'admin') as allowed`,
-      );
-      if (!allowed) throw new ApiError(403, "forbidden", "Only owners and admins can invite");
-      const [invite] = await tx
-        .insert(invites)
-        .values({
-          orgId,
-          email: body.email.toLowerCase(),
-          role,
-          tokenHash: sha256Hex(token),
-          invitedBy: claims.sub,
-        })
-        .returning();
-      if (!invite) throw new Error("invite insert returned nothing");
-      return { org, invite };
-    });
-
-    let emailSent = false;
-    if (deps.email.enabled) {
-      const link = `${deps.env.PUBLIC_APP_URL}/invites/${token}`;
-      try {
-        await deps.email.send({
-          to: result.invite.email,
-          subject: `You're invited to ${result.org.name} on ${PRODUCT_NAME}`,
-          text: `You've been invited to join ${result.org.name} on ${PRODUCT_NAME}.\n\nAccept: ${link}\n\nThis link expires in 7 days.`,
-        });
-        emailSent = true;
-      } catch (err) {
-        deps.logger.warn("invite email failed", { org_id: orgId, error: (err as Error).message });
-      }
-    }
-
+      ),
+    );
+    if (!allowed) throw new ApiError(403, "forbidden", "Only owners and admins can invite");
     return c.json(
-      {
-        id: result.invite.id,
-        org_id: result.invite.orgId,
-        email: result.invite.email,
-        role: result.invite.role,
-        expires_at: iso(result.invite.expiresAt),
-        email_sent: emailSent,
-        ...(emailSent ? {} : { accept_token: token }),
-      },
+      await createEmailInvite(deps, claims, orgId, body.email.toLowerCase(), body.role ?? "member"),
       201,
     );
   });
@@ -180,6 +144,9 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     uses: number;
     revoked_at: Date | null;
     created_at: Date;
+    kind: "link" | "code";
+    requires_approval: boolean;
+    is_default: boolean;
   };
   const linkOut = (l: LinkRow) => ({
     ...l,
@@ -221,7 +188,7 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     await requireAdmin(claims, id);
     const rows = await withUserSession(db, claims, (tx) =>
       tx.execute<LinkRow>(sql`
-        select id, org_id, role, token_hint, expires_at, max_uses, uses, revoked_at, created_at
+        select id, org_id, role, token_hint, expires_at, max_uses, uses, revoked_at, created_at, kind, requires_approval, is_default
         from public.invite_links where org_id = ${id}::uuid order by created_at desc`),
     );
     return c.json({ items: rows.map(linkOut) }, 200);
@@ -238,10 +205,10 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
       : null;
     const [row] = await withUserSession(db, claims, (tx) =>
       tx.execute<LinkRow>(sql`
-        insert into public.invite_links (org_id, role, token_hash, token_hint, expires_at, max_uses, created_by)
+        insert into public.invite_links (org_id, role, token_hash, token_hint, expires_at, max_uses, created_by, requires_approval)
         values (${id}::uuid, ${b.role ?? "member"}, ${sha256Hex(token)}, ${token.slice(0, 10)}, ${expires?.toISOString() ?? null}::timestamptz,
-                ${b.max_uses ?? null}, ${claims.sub}::uuid)
-        returning id, org_id, role, token_hint, expires_at, max_uses, uses, revoked_at, created_at`),
+                ${b.max_uses ?? null}, ${claims.sub}::uuid, ${b.requires_approval ?? false})
+        returning id, org_id, role, token_hint, expires_at, max_uses, uses, revoked_at, created_at, kind, requires_approval, is_default`),
     );
     if (!row) throw new Error("invite link insert returned nothing");
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
@@ -269,11 +236,18 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     let orgId: string;
     try {
       const [m] = await withUserSession(db, claims, (tx) =>
-        tx.execute<{ org_id: string }>(
-          sql`select org_id from public.accept_invite_link(${sha256Hex(token)})`,
+        tx.execute<{ org_id: string; status: string }>(
+          sql`select org_id, status from public.use_invite_link(${sha256Hex(token)})`,
         ),
       );
-      if (!m) throw new Error("accept_invite_link returned nothing");
+      if (!m) throw new Error("use_invite_link returned nothing");
+      // Links that ask an admin first go through POST /v1/join, which files the request (D-167).
+      if (m.status === "requested")
+        throw new ApiError(
+          403,
+          "join_requested",
+          "An admin needs to approve you; use POST /v1/join",
+        );
       orgId = m.org_id;
     } catch (err) {
       if (pgErrorCode(err) === "P0002")

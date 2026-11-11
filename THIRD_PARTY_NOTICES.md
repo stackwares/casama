@@ -64,6 +64,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | crypto                                                                | client                             | BSD-3-Clause                  |
 | posthog_flutter                                                       | client                             | MIT                           |
 | record, just_audio                                                    | client (voice)                     | BSD-3-Clause, MIT             |
+| flutter_soloud (with the SoLoud engine)                               | client (live-call audio playback)  | MIT, zlib                     |
 | flutter_secure_storage                                                | client (companion)                 | BSD-3-Clause                  |
 | window_manager, tray_manager, hotkey_manager                          | client (desktop)                   | MIT                           |
 | home_widget, live_activities, receive_sharing_intent                  | client (mobile extras)             | BSD-3-Clause, MIT, Apache-2.0 |

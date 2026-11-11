@@ -34,7 +34,7 @@ class FloatingTabChrome extends StatelessWidget {
               destinations: destinations,
               currentIndex: currentIndex,
               onSelected: onDestinationSelected,
-              slotWidth: destinations.isEmpty ? tabSlotWidth : ((c.maxWidth - 14) / destinations.length).clamp(56.0, tabSlotWidth),
+              slotWidth: destinations.isEmpty ? tabSlotWidth : ((c.maxWidth - 14) / destinations.length).clamp(40.0, tabSlotWidth),
             ),
           ),
         ),

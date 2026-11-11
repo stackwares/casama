@@ -58,7 +58,13 @@ class AppearancePreview extends StatelessWidget {
           specOverride: wallpaper,
           child: Padding(
             padding: EdgeInsets.all(compact ? 8 : 16),
-            child: Column(
+            // Like a chat, the newest lines sit at the bottom; when a font or text size makes the
+            // bubbles taller than the preview, the top is cut off under the rounded clip.
+            child: OverflowBox(
+              maxHeight: double.infinity,
+              alignment: Alignment.bottomCenter,
+              child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -99,6 +105,7 @@ class AppearancePreview extends StatelessWidget {
                   ),
                 ],
               ],
+            ),
             ),
           ),
         ),

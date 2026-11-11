@@ -99,11 +99,26 @@ class SelectedOrg extends Notifier<String?> {
   }
 }
 
-/// An invite link opened before signing in; joined right after (D-099).
+/// An invite opened before signing in; shown again right after (D-099, D-167). Kept on the device
+/// so it survives the app restarting during sign-up (a confirmation email opened later).
 class PendingJoinToken extends Notifier<String?> {
+  static const _key = 'kasama.pending_join';
+
   @override
-  String? build() => null;
-  void set(String? token) => state = token;
+  String? build() {
+    SharedPreferences.getInstance()
+        .then((p) {
+          final saved = p.getString(_key);
+          if (saved != null && state == null) state = saved;
+        })
+        .catchError((_) {});
+    return null;
+  }
+
+  void set(String? token) {
+    state = token;
+    SharedPreferences.getInstance().then((p) => token == null ? p.remove(_key) : p.setString(_key, token)).catchError((_) => false);
+  }
 }
 
 final pendingJoinTokenProvider = NotifierProvider<PendingJoinToken, String?>(PendingJoinToken.new);

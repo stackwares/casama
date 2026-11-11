@@ -262,6 +262,25 @@ abstract class Backend {
   Future<OrganizationWithRole> acceptInviteLink(String token);
   Future<List<WorkspaceBadge>> workspaceBadges();
   Future<Invite> invite(String orgId, String email, {bool admin = false});
+  // Joining (D-165)
+  /// The workspace's standing invite link (admins); made on first use.
+  Future<CreatedInviteLink> defaultInvite(String orgId);
+  Future<CreatedInviteLink> updateDefaultInvite(String orgId, {bool? requiresApproval, bool reset = false});
+  /// A short code (XXXX-XXXX) valid for 48 hours.
+  Future<CreatedInviteLink> createInviteCode(String orgId, {String role = 'member'});
+  /// What a link, code or email invite opens; works signed out.
+  Future<InvitePreview> previewInvite(String invite);
+  Future<JoinResult> joinWithInvite(String invite);
+  Future<List<JoinRequest>> joinRequests(String orgId);
+  Future<JoinRequest> decideJoinRequest(String orgId, String requestId, bool approve);
+  Future<List<PendingInvite>> pendingInvites(String orgId);
+  Future<List<Invite>> inviteMany(String orgId, List<String> emails, {bool admin = false});
+  Future<Invite> resendInvite(String orgId, String inviteId);
+  Future<void> revokeInvite(String orgId, String inviteId);
+  Future<JoinDomains> joinDomains(String orgId);
+  Future<JoinDomains> setJoinDomain(String orgId, bool enabled, {String? domain});
+  Future<List<JoinableWorkspace>> joinableWorkspaces();
+  Future<OrganizationWithRole> joinByDomain(String orgId);
 
   // Model keys
   Future<List<Credential>> credentials(String orgId);
@@ -656,8 +675,12 @@ abstract class Backend {
   /// iOS PushKit token, so calls ring through CallKit.
   Future<void> registerVoipToken(String token);
   Future<VoiceToolResult> voiceTool(String botId, String conversationId, String callId, String name, Map<String, Object?> arguments);
-  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds);
+  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds, {String? provider, Map<String, int>? usage});
+  /// Changes some of a bot's voice settings; a null value clears that setting, others are kept.
   Future<void> updateBotVoice(String botId, Map<String, Object?> voice);
+
+  /// A bot's voice settings (providers, voices, tools on calls).
+  Future<Map<String, Object?>> loadBotVoice(String botId);
 
   // Computers: management (Phase 5)
   Future<Computer> createComputer(String orgId, {required String name, required bool private, String? ownerBotId, String profile});

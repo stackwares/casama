@@ -417,7 +417,14 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
 
   Widget _adminSetup(BuildContext context) {
     final l10n = context.l10n;
-    final uri = ref.watch(appCatalogProvider).value?.redirectUri;
+    final catalog = ref.watch(appCatalogProvider).value;
+    final uri = catalog?.redirectUri;
+    final host = uri == null ? null : Uri.tryParse(uri);
+    final insecure = host != null && host.scheme == 'http' && !const {'localhost', '127.0.0.1', '::1'}.contains(host.host);
+    final hubs = [
+      for (final id in _hubIds)
+        ...?catalog?.apps.where((a) => a.id == id && a.id != app.id && a.oauthAvailable && a.auth.contains(CatalogAppAuthEnum.oauth)),
+    ];
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpace.md),
       padding: const EdgeInsets.all(AppSpace.md),
@@ -431,16 +438,45 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
           Row(children: [
             Icon(LucideIcons.wrench, size: 16, color: context.appColors.warning),
             const SizedBox(width: AppSpace.xs),
-            Expanded(child: Text(l10n.adminSetupNeeded(app.name), style: context.textTheme.bodyMedium)),
+            // A server on plain http (a LAN address while testing) can't take sign-ins: providers
+            // only send people back to an https address. Say that, not "an admin must set up".
+            Expanded(child: Text(insecure ? l10n.oauthNeedsHttps(app.name, host.origin) : l10n.adminSetupNeeded(app.name), style: context.textTheme.bodyMedium)),
           ]),
-          if (uri != null) ...[
+          if (uri != null && !insecure) ...[
             const SizedBox(height: AppSpace.xs),
             SelectableText(l10n.adminSetupRedirect(uri), style: context.textTheme.bodySmall),
+          ],
+          if (hubs.isNotEmpty) ...[
+            const SizedBox(height: AppSpace.sm),
+            Text(l10n.connectThroughHub(app.name), style: context.textTheme.bodyMedium),
+            const SizedBox(height: AppSpace.xs),
+            Wrap(
+              spacing: AppSpace.xs,
+              runSpacing: AppSpace.xs,
+              children: [
+                for (final hub in hubs)
+                  ActionChip(
+                    key: Key('connectVia_${hub.id}'),
+                    avatar: AppLogo(appId: hub.id, name: hub.name, color: hub.color, size: 18),
+                    label: Text(hub.name),
+                    onPressed: () {
+                      final nav = Navigator.of(context);
+                      final root = nav.context;
+                      nav.pop();
+                      showConnectApp(root, hub);
+                    },
+                  ),
+              ],
+            ),
           ],
         ],
       ),
     );
   }
+
+  /// Hubs (packages/domain HUB_APPS) that sign in here with one click: the way in when this app's
+  /// own sign-in isn't set up on the server.
+  static const _hubIds = ['composio', 'pipedream', 'zapier'];
 
   Widget _waiting(BuildContext context) {
     final l10n = context.l10n;

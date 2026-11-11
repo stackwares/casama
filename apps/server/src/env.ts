@@ -14,6 +14,17 @@ export const EnvSchema = z.object({
   /** Legacy HS256 secret. When unset, tokens are verified against the project's JWKS. */
   SUPABASE_JWT_SECRET: z.string().optional(),
   PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
+  /**
+   * App links for invite links (D-167): iOS app ids (TEAMID.bundle, comma-separated) for
+   * apple-app-site-association, and the Android package with its signing certificates' SHA-256
+   * fingerprints for assetlinks.json. Unset: invite links open the join page or the web app.
+   */
+  APPLE_APP_IDS: z.string().optional(),
+  ANDROID_APP_PACKAGE: z.string().default("com.kasama.app"),
+  ANDROID_CERT_SHA256: z.string().optional(),
+  /** Store pages shown on the invite join page. */
+  APP_STORE_URL: z.url().optional(),
+  PLAY_STORE_URL: z.url().optional(),
   /** Extra comma-separated origins allowed to call the API from a browser. */
   CORS_ORIGINS: z.string().default(""),
   /**
@@ -99,6 +110,8 @@ export const EnvSchema = z.object({
   /** Calls for you (D-141): overrides for Twilio's API and OpenAI's realtime WebSocket (tests, proxies). */
   TWILIO_API_URL: z.url().optional(),
   OPENAI_REALTIME_URL: z.string().optional(),
+  /** Live calls on Gemini Live (when a workspace has a Google AI key); default gemini-3.8-live. */
+  GEMINI_LIVE_MODEL: z.string().optional(),
   /** Payments (D-142): override for Stripe's API (tests, proxies). */
   STRIPE_API_URL: z.url().optional(),
   /** Cloudflare AI Gateway (D-145): model calls go through it; the token is for authenticated gateways. */
@@ -194,6 +207,12 @@ export const EnvSchema = z.object({
   /** A Google OAuth client for Gmail, Calendar and Drive (Google's MCP servers, D-089). */
   GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
+  /**
+   * Where vendors send people back after an app sign-in (default <API>/oauth/callback, or localhost
+   * when the API is on a private network address over http: vendors only accept https or
+   * localhost). Admin-registered clients (Google, MCP_OAUTH_CLIENTS) must list it.
+   */
+  OAUTH_REDIRECT_URL: z.url().optional(),
   /** Public base URL of this API (signaling URLs); defaults to the request's origin. */
   PUBLIC_API_URL: z.url().optional(),
   /**

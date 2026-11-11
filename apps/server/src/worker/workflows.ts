@@ -428,29 +428,40 @@ export async function testCredential(
       error: cred ? "Pass a model to test this provider." : "Credential not found.",
     };
   } else {
-    try {
+    const ping = async (effort: "none" | "low") => {
       const resolved = await new CredentialResolver(db).resolve(orgId, {
         credential_id: credentialId,
         model: chosen,
-        // A key check needs no reasoning; it keeps the call to a few tokens.
-        reasoning_effort: "none",
+        reasoning_effort: effort,
       });
       await collect(
         gateway.stream({
           model: resolved,
           system: ["Reply with OK."],
           messages: [{ role: "user", content: "ping" }],
-          maxOutputTokens: 16,
+          // Room for a little reasoning on models that always reason.
+          maxOutputTokens: effort === "none" ? 16 : 512,
         }),
       );
+    };
+    try {
+      // A key check needs no reasoning, which keeps it to a few tokens. Some models always reason
+      // and refuse "none" (OpenRouter's Muse Ember): then try again with the least.
+      try {
+        await ping("none");
+      } catch (err) {
+        if (!/reasoning/i.test(providerMessage(err) ?? "")) throw err;
+        await ping("low");
+      }
       outcome = { ok: true, model: chosen, latency_ms: Date.now() - started };
     } catch (err) {
       const status = (err as { status?: number }).status;
+      const said = providerMessage(err);
       const error =
         status === 401 || status === 403
           ? "The provider rejected the key."
           : status
-            ? `The provider returned ${status}.`
+            ? `The provider returned ${status}${said ? `: ${said}` : "."}`
             : "Could not reach the provider.";
       outcome = { ok: false, model: chosen, latency_ms: Date.now() - started, error };
     }
@@ -459,6 +470,32 @@ export async function testCredential(
     sql`update public.model_credentials set last_tested_at = now(), last_test_ok = ${outcome.ok} where id = ${credentialId}::uuid`,
   );
   return outcome;
+}
+
+/** What the provider said about a failed call (its error message), short and without secrets. */
+export function providerMessage(err: unknown): string | undefined {
+  const cause = (err as { cause?: { responseBody?: unknown; message?: unknown } })?.cause;
+  const body = cause?.responseBody;
+  let text: unknown;
+  if (typeof body === "string") {
+    try {
+      const parsed = JSON.parse(body) as {
+        error?: { message?: unknown } | string;
+        message?: unknown;
+      };
+      text =
+        typeof parsed.error === "string" ? parsed.error : (parsed.error?.message ?? parsed.message);
+    } catch {
+      text = body;
+    }
+  }
+  text ??= cause?.message;
+  if (typeof text !== "string" || !text.trim()) return undefined;
+  const clean = text
+    .replace(/\b(sk|pk|rk|key|tok)[-_][A-Za-z0-9_-]{8,}/gi, "[redacted]")
+    .replace(/[A-Za-z0-9_-]{32,}/g, "[redacted]")
+    .trim();
+  return clean.length > 200 ? `${clean.slice(0, 197)}…` : clean;
 }
 
 export const testCredentialWorkflow = DBOS.registerWorkflow(

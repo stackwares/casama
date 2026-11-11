@@ -214,7 +214,7 @@ class _ApprovalCardState extends ConsumerState<ApprovalCard> {
             runSpacing: AppSpace.xs,
             children: [
               TextButton.icon(
-                onPressed: () => context.go('/bots/${a.botId}/runs/${a.runId}'),
+                onPressed: () => context.push('/bots/${a.botId}/runs/${a.runId}'),
                 icon: const Icon(LucideIcons.activity, size: 18),
                 label: Text(l10n.viewRun),
               ),
@@ -329,7 +329,7 @@ class _NotificationRow extends ConsumerWidget {
       key: Key('notification-${n.id}'),
       onTap: () {
         if (unread) unawaited(ref.read(notificationsProvider.notifier).markRead(n.id).catchError((_) {}));
-        if (n.link != null && n.link!.startsWith('/')) context.go(n.link!);
+        if (n.link != null && n.link!.startsWith('/')) context.push(n.link!);
       },
       child: Padding(
         padding: const EdgeInsets.fromLTRB(AppSpace.md, 12, AppSpace.md, 12),

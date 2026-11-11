@@ -192,6 +192,7 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
           ),
         ],
         DropdownButtonFormField<ProviderId>(
+          isExpanded: true,
           initialValue: _provider,
           decoration: InputDecoration(labelText: l10n.provider, prefixIcon: const Icon(LucideIcons.network, size: 20)),
           items: [

@@ -13,6 +13,8 @@ abstract class _$CreateInviteLinkRequestCWProxy {
 
   CreateInviteLinkRequest maxUses(int? maxUses);
 
+  CreateInviteLinkRequest requiresApproval(bool? requiresApproval);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateInviteLinkRequest(...).copyWith.fieldName(value)`.
@@ -25,6 +27,7 @@ abstract class _$CreateInviteLinkRequestCWProxy {
     CreateInviteLinkRequestRoleEnum? role,
     int? expiresInDays,
     int? maxUses,
+    bool? requiresApproval,
   });
 }
 
@@ -47,6 +50,10 @@ class _$CreateInviteLinkRequestCWProxyImpl
   @override
   CreateInviteLinkRequest maxUses(int? maxUses) => call(maxUses: maxUses);
 
+  @override
+  CreateInviteLinkRequest requiresApproval(bool? requiresApproval) =>
+      call(requiresApproval: requiresApproval);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateInviteLinkRequest(...).copyWith.fieldName(value)`.
@@ -60,6 +67,7 @@ class _$CreateInviteLinkRequestCWProxyImpl
     Object? role = const $CopyWithPlaceholder(),
     Object? expiresInDays = const $CopyWithPlaceholder(),
     Object? maxUses = const $CopyWithPlaceholder(),
+    Object? requiresApproval = const $CopyWithPlaceholder(),
   }) {
     return CreateInviteLinkRequest(
       role: role == const $CopyWithPlaceholder()
@@ -74,6 +82,10 @@ class _$CreateInviteLinkRequestCWProxyImpl
           ? _value.maxUses
           // ignore: cast_nullable_to_non_nullable
           : maxUses as int?,
+      requiresApproval: requiresApproval == const $CopyWithPlaceholder()
+          ? _value.requiresApproval
+          // ignore: cast_nullable_to_non_nullable
+          : requiresApproval as bool?,
     );
   }
 }
@@ -106,12 +118,14 @@ CreateInviteLinkRequest _$CreateInviteLinkRequestFromJson(
         (v) => (v as num?)?.toInt(),
       ),
       maxUses: $checkedConvert('max_uses', (v) => (v as num?)?.toInt()),
+      requiresApproval: $checkedConvert('requires_approval', (v) => v as bool?),
     );
     return val;
   },
   fieldKeyMap: const {
     'expiresInDays': 'expires_in_days',
     'maxUses': 'max_uses',
+    'requiresApproval': 'requires_approval',
   },
 );
 
@@ -121,6 +135,7 @@ Map<String, dynamic> _$CreateInviteLinkRequestToJson(
   'role': ?_$CreateInviteLinkRequestRoleEnumEnumMap[instance.role],
   'expires_in_days': ?instance.expiresInDays,
   'max_uses': ?instance.maxUses,
+  'requires_approval': ?instance.requiresApproval,
 };
 
 const _$CreateInviteLinkRequestRoleEnumEnumMap = {

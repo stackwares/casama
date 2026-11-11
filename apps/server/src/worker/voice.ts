@@ -3,16 +3,23 @@
  * audio (cached per message and voice) and realtime call sessions (D-065).
  */
 import {
+  createGeminiLiveSession,
   createRealtimeSession,
+  DEFAULT_GEMINI_LIVE_MODEL,
   DEFAULT_REALTIME_MODEL,
+  integrationToolName,
+  REALTIME_CREDENTIALS,
+  type RealtimeProviderId,
   type RealtimeTool,
+  START_TASK_TOOL,
   STT_PROVIDERS,
   type SttProviderId,
   synthesize,
-  type ToolRegistry,
+  ToolRegistry,
   TTS_PROVIDERS,
   type TtsProviderId,
   transcribe,
+  VOICE_CALL_TOOLS,
   VOICE_PRICES,
   type VoiceBases,
 } from "@kasama/agent";
@@ -30,6 +37,8 @@ export interface VoiceRuntime {
   tools: ToolRegistry;
   computers: boolean;
   realtimeModel?: string;
+  /** Gemini Live model (default gemini-3.8-live). */
+  geminiLiveModel?: string;
 }
 
 type BotVoice = {
@@ -37,7 +46,47 @@ type BotVoice = {
   tts_voice?: string;
   stt_provider?: SttProviderId;
   realtime_voice?: string;
+  /** Prefer one live-call provider when the workspace has keys for both. */
+  realtime_provider?: RealtimeProviderId;
+  /** Connected-app tools (full names) the bot also gets on calls, on top of the voice set. */
+  call_tools?: string[];
 };
+
+/**
+ * The connected-app tools a bot chose for calls, from each connection's cached tool list (no
+ * refresh, so starting a call stays fast). Running them still goes through the bot's run, which
+ * checks the bot may use them.
+ */
+async function chosenCallTools(db: Database, botId: string, chosen: string[]) {
+  if (!chosen.length) return [] as RealtimeTool[];
+  const rows = await db.execute<{
+    kind: string;
+    name: string;
+    tools_cache: Array<{
+      name: string;
+      description?: string;
+      inputSchema?: Record<string, unknown>;
+    }>;
+    tool_allowlist: string[] | null;
+  }>(sql`
+    select i.kind, i.name, i.tools_cache, bi.tool_allowlist
+    from public.bot_integrations bi join public.integrations i on i.id = bi.integration_id
+    where bi.bot_id = ${botId}::uuid and i.status <> 'error'`);
+  const wanted = new Set(chosen);
+  const out: RealtimeTool[] = [];
+  for (const r of rows)
+    for (const t of r.tools_cache ?? []) {
+      if (r.tool_allowlist && !r.tool_allowlist.includes(t.name)) continue;
+      const full = integrationToolName({ kind: r.kind as "mcp", name: r.name }, t.name);
+      if (!wanted.has(full)) continue;
+      out.push({
+        name: ToolRegistry.wireName(full),
+        description: `[${r.name}] ${t.description ?? ""}`.slice(0, 1024),
+        parameters: t.inputSchema ?? { type: "object" },
+      });
+    }
+  return out;
+}
 
 async function botVoice(db: Database, botId: string) {
   const [b] = await db.execute<{
@@ -161,13 +210,29 @@ export async function voiceSession(
 ) {
   const bot = await botVoice(rt.db, botId);
   if (bot.org_id !== orgId) throw new Error("bot_not_found");
-  const k = await rt.key(orgId, ["openai"]);
+  // Gemini Live when there's a Google AI key (cheaper), else OpenAI Realtime.
+  const preferred = bot.voice.realtime_provider;
+  const order = preferred
+    ? [
+        ...REALTIME_CREDENTIALS.filter((c) => c.provider === preferred),
+        ...REALTIME_CREDENTIALS.filter((c) => c.provider !== preferred),
+      ]
+    : REALTIME_CREDENTIALS;
+  const k = await rt.key(
+    orgId,
+    order.map((c) => c.credential),
+  );
   if (!k?.key)
-    return { ok: false as const, error: "Live calls need an OpenAI key (realtime voice)." };
-  // Screen tools and takeover are not offered on calls; everything else runs through /v1/voice/tool.
+    return {
+      ok: false as const,
+      error: "Live calls need a Google AI (Gemini) or OpenAI key.",
+    };
+  const provider = order.find((c) => c.credential === k.provider)?.provider ?? "openai";
+  // Calls get a small conversational tool set (each definition goes with the session and may
+  // count on every turn); bigger jobs go to a normal chat run through start_task.
   const defs = rt.tools
     .available({ computer: rt.computers, desktop: false, vision: false })
-    .filter((d) => !d.screen && d.name !== "computer.request_takeover");
+    .filter((d) => VOICE_CALL_TOOLS.has(d.name));
   const tools: RealtimeTool[] = phone
     ? [
         {
@@ -176,11 +241,15 @@ export async function voiceSession(
           parameters: { type: "object", properties: {} },
         },
       ]
-    : rt.tools.specs(defs).map((s) => ({
-        name: s.name,
-        description: s.description.slice(0, 1024),
-        parameters: s.inputSchema,
-      }));
+    : [
+        ...rt.tools.specs(defs).map((s) => ({
+          name: s.name,
+          description: s.description.slice(0, 1024),
+          parameters: s.inputSchema,
+        })),
+        ...(await chosenCallTools(rt.db, botId, bot.voice.call_tools ?? [])),
+        START_TASK_TOOL,
+      ];
   const instructions = [
     phone
       ? ""
@@ -188,11 +257,22 @@ export async function voiceSession(
     bot.persona_md,
     phone
       ? ""
-      : "Use tools when needed; tell the user briefly what you are doing. Some actions may need their approval in the Kasama app.",
+      : "Use tools when needed; tell the user briefly what you are doing. Some actions may need their approval in the Kasama app. For anything that needs your computer, files, the browser, connected apps or several steps, use start_task: it runs in the chat and the result appears there.",
     greeting,
   ]
     .filter(Boolean)
     .join("\n\n");
+  if (provider === "gemini") {
+    const s = await createGeminiLiveSession(k.key, {
+      model: rt.geminiLiveModel ?? DEFAULT_GEMINI_LIVE_MODEL,
+      voice: bot.voice.realtime_voice,
+      instructions,
+      tools,
+      bases: rt.bases,
+      fetch: rt.fetch,
+    });
+    return { ok: true as const, ...s, tools: tools.length };
+  }
   const s = await createRealtimeSession(k.key, {
     model: rt.realtimeModel ?? DEFAULT_REALTIME_MODEL,
     voice: bot.voice.realtime_voice,
@@ -202,5 +282,5 @@ export async function voiceSession(
     fetch: rt.fetch,
     phone,
   });
-  return { ok: true as const, ...s, tools: tools.length };
+  return { ok: true as const, ...s, setup: null, tools: tools.length };
 }

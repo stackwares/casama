@@ -30,6 +30,8 @@ class VoiceSession {
 
     required  this.connectUrl,
 
+    required  this.setup,
+
     required  this.conversationId,
 
     required  this.tools,
@@ -37,6 +39,7 @@ class VoiceSession {
     required  this.speakFirst,
   });
 
+      /// gemini: Gemini Live over a WebSocket; openai: OpenAI Realtime over WebRTC. Gemini is used when the workspace has a Google AI key
   @JsonKey(
     
     name: r'provider',
@@ -61,7 +64,7 @@ class VoiceSession {
 
 
 
-      /// Ephemeral key, valid for about 10 minutes
+      /// Short-lived credential: Gemini's single-use token (the access_token query parameter) or OpenAI's ephemeral key
   @JsonKey(
     
     name: r'client_secret',
@@ -86,7 +89,7 @@ class VoiceSession {
 
 
 
-      /// POST the WebRTC offer SDP here with the ephemeral key
+      /// gemini: open a WebSocket here with ?access_token=<client_secret>; openai: POST the WebRTC offer SDP here with the ephemeral key
   @JsonKey(
     
     name: r'connect_url',
@@ -96,6 +99,19 @@ class VoiceSession {
 
 
   final String connectUrl;
+
+
+
+      /// gemini: send {setup: <this>} as the first message (add sessionResumption to reconnect); null for openai
+  @JsonKey(
+    
+    name: r'setup',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final Map<String, Object?>? setup;
 
 
 
@@ -144,6 +160,7 @@ class VoiceSession {
       other.clientSecret == clientSecret &&
       other.expiresAt == expiresAt &&
       other.connectUrl == connectUrl &&
+      other.setup == setup &&
       other.conversationId == conversationId &&
       other.tools == tools &&
       other.speakFirst == speakFirst;
@@ -155,6 +172,7 @@ class VoiceSession {
         clientSecret.hashCode +
         expiresAt.hashCode +
         connectUrl.hashCode +
+        (setup == null ? 0 : setup.hashCode) +
         conversationId.hashCode +
         tools.hashCode +
         speakFirst.hashCode;
@@ -170,8 +188,12 @@ class VoiceSession {
 
 }
 
-
+/// gemini: Gemini Live over a WebSocket; openai: OpenAI Realtime over WebRTC. Gemini is used when the workspace has a Google AI key
 enum VoiceSessionProviderEnum {
+    /// gemini: Gemini Live over a WebSocket; openai: OpenAI Realtime over WebRTC. Gemini is used when the workspace has a Google AI key
+@JsonValue(r'gemini')
+gemini(r'gemini'),
+    /// gemini: Gemini Live over a WebSocket; openai: OpenAI Realtime over WebRTC. Gemini is used when the workspace has a Google AI key
 @JsonValue(r'openai')
 openai(r'openai');
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,9 +34,27 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       final w = await ref.read(backendProvider).startWelcome();
       if (!mounted) return;
       ref.read(selectedOrgIdProvider.notifier).select(w.orgId);
-      ref.invalidate(organizationsProvider);
-      ref.invalidate(botsProvider);
-      if (mounted) GoRouter.maybeOf(context)?.go('/bots/${w.botId}/chat?c=${w.conversationId}');
+      // Leave only once this page has finished coming in: navigating back into the app while the
+      // previous page is still animating out would build the app shell twice.
+      final entering = ModalRoute.of(context)?.animation;
+      if (entering != null && entering.status != AnimationStatus.completed) {
+        final done = Completer<void>();
+        void settled(AnimationStatus status) {
+          if (status == AnimationStatus.completed && !done.isCompleted) done.complete();
+        }
+        entering.addStatusListener(settled);
+        await done.future.timeout(const Duration(seconds: 2), onTimeout: () {});
+        entering.removeStatusListener(settled);
+        if (!mounted) return;
+      }
+      final router = GoRouter.maybeOf(context);
+      router?.go('/bots/${w.botId}/chat?c=${w.conversationId}');
+      // Refresh the lists once the chat is on screen: invalidating them makes the router re-check
+      // its redirects, and doing both in one frame built the shell twice (a duplicate navigator).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.invalidate(organizationsProvider);
+        ref.invalidate(botsProvider);
+      });
     } catch (e) {
       if (mounted) setState(() => _error = e);
     }

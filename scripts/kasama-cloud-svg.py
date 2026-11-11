@@ -9,7 +9,7 @@ Run from the repo root: python3 scripts/kasama-cloud-svg.py [out_dir]
 Static SVGs use no CSS so they also work in flutter_svg. Animated SVGs use CSS keyframes plus SMIL
 for the tail (it bends, and the orb rides its tip). With prefers-reduced-motion they hold the static pose.
 """
-import math, re, sys
+import colorsys, math, re, sys
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'client/assets/bots'
 T = 8.0  # master loop length (seconds); every loop is T, T/2 or T/8 so nothing drifts
@@ -19,6 +19,11 @@ OUT_E = 'cubic-bezier(.2,.75,.35,1)'
 IN_E = 'cubic-bezier(.6,0,.85,.45)'
 INK = '#3B1452'
 CORAL = '#F0676B'
+
+
+def hls(h, s, l):
+    r, g, b = colorsys.hls_to_rgb(h / 360, l, s)
+    return '#%02X%02X%02X' % (round(r * 255), round(g * 255), round(b * 255))
 
 
 # ---------------------------------------------------------------- small helpers
@@ -244,13 +249,21 @@ def eye(e, clip, cls, iris_cls, crescent=True, lid=None, iris_tf=None, extra_iri
     if lid:
         lcls, frac = lid
         top, y0 = cy - 3 * ry - 6, cy - ry
-        lid_fill = '#FAF4FB' if cx < 128 else '#F3E9FA'  # matches the cloud behind each eye
-        lidm = (f'<g class="{lcls}" transform="translate(0 {f(frac * 2 * ry)})">'
-                f'<path d="M{pt((cx - rx - 3, top))}H{f(cx + rx + 3)}V{f(y0)}Q{pt((cx, y0 + 7))} {pt((cx - rx - 3, y0))}Z" fill="{lid_fill}"/>'
+        lid_d = f"M{pt((cx - rx - 3, top))}H{f(cx + rx + 3)}V{f(y0)}Q{pt((cx, y0 + 7))} {pt((cx - rx - 3, y0))}Z"
+        # the lid is painted with the cloud's own body, shade and sheen so it matches the skin behind each eye
+        # The paint sits in a counter-moving group (<lid>P, see Bot.anim) so the gradient stays put while the lid slides.
+        dy = frac * 2 * ry
+        x0, x1 = cx - rx - 4, cx + rx + 4
+        lidm = (f'<g class="{lcls}" transform="translate(0 {f(dy)})">'
+                f'<clipPath id="{lcls}Clip{f(cx)}"><path d="{lid_d}"/></clipPath>'
+                f'<g clip-path="url(#{lcls}Clip{f(cx)})"><g class="{lcls}P" transform="translate(0 {f(-dy)})">'
+                f'<rect x="{f(x0)}" y="{f(top - 10)}" width="{f(x1 - x0)}" height="{f(4 * ry + 30)}" fill="url(#kcBody)"/>'
+                f'<rect x="{f(x0)}" y="{f(top - 10)}" width="{f(x1 - x0)}" height="{f(4 * ry + 30)}" fill="url(#kcShade)"/>'
+                f'<ellipse cx="94" cy="94" rx="58" ry="40" fill="url(#kcSheen)"/></g></g>'
                 f'{stroke(f"M{pt((cx - rx - 3, y0))}Q{pt((cx, y0 + 7))} {pt((cx + rx + 3, y0))}", w=4.5)}</g>')
     cres = f'<path d="{crescent_lid(e)}" fill="{INK}"/>' if crescent else ''
     return (f'<g class="{cls}"{otf}><ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="url(#kcSclera)"/>'
-            f'<g clip-path="url(#{clip})">{iris}{lidm}</g>{cres}</g>')
+            f'<g clip-path="url(#{clip})">{iris}</g>' + (f'<g clip-path="url(#{clip}Lid)">{lidm}</g>' if lidm else '') + f'{cres}</g>')
 
 
 def brow_center(e):
@@ -425,6 +438,8 @@ class Bot:
 
     def anim(self, cls, origin, frames, dur=T, timing=EASE):
         self.anims[cls] = (origin, frames, dur, timing)
+        if cls.startswith('lid'):  # the lid's paint moves back by the same amount (see eye())
+            self.anims[cls + 'P'] = (origin, [(t, {k: -v if k == 'y' else v for k, v in d.items()}) for t, d in frames], dur, timing)
 
     def spark(self, layer, cls, cx, cy, R, color, times, dur=.55, mode='anim'):
         self.add(layer, sparkle(cls, cx, cy, R, color), mode)
@@ -482,20 +497,26 @@ def defs(bot):
     clip += f'<ellipse cx="{FILL[0]}" cy="{FILL[1]}" rx="{FILL[2]}" ry="{FILL[3]}"/>'
     t0, t1, t2 = bot.pal['tail']
     o0, o1, o2, o3 = bot.pal['orb']
+    h = bot.pal['hue']
+    b0, b1, b2, b3 = hls(h, .9, .94), hls(h, .8, .82), hls(h, .75, .7), hls(h, .7, .59)
+    shade, rim = hls(h, .55, .45), hls(h, .5, .48)
+    sclera = hls(h, .6, .93)
+    i0, i1, i2 = hls(h, .85, .66), hls(h, .7, .34), hls(h, .6, .12)
+    ck = bot.pal.get('cheek', '#FF6F8C')
     return f'''<defs>
     <linearGradient id="kcBody" gradientUnits="userSpaceOnUse" x1="96" y1="62" x2="150" y2="226">
-      <stop offset="0" stop-color="#FFFCF8"/><stop offset=".46" stop-color="#F7EEFB"/><stop offset=".8" stop-color="#E2D2F6"/><stop offset="1" stop-color="#C9B1EC"/>
+      <stop offset="0" stop-color="{b0}"/><stop offset=".46" stop-color="{b1}"/><stop offset=".8" stop-color="{b2}"/><stop offset="1" stop-color="{b3}"/>
     </linearGradient>
     <radialGradient id="kcShade" gradientUnits="userSpaceOnUse" cx="226" cy="214" r="120">
-      <stop offset="0" stop-color="#A88BDB" stop-opacity=".5"/><stop offset="1" stop-color="#A88BDB" stop-opacity="0"/>
+      <stop offset="0" stop-color="{shade}" stop-opacity=".5"/><stop offset="1" stop-color="{shade}" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="kcSheen" gradientUnits="userSpaceOnUse" cx="92" cy="92" r="62">
       <stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="kcGround"><stop offset="0" stop-color="#2B0E42" stop-opacity=".2"/><stop offset="1" stop-color="#2B0E42" stop-opacity="0"/></radialGradient>
-    <radialGradient id="kcCheek"><stop offset="0" stop-color="#FF8F9E" stop-opacity=".75"/><stop offset=".6" stop-color="#FF9AA6" stop-opacity=".35"/><stop offset="1" stop-color="#FF9AA6" stop-opacity="0"/></radialGradient>
-    <linearGradient id="kcSclera" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9DDF6"/><stop offset=".38" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFFDFB"/></linearGradient>
-    <radialGradient id="kcIris" cx=".5" cy=".78" r=".78"><stop offset="0" stop-color="#B07AF0"/><stop offset=".45" stop-color="#6A2BA8"/><stop offset="1" stop-color="#2A0C40"/></radialGradient>
+    <radialGradient id="kcCheek"><stop offset="0" stop-color="{ck}" stop-opacity=".85"/><stop offset=".6" stop-color="{ck}" stop-opacity=".4"/><stop offset="1" stop-color="{ck}" stop-opacity="0"/></radialGradient>
+    <linearGradient id="kcSclera" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{sclera}"/><stop offset=".38" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFFDFB"/></linearGradient>
+    <radialGradient id="kcIris" cx=".5" cy=".78" r=".78"><stop offset="0" stop-color="{i0}"/><stop offset=".45" stop-color="{i1}"/><stop offset="1" stop-color="{i2}"/></radialGradient>
     <linearGradient id="kcTail" gradientUnits="userSpaceOnUse" x1="40" y1="112" x2="190" y2="44">
       <stop offset="0" stop-color="{t0}"/><stop offset=".5" stop-color="{t1}"/><stop offset="1" stop-color="{t2}"/>
     </linearGradient>
@@ -505,7 +526,7 @@ def defs(bot):
     <filter id="kcPuff" x="-5%" y="-5%" width="110%" height="110%">
       <feOffset in="SourceAlpha" dy="-7" result="up"/><feGaussianBlur in="up" stdDeviation="5" result="upBlur"/>
       <feComposite in="SourceAlpha" in2="upBlur" operator="out" result="rim"/>
-      <feFlood flood-color="#9C7DD6" flood-opacity=".5"/><feComposite in2="rim" operator="in" result="shade"/>
+      <feFlood flood-color="{rim}" flood-opacity=".5"/><feComposite in2="rim" operator="in" result="shade"/>
       <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/></feMerge>
     </filter>
     <filter id="kcEdge" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="1.2" stdDeviation="1.2" flood-color="#2B0E42" flood-opacity=".3"/></filter>
@@ -513,6 +534,8 @@ def defs(bot):
     <clipPath id="kcCloud">{clip}</clipPath>
     <clipPath id="kcEyeL"><ellipse cx="{EL[0]}" cy="{EL[1]}" rx="{EL[2]}" ry="{EL[3]}"/></clipPath>
     <clipPath id="kcEyeR"><ellipse cx="{ER[0]}" cy="{ER[1]}" rx="{ER[2]}" ry="{ER[3]}"/></clipPath>
+    <clipPath id="kcEyeLLid"><ellipse cx="{EL[0]}" cy="{EL[1]}" rx="{EL[2] + 1.5}" ry="{EL[3] + 1.5}"/></clipPath>
+    <clipPath id="kcEyeRLid"><ellipse cx="{ER[0]}" cy="{ER[1]}" rx="{ER[2] + 1.5}" ry="{ER[3] + 1.5}"/></clipPath>
     <clipPath id="kcMouth"><path d="{grin_d()}"/></clipPath>{bot.defs}
   </defs>'''
 
@@ -652,16 +675,16 @@ def build(bot, animated):
 
 # ---------------------------------------------------------------- the ten personalities
 PAL = {
-    'winky':   dict(tail=('#7A90FF', '#B09EFF', '#7DE9F4'), orb=('#F2FFFE', '#7AF2E6', '#5EC2FF', '#A585FF'), glow='#7EF0F4'),
-    'sleepy':  dict(tail=('#7C83F2', '#A59CF6', '#D9D2FF'), orb=('#FFFBE6', '#FFF0B3', '#FFD66E', '#E2A93A'), glow='#FFE9A0'),
-    'starry':  dict(tail=('#FF9F43', '#FFC94D', '#FFF1A6'), orb=('#FFFDE8', '#FFE680', '#FFC93C', '#FF9F1C'), glow='#FFE07A'),
-    'lovey':   dict(tail=('#FF6FAE', '#FF9CC9', '#FFC9E1'), orb=('#FFF0F6', '#FF9CC9', '#FF5C9E', '#E0367A'), glow='#FF9CC9'),
-    'cool':    dict(tail=('#14B8A6', '#4FD1C5', '#A7F3E4'), orb=('#F0FFFC', '#7CF5E0', '#2CC9B5', '#1A8F9E'), glow='#6FF0DC'),
-    'thinker': dict(tail=('#F59E0B', '#FBBF24', '#FDE68A'), orb=('#FFFDF0', '#FFF3B0', '#FFD24D', '#F5A30B'), glow='#FFE27A'),
-    'giggly':  dict(tail=('#22C55E', '#4ADE80', '#BBF7D0'), orb=('#F3FFF6', '#A7F3C0', '#4ADE80', '#16A34A'), glow='#8EF5B0'),
-    'shy':     dict(tail=('#FB7185', '#FDA4AF', '#FFD5DC'), orb=('#FFF5F6', '#FFC2CB', '#FB8A9B', '#E35D74'), glow='#FFB3C0'),
-    'focused': dict(tail=('#3B82F6', '#60A5FA', '#BFDBFE'), orb=('#F0F7FF', '#9CCBFF', '#4C9BFF', '#2563EB'), glow='#8CC4FF'),
-    'wow':     dict(tail=('#8B5CF6', '#A78BFA', '#E2D9FF'), orb=('#FAF7FF', '#D7C8FF', '#A78BFA', '#7C3AED'), glow='#C4B0FF'),
+    'winky':    dict(hue=195, tail=('#7A90FF', '#B09EFF', '#7DE9F4'), orb=('#F2FFFE', '#7AF2E6', '#5EC2FF', '#A585FF'), glow='#7EF0F4'),
+    'sleepy':   dict(hue=245, tail=('#7C83F2', '#A59CF6', '#D9D2FF'), orb=('#FFFBE6', '#FFF0B3', '#FFD66E', '#E2A93A'), glow='#FFE9A0'),
+    'starry':   dict(hue=50, tail=('#FF9F43', '#FFC94D', '#FFF1A6'), orb=('#FFFDE8', '#FFE680', '#FFC93C', '#FF9F1C'), glow='#FFE07A'),
+    'lovey':    dict(hue=325, cheek='#E8365F', tail=('#FF6FAE', '#FF9CC9', '#FFC9E1'), orb=('#FFF0F6', '#FF9CC9', '#FF5C9E', '#E0367A'), glow='#FF9CC9'),
+    'cool':     dict(hue=168, tail=('#14B8A6', '#4FD1C5', '#A7F3E4'), orb=('#F0FFFC', '#7CF5E0', '#2CC9B5', '#1A8F9E'), glow='#6FF0DC'),
+    'thinker':  dict(hue=30, cheek='#E8455F', tail=('#F59E0B', '#FBBF24', '#FDE68A'), orb=('#FFFDF0', '#FFF3B0', '#FFD24D', '#F5A30B'), glow='#FFE27A'),
+    'giggly':   dict(hue=95, tail=('#22C55E', '#4ADE80', '#BBF7D0'), orb=('#F3FFF6', '#A7F3C0', '#4ADE80', '#16A34A'), glow='#8EF5B0'),
+    'shy':      dict(hue=8, cheek='#D9284F', tail=('#FB7185', '#FDA4AF', '#FFD5DC'), orb=('#FFF5F6', '#FFC2CB', '#FB8A9B', '#E35D74'), glow='#FFB3C0'),
+    'focused':  dict(hue=220, tail=('#3B82F6', '#60A5FA', '#BFDBFE'), orb=('#F0F7FF', '#9CCBFF', '#4C9BFF', '#2563EB'), glow='#8CC4FF'),
+    'wow':      dict(hue=272, tail=('#8B5CF6', '#A78BFA', '#E2D9FF'), orb=('#FAF7FF', '#D7C8FF', '#A78BFA', '#7C3AED'), glow='#C4B0FF'),
 }
 
 
@@ -814,12 +837,12 @@ def starry():
 
 def lovey():
     b = Bot('lovey', 'Lovey', 'Smitten: heart eyes thump, hearts float up, blows a kiss.', PAL['lovey'], 'heart')
-    b.defs = ('\n    <linearGradient id="kcHeartEye" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF7EB3"/>'
-              '<stop offset="1" stop-color="#E5306E"/></linearGradient>')
+    b.defs = ('\n    <linearGradient id="kcHeartEye" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF4F8B"/>'
+              '<stop offset="1" stop-color="#B5154F"/></linearGradient>')
     b.add('face', cheek(CHEEK_L, 'cheekL', 1.25) + cheek(CHEEK_R, 'cheekR', 1.25))
     for cls, e in (('heartL', EL), ('heartR', ER)):
         s = e[2] * .74
-        b.add('face', f'<g class="{cls}"><path d="{heart_d(e[0], e[1] + 1, s)}" fill="url(#kcHeartEye)"/>'
+        b.add('face', f'<g class="{cls}"><path d="{heart_d(e[0], e[1] + 1, s)}" fill="url(#kcHeartEye)" stroke="#FFFFFF" stroke-width="2.5"/>'
                       f'<ellipse cx="{f(e[0] - s * .5)}" cy="{f(e[1] - s * .4)}" rx="{f(s * .22)}" ry="{f(s * .15)}" fill="#FFFFFF" opacity=".9" transform="rotate(-30 {f(e[0] - s * .5)} {f(e[1] - s * .4)})"/></g>')
     b.add('face', stroke(happy_arc_d(EL), 'arcL') + stroke(happy_arc_d(ER), 'arcR'), 'anim')
     b.add('face', stroke(smile_d(9, 10), 'smile', CORAL, 5))
@@ -845,7 +868,7 @@ def lovey():
                                         ('fh3', 224, 96, 8, [2.8], 8, -50)):
         b.add('front', f'<g class="{cls}"><path d="{heart_d(x, y, s)}" fill="#FF6FA5" stroke="#FFFFFF" stroke-width="2"/></g>', 'anim')
         b.anim(cls, (x, y), rise(times, 1.6, dx, dy, .5, 1.1), timing='linear')
-    b.add('head', f'<g class="kissHeart"><path d="{heart_d(MX + 10, MY + 2, 9)}" fill="#FF4F93" stroke="#FFFFFF" stroke-width="2"/></g>', 'anim')
+    b.add('head', f'<g class="kissHeart"><path d="{heart_d(MX + 10, MY + 2, 9)}" fill="#D91E5B" stroke="#FFFFFF" stroke-width="2"/></g>', 'anim')
     b.anim('kissHeart', (MX + 10, MY + 2), rise([4.6], 1.0, 88, -46, .4, 1.4), timing='linear')
     still_hearts = ''.join('<path d="%s" fill="#FF6FA5" stroke="#FFFFFF" stroke-width="2"/>' % heart_d(x, y, sz)
                            for x, y, sz in ((22, 96, 6.5), (234, 92, 5.5)))
@@ -1004,7 +1027,7 @@ def shy():
         for i in range(3):
             x = cx - 6 + i * 5
             lines += f'<path d="M{pt((x, cy + 3))}L{pt((x + 3, cy - 3))}"/>'
-    b.add('face', f'<g class="blushLines" fill="none" stroke="#F06B85" stroke-width="2" stroke-linecap="round" opacity=".85">{lines}</g>')
+    b.add('face', f'<g class="blushLines" fill="none" stroke="#B81E4A" stroke-width="2.4" stroke-linecap="round" opacity=".85">{lines}</g>')
     b.add('face', eye(EL, 'kcEyeL', 'eyeL', 'iris', crescent=False, lid=('lidL', .28), iris_tf=(1, 6)))
     b.add('face', eye(ER, 'kcEyeR', 'eyeR', 'iris', crescent=False, lid=('lidR', .28), iris_tf=(1, 6)))
     b.add('face', stroke(shut_d(EL), 'shutL') + stroke(shut_d(ER), 'shutR'), 'anim')

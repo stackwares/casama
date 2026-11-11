@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:kasama_app/core/providers.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:kasama_app/features/chat/chat_screen.dart';
+import 'package:kasama_app/features/chat/chat_detail.dart';
+import 'package:kasama_app/theme/fonts.dart';
 import 'package:kasama_app/features/settings/background_screen.dart';
 import 'package:kasama_app/features/settings/fonts_screen.dart';
 import 'package:kasama_app/features/settings/themes_screen.dart';
@@ -18,10 +20,11 @@ import 'package:kasama_app/theme/presets.dart';
 import 'package:kasama_app/theme/schemes.dart';
 import 'package:kasama_app/theme/wallpaper.dart';
 
+import 'app_test.dart' show StepsShown;
 import 'fake_backend.dart';
 
-Widget _app(FakeBackend backend, Widget child) => ProviderScope(
-      overrides: [backendProvider.overrideWithValue(backend)],
+Widget _app(FakeBackend backend, Widget child, {List<dynamic> overrides = const []}) => ProviderScope(
+      overrides: [backendProvider.overrideWithValue(backend), ...overrides],
       child: Consumer(builder: (context, ref, _) {
         final a = ref.watch(appearanceProvider);
         return MaterialApp(
@@ -41,7 +44,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final backend = FakeBackend();
-    await tester.pumpWidget(_app(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpWidget(_app(backend, const ChatScreen(botId: botId, conversationId: convId), overrides: [showBotStepsProvider.overrideWith(StepsShown.new)]));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('messageInput')), 'make a todo file');
     await tester.pump();
@@ -161,7 +164,8 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('resetFonts')));
     await tester.tap(find.byKey(const Key('resetFonts')));
     await tester.pumpAndSettle();
-    expect(container.read(appearanceProvider).headingFont, 'Noto Serif');
+    expect(container.read(appearanceProvider).headingFont, defaultHeadingFont);
+    expect(container.read(appearanceProvider).bodyFont, defaultBodyFont);
   });
 
   testWidgets('usage shows totals, breakdowns and exports', (tester) async {

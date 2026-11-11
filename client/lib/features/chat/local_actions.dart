@@ -44,7 +44,8 @@ Future<bool> handleLocalUiAction(BuildContext context, WidgetRef ref, BotUiActio
     case 'app:invite':
       final org = ref.read(currentOrgProvider);
       if (org == null) return true;
-      final link = await runGuarded(context, () => ref.read(backendProvider).createInviteLink(org.id, expiresInDays: 7));
+      // The workspace's standing link (D-167), not a new one each time.
+      final link = await runGuarded(context, () => ref.read(backendProvider).defaultInvite(org.id));
       if (link != null && context.mounted) {
         try {
           await Clipboard.setData(ClipboardData(text: link.url));

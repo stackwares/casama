@@ -1,5 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { ModelCallError, type ModelGateway } from "@kasama/agent";
+import { testCredential } from "../src/worker/workflows.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/chat.json", import.meta.url));
@@ -70,6 +72,51 @@ describe("model keys", () => {
       { decrypted_secret: string }[]
     >`select decrypted_secret from vault.decrypted_secrets where id = ${row!.vault_secret_id}`;
     expect(secret?.decrypted_secret).toBe(KEY);
+  });
+
+  it("tests a key on a model that always reasons, and says what a provider objected to", async () => {
+    const efforts: Array<string | undefined> = [];
+    // A provider that, like OpenRouter's Muse Ember, refuses to switch reasoning off.
+    const fussy: ModelGateway = {
+      async *stream(req) {
+        efforts.push(req.model.reasoningEffort);
+        if (req.model.reasoningEffort === "none")
+          throw new ModelCallError("provider returned 400", {
+            retryable: false,
+            status: 400,
+            cause: {
+              responseBody: JSON.stringify({
+                error: {
+                  message: "Reasoning is mandatory for this endpoint and cannot be disabled.",
+                },
+              }),
+            },
+          });
+        yield { type: "text", text: "OK" };
+      },
+    };
+    expect(await testCredential(h.handle.db, fussy, credentialId, orgId)).toMatchObject({
+      ok: true,
+    });
+    expect(efforts).toEqual(["none", "low"]);
+    const broken: ModelGateway = {
+      // biome-ignore lint/correctness/useYield: it fails before answering
+      async *stream() {
+        throw new ModelCallError("provider returned 400", {
+          retryable: false,
+          status: 400,
+          cause: {
+            responseBody: JSON.stringify({
+              error: { message: "This model is not available in your region." },
+            }),
+          },
+        });
+      },
+    };
+    expect(await testCredential(h.handle.db, broken, credentialId, orgId)).toMatchObject({
+      ok: false,
+      error: "The provider returned 400: This model is not available in your region.",
+    });
   });
 
   it("tests a key through the worker with a 1-token call", async () => {

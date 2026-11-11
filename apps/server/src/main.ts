@@ -146,6 +146,7 @@ if (env.MODE === "api") {
       : undefined,
     pagesUrl: env.PAGES_URL,
     publicApiUrl: env.PUBLIC_API_URL,
+    geminiLiveModel: env.GEMINI_LIVE_MODEL,
     auditForwarding: await import("@kasama/ee")
       .then((m) => m.verifyLicense(env.KASAMA_LICENSE_KEY))
       .then((l) => !!l && l.expiresAt > new Date() && l.features.includes("audit_forwarding"))

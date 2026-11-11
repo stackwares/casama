@@ -2,7 +2,7 @@
  * Built-in app connections (D-089). Each app is the vendor's own hosted MCP server, connected with
  * one click through OAuth (MCP authorization: discovery, then dynamic client registration, a
  * client metadata document, or a client the server admin registered; always with PKCE) or with an
- * API key. No Composio or Pipedream needed. Endpoints checked against vendor docs on 2026-11-10.
+ * API key. No Composio or Pipedream needed. Endpoints checked against vendor docs on 2026-11-11.
  */
 export type AppCategory =
   | "developer"
@@ -139,8 +139,7 @@ export const APP_CATALOG: CatalogApp[] = [
     homepage: "https://vercel.com",
     url: "https://mcp.vercel.com",
     auth: ["oauth"],
-    oauthClient: "cimd",
-    note: "Vercel only accepts apps with a public web address, so this works on hosted Kasama servers.",
+    oauthClient: "dcr",
     capabilities: ["Check deployments", "Read build logs", "Search Vercel docs"],
   },
   {
@@ -325,34 +324,26 @@ export const APP_CATALOG: CatalogApp[] = [
     capabilities: ["Search files", "Read documents", "Ask questions about files"],
   },
   // --------------------------------------------------------------- google
+  // Google's own MCP servers (Developer Preview), one per product, all signed in with the server's
+  // Google client (GOOGLE_OAUTH_CLIENT_ID). Scopes are Kasama's choice, never the full list a
+  // server announces (Gmail's includes full mailbox access).
   {
     id: "gmail",
     name: "Gmail",
-    description: "Send email from your address. Reading your inbox is a separate step.",
+    description: "Search and read your email, draft replies, and label threads.",
     category: "google",
     color: "EA4335",
     homepage: "https://mail.google.com",
     url: "https://gmailmcp.googleapis.com/mcp/v1",
     auth: ["oauth"],
     oauthClient: "preregistered",
-    note: "Google's MCP servers are in Developer Preview.",
-    scopes: ["https://www.googleapis.com/auth/gmail.send"],
-    capabilities: ["Send email (asks first)"],
+    note: "Drafts only: you send them from Gmail. Google's MCP servers are in Developer Preview.",
+    scopes: [
+      "https://www.googleapis.com/auth/gmail.modify",
+      "https://www.googleapis.com/auth/gmail.compose",
+    ],
+    capabilities: ["Search and read email", "Draft replies", "Label threads"],
     popular: true,
-  },
-  {
-    id: "gmail_inbox",
-    name: "Gmail inbox",
-    description: "Search and read your email, and draft replies.",
-    category: "google",
-    color: "EA4335",
-    homepage: "https://mail.google.com",
-    url: "https://gmailmcp.googleapis.com/mcp/v1",
-    auth: ["oauth"],
-    oauthClient: "preregistered",
-    note: "Turn this on only for inbox features: catch-ups, triage, replies.",
-    scopes: ["https://www.googleapis.com/auth/gmail.modify"],
-    capabilities: ["Search and read email", "Draft replies", "Label and archive"],
     inbox: true,
   },
   {
@@ -366,14 +357,23 @@ export const APP_CATALOG: CatalogApp[] = [
     auth: ["oauth"],
     oauthClient: "preregistered",
     note: "Google's MCP servers are in Developer Preview.",
-    scopes: ["https://www.googleapis.com/auth/calendar.events"],
-    capabilities: ["See your schedule", "Create and move events", "Find free time"],
+    scopes: [
+      "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+      "https://www.googleapis.com/auth/calendar.events",
+      "https://www.googleapis.com/auth/calendar.events.freebusy",
+    ],
+    capabilities: [
+      "See your schedule",
+      "Create and move events",
+      "Find free time",
+      "Answer invites",
+    ],
     popular: true,
   },
   {
     id: "google_drive",
     name: "Google Drive",
-    description: "Docs, Sheets and files in Drive.",
+    description: "Files in Drive that you pick or that it creates.",
     category: "google",
     color: "1FA463",
     homepage: "https://drive.google.com",
@@ -382,7 +382,67 @@ export const APP_CATALOG: CatalogApp[] = [
     oauthClient: "preregistered",
     note: "Google's MCP servers are in Developer Preview.",
     scopes: ["https://www.googleapis.com/auth/drive.file"],
-    capabilities: ["Files you pick or that it creates", "Read and write those Docs and Sheets"],
+    capabilities: ["Create and copy files", "Read files it has access to"],
+  },
+  {
+    id: "google_docs",
+    name: "Google Docs",
+    description: "Read and edit your documents.",
+    category: "google",
+    color: "4285F4",
+    homepage: "https://docs.google.com/document",
+    url: "https://docsmcp.googleapis.com/mcp/v1",
+    auth: ["oauth"],
+    oauthClient: "preregistered",
+    note: "Google's MCP servers are in Developer Preview.",
+    scopes: ["https://www.googleapis.com/auth/documents"],
+    capabilities: ["Read documents", "Write and edit documents"],
+  },
+  {
+    id: "google_sheets",
+    name: "Google Sheets",
+    description: "Read and update your spreadsheets.",
+    category: "google",
+    color: "0F9D58",
+    homepage: "https://docs.google.com/spreadsheets",
+    url: "https://sheetsmcp.googleapis.com/mcp/v1",
+    auth: ["oauth"],
+    oauthClient: "preregistered",
+    note: "Google's MCP servers are in Developer Preview.",
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    capabilities: ["Read cells and sheets", "Update values and formulas", "Add rows and columns"],
+  },
+  {
+    id: "google_slides",
+    name: "Google Slides",
+    description: "Read and edit your presentations.",
+    category: "google",
+    color: "F4B400",
+    homepage: "https://docs.google.com/presentation",
+    url: "https://slidesmcp.googleapis.com/mcp/v1",
+    auth: ["oauth"],
+    oauthClient: "preregistered",
+    note: "Google's MCP servers are in Developer Preview.",
+    scopes: ["https://www.googleapis.com/auth/presentations"],
+    capabilities: ["Read presentations", "Edit slides"],
+  },
+  {
+    id: "google_contacts",
+    name: "Google Contacts",
+    description: "Look up people in your contacts and your organization's directory.",
+    category: "google",
+    color: "1A73E8",
+    homepage: "https://contacts.google.com",
+    url: "https://people.googleapis.com/mcp/v1",
+    auth: ["oauth"],
+    oauthClient: "preregistered",
+    note: "Google's MCP servers are in Developer Preview.",
+    scopes: [
+      "https://www.googleapis.com/auth/contacts.readonly",
+      "https://www.googleapis.com/auth/directory.readonly",
+      "https://www.googleapis.com/auth/userinfo.profile",
+    ],
+    capabilities: ["Search contacts", "Search your organization's directory"],
   },
   // ------------------------------------------------------------- payments
   {
@@ -494,6 +554,38 @@ export const APP_CATALOG: CatalogApp[] = [
     capabilities: ["Run the Zapier actions you allow", "Reach 8,000+ apps"],
     popular: true,
   },
+  // Hubs: one sign-in reaches many apps, and each app is connected inside the hub. Also the way in
+  // for apps whose own sign-in needs a client this server doesn't have (see HUB_APPS).
+  {
+    id: "composio",
+    name: "Composio",
+    description: "1,000+ apps, each signed in through Composio when the bot first needs it.",
+    category: "automation",
+    color: "5B3DF5",
+    homepage: "https://composio.dev",
+    url: "https://connect.composio.dev/mcp",
+    auth: ["oauth"],
+    oauthClient: "dcr",
+    note: "Sign in with your Composio account. A Composio API key also works, under More ways to connect.",
+    capabilities: [
+      "Gmail, Slack, HubSpot, Salesforce and 1,000+ more",
+      "Connects each app when it's first used",
+    ],
+    popular: true,
+  },
+  {
+    id: "pipedream",
+    name: "Pipedream",
+    description: "2,800+ apps through Pipedream, signed in with your Pipedream account.",
+    category: "automation",
+    color: "1C1C1C",
+    homepage: "https://pipedream.com",
+    url: "https://remote.mcp.pipedream.net",
+    auth: ["oauth"],
+    oauthClient: "dcr",
+    note: "Pipedream's MCP server is in beta. A Pipedream Connect project also works, under More ways to connect.",
+    capabilities: ["2,800+ apps and their actions", "Connects each app when it's first used"],
+  },
   {
     id: "exa",
     name: "Exa",
@@ -546,6 +638,18 @@ export const APP_CATALOG: CatalogApp[] = [
   },
 ];
 
-export const appByIdOrNull = (id: string) => APP_CATALOG.find((a) => a.id === id) ?? null;
+/**
+ * Hubs that sign in to many apps at once. An app whose own one-click sign-in isn't set up on this
+ * server can still be reached through one of these.
+ */
+export const HUB_APPS = ["composio", "pipedream", "zapier"] as const;
+
+/** Ids that were merged into another app: Gmail inbox is now part of Gmail. */
+const RENAMED_APPS: Record<string, string> = { gmail_inbox: "gmail" };
+
+export const appByIdOrNull = (id: string) => {
+  const found = RENAMED_APPS[id] ?? id;
+  return APP_CATALOG.find((a) => a.id === found) ?? null;
+};
 
 export const appById = (id: string) => APP_CATALOG.find((a) => a.id === id);

@@ -145,6 +145,18 @@ services:
       GOTRUE_JWT_EXP: 3600
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      # Continue with Apple and Google. Off until the credentials are set (see
+      # docs-site/self-hosting/configuration.md). Apple's client id list is the Services ID first,
+      # then the app id com.kasama.app. The callback is the public /auth/v1/callback Kong serves;
+      # GoTrue's own default would be the site root, which Kong does not route.
+      GOTRUE_EXTERNAL_APPLE_ENABLED: ${APPLE_AUTH_ENABLED:-false}
+      GOTRUE_EXTERNAL_APPLE_CLIENT_ID: ${APPLE_AUTH_CLIENT_IDS:-}
+      GOTRUE_EXTERNAL_APPLE_SECRET: ${APPLE_AUTH_SECRET:-}
+      GOTRUE_EXTERNAL_APPLE_REDIRECT_URI: ${KASAMA_PUBLIC_URL}/auth/v1/callback
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOOGLE_AUTH_ENABLED:-false}
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_AUTH_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_AUTH_SECRET:-}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${KASAMA_PUBLIC_URL}/auth/v1/callback
       GOTRUE_MAILER_AUTOCONFIRM: ${EMAIL_AUTOCONFIRM:-true}
       GOTRUE_SMTP_HOST: ${SMTP_HOST:-}
       GOTRUE_SMTP_PORT: ${SMTP_PORT:-587}

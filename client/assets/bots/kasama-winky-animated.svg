@@ -55,18 +55,18 @@
   </style>
   <defs>
     <linearGradient id="kcBody" gradientUnits="userSpaceOnUse" x1="96" y1="62" x2="150" y2="226">
-      <stop offset="0" stop-color="#FFFCF8"/><stop offset=".46" stop-color="#F7EEFB"/><stop offset=".8" stop-color="#E2D2F6"/><stop offset="1" stop-color="#C9B1EC"/>
+      <stop offset="0" stop-color="#E2F7FD"/><stop offset=".46" stop-color="#ACE3F6"/><stop offset=".8" stop-color="#79CFEC"/><stop offset="1" stop-color="#4DBBE0"/>
     </linearGradient>
     <radialGradient id="kcShade" gradientUnits="userSpaceOnUse" cx="226" cy="214" r="120">
-      <stop offset="0" stop-color="#A88BDB" stop-opacity=".5"/><stop offset="1" stop-color="#A88BDB" stop-opacity="0"/>
+      <stop offset="0" stop-color="#3492B2" stop-opacity=".5"/><stop offset="1" stop-color="#3492B2" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="kcSheen" gradientUnits="userSpaceOnUse" cx="92" cy="92" r="62">
       <stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="kcGround"><stop offset="0" stop-color="#2B0E42" stop-opacity=".2"/><stop offset="1" stop-color="#2B0E42" stop-opacity="0"/></radialGradient>
-    <radialGradient id="kcCheek"><stop offset="0" stop-color="#FF8F9E" stop-opacity=".75"/><stop offset=".6" stop-color="#FF9AA6" stop-opacity=".35"/><stop offset="1" stop-color="#FF9AA6" stop-opacity="0"/></radialGradient>
-    <linearGradient id="kcSclera" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9DDF6"/><stop offset=".38" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFFDFB"/></linearGradient>
-    <radialGradient id="kcIris" cx=".5" cy=".78" r=".78"><stop offset="0" stop-color="#B07AF0"/><stop offset=".45" stop-color="#6A2BA8"/><stop offset="1" stop-color="#2A0C40"/></radialGradient>
+    <radialGradient id="kcCheek"><stop offset="0" stop-color="#FF6F8C" stop-opacity=".85"/><stop offset=".6" stop-color="#FF6F8C" stop-opacity=".4"/><stop offset="1" stop-color="#FF6F8C" stop-opacity="0"/></radialGradient>
+    <linearGradient id="kcSclera" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2F3F8"/><stop offset=".38" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFFDFB"/></linearGradient>
+    <radialGradient id="kcIris" cx=".5" cy=".78" r=".78"><stop offset="0" stop-color="#5FCDF2"/><stop offset=".45" stop-color="#1A7593"/><stop offset="1" stop-color="#0C2831"/></radialGradient>
     <linearGradient id="kcTail" gradientUnits="userSpaceOnUse" x1="40" y1="112" x2="190" y2="44">
       <stop offset="0" stop-color="#7A90FF"/><stop offset=".5" stop-color="#B09EFF"/><stop offset="1" stop-color="#7DE9F4"/>
     </linearGradient>
@@ -76,7 +76,7 @@
     <filter id="kcPuff" x="-5%" y="-5%" width="110%" height="110%">
       <feOffset in="SourceAlpha" dy="-7" result="up"/><feGaussianBlur in="up" stdDeviation="5" result="upBlur"/>
       <feComposite in="SourceAlpha" in2="upBlur" operator="out" result="rim"/>
-      <feFlood flood-color="#9C7DD6" flood-opacity=".5"/><feComposite in2="rim" operator="in" result="shade"/>
+      <feFlood flood-color="#3D99B8" flood-opacity=".5"/><feComposite in2="rim" operator="in" result="shade"/>
       <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/></feMerge>
     </filter>
     <filter id="kcEdge" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="1.2" stdDeviation="1.2" flood-color="#2B0E42" flood-opacity=".3"/></filter>
@@ -84,6 +84,8 @@
     <clipPath id="kcCloud"><circle cx="110" cy="112" r="50"/><circle cx="176" cy="130" r="36"/><circle cx="205" cy="163" r="27"/><circle cx="178" cy="190" r="29"/><circle cx="128" cy="197" r="28"/><circle cx="80" cy="189" r="29"/><circle cx="50" cy="158" r="28"/><circle cx="68" cy="130" r="23"/><ellipse cx="128" cy="158" rx="84" ry="44"/></clipPath>
     <clipPath id="kcEyeL"><ellipse cx="97" cy="142" rx="21" ry="23"/></clipPath>
     <clipPath id="kcEyeR"><ellipse cx="163" cy="138" rx="17.5" ry="19.5"/></clipPath>
+    <clipPath id="kcEyeLLid"><ellipse cx="97" cy="142" rx="22.5" ry="24.5"/></clipPath>
+    <clipPath id="kcEyeRLid"><ellipse cx="163" cy="138" rx="19.0" ry="21.0"/></clipPath>
     <clipPath id="kcMouth"><path d="M116 160Q130 164 144 160Q143.5 180 130 180Q116.5 180 116 160Z"/></clipPath>
   </defs>
   <g class="groundA"><g class="groundB"><ellipse cx="128" cy="238" rx="66" ry="8" fill="url(#kcGround)"/></g></g>

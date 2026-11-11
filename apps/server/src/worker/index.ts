@@ -113,6 +113,7 @@ export interface WorkerOptions {
     brave?: string;
     tavily?: string;
     openai?: string;
+    gemini?: string;
     deepgram?: string;
     elevenlabs?: string;
     cartesia?: string;
@@ -139,6 +140,8 @@ export interface WorkerOptions {
   cloud?: { url: string; key: string };
   /** Realtime voice model (default gpt-realtime-2.1). */
   realtimeModel?: string;
+  /** Gemini Live model for live calls (default gemini-3.8-live). */
+  geminiLiveModel?: string;
   /** ChatGPT plan sign-in endpoints; defaults are OpenAI's (tests point them at a fake). */
   chatgpt?: { authUrl?: string; apiUrl?: string };
   /** Kasama Cloud abuse controls (D-094): free workspaces need a verified owner email for computers. */
@@ -435,6 +438,7 @@ export async function startWorker(opts: WorkerOptions) {
       tools,
       computers: !!computers,
       realtimeModel: opts.realtimeModel,
+      geminiLiveModel: opts.geminiLiveModel,
     },
     voip,
     auditForwarding: opts.auditForwarding,

@@ -201,7 +201,7 @@ class ProjectScreen extends ConsumerWidget {
                 key: const Key('projectThread'),
                 tooltip: l10n.projectThread,
                 icon: const Icon(LucideIcons.messagesSquare),
-                onPressed: () => context.go('/bots/${p.leadBotId}/chat?c=${p.conversationId}'),
+                onPressed: () => context.push('/bots/${p.leadBotId}/chat?c=${p.conversationId}'),
               ),
           ],
           children: [

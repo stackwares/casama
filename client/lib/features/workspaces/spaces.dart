@@ -3,16 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../mcp/mcp_screens.dart';
+import 'join_flow.dart';
 import 'workspace_files.dart';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kasama_sdk/kasama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
-import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -167,6 +166,7 @@ Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiv
                   ),
               ],
             ),
+            JoinableWorkspacesSection(onJoined: () => Navigator.pop(c)),
             const SizedBox(height: AppSpace.md),
             OutlinedButton.icon(
               key: const Key('newWorkspace'),
@@ -178,10 +178,22 @@ Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiv
               },
             ),
             const SizedBox(height: AppSpace.sm),
+            if (current != null && current.role != OrgRole.member) ...[
+              OutlinedButton.icon(
+                key: const Key('invitePeople'),
+                icon: const Icon(LucideIcons.userPlus, size: 18),
+                label: Text(l10n.invitePeopleTo(current.name)),
+                onPressed: () {
+                  Navigator.pop(c);
+                  GoRouter.maybeOf(context)?.push('/settings/people');
+                },
+              ),
+              const SizedBox(height: AppSpace.sm),
+            ],
             TextButton.icon(
               key: const Key('joinWorkspace'),
               icon: const Icon(LucideIcons.link, size: 18),
-              label: Text(l10n.joinWithLink),
+              label: Text(l10n.joinWithLinkOrCode),
               onPressed: () async {
                 Navigator.pop(c);
                 await showAdaptiveSheet<void>(context: context, builder: (_) => const JoinSpaceSheet());
@@ -293,108 +305,7 @@ class _NewSpaceSheetState extends ConsumerState<NewSpaceSheet> {
   }
 }
 
-/// Extracts the token from a pasted invite link (or takes a bare token).
-String? inviteTokenFrom(String input) {
-  final m = RegExp(r'(kjoin_[A-Za-z0-9_-]{16,})').firstMatch(input.trim());
-  return m?.group(1);
-}
-
-class JoinSpaceSheet extends ConsumerStatefulWidget {
-  const JoinSpaceSheet({super.key});
-
-  @override
-  ConsumerState<JoinSpaceSheet> createState() => _JoinSpaceSheetState();
-}
-
-class _JoinSpaceSheetState extends ConsumerState<JoinSpaceSheet> {
-  final _link = TextEditingController();
-
-  @override
-  void dispose() {
-    _link.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return FormSheet(
-      icon: LucideIcons.link,
-      title: l10n.joinWithLink,
-      subtitle: l10n.joinWorkspaceHelp,
-      submitLabel: l10n.joinWithLink,
-      submitKey: const Key('joinWorkspaceSubmit'),
-      onSubmit: () async {
-        final token = inviteTokenFrom(_link.text);
-        if (token == null) return;
-        final ok = await joinWorkspace(context, ref, token);
-        if (ok && context.mounted) Navigator.pop(context);
-      },
-      children: [
-        TextField(
-          key: const Key('inviteLinkField'),
-          controller: _link,
-          decoration: InputDecoration(labelText: l10n.inviteLinkField, hintText: 'https://…/join/kjoin_…'),
-        ),
-      ],
-    );
-  }
-}
-
-/// Joins with a link and switches to the workspace.
-Future<bool> joinWorkspace(BuildContext context, WidgetRef ref, String token) async {
-  final l10n = context.l10n;
-  final org = await runGuarded(context, () => ref.read(backendProvider).acceptInviteLink(token));
-  if (org == null) return false;
-  ref.invalidate(organizationsProvider);
-  ref.read(selectedOrgIdProvider.notifier).select(org.id);
-  if (context.mounted) showMessage(context, l10n.joinedWorkspace(org.name));
-  return true;
-}
-
-/// `/join/<token>`: joins after sign-in, then opens the workspace.
-class JoinScreen extends ConsumerStatefulWidget {
-  const JoinScreen({super.key, required this.token});
-  final String token;
-
-  @override
-  ConsumerState<JoinScreen> createState() => _JoinScreenState();
-}
-
-class _JoinScreenState extends ConsumerState<JoinScreen> {
-  var _failed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ref.read(pendingJoinTokenProvider.notifier).set(null);
-      final ok = await joinWorkspace(context, ref, widget.token);
-      if (!mounted) return;
-      if (ok) {
-        context.go('/bots');
-      } else {
-        setState(() => _failed = true);
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Scaffold(
-      body: Center(
-        child: _failed
-            ? EmptyState(icon: LucideIcons.unlink, title: l10n.joinWithLink, message: l10n.joinFailed)
-            : Column(mainAxisSize: MainAxisSize.min, children: [const CircularProgressIndicator(), const SizedBox(height: 16), Text(l10n.joiningWorkspace)]),
-      ),
-    );
-  }
-}
-
-final _linksProvider = FutureProvider.family<List<InviteLink>, String>((ref, orgId) => ref.watch(backendProvider).inviteLinks(orgId));
-
-/// Settings → Workspace: name, look, invite links (admins).
+/// Settings → Workspace: name and look; People has the invites (D-167).
 class WorkspaceSettingsScreen extends ConsumerStatefulWidget {
   const WorkspaceSettingsScreen({super.key});
 
@@ -405,10 +316,6 @@ class WorkspaceSettingsScreen extends ConsumerStatefulWidget {
 class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScreen> {
   final _name = TextEditingController();
   String? _loadedFor;
-  var _role = 'member';
-  int? _days = 7;
-  int? _uses;
-  CreatedInviteLink? _created;
 
   @override
   void dispose() {
@@ -432,7 +339,6 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
       _name.text = org.name;
     }
     final admin = org.role != OrgRole.member;
-    final links = admin ? (ref.watch(_linksProvider(org.id)).value ?? const <InviteLink>[]) : const <InviteLink>[];
     return SubPage(
       title: l10n.workspaceSettings,
       children: [
@@ -467,101 +373,19 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
             ],
           ),
         ),
-        if (admin) ...[
-          SectionHeader(title: l10n.inviteLinks),
-          AppCard(
-            padding: const EdgeInsets.all(AppSpace.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpace.sm,
-              children: [
-                FormNote(l10n.inviteLinksHelp),
-                LayoutBuilder(
-                  builder: (context, box) {
-                    final fields = [
-                      DropdownButtonFormField<String>(
-                        key: const Key('linkRole'),
-                        initialValue: _role,
-                        decoration: InputDecoration(labelText: l10n.inviteRole),
-                        items: [
-                          DropdownMenuItem(value: 'member', child: Text(l10n.roleMember)),
-                          DropdownMenuItem(value: 'admin', child: Text(l10n.roleAdmin)),
-                        ],
-                        onChanged: (v) => setState(() => _role = v ?? _role),
-                      ),
-                      DropdownButtonFormField<int?>(
-                        initialValue: _days,
-                        decoration: InputDecoration(labelText: l10n.linkExpires),
-                        items: [
-                          for (final d in [1, 7, 30]) DropdownMenuItem(value: d, child: Text(l10n.linkDays(d))),
-                          DropdownMenuItem(value: null, child: Text(l10n.linkNever)),
-                        ],
-                        onChanged: (v) => setState(() => _days = v),
-                      ),
-                      DropdownButtonFormField<int?>(
-                        initialValue: _uses,
-                        decoration: InputDecoration(labelText: l10n.linkMaxUses),
-                        items: [
-                          for (final u in [1, 5, 25]) DropdownMenuItem(value: u, child: Text('$u')),
-                          DropdownMenuItem(value: null, child: Text(l10n.linkUnlimited)),
-                        ],
-                        onChanged: (v) => setState(() => _uses = v),
-                      ),
-                    ];
-                    // Side by side where there's room, stacked on phones.
-                    if (box.maxWidth < 520) return Column(spacing: AppSpace.sm, children: fields);
-                    return Row(spacing: AppSpace.sm, children: [for (final f in fields) Expanded(child: f)]);
-                  },
-                ),
-                Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: FilledButton.icon(
-                    key: const Key('createInviteLink'),
-                    icon: const Icon(LucideIcons.link, size: 18),
-                    label: Text(l10n.createInviteLink),
-                    onPressed: () async {
-                      final created = await runGuarded(context, () => ref.read(backendProvider).createInviteLink(org.id, role: _role, expiresInDays: _days, maxUses: _uses));
-                      if (created == null || !context.mounted) return;
-                      setState(() => _created = created);
-                      ref.invalidate(_linksProvider(org.id));
-                    },
-                  ),
-                ),
-                if (_created != null) _NewInviteLink(key: ValueKey(_created!.url), url: _created!.url),
-              ],
+        const SizedBox(height: AppSpace.lg),
+        GroupedCard(
+          children: [
+            GroupedTile(
+              key: const Key('workspacePeople'),
+              icon: LucideIcons.users,
+              title: l10n.people,
+              subtitle: admin ? l10n.peopleRow : l10n.members,
+              showChevron: true,
+              onTap: () => context.push('/settings/people'),
             ),
-          ),
-          if (links.isNotEmpty)
-            GroupedCard(
-              children: [
-                for (final l in links)
-                  GroupedTile(
-                    key: Key('link-${l.id}'),
-                    icon: LucideIcons.link,
-                    title: '${l.tokenHint}… · ${l.role == InviteLinkRoleEnum.admin ? l10n.roleAdmin : l10n.roleMember}',
-                    subtitle: [l10n.linkUses('${l.uses}${l.maxUses == null ? '' : '/${l.maxUses}'}'), if (l.revokedAt != null) l10n.linkRevoked].join(' · '),
-                    trailing: l.revokedAt != null
-                        ? null
-                        : TextButton(
-                            key: Key('revoke-${l.id}'),
-                            onPressed: () async {
-                              final ok = await showConfirm(
-                                context: context,
-                                title: l10n.revokeLink,
-                                message: l10n.inviteLinksHelp,
-                                confirmLabel: l10n.revokeLink,
-                                destructive: true,
-                              );
-                              if (!ok || !context.mounted) return;
-                              await runGuarded(context, () => ref.read(backendProvider).revokeInviteLink(org.id, l.id));
-                              ref.invalidate(_linksProvider(org.id));
-                            },
-                            child: Text(l10n.revokeLink),
-                          ),
-                  ),
-              ],
-            ),
-        ],
+          ],
+        ),
         const SizedBox(height: AppSpace.lg),
         GroupedCard(
           children: [
@@ -1253,96 +1077,3 @@ class _SecretStoreSheetState extends ConsumerState<_SecretStoreSheet> {
 }
 
 /// A link just created: shown once in full, with copy and share.
-class _NewInviteLink extends StatefulWidget {
-  const _NewInviteLink({super.key, required this.url});
-  final String url;
-
-  @override
-  State<_NewInviteLink> createState() => _NewInviteLinkState();
-}
-
-class _NewInviteLinkState extends State<_NewInviteLink> {
-  var _copied = false;
-  Timer? _reset;
-
-  @override
-  void dispose() {
-    _reset?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _copy() async {
-    try {
-      await Clipboard.setData(ClipboardData(text: widget.url));
-    } catch (_) {
-      return; // The link stays on screen, selectable.
-    }
-    if (!mounted) return;
-    HapticFeedback.selectionClick();
-    setState(() => _copied = true);
-    _reset?.cancel();
-    _reset = Timer(const Duration(seconds: 2), () => mounted ? setState(() => _copied = false) : null);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = context.colorScheme;
-    return Container(
-      key: const Key('createdLink'),
-      padding: const EdgeInsets.all(AppSpace.md),
-      decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: context.isDark ? 0.14 : 0.07),
-        borderRadius: BorderRadius.circular(AppRadius.tile),
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppSpace.sm,
-        children: [
-          Row(
-            children: [
-              Icon(LucideIcons.circleCheck, size: 18, color: scheme.primary),
-              const SizedBox(width: AppSpace.xs),
-              Expanded(child: Text(l10n.inviteLinkReady, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700))),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm, vertical: 10),
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              borderRadius: BorderRadius.circular(AppRadius.row),
-              border: Border.all(color: context.appColors.hairline),
-            ),
-            child: SelectableText(widget.url, maxLines: 1, style: AppText.mono.copyWith(fontSize: 13, color: scheme.onSurface)),
-          ),
-          Wrap(
-            spacing: AppSpace.xs,
-            runSpacing: AppSpace.xs,
-            alignment: WrapAlignment.end,
-            children: [
-              Builder(
-                builder: (button) => OutlinedButton.icon(
-                  key: const Key('shareInviteLink'),
-                  onPressed: () => shareText(widget.url, origin: shareOrigin(button)),
-                  icon: const Icon(LucideIcons.share2, size: 18),
-                  label: Text(l10n.shareLinkLabel),
-                ),
-              ),
-              FilledButton.icon(
-                key: const Key('copyInviteLink'),
-                onPressed: _copy,
-                icon: AnimatedSwitcher(
-                  duration: AppMotion.fast,
-                  child: Icon(_copied ? LucideIcons.check : LucideIcons.copy, key: ValueKey(_copied), size: 18),
-                ),
-                label: Text(_copied ? l10n.copied : l10n.copyLink),
-              ),
-            ],
-          ),
-          FormNote(l10n.inviteLinkOnce),
-        ],
-      ),
-    );
-  }
-}

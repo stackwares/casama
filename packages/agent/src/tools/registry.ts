@@ -137,11 +137,35 @@ export class ToolRegistry {
     if (!def) throw new ToolError("unknown_tool", `Unknown tool ${name}`);
     const parsed = def.schema.safeParse(args);
     if (!parsed.success) {
+      // Say what the call needs, so a model that sent empty or wrong arguments can fix them.
+      const problems = parsed.error.issues
+        .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
+        .join("; ");
       throw new ToolError(
         "invalid_arguments",
-        parsed.error.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join("; "),
+        `${problems}. ${name} takes ${argumentsHint(def)}; call it again with them filled in.`,
       );
     }
     return { def, args: parsed.data };
   }
+}
+
+/** A tool's arguments in one line: {"command": string (required), "timeout_s": integer}. */
+export function argumentsHint(def: ToolDefinition): string {
+  const schema = (def.jsonSchema ?? z.toJSONSchema(def.schema, { target: "draft-7" })) as {
+    properties?: Record<string, { type?: unknown; enum?: unknown[] }>;
+    required?: string[];
+  };
+  const props = Object.entries(schema.properties ?? {});
+  if (!props.length) return "no arguments";
+  const required = new Set(schema.required ?? []);
+  const parts = props.map(([key, p]) => {
+    const type = Array.isArray(p.enum)
+      ? p.enum.map((v) => JSON.stringify(v)).join("|")
+      : Array.isArray(p.type)
+        ? p.type.join("|")
+        : String(p.type ?? "value");
+    return `${JSON.stringify(key)}: ${type}${required.has(key) ? " (required)" : ""}`;
+  });
+  return `{${parts.join(", ")}}`;
 }

@@ -200,7 +200,7 @@ describe("invites with email", () => {
       expect(invite).toMatchObject({ email_sent: true, role: "admin" });
       expect(invite.accept_token).toBeUndefined();
       expect(eh.outbox).toHaveLength(1);
-      expect(eh.outbox[0]!.text).toContain("/invites/");
+      expect(eh.outbox[0]!.text).toContain("/join/kinv_");
     } finally {
       await eh.stop();
     }

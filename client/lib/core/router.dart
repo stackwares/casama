@@ -53,6 +53,8 @@ import '../features/voice/call_screen.dart';
 import '../features/workspaces/onboarding_screen.dart';
 import '../features/auth/two_step_screen.dart';
 import '../features/board/board_screen.dart';
+import '../features/workspaces/join_flow.dart';
+import '../features/workspaces/people_screen.dart';
 import '../features/workspaces/spaces.dart';
 import 'providers.dart';
 import 'telemetry.dart';
@@ -69,6 +71,7 @@ class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
     ref.listen(signedInProvider, (_, _) => notifyListeners());
     ref.listen(organizationsProvider, (_, _) => notifyListeners());
+    ref.listen(joinableWorkspacesProvider, (_, _) => notifyListeners());
   }
 }
 
@@ -84,18 +87,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       final signedIn = ref.read(signedInProvider);
       if (signedIn.isLoading) return null;
       final loc = state.matchedLocation;
-      // An invite link opened before signing in is joined right after (D-099).
-      if (signedIn.value != true && loc.startsWith('/join/')) {
-        ref.read(pendingJoinTokenProvider.notifier).set(state.pathParameters['token']);
-        return '/sign-in';
-      }
-      if (signedIn.value != true) return loc == '/sign-in' ? null : '/sign-in';
+      // Invite links (D-167): the preview works signed out ("Sign in to join" keeps the invite and
+      // brings people back to it after signing in).
+      final joining = loc.startsWith('/join/') || loc.startsWith('/invites/');
+      if (signedIn.value != true) return loc == '/sign-in' || joining ? null : '/sign-in';
       final pendingJoin = ref.read(pendingJoinTokenProvider);
-      if (pendingJoin != null && !loc.startsWith('/join/')) return '/join/$pendingJoin';
+      if (pendingJoin != null && !loc.startsWith('/join/')) return joinPath(pendingJoin);
       // Two-step sign-in (D-093): the code comes before anything else.
       final codeNeeded = ref.read(backendProvider).twoStepCodeNeeded;
       if (codeNeeded) return loc == '/two-step' ? null : '/two-step';
       if (loc == '/two-step') return '/bots';
+      if (joining || loc.startsWith('/joined/')) return null;
       final orgs = ref.read(organizationsProvider);
       if (orgs.isLoading) return loc == '/sign-in' ? '/bots' : null;
       // Workspaces that couldn't load (offline with none saved) don't mean there are none: never
@@ -104,8 +106,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (orgs.hasError && (orgs.value ?? const []).isEmpty) return loc == '/sign-in' ? '/bots' : null;
       final hasOrg = (orgs.value ?? const []).isNotEmpty;
       final bots = ref.read(botsProvider).value;
-      // New people land in the welcome chat (D-129); the wizard stays at /onboarding.
-      if (!hasOrg && loc != '/onboarding' && loc != '/welcome') return '/welcome';
+      // New people land in the welcome chat (D-129); the wizard stays at /onboarding. Those whose
+      // team already has a workspace open to their email domain see it first (D-167).
+      if (!hasOrg && loc != '/onboarding' && loc != '/welcome' && loc != '/join-team') {
+        final joinable = ref.read(joinableWorkspacesProvider);
+        if (joinable.isLoading) return null;
+        if ((joinable.value ?? const []).isNotEmpty && !ref.read(skipJoinTeamProvider)) return '/join-team';
+        return '/welcome';
+      }
+      if (hasOrg && loc == '/join-team') return '/bots';
       if (hasOrg && loc == '/onboarding' && (bots?.isNotEmpty ?? false)) return '/bots';
       if (loc == '/sign-in') return hasOrg ? '/bots' : '/welcome';
       return null;
@@ -117,8 +126,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/two-step', pageBuilder: _page((_, _) => const TwoStepPromptScreen())),
       GoRoute(
         path: '/join/:token',
-        pageBuilder: _page((_, s) => JoinScreen(token: s.pathParameters['token']!)),
+        pageBuilder: _page((_, s) => JoinScreen(key: ValueKey(s.uri.toString()), invite: s.pathParameters['token']!, server: s.uri.queryParameters['server'])),
       ),
+      // Email invites sent before D-167 point at /invites/<token>.
+      GoRoute(path: '/invites/:token', redirect: (_, s) => joinPath(s.pathParameters['token']!)),
+      GoRoute(path: '/joined/:orgId', pageBuilder: _page((_, s) => JoinedScreen(orgId: s.pathParameters['orgId']!))),
+      GoRoute(path: '/join-team', pageBuilder: _page((_, _) => const JoinTeamScreen())),
       GoRoute(
         path: '/oauth/consent/:id',
         pageBuilder: _page((_, s) => McpConsentScreen(requestId: s.pathParameters['id']!)),
@@ -302,6 +315,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'privacy', pageBuilder: _page((_, _) => const PrivacyScreen())),
               GoRoute(path: 'two-step', pageBuilder: _page((_, _) => const TwoStepSettingsScreen())),
               GoRoute(path: 'workspace', pageBuilder: _page((_, _) => const WorkspaceSettingsScreen())),
+              GoRoute(path: 'people', pageBuilder: _page((_, _) => const PeopleScreen())),
             ],
           ),
         ],

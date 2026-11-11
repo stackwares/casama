@@ -44,7 +44,7 @@ class ForYouList extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: AppSpace.md),
                 child: AppCard(
                   key: Key('brief-${b.botId}'),
-                  onTap: () => context.go('/bots/${b.botId}/chat?c=${b.conversationId}'),
+                  onTap: () => context.push('/bots/${b.botId}/chat?c=${b.conversationId}'),
                   padding: const EdgeInsets.all(AppSpace.md),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +132,7 @@ class _SuggestionCard extends ConsumerWidget {
                   onPressed: () async {
                     final r = await runGuarded(context, () => ref.read(backendProvider).acceptSuggestion(s.id));
                     ref.invalidate(forYouProvider);
-                    if (r != null && context.mounted) GoRouter.maybeOf(context)?.go('/bots/${s.botId}/chat?c=${r.conversationId}');
+                    if (r != null && context.mounted) GoRouter.maybeOf(context)?.push('/bots/${s.botId}/chat?c=${r.conversationId}');
                   },
                   child: Text(l10n.doIt),
                 ),

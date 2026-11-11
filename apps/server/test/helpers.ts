@@ -74,6 +74,7 @@ export async function startHarness(
         brave?: string;
         tavily?: string;
         openai?: string;
+        gemini?: string;
         deepgram?: string;
         elevenlabs?: string;
         treg?: string;
