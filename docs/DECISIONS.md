@@ -2077,6 +2077,7 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **App:** Model keys lists "Casama Cloud" first, with no remove. On Casama Cloud the model field shows Casama's model and does not open, including on a workspace's own key (D-188). A self-hosted server's picker on the shared key shows its one model and does not accept a typed id. Onboarding skips "add a key" because the list is not empty. A bot cannot change the model on Casama's key (`bots.update` / `bots.create`).
 - **Tests:** `packages/domain/test/cloud-models.test.ts`, `packages/domain/test/budget.test.ts`, `packages/agent/test/openrouter-cloud.test.ts`, the credit case in `apps/server/test/billing.test.ts`, `client/test/cloud_model_picker_test.dart`.
 - **Superseded in part by D-188 (2026-11-12):** with billing on, every bot runs on Casama's key, including one created with the workspace's own key, so "a workspace's own key still runs when credits are gone" holds only on a self-hosted server. The billing test now checks that a new bot gets Casama's key and that no credits stops its runs.
+- **CI (2026-11-12):** turbo's strict environment mode had kept `PG_BIN` and `SKIP_DOCKER_TESTS` from the tests; `turbo.json` now declares the variables tests read. CI's Flutter is pinned to 3.47.9, the version the app ships with, because Flutter 3.50 deprecates `package:flutter/material.dart` for the `material_ui` package (288 analyzer infos). Moving to `material_ui` is a follow-up.
 
 ## D-187 Muse Ember for background work; Gemini Live for every call; Gemini for read-aloud
 
