@@ -1423,9 +1423,11 @@ async function recordUsage(
 ) {
   // A ChatGPT plan pays for its own tokens: they are recorded at cost 0 (SPEC: Usage and billing).
   const plan = provider === "chatgpt";
-  const caps = capabilitiesOf(model);
-  const costIn = plan ? 0 : (usage.inputTokens * caps.inputPrice) / 1_000_000;
+  // Output at its price; input gets the rest, so cached tokens are priced as cached (D-181).
+  const caps = capabilitiesOf(model, provider);
+  const total = plan ? 0 : costOf(model, usage, provider);
   const costOut = plan ? 0 : (usage.outputTokens * caps.outputPrice) / 1_000_000;
+  const costIn = Math.max(0, total - costOut);
   const source = plan ? "chatgpt_plan" : "key";
   await db.execute(sql`
     insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model, source) values
@@ -1437,7 +1439,7 @@ async function recordUsage(
     cost_usd: string;
   }>(sql`
     update public.runs set tokens_in = tokens_in + ${usage.inputTokens}, tokens_out = tokens_out + ${usage.outputTokens},
-      cost_usd = cost_usd + ${plan ? 0 : costOf(model, usage)}
+      cost_usd = cost_usd + ${total}
     where id = ${info.runId}::uuid returning tokens_in, tokens_out, cost_usd`);
   await bus.append(info.runId, "usage", {
     tokens_in: Number(totals?.tokens_in ?? 0),
@@ -1608,7 +1610,7 @@ async function modelStep(
     ...(usage.cachedInputTokens !== undefined
       ? { "gen_ai.usage.cache_read.input_tokens": usage.cachedInputTokens }
       : {}),
-    "casama.cost_usd": costOf(model, usage),
+    "casama.cost_usd": costOf(model, usage, provider),
     "casama.failover_attempts": failovers,
     "casama.tool_calls": toolCalls.length,
   };
@@ -1632,7 +1634,7 @@ async function modelStep(
         redactor.text(text) ||
         (toolCalls.length ? `[tool calls: ${toolCalls.map((t) => t.name).join(", ")}]` : ""),
       usage,
-      costUsd: costOf(model, usage),
+      costUsd: costOf(model, usage, provider),
     });
   await recordUsage(deps.db, info, model, usage, bus, provider);
   return { cancelled: false as const, text: redactor.text(text), toolCalls, messageId };

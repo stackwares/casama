@@ -535,6 +535,7 @@ pull` refuses to overwrite a changed file, so commit it on a local branch or re-
 | `TURN_TLS_PORT`            | (empty)             | Also offer a `turns:` address on this port. The bundled relay doesn't serve TLS.              |
 | `CONTENT_KMS_ENDPOINT`     | (AWS's)             | A custom KMS endpoint, for example a VPC endpoint.                                            |
 | `APNS_VOIP_TOPIC`          | `ai.casama.app.voip` | The app's VoIP push topic.                                                                  |
+| `MODEL_PRICES_URL`         | OpenRouter's model list | Where the worker reads model prices once a day, for the cost shown on runs and budgets. `off` uses only the built-in table. |
 | `GEMINI_LIVE_MODEL`        | `gemini-3.8-live`   | The Gemini Live model for live and phone calls (used when a workspace has a Google AI key).   |
 
 **Supervisor:**

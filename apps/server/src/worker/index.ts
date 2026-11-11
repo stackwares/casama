@@ -50,6 +50,7 @@ import {
   registerWatcherTools,
   SearxngSearchProvider,
   StripeIssuingProvider,
+  startLivePrices,
   TavilySearchProvider,
   TregProvider,
   TwilioClient,
@@ -144,6 +145,8 @@ export interface WorkerOptions {
   realtimeModel?: string;
   /** Gemini Live model for live calls (default gemini-3.8-live). */
   geminiLiveModel?: string;
+  /** Refresh model prices from a live list daily (D-181); off unless set. */
+  livePrices?: { url?: string };
   /** COMPUTER_RATES: computer prices by provider as JSON (D-180). */
   computerRates?: string;
   /** The server's SearXNG (SEARXNG_URL, D-179): web search for workspaces without their own key. */
@@ -545,12 +548,19 @@ export async function startWorker(opts: WorkerOptions) {
         ]
       : []),
   ]);
+  const stopPrices = opts.livePrices
+    ? startLivePrices({
+        url: opts.livePrices.url,
+        onError: (e) => opts.logger.warn("model prices not refreshed", { error: e.message }),
+      })
+    : undefined;
   opts.logger.info("worker started", {
     fixtures: !!opts.modelFixtures,
     push: push instanceof FcmPushSender ? "fcm" : opts.push ? "custom" : "off",
   });
   return {
     async stop() {
+      stopPrices?.();
       await client?.destroy();
       await DBOS.shutdown();
       await handle?.close();

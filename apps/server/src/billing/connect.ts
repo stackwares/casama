@@ -287,7 +287,7 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
     const total =
       (typeof usage.cost === "number"
         ? usage.cost
-        : costOf(model, { inputTokens: tin, outputTokens: tout })) * markup;
+        : costOf(model, { inputTokens: tin, outputTokens: tout }, "openrouter")) * markup;
     const share = tin + tout > 0 ? tin / (tin + tout) : 1;
     const meta = JSON.stringify({ source: "cloud_connect", instance: k.instance });
     await db.execute(sql`

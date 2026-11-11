@@ -155,6 +155,7 @@ if (env.MODE === "api") {
     pagesUrl: env.PAGES_URL,
     publicApiUrl: env.PUBLIC_API_URL,
     geminiLiveModel: env.GEMINI_LIVE_MODEL,
+    livePrices: env.MODEL_PRICES_URL === "off" ? undefined : { url: env.MODEL_PRICES_URL },
     computerRates: env.COMPUTER_RATES,
     searxngUrl: env.SEARXNG_URL,
     auditForwarding: await import("@casama/ee")

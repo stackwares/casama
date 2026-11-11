@@ -95,6 +95,8 @@ export const EnvSchema = z.object({
   CLOUD_MODEL_UPSTREAM_KEY: z.string().optional(),
   CLOUD_MODEL_MARKUP: z.coerce.number().positive().default(1),
   CLOUD_COMPUTER_USD_PER_HOUR: z.coerce.number().nonnegative().default(0.05),
+  /** Worker: live model prices (D-181). Default OpenRouter's public model list; "off" turns it off. */
+  MODEL_PRICES_URL: z.string().optional(),
   /** Computer prices by provider, overriding the defaults (D-180): {"docker":{"cpu_hour":0.003,"gb_hour":0.005}}. */
   COMPUTER_RATES: z.string().optional(),
   /** Cloud Connect, self-hosted side: use Casama Cloud computers with this key. Unset = off. */

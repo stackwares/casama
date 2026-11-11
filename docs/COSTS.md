@@ -45,7 +45,7 @@ mailboxes, domain, Apple), plus E2B's $150 if we use it for computers.
 | What | Our cost | How it's metered today (`usage_ledger.kind`, price in code) | Verdict |
 |---|---|---|---|
 | **Bot computers** | E2B: 2 vCPU / 4 GiB ≈ **$0.166 / hour**. Daytona: same ≈ **$0.166 / hour**. Own Hetzner servers: CPX42 runs about 4 computers of that size for €65 / month, ≈ **$0.025 / hour each if fully used** | `computer_seconds` at the provider's rate (D-180): E2B and Daytona $0.0504 per vCPU-hour + $0.0162 per GiB-hour; Docker $0.003 per vCPU-hour + $0.005 per GB-hour (1 vCPU / 1 GB ≈ $0.008 / hour); `COMPUTER_RATES` overrides | ✅ Real rates |
-| **Models on our keys** (credits) | Per 1M tokens in / out: GPT-6.1 Sol $2 / $10, GPT-6 Luna $0.10 / $0.50, Claude Opus 5.5 $4 / $20, Sonnet 5.5 $2 / $10, Haiku 5.5 $0.10 / $0.50, Gemini 3.1 Pro $2 / $12, Gemini 3.8 Flash $0.75 / $3.75 (**doubles on 2027-01-01**), Grok 4.7 $2 / $6. Through OpenRouter: plus **5.5%** on credit purchases | `tokens_in` / `tokens_out` from a hand-written price table | ❌ **Table is stale** (old model names), **open-weight models (Llama, Qwen, DeepSeek) priced at $0**, and no OpenRouter fee. Use OpenRouter's live per-model prices |
+| **Models on our keys** (credits) | Per 1M tokens in / out: GPT-6.1 Sol $2 / $10, GPT-6 Luna $0.10 / $0.50, Claude Opus 5.5 $4 / $20, Sonnet 5.5 $2 / $10, Haiku 5.5 $0.10 / $0.50, Gemini 3.1 Pro $2 / $12, Gemini 3.8 Flash $0.75 / $3.75 (**doubles on 2027-01-01**), Grok 4.7 $2 / $6. Through OpenRouter: plus **5.5%** on credit purchases | `tokens_in` / `tokens_out` at OpenRouter's live prices, refreshed daily, for OpenRouter and direct models alike; the table only as a fallback (D-181) | ✅ Live prices; nothing on OpenRouter at $0. ☐ OpenRouter's 5.5% fee (markup setting) |
 | **Voice calls, OpenAI Realtime** | Audio $32 in / $64 out per 1M tokens ≈ $0.02 / min listening + $0.08 / min speaking. Mini model: about a third | `voice_seconds`, **$0.06 / min** estimate | ⚠️ Close for a balanced call; long bot monologues cost more. Price from reported token usage, like Gemini |
 | **Voice calls, Gemini Live** | $3 in / $12 out per 1M audio tokens ≈ $0.005 + $0.018 per min | `voice_seconds`, priced from the call's own token counts | ✅ |
 | **Dictation (speech to text)** | OpenAI mini transcribe $0.003 / min; Deepgram $0.0077 / min | `stt_seconds`, $0.003 / min | ✅ for OpenAI mini; ❌ if Deepgram is used on our key |
@@ -150,8 +150,9 @@ discussion); with it, $15 / $39 / $149 undercuts every product that gives bots t
 
 1. ✅ **Computer time:** charged at the real provider rate, vCPU-hours plus GiB-hours (D-180), instead
    of the $0.01 per vCPU-hour placeholder. Re-set `COMPUTER_RATES` for Docker when the server changes.
-2. **Model prices:** read OpenRouter's live per-model prices instead of the hand-written table,
-   never price an unknown or open-weight model at $0, and add OpenRouter's 5.5% fee.
+2. ✅ **Model prices:** OpenRouter's live per-model prices (refreshed daily) win over the
+   hand-written table, and nothing on OpenRouter is priced at $0 unless it's a `:free` model
+   (D-181). ☐ Add OpenRouter's 5.5% credit fee through the markup setting (item 5).
 3. **Meter what isn't metered:** Composio calls and connected accounts, phone numbers per month, SMS,
    Twilio Media Streams, and the voice model inside phone calls. (Web search ✅, D-179.)
 4. **Per-model media prices** for images and video.

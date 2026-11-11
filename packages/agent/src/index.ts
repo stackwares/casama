@@ -18,6 +18,7 @@ export * from "./events.ts";
 export * from "./gateway/ai-sdk.ts";
 export * from "./gateway/chatgpt.ts";
 export * from "./gateway/fallback.ts";
+export * from "./gateway/live-prices.ts";
 export * from "./gateway/registry.ts";
 export * from "./gateway/replay.ts";
 export * from "./gateway/types.ts";
