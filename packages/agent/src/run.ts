@@ -2499,9 +2499,10 @@ async function startTakeoverStep(
   // The page the bot is on, so the person lands where they are needed.
   const url = await currentBrowserUrl(computers, row.id);
   if (row.profile !== "desktop") {
-    // A person needs a screen: switch this computer to the desktop profile (files are kept).
+    // A person needs a screen: switch this computer to the desktop profile (files are kept). It
+    // goes back to headless when it next sleeps after the takeover (D-178).
     await deps.db.execute(
-      sql`update public.computers set profile = 'desktop' where id = ${row.id}::uuid`,
+      sql`update public.computers set profile = 'desktop', desktop_for_takeover = true where id = ${row.id}::uuid`,
     );
     await computers.stop(row.id).catch(() => {});
   }

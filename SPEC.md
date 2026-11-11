@@ -520,7 +520,7 @@ Images are versioned and published to GHCR for amd64 and arm64. A running headle
 
 ### Lifecycle
 
-States are `provisioning`, `starting`, `running`, `idle`, `sleeping`, `stopped` and `error`. A computer with no tool calls, open terminals or viewers for 10 minutes goes idle and is put to sleep: its home directory (workspace and browser profiles) is archived to object storage and the container is destroyed. The next tool call or viewer restores it.
+States are `provisioning`, `starting`, `running`, `idle`, `sleeping`, `stopped` and `error`. A computer with no tool calls, open terminals or viewers for 5 minutes goes idle and is put to sleep: its home directory (workspace and browser profiles) is archived to object storage and the container is destroyed. The next tool call or viewer restores it.
 
 &#91;embedded content: computer lifecycle · 5 main states\]
 
@@ -782,7 +782,7 @@ Prices are estimates and providers raised prices several times in 2026; confirm 
 Computer time and model tokens are the two costs that grow with users, so both are metered from Phase 1 and capped per bot and per organization.
 
 - **Headless by default:** desktop computers start only for desktop tools or a live viewer, then drop back to headless after 10 idle minutes.
-- **Sleep on idle:** 10 minutes without activity puts a computer to sleep in object storage.
+- **Sleep on idle:** 5 minutes without activity puts a computer to sleep in object storage. A computer switched to the desktop only for a takeover wakes up headless afterwards (D-178).
 - **Cheap model for internal steps:** memory extraction, summaries, titles and routing never use the primary model.
 - **Prompt caching and compaction** keep long-running bots from growing more expensive each day.
 - **Budgets:** each bot has a per-run and a daily cost cap; subagents inherit a share of the parent's budget.

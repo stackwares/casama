@@ -339,7 +339,8 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       .update(computers)
       .set({
         ...(body.name ? { name: body.name } : {}),
-        ...(body.profile ? { profile: body.profile } : {}),
+        // A profile someone picks stays (D-178).
+        ...(body.profile ? { profile: body.profile, desktopForTakeover: false } : {}),
         ...(body.max_desktops != null ? { maxDesktops: body.max_desktops } : {}),
       })
       .where(eq(computers.id, id));

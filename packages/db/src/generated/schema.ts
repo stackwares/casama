@@ -678,6 +678,7 @@ export const computers = pgTable("computers", {
 	error: text(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	maxDesktops: smallint("max_desktops").default(1).notNull(),
+	desktopForTakeover: boolean("desktop_for_takeover").default(false).notNull(),
 }, (table) => [
 	uniqueIndex("computers_one_team_per_org").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(kind = 'team'::text)`),
 	index("computers_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),

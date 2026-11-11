@@ -2,7 +2,8 @@ import type { Database } from "@casama/db";
 import type { CheckpointRef, SandboxHandle, SandboxProvider, SnapshotRef } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 
-export const IDLE_SLEEP_MS = 10 * 60_000;
+/** Idle computers sleep after 5 minutes (D-178); waking restores their files. */
+export const IDLE_SLEEP_MS = 5 * 60_000;
 export const CHECKPOINT_KEEP = 20;
 export const CHECKPOINT_MAX_AGE_DAYS = 7;
 
@@ -12,6 +13,8 @@ export interface ComputerRow {
   kind: string;
   owner_bot_id: string | null;
   profile: "headless" | "desktop";
+  /** Switched to the desktop only for a takeover: back to headless on the next sleep. */
+  desktop_for_takeover?: boolean;
   provider?: string;
   state: string;
   size: { cpus?: number; memory_mb?: number };
@@ -214,6 +217,7 @@ export class ComputerService {
     const p = this.providerFor(c);
     if (!(await p.get(computerId))) {
       await this.setState(computerId, c.snapshot_ref ? "sleeping" : "stopped", emit);
+      await this.endTakeoverDesktop(c);
       return;
     }
     const snap = await p.sleep(computerId);
@@ -222,8 +226,22 @@ export class ComputerService {
       sql`update public.computers set snapshot_ref = ${JSON.stringify(snap)}::jsonb where id = ${computerId}::uuid`,
     );
     await this.setState(computerId, "sleeping", emit);
+    await this.endTakeoverDesktop(c);
     if (c.snapshot_ref?.key && c.snapshot_ref.key !== snap.key)
       await this.provider.deleteObjects?.([c.snapshot_ref.key]).catch(() => {});
+  }
+
+  /**
+   * A computer switched to the desktop only for a takeover wakes up headless once no takeover is
+   * open (D-178): a desktop needs about four times the memory.
+   */
+  private async endTakeoverDesktop(c: ComputerRow) {
+    if (c.profile !== "desktop" || !c.desktop_for_takeover) return;
+    await this.db.execute(sql`
+      update public.computers set profile = 'headless', desktop_for_takeover = false
+      where id = ${c.id}::uuid and not exists (
+        select 1 from public.takeover_requests t
+        where t.computer_id = ${c.id}::uuid and t.status in ('pending', 'taken') and t.expires_at > now())`);
   }
 
   /** Sleeps running computers with no activity, open terminals or running commands for idleMs. */

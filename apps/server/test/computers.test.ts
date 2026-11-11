@@ -257,6 +257,30 @@ describe.skipIf(!enabled)("computers (Phase 2 gate)", () => {
     expect(listed.items.find((x: { id: string }) => x.id === computerId)?.state).toBe("running");
   }, 240_000);
 
+  it("a desktop used only for a takeover goes back to headless when it sleeps (D-178)", async () => {
+    const profile = async () =>
+      (await j(await h.request(`/v1/computers/${computerId}`, { token: owner.token }))).profile;
+    await h.computers?.sleep(computerId);
+    // Switched for a takeover: headless again after sleep.
+    await h.tdb
+      .admin`update public.computers set profile = 'desktop', desktop_for_takeover = true where id = ${computerId}`;
+    await h.computers?.sleep(computerId);
+    expect(await profile()).toBe("headless");
+    // Picked by a person: stays a desktop.
+    await h.request(`/v1/computers/${computerId}`, {
+      method: "PATCH",
+      token: owner.token,
+      json: { profile: "desktop" },
+    });
+    await h.computers?.sleep(computerId);
+    expect(await profile()).toBe("desktop");
+    await h.request(`/v1/computers/${computerId}`, {
+      method: "PATCH",
+      token: owner.token,
+      json: { profile: "headless" },
+    });
+  }, 120_000);
+
   it("hides computers from other organizations", async () => {
     const stranger = await h.user("computer-stranger@example.com");
     expect((await h.request(`/v1/computers/${computerId}`, { token: stranger.token })).status).toBe(

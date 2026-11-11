@@ -95,9 +95,16 @@ Ranked by saving. ✅ = done, ☐ = to do.
 1. **Bot computers on our own dense servers** (biggest lever, up to 15× cheaper): a dedicated server
    such as Hetzner AX102 (16 cores, 128 GB, €159 / month) holds about 28 standard computers, because
    bots mostly wait on the model (CPU can be shared; memory is the limit). That is about **$0.01 per
-   computer-hour** against $0.17 on E2B or Daytona. Also: headless by default (1–2 GB instead of 4;
-   the desktop only when needed), sleep after about 5 minutes idle (sleep and wake already work),
-   a small warm pool (built), EU servers (US ones cost about twice as much). ☐ Needs a server.
+   computer-hour** against $0.17 on E2B or Daytona. ☐ Needs a server. Also, on any provider:
+   - ✅ Headless by default at 1 vCPU / 1 GB (instead of 4 GB); the desktop only when needed.
+   - ✅ Sleep after 5 minutes idle instead of 10 (D-178). Live viewers and open terminals keep a
+     computer awake; waking restores its files.
+   - ✅ A computer switched to the desktop for a takeover goes back to headless when it next
+     sleeps (D-178). A desktop someone picks stays.
+   - ✅ Hosted sizes: computers carry their size (1 vCPU / 1 GB by default) and Daytona gets it on
+     create. E2B takes its size from the template, so ☐ build the E2B templates at 1 vCPU / 1 GB
+     (headless) and 2 vCPU / 4 GB (desktop), not E2B's 2 vCPU / 4 GB default for both.
+   - A small warm pool (built); EU servers (US ones cost about twice as much).
 2. **Models on our keys:**
    - ✅ Anthropic prompt caching: Claude requests ask for caching, so the instructions, tools and
      conversation so far are read back at a tenth of the price next turn. OpenAI, Gemini and xAI
