@@ -398,7 +398,8 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     ]);
     expect(usage.credits.map((c: { reason: string }) => c.reason)).toEqual(["usage", "grant"]);
 
-    // Spend the rest. A workspace's own key still runs. Casama's key does not (D-186).
+    // Spend the rest. On Casama Cloud every bot runs on Casama's key (D-188), so a bot made
+    // with the workspace's own key is switched to it, and no credits stops every run.
     await h.handle.db.execute(
       sql`insert into public.usage_ledger (org_id, kind, quantity, cost_usd) values (${orgId}::uuid, 'computer_seconds', 9000, 1)`,
     );
@@ -421,26 +422,7 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
         },
       }),
     );
-    const conv = await j(
-      await h.request("/v1/conversations", {
-        method: "POST",
-        token: owner.token,
-        json: { bot_id: bot.id },
-      }),
-    );
-    const sent = await j(
-      await h.request(`/v1/conversations/${conv.id}/messages`, {
-        method: "POST",
-        token: owner.token,
-        json: { text: "hi" },
-      }),
-    );
-    let run: { status: string; error?: { code?: string } } = { status: "queued" };
-    for (let i = 0; i < 100 && !["failed", "completed"].includes(run.status); i++) {
-      await new Promise((r) => setTimeout(r, 200));
-      run = await j(await h.request(`/v1/runs/${sent.run_id}`, { token: owner.token }));
-    }
-    expect(run.status).toBe("completed");
+    expect(bot.model_policy.primary.credential_id).toBe(PLATFORM_OPENROUTER_CREDENTIAL_ID);
     const listed = await j(
       await h.request(`/v1/credentials?org_id=${orgId}`, { token: owner.token }),
     );
