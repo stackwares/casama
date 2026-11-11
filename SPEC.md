@@ -155,7 +155,7 @@ The backend is TypeScript on Node.js 24 LTS with Supabase as the platform; the c
 | Email and SMS                | Resend (email in and out), Twilio (SMS)                                      | Behind a `ChannelAdapter` interface                                         |
 | Observability                | OpenTelemetry, Sentry, Langfuse (self-hostable), PostHog                     | Errors, traces, LLM traces, product analytics and flags                     |
 | Monorepo tooling             | pnpm workspaces, Turborepo, Biome, Vitest, Testcontainers                    | Fast builds and one lint and format tool                                    |
-| CI/CD                        | GitHub Actions, GitHub Container Registry, Shorebird for Flutter OTA patches | Automated tests, images and app updates                                     |
+| CI/CD                        | GitHub Actions, GitHub Container Registry                                    | Automated tests, images and app updates                                     |
 
 **Key decisions**
 
@@ -649,7 +649,7 @@ One Flutter app ships to web, iOS, Android, macOS, Windows and Linux, organized 
 | Secure storage            | flutter\_secure\_storage                                    |
 | Files                     | file\_picker, share\_plus                                   |
 | Monitoring and analytics  | sentry\_flutter, posthog\_flutter                           |
-| OTA updates               | Shorebird (mobile and desktop)                              |
+| OTA updates               | None (D-175): store updates on mobile, Sparkle/WinSparkle on desktop |
 | Languages                 | flutter\_localizations with ARB files                       |
 
 ### Screens
@@ -754,7 +754,7 @@ Production for 100 users runs on one app server and one sandbox server in a regi
 | Component      | Spec                                                                                                                                 | Approx. USD per month |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------- |
 | App server     | Cloud VPS, 4 to 8 vCPU, 16 GB RAM: Caddy, API, worker, coturn, egress proxy                                                          | 30 to 60              |
-| Supabase       | Supabase Cloud (your region) or self-hosted on the app server                                                                        | Plan dependent        |
+| Supabase       | Self-hosted on the app server (D-171; Supabase Cloud stays an option for self-hosters)                                               | Plan dependent        |
 | Sandbox server | Dedicated, 16+ cores, 64 to 128 GB RAM, NVMe: supervisor and computers (30 to 40 concurrent)                                         | 150 to 350            |
 | Object storage | Cloudflare R2 for hosted (no egress fees; every wake downloads a whole home directory); self-hosted uses the filesystem or SeaweedFS | 10 to 20              |
 | Overflow       | E2B or Daytona, per-second billing, only when the sandbox server is full                                                             | Usage based           |
@@ -773,7 +773,7 @@ Prices are estimates and providers raised prices several times in 2026; confirm 
 - **Environments:** local (`supabase start` + `pnpm dev`), preview per pull request (Supabase branch plus a preview server), staging, production.
 - **On every pull request:** lint, typecheck, unit, database, integration and widget tests, OpenAPI diff check, Dart client regeneration check, quick eval subset when agent code changes.
 - **On merge to main:** build multi-arch images to GHCR, run migrations on staging, deploy staging, run end-to-end smoke tests.
-- **Releases:** tagged releases promote to production; Flutter builds for app stores and desktop installers (signed and notarized); Shorebird patches for urgent fixes.
+- **Releases:** tagged releases promote to production; Flutter builds for app stores and desktop installers (signed and notarized); urgent fixes ship as expedited store releases (D-175).
 - **Backups:** daily Postgres backups with point-in-time recovery, object storage versioning, monthly restore drill.
 - **Migrations** are backward compatible for one release so API and worker can deploy without downtime.
 
@@ -1384,7 +1384,7 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 - [x] Data export, account deletion, retention settings
 - [x] Self-host installer, CLI `selfhost` commands, one-click deploy templates, docs site
 - [x] `ee/` features under the commercial license; opt-in telemetry; Casama MCP server
-- [ ] Marketing site, demo video, app store listings, signed desktop installers, Shorebird release flow
+- [ ] Marketing site, demo video, app store listings, signed desktop installers
 - [x] ChatGPT plan sign-in (see Model gateway): desktop and CLI sign-in, the `chatgpt` gateway adapter, limit and reconnect handling, and the fake OpenAI test server; cloud stays off until OpenAI approves hosted use
 - [x] Two-step sign-in: TOTP through Supabase Auth on every platform, more than one factor allowed as backup, and a workspace setting that requires it for owners and admins (sensitive routes then need `aal2`); passkeys once Supabase Auth supports them
 - [x] Casama Cloud abuse controls: a sign-up check on new email accounts (Supabase Auth's before-user-created hook accepts a Firebase App Check token, which needs no visible widget, or a solved proof-of-work puzzle on platforms without App Check), a verified email before a free-tier computer starts, outbound mail ports blocked, per-computer egress and CPU limits, crypto-mining and flood detection in the egress proxy that stops the computer and suspends the workspace, and Suspend in the owner console (stops computers and runs, keeps data, writes `audit_log`); self-hosted servers keep all of this off (D-094)
@@ -1411,9 +1411,9 @@ Eleven decisions have defaults the coding agent can build on now; confirm each b
 
 | Decision                      | Default in this spec                                                                          | Confirm by     |
 | ----------------------------- | --------------------------------------------------------------------------------------------- | -------------- |
-| Final product name and domain | "Casama" as a working name in one config constant; check trademarks before launch             | Phase 8        |
+| Final product name and domain | Decided: Casama on casama.ai (D-170); API `api.casama.ai`, auth `auth.casama.ai` (D-172)       | Phase 8        |
 | Who pays for model usage      | Bring-your-own model keys at launch; included credits later via Dodo Payments                 | Phase 7        |
-| Supabase hosting              | Supabase Cloud in your chosen region for hosted; self-hosted Supabase in Compose              | Phase 0        |
+| Supabase hosting              | Decided: our own self-hosted Supabase for Casama Cloud (D-171); self-hosted in Compose        | Phase 0        |
 | Media generation provider     | fal.ai first; additional `MediaProvider` adapters as needed                                   | Phase 4        |
 | WebRTC streamer               | Decided: Neko (D-054)                                                                         | Phase 5        |
 | Hosted ChatGPT plan usage     | Off on Casama Cloud until OpenAI approves it through its interest form                        | Cloud launch   |

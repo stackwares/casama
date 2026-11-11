@@ -335,7 +335,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - **Self-host** (D-076): `install.sh`, `infra/compose/docker-compose.yml`, `casama selfhost`, `deploy/`, `docs-site/self-hosting/`.
 - **MCP server** (D-077): `packages/mcp`.
 - **Evals and load** (D-078): `packages/evals`, `apps/server/load`.
-- **Launch prep**: `site/`, `client/store/`, `docs/launch/`, `scripts/package-*`, `client/shorebird.yaml`; gate status in `docs/LAUNCH_CHECKLIST.md`, security in `docs/SECURITY_REVIEW.md`.
+- **Launch prep**: `site/`, `client/store/`, `docs/launch/`, `scripts/package-*`; gate status in `docs/LAUNCH_CHECKLIST.md`, security in `docs/SECURITY_REVIEW.md`.
 
 ## Self-hosting defaults and optional services
 

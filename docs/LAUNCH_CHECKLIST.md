@@ -30,4 +30,4 @@ approved in both stores; public launch done. Status re-measured in the November 
 - Privacy: data export, account deletion, retention settings (app, CLI, API).
 - Self-hosting: installer, `casama selfhost` commands, deploy templates in `deploy/`, docs site in `docs-site/`.
 - `ee/` (commercial license draft): license keys, audit export, SAML SSO; opt-in telemetry; Casama MCP server (`packages/mcp`).
-- Marketing page (`site/`), store listings, demo clip (`docs/media/demo-app-flow.mp4`), installer scripts (`scripts/package-*`), Shorebird config.
+- Marketing page (`site/`), store listings, demo clip (`docs/media/demo-app-flow.mp4`), installer scripts (`scripts/package-*`).

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terms of Service | Casama</title>
+<meta name="description" content="The terms for using Casama Cloud and the Casama apps: accounts, acceptable use, your content, AI output, paid plans and credits, and open-source self-hosting.">
+<link rel="canonical" href="https://casama.ai/terms">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+<style>
+  :root { --bg:#f6f4ef; --ink:#1d1f1c; --muted:#5c625b; --line:#dcd8cf; --accent:#0f6b5c; --accent-ink:#fff; --card:#fffdf8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#121412; --ink:#ecebe6; --muted:#a3a8a0; --line:#2a2e2a; --accent:#5cc4ae; --accent-ink:#0b1210; --card:#181b18; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font: 17px/1.6 ui-sans-serif, -apple-system, "Segoe UI", Inter, system-ui, sans-serif; }
+  a { color: inherit; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  header.top { display:flex; justify-content:space-between; align-items:center; padding: 22px 0; }
+  .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 20px; text-decoration:none; }
+  nav a { margin-left: 22px; text-decoration: none; color: var(--muted); font-size: 15px; }
+  main { max-width: 70ch; margin: 0 auto; padding: 32px 0 72px; overflow-wrap: break-word; }
+  h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.05; letter-spacing: -0.03em; margin: 0 0 14px; font-weight: 700; }
+  .meta { color: var(--muted); font-size: 15px; margin: 0 0 28px; }
+  h2 { font-size: clamp(22px, 2.6vw, 28px); letter-spacing: -0.02em; line-height: 1.2; margin: 48px 0 12px; padding-top: 28px; border-top: 1px solid var(--line); }
+  h3 { font-size: 18px; margin: 26px 0 6px; }
+  p, ul, ol { margin: 0 0 14px; }
+  ul, ol { padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  main a { color: var(--accent); text-underline-offset: 2px; }
+  .summary { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px; margin: 0 0 8px; }
+  .summary ul { margin: 0; }
+  .toc { columns: 2; column-gap: 28px; font-size: 15px; padding-left: 20px; }
+  .toc li { break-inside: avoid; }
+  .caps { font-size: 15.5px; }
+  code { font: 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; }
+  footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; border-top:1px solid var(--line); }
+  footer a { margin-right: 16px; }
+  @media (max-width: 820px) { nav a:not(.gh) { display:none; } .toc { columns: 1; } main { padding-top: 12px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="/">casama</a>
+    <nav><a href="https://docs.casama.ai">Docs</a><a href="/#self-host">Self-host</a><a href="/#cloud">Cloud</a><a class="gh" href="https://github.com/stackwares/casama">GitHub</a></nav>
+  </header>
+
+  <main>
+    <h1>Terms of Service</h1>
+    <p class="meta">Effective 11 November 2026</p>
+
+    <div class="summary">
+      <ul>
+        <li>You own what you put into Casama and what your bots make for you.</li>
+        <li>AI can be wrong. You are responsible for what your bots do for you, so set approvals that fit the risk.</li>
+        <li>Don't use Casama, its bots or its computers to break the law or harm others.</li>
+        <li>Paid plans are billed by Apple, Google or Dodo Payments, and refunds follow their rules.</li>
+        <li>If you self-host, the open-source licenses apply instead of these terms.</li>
+      </ul>
+    </div>
+
+    <h2 id="contents">On this page</h2>
+    <ol class="toc">
+      <li><a href="#agreement">This agreement</a></li>
+      <li><a href="#accounts">Accounts</a></li>
+      <li><a href="#workspaces">Workspaces</a></li>
+      <li><a href="#content">Your content</a></li>
+      <li><a href="#ai">AI output and bot actions</a></li>
+      <li><a href="#use">Acceptable use</a></li>
+      <li><a href="#computers">Bot computers</a></li>
+      <li><a href="#third">Third-party services</a></li>
+      <li><a href="#paid">Paid plans and credits</a></li>
+      <li><a href="#opensource">Open source and self-hosting</a></li>
+      <li><a href="#ours">Our rights</a></li>
+      <li><a href="#termination">Suspension and termination</a></li>
+      <li><a href="#disclaimers">Disclaimers</a></li>
+      <li><a href="#liability">Limitation of liability</a></li>
+      <li><a href="#indemnity">Indemnity</a></li>
+      <li><a href="#law">Governing law and disputes</a></li>
+      <li><a href="#changes">Changes to these terms</a></li>
+      <li><a href="#general">General</a></li>
+      <li><a href="#contact">Contact us</a></li>
+    </ol>
+
+    <h2 id="agreement">1. This agreement</h2>
+    <p>These terms are an agreement between you and Stackwares, based in the Philippines ("we", "us"). They cover your use of <strong>Casama Cloud</strong> (the hosted service we run), the <strong>Casama apps</strong> for iOS, Android, macOS, Windows, Linux and the web, the Casama CLI when it connects to Casama Cloud, and casama.ai. Together we call these the "Service".</p>
+    <p>By creating an account or using the Service, you agree to these terms and to our <a href="/privacy">Privacy Policy</a>. If you use the Service for an organization, you agree on its behalf and confirm you are allowed to.</p>
+    <p>If you got the app from the Apple App Store or Google Play, their terms also apply to your download. Apple and Google are not parties to these terms and are not responsible for the Service.</p>
+
+    <h2 id="accounts">2. Accounts</h2>
+    <ul>
+      <li>You must be at least 13 years old, or 16 where local law sets a higher age, and old enough to agree to these terms where you live.</li>
+      <li>Give accurate information, and keep your sign-in details safe. We recommend two-step sign-in.</li>
+      <li>You are responsible for activity in your account. Tell us at <a href="mailto:security@casama.ai">security@casama.ai</a> if you think someone else has access.</li>
+      <li>One person per account. Don't share accounts or create accounts in bulk.</li>
+    </ul>
+
+    <h2 id="workspaces">3. Workspaces</h2>
+    <p>Bots, chats, computers, plans and credits belong to a workspace. Workspace owners and admins control the workspace: who can join, its settings, its plan and its data. If you join someone else's workspace, they can see and manage the content you add to it, according to their role.</p>
+    <p>If you delete your account, workspaces where you are the only owner are deleted too, even if other people use them.</p>
+
+    <h2 id="content">4. Your content</h2>
+    <p>"Your content" means what you put into the Service (messages, files, instructions, memories, connections) and what your bots produce for you (replies, files, pages and other output).</p>
+    <ul>
+      <li><strong>You own your content.</strong> We don't claim ownership of it.</li>
+      <li><strong>You give us permission to use it only to run the Service for you.</strong> That means storing, copying, processing and displaying it, and sending it to the AI model providers and services you choose, as needed to provide, secure and support the Service. This permission ends when your content is deleted, except for copies in backups until they expire and anything we must keep by law.</li>
+      <li>We don't train AI models on your content.</li>
+      <li>You confirm you have the rights to the content you put in, and that using it with the Service doesn't break the law or anyone else's rights.</li>
+      <li>Other people may own rights in AI output that resembles existing work. Check output before you publish or rely on it.</li>
+    </ul>
+    <p>If you send us feedback or ideas, we may use them without owing you anything.</p>
+
+    <h2 id="ai">5. AI output and bot actions</h2>
+    <p>Casama bots use AI models that can make mistakes. Output can be wrong, incomplete, out of date or offensive, even when it sounds confident.</p>
+    <ul>
+      <li><strong>Check before you rely on it.</strong> Don't treat output as professional advice. Bots are not doctors, lawyers or financial advisers. Health information is not medical advice.</li>
+      <li><strong>You are responsible for what your bots do for you.</strong> Bots can act on your behalf: send emails and messages, make phone calls, run code, change files, post to connected apps, run routines while you are away, and make payments. These actions are yours, as if you took them yourself.</li>
+      <li><strong>You choose the safeguards.</strong> Casama gives you autonomy levels, approvals, action rules, budgets and checkpoints. Settings that let bots act without asking increase your risk. Pick settings that fit what is at stake.</li>
+      <li><strong>Untrusted content.</strong> Web pages, emails and other content bots read can contain instructions meant to mislead them. Casama labels this content and asks before risky steps after it, but this can't catch everything.</li>
+      <li><strong>Costs.</strong> Bots use model tokens, computer time and paid services. Budgets help, but you are responsible for charges from your own accounts with model providers and other services.</li>
+    </ul>
+
+    <h2 id="use">6. Acceptable use</h2>
+    <p>You may not use the Service, or let your bots use it, to:</p>
+    <ul>
+      <li>break any law, or help anyone else break one;</li>
+      <li>harm, harass, threaten, stalk or defraud anyone;</li>
+      <li>send spam or unsolicited bulk messages, emails or calls;</li>
+      <li>make bots pretend to be a human, or impersonate a person or organization in a misleading way;</li>
+      <li>attack, scan, probe or break into any system or network, ours or anyone else's;</li>
+      <li>spread malware, or mine cryptocurrency;</li>
+      <li>get around our limits, sign-up checks, network blocks or security measures, or access other people's accounts or workspaces;</li>
+      <li>collect personal data about others without a lawful basis, or process sensitive data you aren't allowed to;</li>
+      <li>create or share child sexual abuse material, content that exploits minors, non-consensual intimate images, or content promoting violence or terrorism;</li>
+      <li>infringe intellectual property or privacy rights;</li>
+      <li>make phone calls to emergency services, or use bots to call people who haven't agreed to it where the law requires consent;</li>
+      <li>use bots for decisions with legal or similarly serious effects on people (such as credit, hiring or housing) without proper human review;</li>
+      <li>overload the Service, or resell it without our written permission;</li>
+      <li>break the usage policies of the AI model providers or connected services you use.</li>
+    </ul>
+    <p>We may investigate suspected misuse and act on it, as described in <a href="#termination">Suspension and termination</a>.</p>
+
+    <h2 id="computers">7. Bot computers</h2>
+    <p>On Casama Cloud, bots can have their own sandboxed cloud computers. Use them only for your bots' legitimate work.</p>
+    <ul>
+      <li>Outbound network access is limited. For example, mail-sending ports, private networks and cryptocurrency mining pools are blocked.</li>
+      <li>Computers go to sleep when idle and may be stopped, limited or moved to keep the Service running.</li>
+      <li>On free plans, computers start only after an owner has confirmed their email address.</li>
+      <li>Computers are not a backup service. Keep your own copies of anything important.</li>
+    </ul>
+    <p>If you connect your own device as a bot's computer, you choose which folders bots can use and you are responsible for that device.</p>
+
+    <h2 id="third">8. Third-party services</h2>
+    <p>Casama works with services we don't control: AI model providers, apps you connect (directly or through Composio, Pipedream or similar services), chat apps, phone and payment providers, and others.</p>
+    <ul>
+      <li>Your use of those services is governed by their own terms and privacy policies. If you use your own key or account, you deal with that provider directly, including for charges.</li>
+      <li>We are not responsible for third-party services, their availability, or what they do with data you send them.</li>
+      <li>A third-party service may change or stop working with Casama at any time.</li>
+    </ul>
+
+    <h2 id="paid">9. Paid plans and credits</h2>
+    <p>Casama Cloud offers paid plans and credits. Self-hosting is free.</p>
+    <h3>Who bills you</h3>
+    <ul>
+      <li><strong>iPhone, iPad and the Mac App Store app:</strong> Apple, through in-app purchase.</li>
+      <li><strong>Android:</strong> Google Play.</li>
+      <li><strong>Web, Windows, Linux and the Mac app from the web:</strong> Dodo Payments, which is the merchant of record. They process the payment and handle sales tax and VAT.</li>
+    </ul>
+    <p>Prices, plan contents and taxes are shown before you buy.</p>
+    <h3>Subscriptions</h3>
+    <ul>
+      <li>Subscriptions renew automatically each month or year until you cancel.</li>
+      <li>Cancel through <strong>Manage subscription</strong> in the app, or in your App Store or Google Play account settings. Store subscriptions keep access until the end of the paid period. A web subscription may end when you cancel; the checkout and billing screens show what applies.</li>
+      <li>Purchases belong to the workspace they were made for, not to a person.</li>
+    </ul>
+    <h3>Credits</h3>
+    <ul>
+      <li>Credits pay for what Casama Cloud provides, such as cloud computer time, live view time and model calls through Casama. Usage on your own model keys is never charged in credits.</li>
+      <li>Plans add their included credits once a month. Credit packs are sold on the web.</li>
+      <li>When a workspace's credit balance reaches zero, new runs stop until you add credits or change plans.</li>
+      <li>Credits have no cash value, can't be transferred or exchanged for money, and are not refundable except where the law or the store's rules require.</li>
+    </ul>
+    <h3>Refunds</h3>
+    <p>Refunds follow the rules of whoever billed you. For App Store purchases, ask Apple. For Google Play purchases, follow Google Play's refund process. For web and desktop purchases, contact Dodo Payments or email <a href="mailto:billing@casama.ai">billing@casama.ai</a> and we will help. A refunded subscription ends its access. Nothing here limits refund rights you have under consumer law.</p>
+    <h3>Price changes</h3>
+    <p>We may change prices or plans. We will tell you in advance, and changes apply from your next billing period. If you don't agree, cancel before then.</p>
+
+    <h2 id="opensource">10. Open source and self-hosting</h2>
+    <p>Casama's source code is public. Everything outside the <code>ee/</code> directory is licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a>. The <code>ee/</code> directory is under the Casama Enterprise License, which allows reading and testing, and requires a paid license key for production use.</p>
+    <p>If you run Casama on your own server, your use of the software is governed by those licenses, not by these terms. We don't operate, monitor or support self-hosted servers unless we agree otherwise in writing. If you use a server someone else runs, their terms apply to that server.</p>
+    <p>These terms do apply when a self-hosted server uses Casama Cloud services, such as Cloud Connect for cloud computers or model credits.</p>
+    <p>The Casama name and logo are ours. The open-source licenses don't give you the right to use them in a way that suggests your service is ours or endorsed by us.</p>
+
+    <h2 id="ours">11. Our rights</h2>
+    <p>Apart from your content and the open-source code under its licenses, the Service and its branding belong to Stackwares. Subject to these terms, we give you a personal, non-exclusive, non-transferable right to use the Service and the apps while your account is active.</p>
+    <p>We are constantly working on Casama. We may add, change or remove features. Some features may be marked as preview or beta; they may be less reliable and may change or end.</p>
+
+    <h2 id="termination">12. Suspension and termination</h2>
+    <ul>
+      <li>You can stop using the Service and delete your account at any time from <strong>Settings → Privacy</strong>.</li>
+      <li>We may suspend a workspace or account, or limit features, if we reasonably believe it breaks these terms, puts others at risk, is required by law, or if payment fails. Suspension stops running bots and computers and keeps the data.</li>
+      <li>Some abuse, such as cryptocurrency mining or repeated network flooding from a bot's computer, can trigger an automatic suspension.</li>
+      <li>We may close an account for serious or repeated violations, or if we stop offering the Service. Where reasonable, we will give notice first and a chance to export your data.</li>
+      <li>Sections that by their nature should survive the end of this agreement do, including your content ownership, payment obligations, disclaimers, limitation of liability, indemnity and governing law.</li>
+    </ul>
+    <p>If you think we suspended you by mistake, email <a href="mailto:support@casama.ai">support@casama.ai</a>.</p>
+
+    <h2 id="disclaimers">13. Disclaimers</h2>
+    <p class="caps">The Service is provided "as is" and "as available". To the extent the law allows, we disclaim all warranties, express or implied, including fitness for a particular purpose, merchantability, accuracy and non-infringement. We don't promise the Service will be uninterrupted, error-free or secure, that AI output will be accurate, or that data will never be lost.</p>
+    <p>Some places don't allow these exclusions, so some may not apply to you. Your rights under consumer protection law are not affected.</p>
+
+    <h2 id="liability">14. Limitation of liability</h2>
+    <p class="caps">To the extent the law allows, Stackwares and its people are not liable for indirect, incidental, special, consequential or punitive damages, or for lost profits, revenue, data or goodwill, arising from the Service or these terms. This includes losses caused by AI output or by actions your bots take.</p>
+    <p class="caps">Our total liability for any claim about the Service or these terms is limited to the greater of (a) what you paid us for the Service in the 12 months before the claim, or (b) USD 50.</p>
+    <p>These limits don't apply to liability that can't be limited by law, such as for fraud, gross negligence or wilful misconduct.</p>
+
+    <h2 id="indemnity">15. Indemnity</h2>
+    <p>If someone makes a claim against us because of your content, your use of the Service, actions your bots took for you, or your breach of these terms or the law, you agree to cover our reasonable losses and costs from that claim, including legal fees. This doesn't apply to the extent the claim was caused by our own fault. If you are a consumer, this section applies only as far as your local law allows.</p>
+
+    <h2 id="law">16. Governing law and disputes</h2>
+    <p>These terms are governed by the laws of the Republic of the Philippines. Before going to court, please contact us at <a href="mailto:hello@casama.ai">hello@casama.ai</a> so we can try to resolve the issue informally. If we can't, disputes will be decided by the courts of the Philippines.</p>
+    <p>If you are a consumer, you also keep any protections and rights to bring claims in your home country that its laws give you.</p>
+
+    <h2 id="changes">17. Changes to these terms</h2>
+    <p>We may update these terms. We will post the new version here with a new effective date. If a change is significant, we will tell you in the app or by email at least 14 days before it takes effect, unless it is needed sooner for legal or security reasons. If you keep using the Service after a change takes effect, you accept the new terms. If you don't agree, stop using the Service and delete your account.</p>
+
+    <h2 id="general">18. General</h2>
+    <ul>
+      <li>These terms and the Privacy Policy are the whole agreement between you and us about the Service, unless we sign a separate written agreement.</li>
+      <li>If part of these terms can't be enforced, the rest still applies.</li>
+      <li>If we don't enforce a right, we haven't given it up.</li>
+      <li>You may not transfer these terms without our consent. We may transfer them as part of a merger, acquisition or sale of assets.</li>
+      <li>We are not liable for delays or failures caused by events beyond our reasonable control.</li>
+      <li>We may send notices to the email address on your account or in the app.</li>
+    </ul>
+
+    <h2 id="contact">19. Contact us</h2>
+    <p>Stackwares, Philippines.</p>
+    <ul>
+      <li>Help with the apps or your account: <a href="mailto:support@casama.ai">support@casama.ai</a></li>
+      <li>Plans, invoices and refunds: <a href="mailto:billing@casama.ai">billing@casama.ai</a></li>
+      <li>Privacy and data requests: <a href="mailto:privacy@casama.ai">privacy@casama.ai</a></li>
+      <li>Security issues: <a href="mailto:security@casama.ai">security@casama.ai</a></li>
+      <li>Anything else: <a href="mailto:hello@casama.ai">hello@casama.ai</a></li>
+    </ul>
+  </main>
+
+  <footer><a href="/">Home</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="https://docs.casama.ai">Docs</a><br><br>&copy; 2026 Stackwares. Casama is open source (Apache-2.0; enterprise features in <code>ee/</code> under a commercial license).</footer>
+</div>
+</body>
+</html>

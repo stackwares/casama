@@ -16,6 +16,13 @@ Any Flutter device works: `-d chrome`, an iOS simulator, an Android emulator, `-
 `-d linux`. The app reads the Supabase address and key from the server, so the server address is
 the only setting. People can also change it at sign-in (**More options** → **Server**).
 
+On a physical iPhone or Android phone, point it at an address the phone can reach, such as an https
+tunnel to your machine (see [CONTRIBUTING.md](../CONTRIBUTING.md#run-the-app)):
+
+```sh
+flutter run -d <device-id> --dart-define=CASAMA_API_URL=https://api-dev.casama.ai
+```
+
 ## Build settings
 
 Pass these with `--dart-define=NAME=value`. All are optional.

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy | Casama</title>
+<meta name="description" content="How Casama Cloud and the Casama apps collect, use, share and protect your data, and the rights you have over it.">
+<link rel="canonical" href="https://casama.ai/privacy">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+<style>
+  :root { --bg:#f6f4ef; --ink:#1d1f1c; --muted:#5c625b; --line:#dcd8cf; --accent:#0f6b5c; --accent-ink:#fff; --card:#fffdf8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#121412; --ink:#ecebe6; --muted:#a3a8a0; --line:#2a2e2a; --accent:#5cc4ae; --accent-ink:#0b1210; --card:#181b18; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font: 17px/1.6 ui-sans-serif, -apple-system, "Segoe UI", Inter, system-ui, sans-serif; }
+  a { color: inherit; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  header.top { display:flex; justify-content:space-between; align-items:center; padding: 22px 0; }
+  .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 20px; text-decoration:none; }
+  nav a { margin-left: 22px; text-decoration: none; color: var(--muted); font-size: 15px; }
+  main { max-width: 70ch; margin: 0 auto; padding: 32px 0 72px; overflow-wrap: break-word; }
+  h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.05; letter-spacing: -0.03em; margin: 0 0 14px; font-weight: 700; }
+  .meta { color: var(--muted); font-size: 15px; margin: 0 0 28px; }
+  h2 { font-size: clamp(22px, 2.6vw, 28px); letter-spacing: -0.02em; line-height: 1.2; margin: 48px 0 12px; padding-top: 28px; border-top: 1px solid var(--line); }
+  h3 { font-size: 18px; margin: 26px 0 6px; }
+  p, ul, ol { margin: 0 0 14px; }
+  ul, ol { padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  main a { color: var(--accent); text-underline-offset: 2px; }
+  .summary { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px; margin: 0 0 8px; }
+  .summary ul { margin: 0; }
+  .toc { columns: 2; column-gap: 28px; font-size: 15px; padding-left: 20px; }
+  .toc li { break-inside: avoid; }
+  .table-scroll { overflow-x: auto; margin: 0 0 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
+  th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 14px; }
+  code { font: 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; }
+  footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; border-top:1px solid var(--line); }
+  footer a { margin-right: 16px; }
+  @media (max-width: 820px) { nav a:not(.gh) { display:none; } .toc { columns: 1; } main { padding-top: 12px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="/">casama</a>
+    <nav><a href="https://docs.casama.ai">Docs</a><a href="/#self-host">Self-host</a><a href="/#cloud">Cloud</a><a class="gh" href="https://github.com/stackwares/casama">GitHub</a></nav>
+  </header>
+
+  <main>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Effective 11 November 2026</p>
+
+    <div class="summary">
+      <ul>
+        <li>Your chats, memories and files are yours. We use them to run Casama for you, and for nothing else.</li>
+        <li>We don't sell your data, show ads, or train AI models on your content.</li>
+        <li>Your messages go to the AI model you pick. Your secrets and keys never do.</li>
+        <li>Phone data such as your calendar, contacts and health summaries is shared only when you turn it on, and only with bots you allow.</li>
+        <li>You can export everything or delete your account from the app at any time.</li>
+        <li>If you run your own Casama server, we don't receive your data.</li>
+      </ul>
+    </div>
+
+    <h2 id="contents">On this page</h2>
+    <ol class="toc">
+      <li><a href="#who">Who we are and what this covers</a></li>
+      <li><a href="#collect">What we collect</a></li>
+      <li><a href="#use">How we use it</a></li>
+      <li><a href="#models">AI models and what they see</a></li>
+      <li><a href="#device">Device data and health</a></li>
+      <li><a href="#share">Who we share it with</a></li>
+      <li><a href="#bases">Legal bases</a></li>
+      <li><a href="#retention">How long we keep it</a></li>
+      <li><a href="#rights">Your rights and choices</a></li>
+      <li><a href="#security">Security</a></li>
+      <li><a href="#transfers">International transfers</a></li>
+      <li><a href="#children">Children</a></li>
+      <li><a href="#selfhost">Self-hosted servers and telemetry</a></li>
+      <li><a href="#google">Google user data</a></li>
+      <li><a href="#changes">Changes to this policy</a></li>
+      <li><a href="#contact">Contact us</a></li>
+    </ol>
+
+    <h2 id="who">1. Who we are and what this covers</h2>
+    <p>Casama is made by Stackwares, based in the Philippines ("we", "us"). We are the personal information controller for the data described here.</p>
+    <p>This policy covers:</p>
+    <ul>
+      <li><strong>Casama Cloud</strong>, the hosted service we run;</li>
+      <li>the <strong>Casama apps</strong> for iOS, Android, macOS, Windows, Linux and the web, and the Casama CLI, when they connect to Casama Cloud;</li>
+      <li>this website, <strong>casama.ai</strong>.</li>
+    </ul>
+    <p>Casama can also be self-hosted. A self-hosted server is run by whoever hosts it, and they decide what happens to the data on it. We don't receive that data. See <a href="#selfhost">Self-hosted servers and telemetry</a>.</p>
+    <p>We follow the Philippine Data Privacy Act of 2012 (Republic Act No. 10173). We also give everyone, wherever they live, the rights described in <a href="#rights">Your rights and choices</a>.</p>
+
+    <h2 id="collect">2. What we collect</h2>
+
+    <h3>Account information</h3>
+    <ul>
+      <li>Your email address, and your name if you give it or your sign-in provider shares it.</li>
+      <li>If you sign in with Apple or Google, an identifier from that provider. With Apple you can choose to hide your email.</li>
+      <li>Your password, stored only as a secure hash, and your two-step sign-in authenticators if you set them up.</li>
+      <li>Your profile: the name bots should call you, pronouns, how you like replies, what you write under <strong>About you</strong>, and facts bots learn about you if <strong>Learn about me from chats</strong> is on.</li>
+    </ul>
+
+    <h3>Your content</h3>
+    <p>Everything you and your bots create in Casama: conversations, messages, attachments, memories, skills, routines, pages, tickets, knowledge sources, files on your bots' computers, voice transcripts, and the history of each run (tool calls, outputs and errors).</p>
+
+    <h3>Keys, secrets and connections</h3>
+    <p>Model keys, app connection tokens and secrets you give your bots. These are kept in an encrypted vault on the server. They are never shown back to you in full, never put into a model's input, and never included in exports.</p>
+
+    <h3>Device data, only if you turn it on</h3>
+    <p>Calendar, contacts, health summaries, named places, notifications from apps you pick, and computer activity summaries. Each kind is off until you switch it on. See <a href="#device">Device data and health</a>.</p>
+
+    <h3>Voice</h3>
+    <p>Microphone audio when you dictate, read aloud, or start a live call. The wake word on desktop and Android is detected on your device, and no audio leaves it until a call starts.</p>
+
+    <h3>Purchases</h3>
+    <p>Your plan, subscription status, credit balance and purchase records, such as store transaction and order ids. Card details are handled by Apple, Google or Dodo Payments. We never see your full card number.</p>
+
+    <h3>Usage and technical data</h3>
+    <ul>
+      <li>Usage records: model tokens, computer time, costs and similar counts, so we can show usage and bill credits.</li>
+      <li>An audit log of admin actions, approvals and credential changes in your workspace.</li>
+      <li>Push notification tokens for your devices, and basic device and app details such as platform and app version.</li>
+      <li>Request data our servers need to work and stay safe, such as IP addresses.</li>
+      <li>Signals that protect sign-up and our computers from abuse, such as a sign-up check token and blocked network attempts from a bot's computer.</li>
+    </ul>
+
+    <h3>Error reports</h3>
+    <p>If error reporting is turned on in an app build or on our servers, crash and error reports are sent to an error reporting service. Before they leave, they are scrubbed of message text, prompts, secrets and email addresses. They are not used for tracking.</p>
+
+    <h3>When you contact us</h3>
+    <p>Your email address and whatever you write to us.</p>
+
+    <h3>This website</h3>
+    <p>casama.ai sets no cookies and runs no analytics or ad scripts. Cloudflare, which serves the site, processes standard request data such as IP addresses to deliver it and block attacks.</p>
+
+    <h2 id="use">3. How we use it</h2>
+    <ul>
+      <li>To provide Casama: run your bots, their tools and computers, sync your data across devices, and send notifications.</li>
+      <li>To bill paid plans and credits, and show your usage.</li>
+      <li>To keep Casama secure: prevent fraud, spam, abuse and attacks, and enforce our <a href="/terms">Terms of Service</a>.</li>
+      <li>To answer your support requests and send important messages about your account, such as sign-in links and changes to these terms.</li>
+      <li>To fix bugs and improve reliability, using error reports and aggregate counts.</li>
+      <li>To meet legal obligations.</li>
+    </ul>
+    <p>We don't sell or rent your personal information. We don't use it for advertising. We don't train AI models on your content.</p>
+
+    <h2 id="models">4. AI models and what they see</h2>
+    <p>To answer you, a bot sends the conversation and relevant context (such as memories, skills, tool results, your profile, and device data you allowed) to an AI model provider.</p>
+    <ul>
+      <li><strong>Your own key.</strong> If you add a key for OpenAI, Anthropic, Google, xAI, OpenRouter or another provider, or sign in with a ChatGPT plan, requests go to that provider under your account and their terms and privacy policy.</li>
+      <li><strong>Casama credits.</strong> If you use credits we provide, requests go through our account with a model provider or router, such as OpenRouter. We send only what the request needs.</li>
+      <li><strong>Local models.</strong> If you point a bot at a model on your own machine or network, the content stays there.</li>
+    </ul>
+    <p>What models never see:</p>
+    <ul>
+      <li><strong>Secrets.</strong> Bots use placeholders. The real value is filled in only when a request goes to a host the secret allows, after the model has written the call. Known secret values are removed before anything reaches a model, the run history or logs.</li>
+      <li><strong>Model keys and connection tokens.</strong> These stay in the server's vault and are used by the server, not the bot.</li>
+      <li><strong>Card details</strong> for bot payments. Bots see placeholders only.</li>
+      <li><strong>What you type while you control a bot's computer.</strong> While you hold control, input is not recorded and screenshots are not sent to the model.</li>
+    </ul>
+    <p>Model providers have their own policies about storing and using the data they receive. Check them for the providers you choose.</p>
+
+    <h2 id="device">5. Device data and health</h2>
+    <p>Device connections let bots use personal data from your phone or computer. These rules apply:</p>
+    <ul>
+      <li>Each kind is off until you turn it on. The system permission prompt appears only then.</li>
+      <li>Turning a kind on doesn't give any bot access. A bot must ask, and you tap <strong>Allow</strong>. You can revoke a bot at any time.</li>
+      <li>A bot reads your device data only in runs acting for you. A teammate using the same bot gets nothing, and workspace admins can't see it.</li>
+      <li>Every read shows on the run's timeline: which kind, how many items, which dates and which devices.</li>
+      <li>You can mark a kind <strong>Private models only</strong>, so only bots whose models all run on your own machine or private network can read it.</li>
+      <li>Bots don't learn facts about you from runs that used personal device data.</li>
+    </ul>
+    <p>What each kind shares:</p>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Kind</th><th>What's shared</th></tr></thead>
+      <tbody>
+        <tr><td>Calendar</td><td>One summary per day, from yesterday to 30 days ahead. Bots can add events only after asking, unless your action rules allow it.</td></tr>
+        <tr><td>Contacts</td><td>Names, phone numbers and email addresses.</td></tr>
+        <tr><td>Health</td><td>Daily summaries (sleep, steps, active energy, workouts, resting heart rate, heart-rate variability, weight) and workout summaries. Cycle tracking, blood glucose and blood pressure are separate switches, off by default. Raw samples never leave your device.</td></tr>
+        <tr><td>Places</td><td>Arriving at and leaving places you name. We keep the place name and times, not a location trail. For "leave now" reminders, your current location is asked for once, used to work out travel time, then deleted.</td></tr>
+        <tr><td>Notifications (Android)</td><td>Notifications from apps you pick only. One-time codes are masked on your device and again on the server.</td></tr>
+        <tr><td>Computer activity (desktop)</td><td>Off by default. Minutes per app and the top window titles, per hour. Never your keystrokes, selections or screenshots.</td></tr>
+        <tr><td>Quick ask context (desktop)</td><td>Read only when you press the quick ask shortcut: the front app, window title, selected text and browser tab. You can switch each part off before sending. A screenshot is taken only if you ask.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>By default, daily summaries are kept for a year, and places and notifications for 90 days. You can shorten this for each kind, or choose "live only" so nothing is stored. Turning a kind off deletes what it stored. Forgetting a device deletes everything it shared.</p>
+    <p><strong>Health data.</strong> On Casama Cloud, health data is stored only in encrypted form, and only once you have turned on encryption for a workspace you own. We never use health data for advertising or marketing, never sell it, and never use it to train AI models. Bots don't give medical advice.</p>
+
+    <h2 id="share">6. Who we share it with</h2>
+    <p>We share data only with service providers that help us run Casama, with services you choose to connect, or when the law requires it. Providers may use it only to provide their service to us or to you.</p>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Who</th><th>What for</th><th>When</th></tr></thead>
+      <tbody>
+        <tr><td>Supabase (open-source software we host ourselves)</td><td>Sign-in and the database</td><td>Always. This runs on our own servers, not Supabase's cloud.</td></tr>
+        <tr><td>Cloudflare</td><td>DNS, content delivery, the secure tunnel to our servers, protection from attacks, and file storage</td><td>Always</td></tr>
+        <tr><td>Zoho</td><td>Sending sign-in and account emails, and our email inboxes</td><td>When we email you or you email us</td></tr>
+        <tr><td>AI model providers you choose, or OpenRouter for Casama credits</td><td>Generating your bots' replies and actions</td><td>When a bot runs</td></tr>
+        <tr><td>Voice providers you choose (such as OpenAI, Google, Deepgram, ElevenLabs, Cartesia, Fish Audio)</td><td>Dictation, read aloud and live calls</td><td>When you use voice. For live calls, your app connects to the provider directly with a short-lived key.</td></tr>
+        <tr><td>Google (Firebase Cloud Messaging, Firebase App Check)</td><td>Push notifications to Android, and checking sign-ups come from a genuine app</td><td>Push: when you allow notifications. App Check: at sign-up.</td></tr>
+        <tr><td>Apple (Apple Push Notification service)</td><td>Push notifications and incoming bot calls on Apple devices</td><td>When you allow notifications</td></tr>
+        <tr><td>Apple and Google sign-in</td><td>Signing in with your Apple or Google account</td><td>When you choose that sign-in</td></tr>
+        <tr><td>Apple App Store, Google Play</td><td>In-app purchases and subscriptions</td><td>When you buy in the app</td></tr>
+        <tr><td>Dodo Payments</td><td>Payments on the web and desktop, as merchant of record (they handle checkout, tax and refunds)</td><td>When you buy on the web or desktop</td></tr>
+        <tr><td>Composio, Pipedream</td><td>Connecting apps such as GitHub, Slack or Google through their sign-in</td><td>Only when you connect an app through them</td></tr>
+        <tr><td>Sandbox providers (such as E2B or Daytona)</td><td>Running bots' cloud computers when our own machines are full</td><td>Only if we use them for your computer</td></tr>
+        <tr><td>Error reporting (Sentry or PostHog)</td><td>Crash and error reports, scrubbed as described above</td><td>Only if turned on</td></tr>
+        <tr><td>Apps and services you connect</td><td>Whatever you ask your bots to do with them (for example Gmail, Slack, Twilio, Stripe, chat apps, memory services, maps)</td><td>Only when you connect them</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p><strong>People in your workspace.</strong> Content in a shared workspace is visible to its members according to their roles. Your profile name and pronouns are visible to teammates. Your About you details, learned facts and device data are private to you.</p>
+    <p><strong>Legal reasons.</strong> We may disclose data if the law requires it, to respond to valid legal process, or to protect the rights, safety or property of our users, the public or us. Where we can, we tell you first.</p>
+    <p><strong>Business changes.</strong> If Stackwares is involved in a merger, acquisition or sale of assets, your data may transfer as part of it. This policy, or one at least as protective, will continue to apply, and we will tell you.</p>
+
+    <h2 id="bases">7. Legal bases</h2>
+    <p>Where the law requires a legal basis for processing, we rely on:</p>
+    <ul>
+      <li><strong>Contract:</strong> to provide the service you signed up for.</li>
+      <li><strong>Consent:</strong> for device data, health data, and anything else you switch on. You can withdraw consent at any time by switching it off.</li>
+      <li><strong>Legitimate interests:</strong> to keep Casama secure, prevent abuse and fix problems, in ways you would reasonably expect.</li>
+      <li><strong>Legal obligation:</strong> for example, keeping billing records.</li>
+    </ul>
+
+    <h2 id="retention">8. How long we keep it</h2>
+    <ul>
+      <li><strong>Your account and content:</strong> until you delete them, or delete your account.</li>
+      <li><strong>Run history:</strong> 180 days by default. Workspace owners and admins can change this from 30 to 730 days in the app, or 7 to 3,650 days through the API. Older run events are deleted automatically every day.</li>
+      <li><strong>Device data:</strong> as described in <a href="#device">Device data and health</a>.</li>
+      <li><strong>Billing records:</strong> as long as tax and accounting laws require.</li>
+    </ul>
+    <h3>When you delete your account</h3>
+    <ul>
+      <li><strong>Right away:</strong> you are signed out everywhere, your devices stop getting notifications, and your device data is deleted.</li>
+      <li><strong>After a 7-day grace period:</strong> your account, and every workspace where you are the only owner, with its bots, chats and computers (including computer snapshots). The app shows the exact date.</li>
+      <li><strong>Shared workspaces</strong> with another owner keep their data. Only your membership is removed.</li>
+    </ul>
+    <p>A workspace where you are the only owner is deleted with your account, even if other people use it. Make someone else an owner first if it should stay.</p>
+    <p>Copies in our backups are removed as those backups expire.</p>
+
+    <h2 id="rights">9. Your rights and choices</h2>
+    <p>Wherever you live, you can:</p>
+    <ul>
+      <li><strong>Access and export</strong> your data. In the app, go to <strong>Settings → Privacy → Export my data</strong>, or run <code>casama account export</code>. You get a ZIP of JSON files with everything you can see. Secrets and keys appear by name only.</li>
+      <li><strong>Correct</strong> your data. Edit your profile and content in the app, or ask us.</li>
+      <li><strong>Delete</strong> your data. Delete individual items in the app, or your whole account at <strong>Settings → Privacy → Delete my account</strong>.</li>
+      <li><strong>Object to or restrict</strong> how we use your data, and <strong>withdraw consent</strong> for anything you switched on.</li>
+      <li><strong>Be informed</strong> about how we process your data, which is what this policy is for.</li>
+      <li><strong>Complain</strong> to a data protection authority. In the Philippines, that is the National Privacy Commission (<a href="https://privacy.gov.ph">privacy.gov.ph</a>). You can also complain to the authority where you live.</li>
+    </ul>
+    <p>For anything you can't do in the app, email <a href="mailto:privacy@casama.ai">privacy@casama.ai</a>. We may need to confirm it's you. We aim to reply within 30 days. We won't treat you differently for using these rights.</p>
+    <p>If your data is in a workspace run by your employer or another organization, they control that workspace. We may refer your request to them.</p>
+
+    <h2 id="security">10. Security</h2>
+    <p>We protect your data with:</p>
+    <ul>
+      <li>Encrypted connections (TLS) everywhere.</li>
+      <li>Row-level security on every database table, so one workspace can't read another's data.</li>
+      <li>Keys and secrets in an encrypted vault, never returned by the API.</li>
+      <li>Optional encryption at rest for workspace content, with a key per workspace.</li>
+      <li>Two-step sign-in, which workspaces can require for owners and admins.</li>
+      <li>Isolated computers for bots, with a network proxy that blocks private and internal addresses.</li>
+      <li>Approvals before risky bot actions, and checkpoints before destructive commands.</li>
+    </ul>
+    <p>No system is perfectly secure. If a breach affects your personal data, we will notify you and the National Privacy Commission as the law requires. To report a security issue, email <a href="mailto:security@casama.ai">security@casama.ai</a>.</p>
+
+    <h2 id="transfers">11. International transfers</h2>
+    <p>We are based in the Philippines. Some of our service providers, and the AI model providers you choose, process data in other countries, including the United States. When data moves across borders, we use providers that commit to protecting it, and we take the steps the law requires, such as contractual safeguards.</p>
+
+    <h2 id="children">12. Children</h2>
+    <p>Casama is not for children under 13, or under 16 where local law sets a higher age for consent. We don't knowingly collect data from them. If you believe a child has given us personal data, email <a href="mailto:privacy@casama.ai">privacy@casama.ai</a> and we will delete it.</p>
+
+    <h2 id="selfhost">13. Self-hosted servers and telemetry</h2>
+    <p>If you use a Casama server that you or someone else runs, the data on it stays on that server. The person or organization running it is responsible for it. Ask them about their privacy practices.</p>
+    <p>A self-hosted server sends us nothing by default. If its owner turns on the usage ping (<code>TELEMETRY=on</code>), it sends us once a week: a random instance id, the Casama version, and the number of bots and users active in the last 7 days. Nothing else.</p>
+    <p>If a self-hosted server uses Cloud Connect for our cloud computers or model credits, the data needed for those requests passes through Casama Cloud and this policy applies to it.</p>
+    <p>The official apps may still use Apple or Google services (such as push notifications) when connected to a self-hosted server, as described above.</p>
+
+    <h2 id="google">14. Google user data</h2>
+    <p>When you connect a Google account (for example Gmail, Google Calendar or Google Drive), Casama uses the data only to do what you ask your bots to do, shown in the app. Casama's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. We don't use Google user data for advertising, don't sell it, and don't use it to train AI models. People can't read it unless you ask us to for support, it's needed for security, or the law requires it. You can disconnect a Google account at any time from the connection's page, which deletes its stored token.</p>
+
+    <h2 id="changes">15. Changes to this policy</h2>
+    <p>We may update this policy as Casama changes. We will post the new version here with a new effective date. If a change is significant, we will tell you in the app or by email before it takes effect.</p>
+
+    <h2 id="contact">16. Contact us</h2>
+    <p>Stackwares, Philippines.</p>
+    <ul>
+      <li>Privacy questions, data requests and our data protection officer: <a href="mailto:privacy@casama.ai">privacy@casama.ai</a></li>
+      <li>Help with the apps or your account: <a href="mailto:support@casama.ai">support@casama.ai</a></li>
+      <li>Security issues: <a href="mailto:security@casama.ai">security@casama.ai</a></li>
+      <li>Plans, invoices and refunds: <a href="mailto:billing@casama.ai">billing@casama.ai</a></li>
+      <li>Anything else: <a href="mailto:hello@casama.ai">hello@casama.ai</a></li>
+    </ul>
+  </main>
+
+  <footer><a href="/">Home</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="https://docs.casama.ai">Docs</a><br><br>&copy; 2026 Stackwares. Casama is open source (Apache-2.0; enterprise features in <code>ee/</code> under a commercial license).</footer>
+</div>
+</body>
+</html>

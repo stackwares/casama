@@ -8,5 +8,6 @@
   "FIREBASE_ANDROID_APP_ID": "1:278631205206:android:c5d3ecc40b4ceaa7a9aef7",
   "FIREBASE_WEB_API_KEY": "AIzaSyBeDKGmtRD0ldsUp1keE5cnVrmMLen4FHs",
   "FIREBASE_WEB_APP_ID": "1:278631205206:web:fb7b1669af4ac24ea9aef7",
-  "FIREBASE_WEB_AUTH_DOMAIN": "kasama-ai.firebaseapp.com"
+  "FIREBASE_WEB_AUTH_DOMAIN": "kasama-ai.firebaseapp.com",
+  "FIREBASE_VAPID_KEY": "BKV9ZStJNW0sVVkZKAuzm1ZQne0H-Qqh0t4XDHdf9UJncnG3VnSp43stuPHO3028Eg7HpbX0zIz1OytAH_bwUpQ"
 }

@@ -59,6 +59,12 @@ flutter run -d macos --dart-define=CASAMA_API_URL=http://localhost:8787
 Use `-d chrome`, an iOS simulator or an Android emulator instead of `macos` as you like. The app
 reads the Supabase address and key from the API, so the API address is the only setting.
 
+On a physical phone, `localhost` is the phone itself. Give it an address that reaches your machine:
+an https tunnel (the maintainers' Mac is `https://api-dev.casama.ai` through a Cloudflare Tunnel,
+D-172), `adb reverse tcp:8787 tcp:8787` for an Android phone on USB, or your LAN address (iOS blocks
+plain http unless allowed). The API's `SUPABASE_URL` must be reachable from the phone too, since the
+app signs in there.
+
 ### Run the CLI
 
 ```sh
