@@ -132,9 +132,10 @@ codes and password resets don't.
 
 ### Invites show a code instead of sending an email
 
-**Cause:** Casama sends invite emails through Resend, and `RESEND_API_KEY` isn't set.
+**Cause:** Neither SMTP (`SMTP_HOST`) nor Resend (`RESEND_API_KEY`) is set, so Casama can't send email.
 
-**Fix:** Share the code with the person, or set `RESEND_API_KEY` and `EMAIL_FROM`.
+**Fix:** Share the code with the person, or set the SMTP settings (or `RESEND_API_KEY`) and
+`EMAIL_FROM`, then restart.
 
 ### Every sign-up is refused with "limited to approved email addresses"
 

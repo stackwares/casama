@@ -42,3 +42,53 @@ export function resendEmail(
     },
   };
 }
+
+export interface SmtpSettings {
+  host: string;
+  port: number;
+  user?: string;
+  pass?: string;
+}
+
+/** The part of nodemailer's transport we use, so tests can pass a stand-in. */
+export interface MailTransport {
+  sendMail(mail: {
+    from: string;
+    to: string;
+    subject: string;
+    text: string;
+    html?: string;
+  }): Promise<unknown>;
+}
+
+/**
+ * Transactional email over SMTP (for example Zoho, D-174). Port 465 uses TLS from the start;
+ * other ports upgrade with STARTTLS, which is required.
+ */
+export async function smtpEmail(
+  settings: SmtpSettings,
+  from: string,
+  transport?: MailTransport,
+): Promise<EmailSender> {
+  const mailer =
+    transport ??
+    (await import("nodemailer")).createTransport({
+      host: settings.host,
+      port: settings.port,
+      secure: settings.port === 465,
+      requireTLS: settings.port !== 465,
+      auth: settings.user ? { user: settings.user, pass: settings.pass ?? "" } : undefined,
+    });
+  return {
+    enabled: true,
+    async send(msg) {
+      await mailer.sendMail({
+        from,
+        to: msg.to,
+        subject: msg.subject,
+        text: msg.text,
+        html: msg.html,
+      });
+    },
+  };
+}

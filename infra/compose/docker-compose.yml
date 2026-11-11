@@ -39,11 +39,6 @@ x-casama: &casama
     SMTP_PORT: ${SMTP_PORT:-587}
     SMTP_USER: ${SMTP_USER:-}
     SMTP_PASS: ${SMTP_PASS:-}
-    # Invites use the same SMTP server as Auth when there's no Resend key (D-174).
-    SMTP_HOST: ${SMTP_HOST:-}
-    SMTP_PORT: ${SMTP_PORT:-587}
-    SMTP_USER: ${SMTP_USER:-}
-    SMTP_PASS: ${SMTP_PASS:-}
     ERROR_REPORTING: ${ERROR_REPORTING:-auto}
     SENTRY_DSN: ${SENTRY_DSN:-}
     POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}

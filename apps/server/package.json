@@ -12,9 +12,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@dbos-inc/dbos-sdk": "^5.4.0",
-    "@hono/node-server": "^2.1.6",
-    "@hono/zod-openapi": "^1.6.3",
     "@casama/agent": "workspace:*",
     "@casama/contracts": "workspace:*",
     "@casama/db": "workspace:*",
@@ -23,17 +20,22 @@
     "@casama/mcp": "workspace:*",
     "@casama/observability": "workspace:*",
     "@casama/sandbox": "workspace:*",
+    "@dbos-inc/dbos-sdk": "^5.4.0",
+    "@hono/node-server": "^2.1.6",
+    "@hono/zod-openapi": "^1.6.3",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@scalar/hono-api-reference": "^0.12.18",
     "drizzle-orm": "^0.45.4",
     "fflate": "^0.8.3",
     "hono": "^4.13.17",
     "jose": "^6.2.15",
+    "nodemailer": "10.2.1",
     "postgres": "^4.1.0",
     "ws": "^8.22.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/nodemailer": "8.0.2",
     "@types/ws": "^8.18.2"
   }
 }
