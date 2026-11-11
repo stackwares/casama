@@ -1,11 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:http/http.dart' as http;
 import 'package:casama_computerd/computerd.dart';
 import 'package:test/test.dart';
 
 const token = 'test-token-0123456789abcdef';
+
+/// The fake server's absolute path, so the test passes from the package or the workspace root.
+final fakeServer = Isolate.resolvePackageUriSync(Uri.parse('package:casama_computerd/computerd.dart'))!
+    .resolve('../test/fixtures/fake_mcp_server.dart')
+    .toFilePath();
 
 /// Local MCP servers through computerd (companion mode, D-096).
 void main() {
@@ -23,7 +29,7 @@ void main() {
       allowedRoots: [home.path],
       capabilities: caps,
       mcpServers: {
-        'fake': LocalMcpServer(key: 'fake', kind: 'stdio', command: Platform.resolvedExecutable, args: ['run', 'test/fixtures/fake_mcp_server.dart']),
+        'fake': LocalMcpServer(key: 'fake', kind: 'stdio', command: Platform.resolvedExecutable, args: ['run', fakeServer]),
       },
     ));
     await server.start();
@@ -99,7 +105,7 @@ void main() {
     final none = await http.post(base.replace(path: '/mcp/plug'), headers: headers, body: '{}');
     expect(none.statusCode, 404);
     final put = await http.put(base.replace(path: '/mcp-servers'), headers: headers, body: jsonEncode({
-      'plug': {'kind': 'stdio', 'command': Platform.resolvedExecutable, 'args': ['run', '${Directory.current.path}/test/fixtures/fake_mcp_server.dart']},
+      'plug': {'kind': 'stdio', 'command': Platform.resolvedExecutable, 'args': ['run', fakeServer]},
     }));
     expect(put.statusCode, 200, reason: put.body);
     final init = {'jsonrpc': '2.0', 'id': 0, 'method': 'initialize', 'params': {'protocolVersion': '2025-06-18', 'capabilities': {}, 'clientInfo': {'name': 'a', 'version': '1'}}};
