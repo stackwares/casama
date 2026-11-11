@@ -67,6 +67,25 @@ import '../features/devices/device_connections_screen.dart';
 GoRouterPageBuilder _page(Widget Function(BuildContext context, GoRouterState state) build) =>
     (context, state) => MaterialPage<void>(key: state.pageKey, name: state.name, arguments: state.extra, child: build(context, state));
 
+/// The tab pages (Chats, Inbox, Tasks). They paint no wallpaper of their own: the shell's page
+/// already paints one behind every tab, and the shell's screens are see-through. Switching tabs
+/// only crossfades the content over that one wallpaper, so it never flickers, shifts or reloads
+/// its photo the way two page wallpapers blending into each other did. Pages opened from a tab
+/// (a chat, settings) stay [MaterialPage]s with their own wallpaper, so they cover the tab while
+/// they slide in.
+GoRouterPageBuilder _tab(Widget Function(BuildContext context, GoRouterState state) build) => (context, state) {
+  final duration = MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 180);
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    name: state.name,
+    arguments: state.extra,
+    transitionDuration: duration,
+    reverseTransitionDuration: duration,
+    transitionsBuilder: (_, animation, _, child) => FadeTransition(opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut), child: child),
+    child: build(context, state),
+  );
+};
+
 /// Re-evaluates redirects when sign-in or workspace state changes.
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(Ref ref) {
@@ -149,7 +168,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/bots',
-            pageBuilder: _page((context, _) => layoutFor(MediaQuery.sizeOf(context).width) == LayoutSize.desktop ? const SizedBox.shrink() : const BotsScreen()),
+            pageBuilder: _tab((context, _) => layoutFor(MediaQuery.sizeOf(context).width) == LayoutSize.desktop ? const SizedBox.shrink() : const BotsScreen()),
             routes: [
               GoRoute(
                 path: ':botId/chat',
@@ -237,9 +256,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/inbox',
-            pageBuilder: _page((_, s) => InboxScreen(initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? -1)),
+            pageBuilder: _tab((_, s) => InboxScreen(initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? -1)),
           ),
-          GoRoute(path: '/tasks', pageBuilder: _page((_, _) => const BoardScreen())),
+          GoRoute(path: '/tasks', pageBuilder: _tab((_, _) => const BoardScreen())),
           GoRoute(
             path: '/projects',
             pageBuilder: _page((_, _) => const ProjectsScreen()),
