@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,5 +72,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('call $botId'), findsOneWidget);
     WakeWordController.testing = false;
+  });
+
+  test('microphone audio decodes at odd offsets and across chunk edges', () {
+    // Samples 1, -1, 32767, -32768 as little-endian bytes, behind one junk byte so the view
+    // starts at an odd offset (what crashed asInt16List).
+    final bytes = Uint8List.fromList([0xAA, 0x01, 0x00, 0xFF, 0xFF, 0xFF, 0x7F, 0x00, 0x80]);
+    final view = Uint8List.sublistView(bytes, 1);
+    final whole = Pcm16Decoder().decode(view);
+    expect(whole, [1 / 32768, -1 / 32768, 32767 / 32768, -1.0]);
+
+    // The same bytes split mid-sample: the half sample waits for the next chunk.
+    final d = Pcm16Decoder();
+    final a = d.decode(Uint8List.sublistView(bytes, 1, 4));
+    final b = d.decode(Uint8List.sublistView(bytes, 4, 4));
+    final c = d.decode(Uint8List.sublistView(bytes, 4));
+    expect([...a, ...b, ...c], whole);
   });
 }

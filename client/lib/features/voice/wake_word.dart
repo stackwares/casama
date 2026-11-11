@@ -123,6 +123,36 @@ class WakeWordModel {
   }
 }
 
+/// 16-bit little-endian mono PCM from the microphone, as samples between -1 and 1. Chunks can
+/// start at an odd byte and end halfway through a sample, so it reads bytes rather than viewing
+/// the buffer as 16-bit values (which needs an even offset), and keeps a leftover byte for the
+/// next chunk.
+class Pcm16Decoder {
+  int? _carry;
+
+  Float32List decode(Uint8List chunk) {
+    final carry = _carry;
+    final total = chunk.length + (carry == null ? 0 : 1);
+    final out = Float32List(total ~/ 2);
+    var i = 0;
+    var o = 0;
+    if (carry != null && chunk.isNotEmpty) {
+      out[o++] = _sample(carry, chunk[0]);
+      i = 1;
+    }
+    for (; i + 1 < chunk.length; i += 2) {
+      out[o++] = _sample(chunk[i], chunk[i + 1]);
+    }
+    _carry = i < chunk.length ? chunk[i] : (chunk.isEmpty ? carry : null);
+    return out;
+  }
+
+  static double _sample(int lo, int hi) {
+    final v = (hi << 8) | lo;
+    return (v >= 0x8000 ? v - 0x10000 : v) / 32768.0;
+  }
+}
+
 class SherpaWakeWordEngine implements WakeWordEngine {
   String? _dir;
   final _rec = AudioRecorder();
@@ -165,22 +195,27 @@ class SherpaWakeWordEngine implements WakeWordEngine {
         _stream = _spotter!.createStream();
         if (!await _rec.hasPermission()) throw StateError('Microphone permission is needed for the wake word');
         final audio = await _rec.startStream(const RecordConfig(encoder: AudioEncoder.pcm16bits, sampleRate: 16000, numChannels: 1));
-        _sub = audio.listen((chunk) {
-          final pcm = chunk.buffer.asInt16List(chunk.offsetInBytes, chunk.lengthInBytes ~/ 2);
-          final samples = Float32List(pcm.length);
-          for (var i = 0; i < pcm.length; i++) {
-            samples[i] = pcm[i] / 32768.0;
-          }
-          final s = _stream!;
-          s.acceptWaveform(samples: samples, sampleRate: 16000);
-          while (_spotter!.isReady(s)) {
-            _spotter!.decode(s);
-          }
-          if (_spotter!.getResult(s).keyword.isNotEmpty) {
-            _spotter!.reset(s);
-            if (!out.isClosed) out.add(null);
-          }
-        });
+        final pcm = Pcm16Decoder();
+        _sub = audio.listen(
+          (chunk) {
+            final samples = pcm.decode(chunk);
+            final s = _stream;
+            final spotter = _spotter;
+            if (s == null || spotter == null || samples.isEmpty) return;
+            s.acceptWaveform(samples: samples, sampleRate: 16000);
+            while (spotter.isReady(s)) {
+              spotter.decode(s);
+            }
+            if (spotter.getResult(s).keyword.isNotEmpty) {
+              spotter.reset(s);
+              if (!out.isClosed) out.add(null);
+            }
+          },
+          // A microphone error ends listening through the stream, not as an unhandled crash.
+          onError: (Object e) {
+            if (!out.isClosed) out.addError(e);
+          },
+        );
       } catch (e) {
         if (!out.isClosed) out.addError(e);
       }
