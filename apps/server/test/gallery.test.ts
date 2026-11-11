@@ -70,7 +70,11 @@ describe("gallery", () => {
       await h.request("/v1/gallery?type=theme&featured=true", { token: owner.token }),
     );
     expect(list.available).toBe(true);
-    expect(list.items.map((i: { id: string }) => i.id)).toEqual(["lagoon", "nightshift", "orchard"]);
+    expect(list.items.map((i: { id: string }) => i.id)).toEqual([
+      "lagoon",
+      "nightshift",
+      "orchard",
+    ]);
     // A list carries what each card draws, so the app needs no request per preview.
     expect(list.items[0].document.headingFont).toBe("Fraunces");
     const item = await j(await h.request("/v1/gallery/theme/lagoon", { token: owner.token }));

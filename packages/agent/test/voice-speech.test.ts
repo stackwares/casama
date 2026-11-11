@@ -11,13 +11,21 @@ describe("read aloud", () => {
       auth = new Headers(init.headers).get("x-goog-api-key") ?? "";
       sent = JSON.parse(String(init.body));
       return Response.json({
-        candidates: [{ content: { parts: [{ inlineData: { data: Buffer.from(pcm).toString("base64") } }] } }],
+        candidates: [
+          { content: { parts: [{ inlineData: { data: Buffer.from(pcm).toString("base64") } }] } },
+        ],
       });
     }) as unknown as typeof fetch;
-    const speech = await synthesize("google", "gem-key", "Water the fern.", "21m00Tcm4TlvDq8EAChM", {
-      bases: { gemini: "http://gemini.test" },
-      fetch: fake,
-    });
+    const speech = await synthesize(
+      "google",
+      "gem-key",
+      "Water the fern.",
+      "21m00Tcm4TlvDq8EAChM",
+      {
+        bases: { gemini: "http://gemini.test" },
+        fetch: fake,
+      },
+    );
     expect(auth).toBe("gem-key");
     expect(sent).toMatchObject({
       contents: [{ parts: [{ text: "Water the fern." }] }],
@@ -30,8 +38,14 @@ describe("read aloud", () => {
     expect(speech.audio[0]).toBe(0x52);
     // 4800 bytes of 16-bit audio at 24 kHz is a tenth of a second.
     expect(wavDurationS(speech.audio)).toBeCloseTo(0.1, 6);
-    expect(ttsCostUsd("google", 16, speech.audio, new Date("2026-11-11"))).toBeCloseTo(0.1 * 25 * (6 / 1_000_000), 8);
-    expect(ttsCostUsd("google", 16, speech.audio, new Date("2027-01-01"))).toBeCloseTo(0.1 * 25 * (12 / 1_000_000), 8);
+    expect(ttsCostUsd("google", 16, speech.audio, new Date("2026-11-11"))).toBeCloseTo(
+      0.1 * 25 * (6 / 1_000_000),
+      8,
+    );
+    expect(ttsCostUsd("google", 16, speech.audio, new Date("2027-01-01"))).toBeCloseTo(
+      0.1 * 25 * (12 / 1_000_000),
+      8,
+    );
   });
 
   it("keeps a WAV Gemini already wrapped, and prices other providers per character", () => {

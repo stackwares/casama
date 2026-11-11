@@ -58,16 +58,34 @@ describe("gallery", () => {
 
   it("checks an image wallpaper's small copy for cards", () => {
     const doc = { kind: "image", file: "dusk.jpg", thumb: "thumb.jpg" };
-    expect(checkWallpaperDocument(doc, [{ path: "dusk.jpg", bytes: 180_000 }, { path: "thumb.jpg", bytes: 12_000 }])).toEqual([]);
-    expect(checkWallpaperDocument(doc, [{ path: "dusk.jpg", bytes: 180_000 }, { path: "thumb.jpg", bytes: 300_000 }])).toEqual([
-      "thumb.jpg is over 200 KB",
+    expect(
+      checkWallpaperDocument(doc, [
+        { path: "dusk.jpg", bytes: 180_000 },
+        { path: "thumb.jpg", bytes: 12_000 },
+      ]),
+    ).toEqual([]);
+    expect(
+      checkWallpaperDocument(doc, [
+        { path: "dusk.jpg", bytes: 180_000 },
+        { path: "thumb.jpg", bytes: 300_000 },
+      ]),
+    ).toEqual(["thumb.jpg is over 200 KB"]);
+    expect(checkWallpaperDocument(doc, [{ path: "dusk.jpg", bytes: 180_000 }])).toEqual([
+      "missing thumb.jpg",
     ]);
-    expect(checkWallpaperDocument(doc, [{ path: "dusk.jpg", bytes: 180_000 }])).toEqual(["missing thumb.jpg"]);
   });
 
   it("keeps a skill's icon only when it is a Lucide name", () => {
-    const meta = { name: "Notes", author: { name: "Casama" }, license: "MIT", tags: [], category: "work" };
-    expect(parseGalleryMeta({ ...meta, icon: "notebook-pen" }, ["MIT"]).meta?.icon).toBe("notebook-pen");
+    const meta = {
+      name: "Notes",
+      author: { name: "Casama" },
+      license: "MIT",
+      tags: [],
+      category: "work",
+    };
+    expect(parseGalleryMeta({ ...meta, icon: "notebook-pen" }, ["MIT"]).meta?.icon).toBe(
+      "notebook-pen",
+    );
     expect(parseGalleryMeta({ ...meta, icon: "<svg>" }, ["MIT"]).errors).toEqual([
       "icon must be a Lucide icon name such as notebook-pen",
     ]);

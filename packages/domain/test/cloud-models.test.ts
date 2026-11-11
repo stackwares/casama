@@ -23,7 +23,9 @@ describe("Casama Cloud models", () => {
     );
     // A self-hosted server that set the shared key is locked the same way.
     expect(cloudModelAllowed({ billing: false, plan: "selfhost" }, CLOUD_LOCKED_MODEL)).toBe(true);
-    expect(cloudModelAllowed({ billing: false, plan: "selfhost" }, "openai/gpt-6-luna")).toBe(false);
+    expect(cloudModelAllowed({ billing: false, plan: "selfhost" }, "openai/gpt-6-luna")).toBe(
+      false,
+    );
     expect(cloudModelAllowed({ billing: false, plan: "selfhost" }, "some/unknown-model")).toBe(
       false,
     );

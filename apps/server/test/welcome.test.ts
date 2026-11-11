@@ -171,9 +171,11 @@ describe("welcome chat", () => {
     await h.tdb.admin`update public.bots set autonomy = 'autonomous' where id = ${w.bot_id}`;
     await act(await last(), "welcome.next", {}, "Continue");
     const connect = await last();
-    expect(actions(connect).filter((a) => a.name === "app:connect").map((a) => a.context?.app)).toEqual([
-      "github",
-    ]);
+    expect(
+      actions(connect)
+        .filter((a) => a.name === "app:connect")
+        .map((a) => a.context?.app),
+    ).toEqual(["github"]);
     expect(actions(connect).some((a) => a.name === "app:invite")).toBe(false);
     await act(connect, "welcome.next", {}, "Done, next");
     const invite = await last();

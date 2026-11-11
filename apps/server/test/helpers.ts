@@ -261,7 +261,6 @@ export async function startHarness(
 }
 
 /** Response body as a loosely typed value for assertions. */
-// biome-ignore lint/suspicious/noExplicitAny: test assertions inspect arbitrary JSON
 export const j = (res: Response): Promise<any> => res.json();
 
 async function freePort() {

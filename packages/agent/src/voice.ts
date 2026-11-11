@@ -167,7 +167,13 @@ export const STT_PROVIDERS: SttProviderId[] = ["openai", "deepgram", "openrouter
 export const OPENROUTER_STT_MODEL = "openai/whisper-large-v3-turbo";
 // Gemini Flash-Lite TTS first: about $0.009 a minute of speech through 2026, against about
 // $0.018 for gpt-4o-mini-tts and $0.032 for ElevenLabs Flash (D-187).
-export const TTS_PROVIDERS: TtsProviderId[] = ["google", "openai", "elevenlabs", "cartesia", "fish_audio"];
+export const TTS_PROVIDERS: TtsProviderId[] = [
+  "google",
+  "openai",
+  "elevenlabs",
+  "cartesia",
+  "fish_audio",
+];
 
 export const DEFAULT_VOICES: Record<TtsProviderId, string> = {
   google: DEFAULT_GEMINI_VOICE,
@@ -559,7 +565,12 @@ export const VOICE_PRICES = {
 };
 
 /** What one read-aloud cost. Gemini bills the audio, and that rate doubles on 2027-01-01. */
-export function ttsCostUsd(provider: TtsProviderId, chars: number, audio?: Uint8Array, now = new Date()): number {
+export function ttsCostUsd(
+  provider: TtsProviderId,
+  chars: number,
+  audio?: Uint8Array,
+  now = new Date(),
+): number {
   if (provider !== "google") return (chars / 1000) * VOICE_PRICES.ttsPerThousandChars;
   const perMillion = now >= new Date("2027-01-01T00:00:00Z") ? 12 : 6;
   const seconds = wavDurationS(audio);
@@ -579,7 +590,13 @@ export function wavDurationS(audio: Uint8Array | undefined): number | null {
 
 /** Gemini returns a WAV. Raw 24 kHz PCM gets a header so players can open it. */
 export function asWav(audio: Uint8Array, sampleRate = 24_000): Uint8Array {
-  if (audio.length >= 12 && audio[0] === 0x52 && audio[1] === 0x49 && audio[2] === 0x46 && audio[3] === 0x46)
+  if (
+    audio.length >= 12 &&
+    audio[0] === 0x52 &&
+    audio[1] === 0x49 &&
+    audio[2] === 0x46 &&
+    audio[3] === 0x46
+  )
     return audio;
   const header = new ArrayBuffer(44);
   const v = new DataView(header);
@@ -612,8 +629,12 @@ async function synthesizeGemini(
   opts: { bases?: VoiceBases; fetch?: typeof fetch; model?: string },
 ): Promise<{ audio: Uint8Array; mime: string }> {
   const f = opts.fetch ?? fetch;
-  const base = (opts.bases?.gemini ?? "https://generativelanguage.googleapis.com").replace(/\/$/, "");
-  const voiceName = GEMINI_VOICES.includes(voice) || voice.startsWith("voice_") ? voice : DEFAULT_GEMINI_VOICE;
+  const base = (opts.bases?.gemini ?? "https://generativelanguage.googleapis.com").replace(
+    /\/$/,
+    "",
+  );
+  const voiceName =
+    GEMINI_VOICES.includes(voice) || voice.startsWith("voice_") ? voice : DEFAULT_GEMINI_VOICE;
   const model = opts.model ?? GEMINI_TTS_MODEL;
   const res = await ok(
     await f(`${base}/v1beta/models/${model}:generateContent`, {
@@ -632,7 +653,8 @@ async function synthesizeGemini(
   const body = (await res.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ inlineData?: { data?: string } }> } }>;
   };
-  const b64 = body.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData?.data;
+  const b64 = body.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData
+    ?.data;
   if (!b64) throw new VoiceError("Gemini returned no audio");
   return { audio: asWav(Uint8Array.from(Buffer.from(b64, "base64"))), mime: "audio/wav" };
 }

@@ -12,8 +12,8 @@ import { randomUUID } from "node:crypto";
 import type { Database } from "@casama/db";
 import { contentKeys } from "@casama/db";
 import { defaultModelFor } from "@casama/domain";
-import { PLATFORM_OPENROUTER_CREDENTIAL_ID } from "./credentials.ts";
 import { sql } from "drizzle-orm";
+import { PLATFORM_OPENROUTER_CREDENTIAL_ID } from "./credentials.ts";
 import { surfaceMessages } from "./tools/ui.ts";
 
 export const WELCOME_FOCUS = [
@@ -327,7 +327,13 @@ function connectCard(s: WelcomeState) {
           ),
         ),
         { id: "row", component: "Row", children: ["more", "next"] },
-        ...button("more", "More apps", "app:route", { path: "/settings/integrations" }, "borderless"),
+        ...button(
+          "more",
+          "More apps",
+          "app:route",
+          { path: "/settings/integrations" },
+          "borderless",
+        ),
         ...button("next", "Done, next", "welcome.next"),
       ],
     ),
@@ -346,7 +352,13 @@ function phoneCard(s: WelcomeState) {
             : "Share your phone's calendar and places with me, so I can plan around your day. You choose each kind.",
         ),
         { id: "row", component: "Row", children: ["phone", "next"] },
-        ...button("phone", "Choose what to share", "app:route", { path: "/settings/devices" }, "primary"),
+        ...button(
+          "phone",
+          "Choose what to share",
+          "app:route",
+          { path: "/settings/devices" },
+          "primary",
+        ),
         ...button("next", "Done, next", "welcome.next"),
       ],
     ),
@@ -738,7 +750,13 @@ export async function handleWelcomeAction(
               ? "Uses Casama with their team."
               : "Uses Casama for their business.",
         );
-      const hasModel = await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel);
+      const hasModel = await ensureBotModel(
+        db,
+        c.botId,
+        c.orgId,
+        d.modelOverrides,
+        d.platformModel,
+      );
       const prompts = setupPrompts(s, hasModel);
       const lead = [focusIntro(s), laterBots(s)].filter(Boolean).join("\n\n");
       const first = prompts[0];
@@ -750,7 +768,13 @@ export async function handleWelcomeAction(
       return scripted([{ type: "text", text: lead }, ...onePrompt(first, s)]);
     }
     case "welcome.next": {
-      const hasModel = await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel);
+      const hasModel = await ensureBotModel(
+        db,
+        c.botId,
+        c.orgId,
+        d.modelOverrides,
+        d.platformModel,
+      );
       if (!hasModel) {
         s.step = "model";
         return scripted([modelCard(true)]);

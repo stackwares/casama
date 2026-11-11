@@ -14,9 +14,9 @@
       "!dart",
       "!client",
       "!supabase",
-      "!docs-site/**/*.md",
-      "!**/SKILL.md",
+      "!**/*.md",
       "!site",
+      "!gallery",
       "!infra/helm/**/templates",
       "!infra/compose/selfhost/kong.yml"
     ]
@@ -57,14 +57,16 @@
   },
   "overrides": [
     {
-      "includes": ["**/test/**", "**/scripts/**"],
+      "includes": ["**/test/**", "**/scripts/**", "examples/**/*.mjs", "infra/**/*.mjs"],
       "linter": {
         "rules": {
           "style": {
             "noNonNullAssertion": "off"
           },
           "suspicious": {
-            "noAssignInExpressions": "off"
+            "noAssignInExpressions": "off",
+            "noExplicitAny": "off",
+            "noUndeclaredEnvVars": "off"
           }
         }
       }

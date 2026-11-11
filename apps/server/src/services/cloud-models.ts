@@ -3,11 +3,9 @@
  * cache, so a change in the admin console reaches every process within seconds, without a restart.
  * Self-hosted servers never read it.
  */
-import {
-  type CloudModelAssignment,
-  cloudModelAssignment,
-} from "@casama/domain";
+
 import type { Database } from "@casama/db";
+import { type CloudModelAssignment, cloudModelAssignment } from "@casama/domain";
 import { sql } from "drizzle-orm";
 
 const KEY = "cloud_models";

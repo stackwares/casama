@@ -50,8 +50,10 @@ const provider: SandboxProvider | undefined =
         docker: new DockerApi(env.DOCKER_SOCKET ?? "/var/run/docker.sock"),
         store,
         images: {
-          headless: env.COMPUTER_IMAGE_HEADLESS ?? "ghcr.io/stackwares/casama/computer-headless:latest",
-          desktop: env.COMPUTER_IMAGE_DESKTOP ?? "ghcr.io/stackwares/casama/computer-desktop:latest",
+          headless:
+            env.COMPUTER_IMAGE_HEADLESS ?? "ghcr.io/stackwares/casama/computer-headless:latest",
+          desktop:
+            env.COMPUTER_IMAGE_DESKTOP ?? "ghcr.io/stackwares/casama/computer-desktop:latest",
         },
         runtime: env.SANDBOX_RUNTIME || undefined,
         tokenSecret: need("COMPUTER_TOKEN_SECRET"),

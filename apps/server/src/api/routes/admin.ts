@@ -59,7 +59,11 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.setAdminCloudModels, async (c) => {
     await requireOwner(requireClaims(c.get("claims")));
     const saved = await setCloudModels(db, c.req.valid("json"));
-    deps.logger.info("cloud models changed", { chat: saved.chat, live: saved.live, image: saved.image });
+    deps.logger.info("cloud models changed", {
+      chat: saved.chat,
+      live: saved.live,
+      image: saved.image,
+    });
     return c.json(saved, 200);
   });
 

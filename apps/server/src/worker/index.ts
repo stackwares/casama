@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import { getCloudModels } from "../services/cloud-models.ts";
 import {
   AiSdkGateway,
   ApnsVoipSender,
@@ -10,21 +9,21 @@ import {
   computerRates,
   createSafeFetch,
   type Embedder,
-  OPENROUTER_EMBEDDING_MODEL,
-  PLATFORM_OPENROUTER_CREDENTIAL_ID,
   FalMediaProvider,
-  GeminiVideoProvider,
   FcmPushSender,
   type FixtureFile,
   type FixtureTurn,
+  GeminiVideoProvider,
   hashEmbedder,
   LangfuseSink,
   MediaRouter,
   type ModelGateway,
   memoryStoreFor,
   NotificationService,
+  OPENROUTER_EMBEDDING_MODEL,
   OpenRouterMediaProvider,
   openAiEmbedder,
+  PLATFORM_OPENROUTER_CREDENTIAL_ID,
   type PushSender,
   RecordingPushSender,
   ReplayGateway,
@@ -68,6 +67,7 @@ import { LocalProvider, SupervisorProvider, unavailableProvider } from "@casama/
 import { DBOS, DBOSClient } from "@dbos-inc/dbos-sdk";
 import { sql } from "drizzle-orm";
 import { casamaCloudProvider } from "../billing/index.ts";
+import { getCloudModels } from "../services/cloud-models.ts";
 import {
   billingSettleWorkflow,
   computersIdleWorkflow,
@@ -317,7 +317,8 @@ export async function startWorker(opts: WorkerOptions) {
         providerKey(orgId, ["google"]),
       ]);
       const videoId = assigned?.video;
-      const falVideo = videoId?.startsWith("fal-ai/") || videoId?.includes("/") ? videoId : undefined;
+      const falVideo =
+        videoId?.startsWith("fal-ai/") || videoId?.includes("/") ? videoId : undefined;
       const fal = f?.key
         ? new FalMediaProvider({
             apiKey: f.key,

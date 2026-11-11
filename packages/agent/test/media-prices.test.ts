@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   FalMediaProvider,
   falImageCost,
-  MEDIA_PRICES,
   GeminiVideoProvider,
+  MEDIA_PRICES,
   MediaRouter,
   OpenRouterMediaProvider,
 } from "../src/media.ts";
@@ -100,7 +100,9 @@ describe("media prices", () => {
       auth = new Headers(init.headers).get("x-goog-api-key") ?? "";
       sent = JSON.parse(String(init.body));
       return Response.json({
-        steps: [{ type: "model_output", content: [{ type: "video", data: mp4, mime_type: "video/mp4" }] }],
+        steps: [
+          { type: "model_output", content: [{ type: "video", data: mp4, mime_type: "video/mp4" }] },
+        ],
       });
     }) as unknown as typeof fetch;
     const video = await new GeminiVideoProvider("gem-key", {
@@ -113,7 +115,11 @@ describe("media prices", () => {
       input: "a lighthouse",
       response_format: { type: "video", duration: "3s", aspect_ratio: "9:16", resolution: "720p" },
     });
-    expect(video).toMatchObject({ contentType: "video/mp4", durationS: 3, model: "gemini-omni-1.2-flash" });
+    expect(video).toMatchObject({
+      contentType: "video/mp4",
+      durationS: 3,
+      model: "gemini-omni-1.2-flash",
+    });
     expect(video.costUsd).toBeCloseTo(3 * 0.0695, 6);
     expect(Buffer.from(video.data ?? []).toString()).toBe("mp4");
   });

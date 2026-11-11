@@ -2,13 +2,14 @@
  * Voice work that needs provider keys (only the worker reads Vault): transcription, read-aloud
  * audio (cached per message and voice) and realtime call sessions (D-065).
  */
-import type { CloudModelAssignment } from "@casama/domain";
+
 import {
   createGeminiLiveSession,
   createRealtimeSession,
   DEFAULT_GEMINI_LIVE_MODEL,
   DEFAULT_REALTIME_MODEL,
   integrationToolName,
+  OPENROUTER_STT_MODEL,
   type RealtimeProviderId,
   type RealtimeTool,
   START_TASK_TOOL,
@@ -23,10 +24,10 @@ import {
   VOICE_CALL_TOOLS,
   VOICE_PRICES,
   type VoiceBases,
-  OPENROUTER_STT_MODEL,
 } from "@casama/agent";
-import { cloudOpenRouterCharge } from "@casama/domain";
 import type { Database } from "@casama/db";
+import type { CloudModelAssignment } from "@casama/domain";
+import { cloudOpenRouterCharge } from "@casama/domain";
 import { sql } from "drizzle-orm";
 
 export interface VoiceRuntime {
@@ -140,7 +141,10 @@ export async function voiceTranscribe(
   if (bot.org_id !== orgId) throw new Error("bot_not_found");
   const assigned = await rt.cloudModels?.();
   // On Casama Cloud the person cannot pick a dictation service.
-  const own = await rt.key(orgId, assigned ? STT_PROVIDERS : ordered(bot.voice.stt_provider, STT_PROVIDERS));
+  const own = await rt.key(
+    orgId,
+    assigned ? STT_PROVIDERS : ordered(bot.voice.stt_provider, STT_PROVIDERS),
+  );
   // No key of their own: the server's shared OpenRouter key, on the server's model (D-194).
   const shared = !own?.key && !!rt.platformOpenRouterKey;
   const k = shared ? { provider: "openrouter", key: rt.platformOpenRouterKey ?? null } : own;
@@ -194,7 +198,10 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
   const k =
     assigned && (google?.key || rt.serverGeminiKey)
       ? { provider: "google", key: google?.key ?? rt.serverGeminiKey ?? null }
-      : await rt.key(orgId, assigned ? TTS_PROVIDERS : ordered(bot.voice.tts_provider, TTS_PROVIDERS));
+      : await rt.key(
+          orgId,
+          assigned ? TTS_PROVIDERS : ordered(bot.voice.tts_provider, TTS_PROVIDERS),
+        );
   if (!k?.key)
     return {
       ok: false as const,

@@ -184,8 +184,7 @@ export function registerBotTemplateRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
       if (!isValidCron(r.schedule_cron))
         throw new ApiError(400, "invalid_cron", `Routine "${r.name}" has an invalid schedule.`);
     await enforceLimit(db, body.org_id, "max_bots");
-    const cloud =
-      deps.env.BILLING_ENABLED && Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY);
+    const cloud = deps.env.BILLING_ENABLED && Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY);
     const cloudKey = cloud || body.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
     const model = cloud
       ? (await getCloudModels(deps.db)).chat

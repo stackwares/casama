@@ -34,7 +34,13 @@ if (args[0] === "--svg") {
 const profile = mkdtempSync(join(tmpdir(), "casama-chrome-"));
 const chrome = spawn(
   CHROME,
-  ["--headless=new", "--remote-debugging-port=0", `--user-data-dir=${profile}`, "--hide-scrollbars", "about:blank"],
+  [
+    "--headless=new",
+    "--remote-debugging-port=0",
+    `--user-data-dir=${profile}`,
+    "--hide-scrollbars",
+    "about:blank",
+  ],
   { stdio: ["ignore", "ignore", "pipe"] },
 );
 const wsUrl = await new Promise((res) =>
@@ -44,7 +50,9 @@ const wsUrl = await new Promise((res) =>
   }),
 );
 const port = new URL(wsUrl).port;
-const target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: "PUT" })).json();
+const target = await (
+  await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: "PUT" })
+).json();
 const ws = new WebSocket(target.webSocketDebuggerUrl);
 await new Promise((r) => ws.addEventListener("open", r));
 let seq = 0;
@@ -60,19 +68,30 @@ const send = (method, params = {}) =>
   new Promise((res, rej) => {
     const id = ++seq;
     pending.set(id, (m) =>
-      m.error ? rej(new Error(`${method}: ${m.error.message} ${JSON.stringify(params).slice(0, 200)}`)) : res(m.result),
+      m.error
+        ? rej(new Error(`${method}: ${m.error.message} ${JSON.stringify(params).slice(0, 200)}`))
+        : res(m.result),
     );
     ws.send(JSON.stringify({ id, method, params }));
   });
 
-await send("Emulation.setDeviceMetricsOverride", { width: SIZE, height: SIZE, deviceScaleFactor: 1, mobile: false });
+await send("Emulation.setDeviceMetricsOverride", {
+  width: SIZE,
+  height: SIZE,
+  deviceScaleFactor: 1,
+  mobile: false,
+});
 await send("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
 const shot = async (file) =>
   writeFileSync(
     file,
     Buffer.from(
-      (await send("Page.captureScreenshot", { format: "png", clip: { x: 0, y: 0, width: SIZE, height: SIZE, scale: 1 } }))
-        .data,
+      (
+        await send("Page.captureScreenshot", {
+          format: "png",
+          clip: { x: 0, y: 0, width: SIZE, height: SIZE, scale: 1 },
+        })
+      ).data,
       "base64",
     ),
   );

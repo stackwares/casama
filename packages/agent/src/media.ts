@@ -288,10 +288,7 @@ export class GeminiVideoProvider implements MediaProvider {
   private readonly base: string;
   private readonly fetchImpl: typeof fetch;
   private readonly model: string;
-  constructor(
-    key: string,
-    opts: { base?: string; fetch?: typeof fetch; model?: string } = {},
-  ) {
+  constructor(key: string, opts: { base?: string; fetch?: typeof fetch; model?: string } = {}) {
     this.key = key;
     this.base = (opts.base ?? "https://generativelanguage.googleapis.com").replace(/\/$/, "");
     this.fetchImpl = opts.fetch ?? fetch;
@@ -302,7 +299,12 @@ export class GeminiVideoProvider implements MediaProvider {
     throw new Error("Images need an OpenRouter or fal.ai key in Model keys.");
   }
 
-  async generateVideo(input: { prompt: string; durationS?: number; model?: string; size?: "square" | "portrait" | "landscape" }) {
+  async generateVideo(input: {
+    prompt: string;
+    durationS?: number;
+    model?: string;
+    size?: "square" | "portrait" | "landscape";
+  }) {
     const model = input.model ?? this.model;
     const seconds = Math.min(15, Math.max(3, input.durationS ?? 5));
     const res = await this.fetchImpl(`${this.base}/v1beta/interactions`, {

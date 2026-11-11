@@ -368,7 +368,9 @@ describe("voice (Phase 6)", () => {
     expect(audio.headers.get("content-type")).toBe("audio/wav");
     const tts = mock.calls.findLast((c) => c.path.endsWith(":generateContent"));
     expect(tts?.headers["x-goog-api-key"]).toBe("gemini-voice-key");
-    expect(JSON.parse(Buffer.from(tts?.body ?? "{}", "latin1").toString("utf8")).generationConfig).toMatchObject({
+    expect(
+      JSON.parse(Buffer.from(tts?.body ?? "{}", "latin1").toString("utf8")).generationConfig,
+    ).toMatchObject({
       speechConfig: { voiceConfig: { voice: "Kore" } },
     });
   }, 60_000);
