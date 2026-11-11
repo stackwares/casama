@@ -25,8 +25,15 @@ jobs:
         with: { sdk: stable }
       - name: Postgres extensions
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-16-pgvector
+          # The runners' Azure apt mirror sometimes doesn't resolve: use Ubuntu's archive and retry.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            echo "http://archive.ubuntu.com/ubuntu/	priority:1" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+          for i in 1 2 3; do
+            sudo apt-get update && sudo apt-get install -y postgresql-16-pgvector && break
+            [ "$i" = 3 ] && exit 1
+            sleep 20
+          done
           curl -sL https://github.com/theory/pgtap/archive/refs/tags/v1.3.3.tar.gz | tar xz
           (cd pgtap-1.3.3 && make PG_CONFIG=$PG_BIN/pg_config && sudo make install PG_CONFIG=$PG_BIN/pg_config)
       - run: pnpm install --frozen-lockfile
