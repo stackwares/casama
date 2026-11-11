@@ -37,13 +37,30 @@ const available = new Set((process.env.EVAL_CAPABILITIES ?? "").split(",").filte
 async function token() {
   if (process.env.EVAL_TOKEN) return process.env.EVAL_TOKEN;
   const sb = process.env.SUPABASE_URL ?? "http://127.0.0.1:54321";
-  const r = await fetch(`${sb}/auth/v1/signup`, {
+  const anon = process.env.SUPABASE_ANON_KEY ?? "";
+  const service = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SERVICE_ROLE_KEY ?? "";
+  const email = `evals-${Date.now()}@example.com`;
+  const password = "evals-pw-123";
+  // Sign-ups need a confirmed email, so the evals user is made already confirmed.
+  if (!service)
+    throw new Error("set SUPABASE_SERVICE_ROLE_KEY (or EVAL_TOKEN) to create the evals user");
+  const created = await fetch(`${sb}/auth/v1/admin/users`, {
     method: "POST",
-    headers: { apikey: process.env.SUPABASE_ANON_KEY ?? "", "content-type": "application/json" },
-    body: JSON.stringify({ email: `evals-${Date.now()}@example.com`, password: "evals-pw-123" }),
+    headers: {
+      apikey: service,
+      authorization: `Bearer ${service}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ email, password, email_confirm: true }),
+  });
+  if (!created.ok) throw new Error(`creating the evals user failed: ${await created.text()}`);
+  const r = await fetch(`${sb}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { apikey: anon, "content-type": "application/json" },
+    body: JSON.stringify({ email, password }),
   });
   const j = (await r.json()) as { access_token?: string };
-  if (!j.access_token) throw new Error(`sign up failed: ${JSON.stringify(j)}`);
+  if (!j.access_token) throw new Error(`sign in failed: ${JSON.stringify(j)}`);
   return j.access_token;
 }
 

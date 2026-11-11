@@ -1,8 +1,8 @@
 # Voice and calls
 
 Talk to your bots instead of typing. Dictate messages, have replies read aloud, call a bot live,
-let a bot ring your phone when something needs you, and have a bot phone a business for you. Voice
-runs on your workspace's own provider keys.
+and let a bot ring your phone when something needs you. Voice runs on your workspace's own provider
+keys.
 
 ## Which keys you need
 
@@ -11,10 +11,9 @@ Add keys in **Settings** → **Model keys** → **Add key**.
 | Feature                      | Needs                                                                             |
 | ---------------------------- | --------------------------------------------------------------------------------- |
 | Dictation                    | An OpenAI or Deepgram key                                                          |
-| Read aloud                   | An ElevenLabs, OpenAI, Cartesia or Fish Audio key                                  |
-| Live calls                   | A Google AI (Gemini) key for Gemini Live, or an OpenAI key for OpenAI Realtime     |
+| Read aloud                   | A Google AI key (Gemini Flash-Lite), or an OpenAI, ElevenLabs, Cartesia or Fish Audio key |
+| Live calls                   | A Google AI (Gemini) key. OpenAI Realtime is used only when there is no Google key. Included on Casama Cloud, and on servers whose admin set a server-wide key |
 | Bot rings your phone         | A live-call key (Gemini or OpenAI), plus push set up on the server for iOS and Android |
-| Bot calls a business for you | A live-call key (Gemini or OpenAI) and the workspace's Twilio account              |
 | Wake word                    | No key: it runs on your device                                                     |
 
 Every minute, second or character of voice is recorded in [Usage](/guide/usage). The provider bills
@@ -26,7 +25,7 @@ your own account.
 2. Speak, then tap **Stop and transcribe**.
 3. The text lands in the message box. Edit it if you like, then send.
 
-Dictation uses OpenAI (`gpt-4o-mini-transcribe`) or Deepgram (`nova-3`).
+Dictation uses OpenAI (`gpt-4o-mini-transcribe`) or Deepgram (`nova-3`). Google's transcriber costs more once the transcript text is included, so it is not the default.
 
 ## Have a reply read aloud
 
@@ -36,7 +35,7 @@ replaying it doesn't call the provider again.
 ## Choose a bot's voice
 
 1. Open **Bot settings** → **Voice**.
-2. Pick a **Read-aloud provider**: ElevenLabs, OpenAI, Cartesia or Fish Audio.
+2. Pick a **Read-aloud provider**: Google, ElevenLabs, OpenAI, Cartesia or Fish Audio. Automatic uses Google when that key exists.
 3. Optionally enter a **Voice id** from that provider. Leave it empty for a default voice.
 4. Pick a **Dictation provider**: OpenAI or Deepgram.
 5. Tap **Save**.
@@ -45,16 +44,41 @@ replaying it doesn't call the provider again.
 
 ## Call a bot live
 
-Live calls use **Gemini Live** when the workspace has a Google AI key, and **OpenAI Realtime**
-otherwise. Gemini Live costs much less per minute (roughly $0.02 against $0.06 or more), so add a
-Google AI key under **Model keys** if you call bots often. The bot's voice on Gemini is one of
-Gemini's built-in voices (Kore by default).
+Live calls and phone calls use **Gemini Live** when the workspace has a Google AI key, and the
+server's own Google key when the workspace has none. **OpenAI Realtime** is used only when neither
+exists. The bot's voice on Gemini is one of Gemini's built-in voices (Kore by default).
 
 1. In a chat, tap **Start a voice call** (the phone icon in the header).
 2. Wait for **Live**, then talk. Use **Mute** and **Hang up** as on a phone call.
 
+If the workspace has no live-call key, the call screen says so, with **Get a free key from Google**
+(Google AI Studio) and **Add a Google AI key** (opens **Model keys** with Google picked). Only
+owners and admins can add keys.
+
+### The call screen
+
+The bot appears as its Casama cloud mascot, animated for the call. Bots without a mascot icon
+appear as the lavender Casama cloud.
+
+- While you talk, it listens: a soft smile, blinks, glances and a nod.
+- While it talks, its mouth moves, it bounces a little and its orb pulses. It grows slightly with
+  its voice.
+- It fades when you mute, and turns grey if the call drops.
+- On phones, calls play through the speaker. Tap the audio button (**Speaker**) to switch to the
+  earpiece (**Phone**). With Bluetooth or wired headphones connected, it lists them to pick from.
+- **Captions** shows the last few lines of the conversation under the orb. Turn them off for just
+  the orb; the choice is remembered on the device.
+- With reduced motion turned on in your system settings, the mascot holds still.
+
 What to know:
 
+- Before it uses a tool, the bot says so ("Let me check that"), so the call doesn't go quiet. A
+  tool that takes more than about 12 seconds hands its result to the chat, and the bot tells you.
+- Each tool shows as a card above the captions, in plain words with what it's about ("Searching
+  the web", "best time to repot a fern"). It spins while it runs, shows a check when it's done and
+  then folds away. Cards that take a while count the seconds.
+- When an action needs your OK, its card asks right there: tap **Allow** or **Not now** without
+  leaving the call. The bot hears your answer and carries on.
 - The bot keeps its persona and a small set of tools suited to talking: memory, knowledge, web
   search, notes to you, routines, watchers, tickets, usage and your device data. Each tool call runs
   with the bot's normal approvals. If an action needs your approval, the bot tells you, and you
@@ -73,9 +97,6 @@ What to know:
 - You can interrupt. When you start speaking, the bot stops talking and listens.
 - The call's transcript is saved to the conversation.
 - Screen tools, such as clicking around the bot's desktop, aren't offered during a call.
-- Tap **Avatar** to show an animated version of the bot's avatar. It breathes while listening and
-  moves while the bot speaks. It follows your reduced-motion setting, and the choice is remembered
-  on the device.
 
 ## Start a call with a wake word
 
@@ -120,50 +141,6 @@ If you self-host, phones need push credentials on the server:
 `APNS_VOIP_TOPIC` defaults to `ai.casama.app.voip`. Without these, desktop and web still ring
 through the banner while the app is open. See [Configuration](/self-hosting/configuration).
 
-## Let a bot call a business for you
-
-A bot can phone a business for you, for example to book a table or ask about an order. It uses your
-workspace's own Twilio account.
-
-### Set it up
-
-Admins connect Twilio once:
-
-1. Open **Settings** → **Workspace settings** → **Phone calls**.
-2. Enter the **Account SID**, **Auth token** and the number **Calls come from**.
-3. Optionally change **Calls per day** (default 10) and turn on **Allow calling personal numbers**.
-4. Tap **Save**. Casama checks the account before saving.
-
-### What happens on a call
-
-1. The bot asks to place the call, with the number and purpose. Placing a call is a high-risk
-   action, so under the default autonomy it always asks first.
-2. You get a notification when the call starts. Open it to see the live transcript.
-3. The bot introduces itself as an AI assistant calling on your behalf. It never pretends to be a
-   person.
-4. When it's done, the bot says goodbye and hangs up. It gets the full transcript and how the call
-   ended, and reports back in the chat.
-
-While the call is live you can:
-
-- **End call** to hang up right away.
-- **Take over** to have the call redirected to your own phone. Enter **Your phone number** in
-  international format, such as `+13125550123`, or leave it empty to use the one you saved before.
-
-### Call rules
-
-- Numbers must be in international (E.164) format.
-- Emergency and short numbers are never called.
-- Numbers on the server's deny list are refused. Casama Cloud keeps one.
-- Each workspace has a daily cap (default 10).
-- Business numbers only, by default. A number Twilio's lookup reports as personal is refused unless
-  an admin turned on **Allow calling personal numbers**. Lookup mostly covers US numbers, so numbers
-  of unknown type are allowed.
-- Recording is always off.
-- A call waits up to 20 minutes for the conversation to end.
-
-Each call's minutes, rounded up, are recorded in [Usage](/guide/usage). Twilio bills your account.
-
 ## Limits
 
 - Live calls run on Gemini Live or OpenAI Realtime; other realtime voice providers aren't
@@ -172,10 +149,8 @@ Each call's minutes, rounded up, are recorded in [Usage](/guide/usage). Twilio b
   cancellation depends on the device.
 - The wake word isn't available on iOS or on the web, and on Android it listens only while the app
   is open.
-- When a bot calls a business, you can follow the live transcript but can't listen to the audio yet.
-- Calls for you work only with your own Twilio account. Casama-provided phone numbers aren't
-  offered.
-- The avatar is a 2D animation of the bot's picture. A lip-synced 3D avatar isn't built.
+- Bots can't phone other numbers, such as a business, yet.
+- On OpenAI Realtime calls the mascot follows whether the bot is speaking, not how loud it is.
 - Provider connections follow each provider's public docs and have been tested against stand-ins,
   not yet against every live provider.
 

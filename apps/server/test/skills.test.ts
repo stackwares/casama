@@ -101,6 +101,10 @@ describe("catalog", () => {
     expect(cat.categories).toContain("work");
     const csv = cat.items.find((s: { id: string }) => s.id === "csv-cleanup");
     expect(csv.files).toEqual(["scripts/clean.py"]);
+    expect(csv.icon).toBe("sheet");
+    expect(csv.skill_md).toContain("name: csv-cleanup");
+    // Every bundled skill names a category the catalog lists.
+    for (const s of cat.items) expect(cat.categories).toContain(s.category);
     expect(
       (
         await h.request("/v1/skills/install", {

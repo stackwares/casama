@@ -14,29 +14,37 @@ void main() {
     await setSize(tester, const Size(1500, 1200));
     await tester.pumpWidget(harness(FakeBackend(), const SettingsScreen()));
     await tester.pumpAndSettle();
+    // You and Appearance on the left; Workspace and Connections on the right (D-176).
+    final you = tester.getTopLeft(find.text('You'));
     final workspace = tester.getTopLeft(find.text('Workspace'));
-    final appearance = tester.getTopLeft(find.text('Appearance'));
-    expect(appearance.dx, greaterThan(workspace.dx + 300));
-    expect(appearance.dy, workspace.dy);
+    expect(workspace.dx, greaterThan(you.dx + 300));
+    expect(workspace.dy, you.dy);
 
     await setSize(tester, const Size(700, 2400));
     await tester.pumpAndSettle();
-    expect(tester.getTopLeft(find.text('Appearance')).dx, tester.getTopLeft(find.text('Workspace')).dx);
-    expect(tester.getTopLeft(find.text('Appearance')).dy, greaterThan(tester.getTopLeft(find.text('Workspace')).dy));
+    expect(tester.getTopLeft(find.text('Workspace')).dx, tester.getTopLeft(find.text('You')).dx);
+    expect(tester.getTopLeft(find.text('Workspace')).dy, greaterThan(tester.getTopLeft(find.text('You')).dy));
   });
 
   testWidgets('on wide windows a settings page opens beside the settings list, the open row highlighted', (tester) async {
     await setSize(tester, const Size(1600, 1000));
     await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(FakeBackend())], child: const CasamaApp()));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('sidebar-nav-/settings')));
+    await tester.tap(find.byKey(const Key('sidebarMe')));
+    await tester.pumpAndSettle();
+    // Model keys sits under Connections, in the right-hand column (D-176).
+    await tester.ensureVisible(find.text('Model keys').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Model keys').first);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('settingsPane')), findsOneWidget);
     expect(find.byType(ModelKeysScreen), findsOneWidget);
     // Another row swaps the page beside the list.
-    await tester.tap(find.descendant(of: find.byKey(const Key('settingsPane')), matching: find.text('Skills')));
+    // The pane is one column, so Connections is further down its list.
+    final skills = find.descendant(of: find.byKey(const Key('settingsPane')), matching: find.text('Skills'));
+    await tester.scrollUntilVisible(skills, 200, scrollable: find.descendant(of: find.byKey(const Key('settingsPane')), matching: find.byType(Scrollable)).first);
+    await tester.pumpAndSettle();
+    await tester.tap(skills);
     await tester.pumpAndSettle();
     expect(find.byType(ModelKeysScreen), findsNothing);
     expect(find.byKey(const Key('settingsPane')), findsOneWidget);

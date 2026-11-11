@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { PLATFORM_OPENROUTER_CREDENTIAL_ID } from "@casama/agent";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { billingEnv, type FakeBilling, makeTestPki, startFakeBilling } from "./fake-billing.ts";
@@ -397,7 +398,7 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     ]);
     expect(usage.credits.map((c: { reason: string }) => c.reason)).toEqual(["usage", "grant"]);
 
-    // Spend the rest; the next run is refused before any model call.
+    // Spend the rest. A workspace's own key still runs. Casama's key does not (D-186).
     await h.handle.db.execute(
       sql`insert into public.usage_ledger (org_id, kind, quantity, cost_usd) values (${orgId}::uuid, 'computer_seconds', 9000, 1)`,
     );
@@ -439,8 +440,56 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
       await new Promise((r) => setTimeout(r, 200));
       run = await j(await h.request(`/v1/runs/${sent.run_id}`, { token: owner.token }));
     }
-    expect(run.status).toBe("failed");
-    expect(run.error?.code).toBe("out_of_credits");
+    expect(run.status).toBe("completed");
+    const listed = await j(
+      await h.request(`/v1/credentials?org_id=${orgId}`, { token: owner.token }),
+    );
+    expect(listed.items.at(-1)).toMatchObject({
+      id: PLATFORM_OPENROUTER_CREDENTIAL_ID,
+      label: "Casama Cloud",
+    });
+    expect(
+      (
+        await h.request(`/v1/credentials/${PLATFORM_OPENROUTER_CREDENTIAL_ID}`, {
+          method: "DELETE",
+          token: owner.token,
+        })
+      ).status,
+    ).toBe(403);
+    const cloudBot = await j(
+      await h.request("/v1/bots", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          org_id: orgId,
+          name: "Cloud",
+          model_policy: {
+            primary: { credential_id: PLATFORM_OPENROUTER_CREDENTIAL_ID, model: "meta/muse-ember" },
+          },
+        },
+      }),
+    );
+    const cloudConv = await j(
+      await h.request("/v1/conversations", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: cloudBot.id },
+      }),
+    );
+    const cloudSent = await j(
+      await h.request(`/v1/conversations/${cloudConv.id}/messages`, {
+        method: "POST",
+        token: owner.token,
+        json: { text: "hi" },
+      }),
+    );
+    let cloudRun: { status: string; error?: { code?: string } } = { status: "queued" };
+    for (let i = 0; i < 100 && !["failed", "completed"].includes(cloudRun.status); i++) {
+      await new Promise((r) => setTimeout(r, 200));
+      cloudRun = await j(await h.request(`/v1/runs/${cloudSent.run_id}`, { token: owner.token }));
+    }
+    expect(cloudRun.status).toBe("failed");
+    expect(cloudRun.error?.code).toBe("out_of_credits");
 
     // Metered plan: usage rows are sent to Dodo as usage events.
     await h.handle.db.execute(

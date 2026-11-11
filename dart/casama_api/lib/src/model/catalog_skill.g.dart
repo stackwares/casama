@@ -15,7 +15,11 @@ abstract class _$CatalogSkillCWProxy {
 
   CatalogSkill category(String category);
 
+  CatalogSkill icon(String? icon);
+
   CatalogSkill files(List<String> files);
+
+  CatalogSkill skillMd(String? skillMd);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -30,7 +34,9 @@ abstract class _$CatalogSkillCWProxy {
     String name,
     String description,
     String category,
+    String? icon,
     List<String> files,
+    String? skillMd,
   });
 }
 
@@ -55,7 +61,13 @@ class _$CatalogSkillCWProxyImpl implements _$CatalogSkillCWProxy {
   CatalogSkill category(String category) => call(category: category);
 
   @override
+  CatalogSkill icon(String? icon) => call(icon: icon);
+
+  @override
   CatalogSkill files(List<String> files) => call(files: files);
+
+  @override
+  CatalogSkill skillMd(String? skillMd) => call(skillMd: skillMd);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -71,7 +83,9 @@ class _$CatalogSkillCWProxyImpl implements _$CatalogSkillCWProxy {
     Object? name = const $CopyWithPlaceholder(),
     Object? description = const $CopyWithPlaceholder(),
     Object? category = const $CopyWithPlaceholder(),
+    Object? icon = const $CopyWithPlaceholder(),
     Object? files = const $CopyWithPlaceholder(),
+    Object? skillMd = const $CopyWithPlaceholder(),
   }) {
     return CatalogSkill(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -91,10 +105,18 @@ class _$CatalogSkillCWProxyImpl implements _$CatalogSkillCWProxy {
           ? _value.category
           // ignore: cast_nullable_to_non_nullable
           : category as String,
+      icon: icon == const $CopyWithPlaceholder()
+          ? _value.icon
+          // ignore: cast_nullable_to_non_nullable
+          : icon as String?,
       files: files == const $CopyWithPlaceholder() || files == null
           ? _value.files
           // ignore: cast_nullable_to_non_nullable
           : files as List<String>,
+      skillMd: skillMd == const $CopyWithPlaceholder()
+          ? _value.skillMd
+          // ignore: cast_nullable_to_non_nullable
+          : skillMd as String?,
     );
   }
 }
@@ -121,13 +143,15 @@ CatalogSkill _$CatalogSkillFromJson(Map<String, dynamic> json) =>
         name: $checkedConvert('name', (v) => v as String),
         description: $checkedConvert('description', (v) => v as String),
         category: $checkedConvert('category', (v) => v as String),
+        icon: $checkedConvert('icon', (v) => v as String?),
         files: $checkedConvert(
           'files',
           (v) => (v as List<dynamic>).map((e) => e as String).toList(),
         ),
+        skillMd: $checkedConvert('skill_md', (v) => v as String?),
       );
       return val;
-    });
+    }, fieldKeyMap: const {'skillMd': 'skill_md'});
 
 Map<String, dynamic> _$CatalogSkillToJson(CatalogSkill instance) =>
     <String, dynamic>{
@@ -135,5 +159,7 @@ Map<String, dynamic> _$CatalogSkillToJson(CatalogSkill instance) =>
       'name': instance.name,
       'description': instance.description,
       'category': instance.category,
+      'icon': ?instance.icon,
       'files': instance.files,
+      'skill_md': ?instance.skillMd,
     };

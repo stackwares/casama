@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:record/record.dart';
 
+import 'call_audio.dart';
 import 'gemini_live.dart';
 
 /// Records a short clip for dictation.
@@ -114,7 +116,8 @@ class _BytesSource extends StreamAudioSource {
     final s = start ?? 0;
     final e = end ?? bytes.length;
     // ignore: experimental_member_use
-    return StreamAudioResponse(sourceLength: bytes.length, contentLength: e - s, offset: s, stream: Stream.value(bytes.sublist(s, e)), contentType: 'audio/mpeg');
+    final wav = bytes.length >= 4 && bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46;
+    return StreamAudioResponse(sourceLength: bytes.length, contentLength: e - s, offset: s, stream: Stream.value(bytes.sublist(s, e)), contentType: wav ? 'audio/wav' : 'audio/mpeg');
   }
 }
 
@@ -149,12 +152,48 @@ abstract class VoiceCall {
   /// Tool calls the model wants run; answer each with [sendToolResult].
   Stream<CallToolRequest> get toolCalls;
   void sendToolResult(String callId, String output);
+
+  /// Tells the model something that happened in the app (the person approved an action), so it
+  /// can say so and carry on. Not shown as the person speaking.
+  void tellModel(String note);
   void setMuted(bool muted);
   Future<void> hangUp();
 
   /// The call's token counts as the provider reported them (Gemini Live), so usage can record the
   /// real cost; null when the provider doesn't report them.
   Map<String, int>? get usage;
+
+  /// How loud each side is right now, for the call screen; null when the call can't tell (the
+  /// screen then follows [speaking]).
+  CallLevels? get levels;
+
+  /// Where the call plays (speaker, earpiece, headset); null where there's no choice (desktop,
+  /// web).
+  CallAudioRoutes? get routes;
+}
+
+/// Loudness of a live call, 0 (silent) to 1 (loud), read once per frame by the call screen.
+abstract class CallLevels {
+  /// The person's microphone (0 while muted).
+  double get input;
+
+  /// The bot's voice, as it plays.
+  double get output;
+}
+
+/// Loudness of 16-bit little-endian PCM, mapped so normal speech lands around 0.4–0.9.
+double pcmLevel(Uint8List pcm, [int start = 0, int? end]) {
+  final to = math.min(end ?? pcm.length, pcm.length) & ~1;
+  if (to - start < 2) return 0;
+  final data = ByteData.sublistView(pcm);
+  var sum = 0.0;
+  var n = 0;
+  for (var i = start; i < to; i += 2) {
+    final s = data.getInt16(i, Endian.little) / 32768;
+    sum += s * s;
+    n++;
+  }
+  return (math.sqrt(math.sqrt(sum / n)) * 1.6).clamp(0.0, 1.0);
 }
 
 abstract class VoiceCallConnector {
@@ -288,12 +327,31 @@ class _RealtimeCall implements VoiceCall {
   Stream<CallToolRequest> get toolCalls => _ev.tools.stream;
   @override
   Map<String, int>? get usage => null;
+  @override
+  CallLevels? get levels => null;
+  @override
+  CallAudioRoutes? get routes => CallAudioRoutes.supported ? DeviceCallAudioRoutes() : null;
 
   @override
   void sendToolResult(String callId, String output) {
     _send({
       'type': 'conversation.item.create',
       'item': {'type': 'function_call_output', 'call_id': callId, 'output': output},
+    });
+    _send({'type': 'response.create'});
+  }
+
+  @override
+  void tellModel(String note) {
+    _send({
+      'type': 'conversation.item.create',
+      'item': {
+        'type': 'message',
+        'role': 'user',
+        'content': [
+          {'type': 'input_text', 'text': note},
+        ],
+      },
     });
     _send({'type': 'response.create'});
   }

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:casama_app/core/backend.dart';
 import 'package:casama_app/core/providers.dart';
 import 'package:casama_app/core/server_address.dart';
 import 'package:casama_app/features/auth/sign_in_screen.dart';
@@ -58,7 +59,9 @@ void main() {
   testWidgets('sign-in offers SSO and switching to a self-hosted server', (tester) async {
     await setSize(tester, const Size(800, 1200));
     SharedPreferences.setMockInitialValues({});
-    final backend = FakeBackend()..signedIn = false;
+    final backend = FakeBackend()
+      ..signedIn = false
+      ..authMethodsValue = const AuthMethods(sso: true);
     String? switchedTo;
     onChangeServer = (url) async => switchedTo = url;
     addTearDown(() => onChangeServer = null);

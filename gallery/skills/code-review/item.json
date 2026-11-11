@@ -1,0 +1,15 @@
+{
+  "name": "Code review",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "code"
+  ],
+  "category": "build",
+  "icon": "git-pull-request",
+  "featured": false,
+  "version": 1
+}

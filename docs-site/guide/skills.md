@@ -66,12 +66,18 @@ You can also teach a bot a skill by doing the task once while it watches. See
 
 ## Install from the catalog
 
-Casama ships a small catalog of ready-made skills: meeting-notes, weekly-report, research-brief,
-csv-cleanup (with a cleaning script), code-review and trip-planner.
+Casama ships a catalog of ready-made skills in seven categories: Work (meeting notes, meeting
+prep, weekly report, email drafts, inbox triage, decision memos, a daily digest, feature specs,
+PDF, Word and PowerPoint), Writing (proofreading, tone rewrites, social posts, article outlines),
+Research (research briefs, comparisons, fact checks, document summaries, a second pass over claims,
+competitive briefs), Data (CSV cleanup with a cleaning script, spreadsheet formulas, charts, Excel,
+an HTML dashboard), Money (budget reviews, invoice checks), Build (code review, bug reports, SQL,
+web app checks, systematic debugging) and Life (trips, meals, gifts, workouts, teaching a topic).
 
-1. Go to **Settings** → **Skills** and select **Skill catalog**.
-2. Search, or filter by category.
-3. Under **Install for**, choose **The whole workspace** or one bot, then select **Install**.
+1. Go to **Settings** → **Skills** and select **Skill catalog**. The catalog opens as its own page.
+2. Search, or filter by category. Select a skill to read its full instructions.
+3. Select **Install**, then choose **The whole workspace** or one bot. With no bots yet, it installs
+   for the whole workspace straight away. Installed skills show a check.
 
 Workspace owners and admins can install for the whole workspace. People who manage a bot can
 install for that bot.

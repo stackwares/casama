@@ -5,6 +5,7 @@ import {
   AdminOverview,
   AdminService,
   AdminUser,
+  CloudModels,
   ConnectionSettings,
   SetConnectionSettingsRequest,
   SetOrgLimitsRequest,
@@ -63,6 +64,24 @@ export const adminConnectionSettings = get(
   "How apps without their own sign-in connect (owner only)",
   ConnectionSettings,
 );
+
+export const adminCloudModels = get(
+  "adminCloudModels",
+  "/v1/admin/models",
+  "The models Casama Cloud runs (owner only)",
+  CloudModels,
+);
+
+export const setAdminCloudModels = createRoute({
+  operationId: "setAdminCloudModels",
+  method: "put",
+  path: "/v1/admin/models",
+  tags: ["admin"],
+  security,
+  summary: "Change the models Casama Cloud runs (owner only)",
+  request: { body: jsonBody(CloudModels) },
+  responses: { 200: jsonResponse("Updated", CloudModels), 401: e401, 403: e403 },
+});
 
 export const setAdminConnectionSettings = createRoute({
   operationId: "setAdminConnectionSettings",

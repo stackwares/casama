@@ -1,0 +1,13 @@
+{
+  "name": "Plum",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "purple"
+  ],
+  "featured": false,
+  "version": 1
+}

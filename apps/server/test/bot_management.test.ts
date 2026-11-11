@@ -1,5 +1,10 @@
 /** Bots that manage bots (D-100): limits, revisions with the acting bot, archive, folders. */
-import { registerAutonomyTools, registerBotTools, ToolRegistry } from "@casama/agent";
+import {
+  PLATFORM_OPENROUTER_CREDENTIAL_ID,
+  registerAutonomyTools,
+  registerBotTools,
+  ToolRegistry,
+} from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -47,7 +52,7 @@ beforeAll(async () => {
     insert into public.runs (org_id, bot_id, trigger, status, created_by)
     values (${orgId}, ${botId}, 'chat', 'running', ${owner.id}) returning id`;
   runId = run!.id;
-  registerBotTools(reg, { db: h.handle.db });
+  registerBotTools(reg, { db: h.handle.db, lockCloudModel: true });
   registerAutonomyTools(reg, { db: h.handle.db } as never);
 }, 60_000);
 afterAll(async () => h?.stop());
@@ -117,5 +122,18 @@ describe("bot tools", () => {
     );
     expect(archived.items[0]).toMatchObject({ name: "Scout", folder_id: expect.any(String) });
     expect(archived.items[0].archived_at).not.toBeNull();
+  });
+
+  it("refuses a model change on Casama's key", async () => {
+    await h.tdb.admin`
+      update public.bots set model_policy = ${JSON.stringify({
+        primary: { credential_id: PLATFORM_OPENROUTER_CREDENTIAL_ID, model: "meta/muse-ember" },
+      })}::text::jsonb where id = ${botId}`;
+    await expect(call("bots.update", { model: "anthropic/claude-opus-5.5" })).rejects.toThrow(
+      /own model key/,
+    );
+    const [kept] = await h.tdb.admin<{ model: string }[]>`
+      select model_policy #>> '{primary,model}' as model from public.bots where id = ${botId}`;
+    expect(kept?.model).toBe("meta/muse-ember");
   });
 });

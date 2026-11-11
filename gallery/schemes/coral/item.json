@@ -1,0 +1,14 @@
+{
+  "name": "Coral",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "warm",
+    "red"
+  ],
+  "featured": false,
+  "version": 1
+}

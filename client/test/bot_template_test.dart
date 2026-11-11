@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/features/bots/bot_template.dart';
-import 'package:casama_app/features/settings/settings_screen.dart';
+import 'package:casama_app/features/bots/bot_profile_screen.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -10,7 +10,11 @@ void main() {
   testWidgets('a bot is shared as a link, with memories only when ticked', (tester) async {
     await setSize(tester, const Size(1000, 3200));
     final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const BotSettingsScreen(botId: botId)));
+    await tester.pumpWidget(harness(backend, const BotProfileScreen(botId: botId)));
+    await tester.pumpAndSettle();
+    // Sharing as a template lives under Advanced, folded away until opened.
+    await tester.ensureVisible(find.byKey(const Key('advanced-bot.advanced')));
+    await tester.tap(find.byKey(const Key('advanced-bot.advanced')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('shareBot')));
     await tester.tap(find.byKey(const Key('shareBot')));

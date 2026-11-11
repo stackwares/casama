@@ -5,6 +5,7 @@ import { type Database, type JwtClaims, pgErrorCode, withUserSession } from "@ca
 import { lineDiff } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
+import { fetchGallerySkill } from "../../services/gallery.ts";
 import {
   GitHubReader,
   isText,
@@ -42,7 +43,11 @@ async function saveSkill(
   claims: JwtClaims,
   target: { orgId: string; botId: string | null; skillId?: string },
   bundle: SkillBundle,
-  source: { kind: "catalog" | "github"; ref: Record<string, unknown>; category: string | null },
+  source: {
+    kind: "catalog" | "github" | "gallery";
+    ref: Record<string, unknown>;
+    category: string | null;
+  },
 ): Promise<Row> {
   try {
     return await withUserSession(db, claims, async (tx) => {
@@ -119,7 +124,9 @@ export function registerSkillRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           name: s.name,
           description: s.description,
           category: s.category,
+          icon: s.icon,
           files: s.files.map((f) => f.path),
+          skill_md: s.skillMd,
         })),
       },
       200,
@@ -129,19 +136,23 @@ export function registerSkillRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.installCatalogSkill, async (c) => {
     const claims = claimsOf(c);
     const body = c.req.valid("json");
+    const target = { orgId: body.org_id, botId: body.bot_id ?? null };
+    if (body.gallery_id) {
+      const fetched = await fetchGallerySkill(deps.env, body.gallery_id);
+      const row = await saveSkill(db, claims, target, fetched.bundle, {
+        kind: "gallery",
+        ref: { id: body.gallery_id, sha256: fetched.sha256 },
+        category: fetched.category,
+      });
+      return c.json(out(row), 201);
+    }
     const skill = loadCatalog().skills.find((s) => s.id === body.catalog_id);
     if (!skill) throw new ApiError(404, "catalog_skill_not_found", "No such skill in the catalog");
-    const row = await saveSkill(
-      db,
-      claims,
-      { orgId: body.org_id, botId: body.bot_id ?? null },
-      skill,
-      {
-        kind: "catalog",
-        ref: { id: skill.id },
-        category: skill.category,
-      },
-    );
+    const row = await saveSkill(db, claims, target, skill, {
+      kind: "catalog",
+      ref: { id: skill.id },
+      category: skill.category,
+    });
     return c.json(out(row), 201);
   });
 

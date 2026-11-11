@@ -75,10 +75,12 @@ class FormSheet extends StatelessWidget {
               if (showCancel) ...[const SizedBox(height: AppSpace.xxs), SizedBox(height: 46, child: cancel)],
             ],
           )
-        : Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+        : OverflowBar(
+            spacing: AppSpace.xs,
+            alignment: MainAxisAlignment.end,
+            overflowAlignment: OverflowBarAlignment.end,
             children: [
-              if (showCancel) ...[cancel, const SizedBox(width: AppSpace.xs)],
+              if (showCancel) cancel,
               submit,
             ],
           );
@@ -299,7 +301,20 @@ class _TextPromptState extends State<_TextPrompt> {
   late final _c = TextEditingController(text: widget.initial);
 
   @override
+  void initState() {
+    super.initState();
+    // Typing through the controller (including a paste) has to enable the button. onChanged
+    // alone misses some of those updates.
+    _c.addListener(_onText);
+  }
+
+  void _onText() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
+    _c.removeListener(_onText);
     _c.dispose();
     super.dispose();
   }
@@ -327,7 +342,6 @@ class _TextPromptState extends State<_TextPrompt> {
             hintText: widget.hint,
             prefixIcon: widget.fieldIcon == null ? null : Icon(widget.fieldIcon, size: 20),
           ),
-          onChanged: (_) => setState(() {}),
           onSubmitted: (_) => _submit(),
         ),
       ],

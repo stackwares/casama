@@ -1,5 +1,6 @@
 import { ComputerService, computerRates, createSafeFetch } from "@casama/agent";
 import { contentKeys, createDb } from "@casama/db";
+import { defaultModelFor } from "@casama/domain";
 import { createLogger, initObservability, shutdownObservability } from "@casama/observability";
 import { LocalProvider, SupervisorProvider, unavailableProvider } from "@casama/sandbox";
 import { serve } from "@hono/node-server";
@@ -20,7 +21,7 @@ import {
   inlineOrFile,
 } from "./billing/index.ts";
 import { configureContentKeys } from "./content-keys.ts";
-import { loadEnv } from "./env.ts";
+import { loadEnv, modelOverrides } from "./env.ts";
 import { createPagesApp } from "./pages/app.ts";
 import { abuseControlsOn } from "./services/abuse.ts";
 import { disabledEmail, resendEmail, smtpEmail } from "./services/email.ts";
@@ -154,14 +155,18 @@ if (env.MODE === "api") {
       : undefined,
     pagesUrl: env.PAGES_URL,
     publicApiUrl: env.PUBLIC_API_URL,
+    phoneCalls: env.PHONE_CALLS,
     geminiLiveModel: env.GEMINI_LIVE_MODEL,
     livePrices: env.MODEL_PRICES_URL === "off" ? undefined : { url: env.MODEL_PRICES_URL },
     computerRates: env.COMPUTER_RATES,
     searxngUrl: env.SEARXNG_URL,
+    serverGeminiKey: env.GOOGLE_AI_API_KEY,
     auditForwarding: await import("@casama/ee")
       .then((m) => m.verifyLicense(env.CASAMA_LICENSE_KEY))
       .then((l) => !!l && l.expiresAt > new Date() && l.features.includes("audit_forwarding"))
       .catch(() => false),
+    platformOpenRouterKey: env.CLOUD_MODEL_UPSTREAM_KEY,
+    cloudLockedModel: defaultModelFor("openrouter", modelOverrides(env)),
     aiGateway: env.AI_GATEWAY_URL
       ? {
           url: env.AI_GATEWAY_URL,

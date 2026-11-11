@@ -10,6 +10,7 @@ import 'package:casama_app/core/router.dart';
 import 'package:casama_app/features/workspaces/join_flow.dart';
 import 'package:casama_app/features/workspaces/people_screen.dart';
 import 'package:casama_sdk/casama_sdk.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -145,6 +146,7 @@ void main() {
   });
 
   testWidgets('People: copy the standing link, ask first, get a code, reset', (tester) async {
+    SharedPreferences.setMockInitialValues({});
     await setSize(tester, const Size(900, 2400));
     final backend = FakeBackend();
     String? clipboard;
@@ -171,10 +173,6 @@ void main() {
     expect(backend.defaultApproval, isTrue);
     expect(find.text('Anyone with this link can ask to join. You approve them below.'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('makeInviteCode')));
-    await tester.pumpAndSettle();
-    expect(find.text('7F3Q-9XWD'), findsOneWidget);
-
     await tester.tap(find.byKey(const Key('resetInvite')));
     await tester.pumpAndSettle();
     expect(backend.defaultResets, 0, reason: 'resetting asks first');
@@ -182,9 +180,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.defaultResets, 1);
     expect(find.text('https://app.example.com/join/kjoin_default1abcdefghijk'), findsOneWidget);
+
+    // A code to type is under Advanced (D-182).
+    expect(find.byKey(const Key('makeInviteCode')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('advanced-workspace.people')));
+    await tester.tap(find.byKey(const Key('advanced-workspace.people')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('makeInviteCode')));
+    await tester.tap(find.byKey(const Key('makeInviteCode')));
+    await tester.pumpAndSettle();
+    expect(find.text('7F3Q-9XWD'), findsOneWidget);
   });
 
   testWidgets('People: email invites, requests, pending invites, domain', (tester) async {
+    SharedPreferences.setMockInitialValues({});
     await setSize(tester, const Size(900, 2600));
     final backend = FakeBackend()
       ..joinRequestList.add(JoinRequest.fromJson({
@@ -226,6 +235,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.revokedInvites, ['i1']);
 
+    // Joining by email domain is under Advanced (D-182).
+    await tester.ensureVisible(find.byKey(const Key('advanced-workspace.people')));
+    await tester.tap(find.byKey(const Key('advanced-workspace.people')));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('joinDomain')));
     expect(find.text('Anyone with a verified @acme.dev email can join'), findsOneWidget);
     await tester.tap(find.byKey(const Key('joinDomain')));

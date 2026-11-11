@@ -209,7 +209,9 @@ catalog(r'catalog'),
 @JsonValue(r'github')
 github(r'github'),
 @JsonValue(r'bot')
-bot(r'bot');
+bot(r'bot'),
+@JsonValue(r'gallery')
+gallery(r'gallery');
 
 const InstalledSkillSource_Enum(this.value);
 

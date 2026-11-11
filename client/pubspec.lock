@@ -90,7 +90,7 @@ packages:
     source: hosted
     version: "2.13.1"
   audio_session:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: audio_session
       sha256: f9e7711a0e24ca8b40f5d7ac374c3c6e55016f3157912badd18199cdbbca5c4d
@@ -1129,6 +1129,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  lottie:
+    dependency: "direct main"
+    description:
+      name: lottie
+      sha256: "3ce005da56c2ce38b97d2fe8ca812627d12aae3d13bb611f735c4a506cdf46b9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.8.2"
   lucide_icons_flutter:
     dependency: "direct main"
     description:
@@ -1281,6 +1289,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
+  passkeys:
+    dependency: "direct main"
+    description:
+      name: passkeys
+      sha256: "95bea8590e95a82173462a0eb6ca193c4f5d4a98981df1ee06c0029d637b3dd3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.24.1"
+  passkeys_android:
+    dependency: transitive
+    description:
+      name: passkeys_android
+      sha256: "2b070609a4278a07e653b4404f2cc2e525718c3fc19bd2b4dc52f09083f0705b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.15.0"
+  passkeys_darwin:
+    dependency: transitive
+    description:
+      name: passkeys_darwin
+      sha256: "83e4efcd1841f2031206cc9c9c5d30d6859e3624e1892c87fd100e97f612fb86"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.8"
+  passkeys_doctor:
+    dependency: transitive
+    description:
+      name: passkeys_doctor
+      sha256: "50af0fb53febdd988d874e60e1b10b06ea0eed496c3900994924804a1a3b1be8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.7.0"
   passkeys_platform_interface:
     dependency: transitive
     description:
@@ -1289,6 +1329,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
+  passkeys_web:
+    dependency: transitive
+    description:
+      name: passkeys_web
+      sha256: "4f024405d1e1af9e510b0062d2e602b3567b97a47833f0ac78d53e9f888301f2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.11.0"
+  passkeys_windows:
+    dependency: transitive
+    description:
+      name: passkeys_windows
+      sha256: "1b5baee872a9b3cc66fb41e43d5c5bd1d38b2ded0ab57a9fb9dd632acb047176"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.6"
   path:
     dependency: transitive
     description:

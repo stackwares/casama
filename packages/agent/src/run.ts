@@ -3,10 +3,17 @@ import type { Database } from "@casama/db";
 import {
   type ActionRule,
   APPROVAL_TTL_MS,
+  CLOUD_LOCKED_MODEL,
+  type CloudModelAssignment,
+  cloudRunPolicy,
   checkBudget,
+  cloudModelAllowed,
+  cloudModelDailyCap,
+  cloudOpenRouterCharge,
   describeActionRule,
   extractTarget,
   isCredentialChange,
+  lockCloudPolicy,
   needsApproval,
   parseMentions,
   RUN_DEFAULTS,
@@ -22,11 +29,15 @@ import { loadPerson, type PersonContext, savePersonFact } from "./about-you.ts";
 import { replyToChannel } from "./channels/service.ts";
 import type { ComputerService } from "./computers.ts";
 import { buildContext, offloadLargeResult } from "./context.ts";
-import type { CredentialResolver, ModelPolicy } from "./credentials.ts";
+import {
+  type CredentialResolver,
+  type ModelPolicy,
+  PLATFORM_OPENROUTER_CREDENTIAL_ID,
+} from "./credentials.ts";
 import type { Embedder } from "./embeddings.ts";
 import { DeltaCoalescer, EventBus } from "./events.ts";
 import { type FallbackOptions, withFallback } from "./gateway/fallback.ts";
-import { capabilitiesOf, costOf } from "./gateway/registry.ts";
+import { capabilitiesOf, cloudCallReserveUsd, costOf } from "./gateway/registry.ts";
 import {
   type ChatMessage,
   collect,
@@ -158,6 +169,18 @@ export interface RunDeps {
   notifications?: NotificationService;
   /** Durable wait for an approval decision (DBOS.recv in the worker; polling by default). */
   waitForApproval?: (approvalId: string, runId: string, timeoutMs: number) => Promise<void>;
+  /**
+   * Casama Cloud bills calls on its shared OpenRouter key (D-186). Off on a self-hosted server,
+   * which pays OpenRouter itself and does not charge credits.
+   */
+  billCloudModels?: boolean;
+  /** The one model Casama Cloud runs on its shared key. Defaults to Muse Ember. */
+  cloudLockedModel?: string;
+  /**
+   * Casama Cloud's live model assignment (D-188). Read on each run, so an admin change applies
+   * without a restart. Unset on a self-hosted server.
+   */
+  cloudModels?: () => Promise<CloudModelAssignment>;
   /** Guarded fetch for integration calls (private ranges blocked). */
   fetch?: typeof fetch;
   /** The API's device tunnel, for local MCP servers on users' computers (D-096). */
@@ -317,6 +340,16 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
   const log = deps.logger;
 
   const info = await step("load", () => loadRun(db, runId));
+  // A workspace with no key of its own still runs on Casama Cloud's shared model.
+  if (info && !info.policy.primary) {
+    const platform = deps.credentials.platformChoice();
+    if (platform) info.policy = { ...info.policy, primary: platform };
+  }
+  // Casama Cloud picks every model. A change in the admin console applies on the next run (D-188).
+  const assigned = deps.billCloudModels && deps.cloudModels ? await deps.cloudModels() : null;
+  const cloudLocked = assigned?.chat || deps.cloudLockedModel || CLOUD_LOCKED_MODEL;
+  if (info && deps.billCloudModels)
+    info.policy = assigned ? cloudRunPolicy(assigned) : lockCloudPolicy(info.policy, cloudLocked);
   if (!info) return { status: "missing" };
   if (TERMINAL.has(info.status)) return { status: info.status };
   const limits = {
@@ -348,6 +381,13 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     return redactorCache;
   };
   const bus = async () => new EventBus(db, await redactor());
+  let planPromise: Promise<string | null> | undefined;
+  const planOf = () =>
+    (planPromise ??= db
+      .execute<{ plan: string | null }>(
+        sql`select plan_code as plan from public.entitlements where org_id = ${info.orgId}::uuid order by created_at desc limit 1`,
+      )
+      .then((rows) => rows[0]?.plan ?? null));
   // A ChatGPT plan serves only its owner; one that can't be used is skipped when allowed.
   const skipped = new Set<string>();
   const chainFor = async (choices: Array<{ credential_id: string; model: string } | undefined>) => {
@@ -356,9 +396,24 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     for (const c of choices) {
       if (!c) continue;
       try {
-        out.push(
-          await deps.credentials.resolve(info.orgId, c, { actingUserId: info.actingUserId }),
-        );
+        const resolved = await deps.credentials.resolve(info.orgId, c, {
+          actingUserId: info.actingUserId,
+        });
+        if (
+          resolved.credentialId === PLATFORM_OPENROUTER_CREDENTIAL_ID &&
+          !cloudModelAllowed(
+            { billing: deps.billCloudModels === true, plan: await planOf(), locked: cloudLocked },
+            resolved.model,
+          )
+        ) {
+          const denied = new ModelCallError(
+            "That model isn't included on Casama's key. Add your own key to choose a model.",
+            { retryable: false, code: "cloud_model_not_allowed" },
+          );
+          if (out.length) continue;
+          throw denied;
+        }
+        out.push(resolved);
       } catch (err) {
         if (!(err instanceof ModelCallError) || !err.code?.startsWith("chatgpt_")) throw err;
         firstError ??= err;
@@ -382,7 +437,9 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
   };
 
   try {
-    const admitted = await step("admit", () => admit(db, info, bus));
+    const admitted = await step("admit", () =>
+      admit(db, info, bus, deps.billCloudModels === true, cloudLocked),
+    );
     if (!admitted.ok) {
       await step("reject", () => finishFailed(db, info, admitted, bus));
       return { status: "failed" };
@@ -606,7 +663,9 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     let untrusted = false;
 
     for (let i = 0; ; i++) {
-      const check = await step(`check-${i}`, () => checkRun(db, info, i, limits));
+      const check = await step(`check-${i}`, () =>
+        checkRun(db, info, i, limits, deps.billCloudModels === true, cloudLocked),
+      );
       if (check === "cancelled") {
         await step("cancel", () => finishCancelled(db, info, bus));
         return { status: "cancelled" };
@@ -1060,6 +1119,12 @@ export function failureMessage(code: string, detail: string): string {
     chatgpt_unavailable: "ChatGPT plan usage is unavailable right now. Try again in a few minutes.",
     chatgpt_forbidden: "ChatGPT refused this request.",
     chatgpt_unsupported_request: "ChatGPT refused a request Casama sent. This is a Casama bug.",
+    openrouter_key_limit:
+      "Casama's model key hit its daily limit. Try again tomorrow, or add your own key.",
+    cloud_model_not_allowed:
+      "That model isn't included on Casama's key. Add your own key to choose a model.",
+    cloud_daily_cap:
+      "This workspace reached its daily limit on Casama's models. It resets at midnight UTC, or add your own key.",
   };
   const redacted = detail
     .replace(/\b(sk|pk|rk|key|tok|ghp|gho|xox[abp])[-_][A-Za-z0-9_-]{8,}/gi, "[redacted]")
@@ -1299,14 +1364,22 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
   };
 }
 
-async function spend(db: Database, info: RunInfo) {
+async function spend(
+  db: Database,
+  info: RunInfo,
+  billCloudModels: boolean,
+  cloudLocked = CLOUD_LOCKED_MODEL,
+) {
   const [row] = await db.execute<{
     run_cost: string;
     bot_today: string;
     org_period: string;
     quota: string | null;
     limits: Record<string, unknown> | null;
+    plan_code: string | null;
     credits: string | null;
+    unbilled: string;
+    cloud_today: string;
     computer_seconds: string;
   }>(sql`
     select
@@ -1317,7 +1390,13 @@ async function spend(db: Database, info: RunInfo) {
         where org_id = ${info.orgId}::uuid and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') as org_period,
       (select max_cost_usd from public.quotas where org_id = ${info.orgId}::uuid and period = 'month') as quota,
       (select limits from public.entitlements where org_id = ${info.orgId}::uuid order by created_at desc limit 1) as limits,
+      (select plan_code from public.entitlements where org_id = ${info.orgId}::uuid order by created_at desc limit 1) as plan_code,
       (select balance_after from public.credit_ledger where org_id = ${info.orgId}::uuid order by seq desc limit 1) as credits,
+      (select coalesce(sum(cost_usd), 0) from public.usage_ledger
+        where org_id = ${info.orgId}::uuid and billable and billed_at is null) as unbilled,
+      (select coalesce(sum(cost_usd), 0) from public.usage_ledger
+        where org_id = ${info.orgId}::uuid and billable and kind in ('tokens_in', 'tokens_out')
+          and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') as cloud_today,
       (select coalesce(sum(quantity), 0) from public.usage_ledger
         where org_id = ${info.orgId}::uuid and kind = 'computer_seconds'
           and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') as computer_seconds`);
@@ -1327,6 +1406,23 @@ async function spend(db: Database, info: RunInfo) {
   const caps = [row?.quota == null ? null : Number(row.quota), num(limits.monthly_usd)].filter(
     (v): v is number => v != null,
   );
+  const primary = info.policy.primary;
+  const onPlatform = primary?.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
+  const gate = limits.credit_gate === true;
+  // A workspace's own key still runs with no credits. Casama's key does not (D-186).
+  if (
+    onPlatform &&
+    primary &&
+    !cloudModelAllowed(
+      { billing: billCloudModels, plan: row?.plan_code, locked: cloudLocked },
+      primary.model,
+    )
+  )
+    return {
+      ok: false as const,
+      code: "cloud_model_not_allowed" as const,
+      message: "That model isn't included on Casama's key. Add your own key to choose a model.",
+    };
   return checkBudget({
     runCost: Number(row?.run_cost ?? 0),
     perRunLimit: info.perRunLimit,
@@ -1334,7 +1430,11 @@ async function spend(db: Database, info: RunInfo) {
     dailyLimit: info.dailyLimit,
     orgPeriod: Number(row?.org_period ?? 0),
     quotaLimit: caps.length ? Math.min(...caps) : null,
-    credits: limits.credit_gate === true ? Number(row?.credits ?? 0) : null,
+    credits: onPlatform && gate ? Number(row?.credits ?? 0) : null,
+    unbilledUsd: onPlatform && gate ? Number(row?.unbilled ?? 0) : 0,
+    reserveUsd: onPlatform && gate && primary ? cloudCallReserveUsd(primary.model) : undefined,
+    cloudToday: onPlatform && billCloudModels ? Number(row?.cloud_today ?? 0) : 0,
+    cloudDailyCap: onPlatform && billCloudModels ? cloudModelDailyCap(row?.plan_code) : null,
     computerSeconds: Number(row?.computer_seconds ?? 0),
     computerHours: num(limits.computer_hours),
   });
@@ -1344,6 +1444,8 @@ async function admit(
   db: Database,
   info: RunInfo,
   bus: () => Promise<EventBus>,
+  billCloudModels: boolean,
+  cloudLocked = CLOUD_LOCKED_MODEL,
 ): Promise<StepOutcome> {
   if (!info.policy.primary)
     return {
@@ -1368,7 +1470,7 @@ async function admit(
       code: "workspace_suspended",
       message: "This workspace is suspended. Contact the instance owner.",
     };
-  const verdict = await spend(db, info);
+  const verdict = await spend(db, info, billCloudModels, cloudLocked);
   if (!verdict.ok) return verdict;
   await db.execute(
     sql`update public.runs set status = 'running', started_at = coalesce(started_at, now()),
@@ -1389,6 +1491,8 @@ async function checkRun(
   info: RunInfo,
   i: number,
   limits: { maxSteps: number; wallTimeMs: number },
+  billCloudModels: boolean,
+  cloudLocked = CLOUD_LOCKED_MODEL,
 ) {
   const [run] = await db.execute<{ cancel_requested_at: Date | null; started_at: Date | null }>(
     sql`select cancel_requested_at, started_at from public.runs where id = ${info.runId}::uuid`,
@@ -1407,12 +1511,19 @@ async function checkRun(
       message: "The run took longer than its time limit.",
     };
   }
-  const verdict = await spend(db, info);
+  const verdict = await spend(db, info, billCloudModels, cloudLocked);
   if (!verdict.ok) return verdict;
   return "ok" as const;
 }
 
 /** Records usage in the ledger and on the run, and emits running totals. */
+function onPlatformKey(chain: ResolvedModel[], model: string) {
+  return (
+    (chain.find((m) => m.model === model) ?? chain[0])?.credentialId ===
+    PLATFORM_OPENROUTER_CREDENTIAL_ID
+  );
+}
+
 async function recordUsage(
   db: Database,
   info: RunInfo,
@@ -1420,19 +1531,24 @@ async function recordUsage(
   usage: Usage,
   bus: EventBus,
   provider?: ProviderId,
+  billable = false,
 ) {
   // A ChatGPT plan pays for its own tokens: they are recorded at cost 0 (SPEC: Usage and billing).
   const plan = provider === "chatgpt";
-  // Output at its price; input gets the rest, so cached tokens are priced as cached (D-181).
+  // OpenRouter's own cost when the response has one; otherwise the price list (D-181, D-186).
+  const raw = plan ? 0 : (usage.providerCostUsd ?? costOf(model, usage, provider));
+  const total = plan ? 0 : billable ? cloudOpenRouterCharge(raw) : raw;
   const caps = capabilitiesOf(model, provider);
-  const total = plan ? 0 : costOf(model, usage, provider);
-  const costOut = plan ? 0 : (usage.outputTokens * caps.outputPrice) / 1_000_000;
-  const costIn = Math.max(0, total - costOut);
+  const tableOut = plan ? 0 : (usage.outputTokens * caps.outputPrice) / 1_000_000;
+  const scale = !plan && raw > 0 ? total / raw : 1;
+  const costOut = Math.min(tableOut * scale, total);
+  const costIn = total - costOut;
   const source = plan ? "chatgpt_plan" : "key";
+  const meta = JSON.stringify(billable ? { key: "server", provider_cost_usd: raw } : {});
   await db.execute(sql`
-    insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model, source) values
-      (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, 'tokens_in', ${usage.inputTokens}, ${costIn}, ${model}, ${source}),
-      (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, 'tokens_out', ${usage.outputTokens}, ${costOut}, ${model}, ${source})`);
+    insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model, source, billable, meta) values
+      (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, 'tokens_in', ${usage.inputTokens}, ${costIn}, ${model}, ${source}, ${billable}, ${meta}::jsonb),
+      (${info.orgId}::uuid, ${info.botId}::uuid, ${info.runId}::uuid, 'tokens_out', ${usage.outputTokens}, ${costOut}, ${model}, ${source}, ${billable}, ${meta}::jsonb)`);
   const [totals] = await db.execute<{
     tokens_in: string;
     tokens_out: string;
@@ -1636,7 +1752,15 @@ async function modelStep(
       usage,
       costUsd: costOf(model, usage, provider),
     });
-  await recordUsage(deps.db, info, model, usage, bus, provider);
+  await recordUsage(
+    deps.db,
+    info,
+    model,
+    usage,
+    bus,
+    provider,
+    deps.billCloudModels === true && onPlatformKey(chain, model),
+  );
   return { cancelled: false as const, text: redactor.text(text), toolCalls, messageId };
 }
 
@@ -1689,7 +1813,14 @@ async function toolStep(
               "This bot works on someone else's personal computer, which only they can use from their own chats.",
             );
         }
-        const h = await deps.computers.ensureRunning(row.id, emit);
+        const h = await deps.computers.ensureRunning(row.id, emit).catch((err: unknown) => {
+          if ((err as Error).message === "out_of_credits")
+            throw new ToolError(
+              "out_of_credits",
+              "The workspace is out of credits. Add credits or change plans in Billing.",
+            );
+          throw err;
+        });
         // Tell a personal computer which bot is acting, so its overlay can show it (D-066).
         const activity = {
           run_id: info.runId,
@@ -1892,7 +2023,15 @@ async function compact(
   });
   await bus.append(info.runId, "memory.written", { memory_id: id, kind: "episode" });
   const usedModel = r.model || chain[0]?.model || "unknown";
-  await recordUsage(db, info, usedModel, r.usage, bus, providerOf(r.provider, usedModel, chain));
+  await recordUsage(
+    db,
+    info,
+    usedModel,
+    r.usage,
+    bus,
+    providerOf(r.provider, usedModel, chain),
+    deps.billCloudModels === true && onPlatformKey(chain, usedModel),
+  );
   return summary;
 }
 
@@ -2125,7 +2264,15 @@ async function extractStep(
     });
     await bus.append(info.runId, "memory.written", { memory_id: id, kind: m.kind });
   }
-  await recordUsage(deps.db, info, r.model, r.usage, bus, providerOf(undefined, r.model, chain));
+  await recordUsage(
+    deps.db,
+    info,
+    r.model,
+    r.usage,
+    bus,
+    providerOf(undefined, r.model, chain),
+    deps.billCloudModels === true && onPlatformKey(chain, r.model),
+  );
   return r.memories.length;
 }
 
@@ -2165,6 +2312,7 @@ async function learnStep(
           out.usage,
           bus,
           providerOf(undefined, out.model || cheap.model, chain),
+          deps.billCloudModels === true && onPlatformKey(chain, out.model || cheap.model),
         );
         return out.text;
       },

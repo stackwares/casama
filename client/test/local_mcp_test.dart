@@ -41,6 +41,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pairComputer')));
     await tester.pumpAndSettle();
+    // Local tools are under Advanced (D-182).
+    await tester.scrollUntilVisible(find.byKey(const Key('advanced-companion')), 200);
+    await tester.tap(find.byKey(const Key('advanced-companion')));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.byKey(const Key('cap-mcp')), 200);
     await tester.tap(find.byKey(const Key('cap-mcp')));
     await tester.pumpAndSettle();
     expect(companion.started?.capabilities, {'mcp'});
@@ -90,6 +95,9 @@ void main() {
     ));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pairComputer')));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.byKey(const Key('advanced-companion')), 200);
+    await tester.tap(find.byKey(const Key('advanced-companion')));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.byKey(const Key('codingAgent-codex')), 200);
     expect(find.text('Claude Code'), findsOneWidget);

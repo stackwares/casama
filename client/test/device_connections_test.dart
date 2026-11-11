@@ -223,6 +223,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(collector.asked, [DeviceKind.calendar]);
     expect(backend.deviceSourcesSaved.values.single.kinds.keys, ['calendar']);
+    // How long it's kept and which bots read it are under Advanced (D-182).
+    await tester.tap(find.byKey(const Key('advanced-devices')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('grant-$botId-calendar')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('deviceKeep-calendar')));

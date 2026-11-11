@@ -244,6 +244,21 @@ redirect URI of the web client.
    secret.
 3. Add the values to `infra/compose/.env` and run `casama selfhost up`.
 
+## Passkeys
+
+People can sign in with a passkey (Face ID, a fingerprint or a screen lock) once they add one in
+Settings → Passkeys. On your own server this works in the browser, under your domain. The App
+Store and Google Play apps are tied to `casama.ai`, so they hide passkeys when connected to
+another server.
+
+| Name                 | Default               | What it does                                                                            |
+| -------------------- | --------------------- | --------------------------------------------------------------------------------------- |
+| `PASSKEYS_ENABLED`   | `false`               | `true` turns on passkeys.                                                               |
+| `PASSKEY_RP_ID`      | (empty)               | Your domain without `https://`, for example `casama.example.com`. Required when on.     |
+| `PASSKEY_RP_ORIGINS` | `CASAMA_PUBLIC_URL`   | Comma-separated addresses the web app is served from, if more than the public address. |
+
+A passkey belongs to its domain. Changing `PASSKEY_RP_ID` later means everyone adds theirs again.
+
 iPhone and Mac use Apple's system sheet, so they need `ai.casama.app` in the client id list.
 Android, Windows, Linux and the web open the browser, which is what the secret is for. Keep
 `casama://app/login-callback` in `ADDITIONAL_REDIRECT_URLS`. If the web app is served from another
@@ -360,9 +375,11 @@ link-local (cloud metadata), CGNAT, multicast and reserved addresses for compute
 
 ## Voice and phone calls
 
-Phone calls through a workspace's own Twilio account need a public `https://` address, because
-Twilio calls back to `PUBLIC_API_URL` (Compose sets it to `CASAMA_PUBLIC_URL`). See
-[Voice](/guide/voice).
+Bots phoning other numbers through a workspace's own Twilio account is built but turned off for
+now. To try it, set `PHONE_CALLS=true` on the server (bots get the `voice.call` tool) and build the
+app with `--dart-define=PHONE_CALLS=true` (admins see **Workspace settings** → **Phone calls**).
+It needs a public `https://` address, because Twilio calls back to `PUBLIC_API_URL` (Compose sets
+it to `CASAMA_PUBLIC_URL`).
 
 To ring iPhones for calls through PushKit, the worker needs an APNs token key for the app's bundle:
 
@@ -391,6 +408,7 @@ the in-app inbox still shows every notification.
 | `COMPOSIO_API_KEY`            | (empty)   | A server-wide Composio key that enables Composio's managed sign-in for inbox apps such as Gmail.                                                                |
 | `SEARXNG_URL`                 | (empty)   | A SearXNG instance for web search in workspaces without a Brave Search or Tavily key. Free: `./install.sh --search` runs one (`http://searxng:8080`). Its settings must allow JSON results. |
 | `UNSPLASH_ACCESS_KEY`         | (empty)   | Wallpaper photo search in Appearance. Without it, the app offers its own patterns and photos.                                                                   |
+| `GALLERY_URL`                 | `https://gallery.casama.ai` | The open gallery of themes, color schemes, wallpapers and skills. Set to `off` to turn it off; a fork can point here instead. When it can't be reached, the built-in looks and skills stay. |
 
 Register `https://casama.example.com/oauth/callback` as the redirect URI in each OAuth app. See
 [Connections](/guide/connections).
@@ -536,7 +554,8 @@ pull` refuses to overwrite a changed file, so commit it on a local branch or re-
 | `CONTENT_KMS_ENDPOINT`     | (AWS's)             | A custom KMS endpoint, for example a VPC endpoint.                                            |
 | `APNS_VOIP_TOPIC`          | `ai.casama.app.voip` | The app's VoIP push topic.                                                                  |
 | `MODEL_PRICES_URL`         | OpenRouter's model list | Where the worker reads model prices once a day, for the cost shown on runs and budgets. `off` uses only the built-in table. |
-| `GEMINI_LIVE_MODEL`        | `gemini-3.8-live`   | The Gemini Live model for live and phone calls (used when a workspace has a Google AI key).   |
+| `GEMINI_LIVE_MODEL`        | `gemini-3.8-live`   | The Gemini Live model for live calls (used when a workspace has a Google AI key).   |
+| `GOOGLE_AI_API_KEY`        | (empty)             | A server-wide Google AI key: live calls in workspaces without a Gemini or OpenAI key of their own use it. You pay Google for those calls. With `BILLING_ENABLED` they're paid from the workspace's credits. |
 
 **Supervisor:**
 

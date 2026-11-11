@@ -28,7 +28,11 @@ class CatalogSkill {
 
     required  this.category,
 
+     this.icon,
+
     required  this.files,
+
+     this.skillMd,
   });
 
   @JsonKey(
@@ -79,6 +83,19 @@ class CatalogSkill {
 
 
 
+      /// A Lucide icon name (kebab-case); apps fall back to the category's icon
+  @JsonKey(
+    
+    name: r'icon',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? icon;
+
+
+
   @JsonKey(
     
     name: r'files',
@@ -91,6 +108,19 @@ class CatalogSkill {
 
 
 
+      /// The raw SKILL.md, for a preview
+  @JsonKey(
+    
+    name: r'skill_md',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? skillMd;
+
+
+
 
 
     @override
@@ -99,7 +129,9 @@ class CatalogSkill {
       other.name == name &&
       other.description == description &&
       other.category == category &&
-      other.files == files;
+      other.icon == icon &&
+      other.files == files &&
+      other.skillMd == skillMd;
 
     @override
     int get hashCode =>
@@ -107,7 +139,9 @@ class CatalogSkill {
         name.hashCode +
         description.hashCode +
         category.hashCode +
-        files.hashCode;
+        (icon == null ? 0 : icon.hashCode) +
+        files.hashCode +
+        skillMd.hashCode;
 
   factory CatalogSkill.fromJson(Map<String, dynamic> json) => _$CatalogSkillFromJson(json);
 

@@ -15,6 +15,7 @@ import * as checkins from "./checkins.ts";
 import * as computers from "./computers.ts";
 import * as deviceData from "./device-data.ts";
 import * as encryption from "./encryption.ts";
+import * as gallery from "./gallery.ts";
 import * as knowledge from "./knowledge.ts";
 import * as links from "./links.ts";
 import * as local from "./local.ts";
@@ -62,6 +63,7 @@ export const routes = {
   ...botSharing,
   ...channels,
   ...encryption,
+  ...gallery,
   ...telephony,
   ...payments,
   ...links,
@@ -96,6 +98,7 @@ export {
   computers,
   deviceData,
   encryption,
+  gallery,
   knowledge,
   links,
   local,

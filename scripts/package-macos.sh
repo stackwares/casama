@@ -7,17 +7,23 @@
 set -euo pipefail
 cd "$(dirname "$0")/../client"
 version=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
-flutter build macos --release --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://cloud.casama.ai}" --dart-define-from-file=config/firebase.json
+# A signed build carries the passkey entitlement (added below), so the app offers passkeys (D-184).
+signed=()
+[[ -n "${SIGN_IDENTITY:-}" ]] && signed=(--dart-define=CASAMA_SIGNED_MAC=true)
+flutter build macos --release --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://cloud.casama.ai}" --dart-define-from-file=config/firebase.json "${signed[@]}"
 app="build/macos/Build/Products/Release/casama_app.app"
 out="../dist/Casama-$version-macos.dmg"
 mkdir -p ../dist
 if [[ -n "${SIGN_IDENTITY:-}" ]]; then
-  # Sign in with Apple is added only on this signed build. Release.entitlements is also what an
-  # unsigned local build is signed with, and this entitlement keeps those builds from launching.
+  # Sign in with Apple and passkeys (associated domains) are added only on this signed build.
+  # Release.entitlements is also what an unsigned local build is signed with, and these
+  # entitlements keep those builds from launching.
   entitlements=$(mktemp)
   cp macos/Runner/Release.entitlements "$entitlements"
   /usr/libexec/PlistBuddy -c "Add :com.apple.developer.applesignin array" "$entitlements"
   /usr/libexec/PlistBuddy -c "Add :com.apple.developer.applesignin:0 string Default" "$entitlements"
+  /usr/libexec/PlistBuddy -c "Add :com.apple.developer.associated-domains array" "$entitlements"
+  /usr/libexec/PlistBuddy -c "Add :com.apple.developer.associated-domains:0 string webcredentials:casama.ai" "$entitlements"
   codesign --deep --force --options runtime --timestamp --entitlements "$entitlements" \
     --sign "$SIGN_IDENTITY" "$app"
   rm -f "$entitlements"

@@ -29,11 +29,11 @@
   "usePasswordInstead": "Use a password instead",
   "checkInboxTitle": "Check your inbox",
   "checkInboxBody": "We sent a sign-in link and a 6-digit code to {email}. Tap the link, or type the code here.",
-  "@checkInboxBody": { "placeholders": { "email": { "type": "String" } } },
+  "@checkInboxBody": {"placeholders": {"email": {"type": "String"}}},
   "emailCodeLabel": "6-digit code",
   "resendLink": "Send again",
   "resendLinkIn": "Send again in {seconds}s",
-  "@resendLinkIn": { "placeholders": { "seconds": { "type": "int" } } },
+  "@resendLinkIn": {"placeholders": {"seconds": {"type": "int"}}},
   "useDifferentEmail": "Use a different email",
   "authWrongPassword": "That email and password don't match. Try again, or sign in with an email link instead.",
   "authEmailNotConfirmed": "Confirm your email first: open the link we sent you.",
@@ -59,24 +59,9 @@
   "baseUrl": "Base URL",
   "testKey": "Test key",
   "keyOk": "Key works ({model}, {ms} ms)",
-  "@keyOk": {
-    "placeholders": {
-      "model": {
-        "type": "String"
-      },
-      "ms": {
-        "type": "int"
-      }
-    }
-  },
+  "@keyOk": {"placeholders": {"model": {"type": "String"}, "ms": {"type": "int"}}},
   "keyFailed": "Key test failed: {error}",
-  "@keyFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
+  "@keyFailed": {"placeholders": {"error": {"type": "String"}}},
   "createFirstBot": "Create your first bot",
   "botName": "Bot name",
   "model": "Model",
@@ -86,6 +71,12 @@
   "navBots": "Bots",
   "navComputer": "Computer",
   "navSettings": "Settings",
+  "navChats": "Chats",
+  "navTasks": "Tasks",
+  "settingsYouSection": "You",
+  "settingsConnectionsSection": "Connections",
+  "advanced": "Advanced",
+  "settingsAdvancedSummary": "Secrets, computers, devices, bot steps",
   "bots": "Bots",
   "newBot": "New bot",
   "noBots": "No bots yet",
@@ -94,83 +85,32 @@
   "botStatusWaiting": "Waiting for you",
   "botStatusDisabled": "Disabled",
   "costToday": "{cost} today",
-  "@costToday": {
-    "placeholders": {
-      "cost": {
-        "type": "String"
-      }
-    }
-  },
+  "@costToday": {"placeholders": {"cost": {"type": "String"}}},
   "selectBot": "Select a bot to chat",
   "newChat": "New chat",
   "conversations": "Conversations",
   "messageHint": "Message {bot}",
-  "@messageHint": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      }
-    }
-  },
+  "@messageHint": {"placeholders": {"bot": {"type": "String"}}},
   "send": "Send",
   "stop": "Stop",
   "thinking": "Thinking…",
   "runFailed": "{message}",
-  "@runFailed": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
+  "@runFailed": {"placeholders": {"message": {"type": "String"}}},
   "runCancelled": "Stopped.",
   "emptyChat": "Say hello to {bot}.",
-  "@emptyChat": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      }
-    }
-  },
+  "@emptyChat": {"placeholders": {"bot": {"type": "String"}}},
   "toolRunning": "Running",
   "toolFailedLabel": "Failed",
   "toolOutput": "Output",
   "remembered": "Remembered something",
   "skillLoaded": "Loaded skill {name}",
-  "@skillLoaded": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@skillLoaded": {"placeholders": {"name": {"type": "String"}}},
   "checkpointSaved": "Saved checkpoint: {label}",
-  "@checkpointSaved": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
+  "@checkpointSaved": {"placeholders": {"label": {"type": "String"}}},
   "computerState": "Computer {state}",
-  "@computerState": {
-    "placeholders": {
-      "state": {
-        "type": "String"
-      }
-    }
-  },
+  "@computerState": {"placeholders": {"state": {"type": "String"}}},
   "runCost": "{cost} · {tokens} tokens",
-  "@runCost": {
-    "placeholders": {
-      "cost": {
-        "type": "String"
-      },
-      "tokens": {
-        "type": "int"
-      }
-    }
-  },
+  "@runCost": {"placeholders": {"cost": {"type": "String"}, "tokens": {"type": "int"}}},
   "activity": "Activity",
   "timelineTitle": "Run timeline",
   "allEvents": "All",
@@ -214,20 +154,29 @@
   "workspace": "Workspace",
   "switchWorkspace": "Switch workspace",
   "modelKeys": "Model keys",
+  "moreProviders": "More providers",
+  "integrationsAdvancedSummary": "Composio, Pipedream, custom servers",
+  "toolPermissions": "Tool permissions",
+  "devicesAdvancedSummary": "How long it's kept, private models, bots with access",
+  "companionAdvancedSummary": "Commands, local tools (MCP), coding agents",
   "noKeys": "No model keys yet.",
   "addKey": "Add key",
   "usage": "Usage",
   "language": "Language",
   "inviteMember": "Invite a member",
   "inviteSent": "Invite sent to {email}.",
-  "@inviteSent": {
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
+  "@inviteSent": {"placeholders": {"email": {"type": "String"}}},
   "botSettings": "Bot settings",
+  "botProfile": "Bot profile",
+  "botAdvancedSummary": "Chat apps, links, rules, watchers, plugins, activity",
+  "botActivityRow": "Every run, step by step",
+  "createBotAdvancedSummary": "Model key and model",
+  "botProfileSection": "Profile",
+  "botBrain": "Brain",
+  "botAbilities": "Abilities",
+  "botSchedule": "Schedule",
+  "botAdvanced": "Advanced",
+  "chatComputerLive": "Working on its computer",
   "autonomy": "Autonomy",
   "autonomyAskAlways": "Ask before acting",
   "autonomyAskRisky": "Ask for risky actions",
@@ -235,29 +184,11 @@
   "saved": "Saved.",
   "justNow": "just now",
   "minutesAgo": "{n, plural, =1{1 minute ago} other{{n} minutes ago}}",
-  "@minutesAgo": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
+  "@minutesAgo": {"placeholders": {"n": {"type": "int"}}},
   "hoursAgo": "{n, plural, =1{1 hour ago} other{{n} hours ago}}",
-  "@hoursAgo": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
+  "@hoursAgo": {"placeholders": {"n": {"type": "int"}}},
   "daysAgo": "{n, plural, =1{yesterday} other{{n} days ago}}",
-  "@daysAgo": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
+  "@daysAgo": {"placeholders": {"n": {"type": "int"}}},
   "aBot": "A bot",
   "addIntegration": "Add integration",
   "addSecret": "Add secret",
@@ -280,21 +211,9 @@
   "recommendedModels": "Recommended",
   "allModels": "All models",
   "useCustomModel": "Use \"{id}\"",
-  "@useCustomModel": {
-    "placeholders": {
-      "id": {
-        "type": "String"
-      }
-    }
-  },
+  "@useCustomModel": {"placeholders": {"id": {"type": "String"}}},
   "modelListFallback": "Showing suggested models. {reason} You can still type any model id.",
-  "@modelListFallback": {
-    "placeholders": {
-      "reason": {
-        "type": "String"
-      }
-    }
-  },
+  "@modelListFallback": {"placeholders": {"reason": {"type": "String"}}},
   "noModelsFound": "No models match.",
   "addModelKeyFirst": "Add a model key first. Your bot uses it to think; it's stored encrypted and never shown again.",
   "botIntegrations": "Integrations for this bot",
@@ -338,6 +257,42 @@
   "routineStarted": "Routine started",
   "routineWebhook": "On webhook",
   "routines": "Routines",
+  "routineAdvancedSummary": "GitHub and webhook triggers, cron, timezone",
+  "routineRepeatDaily": "Every day",
+  "routineRepeatWeekdays": "Weekdays",
+  "routineRepeatWeekly": "Every week",
+  "routineDay": "Day",
+  "routineTimesIn": "Times are in {timezone}",
+  "@routineTimesIn": {"placeholders": {"timezone": {"type": "String"}}},
+  "routineCustomSchedule": "Custom: {schedule}",
+  "@routineCustomSchedule": {"placeholders": {"schedule": {"type": "String"}}},
+  "routineOtherTriggers": "Other triggers",
+  "cronEveryMinutes": "{n, plural, =1{Every minute} other{Every {n} minutes}}",
+  "@cronEveryMinutes": {"placeholders": {"n": {"type": "int"}}},
+  "cronEveryHours": "{n, plural, =1{Every hour} other{Every {n} hours}}",
+  "@cronEveryHours": {"placeholders": {"n": {"type": "int"}}},
+  "cronHourlyAt": "Every hour at :{minute}",
+  "@cronHourlyAt": {"placeholders": {"minute": {"type": "String"}}},
+  "cronDailyAt": "Every day at {time}",
+  "@cronDailyAt": {"placeholders": {"time": {"type": "String"}}},
+  "cronWeekdaysAt": "Weekdays at {time}",
+  "@cronWeekdaysAt": {"placeholders": {"time": {"type": "String"}}},
+  "cronWeekendsAt": "Weekends at {time}",
+  "@cronWeekendsAt": {"placeholders": {"time": {"type": "String"}}},
+  "cronDaysAt": "{days} at {time}",
+  "@cronDaysAt": {"placeholders": {"days": {"type": "String"}, "time": {"type": "String"}}},
+  "cronMonthlyAt": "Day {day} of every month at {time}",
+  "@cronMonthlyAt": {"placeholders": {"day": {"type": "int"}, "time": {"type": "String"}}},
+  "cronAnd": "{items} and {last}",
+  "@cronAnd": {"placeholders": {"items": {"type": "String"}, "last": {"type": "String"}}},
+  "cronDays": "{day, select, sun{Sundays} mon{Mondays} tue{Tuesdays} wed{Wednesdays} thu{Thursdays} fri{Fridays} sat{Saturdays} other{{day}}}",
+  "@cronDays": {"placeholders": {"day": {"type": "String"}}},
+  "cronDay": "{day, select, sun{Sunday} mon{Monday} tue{Tuesday} wed{Wednesday} thu{Thursday} fri{Friday} sat{Saturday} other{{day}}}",
+  "@cronDay": {"placeholders": {"day": {"type": "String"}}},
+  "computerAdvancedTabsShow": "Show terminal and checkpoints",
+  "computerAdvancedTabsHide": "Hide terminal and checkpoints",
+  "headlessScreenNoteSettings": "This computer has no desktop, so this shows its browser (blank until the bot opens a page). To watch and control apps live, switch it to a desktop in computer settings.",
+  "openComputerSettings": "Open computer settings",
   "runNow": "Run now",
   "secretName": "Name",
   "secretNameHelp": "Uppercase, for example GITHUB_TOKEN",
@@ -362,102 +317,25 @@
   "webhookShownOnce": "Copy the signing secret now. It is shown only once.",
   "webhookUrl": "URL",
   "approvalsCount": "Approvals ({n})",
-  "@approvalsCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
+  "@approvalsCount": {"placeholders": {"n": {"type": "int"}}},
   "botWantsTo": "{bot}: {summary}",
-  "@botWantsTo": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      },
-      "summary": {
-        "type": "String"
-      }
-    }
-  },
+  "@botWantsTo": {"placeholders": {"bot": {"type": "String"}, "summary": {"type": "String"}}},
   "integrationFailed": "Connection failed: {error}",
-  "@integrationFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
+  "@integrationFailed": {"placeholders": {"error": {"type": "String"}}},
   "integrationOk": "{n, plural, =1{Connected, 1 tool} other{Connected, {n} tools}}",
-  "@integrationOk": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "needsApprovalFor": "{bot} needs your approval to use {tool}",
-  "@needsApprovalFor": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      },
-      "tool": {
-        "type": "String"
-      }
-    }
-  },
+  "@integrationOk": {"placeholders": {"n": {"type": "int"}}},
   "nextRun": "Next: {when}",
-  "@nextRun": {
-    "placeholders": {
-      "when": {
-        "type": "String"
-      }
-    }
-  },
+  "@nextRun": {"placeholders": {"when": {"type": "String"}}},
   "onlySentTo": "Only sent to {hosts}",
-  "@onlySentTo": {
-    "placeholders": {
-      "hosts": {
-        "type": "String"
-      }
-    }
-  },
+  "@onlySentTo": {"placeholders": {"hosts": {"type": "String"}}},
   "requestedAgo": "requested {when}",
-  "@requestedAgo": {
-    "placeholders": {
-      "when": {
-        "type": "String"
-      }
-    }
-  },
+  "@requestedAgo": {"placeholders": {"when": {"type": "String"}}},
   "routineSchedule": "{cron} ({timezone})",
-  "@routineSchedule": {
-    "placeholders": {
-      "cron": {
-        "type": "String"
-      },
-      "timezone": {
-        "type": "String"
-      }
-    }
-  },
+  "@routineSchedule": {"placeholders": {"cron": {"type": "String"}, "timezone": {"type": "String"}}},
   "templateIncludesRoutines": "Includes routines: {names}.",
-  "@templateIncludesRoutines": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
+  "@templateIncludesRoutines": {"placeholders": {"names": {"type": "String"}}},
   "toolCount": "{n, plural, =1{1 tool} other{{n} tools}}",
-  "@toolCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
+  "@toolCount": {"placeholders": {"n": {"type": "int"}}},
   "weekdaysAt9": "Weekdays at 9:00",
   "botBackInControl": "The bot is back in control",
   "botComputer": "Computer",
@@ -506,45 +384,15 @@
   "withDesktopHelp": "Adds a screen you can watch live; uses more memory",
   "youAreInControl": "You're in control",
   "botAsksForHelp": "The bot asks: {reason}",
-  "@botAsksForHelp": {
-    "placeholders": {
-      "reason": {
-        "type": "String"
-      }
-    }
-  },
+  "@botAsksForHelp": {"placeholders": {"reason": {"type": "String"}}},
   "botNeedsHelp": "{bot} needs your help",
-  "@botNeedsHelp": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      }
-    }
-  },
+  "@botNeedsHelp": {"placeholders": {"bot": {"type": "String"}}},
   "deleteComputerConfirm": "Delete {name}? Its files, snapshots and checkpoints are deleted too.",
-  "@deleteComputerConfirm": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@deleteComputerConfirm": {"placeholders": {"name": {"type": "String"}}},
   "latencyMs": "{ms} ms",
-  "@latencyMs": {
-    "placeholders": {
-      "ms": {
-        "type": "int"
-      }
-    }
-  },
+  "@latencyMs": {"placeholders": {"ms": {"type": "int"}}},
   "privateComputerOf": "{bot}'s computer",
-  "@privateComputerOf": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      }
-    }
-  },
+  "@privateComputerOf": {"placeholders": {"bot": {"type": "String"}}},
   "micPermissionNeeded": "Allow microphone access to dictate.",
   "startCall": "Start a voice call",
   "stopDictation": "Stop and transcribe",
@@ -555,32 +403,55 @@
   "callEnded": "Call ended",
   "callEndedIdle": "Ended the call after 2 minutes of silence.",
   "callFailed": "The call could not connect.",
+  "callListening": "Listening",
+  "callSpeaking": "Speaking",
+  "callWorking": "Working on it",
+  "callMutedState": "Muted",
+  "callCaptions": "Captions",
+  "callSpeaker": "Speaker",
+  "callEarpiece": "Phone",
+  "callBluetooth": "Bluetooth",
+  "callHeadphones": "Headphones",
+  "callAudioOutput": "Play the call through",
+  "toolDoing": "{tool, select, memory_search{Searching your memories} memory_write{Saving that to memory} memory{Updating its memory} knowledge_search{Looking through your knowledge} web_search{Searching the web} web{Reading a web page} browser_open{Opening a website} browser_click{Clicking on the page} browser_type{Typing on the page} browser_press{Pressing a key} browser_scroll{Scrolling the page} browser_look{Looking at the page} desktop_click{Clicking on the screen} desktop_type{Typing} desktop_press{Pressing keys} desktop_launch{Opening an app} desktop_look{Looking at the screen} shell{Working on its computer} files_read{Reading a file} files_write{Writing a file} files_list{Looking through files} files_search{Searching files} http{Contacting a service} data_search{Looking for data} data_call{Getting data} skills_load{Getting a skill ready} skills_create{Learning a new skill} skills_update{Improving a skill} checkpoint{Saving a restore point} takeover{Asking you to take over} delegate{Asking a helper} routines_list{Checking your routines} routines_create{Setting up a routine} routines_update{Updating a routine} routines_delete{Removing a routine} watchers_create{Setting up a watcher} watchers_list{Checking your watchers} watchers_delete{Removing a watcher} tasks_list{Checking your tasks} tasks_create{Adding a task} tasks{Updating your tasks} notify_user{Sending you a note} usage_report{Checking usage} device_read{Reading your device data} device_access{Asking for device access} pages_publish{Publishing a page} pages{Updating a page} media{Making an image} projects{Planning a project} payments{Asking to make a payment} voice_call{Calling a business} voice_call_user{Calling you} tools_load{Getting ready} ui_show{Showing you something} start_task{Starting this in the chat} other{Working on it}}",
+  "@toolDoing": {"description": "What the bot is doing in a tool step, in everyday words (chats, calls, the computer view).", "placeholders": {"tool": {"type": "String"}}},
+  "toolDid": "{tool, select, memory_search{Searched your memories} memory_write{Saved to memory} memory{Updated its memory} knowledge_search{Looked through your knowledge} web_search{Searched the web} web{Read a web page} browser_open{Opened a website} browser_click{Clicked on the page} browser_type{Typed on the page} browser_press{Pressed a key} browser_scroll{Scrolled the page} browser_look{Looked at the page} desktop_click{Clicked on the screen} desktop_type{Typed} desktop_press{Pressed keys} desktop_launch{Opened an app} desktop_look{Looked at the screen} shell{Worked on its computer} files_read{Read a file} files_write{Wrote a file} files_list{Looked through files} files_search{Searched files} http{Contacted a service} data_search{Looked for data} data_call{Got data} skills_load{Used a skill} skills_create{Learned a new skill} skills_update{Improved a skill} checkpoint{Saved a restore point} takeover{Asked you to take over} delegate{Asked a helper} routines_list{Checked your routines} routines_create{Set up a routine} routines_update{Updated a routine} routines_delete{Removed a routine} watchers_create{Set up a watcher} watchers_list{Checked your watchers} watchers_delete{Removed a watcher} tasks_list{Checked your tasks} tasks_create{Added a task} tasks{Updated your tasks} notify_user{Sent you a note} usage_report{Checked usage} device_read{Read your device data} device_access{Asked for device access} pages_publish{Published a page} pages{Updated a page} media{Made an image} projects{Planned a project} payments{Asked to make a payment} voice_call{Called a business} voice_call_user{Called you} tools_load{Got ready} ui_show{Showed you something} start_task{Started in the chat} other{Done}}",
+  "@toolDid": {"description": "The same step once it's done.", "placeholders": {"tool": {"type": "String"}}},
+  "toolUsingApp": "Using {app}",
+  "@toolUsingApp": {"placeholders": {"app": {"type": "String"}}},
+  "toolUsedApp": "Used {app}",
+  "@toolUsedApp": {"placeholders": {"app": {"type": "String"}}},
+  "toolDetails": "Details",
+  "toolNeedsOkTitle": "{bot} needs your OK",
+  "@toolNeedsOkTitle": {"placeholders": {"bot": {"type": "String"}}},
+  "callToolFailed": "That didn't work",
+  "callToolNeedsOk": "Needs your OK to go ahead",
+  "callToolAllow": "Allow",
+  "callToolNotNow": "Not now",
+  "callToolAllowed": "Allowed. The result will show in the chat",
+  "callToolDeclined": "You said not now",
+  "callToolBackground": "Still working. The result will show in the chat",
+  "callToolInChat": "The result will show in the chat",
+  "callToolSeconds": "{seconds}s",
+  "@callToolSeconds": {"placeholders": {"seconds": {"type": "int"}}},
+  "callNeedsKeyTitle": "Calls need a voice key",
+  "callNeedsKeyBody": "Live calls run on Google's Gemini Live, so this workspace needs a Google AI key. Google gives you one free in AI Studio: create it there, then add it under Model keys and calls work right away. Only workspace owners and admins can add keys.",
+  "callAddKey": "Add a Google AI key",
+  "callGetFreeKey": "Get a free key from Google",
   "unmute": "Unmute",
   "mute": "Mute",
   "hangUp": "Hang up",
   "callWith": "Call with {bot}",
-  "@callWith": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      }
-    }
-  },
+  "@callWith": {"placeholders": {"bot": {"type": "String"}}},
   "replyLatency": "Reply started in {ms} ms",
-  "@replyLatency": {
-    "placeholders": {
-      "ms": {
-        "type": "int"
-      }
-    }
-  },
+  "@replyLatency": {"placeholders": {"ms": {"type": "int"}}},
   "voiceSettings": "Voice",
   "voiceSettingsHelp": "Read-aloud voice and dictation provider",
   "callTools": "Tools on calls",
   "callToolsHelp": "Calls already include memory, web search, notes to you, routines and tickets, and hand bigger jobs to the chat. Add connected-app tools the bot should use live; each one adds a little to every call's cost.",
   "callToolsNone": "This bot has no connected apps yet. Connect one under Integrations.",
   "callToolsCount": "{count, plural, =0{Only the built-in voice tools} =1{1 connected-app tool added} other{{count} connected-app tools added}}",
-  "@callToolsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@callToolsCount": {"placeholders": {"count": {"type": "int"}}},
   "readAloudProvider": "Read-aloud provider",
   "automatic": "Automatic (first key found)",
   "voiceId": "Voice id (optional)",
@@ -606,16 +477,7 @@
   "botsAllowedHelp": "Allowed bots use this computer as theirs.",
   "unpairComputer": "Stop using this computer and unpair it",
   "botActingHere": "{bot} is working on this computer: {action}",
-  "@botActingHere": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      },
-      "action": {
-        "type": "String"
-      }
-    }
-  },
+  "@botActingHere": {"placeholders": {"bot": {"type": "String"}, "action": {"type": "String"}}},
   "quickAsk": "Quick ask",
   "quickAskHint": "Ask a bot anything…",
   "bot": "Bot",
@@ -624,6 +486,14 @@
   "adminUsers": "Users",
   "adminWorkspaces": "Workspaces",
   "adminServices": "Services",
+  "cloudModelsTitle": "Cloud models",
+  "cloudModelsHelp": "Casama Cloud runs these. A change reaches every server within a few seconds. People on Cloud cannot pick their own.",
+  "connectionsTitle": "App connections",
+  "connectionsServerComposio": "Casama's Composio account",
+  "connectionsServerComposioHelp": "Apps without their own sign-in connect in one click through this server's Composio account.",
+  "connectionsOwnAccounts": "People's own accounts",
+  "connectionsOwnAccountsHelp": "People connect those apps with their own Composio, Pipedream or Zapier account.",
+  "connectionsNoComposioKey": "Add COMPOSIO_API_KEY to this server to use Casama's account.",
   "notInstanceOwner": "Only the instance owner can open the admin console.",
   "runs24h": "Runs (24 h)",
   "failedRuns24h": "Failed runs (24 h)",
@@ -634,83 +504,26 @@
   "maxBots": "Max bots",
   "monthlyUsd": "Monthly spend limit (USD)",
   "updateAvailable": "Casama {latest} is available (you run {current})",
-  "@updateAvailable": {
-    "placeholders": {
-      "latest": {
-        "type": "String"
-      },
-      "current": {
-        "type": "String"
-      }
-    }
-  },
+  "@updateAvailable": {"placeholders": {"latest": {"type": "String"}, "current": {"type": "String"}}},
   "casamaVersion": "Casama {version}",
-  "@casamaVersion": {
-    "placeholders": {
-      "version": {
-        "type": "String"
-      }
-    }
-  },
+  "@casamaVersion": {"placeholders": {"version": {"type": "String"}}},
   "workspacesCount": "{n, plural, =1{1 workspace} other{{n} workspaces}}",
-  "@workspacesCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
+  "@workspacesCount": {"placeholders": {"n": {"type": "int"}}},
   "lastSignIn": "signed in {when}",
-  "@lastSignIn": {
-    "placeholders": {
-      "when": {
-        "type": "String"
-      }
-    }
-  },
+  "@lastSignIn": {"placeholders": {"when": {"type": "String"}}},
   "quotasFor": "Quotas for {name}",
-  "@quotasFor": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@quotasFor": {"placeholders": {"name": {"type": "String"}}},
   "membersCount": "{n, plural, =1{1 member} other{{n} members}}",
-  "@membersCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
+  "@membersCount": {"placeholders": {"n": {"type": "int"}}},
   "botsCount": "{n, plural, =1{1 bot} other{{n} bots}}",
-  "@botsCount": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
+  "@botsCount": {"placeholders": {"n": {"type": "int"}}},
   "cost30d": "{usd} in 30 days",
-  "@cost30d": {
-    "placeholders": {
-      "usd": {
-        "type": "String"
-      }
-    }
-  },
+  "@cost30d": {"placeholders": {"usd": {"type": "String"}}},
   "connectingToServer": "Connecting to Casama…",
   "cannotReachServer": "Can't reach your Casama server",
   "connectionFailed": "Couldn't reach your Casama server. Check your connection and try again.",
   "cannotReachServerHelp": "Check your connection, or that the server at {url} is running.",
-  "@cannotReachServerHelp": {
-    "placeholders": {
-      "url": {
-        "type": "String"
-      }
-    }
-  },
+  "@cannotReachServerHelp": {"placeholders": {"url": {"type": "String"}}},
   "upgradeTitle": "Upgrade your plan",
   "notNow": "Not now",
   "seePlans": "See plans",
@@ -721,92 +534,32 @@
   "plans": "Plans",
   "currentPlan": "Current plan",
   "subscribeFor": "Subscribe for {price}",
-  "@subscribeFor": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
+  "@subscribeFor": {"placeholders": {"price": {"type": "String"}}},
   "subscribeOnWeb": "Subscribe on the web",
   "credits": "Credits",
   "limitBots": "{count, plural, =1{1 bot} other{{count} bots}}",
-  "@limitBots": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@limitBots": {"placeholders": {"count": {"type": "int"}}},
   "limitComputerHours": "{hours} computer hours a month",
-  "@limitComputerHours": {
-    "placeholders": {
-      "hours": {
-        "type": "int"
-      }
-    }
-  },
+  "@limitComputerHours": {"placeholders": {"hours": {"type": "int"}}},
   "limitCredits": "${amount} credits a month",
-  "@limitCredits": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
+  "@limitCredits": {"placeholders": {"amount": {"type": "String"}}},
   "viaWeb": "Billed on the web",
   "viaAppStore": "Billed through the App Store",
   "viaGooglePlay": "Billed through Google Play",
   "yourPlan": "Your plan",
   "planEndsOn": "Ends on {date}",
-  "@planEndsOn": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
+  "@planEndsOn": {"placeholders": {"date": {"type": "String"}}},
   "planRenewsOn": "Renews on {date}",
-  "@planRenewsOn": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
+  "@planRenewsOn": {"placeholders": {"date": {"type": "String"}}},
   "creditsBalance": "Credits: ${amount}",
-  "@creditsBalance": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
+  "@creditsBalance": {"placeholders": {"amount": {"type": "String"}}},
   "manageSubscription": "Manage subscription",
   "usageComputerHours": "Cloud computers: {hours} h",
-  "@usageComputerHours": {
-    "placeholders": {
-      "hours": {
-        "type": "String"
-      }
-    }
-  },
+  "@usageComputerHours": {"placeholders": {"hours": {"type": "String"}}},
   "usageLiveViewMinutes": "Live view: {minutes} min",
-  "@usageLiveViewMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
+  "@usageLiveViewMinutes": {"placeholders": {"minutes": {"type": "String"}}},
   "usageTokens": "Model credits: {count} tokens",
-  "@usageTokens": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@usageTokens": {"placeholders": {"count": {"type": "int"}}},
   "thisMonth": "This month",
   "noBillableUsage": "No billable usage yet.",
   "cloudConnect": "Cloud Connect",
@@ -822,102 +575,35 @@
   "connect": "Connect",
   "changeServer": "Use a different server",
   "serverIs": "Server: {host}",
-  "@serverIs": {
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
+  "@serverIs": {"placeholders": {"host": {"type": "String"}}},
   "continueWithSso": "Continue with SSO",
   "workEmail": "Work email",
   "privacy": "Privacy",
   "exportMyData": "Export my data",
   "exportMyDataHelp": "A ZIP of everything you can see: bots, chats, runs, memories and settings. Secrets and keys are never included.",
   "exportReady": "Export ready ({kb} KB)",
-  "@exportReady": {
-    "placeholders": {
-      "kb": {
-        "type": "String"
-      }
-    }
-  },
+  "@exportReady": {"placeholders": {"kb": {"type": "String"}}},
   "runHistoryRetention": "Keep run history for",
   "runHistoryRetentionHelp": "Older run events are deleted automatically.",
   "days": "{count, plural, =1{1 day} other{{count} days}}",
-  "@days": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@days": {"placeholders": {"count": {"type": "int"}}},
   "deleteAccount": "Delete my account",
   "deleteAccountHelp": "Signs you out now and erases your data and the workspaces you solely own after a short grace period.",
   "deleteAccountQuestion": "Delete your account?",
   "deleteAccountConfirm": "Workspaces where you are the only owner are deleted with your account, including their bots and computers. Type {email} to confirm.",
-  "@deleteAccountConfirm": {
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
+  "@deleteAccountConfirm": {"placeholders": {"email": {"type": "String"}}},
   "accountDeleted": "Account scheduled for deletion",
   "accountDeletedBody": "You have been signed out. Your data will be erased on {date}.",
-  "@accountDeletedBody": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
+  "@accountDeletedBody": {"placeholders": {"date": {"type": "String"}}},
   "selectBotHelp": "Pick a bot on the left, or create one to get started.",
-  "toolShell": "Ran a command",
-  "toolFileRead": "Read a file",
-  "toolFileWrite": "Wrote a file",
-  "toolFiles": "Worked with files",
-  "toolBrowser": "Used the browser",
-  "toolSearch": "Searched the web",
-  "toolMemory": "Checked memory",
-  "toolSkill": "Used a skill",
-  "toolCheckpoint": "Saved a checkpoint",
-  "toolDesktop": "Used the desktop",
-  "toolDelegate": "Asked another bot",
-  "toolOther": "Used {tool}",
-  "@toolOther": {
-    "placeholders": {
-      "tool": {
-        "type": "String"
-      }
-    }
-  },
   "toolSteps": "{count, plural, =1{1 step} other{{count} steps}}",
-  "@toolSteps": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@toolSteps": {"placeholders": {"count": {"type": "int"}}},
   "showMoreSteps": "{count, plural, =1{Show 1 earlier step} other{Show {count} earlier steps}}",
-  "@showMoreSteps": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@showMoreSteps": {"placeholders": {"count": {"type": "int"}}},
   "copied": "Copied",
   "jumpToLatest": "Jump to latest",
   "chatEmptySubtitle": "{bot} has its own computer, memory and tools. Ask for something you want done.",
-  "@chatEmptySubtitle": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      }
-    }
-  },
+  "@chatEmptySubtitle": {"placeholders": {"bot": {"type": "String"}}},
   "suggestResearch": "Research a topic and write me a short summary",
   "suggestFiles": "Make a project folder with a to-do list in my workspace",
   "suggestWebsite": "Check a website and tell me what's new",
@@ -944,21 +630,9 @@
   "autoUpdatesHelp": "Download new versions in the background and install them when you quit.",
   "upToDate": "Casama is up to date",
   "updateReady": "Casama {version} is available",
-  "@updateReady": {
-    "placeholders": {
-      "version": {
-        "type": "String"
-      }
-    }
-  },
+  "@updateReady": {"placeholders": {"version": {"type": "String"}}},
   "appVersion": "Version {version}",
-  "@appVersion": {
-    "placeholders": {
-      "version": {
-        "type": "String"
-      }
-    }
-  },
+  "@appVersion": {"placeholders": {"version": {"type": "String"}}},
   "openAtLogin": "Open at login",
   "openAtLoginHelp": "Start Casama when you log in to this Mac, ready for the quick-ask shortcut.",
   "signInTagline": "Teammates that keep working after you close the app.",
@@ -986,16 +660,7 @@
   "getOpenRouterKey": "Get an OpenRouter key",
   "createFirstBotBody": "Give it a name and a model. You can change both later.",
   "stepOf": "Step {step} of {total}",
-  "@stepOf": {
-    "placeholders": {
-      "step": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
+  "@stepOf": {"placeholders": {"step": {"type": "int"}, "total": {"type": "int"}}},
   "providerHintOpenRouter": "recommended",
   "providerHintCompatible": "Ollama, LM Studio, vLLM",
   "providerHintImages": "images",
@@ -1004,78 +669,30 @@
   "noRoutinesHelp": "A routine is work a bot does later on its own: once at a time you pick, on a schedule, or when a webhook arrives.",
   "routineOnce": "Once",
   "lastRun": "Last: {when}",
-  "@lastRun": {
-    "placeholders": {
-      "when": {
-        "type": "String"
-      }
-    }
-  },
+  "@lastRun": {"placeholders": {"when": {"type": "String"}}},
   "routineOff": "Off",
   "deleteRoutineTitle": "Delete “{name}”?",
-  "@deleteRoutineTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@deleteRoutineTitle": {"placeholders": {"name": {"type": "String"}}},
   "deleteRoutineBody": "It won't run again. Results it already posted stay in their conversation.",
   "triggerOnce": "Once",
   "inMinutes": "In {n} min",
-  "@inMinutes": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
+  "@inMinutes": {"placeholders": {"n": {"type": "int"}}},
   "inHours": "{n, plural, =1{In 1 hour} other{In {n} hours}}",
-  "@inHours": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
+  "@inHours": {"placeholders": {"n": {"type": "int"}}},
   "tomorrowAt9": "Tomorrow 9:00",
   "integrationNeedsName": "Give it a name with at least one letter.",
   "integrationNeedsField": "Fill in {field} to save.",
-  "@integrationNeedsField": {
-    "placeholders": {
-      "field": {
-        "type": "String"
-      }
-    }
-  },
+  "@integrationNeedsField": {"placeholders": {"field": {"type": "String"}}},
   "integrationSavedAs": "Saved as {name}",
-  "@integrationSavedAs": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@integrationSavedAs": {"placeholders": {"name": {"type": "String"}}},
   "integrationUrlInvalid": "Use a full address starting with https://",
   "openFile": "Open",
   "saveFile": "Save",
   "shareFile": "Share",
   "savedFile": "Saved {name}",
-  "@savedFile": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@savedFile": {"placeholders": {"name": {"type": "String"}}},
   "noAppToOpen": "No app on this device opens {name}. Save it instead.",
-  "@noAppToOpen": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@noAppToOpen": {"placeholders": {"name": {"type": "String"}}},
   "previewUnavailable": "No preview for this kind of file. Open or save it to view it.",
   "openFileInChat": "Open file",
   "attach": "Attach",
@@ -1084,40 +701,14 @@
   "attachCamera": "Take photo",
   "dropToAttach": "Drop files to attach",
   "uploadFailed": "Couldn't upload {name}",
-  "@uploadFailed": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@uploadFailed": {"placeholders": {"name": {"type": "String"}}},
   "removeAttachment": "Remove",
   "noComputerForFiles": "This bot has no computer to keep files on.",
   "fileTooLarge": "{name} is over 25 MB, too large to attach.",
-  "@fileTooLarge": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "toolRoutineCreate": "Scheduled a routine",
-  "toolRoutineDelete": "Deleted a routine",
-  "toolRoutines": "Checked routines",
-  "toolTasks": "Updated the task board",
-  "toolNotify": "Sent you a notification",
-  "toolHttp": "Called a web API",
-  "toolMedia": "Made an image",
-  "toolTakeover": "Asked you to take over",
+  "@fileTooLarge": {"placeholders": {"name": {"type": "String"}}},
   "secretsHelp": "Bots put a secret in requests by its name. It's only sent to the hosts you allow and the model never sees it.",
   "deleteSecretTitle": "Delete {name}?",
-  "@deleteSecretTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@deleteSecretTitle": {"placeholders": {"name": {"type": "String"}}},
   "deleteSecretBody": "Bots that use it will stop being able to reach that service.",
   "hide": "Hide",
   "show": "Show",
@@ -1132,27 +723,18 @@
   "editMemory": "Edit memory",
   "editMemoryHelp": "The bot uses this the next time it's relevant.",
   "modelKeysIntro": "Bots think with your own model provider keys. Keys are stored encrypted and never shown again.",
+  "casamaCloudKeyHint": "Paid from your credits",
+  "casamaCloudIncluded": "Included",
+  "casamaCloudModelLocked": "Casama chooses this model.",
   "modelKeysFor": "Keys belong to one workspace. These are for {workspace}.",
-  "@modelKeysFor": {
-    "placeholders": {
-      "workspace": {
-        "type": "String"
-      }
-    }
-  },
+  "@modelKeysFor": {"placeholders": {"workspace": {"type": "String"}}},
   "yourKeys": "Your keys",
   "keyWorking": "Working",
   "keyFailing": "Failing",
   "keyUntested": "Not tested",
   "skillsHelp": "A skill is a set of instructions a bot loads when a task calls for it, like your house style for reports.",
   "deleteSkillTitle": "Delete the skill “{name}”?",
-  "@deleteSkillTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@deleteSkillTitle": {"placeholders": {"name": {"type": "String"}}},
   "editSkill": "Edit skill",
   "deleteSkill": "Delete skill",
   "skillDescriptionHelp": "Bots read this to decide when the skill applies.",
@@ -1161,13 +743,7 @@
   "thisDevice": "This device",
   "renameComputer": "Rename computer",
   "deleteComputerTitle": "Delete {name}?",
-  "@deleteComputerTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@deleteComputerTitle": {"placeholders": {"name": {"type": "String"}}},
   "privacyIntro": "Your chats, memories and files belong to you. Export them any time, or delete your account.",
   "yourData": "Your data",
   "dangerZone": "Danger zone",
@@ -1179,13 +755,7 @@
   "sendInvite": "Send invite",
   "inviteReady": "Invite ready",
   "inviteCodeHelp": "Email isn't set up on this server, so share this code with {email}. They paste it when joining.",
-  "@inviteCodeHelp": {
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
+  "@inviteCodeHelp": {"placeholders": {"email": {"type": "String"}}},
   "copyCode": "Copy code",
   "thinking0": "Model",
   "computerAndTools": "Computer and tools",
@@ -1216,13 +786,7 @@
   "runStatusStopped": "Stopped",
   "quickAskIntro": "Send a quick request. It starts a new chat with the bot you pick.",
   "quickAskHintBot": "What should {bot} do?",
-  "@quickAskHintBot": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      }
-    }
-  },
+  "@quickAskHintBot": {"placeholders": {"bot": {"type": "String"}}},
   "noNotificationsHelp": "Routine results, budget alerts and requests from your bots show up here.",
   "stateProvisioning": "Setting up",
   "stateStarting": "Starting",
@@ -1237,24 +801,12 @@
   "noCheckpointsTitle": "No checkpoints yet",
   "checkpointsHelp": "A checkpoint saves this computer before a risky change. Restoring puts its files back as they were.",
   "deleteFileTitle": "Delete {name}?",
-  "@deleteFileTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@deleteFileTitle": {"placeholders": {"name": {"type": "String"}}},
   "botComputerAuto": "Automatic",
   "botComputerHelp": "Where this bot runs commands, browses and keeps its files.",
   "billingOffTitle": "No limits here",
   "revokeKeyTitle": "Revoke the key for {name}?",
-  "@revokeKeyTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@revokeKeyTitle": {"placeholders": {"name": {"type": "String"}}},
   "revokeKeyBody": "That server stops using cloud computers and credits right away.",
   "handBackHelp": "The bot picks up where you left off. Tell it what you did, if it helps.",
   "serverHelp": "Use your own Casama server. Enter the address you or your admin set up.",
@@ -1286,13 +838,9 @@
   "botUiBroken": "This part of the reply couldn't be shown.",
   "botUiSent": "Sent",
   "botIcon": "Icon",
-  "@botIcon": {
-    "description": "Label above the picker for a bot's avatar (initials or a cloud mascot)"
-  },
+  "@botIcon": {"description": "Label above the picker for a bot's avatar (initials or a cloud mascot)"},
   "botIconInitials": "Initials",
-  "@botIconInitials": {
-    "description": "Avatar choice that shows the bot's initials instead of a mascot"
-  },
+  "@botIconInitials": {"description": "Avatar choice that shows the bot's initials instead of a mascot"},
   "errorDetailsTitle": "What went wrong",
   "exportLabel": "Export",
   "openTimeline": "Open run timeline",
@@ -1308,23 +856,11 @@
   "themeCodeHelp": "Paste a code someone shared with you. It starts with casama-theme:",
   "invalidThemeCode": "That isn't a Casama theme code.",
   "themeImported": "Added {name} to your themes",
-  "@themeImported": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@themeImported": {"placeholders": {"name": {"type": "String"}}},
   "themeCodeCopied": "Theme code copied. Anyone can paste it into Themes → Import.",
   "shareTheme": "Share code",
   "deleteThemeTitle": "Delete {name}?",
-  "@deleteThemeTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@deleteThemeTitle": {"placeholders": {"name": {"type": "String"}}},
   "currentLook": "Custom",
   "fonts": "Fonts",
   "headingFont": "Headings",
@@ -1343,13 +879,7 @@
   "photoBlur": "Blur",
   "photoDim": "Dim",
   "photoBy": "Photo by {name} on Unsplash",
-  "@photoBy": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@photoBy": {"placeholders": {"name": {"type": "String"}}},
   "searchPhotos": "Search photos",
   "photosUnavailable": "Couldn't load photos.",
   "noPhotos": "No photos found",
@@ -1373,16 +903,7 @@
   "deletedBot": "Not tied to a bot",
   "usageHelp": "Costs are estimates from token counts and published prices. Your model provider's bill is the final word.",
   "usageAskPrompt": "Here is my Casama usage for {period}. Help me understand where the money goes and how I could spend less. You can also check live numbers with your usage tool.\n\n{summary}",
-  "@usageAskPrompt": {
-    "placeholders": {
-      "period": {
-        "type": "String"
-      },
-      "summary": {
-        "type": "String"
-      }
-    }
-  },
+  "@usageAskPrompt": {"placeholders": {"period": {"type": "String"}, "summary": {"type": "String"}}},
   "kindTokensIn": "Model input",
   "kindTokensOut": "Model output",
   "kindComputer": "Cloud computer time",
@@ -1404,23 +925,11 @@
   "personaInstructions": "Instructions",
   "personaTryAsking": "Try asking",
   "usePersona": "Use {name}",
-  "@usePersona": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@usePersona": {"placeholders": {"name": {"type": "String"}}},
   "loadPersona": "Load a persona",
   "replaceInstructionsTitle": "Replace the instructions?",
   "replaceInstructionsBody": "The bot's current instructions will be replaced with {name}'s. Skills and routines stay as they are.",
-  "@replaceInstructionsBody": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@replaceInstructionsBody": {"placeholders": {"name": {"type": "String"}}},
   "replace": "Replace",
   "appsTitle": "Apps",
   "appsSubtitle": "Give your bots the tools your team already uses.",
@@ -1444,86 +953,32 @@
   "connectedBadge": "Connected",
   "whatBotsCanDo": "What your bots can do",
   "continueWith": "Continue with {app}",
-  "@continueWith": {
-    "placeholders": {
-      "app": {
-        "type": "String"
-      }
-    }
-  },
+  "@continueWith": {"placeholders": {"app": {"type": "String"}}},
   "signInTab": "Sign in",
   "connectNoSignIn": "This app works without signing in.",
   "finishSignIn": "Finish signing in to {app}",
-  "@finishSignIn": {
-    "placeholders": {
-      "app": {
-        "type": "String"
-      }
-    }
-  },
+  "@finishSignIn": {"placeholders": {"app": {"type": "String"}}},
   "finishSignInHelp": "{app} opened in your browser. Approve access there and this updates by itself.",
-  "@finishSignInHelp": {
-    "placeholders": {
-      "app": {
-        "type": "String"
-      }
-    }
-  },
+  "@finishSignInHelp": {"placeholders": {"app": {"type": "String"}}},
   "reopenSignIn": "Open the sign-in page again",
   "appConnected": "{app} is connected",
-  "@appConnected": {
-    "placeholders": {
-      "app": {
-        "type": "String"
-      }
-    }
-  },
+  "@appConnected": {"placeholders": {"app": {"type": "String"}}},
   "appToolsReady": "{count, plural, =0{Ready to use.} =1{1 tool is ready for your bots.} other{{count} tools are ready for your bots.}}",
-  "@appToolsReady": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@appToolsReady": {"placeholders": {"count": {"type": "int"}}},
   "whichBots": "Which bots can use it?",
   "whichBotsHelp": "Bots still ask you before anything risky.",
   "doneLabel": "Done",
   "openApp": "Open {app}",
-  "@openApp": {
-    "placeholders": {
-      "app": {
-        "type": "String"
-      }
-    }
-  },
+  "@openApp": {"placeholders": {"app": {"type": "String"}}},
   "pasteLabel": "Paste",
   "connectingLabel": "Connecting…",
   "connectFailedTitle": "Couldn't connect",
   "adminSetupNeeded": "One-click sign-in for {app} needs a one-time setup by whoever runs this Casama server.",
-  "@adminSetupNeeded": {
-    "placeholders": {
-      "app": {
-        "type": "String"
-      }
-    }
-  },
+  "@adminSetupNeeded": {"placeholders": {"app": {"type": "String"}}},
   "connectThroughHub": "Or connect {app} through one of these. Sign in once, then ask your bot to use {app}.",
-  "@connectThroughHub": {
-    "placeholders": {
-      "app": {
-        "type": "String"
-      }
-    }
-  },
+  "@connectThroughHub": {"placeholders": {"app": {"type": "String"}}},
   "adminSetupRedirect": "Register this redirect address with the app: {uri}",
-  "@adminSetupRedirect": {
-    "placeholders": {
-      "uri": {
-        "type": "String"
-      }
-    }
-  },
+  "@adminSetupRedirect": {"placeholders": {"uri": {"type": "String"}}},
   "privacyNote": "The sign-in is stored encrypted and never shown again. Disconnect anytime.",
   "moreWays": "More ways to connect",
   "composioHelp": "Hundreds of apps like Gmail, Salesforce and Shopify, with sign-in handled by Composio.",
@@ -1531,13 +986,7 @@
   "customServer": "Custom server",
   "customServerHelp": "Any MCP server or OpenAPI spec. For developers.",
   "usedByBots": "{count, plural, =0{Not given to any bot yet} =1{Used by 1 bot} other{Used by {count} bots}}",
-  "@usedByBots": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@usedByBots": {"placeholders": {"count": {"type": "int"}}},
   "statusReady": "Ready",
   "statusNeedsAttention": "Needs attention",
   "statusChecking": "Checking",
@@ -1547,13 +996,7 @@
   "reconnect": "Reconnect",
   "disconnect": "Disconnect",
   "disconnectTitle": "Disconnect {app}?",
-  "@disconnectTitle": {
-    "placeholders": {
-      "app": {
-        "type": "String"
-      }
-    }
-  },
+  "@disconnectTitle": {"placeholders": {"app": {"type": "String"}}},
   "disconnectBody": "Bots lose its tools right away, and the saved sign-in is deleted.",
   "testConnection": "Test connection",
   "signedInOAuth": "Signed in with your account",
@@ -1563,39 +1006,15 @@
   "noConnections": "Stripe, Linear, Notion, Gmail and more. Most take one click.",
   "browseApps": "Browse apps",
   "providerSetupTitle": "Connect {provider}",
-  "@providerSetupTitle": {
-    "placeholders": {
-      "provider": {
-        "type": "String"
-      }
-    }
-  },
+  "@providerSetupTitle": {"placeholders": {"provider": {"type": "String"}}},
   "providerSetupHelp": "{provider} signs in to the apps for you, so you never handle their keys.",
-  "@providerSetupHelp": {
-    "placeholders": {
-      "provider": {
-        "type": "String"
-      }
-    }
-  },
+  "@providerSetupHelp": {"placeholders": {"provider": {"type": "String"}}},
   "getFreeKey": "Get a free key",
   "providerAppsTitle": "Apps through {provider}",
-  "@providerAppsTitle": {
-    "placeholders": {
-      "provider": {
-        "type": "String"
-      }
-    }
-  },
+  "@providerAppsTitle": {"placeholders": {"provider": {"type": "String"}}},
   "addAnApp": "Add an app",
   "searchProviderApps": "Search {provider} apps",
-  "@searchProviderApps": {
-    "placeholders": {
-      "provider": {
-        "type": "String"
-      }
-    }
-  },
+  "@searchProviderApps": {"placeholders": {"provider": {"type": "String"}}},
   "accountConnected": "Signed in",
   "accountPending": "Waiting for sign-in",
   "accountError": "Sign-in problem",
@@ -1611,20 +1030,12 @@
   "wakeAndWatch": "Wake up and watch live",
   "chatGptPlan": "ChatGPT plan",
   "continueWithChatGpt": "Continue with ChatGPT",
-  "@continueWithChatGpt": {
-    "description": "Sign-in button label required by OpenAI's branding rules"
-  },
+  "@continueWithChatGpt": {"description": "Sign-in button label required by OpenAI's branding rules"},
   "chatGptConnectHelp": "Run your bots on your ChatGPT plan instead of an API key. Their model calls count toward your plan's limits, and only you can use it.",
   "chatGptDesktopOnly": "To connect your ChatGPT plan, open the desktop app, or run \"casama credential chatgpt\" in the CLI.",
   "chatGptWaiting": "Finish signing in with ChatGPT in your browser…",
   "chatGptConnected": "Connected your ChatGPT plan ({account}).",
-  "@chatGptConnected": {
-    "placeholders": {
-      "account": {
-        "type": "String"
-      }
-    }
-  },
+  "@chatGptConnected": {"placeholders": {"account": {"type": "String"}}},
   "chatGptPlanUsageOff": "You signed in, but plan usage wasn't allowed. Reconnect and allow it, or add an API key.",
   "orAddApiKey": "Or add an API key",
   "planOnlyYou": "Only you can use it",
@@ -1637,24 +1048,59 @@
   "manageUsage": "Manage usage",
   "removeKey": "Remove",
   "removeKeyConfirm": "Remove {label}? Bots that use it stop working until you give them another key.",
-  "@removeKeyConfirm": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
+  "@removeKeyConfirm": {"placeholders": {"label": {"type": "String"}}},
   "removeKeyChatGptNote": "Your ChatGPT sign-in is revoked too.",
   "modelFallbackNotice": "Switched to the next model: {message}",
-  "@modelFallbackNotice": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
+  "@modelFallbackNotice": {"placeholders": {"message": {"type": "String"}}},
   "twoStepSignIn": "Two-step sign-in",
   "twoStepHelp": "Ask for a code from an authenticator app whenever you sign in.",
+  "signInWithPasskey": "Sign in with a passkey",
+  "account": "Account",
+  "accountRow": "Email, password and signing out everywhere",
+  "forgotPassword": "Forgot password?",
+  "passwordResetTitle": "Reset your password",
+  "newPassword": "New password",
+  "newPasswordAgain": "New password again",
+  "passwordsDontMatch": "The passwords don't match",
+  "newPasswordTitle": "Choose a new password",
+  "newPasswordBody": "You're signed in. Pick a new password for signing in with your email.",
+  "savePassword": "Save password",
+  "passwordSaved": "Password saved.",
+  "passwordTitle": "Password",
+  "passwordRow": "Set or change the password for signing in with your email",
+  "passwordHelp": "Use at least 6 characters. You can still sign in with Google, Apple, a passkey or an email link.",
+  "passwordCodeSent": "To keep your account safe, enter the code we just emailed to {email}.",
+  "@passwordCodeSent": {"placeholders": {"email": {"type": "String"}}},
+  "changeEmailTitle": "Change email",
+  "changeEmailHelp": "We'll email a confirmation link to your current address and to the new one. The change happens once both are confirmed.",
+  "newEmail": "New email",
+  "changeEmailSend": "Send confirmation",
+  "changeEmailRow": "Change the email you sign in with",
+  "changeEmailSent": "Check both inboxes. {email} becomes your email once both links are confirmed.",
+  "@changeEmailSent": {"placeholders": {"email": {"type": "String"}}},
+  "changeEmailPending": "Waiting for confirmation: {email}",
+  "@changeEmailPending": {"placeholders": {"email": {"type": "String"}}},
+  "signOutEverywhere": "Sign out everywhere",
+  "signOutEverywhereHelp": "Every phone, computer and browser, including this one",
+  "signOutEverywhereConfirm": "Sign out on every device, including this one? Use this if you lost a device or think someone else is signed in.",
+  "passkeySuggestTitle": "Sign in faster next time?",
+  "passkeySuggestBody": "Add a passkey and sign in with Face ID, a fingerprint or your screen lock. No password or email needed.",
+  "passkeys": "Passkeys",
+  "passkeysRow": "Sign in with Face ID, a fingerprint or your screen lock",
+  "passkeysHelp": "A passkey signs you in with Face ID, a fingerprint or your screen lock, with no password or email. Each phone, computer or password manager keeps its own.",
+  "passkeyAdd": "Add a passkey",
+  "passkeyAddAnother": "Add another passkey",
+  "passkeyAdded": "Passkey added. Next time, sign in with it.",
+  "passkeyRename": "Rename",
+  "passkeyRenameTitle": "Rename passkey",
+  "passkeyNameLabel": "Name",
+  "passkeyRemove": "Remove",
+  "passkeyRemoveConfirm": "Remove \"{name}\"? You won't be able to sign in with it any more.",
+  "@passkeyRemoveConfirm": {"placeholders": {"name": {"type": "String"}}},
+  "passkeyAddedOn": "Added {date}",
+  "@passkeyAddedOn": {"placeholders": {"date": {"type": "String"}}},
+  "passkeyLastUsed": "Last used {when}",
+  "@passkeyLastUsed": {"placeholders": {"when": {"type": "String"}}},
   "twoStepSetUp": "Set up an authenticator app",
   "twoStepAddAnother": "Add another authenticator",
   "twoStepScan": "Scan this code with an authenticator app (such as 1Password, Google Authenticator or Authy), or type in the setup key, then enter the 6-digit code it shows.",
@@ -1681,13 +1127,7 @@
   "suspendReason": "Reason",
   "suspendWorkspaceHelp": "Its computers stop and its bots stop running. Nothing is deleted, and you can lift it any time.",
   "workspaceSuspended": "Suspended: {reason}",
-  "@workspaceSuspended": {
-    "placeholders": {
-      "reason": {
-        "type": "String"
-      }
-    }
-  },
+  "@workspaceSuspended": {"placeholders": {"reason": {"type": "String"}}},
   "workspaceSuspendedBanner": "This workspace is suspended, so bots can't run and computers can't start. Contact whoever runs this server.",
   "abuseKind_mining_pool": "Crypto mining blocked",
   "abuseKind_blocked_port": "Mail port blocked",
@@ -1720,6 +1160,13 @@
   "navBoard": "Board",
   "board": "Board",
   "newTicket": "New ticket",
+  "allProjects": "All projects",
+  "manageProjects": "Manage projects",
+  "filterByProject": "Filter by project",
+  "moveTo": "Move to",
+  "noMatchingTickets": "No matching tickets",
+  "noMatchingTicketsHelp": "No tickets match these filters.",
+  "clearFilters": "Clear filters",
   "ticketTitle": "Title",
   "ticketDetails": "Details",
   "taskInReview": "In review",
@@ -1759,23 +1206,11 @@
   "linkExpires": "Expires",
   "linkNever": "Never",
   "linkDays": "{days, plural, =1{In 1 day} other{In {days} days}}",
-  "@linkDays": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
+  "@linkDays": {"placeholders": {"days": {"type": "int"}}},
   "linkMaxUses": "Uses",
   "linkUnlimited": "Unlimited",
   "linkUses": "{uses} used",
-  "@linkUses": {
-    "placeholders": {
-      "uses": {
-        "type": "String"
-      }
-    }
-  },
+  "@linkUses": {"placeholders": {"uses": {"type": "String"}}},
   "linkRevoked": "Revoked",
   "revokeLink": "Revoke",
   "linkCopied": "Invite link copied.",
@@ -1785,13 +1220,7 @@
   "shareLinkLabel": "Share",
   "joiningWorkspace": "Joining the workspace…",
   "joinedWorkspace": "You joined {name}.",
-  "@joinedWorkspace": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@joinedWorkspace": {"placeholders": {"name": {"type": "String"}}},
   "joinFailed": "This invite link doesn't work anymore. Ask for a new one.",
   "joinWithLink": "Join with a link",
   "botFolder": "Folder",
@@ -1800,45 +1229,21 @@
   "folderName": "Folder name",
   "archiveBot": "Archive bot",
   "archiveBotTitle": "Archive {name}?",
-  "@archiveBotTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@archiveBotTitle": {"placeholders": {"name": {"type": "String"}}},
   "archiveBotBody": "It leaves the sidebar and stops running. Its chats and history are kept, and you can bring it back from Archived bots.",
   "archive": "Archive",
   "archivedBots": "Archived bots",
   "unarchive": "Bring back",
   "botArchived": "{name} archived.",
-  "@botArchived": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@botArchived": {"placeholders": {"name": {"type": "String"}}},
   "settingsHistory": "Settings history",
   "settingsHistoryHelp": "Every change to this bot's settings, and who made it",
   "noHistory": "No changes yet.",
   "restoreSettings": "Restore these settings",
   "restoreSettingsBody": "Put back {fields} as they were before this change? The current settings stay in the history.",
-  "@restoreSettingsBody": {
-    "placeholders": {
-      "fields": {
-        "type": "String"
-      }
-    }
-  },
+  "@restoreSettingsBody": {"placeholders": {"fields": {"type": "String"}}},
   "changedByBot": "Changed by {name}",
-  "@changedByBot": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@changedByBot": {"placeholders": {"name": {"type": "String"}}},
   "changedByPerson": "Changed by a person",
   "changedBySystem": "Changed by Casama",
   "fieldName": "name",
@@ -1849,33 +1254,12 @@
   "fieldComputer": "computer",
   "fieldArchived": "archived",
   "secretRequestTitle": "{bot} needs a {service} key",
-  "@secretRequestTitle": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      },
-      "service": {
-        "type": "String"
-      }
-    }
-  },
+  "@secretRequestTitle": {"placeholders": {"bot": {"type": "String"}, "service": {"type": "String"}}},
   "secretRequestHosts": "Only for {hosts}",
-  "@secretRequestHosts": {
-    "placeholders": {
-      "hosts": {
-        "type": "String"
-      }
-    }
-  },
+  "@secretRequestHosts": {"placeholders": {"hosts": {"type": "String"}}},
   "secretRequestHelp": "Goes straight to the vault. The bot never sees it.",
   "secretSaved": "Saved {name}",
-  "@secretSaved": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@secretSaved": {"placeholders": {"name": {"type": "String"}}},
   "secretDeclined": "Declined",
   "decline": "Decline",
   "signInCode": "Sign-in code",
@@ -1884,27 +1268,12 @@
   "totpSeedHelp": "From the site's two-step setup. Bots only ever get the current code, never the key.",
   "scanQrCode": "Scan QR code",
   "totpRequestTitle": "{bot} needs a {service} sign-in code",
-  "@totpRequestTitle": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      },
-      "service": {
-        "type": "String"
-      }
-    }
-  },
+  "@totpRequestTitle": {"placeholders": {"bot": {"type": "String"}, "service": {"type": "String"}}},
   "search": "Search",
   "searchHint": "Search chats, memories, skills, tickets and files",
   "searchEmptyPrompt": "Type at least 2 characters.",
   "searchNoResults": "Nothing found for “{query}”.",
-  "@searchNoResults": {
-    "placeholders": {
-      "query": {
-        "type": "String"
-      }
-    }
-  },
+  "@searchNoResults": {"placeholders": {"query": {"type": "String"}}},
   "searchMessages": "Messages",
   "searchChats": "Chats",
   "searchTickets": "Tickets",
@@ -1916,22 +1285,10 @@
   "searchSkills": "Search skills",
   "all": "All",
   "skillFiles": "{count, plural, =1{1 file} other{{count} files}}",
-  "@skillFiles": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@skillFiles": {"placeholders": {"count": {"type": "int"}}},
   "install": "Install",
   "skillInstalled": "Installed {name}.",
-  "@skillInstalled": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@skillInstalled": {"placeholders": {"name": {"type": "String"}}},
   "noResults": "No results.",
   "importFromGitHub": "Import from GitHub",
   "importFromGitHubHelp": "Paste a link to a folder with a SKILL.md. You'll see every file before anything is installed. Private repositories use a GITHUB_TOKEN secret allowed for api.github.com.",
@@ -1939,13 +1296,7 @@
   "skillScriptsNote": "Scripts in a skill only ever run on a bot's computer, never on the server.",
   "binaryFile": "(binary file)",
   "skillUpdate": "Update {name}",
-  "@skillUpdate": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@skillUpdate": {"placeholders": {"name": {"type": "String"}}},
   "checkingForUpdates": "Checking for updates…",
   "skillUpToDate": "Already up to date.",
   "update": "Update",
@@ -1957,13 +1308,7 @@
   "checkForUpdates": "Check for updates",
   "attachSkill": "Attach a skill",
   "setupTitle": "Set up {name}",
-  "@setupTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@setupTitle": {"placeholders": {"name": {"type": "String"}}},
   "setupBody": "Answer a few quick questions and it will propose its instructions, routines and the accounts to connect. Nothing changes until you approve.",
   "startSetup": "Start setup",
   "skipSetup": "Skip for now",
@@ -1978,16 +1323,7 @@
   "quietHours": "Quiet hours",
   "quietHoursHelp": "Notifications wait until quiet hours end; your inbox still fills. Approvals for a chat you're in still come through.",
   "quietHoursRange": "{start} to {end}",
-  "@quietHoursRange": {
-    "placeholders": {
-      "start": {
-        "type": "String"
-      },
-      "end": {
-        "type": "String"
-      }
-    }
-  },
+  "@quietHoursRange": {"placeholders": {"start": {"type": "String"}, "end": {"type": "String"}}},
   "off": "Off",
   "botNotifications": "Notifications from this bot",
   "botNotificationsHelp": "Whether this bot follows your quiet hours",
@@ -2006,35 +1342,14 @@
   "notABotTemplate": "That file isn't a Casama bot template.",
   "importBot": "Import a bot",
   "botImported": "{name} is ready.",
-  "@botImported": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@botImported": {"placeholders": {"name": {"type": "String"}}},
   "botImportedConnect": "{name} is ready. Connect {services} in Integrations so it can use them.",
-  "@botImportedConnect": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "services": {
-        "type": "String"
-      }
-    }
-  },
+  "@botImportedConnect": {"placeholders": {"name": {"type": "String"}, "services": {"type": "String"}}},
   "whatComesWithIt": "What comes with it",
   "connectAfterImport": "Connect after importing",
   "importRoutines": "Schedule its routines",
   "importMemories": "{count, plural, =1{Keep its 1 memory} other{Keep its {count} memories}}",
-  "@importMemories": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@importMemories": {"placeholders": {"count": {"type": "int"}}},
   "startingRoutine": "Starting the routine…",
   "offlineSaved": "Offline. Showing saved messages.",
   "projects": "Projects",
@@ -2065,25 +1380,24 @@
   "projectDone": "Done",
   "projectCancelled": "Cancelled",
   "forYou": "For you",
+  "inboxNeedsYou": "Needs you",
+  "inboxNeedsYouCount": "Needs you ({n})",
+  "@inboxNeedsYouCount": {"placeholders": {"n": {"type": "int"}}},
+  "inboxBriefs": "Briefs",
+  "inboxUpdates": "Updates",
+  "inboxEmptyHelp": "Requests, morning briefs, notifications and new pages from your bots show up here.",
+  "inboxNeedsYouEmpty": "Nothing needs you right now",
+  "inboxNeedsYouEmptyHelp": "When a bot needs a decision, your help or has an idea, it shows up here.",
+  "noBriefs": "No morning briefs yet",
+  "botPublishedPage": "{bot} published {title}",
+  "@botPublishedPage": {"placeholders": {"bot": {"type": "String"}, "title": {"type": "String"}}},
   "forYouEmpty": "Nothing for you right now",
   "forYouEmptyHelp": "Turn on check-ins in a bot's settings for a morning brief and suggestions through the day.",
   "morningBriefFrom": "Morning brief from {name}",
-  "@morningBriefFrom": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@morningBriefFrom": {"placeholders": {"name": {"type": "String"}}},
   "suggestions": "Suggestions",
   "suggestedBy": "Suggested by {name}",
-  "@suggestedBy": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@suggestedBy": {"placeholders": {"name": {"type": "String"}}},
   "dismissSuggestion": "Dismiss this suggestion?",
   "justThisOnce": "Just this once",
   "dontSuggestAgain": "Don't suggest it again",
@@ -2093,13 +1407,7 @@
   "briefTime": "Morning brief at",
   "scanEvery": "Look every",
   "hours": "{count, plural, =1{1 hour} other{{count} hours}}",
-  "@hours": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@hours": {"placeholders": {"count": {"type": "int"}}},
   "dailyCap": "Daily limit",
   "on": "On",
   "actionRules": "Action rules",
@@ -2134,30 +1442,12 @@
   "watcherDone": "Done",
   "watcherExpired": "Expired",
   "firedTimes": "{count, plural, =0{not fired yet} =1{fired once} other{fired {count} times}}",
-  "@firedTimes": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@firedTimes": {"placeholders": {"count": {"type": "int"}}},
   "connectAiApp": "Connect an AI app",
   "connectAiAppAsk": "{app} wants to use Casama",
-  "@connectAiAppAsk": {
-    "placeholders": {
-      "app": {
-        "type": "String"
-      }
-    }
-  },
+  "@connectAiAppAsk": {"placeholders": {"app": {"type": "String"}}},
   "connectAiAppHelp": "It can list your bots, ask them to do things and read results in the workspace you pick, as you. Your bots' approvals and rules still apply. You'll go back to {host}.",
-  "@connectAiAppHelp": {
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
+  "@connectAiAppHelp": {"placeholders": {"host": {"type": "String"}}},
   "connectAiAppDone": "Done. You can go back to the AI app.",
   "refuse": "Refuse",
   "allow": "Allow",
@@ -2171,39 +1461,15 @@
   "newGroupChat": "New group chat",
   "groupChats": "Group chats",
   "groupWhoAnswers": "{names} will answer",
-  "@groupWhoAnswers": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
+  "@groupWhoAnswers": {"placeholders": {"names": {"type": "String"}}},
   "groupEveryoneAnswers": "Everyone will answer",
   "groupMentionHint": "@mention a bot, or @everyone",
-  "routineRan": "Routine \u201c{name}\u201d ran",
-  "@routineRan": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "routineRan": "Routine “{name}” ran",
+  "@routineRan": {"placeholders": {"name": {"type": "String"}}},
   "groupBotCount": "{count, plural, =1{1 bot} other{{count} bots}}",
-  "@groupBotCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@groupBotCount": {"placeholders": {"count": {"type": "int"}}},
   "botWaitingCount": "{count, plural, =1{1 thing waiting for you} other{{count} things waiting for you}}",
-  "@botWaitingCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@botWaitingCount": {"placeholders": {"count": {"type": "int"}}},
   "newGroupChatHelp": "Pick 2 to 10 bots. The first one leads: @everyone asks it for a plan. @Name wakes one bot.",
   "groupTitle": "Name (optional)",
   "groupPickBots": "Bots",
@@ -2218,13 +1484,7 @@
   "pagePublic": "Anyone with the link",
   "pageRefreshes": "Refreshes on schedule",
   "pageUpdated": "Updated {date}",
-  "@pageUpdated": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
+  "@pageUpdated": {"placeholders": {"date": {"type": "String"}}},
   "exportPdf": "Export PDF",
   "pageMakePublicTitle": "Make this page public?",
   "pageMakePublicBody": "Anyone with the link can open it, including the data on it. You can take it back any time; the link stops working.",
@@ -2232,13 +1492,7 @@
   "pagePublicLinkTitle": "Public link",
   "pagePublicLinkBody": "Copied. It isn't listed in search engines.",
   "deletePageTitle": "Delete \"{title}\"?",
-  "@deletePageTitle": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
+  "@deletePageTitle": {"placeholders": {"title": {"type": "String"}}},
   "openPages": "Open in Pages",
   "skillInstructions": "Instructions",
   "discard": "Discard",
@@ -2253,70 +1507,25 @@
   "teachDraftTitle": "New skill",
   "teachDrafting": "Writing a skill from your recording…",
   "teachSteps": "{count, plural, =1{1 step} other{{count} steps}}",
-  "@teachSteps": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@teachSteps": {"placeholders": {"count": {"type": "int"}}},
   "teachRecordedSteps": "What you showed ({count, plural, =1{1 step} other{{count} steps}})",
-  "@teachRecordedSteps": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@teachRecordedSteps": {"placeholders": {"count": {"type": "int"}}},
   "teachReviewHelp": "Check the steps, inputs and success checks, then save. You can try it right away.",
   "teachDraftFailed": "The bot couldn't write a draft. Write the steps yourself from the recording below, or discard it.",
   "teachAlreadySaved": "This skill is saved",
   "teachSaveAndTry": "Save and try",
   "teachSaved": "Saved {name}",
-  "@teachSaved": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@teachSaved": {"placeholders": {"name": {"type": "String"}}},
   "teachDiscardTitle": "Discard this recording?",
   "teachDiscardBody": "Every step, snapshot and screenshot it captured is deleted.",
   "teachStepClick": "Click at {x}, {y}",
-  "@teachStepClick": {
-    "placeholders": {
-      "x": {
-        "type": "int"
-      },
-      "y": {
-        "type": "int"
-      }
-    }
-  },
+  "@teachStepClick": {"placeholders": {"x": {"type": "int"}, "y": {"type": "int"}}},
   "teachStepType": "Type “{text}”",
-  "@teachStepType": {
-    "placeholders": {
-      "text": {
-        "type": "String"
-      }
-    }
-  },
+  "@teachStepType": {"placeholders": {"text": {"type": "String"}}},
   "teachStepSecret": "Type secret {name}",
-  "@teachStepSecret": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@teachStepSecret": {"placeholders": {"name": {"type": "String"}}},
   "teachStepKey": "Press {key}",
-  "@teachStepKey": {
-    "placeholders": {
-      "key": {
-        "type": "String"
-      }
-    }
-  },
+  "@teachStepKey": {"placeholders": {"key": {"type": "String"}}},
   "teachStepScroll": "Scroll",
   "plugins": "Plugins",
   "pluginsRow": "Skills and tools from plugin packages",
@@ -2326,29 +1535,11 @@
   "addPluginHelp": "Paste a GitHub link to the plugin's folder. You'll see what it adds before anything is installed.",
   "pluginAdds": "It adds",
   "pluginStdio": "Runs on the bot's computer: {command}",
-  "@pluginStdio": {
-    "placeholders": {
-      "command": {
-        "type": "String"
-      }
-    }
-  },
+  "@pluginStdio": {"placeholders": {"command": {"type": "String"}}},
   "pluginRemote": "Connects to {url}",
-  "@pluginRemote": {
-    "placeholders": {
-      "url": {
-        "type": "String"
-      }
-    }
-  },
+  "@pluginRemote": {"placeholders": {"url": {"type": "String"}}},
   "pluginTalksTo": "Talks to: {hosts}",
-  "@pluginTalksTo": {
-    "placeholders": {
-      "hosts": {
-        "type": "String"
-      }
-    }
-  },
+  "@pluginTalksTo": {"placeholders": {"hosts": {"type": "String"}}},
   "pluginSkill": "Skill",
   "pluginHosts": "Network",
   "pluginServerError": "Couldn't start",
@@ -2357,78 +1548,24 @@
   "checkForUpdate": "Check for update",
   "uninstall": "Uninstall",
   "uninstallPluginTitle": "Uninstall {name}?",
-  "@uninstallPluginTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@uninstallPluginTitle": {"placeholders": {"name": {"type": "String"}}},
   "uninstallPluginBody": "Its skills, tools, files and saved secrets are removed from this bot.",
   "updatePluginTitle": "Update {name}",
-  "@updatePluginTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@updatePluginTitle": {"placeholders": {"name": {"type": "String"}}},
   "pluginDiffSkillsAdded": "New skills: {names}",
-  "@pluginDiffSkillsAdded": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
+  "@pluginDiffSkillsAdded": {"placeholders": {"names": {"type": "String"}}},
   "pluginDiffSkillsChanged": "Changed skills: {names}",
-  "@pluginDiffSkillsChanged": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
+  "@pluginDiffSkillsChanged": {"placeholders": {"names": {"type": "String"}}},
   "pluginDiffSkillsRemoved": "Removed skills: {names}",
-  "@pluginDiffSkillsRemoved": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
+  "@pluginDiffSkillsRemoved": {"placeholders": {"names": {"type": "String"}}},
   "pluginDiffServersAdded": "New tool servers: {names}",
-  "@pluginDiffServersAdded": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
+  "@pluginDiffServersAdded": {"placeholders": {"names": {"type": "String"}}},
   "pluginDiffServersChanged": "Changed tool servers: {names}",
-  "@pluginDiffServersChanged": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
+  "@pluginDiffServersChanged": {"placeholders": {"names": {"type": "String"}}},
   "pluginDiffServersRemoved": "Removed tool servers: {names}",
-  "@pluginDiffServersRemoved": {
-    "placeholders": {
-      "names": {
-        "type": "String"
-      }
-    }
-  },
+  "@pluginDiffServersRemoved": {"placeholders": {"names": {"type": "String"}}},
   "pluginDiffHosts": "Talks to new hosts: {hosts}",
-  "@pluginDiffHosts": {
-    "placeholders": {
-      "hosts": {
-        "type": "String"
-      }
-    }
-  },
+  "@pluginDiffHosts": {"placeholders": {"hosts": {"type": "String"}}},
   "pluginDiffNone": "No changes to what it adds.",
   "next": "Next",
   "botNameLabel": "Name",
@@ -2439,119 +1576,41 @@
   "agentImportReviewHelp": "Untick anything you don't want. Nothing is created until you import.",
   "agentImportNoPersona": "No persona file was found.",
   "agentImportSkills": "{count, plural, =1{1 skill} other{{count} skills}}",
-  "@agentImportSkills": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@agentImportSkills": {"placeholders": {"count": {"type": "int"}}},
   "agentImportRoutines": "{count, plural, =1{1 routine} other{{count} routines}}",
-  "@agentImportRoutines": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@agentImportRoutines": {"placeholders": {"count": {"type": "int"}}},
   "agentImportMemories": "{count, plural, =1{1 memory} other{{count} memories}}",
-  "@agentImportMemories": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@agentImportMemories": {"placeholders": {"count": {"type": "int"}}},
   "agentImportLeftovers": "Copy {count, plural, =1{1 other file} other{{count} other files}} to ~/imported/ on its computer",
-  "@agentImportLeftovers": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@agentImportLeftovers": {"placeholders": {"count": {"type": "int"}}},
   "agentImportSkipped": "Not imported: {files}",
-  "@agentImportSkipped": {
-    "placeholders": {
-      "files": {
-        "type": "String"
-      }
-    }
-  },
+  "@agentImportSkipped": {"placeholders": {"files": {"type": "String"}}},
   "agentImportedWithFiles": "Imported {name} and copied {count} files to its computer",
-  "@agentImportedWithFiles": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@agentImportedWithFiles": {"placeholders": {"name": {"type": "String"}, "count": {"type": "int"}}},
   "agentImportedFilesLater": "Imported {name}. Its other files couldn't be copied yet; give it a computer and import again to copy them.",
-  "@agentImportedFilesLater": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@agentImportedFilesLater": {"placeholders": {"name": {"type": "String"}}},
   "importMemoryTitle": "Import memories from ChatGPT or Claude",
   "importMemoryHelp": "Copy this prompt into ChatGPT or Claude, then paste its answer below.",
   "importMemoryPick": "Keep what's right; untick the rest.",
   "importMemoryPaste": "Its answer",
   "importMemoryNone": "No memories found in that answer.",
   "memoriesImported": "Added {count, plural, =1{1 memory} other{{count} memories}}",
-  "@memoriesImported": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@memoriesImported": {"placeholders": {"count": {"type": "int"}}},
   "routinesAsFiles": "Routines and skills as files",
   "routinesAsFilesHelp": "Every routine and skill as a Markdown file: export them, edit them anywhere, import them back, or keep them in a GitHub repository.",
   "exportFiles": "Export as files",
   "importFiles": "Import files",
   "importFilesApply": "Apply",
   "filesPreview": "{created} new, {updated} changed, {unchanged} unchanged",
-  "@filesPreview": {
-    "placeholders": {
-      "created": {
-        "type": "int"
-      },
-      "updated": {
-        "type": "int"
-      },
-      "unchanged": {
-        "type": "int"
-      }
-    }
-  },
+  "@filesPreview": {"placeholders": {"created": {"type": "int"}, "updated": {"type": "int"}, "unchanged": {"type": "int"}}},
   "filesImported": "Imported: {created} new, {updated} changed",
-  "@filesImported": {
-    "placeholders": {
-      "created": {
-        "type": "int"
-      },
-      "updated": {
-        "type": "int"
-      }
-    }
-  },
+  "@filesImported": {"placeholders": {"created": {"type": "int"}, "updated": {"type": "int"}}},
   "gitSync": "Git sync",
   "gitSyncOff": "Off",
   "gitSyncHelp": "Changes in Casama are committed to the repository, and pushes to it update Casama after they're checked. If a file changed in both places, Casama keeps its version and opens a pull request. Needs a GITHUB_TOKEN secret allowed for api.github.com.",
   "gitSyncNeedsToken": "Needs a GITHUB_TOKEN secret",
   "gitSyncLast": "Synced {date}",
-  "@gitSyncLast": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
+  "@gitSyncLast": {"placeholders": {"date": {"type": "String"}}},
   "gitSyncPr": "Pull request waiting for you",
   "syncNow": "Sync now",
   "syncQueued": "Syncing within a minute",
@@ -2577,139 +1636,46 @@
   "knowledgeShareAll": "Share with every bot in the workspace",
   "knowledgeShared": "Whole workspace",
   "knowledgeReady": "{docs, plural, =1{1 document} other{{docs} documents}}, {chunks} passages",
-  "@knowledgeReady": {
-    "placeholders": {
-      "docs": {
-        "type": "int"
-      },
-      "chunks": {
-        "type": "int"
-      }
-    }
-  },
+  "@knowledgeReady": {"placeholders": {"docs": {"type": "int"}, "chunks": {"type": "int"}}},
   "knowledgeError": "Couldn't read it",
   "knowledgeSyncing": "Reading…",
   "knowledgePending": "Waiting to be read",
   "add": "Add",
   "skillIdeas": "Skill ideas",
   "skillIdeaFrom": "{bot} suggests a skill: {name}",
-  "@skillIdeaFrom": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      },
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@skillIdeaFrom": {"placeholders": {"bot": {"type": "String"}, "name": {"type": "String"}}},
   "skillEditFrom": "{bot} suggests improving {name}",
-  "@skillEditFrom": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      },
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@skillEditFrom": {"placeholders": {"bot": {"type": "String"}, "name": {"type": "String"}}},
   "skillUsesTools": "Uses: {tools}",
-  "@skillUsesTools": {
-    "placeholders": {
-      "tools": {
-        "type": "String"
-      }
-    }
-  },
+  "@skillUsesTools": {"placeholders": {"tools": {"type": "String"}}},
   "saveSkill": "Save skill",
   "applyEdit": "Apply change",
   "skillSaved": "Saved {name}",
-  "@skillSaved": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@skillSaved": {"placeholders": {"name": {"type": "String"}}},
   "skillUpdated": "Updated {name}",
-  "@skillUpdated": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@skillUpdated": {"placeholders": {"name": {"type": "String"}}},
   "skillStats": "How it's doing",
   "skillNotUsedYet": "Not used yet",
   "skillStatsLine": "Used {uses} times · {rate}% went well · {failures} failed · {corrections} corrected",
-  "@skillStatsLine": {
-    "placeholders": {
-      "uses": {
-        "type": "int"
-      },
-      "rate": {
-        "type": "int"
-      },
-      "failures": {
-        "type": "int"
-      },
-      "corrections": {
-        "type": "int"
-      }
-    }
-  },
+  "@skillStatsLine": {"placeholders": {"uses": {"type": "int"}, "rate": {"type": "int"}, "failures": {"type": "int"}, "corrections": {"type": "int"}}},
   "skillLastFailure": "Last problem: {date}",
-  "@skillLastFailure": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
+  "@skillLastFailure": {"placeholders": {"date": {"type": "String"}}},
   "skillHistory": "Earlier versions",
   "replays": "Replays",
   "replaysRow": "Recorded steps it runs without thinking",
   "noReplays": "No replays yet",
   "replaysHelp": "A replay is a recorded set of browser or desktop steps the bot runs as is, which is faster and cheaper. If a step doesn't work any more, the bot takes over from there and can update the replay. Save one from a teach recording, or ask the bot to save what it just did.",
   "replaySteps": "{count, plural, =1{1 step} other{{count} steps}}",
-  "@replaySteps": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@replaySteps": {"placeholders": {"count": {"type": "int"}}},
   "replayRuns": "run {runs} times, {failures} needed help",
-  "@replayRuns": {
-    "placeholders": {
-      "runs": {
-        "type": "int"
-      },
-      "failures": {
-        "type": "int"
-      }
-    }
-  },
+  "@replayRuns": {"placeholders": {"runs": {"type": "int"}, "failures": {"type": "int"}}},
   "runReplay": "Run {name}",
-  "@runReplay": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@runReplay": {"placeholders": {"name": {"type": "String"}}},
   "runReplayHelp": "Check the values it fills in, then run it.",
   "run": "Run",
   "saveAsReplay": "Also save as a replay",
   "replaySaved": "Saved the replay {name}",
-  "@replaySaved": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@replaySaved": {"placeholders": {"name": {"type": "String"}}},
   "passwordManagers": "Password managers",
   "passwordManagersRow": "1Password or Bitwarden logins for bots",
   "noPasswordManagers": "No password managers connected",
@@ -2719,21 +1685,9 @@
   "pmJustMe": "Just me",
   "pmNoVaults": "No vaults chosen yet",
   "pmVaults": "{count, plural, =1{1 vault} other{{count} vaults}}",
-  "@pmVaults": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@pmVaults": {"placeholders": {"count": {"type": "int"}}},
   "pmLogins": "{count, plural, =1{1 login} other{{count} logins}}",
-  "@pmLogins": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@pmLogins": {"placeholders": {"count": {"type": "int"}}},
   "pmOnePasswordHelp": "Uses a 1Password Connect server with a service account's token.",
   "pmBitwardenHelp": "Uses Bitwarden's Vault Management API (bw serve) for your organization's collections.",
   "pmConnectUrl": "Connect server address",
@@ -2748,7 +1702,8 @@
   "tryAgain": "Try again",
   "inviteLinkCopied": "Invite link copied. Send it to the people you work with.",
   "connectManaged": "Sign in through Composio",
-  "connectManagedHelp": "Casama reads your inbox through Composio's Google sign-in for now. You can disconnect any time.",
+  "connectManagedHelp": "Casama connects {app} through Composio, which handles the sign-in. You can disconnect any time.",
+  "@connectManagedHelp": {"placeholders": {"app": {"type": "String"}}},
   "sharing": "Sharing",
   "sharingRow": "Who can chat with, edit or manage it",
   "sharingHelp": "Everyone in the workspace can chat with a bot unless you make it private. People you add can chat, edit its settings, or also manage who has access. A bot working for someone only uses their own personal computer and connections.",
@@ -2759,36 +1714,18 @@
   "sharingOnlyCreator": "Only its creator",
   "sharingEveryoneChats": "Everyone can chat; add people who should edit it",
   "sharingEveryoneRole": "Everyone who is {role}",
-  "@sharingEveryoneRole": {
-    "placeholders": {
-      "role": {
-        "type": "String"
-      }
-    }
-  },
+  "@sharingEveryoneRole": {"placeholders": {"role": {"type": "String"}}},
   "accessChat": "Can chat",
   "accessEdit": "Can edit",
   "accessAdmin": "Can manage",
   "sharingSaved": "Sharing saved",
   "triggerCalendar": "Meetings",
   "routineCalendar": "{minutes, plural, =0{At the start of matching meetings} other{Around matching meetings ({minutes} min)}}",
-  "@routineCalendar": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
+  "@routineCalendar": {"placeholders": {"minutes": {"type": "int"}}},
   "calendarTriggerNeedsCalendar": "Connect Google Calendar or Outlook first.",
   "calendarTriggerCalendar": "Calendar",
   "calendarOffset": "{minutes, plural, =0{At start} other{{minutes} min}}",
-  "@calendarOffset": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
+  "@calendarOffset": {"placeholders": {"minutes": {"type": "int"}}},
   "calendarOutsideGuests": "Only meetings with people outside my company",
   "calendarVideoLink": "Only meetings with a video link",
   "calendarTitleMatch": "Only titles containing (optional)",
@@ -2807,25 +1744,13 @@
   "chatAppsMac": "Mac",
   "chatAppsNoMac": "Turn on \"Use this computer for bots\" with Messages allowed in the desktop app on your Mac first.",
   "chatAppsConnected": "{name} is connected",
-  "@chatAppsConnected": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@chatAppsConnected": {"placeholders": {"name": {"type": "String"}}},
   "chatAppsTelegramDone": "Telegram is already sending messages here. Message your bot to try it.",
   "chatAppsPasteUrl": "Paste this address into the app's webhook settings.",
   "chatAppsWebhookUrl": "Webhook address",
   "chatAppsVerifyToken": "Verify token",
   "chatAppsAllowed": "{count, plural, =0{Nobody allowed} =1{1 allowed sender} other{{count} allowed senders}}",
-  "@chatAppsAllowed": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@chatAppsAllowed": {"placeholders": {"count": {"type": "int"}}},
   "chatAppsActivity": "Activity",
   "chatAppsNoActivity": "No messages yet.",
   "chatAppsIgnored": "Ignored: not on the allowed list",
@@ -2856,13 +1781,7 @@
   "messageTriggerSubject": "Subject contains",
   "messageTriggerWords": "Message contains",
   "callIncoming": "{name} is calling",
-  "@callIncoming": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@callIncoming": {"placeholders": {"name": {"type": "String"}}},
   "callAnswer": "Answer",
   "callDecline": "Decline",
   "encryption": "Encrypt content",
@@ -2881,13 +1800,7 @@
   "encryptionRotateBody": "The workspace key is wrapped again with the server's current key. Your content stays readable and nothing needs re-encrypting. Do this after changing the server's key, or on a schedule.",
   "encryptionRotateHelp": "Rewraps the workspace key with the server's current key",
   "encryptionRotated": "Last rotated {date}",
-  "@encryptionRotated": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
+  "@encryptionRotated": {"placeholders": {"date": {"type": "String"}}},
   "memoryBackend": "Where memory is kept",
   "memoryBuiltIn": "Built in",
   "memoryBackendHelp": "Bots' long-term memory",
@@ -2920,13 +1833,7 @@
   "outCallRinging": "Ringing…",
   "outCallLive": "On the call",
   "outCallEnded": "Ended after {seconds}s",
-  "@outCallEnded": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
+  "@outCallEnded": {"placeholders": {"seconds": {"type": "int"}}},
   "outCallEndedByYou": "You ended the call",
   "outCallTakenOver": "You took over the call",
   "outCallFailed": "Didn't go through",
@@ -2938,16 +1845,7 @@
   "payments": "Payments",
   "paymentsHelp": "Let bots pay merchants with single-use virtual cards you approve each time. Bring your own Stripe Issuing account.",
   "paymentsOn": "{spent} spent this month of {cap}",
-  "@paymentsOn": {
-    "placeholders": {
-      "spent": {
-        "type": "String"
-      },
-      "cap": {
-        "type": "String"
-      }
-    }
-  },
+  "@paymentsOn": {"placeholders": {"spent": {"type": "String"}, "cap": {"type": "String"}}},
   "paymentsSheetHelp": "Every card is approved by you with the amount shown, works once at that merchant for one hour, and never for securities, crypto, gift cards or transfers.",
   "paymentsStripeKey": "Stripe secret key (with Issuing)",
   "paymentsWebhookSecret": "Webhook signing secret",
@@ -2972,13 +1870,7 @@
   "linksAcceptHelp": "Paste the invite your contact sent you.",
   "linksInviteText": "Invite",
   "linksActive": "Linked with {bot}",
-  "@linksActive": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      }
-    }
-  },
+  "@linksActive": {"placeholders": {"bot": {"type": "String"}}},
   "linksPending": "Waiting for your contact to accept",
   "linksRevoked": "Unlinked",
   "linksExchanges": "Exchanges",
@@ -2986,17 +1878,10 @@
   "linksNoAnswer": "No answer",
   "linksWorking": "Working…",
   "linksRevoke": "Unlink",
-  "callAvatar": "Avatar",
   "wakeWord": "Wake word",
   "wakeWordRow": "Say a phrase to start a call with a bot",
   "wakeWordOnRow": "Listening for \"{phrase}\"",
-  "@wakeWordOnRow": {
-    "placeholders": {
-      "phrase": {
-        "type": "String"
-      }
-    }
-  },
+  "@wakeWordOnRow": {"placeholders": {"phrase": {"type": "String"}}},
   "wakeWordHelp": "While Casama is open, this device listens for your phrase and starts a live call with the bot you choose.",
   "wakeWordListen": "Listen for the wake word",
   "wakeWordPhrase": "Phrase",
@@ -3027,33 +1912,12 @@
   "desktopUsers": "Desktop users at once",
   "desktopUsersHelp": "Bots on this team computer share one screen. Others wait (and keep working with the shell, files and browser) while it's in use.",
   "desktopUsersCount": "{count, plural, =1{1 bot} other{{count} bots}}",
-  "@desktopUsersCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@desktopUsersCount": {"placeholders": {"count": {"type": "int"}}},
   "deviceAccessTitle": "{bot} would like to use your {what}",
-  "@deviceAccessTitle": {
-    "placeholders": {
-      "bot": {
-        "type": "String"
-      },
-      "what": {
-        "type": "String"
-      }
-    }
-  },
+  "@deviceAccessTitle": {"placeholders": {"bot": {"type": "String"}, "what": {"type": "String"}}},
   "deviceAccessHelp": "Only in your own chats. You can stop it any time in Settings → Device connections.",
   "deviceAccessAllowed": "Allowed to use your {what}",
-  "@deviceAccessAllowed": {
-    "placeholders": {
-      "what": {
-        "type": "String"
-      }
-    }
-  },
+  "@deviceAccessAllowed": {"placeholders": {"what": {"type": "String"}}},
   "deviceAccessSkipped": "Not shared",
   "deviceKindCalendar": "calendar",
   "deviceKindReminders": "reminders",
@@ -3069,13 +1933,7 @@
   "deviceKeepFor": "Keep for",
   "deviceKeepLiveOnly": "Live only",
   "deviceKeepDays": "{count, plural, =1{1 day} other{{count} days}}",
-  "@deviceKeepDays": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "@deviceKeepDays": {"placeholders": {"count": {"type": "int"}}},
   "devicePrivateModel": "Private models only",
   "devicePrivateModelHelp": "Only bots on a local model can read it",
   "deviceNoBots": "No bots yet. A bot asks when it needs this.",
@@ -3096,16 +1954,7 @@
   "watchedAppAdd": "Add an app (name or package id)",
   "providerHintMaps": "travel times for leave-now",
   "routineDevice": "On your phone: {event} {detail}",
-  "@routineDevice": {
-    "placeholders": {
-      "event": {
-        "type": "String"
-      },
-      "detail": {
-        "type": "String"
-      }
-    }
-  },
+  "@routineDevice": {"placeholders": {"event": {"type": "String"}, "detail": {"type": "String"}}},
   "ctxSelection": "Selected text",
   "ctxAddScreenshot": "Add a screenshot",
   "ctxScreenshotAdded": "Screenshot added",
@@ -3114,21 +1963,9 @@
   "watchedFoldersHelp": "A new file in one of these folders can start a routine (for example, file new PDFs in Downloads). Only its name is shared; bots read the file only if they work on this computer.",
   "whyTitle": "Why am I seeing this?",
   "whyData": "Used: {data}",
-  "@whyData": {
-    "placeholders": {
-      "data": {
-        "type": "String"
-      }
-    }
-  },
+  "@whyData": {"placeholders": {"data": {"type": "String"}}},
   "whyUrgency": "Urgency: {urgency}",
-  "@whyUrgency": {
-    "placeholders": {
-      "urgency": {
-        "type": "String"
-      }
-    }
-  },
+  "@whyUrgency": {"placeholders": {"urgency": {"type": "String"}}},
   "heldMeeting": "It waited while you were in a meeting and came with your brief.",
   "heldFocus": "It waited while Focus was on and came with your brief.",
   "heldDriving": "It waited while you were driving and came with your brief.",
@@ -3149,7 +1986,6 @@
   "photosFromUnsplash": "Photos from Unsplash",
   "showBotSteps": "Show the bot's steps",
   "showBotStepsHelp": "Each step it takes, with commands and technical errors. Off, chats show what it's doing in a few words and its answer.",
-  "toolLoad": "Got its tools ready",
   "activityReady": "Getting ready…",
   "activitySearching": "Searching the web…",
   "activityBrowsing": "Browsing the web…",
@@ -3234,6 +2070,17 @@
   "@openWorkspace": {"placeholders": {"name": {"type": "String"}}},
   "pendingInvites": "Invites not accepted yet",
   "people": "People",
+  "workspaceAdvancedSummary": "Secrets, memory, encryption, payments, MCP",
+  "peopleAdvancedSummary": "Invite code, email domain, custom links",
+  "inviteLinkToCopy": "Invite link, ready to copy",
+  "linkMade": "Made {when}",
+  "@linkMade": {"placeholders": {"when": {"type": "String"}}},
+  "billingAdvancedSummary": "Charges by server, Cloud Connect keys",
+  "billingChargesSummary": "Charges by server",
+  "billingUsageRow": "What bots used and what it cost",
+  "billingUsageSoFar": "This month so far: {amount}",
+  "@billingUsageSoFar": {"placeholders": {"amount": {"type": "String"}}},
+  "usageAdvancedSummary": "Tokens in and out, JSON export",
   "peopleHelp": "Invite people and decide who gets in.",
   "peopleRow": "Invite people, approve requests, see members",
   "qrCode": "QR code",
@@ -3291,5 +2138,64 @@
   "@factsImported": {"placeholders": {"count": {"type": "int"}}},
   "nameCardHelp": "Your bots will use it in every workspace. You can change it later in Settings → About you.",
   "nameStepBubble": "Nice to meet you!",
-  "nameStepHint": "Your name"
+  "nameStepHint": "Your name",
+  "skillCatalogSubtitle": "Ready-made skills your bots load when a task calls for one.",
+  "skillCategoryWork": "Work",
+  "skillCategoryWriting": "Writing",
+  "skillCategoryResearch": "Research",
+  "skillCategoryData": "Data",
+  "skillCategoryMoney": "Money",
+  "skillCategoryBuild": "Build",
+  "skillCategoryLife": "Life",
+  "skillCount": "{count, plural, =1{1 skill} other{{count} skills}}",
+  "@skillCount": {"placeholders": {"count": {"type": "int"}}},
+  "skillInstalledBadge": "Installed",
+  "skillInstalledFor": "Installed for {names}",
+  "@skillInstalledFor": {"placeholders": {"names": {"type": "String"}}},
+  "installSkillFor": "Install {name} for",
+  "@installSkillFor": {"placeholders": {"name": {"type": "String"}}},
+  "skillUseHint": "Bots load it on their own when a task fits, or type /{name} in a chat to use it.",
+  "@skillUseHint": {"placeholders": {"name": {"type": "String"}}},
+  "skillInstructions": "Instructions",
+  "skillAlreadyEverywhere": "Installed everywhere it can be.",
+  "gallery": "Gallery",
+  "galleryHelp": "Themes, color schemes, wallpapers and skills other people contribute. Using one saves it on this device.",
+  "galleryEmpty": "Nothing in the gallery matches.",
+  "galleryOffline": "The gallery can't be reached right now. The built-in looks and skills are still here.",
+  "galleryUse": "Use",
+  "galleryInstall": "Install",
+  "galleryReport": "Report",
+  "galleryShare": "Share to gallery",
+  "galleryBy": "By {name}",
+  "@galleryBy": {"placeholders": {"name": {"type": "String"}}},
+  "galleryFeatured": "Featured",
+  "galleryAll": "All",
+  "galleryThemes": "Themes",
+  "gallerySchemes": "Colors",
+  "galleryWallpapers": "Wallpapers",
+  "gallerySkills": "Skills",
+  "fromGallery": "Gallery",
+  "galleryApplied": "Using {name}",
+  "@galleryApplied": {"placeholders": {"name": {"type": "String"}}},
+  "gallerySeeAll": "See all",
+  "galleryInUse": "In use",
+  "galleryInstalled": "Installed {name}",
+  "@galleryInstalled": {"placeholders": {"name": {"type": "String"}}},
+  "galleryPreviewDark": "Preview in dark",
+  "galleryPreviewLight": "Preview in light",
+  "galleryClearSearch": "Clear search",
+  "galleryOfflineTitle": "The gallery is offline",
+  "galleryNoMatches": "Nothing matches “{query}”",
+  "@galleryNoMatches": {"placeholders": {"query": {"type": "String"}}},
+  "galleryInstructions": "Instructions",
+  "galleryPatternOn": "{pattern} on {palette}",
+  "@galleryPatternOn": {"placeholders": {"pattern": {"type": "String"}, "palette": {"type": "String"}}},
+  "galleryImage": "Image",
+  "galleryLightAndDark": "Light and dark",
+  "galleryContribute": "Made a look you like? Share it, and everyone on Casama can find it here.",
+  "galleryTypeTheme": "Theme",
+  "galleryTypeScheme": "Color scheme",
+  "galleryTypeWallpaper": "Wallpaper",
+  "galleryTypeSkill": "Skill",
+  "galleryBehindChats": "Behind your chats"
 }

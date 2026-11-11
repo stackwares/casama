@@ -11,77 +11,49 @@ import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../chat/widgets/chat_markdown.dart';
-import '../skills/skill_proposals.dart';
 
-/// The "For you" feed (D-114): the latest morning briefs, pending suggestions and approvals.
+/// The "For you" feed (D-114): the latest morning briefs, pending suggestions and approvals,
+/// shown in the Inbox.
 final forYouProvider = FutureProvider.autoDispose<ForYou>((ref) async {
   final org = ref.watch(currentOrgProvider);
   if (org == null) return ForYou(briefs: const [], suggestions: const [], approvals: const []);
   return ref.watch(backendProvider).forYou(org.id);
 });
 
-class ForYouList extends ConsumerWidget {
-  const ForYouList({super.key});
+/// A morning brief (D-114): opens the conversation it was posted in.
+class BriefCard extends ConsumerWidget {
+  const BriefCard({super.key, required this.brief});
+  final ForYouBrief brief;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final bots = ref.watch(botsProvider).value ?? const <Bot>[];
-    Bot? bot(String id) => bots.where((b) => b.id == id).firstOrNull;
-    final proposals = ref.watch(skillProposalsProvider).value ?? const <SkillProposal>[];
-    return AsyncView(
-      value: ref.watch(forYouProvider),
-      onRetry: () => ref.invalidate(forYouProvider),
-      data: (f) {
-        if (f.briefs.isEmpty && f.suggestions.isEmpty && f.approvals.isEmpty && proposals.isEmpty) {
-          return EmptyState(icon: LucideIcons.sun, title: l10n.forYouEmpty, message: l10n.forYouEmptyHelp);
-        }
-        return ListView(
-          padding: const EdgeInsets.all(AppSpace.lg),
-          children: [
-            for (final b in f.briefs)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpace.md),
-                child: AppCard(
-                  key: Key('brief-${b.botId}'),
-                  onTap: () => context.push('/bots/${b.botId}/chat?c=${b.conversationId}'),
-                  padding: const EdgeInsets.all(AppSpace.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: AppSpace.sm,
-                    children: [
-                      Row(children: [
-                        BotAvatar(name: bot(b.botId)?.name ?? '', avatar: bot(b.botId)?.avatarUrl, size: 28),
-                        const SizedBox(width: AppSpace.sm),
-                        Expanded(child: Text(l10n.morningBriefFrom(bot(b.botId)?.name ?? ''), style: context.textTheme.titleSmall)),
-                        Text(relativeTime(b.createdAt, context), style: context.textTheme.labelSmall),
-                      ]),
-                      ChatMarkdown(data: b.text),
-                    ],
-                  ),
-                ),
-              ),
-            if (proposals.isNotEmpty) SectionHeader(title: l10n.skillIdeas),
-            for (final p in proposals) SkillProposalCard(proposal: p, botName: bot(p.botId)?.name ?? ''),
-            if (f.suggestions.isNotEmpty) SectionHeader(title: l10n.suggestions),
-            for (final s in f.suggestions) _SuggestionCard(s: s, botName: bot(s.botId)?.name ?? ''),
-            if (f.approvals.isNotEmpty) SectionHeader(title: l10n.approvals),
-            for (final a in f.approvals)
-              ListTile(
-                key: Key('forYouApproval-${a.id}'),
-                leading: const Icon(LucideIcons.shieldAlert),
-                title: Text(a.summary, maxLines: 2, overflow: TextOverflow.ellipsis),
-                onTap: () => context.push('/approvals/${a.id}'),
-              ),
-          ],
-        );
-      },
+    final b = brief;
+    final bot = (ref.watch(botsProvider).value ?? const <Bot>[]).where((x) => x.id == b.botId).firstOrNull;
+    return AppCard(
+      key: Key('brief-${b.botId}'),
+      onTap: () => context.push('/bots/${b.botId}/chat?c=${b.conversationId}'),
+      padding: const EdgeInsets.all(AppSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpace.sm,
+        children: [
+          Row(children: [
+            BotAvatar(name: bot?.name ?? '', avatar: bot?.avatarUrl, size: 28),
+            const SizedBox(width: AppSpace.sm),
+            Expanded(child: Text(l10n.morningBriefFrom(bot?.name ?? ''), style: context.textTheme.titleSmall)),
+            Text(relativeTime(b.createdAt, context), style: context.textTheme.labelSmall),
+          ]),
+          ChatMarkdown(data: b.text),
+        ],
+      ),
     );
   }
 }
 
-class _SuggestionCard extends ConsumerWidget {
-  const _SuggestionCard({required this.s, required this.botName});
+/// A suggestion from a bot (D-114): do it, or dismiss it once or for good.
+class SuggestionCard extends ConsumerWidget {
+  const SuggestionCard({super.key, required this.s, required this.botName});
   final Suggestion s;
   final String botName;
 

@@ -8,6 +8,8 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
@@ -80,6 +82,7 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
         onRetry: () => ref.invalidate(_deviceStateProvider),
         data: (st) {
           final others = st.sources.where((s) => s.deviceKey != st.key).toList();
+          final onKinds = [for (final k in DeviceKind.values.where(supported.contains)) if (st.mine?.kinds[k.value] != null) k];
           return PageColumn(
             children: [
               FormNote(l10n.deviceConnectionsHelp, icon: LucideIcons.shieldCheck),
@@ -92,18 +95,13 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
                     kind: kind,
                     settings: st.mine?.kinds[kind.value],
                     busy: _busy.contains(kind),
-                    grants: st.grants.where((g) => g.kind == kind).toList(),
                     onToggle: (on) => _toggle(kind, on),
-                    onSettings: (s) => _settings(kind, s),
+                    // Places and watched apps stay with the switch: without them the kind shares nothing.
                     extra: kind == DeviceKind.places
                         ? const _PlacesEditor()
                         : kind == DeviceKind.notifications
                         ? _AppsEditor(apps: st.mine?.kinds['notifications']?.apps ?? const [], onChanged: (apps) => _settings(kind, DeviceKindSettings(retentionDays: st.mine?.kinds['notifications']?.retentionDays, privateModel: st.mine?.kinds['notifications']?.privateModel, apps: apps)))
                         : null,
-                    onRevoke: (g) async {
-                      await runGuarded(context, () => ref.read(backendProvider).setDeviceGrant(g.botId, g.kind, false));
-                      ref.invalidate(_deviceStateProvider);
-                    },
                   ),
                   const SizedBox(height: AppSpace.sm),
                 ],
@@ -133,6 +131,27 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
                   ],
                 ),
               ],
+              // How long each kind is kept, who may read it and the health extras (D-182).
+              if (onKinds.isNotEmpty)
+                AdvancedSection(
+                  id: 'devices',
+                  summary: l10n.devicesAdvancedSummary,
+                  children: [
+                    for (final kind in onKinds) ...[
+                      _KindAdvanced(
+                        kind: kind,
+                        settings: st.mine!.kinds[kind.value]!,
+                        grants: st.grants.where((g) => g.kind == kind).toList(),
+                        onSettings: (s) => _settings(kind, s),
+                        onRevoke: (g) async {
+                          await runGuarded(context, () => ref.read(backendProvider).setDeviceGrant(g.botId, g.kind, false));
+                          ref.invalidate(_deviceStateProvider);
+                        },
+                      ),
+                      const SizedBox(height: AppSpace.sm),
+                    ],
+                  ],
+                ),
             ],
           );
         },
@@ -141,23 +160,24 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
   }
 }
 
+String _kindTitle(AppLocalizations l10n, DeviceKind kind) {
+  final label = deviceKindLabel(l10n, kind);
+  return label[0].toUpperCase() + label.substring(1);
+}
+
+/// One kind's switch, plus what it can't work without (places, watched apps).
 class _KindCard extends StatelessWidget {
-  const _KindCard({required this.kind, required this.settings, required this.busy, required this.grants, required this.onToggle, required this.onSettings, required this.onRevoke, this.extra});
+  const _KindCard({required this.kind, required this.settings, required this.busy, required this.onToggle, this.extra});
   final Widget? extra;
   final DeviceKind kind;
   final DeviceKindSettings? settings;
   final bool busy;
-  final List<DeviceGrant> grants;
   final ValueChanged<bool> onToggle;
-  final ValueChanged<DeviceKindSettings> onSettings;
-  final ValueChanged<DeviceGrant> onRevoke;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final on = settings != null;
-    final label = deviceKindLabel(l10n, kind);
-    final keep = settings?.retentionDays ?? defaultRetentionDays(kind);
     return AppCard(
       key: Key('deviceKind-${kind.value}'),
       padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
@@ -168,69 +188,112 @@ class _KindCard extends StatelessWidget {
             key: Key('deviceSwitch-${kind.value}'),
             contentPadding: EdgeInsets.zero,
             secondary: Icon(deviceKindIcon(kind)),
-            title: Text(label[0].toUpperCase() + label.substring(1)),
+            title: Text(_kindTitle(l10n, kind)),
             value: on,
             onChanged: busy ? null : onToggle,
           ),
-          if (on) ...[
-            Row(
+          if (on && (kind == DeviceKind.health || extra != null))
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpace.sm),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (kind == DeviceKind.health) Text(l10n.healthNotMedical, style: context.textTheme.bodySmall),
+                  ?extra,
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A shared kind's expert settings: how long it's kept, private models only, the health extras,
+/// and the bots that may read it.
+class _KindAdvanced extends StatelessWidget {
+  const _KindAdvanced({required this.kind, required this.settings, required this.grants, required this.onSettings, required this.onRevoke});
+  final DeviceKind kind;
+  final DeviceKindSettings settings;
+  final List<DeviceGrant> grants;
+  final ValueChanged<DeviceKindSettings> onSettings;
+  final ValueChanged<DeviceGrant> onRevoke;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final keep = settings.retentionDays ?? defaultRetentionDays(kind);
+    return AppCard(
+      key: Key('deviceAdvanced-${kind.value}'),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpace.sm),
+            child: Row(
               children: [
-                Expanded(child: Text(l10n.deviceKeepFor, style: context.textTheme.bodyMedium)),
-                DropdownButton<int>(
-                  key: Key('deviceKeep-${kind.value}'),
-                  value: const [0, 7, 30, 90, 365].contains(keep) ? keep : 365,
-                  underline: const SizedBox.shrink(),
-                  items: [
-                    for (final d in const [0, 7, 30, 90, 365])
-                      if (d <= defaultRetentionDays(kind)) DropdownMenuItem(value: d, child: Text(d == 0 ? l10n.deviceKeepLiveOnly : l10n.deviceKeepDays(d))),
-                  ],
-                  onChanged: (d) => d == null ? null : onSettings(DeviceKindSettings(retentionDays: d, privateModel: settings?.privateModel, extras: settings?.extras)),
-                ),
+                Icon(deviceKindIcon(kind), size: 18, color: context.colorScheme.onSurfaceVariant),
+                const SizedBox(width: AppSpace.sm),
+                Expanded(child: Text(_kindTitle(l10n, kind), style: context.textTheme.titleSmall)),
               ],
             ),
-            SwitchListTile(
-              key: Key('devicePrivate-${kind.value}'),
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              title: Text(l10n.devicePrivateModel),
-              subtitle: Text(l10n.devicePrivateModelHelp),
-              value: settings?.privateModel ?? false,
-              onChanged: (v) => onSettings(DeviceKindSettings(retentionDays: settings?.retentionDays, privateModel: v, extras: settings?.extras)),
-            ),
-            // Health (D-150): sensitive extras are separate switches, off by default.
-            if (kind == DeviceKind.health)
-              for (final x in DeviceKindSettingsExtrasEnum.values)
-                SwitchListTile(
-                  key: Key('healthExtra-${x.value}'),
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: Text(switch (x) {
-                    DeviceKindSettingsExtrasEnum.cycle => l10n.healthExtraCycle,
-                    DeviceKindSettingsExtrasEnum.glucose => l10n.healthExtraGlucose,
-                    DeviceKindSettingsExtrasEnum.bloodPressure => l10n.healthExtraBloodPressure,
-                  }),
-                  value: settings?.extras?.contains(x) ?? false,
-                  onChanged: (v) => onSettings(
-                    DeviceKindSettings(
-                      retentionDays: settings?.retentionDays,
-                      privateModel: settings?.privateModel,
-                      extras: [...?settings?.extras?.where((e) => e != x), if (v) x],
-                    ),
+          ),
+          Row(
+            children: [
+              Expanded(child: Text(l10n.deviceKeepFor, style: context.textTheme.bodyMedium)),
+              DropdownButton<int>(
+                key: Key('deviceKeep-${kind.value}'),
+                value: const [0, 7, 30, 90, 365].contains(keep) ? keep : 365,
+                underline: const SizedBox.shrink(),
+                items: [
+                  for (final d in const [0, 7, 30, 90, 365])
+                    if (d <= defaultRetentionDays(kind)) DropdownMenuItem(value: d, child: Text(d == 0 ? l10n.deviceKeepLiveOnly : l10n.deviceKeepDays(d))),
+                ],
+                onChanged: (d) => d == null ? null : onSettings(DeviceKindSettings(retentionDays: d, privateModel: settings.privateModel, extras: settings.extras)),
+              ),
+            ],
+          ),
+          SwitchListTile(
+            key: Key('devicePrivate-${kind.value}'),
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: Text(l10n.devicePrivateModel),
+            subtitle: Text(l10n.devicePrivateModelHelp),
+            value: settings.privateModel ?? false,
+            onChanged: (v) => onSettings(DeviceKindSettings(retentionDays: settings.retentionDays, privateModel: v, extras: settings.extras)),
+          ),
+          // Health (D-150): sensitive extras are separate switches, off by default.
+          if (kind == DeviceKind.health)
+            for (final x in DeviceKindSettingsExtrasEnum.values)
+              SwitchListTile(
+                key: Key('healthExtra-${x.value}'),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(switch (x) {
+                  DeviceKindSettingsExtrasEnum.cycle => l10n.healthExtraCycle,
+                  DeviceKindSettingsExtrasEnum.glucose => l10n.healthExtraGlucose,
+                  DeviceKindSettingsExtrasEnum.bloodPressure => l10n.healthExtraBloodPressure,
+                }),
+                value: settings.extras?.contains(x) ?? false,
+                onChanged: (v) => onSettings(
+                  DeviceKindSettings(
+                    retentionDays: settings.retentionDays,
+                    privateModel: settings.privateModel,
+                    extras: [...?settings.extras?.where((e) => e != x), if (v) x],
                   ),
                 ),
-            if (kind == DeviceKind.health) Text(l10n.healthNotMedical, style: context.textTheme.bodySmall),
-            ?extra,
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpace.xs, bottom: AppSpace.sm),
-              child: grants.isEmpty
-                  ? Text(l10n.deviceNoBots, style: context.textTheme.bodySmall)
-                  : Wrap(
-                      spacing: AppSpace.xs,
-                      runSpacing: AppSpace.xs,
-                      children: [for (final g in grants) InputChip(key: Key('grant-${g.botId}-${kind.value}'), label: Text(g.botName), onDeleted: () => onRevoke(g))],
-                    ),
-            ),
-          ],
+              ),
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpace.xs, bottom: AppSpace.sm),
+            child: grants.isEmpty
+                ? Text(l10n.deviceNoBots, style: context.textTheme.bodySmall)
+                : Wrap(
+                    spacing: AppSpace.xs,
+                    runSpacing: AppSpace.xs,
+                    children: [for (final g in grants) InputChip(key: Key('grant-${g.botId}-${kind.value}'), label: Text(g.botName), onDeleted: () => onRevoke(g))],
+                  ),
+          ),
         ],
       ),
     );

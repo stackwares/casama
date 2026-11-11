@@ -1,0 +1,22 @@
+{
+  "v": 2,
+  "scheme": {
+    "light": {
+      "seed": "#A35F00",
+      "background": "#FFF8EE",
+      "onBackground": "#2B1D08"
+    },
+    "dark": {
+      "seed": "#FFC266",
+      "background": "#1E1608",
+      "onBackground": "#FBEFDC"
+    }
+  },
+  "headingFont": "Young Serif",
+  "bodyFont": "DM Sans",
+  "wallpaper": {
+    "pattern": "treats",
+    "palette": "peach",
+    "intensity": 0.45
+  }
+}

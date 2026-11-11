@@ -3,6 +3,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createXai } from "@ai-sdk/xai";
+import { CLOUD_MAX_OUTPUT_TOKENS } from "@casama/domain";
 import {
   APICallError,
   type JSONValue,
@@ -14,6 +15,7 @@ import {
   tool,
 } from "ai";
 import { type ChatGptOptions, streamChatGpt } from "./chatgpt.ts";
+import { openRouterFetch } from "./openrouter.ts";
 import {
   type ChatMessage,
   type GatewayEvent,
@@ -23,7 +25,7 @@ import {
   type ResolvedModel,
 } from "./types.ts";
 
-export function languageModel(m: ResolvedModel): LanguageModel {
+export function languageModel(m: ResolvedModel, fetchImpl?: typeof fetch): LanguageModel {
   switch (m.provider) {
     case "openai":
       return createOpenAI({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
@@ -42,6 +44,7 @@ export function languageModel(m: ResolvedModel): LanguageModel {
         headers: m.headers,
         baseURL: m.baseUrl ?? "https://openrouter.ai/api/v1",
         includeUsage: true,
+        fetch: fetchImpl,
       })(m.model);
     case "openai_compatible":
       if (!m.baseUrl)
@@ -122,6 +125,15 @@ function classify(err: unknown): ModelCallError {
   if (err instanceof ModelCallError) return err;
   if (APICallError.isInstance(err)) {
     const status = err.statusCode;
+    const body =
+      typeof err.responseBody === "string"
+        ? err.responseBody
+        : JSON.stringify(err.responseBody ?? "");
+    if (status === 403 && body.includes("openrouter_key_limit"))
+      return new ModelCallError(
+        "Casama's model key hit its daily limit. Try again tomorrow, or add your own key.",
+        { retryable: false, status, code: "openrouter_key_limit", cause: err },
+      );
     const retryable =
       status === undefined || status === 408 || status === 409 || status === 429 || status >= 500;
     return new ModelCallError(`provider returned ${status ?? "no status"}`, {
@@ -158,14 +170,26 @@ export class AiSdkGateway implements ModelGateway {
         inputSchema: jsonSchema(t.inputSchema as never),
       });
     }
+    let costPromise = Promise.resolve<number | undefined>(undefined);
+    const fetchImpl =
+      req.model.provider === "openrouter"
+        ? openRouterFetch({
+            user: req.model.platformKey ? req.model.openRouterUser : undefined,
+            denyDataCollection: req.model.platformKey === true,
+            track: (cost) => {
+              costPromise = cost;
+            },
+          })
+        : undefined;
     let result: ReturnType<typeof streamText>;
     try {
       result = streamText({
-        model: languageModel(req.model),
+        model: languageModel(req.model, fetchImpl),
         system: req.system.join("\n\n"),
         messages: toModelMessages(req.messages),
         tools: req.tools?.length ? tools : undefined,
-        maxOutputTokens: req.maxOutputTokens,
+        maxOutputTokens:
+          req.maxOutputTokens ?? (req.model.platformKey ? CLOUD_MAX_OUTPUT_TOKENS : undefined),
         providerOptions: reasoningOptions(req.model),
         abortSignal: req.abortSignal,
         maxRetries: 0,
@@ -188,6 +212,7 @@ export class AiSdkGateway implements ModelGateway {
         } else if (part.type === "error") throw part.error;
         else if (part.type === "abort") throw new ModelCallError("aborted", { retryable: false });
         else if (part.type === "finish") {
+          const providerCostUsd = await costPromise;
           yield {
             type: "finish",
             finishReason: part.finishReason,
@@ -201,6 +226,7 @@ export class AiSdkGateway implements ModelGateway {
               ...(part.totalUsage.inputTokenDetails?.cacheWriteTokens
                 ? { cacheWriteTokens: part.totalUsage.inputTokenDetails.cacheWriteTokens }
                 : {}),
+              ...(providerCostUsd !== undefined ? { providerCostUsd } : {}),
             },
           };
         }

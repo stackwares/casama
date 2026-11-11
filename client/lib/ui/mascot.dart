@@ -1,9 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
-/// The Casama cloud bots. Art lives in assets/mascots (rendered from assets/bots by
-/// scripts/casama-mascot-render.mjs): `<name>.webp` loops an 8 second animation, `<name>.png` is the still pose.
+/// The Casama cloud bots. Art lives in assets/mascots, made from the SVGs in assets/bots:
+/// `<name>.json` is the 8 second loop as Lottie (scripts/casama-mascot-lottie.py) and `<name>.png` the
+/// still pose (scripts/casama-mascot-render.mjs).
 enum Mascot {
   winky('Winky'),
   sleepy('Sleepy'),
@@ -28,7 +30,7 @@ enum Mascot {
   String get avatarValue => '$_prefix$name';
 
   String get stillAsset => 'assets/mascots/$name.png';
-  String get animatedAsset => 'assets/mascots/$name.webp';
+  String get lottieAsset => 'assets/mascots/$name.json';
 
   /// The mascot a bot's `avatar_url` points at, or null for initials (or a real image URL).
   static Mascot? fromAvatar(String? avatarUrl) {
@@ -44,8 +46,8 @@ enum Mascot {
       values[(rng ?? Random()).nextInt(values.length)];
 }
 
-/// One mascot, transparent, filling [size]. Animates unless [animate] is false or the system asks
-/// for reduced motion.
+/// One mascot, transparent, filling [size]. Plays its Lottie loop at the screen's frame rate unless
+/// [animate] is false or the system asks for reduced motion; the still pose shows until it loads.
 class MascotImage extends StatelessWidget {
   const MascotImage(
     this.mascot, {
@@ -60,45 +62,102 @@ class MascotImage extends StatelessWidget {
   final bool animate;
   final String? semanticLabel;
 
-  /// The art keeps a margin around the cloud for its hops and tail swings; scale it up a little so
-  /// the cloud itself fills the box (the overflow is transparent).
-  static const _zoom = 1.14;
-
-  /// Pixel size the assets are rendered at (see scripts/casama-mascot-render.mjs). Enough for a
-  /// 96pt avatar on a 3x screen; never decode above it.
+  /// Pixel size the still poses are rendered at (see scripts/casama-mascot-render.mjs). Enough for
+  /// a 96pt avatar on a 3x screen; never decode above it.
   static const assetPx = 320;
 
   @override
-  Widget build(BuildContext context) {
-    final moving = animate && !MediaQuery.disableAnimationsOf(context);
-    final drawn = size * _zoom;
-    final px = (drawn * MediaQuery.devicePixelRatioOf(context)).round().clamp(
-      16,
-      assetPx,
+  Widget build(BuildContext context) => _mascotArt(
+    context,
+    still: mascot.stillAsset,
+    lottie: mascot.lottieAsset,
+    size: size,
+    animate: animate,
+    semanticLabel: semanticLabel,
+  );
+}
+
+/// The bot that isn't made yet: a pearl-white cloud that dozes, peeks at the New bot button, wakes,
+/// tries on the bots' colours and beckons. Not one of the [Mascot]s and never a bot's icon; it
+/// stands in on "no bots yet" screens. Same art pipeline (casama-blank*.svg in assets/bots).
+class BlankBotImage extends StatelessWidget {
+  const BlankBotImage({super.key, this.size = 128, this.animate = true});
+
+  final double size;
+  final bool animate;
+
+  static const stillAsset = 'assets/mascots/blank.png';
+  static const lottieAsset = 'assets/mascots/blank.json';
+
+  @override
+  Widget build(BuildContext context) => _mascotArt(
+    context,
+    still: stillAsset,
+    lottie: lottieAsset,
+    size: size,
+    animate: animate,
+  );
+}
+
+/// The art keeps a margin around the cloud for its hops and tail swings; scale it up a little so the
+/// cloud itself fills the box (the overflow is transparent).
+const _zoom = 1.14;
+
+/// Big mascots follow the display (up to 120 fps); small ones draw at the loop's own 60 fps.
+const _fullRateFrom = 64.0;
+
+/// A mascot loop (Lottie) with its still pose standing in while it loads, when it fails, and when
+/// [animate] is off or the system asks for reduced motion.
+Widget _mascotArt(
+  BuildContext context, {
+  required String still,
+  required String lottie,
+  required double size,
+  required bool animate,
+  String? semanticLabel,
+}) {
+  final moving = animate && !MediaQuery.disableAnimationsOf(context);
+  final drawn = size * _zoom;
+  final px = (drawn * MediaQuery.devicePixelRatioOf(context)).round().clamp(
+    16,
+    MascotImage.assetPx,
+  );
+  final stillImage = Image.asset(
+    still,
+    width: drawn,
+    height: drawn,
+    cacheWidth: px,
+    cacheHeight: px,
+    gaplessPlayback: true,
+    filterQuality: FilterQuality.medium,
+    excludeFromSemantics: true,
+  );
+  Widget art;
+  if (moving) {
+    final loop = Lottie.asset(
+      lottie,
+      width: drawn,
+      height: drawn,
+      frameRate: size >= _fullRateFrom ? FrameRate.max : FrameRate.composition,
+      filterQuality: FilterQuality.medium,
+      frameBuilder: (context, child, composition) =>
+          composition == null ? stillImage : child,
+      errorBuilder: (context, error, stack) => stillImage,
     );
-    final image = SizedBox(
-      width: size,
-      height: size,
-      child: OverflowBox(
-        maxWidth: drawn,
-        maxHeight: drawn,
-        child: Image.asset(
-          moving ? mascot.animatedAsset : mascot.stillAsset,
-          width: drawn,
-          height: drawn,
-          cacheWidth: px,
-          cacheHeight: px,
-          gaplessPlayback: true,
-          filterQuality: FilterQuality.medium,
-          semanticLabel: semanticLabel,
-          excludeFromSemantics: semanticLabel == null,
-        ),
-      ),
-    );
-    // A playing animation repaints on each of its frames: on its own layer, it doesn't repaint
-    // the screen around it with it.
-    return moving ? RepaintBoundary(child: image) : image;
+    // A playing loop repaints on each of its frames: on its own layer, it doesn't repaint the
+    // screen around it.
+    art = RepaintBoundary(child: ExcludeSemantics(child: loop));
+  } else {
+    art = stillImage;
   }
+  if (semanticLabel != null) {
+    art = Semantics(label: semanticLabel, image: true, child: art);
+  }
+  return SizedBox(
+    width: size,
+    height: size,
+    child: OverflowBox(maxWidth: drawn, maxHeight: drawn, child: art),
+  );
 }
 
 /// Picks a bot's icon: its initials or one of the mascots. [value] is the bot's `avatar_url`.

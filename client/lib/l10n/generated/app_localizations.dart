@@ -496,6 +496,42 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get navSettings;
 
+  /// No description provided for @navChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get navChats;
+
+  /// No description provided for @navTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get navTasks;
+
+  /// No description provided for @settingsYouSection.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get settingsYouSection;
+
+  /// No description provided for @settingsConnectionsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connections'**
+  String get settingsConnectionsSection;
+
+  /// No description provided for @advanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advanced;
+
+  /// No description provided for @settingsAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Secrets, computers, devices, bot steps'**
+  String get settingsAdvancedSummary;
+
   /// No description provided for @bots.
   ///
   /// In en, this message translates to:
@@ -910,6 +946,36 @@ abstract class AppLocalizations {
   /// **'Model keys'**
   String get modelKeys;
 
+  /// No description provided for @moreProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'More providers'**
+  String get moreProviders;
+
+  /// No description provided for @integrationsAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Composio, Pipedream, custom servers'**
+  String get integrationsAdvancedSummary;
+
+  /// No description provided for @toolPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool permissions'**
+  String get toolPermissions;
+
+  /// No description provided for @devicesAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'How long it\'s kept, private models, bots with access'**
+  String get devicesAdvancedSummary;
+
+  /// No description provided for @companionAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands, local tools (MCP), coding agents'**
+  String get companionAdvancedSummary;
+
   /// No description provided for @noKeys.
   ///
   /// In en, this message translates to:
@@ -951,6 +1017,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bot settings'**
   String get botSettings;
+
+  /// No description provided for @botProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot profile'**
+  String get botProfile;
+
+  /// No description provided for @botAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat apps, links, rules, watchers, plugins, activity'**
+  String get botAdvancedSummary;
+
+  /// No description provided for @botActivityRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Every run, step by step'**
+  String get botActivityRow;
+
+  /// No description provided for @createBotAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Model key and model'**
+  String get createBotAdvancedSummary;
+
+  /// No description provided for @botProfileSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get botProfileSection;
+
+  /// No description provided for @botBrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Brain'**
+  String get botBrain;
+
+  /// No description provided for @botAbilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Abilities'**
+  String get botAbilities;
+
+  /// No description provided for @botSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get botSchedule;
+
+  /// No description provided for @botAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get botAdvanced;
+
+  /// No description provided for @chatComputerLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Working on its computer'**
+  String get chatComputerLive;
 
   /// No description provided for @autonomy.
   ///
@@ -1402,6 +1528,144 @@ abstract class AppLocalizations {
   /// **'Routines'**
   String get routines;
 
+  /// No description provided for @routineAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub and webhook triggers, cron, timezone'**
+  String get routineAdvancedSummary;
+
+  /// No description provided for @routineRepeatDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day'**
+  String get routineRepeatDaily;
+
+  /// No description provided for @routineRepeatWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays'**
+  String get routineRepeatWeekdays;
+
+  /// No description provided for @routineRepeatWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every week'**
+  String get routineRepeatWeekly;
+
+  /// No description provided for @routineDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get routineDay;
+
+  /// No description provided for @routineTimesIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Times are in {timezone}'**
+  String routineTimesIn(String timezone);
+
+  /// No description provided for @routineCustomSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom: {schedule}'**
+  String routineCustomSchedule(String schedule);
+
+  /// No description provided for @routineOtherTriggers.
+  ///
+  /// In en, this message translates to:
+  /// **'Other triggers'**
+  String get routineOtherTriggers;
+
+  /// No description provided for @cronEveryMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{Every minute} other{Every {n} minutes}}'**
+  String cronEveryMinutes(int n);
+
+  /// No description provided for @cronEveryHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{Every hour} other{Every {n} hours}}'**
+  String cronEveryHours(int n);
+
+  /// No description provided for @cronHourlyAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Every hour at :{minute}'**
+  String cronHourlyAt(String minute);
+
+  /// No description provided for @cronDailyAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day at {time}'**
+  String cronDailyAt(String time);
+
+  /// No description provided for @cronWeekdaysAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays at {time}'**
+  String cronWeekdaysAt(String time);
+
+  /// No description provided for @cronWeekendsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekends at {time}'**
+  String cronWeekendsAt(String time);
+
+  /// No description provided for @cronDaysAt.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} at {time}'**
+  String cronDaysAt(String days, String time);
+
+  /// No description provided for @cronMonthlyAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day} of every month at {time}'**
+  String cronMonthlyAt(int day, String time);
+
+  /// No description provided for @cronAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'{items} and {last}'**
+  String cronAnd(String items, String last);
+
+  /// No description provided for @cronDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{day, select, sun{Sundays} mon{Mondays} tue{Tuesdays} wed{Wednesdays} thu{Thursdays} fri{Fridays} sat{Saturdays} other{{day}}}'**
+  String cronDays(String day);
+
+  /// No description provided for @cronDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{day, select, sun{Sunday} mon{Monday} tue{Tuesday} wed{Wednesday} thu{Thursday} fri{Friday} sat{Saturday} other{{day}}}'**
+  String cronDay(String day);
+
+  /// No description provided for @computerAdvancedTabsShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show terminal and checkpoints'**
+  String get computerAdvancedTabsShow;
+
+  /// No description provided for @computerAdvancedTabsHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide terminal and checkpoints'**
+  String get computerAdvancedTabsHide;
+
+  /// No description provided for @headlessScreenNoteSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'This computer has no desktop, so this shows its browser (blank until the bot opens a page). To watch and control apps live, switch it to a desktop in computer settings.'**
+  String get headlessScreenNoteSettings;
+
+  /// No description provided for @openComputerSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open computer settings'**
+  String get openComputerSettings;
+
   /// No description provided for @runNow.
   ///
   /// In en, this message translates to:
@@ -1563,12 +1827,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{n, plural, =1{Connected, 1 tool} other{Connected, {n} tools}}'**
   String integrationOk(int n);
-
-  /// No description provided for @needsApprovalFor.
-  ///
-  /// In en, this message translates to:
-  /// **'{bot} needs your approval to use {tool}'**
-  String needsApprovalFor(String bot, String tool);
 
   /// No description provided for @nextRun.
   ///
@@ -1978,6 +2236,180 @@ abstract class AppLocalizations {
   /// **'The call could not connect.'**
   String get callFailed;
 
+  /// No description provided for @callListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening'**
+  String get callListening;
+
+  /// No description provided for @callSpeaking.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaking'**
+  String get callSpeaking;
+
+  /// No description provided for @callWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working on it'**
+  String get callWorking;
+
+  /// No description provided for @callMutedState.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get callMutedState;
+
+  /// No description provided for @callCaptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Captions'**
+  String get callCaptions;
+
+  /// No description provided for @callSpeaker.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker'**
+  String get callSpeaker;
+
+  /// No description provided for @callEarpiece.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get callEarpiece;
+
+  /// No description provided for @callBluetooth.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth'**
+  String get callBluetooth;
+
+  /// No description provided for @callHeadphones.
+  ///
+  /// In en, this message translates to:
+  /// **'Headphones'**
+  String get callHeadphones;
+
+  /// No description provided for @callAudioOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Play the call through'**
+  String get callAudioOutput;
+
+  /// What the bot is doing in a tool step, in everyday words (chats, calls, the computer view).
+  ///
+  /// In en, this message translates to:
+  /// **'{tool, select, memory_search{Searching your memories} memory_write{Saving that to memory} memory{Updating its memory} knowledge_search{Looking through your knowledge} web_search{Searching the web} web{Reading a web page} browser_open{Opening a website} browser_click{Clicking on the page} browser_type{Typing on the page} browser_press{Pressing a key} browser_scroll{Scrolling the page} browser_look{Looking at the page} desktop_click{Clicking on the screen} desktop_type{Typing} desktop_press{Pressing keys} desktop_launch{Opening an app} desktop_look{Looking at the screen} shell{Working on its computer} files_read{Reading a file} files_write{Writing a file} files_list{Looking through files} files_search{Searching files} http{Contacting a service} data_search{Looking for data} data_call{Getting data} skills_load{Getting a skill ready} skills_create{Learning a new skill} skills_update{Improving a skill} checkpoint{Saving a restore point} takeover{Asking you to take over} delegate{Asking a helper} routines_list{Checking your routines} routines_create{Setting up a routine} routines_update{Updating a routine} routines_delete{Removing a routine} watchers_create{Setting up a watcher} watchers_list{Checking your watchers} watchers_delete{Removing a watcher} tasks_list{Checking your tasks} tasks_create{Adding a task} tasks{Updating your tasks} notify_user{Sending you a note} usage_report{Checking usage} device_read{Reading your device data} device_access{Asking for device access} pages_publish{Publishing a page} pages{Updating a page} media{Making an image} projects{Planning a project} payments{Asking to make a payment} voice_call{Calling a business} voice_call_user{Calling you} tools_load{Getting ready} ui_show{Showing you something} start_task{Starting this in the chat} other{Working on it}}'**
+  String toolDoing(String tool);
+
+  /// The same step once it's done.
+  ///
+  /// In en, this message translates to:
+  /// **'{tool, select, memory_search{Searched your memories} memory_write{Saved to memory} memory{Updated its memory} knowledge_search{Looked through your knowledge} web_search{Searched the web} web{Read a web page} browser_open{Opened a website} browser_click{Clicked on the page} browser_type{Typed on the page} browser_press{Pressed a key} browser_scroll{Scrolled the page} browser_look{Looked at the page} desktop_click{Clicked on the screen} desktop_type{Typed} desktop_press{Pressed keys} desktop_launch{Opened an app} desktop_look{Looked at the screen} shell{Worked on its computer} files_read{Read a file} files_write{Wrote a file} files_list{Looked through files} files_search{Searched files} http{Contacted a service} data_search{Looked for data} data_call{Got data} skills_load{Used a skill} skills_create{Learned a new skill} skills_update{Improved a skill} checkpoint{Saved a restore point} takeover{Asked you to take over} delegate{Asked a helper} routines_list{Checked your routines} routines_create{Set up a routine} routines_update{Updated a routine} routines_delete{Removed a routine} watchers_create{Set up a watcher} watchers_list{Checked your watchers} watchers_delete{Removed a watcher} tasks_list{Checked your tasks} tasks_create{Added a task} tasks{Updated your tasks} notify_user{Sent you a note} usage_report{Checked usage} device_read{Read your device data} device_access{Asked for device access} pages_publish{Published a page} pages{Updated a page} media{Made an image} projects{Planned a project} payments{Asked to make a payment} voice_call{Called a business} voice_call_user{Called you} tools_load{Got ready} ui_show{Showed you something} start_task{Started in the chat} other{Done}}'**
+  String toolDid(String tool);
+
+  /// No description provided for @toolUsingApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Using {app}'**
+  String toolUsingApp(String app);
+
+  /// No description provided for @toolUsedApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {app}'**
+  String toolUsedApp(String app);
+
+  /// No description provided for @toolDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get toolDetails;
+
+  /// No description provided for @toolNeedsOkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} needs your OK'**
+  String toolNeedsOkTitle(String bot);
+
+  /// No description provided for @callToolFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t work'**
+  String get callToolFailed;
+
+  /// No description provided for @callToolNeedsOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs your OK to go ahead'**
+  String get callToolNeedsOk;
+
+  /// No description provided for @callToolAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get callToolAllow;
+
+  /// No description provided for @callToolNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get callToolNotNow;
+
+  /// No description provided for @callToolAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed. The result will show in the chat'**
+  String get callToolAllowed;
+
+  /// No description provided for @callToolDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'You said not now'**
+  String get callToolDeclined;
+
+  /// No description provided for @callToolBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Still working. The result will show in the chat'**
+  String get callToolBackground;
+
+  /// No description provided for @callToolInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'The result will show in the chat'**
+  String get callToolInChat;
+
+  /// No description provided for @callToolSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String callToolSeconds(int seconds);
+
+  /// No description provided for @callNeedsKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls need a voice key'**
+  String get callNeedsKeyTitle;
+
+  /// No description provided for @callNeedsKeyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Live calls run on Google\'s Gemini Live, so this workspace needs a Google AI key. Google gives you one free in AI Studio: create it there, then add it under Model keys and calls work right away. Only workspace owners and admins can add keys.'**
+  String get callNeedsKeyBody;
+
+  /// No description provided for @callAddKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a Google AI key'**
+  String get callAddKey;
+
+  /// No description provided for @callGetFreeKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a free key from Google'**
+  String get callGetFreeKey;
+
   /// No description provided for @unmute.
   ///
   /// In en, this message translates to:
@@ -2241,6 +2673,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Services'**
   String get adminServices;
+
+  /// No description provided for @cloudModelsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud models'**
+  String get cloudModelsTitle;
+
+  /// No description provided for @cloudModelsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama Cloud runs these. A change reaches every server within a few seconds. People on Cloud cannot pick their own.'**
+  String get cloudModelsHelp;
+
+  /// No description provided for @connectionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App connections'**
+  String get connectionsTitle;
+
+  /// No description provided for @connectionsServerComposio.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama\'s Composio account'**
+  String get connectionsServerComposio;
+
+  /// No description provided for @connectionsServerComposioHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps without their own sign-in connect in one click through this server\'s Composio account.'**
+  String get connectionsServerComposioHelp;
+
+  /// No description provided for @connectionsOwnAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'People\'s own accounts'**
+  String get connectionsOwnAccounts;
+
+  /// No description provided for @connectionsOwnAccountsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'People connect those apps with their own Composio, Pipedream or Zapier account.'**
+  String get connectionsOwnAccountsHelp;
+
+  /// No description provided for @connectionsNoComposioKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Add COMPOSIO_API_KEY to this server to use Casama\'s account.'**
+  String get connectionsNoComposioKey;
 
   /// No description provided for @notInstanceOwner.
   ///
@@ -2709,78 +3189,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick a bot on the left, or create one to get started.'**
   String get selectBotHelp;
-
-  /// No description provided for @toolShell.
-  ///
-  /// In en, this message translates to:
-  /// **'Ran a command'**
-  String get toolShell;
-
-  /// No description provided for @toolFileRead.
-  ///
-  /// In en, this message translates to:
-  /// **'Read a file'**
-  String get toolFileRead;
-
-  /// No description provided for @toolFileWrite.
-  ///
-  /// In en, this message translates to:
-  /// **'Wrote a file'**
-  String get toolFileWrite;
-
-  /// No description provided for @toolFiles.
-  ///
-  /// In en, this message translates to:
-  /// **'Worked with files'**
-  String get toolFiles;
-
-  /// No description provided for @toolBrowser.
-  ///
-  /// In en, this message translates to:
-  /// **'Used the browser'**
-  String get toolBrowser;
-
-  /// No description provided for @toolSearch.
-  ///
-  /// In en, this message translates to:
-  /// **'Searched the web'**
-  String get toolSearch;
-
-  /// No description provided for @toolMemory.
-  ///
-  /// In en, this message translates to:
-  /// **'Checked memory'**
-  String get toolMemory;
-
-  /// No description provided for @toolSkill.
-  ///
-  /// In en, this message translates to:
-  /// **'Used a skill'**
-  String get toolSkill;
-
-  /// No description provided for @toolCheckpoint.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved a checkpoint'**
-  String get toolCheckpoint;
-
-  /// No description provided for @toolDesktop.
-  ///
-  /// In en, this message translates to:
-  /// **'Used the desktop'**
-  String get toolDesktop;
-
-  /// No description provided for @toolDelegate.
-  ///
-  /// In en, this message translates to:
-  /// **'Asked another bot'**
-  String get toolDelegate;
-
-  /// No description provided for @toolOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Used {tool}'**
-  String toolOther(String tool);
 
   /// No description provided for @toolSteps.
   ///
@@ -3346,54 +3754,6 @@ abstract class AppLocalizations {
   /// **'{name} is over 25 MB, too large to attach.'**
   String fileTooLarge(String name);
 
-  /// No description provided for @toolRoutineCreate.
-  ///
-  /// In en, this message translates to:
-  /// **'Scheduled a routine'**
-  String get toolRoutineCreate;
-
-  /// No description provided for @toolRoutineDelete.
-  ///
-  /// In en, this message translates to:
-  /// **'Deleted a routine'**
-  String get toolRoutineDelete;
-
-  /// No description provided for @toolRoutines.
-  ///
-  /// In en, this message translates to:
-  /// **'Checked routines'**
-  String get toolRoutines;
-
-  /// No description provided for @toolTasks.
-  ///
-  /// In en, this message translates to:
-  /// **'Updated the task board'**
-  String get toolTasks;
-
-  /// No description provided for @toolNotify.
-  ///
-  /// In en, this message translates to:
-  /// **'Sent you a notification'**
-  String get toolNotify;
-
-  /// No description provided for @toolHttp.
-  ///
-  /// In en, this message translates to:
-  /// **'Called a web API'**
-  String get toolHttp;
-
-  /// No description provided for @toolMedia.
-  ///
-  /// In en, this message translates to:
-  /// **'Made an image'**
-  String get toolMedia;
-
-  /// No description provided for @toolTakeover.
-  ///
-  /// In en, this message translates to:
-  /// **'Asked you to take over'**
-  String get toolTakeover;
-
   /// No description provided for @secretsHelp.
   ///
   /// In en, this message translates to:
@@ -3489,6 +3849,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.'**
   String get modelKeysIntro;
+
+  /// No description provided for @casamaCloudKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid from your credits'**
+  String get casamaCloudKeyHint;
+
+  /// No description provided for @casamaCloudIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Included'**
+  String get casamaCloudIncluded;
+
+  /// No description provided for @casamaCloudModelLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama chooses this model.'**
+  String get casamaCloudModelLocked;
 
   /// No description provided for @modelKeysFor.
   ///
@@ -5254,6 +5632,252 @@ abstract class AppLocalizations {
   /// **'Ask for a code from an authenticator app whenever you sign in.'**
   String get twoStepHelp;
 
+  /// No description provided for @signInWithPasskey.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with a passkey'**
+  String get signInWithPasskey;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @accountRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Email, password and signing out everywhere'**
+  String get accountRow;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @passwordResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset your password'**
+  String get passwordResetTitle;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPassword;
+
+  /// No description provided for @newPasswordAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'New password again'**
+  String get newPasswordAgain;
+
+  /// No description provided for @passwordsDontMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The passwords don\'t match'**
+  String get passwordsDontMatch;
+
+  /// No description provided for @newPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password'**
+  String get newPasswordTitle;
+
+  /// No description provided for @newPasswordBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re signed in. Pick a new password for signing in with your email.'**
+  String get newPasswordBody;
+
+  /// No description provided for @savePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Save password'**
+  String get savePassword;
+
+  /// No description provided for @passwordSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Password saved.'**
+  String get passwordSaved;
+
+  /// No description provided for @passwordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordTitle;
+
+  /// No description provided for @passwordRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Set or change the password for signing in with your email'**
+  String get passwordRow;
+
+  /// No description provided for @passwordHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 6 characters. You can still sign in with Google, Apple, a passkey or an email link.'**
+  String get passwordHelp;
+
+  /// No description provided for @passwordCodeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'To keep your account safe, enter the code we just emailed to {email}.'**
+  String passwordCodeSent(String email);
+
+  /// No description provided for @changeEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get changeEmailTitle;
+
+  /// No description provided for @changeEmailHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll email a confirmation link to your current address and to the new one. The change happens once both are confirmed.'**
+  String get changeEmailHelp;
+
+  /// No description provided for @newEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'New email'**
+  String get newEmail;
+
+  /// No description provided for @changeEmailSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send confirmation'**
+  String get changeEmailSend;
+
+  /// No description provided for @changeEmailRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the email you sign in with'**
+  String get changeEmailRow;
+
+  /// No description provided for @changeEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Check both inboxes. {email} becomes your email once both links are confirmed.'**
+  String changeEmailSent(String email);
+
+  /// No description provided for @changeEmailPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for confirmation: {email}'**
+  String changeEmailPending(String email);
+
+  /// No description provided for @signOutEverywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out everywhere'**
+  String get signOutEverywhere;
+
+  /// No description provided for @signOutEverywhereHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Every phone, computer and browser, including this one'**
+  String get signOutEverywhereHelp;
+
+  /// No description provided for @signOutEverywhereConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out on every device, including this one? Use this if you lost a device or think someone else is signed in.'**
+  String get signOutEverywhereConfirm;
+
+  /// No description provided for @passkeySuggestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in faster next time?'**
+  String get passkeySuggestTitle;
+
+  /// No description provided for @passkeySuggestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a passkey and sign in with Face ID, a fingerprint or your screen lock. No password or email needed.'**
+  String get passkeySuggestBody;
+
+  /// No description provided for @passkeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Passkeys'**
+  String get passkeys;
+
+  /// No description provided for @passkeysRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Face ID, a fingerprint or your screen lock'**
+  String get passkeysRow;
+
+  /// No description provided for @passkeysHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A passkey signs you in with Face ID, a fingerprint or your screen lock, with no password or email. Each phone, computer or password manager keeps its own.'**
+  String get passkeysHelp;
+
+  /// No description provided for @passkeyAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a passkey'**
+  String get passkeyAdd;
+
+  /// No description provided for @passkeyAddAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another passkey'**
+  String get passkeyAddAnother;
+
+  /// No description provided for @passkeyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Passkey added. Next time, sign in with it.'**
+  String get passkeyAdded;
+
+  /// No description provided for @passkeyRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get passkeyRename;
+
+  /// No description provided for @passkeyRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename passkey'**
+  String get passkeyRenameTitle;
+
+  /// No description provided for @passkeyNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get passkeyNameLabel;
+
+  /// No description provided for @passkeyRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get passkeyRemove;
+
+  /// No description provided for @passkeyRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{name}\"? You won\'t be able to sign in with it any more.'**
+  String passkeyRemoveConfirm(String name);
+
+  /// No description provided for @passkeyAddedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {date}'**
+  String passkeyAddedOn(String date);
+
+  /// No description provided for @passkeyLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used {when}'**
+  String passkeyLastUsed(String when);
+
   /// No description provided for @twoStepSetUp.
   ///
   /// In en, this message translates to:
@@ -5601,6 +6225,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New ticket'**
   String get newTicket;
+
+  /// No description provided for @allProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'All projects'**
+  String get allProjects;
+
+  /// No description provided for @manageProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage projects'**
+  String get manageProjects;
+
+  /// No description provided for @filterByProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by project'**
+  String get filterByProject;
+
+  /// No description provided for @moveTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to'**
+  String get moveTo;
+
+  /// No description provided for @noMatchingTickets.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching tickets'**
+  String get noMatchingTickets;
+
+  /// No description provided for @noMatchingTicketsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'No tickets match these filters.'**
+  String get noMatchingTicketsHelp;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get clearFilters;
 
   /// No description provided for @ticketTitle.
   ///
@@ -6753,6 +7419,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'For you'**
   String get forYou;
+
+  /// No description provided for @inboxNeedsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you'**
+  String get inboxNeedsYou;
+
+  /// No description provided for @inboxNeedsYouCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you ({n})'**
+  String inboxNeedsYouCount(int n);
+
+  /// No description provided for @inboxBriefs.
+  ///
+  /// In en, this message translates to:
+  /// **'Briefs'**
+  String get inboxBriefs;
+
+  /// No description provided for @inboxUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get inboxUpdates;
+
+  /// No description provided for @inboxEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests, morning briefs, notifications and new pages from your bots show up here.'**
+  String get inboxEmptyHelp;
+
+  /// No description provided for @inboxNeedsYouEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing needs you right now'**
+  String get inboxNeedsYouEmpty;
+
+  /// No description provided for @inboxNeedsYouEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'When a bot needs a decision, your help or has an idea, it shows up here.'**
+  String get inboxNeedsYouEmptyHelp;
+
+  /// No description provided for @noBriefs.
+  ///
+  /// In en, this message translates to:
+  /// **'No morning briefs yet'**
+  String get noBriefs;
+
+  /// No description provided for @botPublishedPage.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} published {title}'**
+  String botPublishedPage(String bot, String title);
 
   /// No description provided for @forYouEmpty.
   ///
@@ -8281,8 +9001,8 @@ abstract class AppLocalizations {
   /// No description provided for @connectManagedHelp.
   ///
   /// In en, this message translates to:
-  /// **'Casama reads your inbox through Composio\'s Google sign-in for now. You can disconnect any time.'**
-  String get connectManagedHelp;
+  /// **'Casama connects {app} through Composio, which handles the sign-in. You can disconnect any time.'**
+  String connectManagedHelp(String app);
 
   /// No description provided for @sharing.
   ///
@@ -9268,12 +9988,6 @@ abstract class AppLocalizations {
   /// **'Unlink'**
   String get linksRevoke;
 
-  /// No description provided for @callAvatar.
-  ///
-  /// In en, this message translates to:
-  /// **'Avatar'**
-  String get callAvatar;
-
   /// No description provided for @wakeWord.
   ///
   /// In en, this message translates to:
@@ -9874,12 +10588,6 @@ abstract class AppLocalizations {
   /// **'Each step it takes, with commands and technical errors. Off, chats show what it\'s doing in a few words and its answer.'**
   String get showBotStepsHelp;
 
-  /// No description provided for @toolLoad.
-  ///
-  /// In en, this message translates to:
-  /// **'Got its tools ready'**
-  String get toolLoad;
-
   /// No description provided for @activityReady.
   ///
   /// In en, this message translates to:
@@ -10294,6 +11002,60 @@ abstract class AppLocalizations {
   /// **'People'**
   String get people;
 
+  /// No description provided for @workspaceAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Secrets, memory, encryption, payments, MCP'**
+  String get workspaceAdvancedSummary;
+
+  /// No description provided for @peopleAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code, email domain, custom links'**
+  String get peopleAdvancedSummary;
+
+  /// No description provided for @inviteLinkToCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link, ready to copy'**
+  String get inviteLinkToCopy;
+
+  /// No description provided for @linkMade.
+  ///
+  /// In en, this message translates to:
+  /// **'Made {when}'**
+  String linkMade(String when);
+
+  /// No description provided for @billingAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Charges by server, Cloud Connect keys'**
+  String get billingAdvancedSummary;
+
+  /// No description provided for @billingChargesSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Charges by server'**
+  String get billingChargesSummary;
+
+  /// No description provided for @billingUsageRow.
+  ///
+  /// In en, this message translates to:
+  /// **'What bots used and what it cost'**
+  String get billingUsageRow;
+
+  /// No description provided for @billingUsageSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'This month so far: {amount}'**
+  String billingUsageSoFar(String amount);
+
+  /// No description provided for @usageAdvancedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Tokens in and out, JSON export'**
+  String get usageAdvancedSummary;
+
   /// No description provided for @peopleHelp.
   ///
   /// In en, this message translates to:
@@ -10593,6 +11355,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your name'**
   String get nameStepHint;
+
+  /// No description provided for @skillCatalogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready-made skills your bots load when a task calls for one.'**
+  String get skillCatalogSubtitle;
+
+  /// No description provided for @skillCategoryWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get skillCategoryWork;
+
+  /// No description provided for @skillCategoryWriting.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing'**
+  String get skillCategoryWriting;
+
+  /// No description provided for @skillCategoryResearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Research'**
+  String get skillCategoryResearch;
+
+  /// No description provided for @skillCategoryData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get skillCategoryData;
+
+  /// No description provided for @skillCategoryMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Money'**
+  String get skillCategoryMoney;
+
+  /// No description provided for @skillCategoryBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Build'**
+  String get skillCategoryBuild;
+
+  /// No description provided for @skillCategoryLife.
+  ///
+  /// In en, this message translates to:
+  /// **'Life'**
+  String get skillCategoryLife;
+
+  /// No description provided for @skillCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 skill} other{{count} skills}}'**
+  String skillCount(int count);
+
+  /// No description provided for @skillInstalledBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get skillInstalledBadge;
+
+  /// No description provided for @skillInstalledFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed for {names}'**
+  String skillInstalledFor(String names);
+
+  /// No description provided for @installSkillFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Install {name} for'**
+  String installSkillFor(String name);
+
+  /// No description provided for @skillUseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots load it on their own when a task fits, or type /{name} in a chat to use it.'**
+  String skillUseHint(String name);
+
+  /// No description provided for @skillAlreadyEverywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed everywhere it can be.'**
+  String get skillAlreadyEverywhere;
+
+  /// No description provided for @gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get gallery;
+
+  /// No description provided for @galleryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Themes, color schemes, wallpapers and skills other people contribute. Using one saves it on this device.'**
+  String get galleryHelp;
+
+  /// No description provided for @galleryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in the gallery matches.'**
+  String get galleryEmpty;
+
+  /// No description provided for @galleryOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'The gallery can\'t be reached right now. The built-in looks and skills are still here.'**
+  String get galleryOffline;
+
+  /// No description provided for @galleryUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use'**
+  String get galleryUse;
+
+  /// No description provided for @galleryInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get galleryInstall;
+
+  /// No description provided for @galleryReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get galleryReport;
+
+  /// No description provided for @galleryShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share to gallery'**
+  String get galleryShare;
+
+  /// No description provided for @galleryBy.
+  ///
+  /// In en, this message translates to:
+  /// **'By {name}'**
+  String galleryBy(String name);
+
+  /// No description provided for @galleryFeatured.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured'**
+  String get galleryFeatured;
+
+  /// No description provided for @galleryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get galleryAll;
+
+  /// No description provided for @galleryThemes.
+  ///
+  /// In en, this message translates to:
+  /// **'Themes'**
+  String get galleryThemes;
+
+  /// No description provided for @gallerySchemes.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors'**
+  String get gallerySchemes;
+
+  /// No description provided for @galleryWallpapers.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallpapers'**
+  String get galleryWallpapers;
+
+  /// No description provided for @gallerySkills.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get gallerySkills;
+
+  /// No description provided for @fromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get fromGallery;
+
+  /// No description provided for @galleryApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Using {name}'**
+  String galleryApplied(String name);
+
+  /// No description provided for @gallerySeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get gallerySeeAll;
+
+  /// No description provided for @galleryInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'In use'**
+  String get galleryInUse;
+
+  /// No description provided for @galleryInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed {name}'**
+  String galleryInstalled(String name);
+
+  /// No description provided for @galleryPreviewDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview in dark'**
+  String get galleryPreviewDark;
+
+  /// No description provided for @galleryPreviewLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview in light'**
+  String get galleryPreviewLight;
+
+  /// No description provided for @galleryClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get galleryClearSearch;
+
+  /// No description provided for @galleryOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The gallery is offline'**
+  String get galleryOfflineTitle;
+
+  /// No description provided for @galleryNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches “{query}”'**
+  String galleryNoMatches(String query);
+
+  /// No description provided for @galleryInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructions'**
+  String get galleryInstructions;
+
+  /// No description provided for @galleryPatternOn.
+  ///
+  /// In en, this message translates to:
+  /// **'{pattern} on {palette}'**
+  String galleryPatternOn(String pattern, String palette);
+
+  /// No description provided for @galleryImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get galleryImage;
+
+  /// No description provided for @galleryLightAndDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Light and dark'**
+  String get galleryLightAndDark;
+
+  /// No description provided for @galleryContribute.
+  ///
+  /// In en, this message translates to:
+  /// **'Made a look you like? Share it, and everyone on Casama can find it here.'**
+  String get galleryContribute;
+
+  /// No description provided for @galleryTypeTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get galleryTypeTheme;
+
+  /// No description provided for @galleryTypeScheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Color scheme'**
+  String get galleryTypeScheme;
+
+  /// No description provided for @galleryTypeWallpaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallpaper'**
+  String get galleryTypeWallpaper;
+
+  /// No description provided for @galleryTypeSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill'**
+  String get galleryTypeSkill;
+
+  /// No description provided for @galleryBehindChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Behind your chats'**
+  String get galleryBehindChats;
 }
 
 class _AppLocalizationsDelegate

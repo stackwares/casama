@@ -132,7 +132,7 @@ void main() {
 
   testWidgets('the inbox lists takeover requests first', (tester) async {
     final backend = FakeBackend()..openTakeovers = [takeoverFor()];
-    await tester.pumpWidget(harness(backend, const InboxScreen(initialTab: 0)));
+    await tester.pumpWidget(harness(backend, const InboxScreen(initialFilter: InboxFilter.needsYou)));
     await tester.pumpAndSettle();
     expect(find.text('Ada needs your help'), findsOneWidget);
     expect(find.byKey(const Key('openTakeover')), findsOneWidget);

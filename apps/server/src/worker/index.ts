@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { getCloudModels } from "../services/cloud-models.ts";
 import {
   AiSdkGateway,
   ApnsVoipSender,
@@ -10,6 +11,7 @@ import {
   createSafeFetch,
   type Embedder,
   FalMediaProvider,
+  GeminiVideoProvider,
   FcmPushSender,
   type FixtureFile,
   type FixtureTurn,
@@ -132,10 +134,16 @@ export interface WorkerOptions {
   };
   /** The API's public address, for Twilio's call webhooks and media streams (D-141). */
   publicApiUrl?: string;
+  /** Phone calls through Twilio (D-141): false leaves the voice.call tool out. Default on. */
+  phoneCalls?: boolean;
   /** Audit-log forwarding (D-146): on when the enterprise license includes it. */
   auditForwarding?: boolean;
   /** Cloudflare AI Gateway for model calls (D-145). */
   aiGateway?: import("@casama/agent").AiGatewayConfig;
+  /** Casama Cloud's shared OpenRouter key. Workspaces without their own key use it. */
+  platformOpenRouterKey?: string;
+  /** The one model Casama Cloud runs on that key. */
+  cloudLockedModel?: string;
   /** Paid data resale on Casama Cloud (D-138): Casama's Treg key, used only when resale is on. */
   dataResale?: { tregKey: string; tregUrl?: string };
   /** Billing (Casama Cloud only); settles usage into credits every minute. */
@@ -154,6 +162,8 @@ export interface WorkerOptions {
   computerRates?: string;
   /** The server's SearXNG (SEARXNG_URL, D-179): web search for workspaces without their own key. */
   searxngUrl?: string;
+  /** The server's own Google AI key for live calls (GOOGLE_AI_API_KEY). */
+  serverGeminiKey?: string;
   /** ChatGPT plan sign-in endpoints; defaults are OpenAI's (tests point them at a fake). */
   chatgpt?: { authUrl?: string; apiUrl?: string };
   /** Casama Cloud abuse controls (D-094): free workspaces need a verified owner email for computers. */
@@ -207,12 +217,17 @@ export async function startWorker(opts: WorkerOptions) {
   const chatgptFetch = customChatGpt ? fetch : fetchOut;
   const chatgpt = { ...opts.chatgpt, fetch: chatgptFetch };
   const gateway = buildGateway({ ...opts, chatgptFetch });
-  const credentials = new CredentialResolver(db, { chatgpt, aiGateway: opts.aiGateway });
+  const credentials = new CredentialResolver(db, {
+    chatgpt,
+    aiGateway: opts.aiGateway,
+    platformOpenRouterKey: opts.platformOpenRouterKey,
+  });
   const mode = opts.embeddings ?? "auto";
   const embedderFor = async (orgId: string): Promise<Embedder | null> => {
     if (mode === "none") return null;
     if (mode === "hash") return hashEmbedder();
     const cred = await credentials.embeddingCredential(orgId);
+    if (cred && opts.billing) cred.model = (await getCloudModels(db)).embedding;
     return cred ? openAiEmbedder(cred) : null;
   };
   // Bot computers: the sandbox supervisor, plus personal computers through the API (D-066).
@@ -242,7 +257,10 @@ export async function startWorker(opts: WorkerOptions) {
     registerDesktopTools(tools);
   }
   // Bots that manage bots (D-100).
-  registerBotTools(tools, { db });
+  registerBotTools(tools, {
+    db,
+    lockCloudModel: Boolean(opts.billing && opts.platformOpenRouterKey),
+  });
   registerSecretRequestTool(tools);
   registerSkillTools(tools, { db });
   registerSetupTools(tools, { db });
@@ -274,28 +292,47 @@ export async function startWorker(opts: WorkerOptions) {
     db,
     fetch: fetchOut,
     notifications,
-    // Images on OpenRouter when the workspace has a key (Qwen Image 3.0 Pro), else fal; video on
-    // fal (D-183).
+    // Images on OpenRouter (Nano Banana 2.1 at 1K), else fal. Video on Gemini Omni Flash 1.2
+    // when a Google AI key exists, else fal (D-185, D-189).
     mediaFor: async (orgId) => {
-      const [or, f] = await Promise.all([
+      const assigned = opts.billing ? await getCloudModels(db) : null;
+      const [or, f, g] = await Promise.all([
         providerKey(orgId, ["openrouter"]),
         providerKey(orgId, ["fal"]),
+        providerKey(orgId, ["google"]),
       ]);
+      const videoId = assigned?.video;
+      const falVideo = videoId?.startsWith("fal-ai/") || videoId?.includes("/") ? videoId : undefined;
       const fal = f?.key
         ? new FalMediaProvider({
             apiKey: f.key,
             fetch: fetchOut,
             syncBase: opts.providerBases?.fal,
             queueBase: opts.providerBases?.fal,
+            videoModel: falVideo,
           })
         : null;
-      const openrouter = or?.key
-        ? new OpenRouterMediaProvider(or.key, {
+      const geminiKey = g?.key || opts.serverGeminiKey;
+      const gemini =
+        geminiKey && !falVideo
+          ? new GeminiVideoProvider(geminiKey, {
+              fetch: fetchOut,
+              base: opts.providerBases?.gemini,
+              model: videoId?.startsWith("gemini-") ? videoId : undefined,
+            })
+          : null;
+      const imageKey = or?.key || (assigned ? opts.platformOpenRouterKey : undefined);
+      const openrouter = imageKey
+        ? new OpenRouterMediaProvider(imageKey, {
             fetch: fetchOut,
             base: opts.providerBases?.openrouter,
+            imageModel: assigned?.image,
+            resolution: assigned?.image_resolution,
           })
         : null;
-      return openrouter || fal ? new MediaRouter(openrouter ?? fal, fal) : null;
+      const images = openrouter ?? fal;
+      const video = gemini ?? fal;
+      return images || video ? new MediaRouter(images, video) : null;
     },
     searchFor: async (orgId) => {
       const k = await providerKey(orgId, ["brave_search", "tavily"]);
@@ -372,38 +409,39 @@ export async function startWorker(opts: WorkerOptions) {
     },
   };
   registerPaymentTools(tools, payments);
-  // Calls for you (D-141): the workspace's own Twilio account.
-  registerCallTools(tools, {
-    db,
-    notifications,
-    publicApiUrl: opts.publicApiUrl,
-    twilioFor: async (orgId) => {
-      const [t] = await db.execute<{
-        account_sid: string;
-        from_number: string;
-        token: string | null;
-        allow_personal_numbers: boolean;
-        daily_cap: number;
-      }>(sql`
-        select t.account_sid, t.from_number, v.decrypted_secret as token, t.allow_personal_numbers, t.daily_cap
-        from public.org_telephony t left join vault.decrypted_secrets v on v.id = t.vault_secret_id where t.org_id = ${orgId}::uuid`);
-      if (!t?.token) return null;
-      return {
-        accountSid: t.account_sid,
-        authToken: t.token,
-        fromNumber: t.from_number,
-        allowPersonal: t.allow_personal_numbers,
-        dailyCap: t.daily_cap,
-        client: new TwilioClient({
+  // Calls for you (D-141): the workspace's own Twilio account. Off in the product for now (PHONE_CALLS).
+  if (opts.phoneCalls !== false)
+    registerCallTools(tools, {
+      db,
+      notifications,
+      publicApiUrl: opts.publicApiUrl,
+      twilioFor: async (orgId) => {
+        const [t] = await db.execute<{
+          account_sid: string;
+          from_number: string;
+          token: string | null;
+          allow_personal_numbers: boolean;
+          daily_cap: number;
+        }>(sql`
+          select t.account_sid, t.from_number, v.decrypted_secret as token, t.allow_personal_numbers, t.daily_cap
+          from public.org_telephony t left join vault.decrypted_secrets v on v.id = t.vault_secret_id where t.org_id = ${orgId}::uuid`);
+        if (!t?.token) return null;
+        return {
           accountSid: t.account_sid,
           authToken: t.token,
-          apiUrl: opts.providerBases?.twilio,
-          lookupsUrl: opts.providerBases?.twilioLookups,
-          fetch: opts.providerBases?.twilio ? fetch : fetchOut,
-        }),
-      };
-    },
-  });
+          fromNumber: t.from_number,
+          allowPersonal: t.allow_personal_numbers,
+          dailyCap: t.daily_cap,
+          client: new TwilioClient({
+            accountSid: t.account_sid,
+            authToken: t.token,
+            apiUrl: opts.providerBases?.twilio,
+            lookupsUrl: opts.providerBases?.twilioLookups,
+            fetch: opts.providerBases?.twilio ? fetch : fetchOut,
+          }),
+        };
+      },
+    });
   // Device connections (D-149): the person's own phone and computer data, per-bot grants.
   registerDeviceTools(tools, { db, waitMs: opts.deviceWaitMs });
   // Desktop context (D-152): file search on the person's own computer.
@@ -466,6 +504,8 @@ export async function startWorker(opts: WorkerOptions) {
       computers: !!computers,
       realtimeModel: opts.realtimeModel,
       geminiLiveModel: opts.geminiLiveModel,
+      serverGeminiKey: opts.serverGeminiKey,
+      cloudModels: opts.billing ? () => getCloudModels(db) : undefined,
     },
     voip,
     auditForwarding: opts.auditForwarding,
@@ -498,6 +538,9 @@ export async function startWorker(opts: WorkerOptions) {
         );
       },
       langfuse: opts.langfuse ? new LangfuseSink(opts.langfuse) : undefined,
+      billCloudModels: Boolean(opts.billing && opts.platformOpenRouterKey),
+      cloudLockedModel: opts.cloudLockedModel,
+      cloudModels: opts.billing ? () => getCloudModels(db) : undefined,
     },
   });
 

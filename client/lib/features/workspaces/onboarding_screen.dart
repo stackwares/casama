@@ -13,6 +13,7 @@ import '../../ui/casama_mark.dart';
 import '../bots/bots_screen.dart';
 import '../settings/model_keys_screen.dart';
 import '../../ui/glow_button.dart';
+import '../../ui/mascot.dart';
 
 /// First run: create or join a workspace, add a model key, create a bot. One step at a time, with
 /// progress across the top.
@@ -148,6 +149,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       _ => _StepCard(
         key: const ValueKey(2),
         icon: LucideIcons.bot,
+        art: const BlankBotImage(size: 84),
         title: l10n.createFirstBot,
         body: l10n.createFirstBotBody,
         child: const CreateBotSheet(embedded: true),
@@ -295,8 +297,11 @@ class _Progress extends StatelessWidget {
 }
 
 class _StepCard extends StatelessWidget {
-  const _StepCard({super.key, required this.icon, required this.title, required this.body, required this.child});
+  const _StepCard({super.key, required this.icon, this.art, required this.title, required this.body, required this.child});
   final IconData icon;
+
+  /// Shown instead of the icon tile (the blank bot on "Create your first bot").
+  final Widget? art;
   final String title;
   final String body;
   final Widget child;
@@ -311,13 +316,15 @@ class _StepCard extends StatelessWidget {
         children: [
           Align(
             alignment: AlignmentDirectional.centerStart,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
-              alignment: Alignment.center,
-              child: Icon(icon, color: scheme.primary, size: 24),
-            ),
+            child:
+                art ??
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
+                  alignment: Alignment.center,
+                  child: Icon(icon, color: scheme.primary, size: 24),
+                ),
           ),
           const SizedBox(height: AppSpace.md),
           Text(title, style: context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4, fontSize: 24)),

@@ -11,10 +11,12 @@ export const DEFAULT_MODELS: Readonly<Record<string, string>> = {
 export const DEFAULT_REASONING_EFFORT: ReasoningEffort = "medium";
 
 /**
- * Each provider's small model, for a bot's background work (conversation summaries, memory,
- * routine briefs) when the bot hasn't picked a cheap model of its own (docs/COSTS.md).
+ * The model for a bot's background work (conversation summaries, memory, routine briefs) when it
+ * hasn't picked a cheap model of its own (D-187). On OpenRouter that is Muse Ember. A direct
+ * provider key can't call Muse Ember, so those use that provider's small model.
  */
 export const SMALL_MODELS: Readonly<Record<string, string>> = {
+  openrouter: "meta/muse-ember",
   openai: "gpt-6-luna",
   anthropic: "claude-haiku-5-5",
   google: "gemini-3.5-flash-lite",

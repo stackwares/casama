@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:dio/dio.dart' show DioException, RequestOptions, Response;
 
 import 'package:casama_app/core/backend.dart';
-import 'package:casama_sdk/casama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart' hide GalleryItem;
 
 const orgId = '11111111-1111-4111-8111-111111111111';
 const botId = '22222222-2222-4222-8222-222222222222';
@@ -12,7 +13,11 @@ const runId = '33333333-3333-4333-8333-333333333333';
 const convId = '44444444-4444-4444-8444-444444444444';
 const computerId = '55555555-5555-4555-8555-555555555555';
 
-Map<String, dynamic> eventJson(int seq, String type, Map<String, dynamic> payload) => {
+Map<String, dynamic> eventJson(
+  int seq,
+  String type,
+  Map<String, dynamic> payload,
+) => {
   'v': 1,
   'run_id': runId,
   'seq': seq,
@@ -22,7 +27,8 @@ Map<String, dynamic> eventJson(int seq, String type, Map<String, dynamic> payloa
   'payload': payload,
 };
 
-RunEventItem ev(int seq, String type, Map<String, dynamic> payload) => RunEventItem.fromJson(eventJson(seq, type, payload));
+RunEventItem ev(int seq, String type, Map<String, dynamic> payload) =>
+    RunEventItem.fromJson(eventJson(seq, type, payload));
 
 /// In-memory backend for widget tests.
 class FakeBackend implements Backend {
@@ -35,7 +41,8 @@ class FakeBackend implements Backend {
   List<RunEventItem> storedEvents = [];
 
   @override
-  String? defaultModelFor(String provider) => const {'openrouter': 'meta/muse-ember', 'openai': 'gpt-6-luna'}[provider];
+  String? defaultModelFor(String provider) =>
+      const {'openrouter': 'meta/muse-ember', 'openai': 'gpt-6-luna'}[provider];
 
   @override
   Stream<bool> get signedInChanges => _auth.stream;
@@ -51,8 +58,10 @@ class FakeBackend implements Backend {
     _auth.add(true);
   }
 
+  /// False: the server wants the address confirmed first (no session yet).
+  var signUpSignsIn = true;
   @override
-  Future<bool> signUp(String email, String password) async => true;
+  Future<bool> signUp(String email, String password) async => signUpSignsIn;
   String? magicLinkEmail;
   @override
   Future<void> sendMagicLink(String email) async => magicLinkEmail = email;
@@ -63,9 +72,11 @@ class FakeBackend implements Backend {
     if (verifyCodeError != null) throw verifyCodeError!;
     verifiedCode = code;
   }
+
   final providerSignIns = <String>[];
   @override
-  Future<void> signInWithProvider(String provider) async => providerSignIns.add(provider);
+  Future<void> signInWithProvider(String provider) async =>
+      providerSignIns.add(provider);
   @override
   Future<void> signOut() async {
     signedIn = false;
@@ -100,24 +111,59 @@ class FakeBackend implements Backend {
   final links = <InviteLink>[];
   final joined = <String>[];
   @override
-  Future<Organization> updateOrg(String orgId, {String? name, String? icon, String? color}) async {
+  Future<Organization> updateOrg(
+    String orgId, {
+    String? name,
+    String? icon,
+    String? color,
+  }) async {
     orgName = name ?? orgName;
     orgIcon = icon ?? orgIcon;
     orgColor = color ?? orgColor;
-    return Organization(id: orgId, name: orgName, slug: 'test-org', plan: 'selfhost', region: 'local', icon: orgIcon, color: orgColor, createdAt: DateTime(2026));
+    return Organization(
+      id: orgId,
+      name: orgName,
+      slug: 'test-org',
+      plan: 'selfhost',
+      region: 'local',
+      icon: orgIcon,
+      color: orgColor,
+      createdAt: DateTime(2026),
+    );
   }
 
   @override
   Future<List<InviteLink>> inviteLinks(String orgId) async => List.of(links);
   @override
-  Future<CreatedInviteLink> createInviteLink(String orgId, {String role = 'member', int? expiresInDays, int? maxUses}) async {
+  Future<CreatedInviteLink> createInviteLink(
+    String orgId, {
+    String role = 'member',
+    int? expiresInDays,
+    int? maxUses,
+  }) async {
     final id = 'l${links.length + 1}';
-    final r = role == 'admin' ? InviteLinkRoleEnum.admin : InviteLinkRoleEnum.member;
-    links.add(InviteLink(id: id, orgId: orgId, role: r, tokenHint: 'kjoin_abcd', expiresAt: null, maxUses: maxUses, uses: 0, revokedAt: null, createdAt: DateTime(2026)));
+    final r = role == 'admin'
+        ? InviteLinkRoleEnum.admin
+        : InviteLinkRoleEnum.member;
+    links.add(
+      InviteLink(
+        id: id,
+        orgId: orgId,
+        role: r,
+        tokenHint: 'kjoin_abcd',
+        expiresAt: null,
+        maxUses: maxUses,
+        uses: 0,
+        revokedAt: null,
+        createdAt: DateTime(2026),
+      ),
+    );
     return CreatedInviteLink(
       id: id,
       orgId: orgId,
-      role: role == 'admin' ? CreatedInviteLinkRoleEnum.admin : CreatedInviteLinkRoleEnum.member,
+      role: role == 'admin'
+          ? CreatedInviteLinkRoleEnum.admin
+          : CreatedInviteLinkRoleEnum.member,
       tokenHint: 'kjoin_abcd',
       expiresAt: null,
       maxUses: maxUses,
@@ -130,29 +176,51 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> revokeInviteLink(String orgId, String linkId) async => links.removeWhere((l) => l.id == linkId);
+  Future<void> revokeInviteLink(String orgId, String linkId) async =>
+      links.removeWhere((l) => l.id == linkId);
   @override
   Future<OrganizationWithRole> acceptInviteLink(String token) async {
     joined.add(token);
-    final o = OrganizationWithRole(id: '99999999-0000-4000-8000-000000000001', name: 'Friends', slug: 'friends', plan: 'selfhost', region: 'local', createdAt: DateTime(2026), role: OrgRole.member);
+    final o = OrganizationWithRole(
+      id: '99999999-0000-4000-8000-000000000001',
+      name: 'Friends',
+      slug: 'friends',
+      plan: 'selfhost',
+      region: 'local',
+      createdAt: DateTime(2026),
+      role: OrgRole.member,
+    );
     extraOrgs.add(o);
     return o;
   }
 
   @override
-  Future<List<WorkspaceBadge>> workspaceBadges() async => [WorkspaceBadge(orgId: orgId, approvals: 1, unread: 2)];
+  Future<List<WorkspaceBadge>> workspaceBadges() async => [
+    WorkspaceBadge(orgId: orgId, approvals: 1, unread: 2),
+  ];
   bool orgSuspended = false;
   @override
   Future<Organization> createOrganization(String name) async {
     createdOrgs++;
     hasOrg = true;
-    return Organization(id: orgId, name: name, slug: 'test-org', plan: 'selfhost', region: 'local', createdAt: DateTime(2026));
+    return Organization(
+      id: orgId,
+      name: name,
+      slug: 'test-org',
+      plan: 'selfhost',
+      region: 'local',
+      createdAt: DateTime(2026),
+    );
   }
 
   @override
   Future<void> acceptInvite(String token) async {}
   @override
-  Future<Invite> invite(String orgId, String email, {bool admin = false}) async => throw UnimplementedError();
+  Future<Invite> invite(
+    String orgId,
+    String email, {
+    bool admin = false,
+  }) async => throw UnimplementedError();
 
   // --- joining (D-165) ---
   var defaultApproval = false;
@@ -168,7 +236,11 @@ class FakeBackend implements Backend {
   var joinableList = <JoinableWorkspace>[];
   final domainJoins = <String>[];
   var codesMade = 0;
-  CreatedInviteLink _created(String token, {bool isDefault = false, InviteLinkKindEnum kind = InviteLinkKindEnum.link}) => CreatedInviteLink.fromJson({
+  CreatedInviteLink _created(
+    String token, {
+    bool isDefault = false,
+    InviteLinkKindEnum kind = InviteLinkKindEnum.link,
+  }) => CreatedInviteLink.fromJson({
     'id': isDefault ? 'default' : 'code$codesMade',
     'org_id': orgId,
     'role': 'member',
@@ -186,27 +258,50 @@ class FakeBackend implements Backend {
   });
   String get _defaultToken => 'kjoin_default${defaultResets}abcdefghijk';
   @override
-  Future<CreatedInviteLink> defaultInvite(String orgId) async => _created(_defaultToken, isDefault: true);
+  Future<CreatedInviteLink> defaultInvite(String orgId) async =>
+      _created(_defaultToken, isDefault: true);
   @override
-  Future<CreatedInviteLink> updateDefaultInvite(String orgId, {bool? requiresApproval, bool reset = false}) async {
+  Future<CreatedInviteLink> updateDefaultInvite(
+    String orgId, {
+    bool? requiresApproval,
+    bool reset = false,
+  }) async {
     if (reset) defaultResets++;
     defaultApproval = requiresApproval ?? defaultApproval;
     return _created(_defaultToken, isDefault: true);
   }
 
   @override
-  Future<CreatedInviteLink> createInviteCode(String orgId, {String role = 'member'}) async {
+  Future<CreatedInviteLink> createInviteCode(
+    String orgId, {
+    String role = 'member',
+  }) async {
     codesMade++;
     return _created('7F3Q-9XWD', kind: InviteLinkKindEnum.code);
   }
 
-  final friendsOrg = OrganizationWithRole(id: '99999999-0000-4000-8000-000000000001', name: 'Friends', slug: 'friends', plan: 'selfhost', region: 'local', createdAt: DateTime(2026), role: OrgRole.member);
+  final friendsOrg = OrganizationWithRole(
+    id: '99999999-0000-4000-8000-000000000001',
+    name: 'Friends',
+    slug: 'friends',
+    plan: 'selfhost',
+    region: 'local',
+    createdAt: DateTime(2026),
+    role: OrgRole.member,
+  );
   @override
   Future<InvitePreview> previewInvite(String invite) async {
     if (invite.contains('bad')) throw Exception('invite_invalid');
     return InvitePreview.fromJson({
-      'kind': invite.contains('kinv_') ? 'email' : (invite.contains('kjoin_') ? 'link' : 'code'),
-      'workspace': {'name': 'Friends', 'icon': 'heart', 'color': '#ec4899', 'member_count': 4},
+      'kind': invite.contains('kinv_')
+          ? 'email'
+          : (invite.contains('kjoin_') ? 'link' : 'code'),
+      'workspace': {
+        'name': 'Friends',
+        'icon': 'heart',
+        'color': '#ec4899',
+        'member_count': 4,
+      },
       'role': 'member',
       'inviter_name': 'Sam',
       'requires_approval': invite.contains('gate'),
@@ -218,49 +313,92 @@ class FakeBackend implements Backend {
   @override
   Future<JoinResult> joinWithInvite(String invite) async {
     joined.add(invite);
-    if (invite.contains('gate')) return JoinResult(status: JoinResultStatusEnum.requested, organization: null, workspaceName: 'Friends');
+    if (invite.contains('gate'))
+      return JoinResult(
+        status: JoinResultStatusEnum.requested,
+        organization: null,
+        workspaceName: 'Friends',
+      );
     if (!extraOrgs.any((o) => o.id == friendsOrg.id)) extraOrgs.add(friendsOrg);
-    return JoinResult(status: JoinResultStatusEnum.joined, organization: friendsOrg, workspaceName: 'Friends');
+    return JoinResult(
+      status: JoinResultStatusEnum.joined,
+      organization: friendsOrg,
+      workspaceName: 'Friends',
+    );
   }
 
   @override
-  Future<List<JoinRequest>> joinRequests(String orgId) async => joinRequestList.where((r) => !decided.contains(r.id)).toList();
+  Future<List<JoinRequest>> joinRequests(String orgId) async =>
+      joinRequestList.where((r) => !decided.contains(r.id)).toList();
   @override
-  Future<JoinRequest> decideJoinRequest(String orgId, String requestId, bool approve) async {
+  Future<JoinRequest> decideJoinRequest(
+    String orgId,
+    String requestId,
+    bool approve,
+  ) async {
     decided.add('$requestId:${approve ? 'approve' : 'decline'}');
     decided.add(requestId);
     return joinRequestList.firstWhere((r) => r.id == requestId);
   }
 
   @override
-  Future<List<PendingInvite>> pendingInvites(String orgId) async => pendingInviteList.where((i) => !revokedInvites.contains(i.id)).toList();
+  Future<List<PendingInvite>> pendingInvites(String orgId) async =>
+      pendingInviteList.where((i) => !revokedInvites.contains(i.id)).toList();
   @override
-  Future<List<Invite>> inviteMany(String orgId, List<String> emails, {bool admin = false}) async {
+  Future<List<Invite>> inviteMany(
+    String orgId,
+    List<String> emails, {
+    bool admin = false,
+  }) async {
     invitedEmails.addAll(emails);
     return [
       for (final (i, e) in emails.indexed)
-        Invite(id: 'inv$i', orgId: orgId, email: e, role: admin ? OrgRole.admin : OrgRole.member, expiresAt: DateTime(2026, 2), emailSent: true),
+        Invite(
+          id: 'inv$i',
+          orgId: orgId,
+          email: e,
+          role: admin ? OrgRole.admin : OrgRole.member,
+          expiresAt: DateTime(2026, 2),
+          emailSent: true,
+        ),
     ];
   }
 
   @override
   Future<Invite> resendInvite(String orgId, String inviteId) async {
     resentInvites.add(inviteId);
-    return Invite(id: inviteId, orgId: orgId, email: 'x@example.com', role: OrgRole.member, expiresAt: DateTime(2026, 2), emailSent: true);
+    return Invite(
+      id: inviteId,
+      orgId: orgId,
+      email: 'x@example.com',
+      role: OrgRole.member,
+      expiresAt: DateTime(2026, 2),
+      emailSent: true,
+    );
   }
 
   @override
-  Future<void> revokeInvite(String orgId, String inviteId) async => revokedInvites.add(inviteId);
+  Future<void> revokeInvite(String orgId, String inviteId) async =>
+      revokedInvites.add(inviteId);
   @override
-  Future<JoinDomains> joinDomains(String orgId) async => JoinDomains(items: List.of(joinDomainList), myDomain: myDomain, canUse: myDomain != 'gmail.com');
+  Future<JoinDomains> joinDomains(String orgId) async => JoinDomains(
+    items: List.of(joinDomainList),
+    myDomain: myDomain,
+    canUse: myDomain != 'gmail.com',
+  );
   @override
-  Future<JoinDomains> setJoinDomain(String orgId, bool enabled, {String? domain}) async {
+  Future<JoinDomains> setJoinDomain(
+    String orgId,
+    bool enabled, {
+    String? domain,
+  }) async {
     joinDomainList = enabled ? [myDomain] : [];
     return joinDomains(orgId);
   }
 
   @override
-  Future<List<JoinableWorkspace>> joinableWorkspaces() async => List.of(joinableList);
+  Future<List<JoinableWorkspace>> joinableWorkspaces() async =>
+      List.of(joinableList);
   @override
   Future<OrganizationWithRole> joinByDomain(String orgId) async {
     domainJoins.add(orgId);
@@ -300,37 +438,70 @@ class FakeBackend implements Backend {
   bool canConnectChatGpt = false;
   final connectedChatGpt = <String>[];
   @override
-  Future<Credential> connectChatGpt(String orgId, {String? credentialId}) async {
+  Future<Credential> connectChatGpt(
+    String orgId, {
+    String? credentialId,
+  }) async {
     connectedChatGpt.add(credentialId ?? orgId);
     return chatGptCredential(orgId);
   }
 
   final credentialUpdates = <String, bool?>{};
   @override
-  Future<Credential> updateCredential(String credentialId, {String? label, bool? fallbackOnLimit}) async {
+  Future<Credential> updateCredential(
+    String credentialId, {
+    String? label,
+    bool? fallbackOnLimit,
+  }) async {
     credentialUpdates[credentialId] = fallbackOnLimit;
     return chatGptCredential('org', fallbackOnLimit: fallbackOnLimit ?? false);
   }
 
   final deletedCredentials = <String>[];
   @override
-  Future<void> deleteCredential(String credentialId) async => deletedCredentials.add(credentialId);
+  Future<void> deleteCredential(String credentialId) async =>
+      deletedCredentials.add(credentialId);
   @override
-  Future<Credential> addCredential(String orgId, ProviderId provider, String label, {String? apiKey, String? baseUrl}) async => throw UnimplementedError();
+  Future<Credential> addCredential(
+    String orgId,
+    ProviderId provider,
+    String label, {
+    String? apiKey,
+    String? baseUrl,
+  }) async => throw UnimplementedError();
   @override
-  Future<CredentialTestResult> testCredential(String credentialId, {String? model}) async => CredentialTestResult(ok: true, model: 'm', latencyMs: 12);
+  Future<CredentialTestResult> testCredential(
+    String credentialId, {
+    String? model,
+  }) async => CredentialTestResult(ok: true, model: 'm', latencyMs: 12);
   @override
   Future<ModelOptionList> models(String credentialId) async => ModelOptionList(
     items: [
-      ModelOption(id: 'meta/muse-ember', name: 'Meta: Muse Ember', featured: true),
-      ModelOption(id: 'openai/gpt-6-luna', name: 'OpenAI: GPT-6 Luna', featured: true),
-      ModelOption(id: 'anthropic/claude-sonnet-5.5', name: 'Anthropic: Claude Sonnet 5.5', featured: true),
+      ModelOption(
+        id: 'meta/muse-ember',
+        name: 'Meta: Muse Ember',
+        featured: true,
+      ),
+      ModelOption(
+        id: 'openai/gpt-6-luna',
+        name: 'OpenAI: GPT-6 Luna',
+        featured: true,
+      ),
+      ModelOption(
+        id: 'anthropic/claude-sonnet-5.5',
+        name: 'Anthropic: Claude Sonnet 5.5',
+        featured: true,
+      ),
       ModelOption(id: 'acme/other', name: 'Acme: Other'),
     ],
     source_: ModelOptionListSource_Enum.live,
   );
 
-  Bot bot({BotStatusEnum status = BotStatusEnum.idle, String id = botId, String name = 'Ada'}) => Bot(
+  Bot bot({
+    BotStatusEnum status = BotStatusEnum.idle,
+    String id = botId,
+    String name = 'Ada',
+  }) => Bot(
     id: id,
     orgId: orgId,
     name: name,
@@ -356,7 +527,11 @@ class FakeBackend implements Backend {
   final revisions = <BotRevision>[
     BotRevision(
       id: 'rev-1',
-      snapshot: const {'name': 'Ada', 'persona_md': 'Be brief.', 'autonomy': 'ask_always'},
+      snapshot: const {
+        'name': 'Ada',
+        'persona_md': 'Be brief.',
+        'autonomy': 'ask_always',
+      },
       changedFields: const ['persona_md', 'autonomy'],
       changedByBot: 'bot-2',
       createdAt: DateTime(2026, 11, 9, 10),
@@ -366,9 +541,19 @@ class FakeBackend implements Backend {
   final mcpActions = <String>[];
   bool mcpApprovals = false;
   @override
-  Future<McpAuthRequestInfo> mcpAuthRequest(String id) async => McpAuthRequestInfo(id: id, clientName: 'Phone AI', redirectHost: 'ai.example', expiresAt: DateTime(2030));
+  Future<McpAuthRequestInfo> mcpAuthRequest(String id) async =>
+      McpAuthRequestInfo(
+        id: id,
+        clientName: 'Phone AI',
+        redirectHost: 'ai.example',
+        expiresAt: DateTime(2030),
+      );
   @override
-  Future<String> decideMcpAuthRequest(String id, {required String orgId, required bool approve}) async {
+  Future<String> decideMcpAuthRequest(
+    String id, {
+    required String orgId,
+    required bool approve,
+  }) async {
     mcpActions.add('${approve ? 'allow' : 'refuse'}:$orgId');
     return 'https://ai.example/callback?code=x';
   }
@@ -379,15 +564,25 @@ class FakeBackend implements Backend {
   @override
   Future<CreatedMcpKey> createMcpKey(String orgId, String name) async {
     mcpActions.add('key:$name');
-    return CreatedMcpKey(id: 'k1', name: name, hint: 'abcd', lastUsedAt: null, createdAt: DateTime(2026), key: 'ksk_secret_abcd', mcpUrl: 'http://api/mcp');
+    return CreatedMcpKey(
+      id: 'k1',
+      name: name,
+      hint: 'abcd',
+      lastUsedAt: null,
+      createdAt: DateTime(2026),
+      key: 'ksk_secret_abcd',
+      mcpUrl: 'http://api/mcp',
+    );
   }
 
   @override
-  Future<void> revokeMcpKey(String orgId, String keyId) async => mcpActions.add('revoke:$keyId');
+  Future<void> revokeMcpKey(String orgId, String keyId) async =>
+      mcpActions.add('revoke:$keyId');
   @override
   Future<bool> mcpDecideApprovals(String orgId) async => mcpApprovals;
   @override
-  Future<void> setMcpDecideApprovals(String orgId, bool allowed) async => mcpApprovals = allowed;
+  Future<void> setMcpDecideApprovals(String orgId, bool allowed) async =>
+      mcpApprovals = allowed;
   final watcherList = <Watcher>[
     Watcher(
       id: 'w1',
@@ -410,14 +605,24 @@ class FakeBackend implements Backend {
   @override
   Future<List<Watcher>> watchers(String botId) async => List.of(watcherList);
   @override
-  Future<void> setWatcherPaused(String id, bool paused) async => watcherActions.add('${paused ? 'pause' : 'resume'}:$id');
+  Future<void> setWatcherPaused(String id, bool paused) async =>
+      watcherActions.add('${paused ? 'pause' : 'resume'}:$id');
   @override
-  Future<void> deleteWatcher(String id) async => watcherActions.add('delete:$id');
+  Future<void> deleteWatcher(String id) async =>
+      watcherActions.add('delete:$id');
   final rules = <ActionRule>[];
   @override
-  Future<List<ActionRule>> actionRules(String orgId, {String? botId}) async => List.of(rules);
+  Future<List<ActionRule>> actionRules(String orgId, {String? botId}) async =>
+      List.of(rules);
   @override
-  Future<void> createActionRule(String orgId, {String? botId, required String category, required String rule, List<String> domains = const [], double? maxAmount}) async {
+  Future<void> createActionRule(
+    String orgId, {
+    String? botId,
+    required String category,
+    required String rule,
+    List<String> domains = const [],
+    double? maxAmount,
+  }) async {
     rules.add(
       ActionRule(
         id: 'rule${rules.length + 1}',
@@ -425,25 +630,45 @@ class FakeBackend implements Backend {
         botId: botId,
         matchKind: ActionRuleMatchKindEnum.category,
         matchValue: category,
-        target: domains.isEmpty && maxAmount == null ? null : ActionRuleTarget(domains: domains, maxAmount: maxAmount),
+        target: domains.isEmpty && maxAmount == null
+            ? null
+            : ActionRuleTarget(domains: domains, maxAmount: maxAmount),
         rule: ActionRuleRuleEnum.values.firstWhere((r) => r.value == rule),
-        preview: domains.isEmpty ? '$category: $rule' : 'Sends messages to anyone at ${domains.join(' or ')} without asking',
+        preview: domains.isEmpty
+            ? '$category: $rule'
+            : 'Sends messages to anyone at ${domains.join(' or ')} without asking',
         createdAt: DateTime(2026),
       ),
     );
   }
 
   @override
-  Future<void> deleteActionRule(String id) async => rules.removeWhere((r) => r.id == id);
-  BotCheckins checkins = BotCheckins(enabled: false, briefTime: '08:00', scanEveryHours: 3, dailyCapUsd: 1);
+  Future<void> deleteActionRule(String id) async =>
+      rules.removeWhere((r) => r.id == id);
+  BotCheckins checkins = BotCheckins(
+    enabled: false,
+    briefTime: '08:00',
+    scanEveryHours: 3,
+    dailyCapUsd: 1,
+  );
   final suggestionActions = <String>[];
   @override
   Future<BotCheckins> botCheckins(String botId) async => checkins;
   @override
-  Future<BotCheckins> setBotCheckins(String botId, BotCheckins settings) async => checkins = settings;
+  Future<BotCheckins> setBotCheckins(
+    String botId,
+    BotCheckins settings,
+  ) async => checkins = settings;
   @override
   Future<ForYou> forYou(String orgId) async => ForYou(
-    briefs: [ForYouBrief(botId: botId, conversationId: convId, text: 'Today: 10:00 Standup.', createdAt: DateTime(2026, 11, 10, 8))],
+    briefs: [
+      ForYouBrief(
+        botId: botId,
+        conversationId: convId,
+        text: 'Today: 10:00 Standup.',
+        createdAt: DateTime(2026, 11, 10, 8),
+      ),
+    ],
     suggestions: [
       if (!suggestionActions.any((a) => a.endsWith(':s1')))
         Suggestion(
@@ -467,7 +692,11 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> dismissSuggestion(String id, {bool dontSuggestAgain = false}) async => suggestionActions.add('${dontSuggestAgain ? 'never' : 'dismiss'}:$id');
+  Future<void> dismissSuggestion(
+    String id, {
+    bool dontSuggestAgain = false,
+  }) async =>
+      suggestionActions.add('${dontSuggestAgain ? 'never' : 'dismiss'}:$id');
   ProjectDetail projectDetail = ProjectDetail(
     id: 'p1',
     orgId: orgId,
@@ -487,14 +716,33 @@ class FakeBackend implements Backend {
     planMd: 'Build, then ship.',
     sessions: 0,
     createdAt: DateTime(2026),
-    milestones: [ProjectMilestone(id: 'm1', name: 'Build', position: 1, requiresSignoff: true, status: ProjectMilestoneStatusEnum.awaitingSignoff, ticketsDone: 1, ticketsTotal: 1)],
+    milestones: [
+      ProjectMilestone(
+        id: 'm1',
+        name: 'Build',
+        position: 1,
+        requiresSignoff: true,
+        status: ProjectMilestoneStatusEnum.awaitingSignoff,
+        ticketsDone: 1,
+        ticketsTotal: 1,
+      ),
+    ],
     runs: const [],
   );
   final projectActions = <String>[];
   @override
-  Future<List<Project>> projects(String orgId) async => [Project.fromJson(projectDetail.toJson())];
+  Future<List<Project>> projects(String orgId) async => [
+    Project.fromJson(projectDetail.toJson()),
+  ];
   @override
-  Future<Project> createProject(String orgId, {required String title, required String goal, String doneCriteria = '', required String leadBotId, double? budgetUsd}) async {
+  Future<Project> createProject(
+    String orgId, {
+    required String title,
+    required String goal,
+    String doneCriteria = '',
+    required String leadBotId,
+    double? budgetUsd,
+  }) async {
     projectActions.add('create:$title:$budgetUsd');
     return Project.fromJson(projectDetail.toJson());
   }
@@ -502,11 +750,17 @@ class FakeBackend implements Backend {
   @override
   Future<ProjectDetail> project(String projectId) async => projectDetail;
   @override
-  Future<void> updateProject(String projectId, {String? status, double? budgetUsd}) async => projectActions.add('status:$status');
+  Future<void> updateProject(
+    String projectId, {
+    String? status,
+    double? budgetUsd,
+  }) async => projectActions.add('status:$status');
   @override
-  Future<void> approveProjectPlan(String projectId) async => projectActions.add('approve');
+  Future<void> approveProjectPlan(String projectId) async =>
+      projectActions.add('approve');
   @override
-  Future<void> signOffMilestone(String projectId, String milestoneId) async => projectActions.add('signoff:$milestoneId');
+  Future<void> signOffMilestone(String projectId, String milestoneId) async =>
+      projectActions.add('signoff:$milestoneId');
   final shares = <bool>[];
   ({String credentialId, String model, bool memories, bool routines})? imported;
   BotTemplateFile template() => BotTemplateFile(
@@ -515,44 +769,96 @@ class FakeBackend implements Backend {
     name: 'Invoicer',
     personaMd: 'You chase unpaid invoices politely.',
     autonomy: BotTemplateFileAutonomyEnum.askRisky,
-    skills: [BotTemplateFileSkillsInner(name: 'dunning', description: 'Follow-up cadence', bodyMd: '1. Day 7')],
-    routines: [BotTemplateFileRoutinesInner(name: 'Weekly chase', instructionsMd: 'Chase.', scheduleCron: '0 9 * * 1')],
-    connections: [BotTemplateFileConnectionsInner(kind: 'composio', name: 'Gmail')],
-    memories: [BotTemplateFileMemoriesInner(kind: BotTemplateFileMemoriesInnerKindEnum.fact, content: 'Acme pays late')],
+    skills: [
+      BotTemplateFileSkillsInner(
+        name: 'dunning',
+        description: 'Follow-up cadence',
+        bodyMd: '1. Day 7',
+      ),
+    ],
+    routines: [
+      BotTemplateFileRoutinesInner(
+        name: 'Weekly chase',
+        instructionsMd: 'Chase.',
+        scheduleCron: '0 9 * * 1',
+      ),
+    ],
+    connections: [
+      BotTemplateFileConnectionsInner(kind: 'composio', name: 'Gmail'),
+    ],
+    memories: [
+      BotTemplateFileMemoriesInner(
+        kind: BotTemplateFileMemoriesInnerKindEnum.fact,
+        content: 'Acme pays late',
+      ),
+    ],
   );
   @override
-  Future<BotTemplateFile> exportBot(String botId, {bool memories = false}) async => template();
+  Future<BotTemplateFile> exportBot(
+    String botId, {
+    bool memories = false,
+  }) async => template();
   @override
-  Future<BotShareLink> createBotShare(String botId, {bool memories = false}) async {
+  Future<BotShareLink> createBotShare(
+    String botId, {
+    bool memories = false,
+  }) async {
     shares.add(memories);
-    return BotShareLink(token: 't0k3n', url: 'https://app.example/import/t0k3n', expiresAt: null);
+    return BotShareLink(
+      token: 't0k3n',
+      url: 'https://app.example/import/t0k3n',
+      expiresAt: null,
+    );
   }
 
   @override
   Future<BotTemplateFile> getBotShare(String token) async => template();
   @override
-  Future<ImportBotResponse> importBot(String orgId, BotTemplateFile template, {required String credentialId, required String model, bool memories = true, bool routines = true}) async {
-    imported = (credentialId: credentialId, model: model, memories: memories, routines: routines);
+  Future<ImportBotResponse> importBot(
+    String orgId,
+    BotTemplateFile template, {
+    required String credentialId,
+    required String model,
+    bool memories = true,
+    bool routines = true,
+  }) async {
+    imported = (
+      credentialId: credentialId,
+      model: model,
+      memories: memories,
+      routines: routines,
+    );
     importedTemplate = template;
     return ImportBotResponse(
       botId: 'bot-new',
       skills: 1,
       routines: routines ? 1 : 0,
       memories: memories ? 1 : 0,
-      connectionsToAdd: [for (final c in template.connections ?? const <BotTemplateFileConnectionsInner>[]) ImportBotResponseConnectionsToAddInner(kind: c.kind, name: c.name)],
+      connectionsToAdd: [
+        for (final c
+            in template.connections ??
+                const <BotTemplateFileConnectionsInner>[])
+          ImportBotResponseConnectionsToAddInner(kind: c.kind, name: c.name),
+      ],
     );
   }
 
-  QuietHoursView quiet = const QuietHoursView(enabled: false, start: '22:00', end: '07:00');
+  QuietHoursView quiet = const QuietHoursView(
+    enabled: false,
+    start: '22:00',
+    end: '07:00',
+  );
   final botQuiets = <String, BotQuietView>{};
   @override
   Future<QuietHoursView> quietHours() async => quiet;
   @override
   Future<void> setQuietHours(QuietHoursView hours) async => quiet = hours;
   @override
-  Future<BotQuietView> botQuiet(String botId) async => botQuiets[botId] ?? const BotQuietView(mode: 'default');
+  Future<BotQuietView> botQuiet(String botId) async =>
+      botQuiets[botId] ?? const BotQuietView(mode: 'default');
   @override
-  Future<void> setBotQuiet(String botId, BotQuietView value) async => botQuiets[botId] = value;
+  Future<void> setBotQuiet(String botId, BotQuietView value) async =>
+      botQuiets[botId] = value;
 
   // About you (D-169)
   AboutYouView about = const AboutYouView(displayName: 'Test Person');
@@ -563,49 +869,84 @@ class FakeBackend implements Backend {
   Future<AboutYouView> aboutYou() async => about;
   @override
   Future<void> saveAboutYou(AboutYouView value) async =>
-      about = (value.preferredName?.trim().isNotEmpty ?? false) ? value.copyWith(nameAsked: true) : value;
+      about = (value.preferredName?.trim().isNotEmpty ?? false)
+      ? value.copyWith(nameAsked: true)
+      : value;
   var nameAskedMarked = false;
   @override
   Future<void> markNameAsked() async {
     nameAskedMarked = true;
     about = about.copyWith(nameAsked: true);
   }
+
   @override
   Future<List<UserFactView>> userFacts() async => [...facts];
   @override
   Future<void> addUserFacts(List<({String kind, String content})> list) async {
     for (final f in list) {
-      facts.add(UserFactView(id: 'fact-${++_factSeq}', kind: f.kind, content: f.content, updatedAt: DateTime(2026, 11, 11)));
+      facts.add(
+        UserFactView(
+          id: 'fact-${++_factSeq}',
+          kind: f.kind,
+          content: f.content,
+          updatedAt: DateTime(2026, 11, 11),
+        ),
+      );
     }
   }
 
   @override
-  Future<void> updateUserFact(String id, {String? content, bool? pinned}) async {
+  Future<void> updateUserFact(
+    String id, {
+    String? content,
+    bool? pinned,
+  }) async {
     final i = facts.indexWhere((f) => f.id == id);
     if (i < 0) return;
     final f = facts[i];
-    facts[i] = UserFactView(id: f.id, kind: f.kind, content: content ?? f.content, pinned: pinned ?? f.pinned, updatedAt: f.updatedAt);
+    facts[i] = UserFactView(
+      id: f.id,
+      kind: f.kind,
+      content: content ?? f.content,
+      pinned: pinned ?? f.pinned,
+      updatedAt: f.updatedAt,
+    );
   }
 
   @override
-  Future<void> deleteUserFact(String id) async => facts.removeWhere((f) => f.id == id);
+  Future<void> deleteUserFact(String id) async =>
+      facts.removeWhere((f) => f.id == id);
   @override
-  Future<bool> profileSharedIn(String orgId) async => profileShared[orgId] ?? false;
+  Future<bool> profileSharedIn(String orgId) async =>
+      profileShared[orgId] ?? false;
   @override
-  Future<void> setProfileSharedIn(String orgId, bool share) async => profileShared[orgId] = share;
+  Future<void> setProfileSharedIn(String orgId, bool share) async =>
+      profileShared[orgId] = share;
   final edits = <(String, String)>[];
   final branchSwitches = <String>[];
   List<String> siblings = const [];
   @override
-  Future<SendMessageResponse> editMessage(String conversationId, String messageId, String text) async {
+  Future<SendMessageResponse> editMessage(
+    String conversationId,
+    String messageId,
+    String text,
+  ) async {
     edits.add((messageId, text));
-    return SendMessageResponse(messageId: 'm-edit', runId: 'run-edit', conversationId: conversationId);
+    return SendMessageResponse(
+      messageId: 'm-edit',
+      runId: 'run-edit',
+      conversationId: conversationId,
+    );
   }
 
   @override
-  Future<void> switchBranch(String conversationId, String messageId) async => branchSwitches.add(messageId);
+  Future<void> switchBranch(String conversationId, String messageId) async =>
+      branchSwitches.add(messageId);
   @override
-  Future<List<String>> messageSiblings(String conversationId, String messageId) async => siblings;
+  Future<List<String>> messageSiblings(
+    String conversationId,
+    String messageId,
+  ) async => siblings;
   @override
   String? traceUrlTemplate;
   String? runTraceId;
@@ -636,7 +977,8 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> skipBotSetup(String botId) async => setupStatus = BotSetupStatusEnum.skipped;
+  Future<void> skipBotSetup(String botId) async =>
+      setupStatus = BotSetupStatusEnum.skipped;
   final sentSkills = <List<String>>[];
   final catalogInstalls = <(String, String?)>[];
   final githubInstalls = <(String, String)>[];
@@ -645,14 +987,98 @@ class FakeBackend implements Backend {
   Future<SkillCatalog> skillCatalog() async => SkillCatalog(
     categories: const ['work', 'data'],
     items: [
-      CatalogSkill(id: 'meeting-notes', name: 'meeting-notes', description: 'Summarize meetings', category: 'work', files: const []),
-      CatalogSkill(id: 'csv-cleanup', name: 'csv-cleanup', description: 'Clean CSV files', category: 'data', files: const ['scripts/clean.py']),
+      CatalogSkill(
+        id: 'meeting-notes',
+        name: 'meeting-notes',
+        description: 'Summarize meetings',
+        category: 'work',
+        icon: 'notebook-pen',
+        files: const [],
+        skillMd: '---\nname: meeting-notes\ndescription: Summarize meetings\n---\n\n# Meeting notes\n\nList the decisions.',
+      ),
+      CatalogSkill(
+        id: 'csv-cleanup',
+        name: 'csv-cleanup',
+        description: 'Clean CSV files',
+        category: 'data',
+        icon: 'sheet',
+        files: const ['scripts/clean.py'],
+      ),
     ],
   );
   @override
-  Future<void> installCatalogSkill(String orgId, String catalogId, {String? botId}) async => catalogInstalls.add((catalogId, botId));
+  Future<void> installCatalogSkill(
+    String orgId,
+    String catalogId, {
+    String? botId,
+  }) async {
+    catalogInstalls.add((catalogId, botId));
+    skillViews = [
+      ...skillViews,
+      SkillView(
+        id: 'cat-$catalogId-$botId',
+        name: catalogId,
+        description: '',
+        bodyMd: 'x',
+        enabled: true,
+        botId: botId,
+        source: 'catalog',
+        sourceRef: {'id': catalogId},
+      ),
+    ];
+  }
+
+  var galleryAvailable = true;
+  List<GalleryItem> galleryItems = const [];
+  final galleryInstalls = <(String, String?)>[];
+
   @override
-  Future<GitHubSkillPreview> previewGitHubSkill(String orgId, String url) async => GitHubSkillPreview(
+  Future<GalleryPage> gallery({String? type, String? query}) async {
+    final q = query?.trim().toLowerCase() ?? '';
+    return GalleryPage(
+      available: galleryAvailable,
+      items: [
+        for (final item in galleryItems)
+          if ((type == null || item.type == type) &&
+              (q.isEmpty ||
+                  item.name.toLowerCase().contains(q) ||
+                  item.tags.any((t) => t.contains(q))))
+            item,
+      ],
+    );
+  }
+
+  @override
+  Future<GalleryItem> galleryItem(String type, String id) async =>
+      galleryItems.firstWhere((item) => item.type == type && item.id == id);
+
+  @override
+  Future<void> installGallerySkill(
+    String orgId,
+    String galleryId, {
+    String? botId,
+  }) async {
+    galleryInstalls.add((galleryId, botId));
+    skillViews = [
+      ...skillViews,
+      SkillView(
+        id: 'gal-$galleryId-$botId',
+        name: galleryId,
+        description: '',
+        bodyMd: 'x',
+        enabled: true,
+        botId: botId,
+        source: 'gallery',
+        sourceRef: {'id': galleryId},
+      ),
+    ];
+  }
+
+  @override
+  Future<GitHubSkillPreview> previewGitHubSkill(
+    String orgId,
+    String url,
+  ) async => GitHubSkillPreview(
     repo: 'acme/skills',
     path: 'pr-labels',
     ref: null,
@@ -660,22 +1086,36 @@ class FakeBackend implements Backend {
     name: 'pr-labels',
     description: 'Label pull requests',
     skillMd: '---\nname: pr-labels\n---\nSteps',
-    files: [SkillPreviewFile(path: 'label.sh', size: 21, executable: true, text: 'echo label')],
+    files: [
+      SkillPreviewFile(
+        path: 'label.sh',
+        size: 21,
+        executable: true,
+        text: 'echo label',
+      ),
+    ],
   );
   @override
-  Future<void> installGitHubSkill(String orgId, String url, String commit, {String? botId}) async => githubInstalls.add((url, commit));
+  Future<void> installGitHubSkill(
+    String orgId,
+    String url,
+    String commit, {
+    String? botId,
+  }) async => githubInstalls.add((url, commit));
   @override
-  Future<SkillUpdateCheck> checkSkillUpdate(String skillId) async => SkillUpdateCheck(
-    currentCommit: 'a' * 40,
-    latestCommit: 'b' * 40,
-    hasUpdate: true,
-    diff: const ['- old step', '+ new step'],
-    filesAdded: const [],
-    filesRemoved: const ['label.sh'],
-    filesChanged: const [],
-  );
+  Future<SkillUpdateCheck> checkSkillUpdate(String skillId) async =>
+      SkillUpdateCheck(
+        currentCommit: 'a' * 40,
+        latestCommit: 'b' * 40,
+        hasUpdate: true,
+        diff: const ['- old step', '+ new step'],
+        filesAdded: const [],
+        filesRemoved: const ['label.sh'],
+        filesChanged: const [],
+      );
   @override
-  Future<void> applySkillUpdate(String skillId, String commit) async => appliedUpdate = commit;
+  Future<void> applySkillUpdate(String skillId, String commit) async =>
+      appliedUpdate = commit;
   final searches = <String>[];
   @override
   Future<SearchResponse> search(String orgId, String query) async {
@@ -692,18 +1132,35 @@ class FakeBackend implements Backend {
           conversationId: convId,
           createdAt: DateTime(2026, 11, 9),
         ),
-        SearchResult(kind: SearchKind.ticket, id: 't1', title: 'Send invoice', snippet: '', botId: null, conversationId: null, createdAt: DateTime(2026, 11, 9)),
+        SearchResult(
+          kind: SearchKind.ticket,
+          id: 't1',
+          title: 'Send invoice',
+          snippet: '',
+          botId: null,
+          conversationId: null,
+          createdAt: DateTime(2026, 11, 9),
+        ),
       ],
-      files: [FileSearchResult(computerId: 'comp-1', computerName: 'Team computer', path: 'docs/invoice.md', match: FileSearchResultMatchEnum.name)],
+      files: [
+        FileSearchResult(
+          computerId: 'comp-1',
+          computerName: 'Team computer',
+          path: 'docs/invoice.md',
+          match: FileSearchResultMatchEnum.name,
+        ),
+      ],
       filesSearched: 1,
     );
   }
 
   final secretAnswers = <(String, String?)>[];
   @override
-  Future<void> fulfillSecretRequest(String requestId, String value) async => secretAnswers.add((requestId, value));
+  Future<void> fulfillSecretRequest(String requestId, String value) async =>
+      secretAnswers.add((requestId, value));
   @override
-  Future<void> declineSecretRequest(String requestId) async => secretAnswers.add((requestId, null));
+  Future<void> declineSecretRequest(String requestId) async =>
+      secretAnswers.add((requestId, null));
 
   // Device connections (D-149).
   final deviceSourcesSaved = <String, DeviceSource>{};
@@ -717,54 +1174,93 @@ class FakeBackend implements Backend {
   final deviceRequestsController = StreamController<String>.broadcast();
 
   @override
-  Future<List<DeviceSource>> deviceSources() async => deviceSourcesSaved.values.toList();
+  Future<List<DeviceSource>> deviceSources() async =>
+      deviceSourcesSaved.values.toList();
   @override
-  Future<DeviceSource> saveDeviceSource(String key, {required String name, required String platform, required Map<String, DeviceKindSettings> kinds}) async =>
-      deviceSourcesSaved[key] = DeviceSource(
-        id: 'src-$key',
-        deviceKey: key,
-        name: name,
-        platform: DeviceSourcePlatformEnum.values.firstWhere((p) => p.value == platform),
-        kinds: kinds,
-        lastSeenAt: DateTime.now(),
-        createdAt: DateTime.now(),
-      );
+  Future<DeviceSource> saveDeviceSource(
+    String key, {
+    required String name,
+    required String platform,
+    required Map<String, DeviceKindSettings> kinds,
+  }) async => deviceSourcesSaved[key] = DeviceSource(
+    id: 'src-$key',
+    deviceKey: key,
+    name: name,
+    platform: DeviceSourcePlatformEnum.values.firstWhere(
+      (p) => p.value == platform,
+    ),
+    kinds: kinds,
+    lastSeenAt: DateTime.now(),
+    createdAt: DateTime.now(),
+  );
   @override
-  Future<void> deleteDeviceSource(String key) async => deviceSourcesSaved.remove(key);
+  Future<void> deleteDeviceSource(String key) async =>
+      deviceSourcesSaved.remove(key);
   @override
-  Future<int> uploadDeviceReadings(String key, List<DeviceReadingInput> readings, {String? requestId}) async {
-    if (healthNeedsEncryption && readings.any((r) => r.kind == DeviceKind.health)) {
+  Future<int> uploadDeviceReadings(
+    String key,
+    List<DeviceReadingInput> readings, {
+    String? requestId,
+  }) async {
+    if (healthNeedsEncryption &&
+        readings.any((r) => r.kind == DeviceKind.health)) {
       final req = RequestOptions(path: '/v1/devices/$key/readings');
       throw DioException(
         requestOptions: req,
         response: Response(
           requestOptions: req,
           statusCode: 409,
-          data: {'type': 'about:blank', 'title': 'Conflict', 'status': 409, 'code': 'health_needs_encryption', 'detail': 'Health data is stored only with encryption at rest on.'},
+          data: {
+            'type': 'about:blank',
+            'title': 'Conflict',
+            'status': 409,
+            'code': 'health_needs_encryption',
+            'detail': 'Health data is stored only with encryption at rest on.',
+          },
         ),
       );
     }
     for (final r in readings) {
       uploadedReadings.add((key, r, requestId));
     }
-    if (requestId != null) pendingDeviceRequests.removeWhere((r) => r.id == requestId);
+    if (requestId != null)
+      pendingDeviceRequests.removeWhere((r) => r.id == requestId);
     return readings.length;
   }
 
   @override
-  Future<List<DeviceRequest>> deviceRequests(String key) async => List.of(pendingDeviceRequests);
+  Future<List<DeviceRequest>> deviceRequests(String key) async =>
+      List.of(pendingDeviceRequests);
   @override
-  Future<void> answerDeviceRequest(String id, {required bool ok, Map<String, Object?>? result, String? error}) async {
+  Future<void> answerDeviceRequest(
+    String id, {
+    required bool ok,
+    Map<String, Object?>? result,
+    String? error,
+  }) async {
     deviceAnswers.add((id, ok, result));
     pendingDeviceRequests.removeWhere((r) => r.id == id);
   }
 
   @override
-  Future<List<DeviceGrant>> deviceGrants({String? botId}) async => grants.where((g) => botId == null || g.botId == botId).toList();
+  Future<List<DeviceGrant>> deviceGrants({String? botId}) async =>
+      grants.where((g) => botId == null || g.botId == botId).toList();
   @override
-  Future<List<DeviceGrant>> setDeviceGrant(String botId, DeviceKind kind, bool allowed) async {
+  Future<List<DeviceGrant>> setDeviceGrant(
+    String botId,
+    DeviceKind kind,
+    bool allowed,
+  ) async {
     grants.removeWhere((g) => g.botId == botId && g.kind == kind);
-    if (allowed) grants.add(DeviceGrant(botId: botId, botName: 'Pal', kind: kind, createdAt: DateTime(2026)));
+    if (allowed)
+      grants.add(
+        DeviceGrant(
+          botId: botId,
+          botName: 'Pal',
+          kind: kind,
+          createdAt: DateTime(2026),
+        ),
+      );
     return deviceGrants(botId: botId);
   }
 
@@ -773,12 +1269,16 @@ class FakeBackend implements Backend {
 
   final lessLiked = <String>[];
   @override
-  Future<void> lessLikeThis(String notificationId) async => lessLiked.add(notificationId);
+  Future<void> lessLikeThis(String notificationId) async =>
+      lessLiked.add(notificationId);
 
   final reportedEvents = <(String, DeviceEventInput)>[];
   final places = <DevicePlace>[];
   @override
-  Future<int> reportDeviceEvents(String key, List<DeviceEventInput> events) async {
+  Future<int> reportDeviceEvents(
+    String key,
+    List<DeviceEventInput> events,
+  ) async {
     for (final e in events) {
       reportedEvents.add((key, e));
     }
@@ -788,28 +1288,51 @@ class FakeBackend implements Backend {
   @override
   Future<List<DevicePlace>> devicePlaces() async => List.of(places);
   @override
-  Future<DevicePlace> saveDevicePlace({required String name, required double latitude, required double longitude, int? radiusM}) async {
+  Future<DevicePlace> saveDevicePlace({
+    required String name,
+    required double latitude,
+    required double longitude,
+    int? radiusM,
+  }) async {
     places.removeWhere((p) => p.name.toLowerCase() == name.toLowerCase());
-    final p = DevicePlace(id: 'place-$name', name: name, latitude: latitude, longitude: longitude, radiusM: radiusM ?? 150, createdAt: DateTime(2027));
+    final p = DevicePlace(
+      id: 'place-$name',
+      name: name,
+      latitude: latitude,
+      longitude: longitude,
+      radiusM: radiusM ?? 150,
+      createdAt: DateTime(2027),
+    );
     places.add(p);
     return p;
   }
 
   @override
-  Future<void> deleteDevicePlace(String id) async => places.removeWhere((p) => p.id == id);
+  Future<void> deleteDevicePlace(String id) async =>
+      places.removeWhere((p) => p.id == id);
 
   @override
-  Future<List<BotFolder>> botFolders(String orgId) async => [if (botFolder != null) BotFolder(id: botFolder!, name: botFolder!)];
+  Future<List<BotFolder>> botFolders(String orgId) async => [
+    if (botFolder != null) BotFolder(id: botFolder!, name: botFolder!),
+  ];
   @override
-  Future<void> setBotFolder(String orgId, String botId, String? folderName) async => botFolder = folderName;
+  Future<void> setBotFolder(
+    String orgId,
+    String botId,
+    String? folderName,
+  ) async => botFolder = folderName;
   @override
-  Future<List<Bot>> archivedBots(String orgId) async => [if (archived.contains(botId)) bot()];
+  Future<List<Bot>> archivedBots(String orgId) async => [
+    if (archived.contains(botId)) bot(),
+  ];
   @override
-  Future<void> setBotArchived(String botId, bool value) async => value ? archived.add(botId) : archived.remove(botId);
+  Future<void> setBotArchived(String botId, bool value) async =>
+      value ? archived.add(botId) : archived.remove(botId);
   @override
   Future<List<BotRevision>> botRevisions(String botId) async => revisions;
   @override
-  Future<void> restoreBotRevision(String botId, BotRevision revision) async => restored = revision;
+  Future<void> restoreBotRevision(String botId, BotRevision revision) async =>
+      restored = revision;
 
   String? defaultComputer;
 
@@ -822,7 +1345,15 @@ class FakeBackend implements Backend {
   /// More bots, for group chat tests.
   final extraBots = <Bot>[];
   @override
-  Future<Bot> createBot(String orgId, {required String name, required String credentialId, required String model, String persona = '', String? templateId, String? avatarUrl}) async {
+  Future<Bot> createBot(
+    String orgId, {
+    required String name,
+    required String credentialId,
+    required String model,
+    String persona = '',
+    String? templateId,
+    String? avatarUrl,
+  }) async {
     createdBotTemplate = templateId;
     createdBotAvatar = avatarUrl;
     createdBot = (name: name, model: model);
@@ -844,40 +1375,97 @@ class FakeBackend implements Backend {
       description: 'A morning summary of what changed.',
       autonomy: TemplateAutonomyEnum.askRisky,
       skills: const ['briefing'],
-      routines: [TemplateRoutinesInner(name: 'Morning summary', scheduleCron: '0 7 * * *')],
+      routines: [
+        TemplateRoutinesInner(
+          name: 'Morning summary',
+          scheduleCron: '0 7 * * *',
+        ),
+      ],
       persona: 'You prepare short briefings.',
       category: TemplateCategoryEnum.work,
       icon: 'newspaper',
       mascot: 'sleepy',
       starters: const ['Brief me on AI news'],
     ),
-    Template(id: 'writer', name: 'Writer', description: 'Drafts and edits documents.', autonomy: TemplateAutonomyEnum.askRisky, skills: const [], routines: const []),
+    Template(
+      id: 'writer',
+      name: 'Writer',
+      description: 'Drafts and edits documents.',
+      autonomy: TemplateAutonomyEnum.askRisky,
+      skills: const [],
+      routines: const [],
+    ),
   ];
+
+  /// The last bot update saved: the bot's id and the fields sent.
+  ({String botId, String? name, String? persona, String? autonomy})? botUpdate;
   @override
-  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy, String? avatarUrl}) async {}
+  Future<void> updateBot(
+    String botId, {
+    String? name,
+    String? persona,
+    String? autonomy,
+    Map<String, Object?>? modelPolicy,
+    String? avatarUrl,
+  }) async => botUpdate = (
+    botId: botId,
+    name: name,
+    persona: persona,
+    autonomy: autonomy,
+  );
   @override
   bool wallpapersEnabled = false;
   @override
-  Future<List<WallpaperPhoto>> searchWallpapers({String? query, int page = 1}) async => const [];
+  Future<List<WallpaperPhoto>> searchWallpapers({
+    String? query,
+    int page = 1,
+  }) async => const [];
   final wallpaperDownloads = <String>[];
   @override
-  Future<void> trackWallpaperDownload(String downloadLocation) async => wallpaperDownloads.add(downloadLocation);
+  Future<void> trackWallpaperDownload(String downloadLocation) async =>
+      wallpaperDownloads.add(downloadLocation);
 
   @override
-  Future<UsageReport> usage(String orgId, {String period = 'day'}) async => UsageReport(
-    period: period == 'day' ? UsageReportPeriodEnum.day : UsageReportPeriodEnum.month,
-    since: DateTime(2026),
-    totalCostUsd: 0.0123,
-    byBot: [UsageReportByBotInner(botId: botId, name: 'Ada', costUsd: 0.0123, tokensIn: 1000, tokensOut: 200)],
-  );
+  Future<UsageReport> usage(String orgId, {String period = 'day'}) async =>
+      UsageReport(
+        period: period == 'day'
+            ? UsageReportPeriodEnum.day
+            : UsageReportPeriodEnum.month,
+        since: DateTime(2026),
+        totalCostUsd: 0.0123,
+        byBot: [
+          UsageReportByBotInner(
+            botId: botId,
+            name: 'Ada',
+            costUsd: 0.0123,
+            tokensIn: 1000,
+            tokensOut: 200,
+          ),
+        ],
+      );
 
   @override
   Future<List<Conversation>> conversations(String botId) async => [
-    Conversation(id: convId, botId: botId, title: 'Hello', lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]),
+    Conversation(
+      id: convId,
+      botId: botId,
+      title: 'Hello',
+      lastMessageAt: null,
+      createdAt: DateTime(2026),
+      kind: ConversationKindEnum.direct,
+      botIds: [botId],
+    ),
   ];
   @override
-  Future<Conversation> createConversation(String botId) async =>
-      Conversation(id: convId, botId: botId, title: null, lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.direct, botIds: [botId]);
+  Future<Conversation> createConversation(String botId) async => Conversation(
+    id: convId,
+    botId: botId,
+    title: null,
+    lastMessageAt: null,
+    createdAt: DateTime(2026),
+    kind: ConversationKindEnum.direct,
+    botIds: [botId],
+  );
 
   // Bot-to-bot switch (D-133)
   var botToBot = true;
@@ -885,12 +1473,22 @@ class FakeBackend implements Backend {
   Future<bool> allowBotToBot(String orgId) async => botToBot;
 
   // Secret store (D-145)
-  var secretStoreState = SecretStoreSettings(provider: SecretStoreSettingsProviderEnum.vault, siteUrl: null, projectId: null, environment: null, secretPath: null);
+  var secretStoreState = SecretStoreSettings(
+    provider: SecretStoreSettingsProviderEnum.vault,
+    siteUrl: null,
+    projectId: null,
+    environment: null,
+    secretPath: null,
+  );
   SetSecretStoreRequest? setStore;
   @override
-  Future<SecretStoreSettings> secretStore(String orgId) async => secretStoreState;
+  Future<SecretStoreSettings> secretStore(String orgId) async =>
+      secretStoreState;
   @override
-  Future<SecretStoreSettings> setSecretStore(String orgId, SetSecretStoreRequest request) async {
+  Future<SecretStoreSettings> setSecretStore(
+    String orgId,
+    SetSecretStoreRequest request,
+  ) async {
     setStore = request;
     return secretStoreState = SecretStoreSettings(
       provider: SecretStoreSettingsProviderEnum.infisical,
@@ -903,26 +1501,62 @@ class FakeBackend implements Backend {
 
   @override
   Future<SecretStoreSettings> removeSecretStore(String orgId) async =>
-      secretStoreState = SecretStoreSettings(provider: SecretStoreSettingsProviderEnum.vault, siteUrl: null, projectId: null, environment: null, secretPath: null);
+      secretStoreState = SecretStoreSettings(
+        provider: SecretStoreSettingsProviderEnum.vault,
+        siteUrl: null,
+        projectId: null,
+        environment: null,
+        secretPath: null,
+      );
 
   // Linked agents (D-143)
   final linkList = <BotLink>[];
   final linkActions = <String>[];
-  BotLink _link(String id, String name, BotLinkStatusEnum status, {String? peer}) =>
-      BotLink(id: id, botId: botId, name: name, status: status, peerBotName: peer, remoteUrl: null, exchanges: 1, createdAt: DateTime.utc(2026, 11, 3), activatedAt: null);
+  BotLink _link(
+    String id,
+    String name,
+    BotLinkStatusEnum status, {
+    String? peer,
+  }) => BotLink(
+    id: id,
+    botId: botId,
+    name: name,
+    status: status,
+    peerBotName: peer,
+    remoteUrl: null,
+    exchanges: 1,
+    createdAt: DateTime.utc(2026, 11, 3),
+    activatedAt: null,
+  );
   @override
   Future<List<BotLink>> botLinks(String botId) async => List.of(linkList);
   @override
   Future<CreatedBotLink> createBotLink(String botId, String name) async {
     linkActions.add('invite:$name');
-    linkList.add(_link('lk-${linkList.length + 1}', name, BotLinkStatusEnum.pending));
-    return CreatedBotLink.fromJson({...linkList.last.toJson(), 'invite': 'casama-link:abc123'});
+    linkList.add(
+      _link('lk-${linkList.length + 1}', name, BotLinkStatusEnum.pending),
+    );
+    return CreatedBotLink.fromJson({
+      ...linkList.last.toJson(),
+      'invite': 'casama-link:abc123',
+    });
   }
 
   @override
-  Future<BotLink> acceptBotLink(String invite, String botId, String name) async {
+  Future<BotLink> acceptBotLink(
+    String invite,
+    String botId,
+    String name,
+  ) async {
     linkActions.add('accept:$invite:$name');
-    linkList.add(_link('lk-${linkList.length + 1}', name, BotLinkStatusEnum.active, peer: 'Ben'));
+    linkList.add(
+      _link(
+        'lk-${linkList.length + 1}',
+        name,
+        BotLinkStatusEnum.active,
+        peer: 'Ben',
+      ),
+    );
     return linkList.last;
   }
 
@@ -930,7 +1564,10 @@ class FakeBackend implements Backend {
   Future<BotLink> revokeBotLink(String id) async {
     linkActions.add('revoke:$id');
     final i = linkList.indexWhere((l) => l.id == id);
-    linkList[i] = BotLink.fromJson({...linkList[i].toJson(), 'status': 'revoked'});
+    linkList[i] = BotLink.fromJson({
+      ...linkList[i].toJson(),
+      'status': 'revoked',
+    });
     return linkList[i];
   }
 
@@ -947,12 +1584,22 @@ class FakeBackend implements Backend {
   ];
 
   // Payments (D-142)
-  var pay = PaymentSettings(connected: false, provider: null, monthlyCapUsd: 500, botMonthlyCapUsd: 200, spentThisMonthUsd: 0, webhookUrl: null);
+  var pay = PaymentSettings(
+    connected: false,
+    provider: null,
+    monthlyCapUsd: 500,
+    botMonthlyCapUsd: 200,
+    spentThisMonthUsd: 0,
+    webhookUrl: null,
+  );
   SetPaymentSettingsRequest? setPay;
   @override
   Future<PaymentSettings> paymentSettings(String orgId) async => pay;
   @override
-  Future<PaymentSettings> setPaymentSettings(String orgId, SetPaymentSettingsRequest request) async {
+  Future<PaymentSettings> setPaymentSettings(
+    String orgId,
+    SetPaymentSettingsRequest request,
+  ) async {
     setPay = request;
     return pay = PaymentSettings(
       connected: true,
@@ -966,7 +1613,14 @@ class FakeBackend implements Backend {
 
   @override
   Future<PaymentSettings> removePaymentSettings(String orgId) async =>
-      pay = PaymentSettings(connected: false, provider: null, monthlyCapUsd: 500, botMonthlyCapUsd: 200, spentThisMonthUsd: 0, webhookUrl: null);
+      pay = PaymentSettings(
+        connected: false,
+        provider: null,
+        monthlyCapUsd: 500,
+        botMonthlyCapUsd: 200,
+        spentThisMonthUsd: 0,
+        webhookUrl: null,
+      );
   @override
   Future<List<PaymentRequest>> paymentRequests(String orgId) async => [
     PaymentRequest(
@@ -985,7 +1639,13 @@ class FakeBackend implements Backend {
   ];
 
   // Calls for you (D-141)
-  var tel = TelephonySettings(connected: false, accountSid: null, fromNumber: null, allowPersonalNumbers: false, dailyCap: 10);
+  var tel = TelephonySettings(
+    connected: false,
+    accountSid: null,
+    fromNumber: null,
+    allowPersonalNumbers: false,
+    dailyCap: 10,
+  );
   SetTelephonyRequest? setTel;
   final callLog = <String>[];
   var outbound = OutboundCall(
@@ -995,8 +1655,14 @@ class FakeBackend implements Backend {
     purpose: 'Book a table for 2 at 7pm',
     status: OutboundCallStatusEnum.inProgress,
     transcript: [
-      OutboundCallTranscriptInner(role: OutboundCallTranscriptInnerRoleEnum.bot, text: "Hi, I'm Max, an AI assistant calling for Ana."),
-      OutboundCallTranscriptInner(role: OutboundCallTranscriptInnerRoleEnum.callee, text: 'Sure, what time?'),
+      OutboundCallTranscriptInner(
+        role: OutboundCallTranscriptInnerRoleEnum.bot,
+        text: "Hi, I'm Max, an AI assistant calling for Ana.",
+      ),
+      OutboundCallTranscriptInner(
+        role: OutboundCallTranscriptInnerRoleEnum.callee,
+        text: 'Sure, what time?',
+      ),
     ],
     seconds: null,
     startedAt: DateTime.utc(2026, 11, 3, 18),
@@ -1006,7 +1672,10 @@ class FakeBackend implements Backend {
   @override
   Future<TelephonySettings> telephony(String orgId) async => tel;
   @override
-  Future<TelephonySettings> setTelephony(String orgId, SetTelephonyRequest request) async {
+  Future<TelephonySettings> setTelephony(
+    String orgId,
+    SetTelephonyRequest request,
+  ) async {
     setTel = request;
     return tel = TelephonySettings(
       connected: true,
@@ -1018,19 +1687,32 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<TelephonySettings> removeTelephony(String orgId) async => tel = TelephonySettings(connected: false, accountSid: null, fromNumber: null, allowPersonalNumbers: false, dailyCap: 10);
+  Future<TelephonySettings> removeTelephony(String orgId) async =>
+      tel = TelephonySettings(
+        connected: false,
+        accountSid: null,
+        fromNumber: null,
+        allowPersonalNumbers: false,
+        dailyCap: 10,
+      );
   @override
   Future<OutboundCall> outboundCall(String id) async => outbound;
   @override
   Future<OutboundCall> endOutboundCall(String id) async {
     callLog.add('end:$id');
-    return outbound = OutboundCall.fromJson({...outbound.toJson(), 'status': 'ended_by_user'});
+    return outbound = OutboundCall.fromJson({
+      ...outbound.toJson(),
+      'status': 'ended_by_user',
+    });
   }
 
   @override
   Future<OutboundCall> takeOverOutboundCall(String id, {String? phone}) async {
     callLog.add('takeover:$id:$phone');
-    return outbound = OutboundCall.fromJson({...outbound.toJson(), 'status': 'taken_over'});
+    return outbound = OutboundCall.fromJson({
+      ...outbound.toJson(),
+      'status': 'taken_over',
+    });
   }
 
   // Agent-to-agent (D-140)
@@ -1039,8 +1721,14 @@ class FakeBackend implements Backend {
   @override
   Future<bool> a2aEnabled(String orgId) async => a2aOn;
   @override
-  Future<void> setA2aEnabled(String orgId, bool enabled) async => a2aOn = enabled;
-  BotA2a _a2a(String botId) => BotA2a(workspaceEnabled: a2aOn, published: a2aPublished, agentCardUrl: 'https://api.example.com/a2a/$botId/.well-known/agent-card.json');
+  Future<void> setA2aEnabled(String orgId, bool enabled) async =>
+      a2aOn = enabled;
+  BotA2a _a2a(String botId) => BotA2a(
+    workspaceEnabled: a2aOn,
+    published: a2aPublished,
+    agentCardUrl:
+        'https://api.example.com/a2a/$botId/.well-known/agent-card.json',
+  );
   @override
   Future<BotA2a> botA2a(String botId) async => _a2a(botId);
   @override
@@ -1055,16 +1743,22 @@ class FakeBackend implements Backend {
   EncryptionStatus _enc() => EncryptionStatus(
     mode: encryptionMode,
     available: true,
-    key: encryptionMode == EncryptionStatusModeEnum.off ? null : EncryptionStatusKeyEnum.serverKey,
+    key: encryptionMode == EncryptionStatusModeEnum.off
+        ? null
+        : EncryptionStatusKeyEnum.serverKey,
     since: null,
-    rotatedAt: encryptionActions.contains('rotate') ? DateTime.utc(2026, 11, 2) : null,
+    rotatedAt: encryptionActions.contains('rotate')
+        ? DateTime.utc(2026, 11, 2)
+        : null,
   );
   @override
   Future<EncryptionStatus> encryption(String orgId) async => _enc();
   @override
   Future<EncryptionStatus> setEncryption(String orgId, bool enabled) async {
     encryptionActions.add('set:$enabled');
-    encryptionMode = enabled ? EncryptionStatusModeEnum.encrypting : EncryptionStatusModeEnum.decrypting;
+    encryptionMode = enabled
+        ? EncryptionStatusModeEnum.encrypting
+        : EncryptionStatusModeEnum.decrypting;
     return _enc();
   }
 
@@ -1075,7 +1769,8 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> setAllowBotToBot(String orgId, bool allowed) async => botToBot = allowed;
+  Future<void> setAllowBotToBot(String orgId, bool allowed) async =>
+      botToBot = allowed;
 
   // Bot sharing (D-131)
   SetBotAccessRequest? savedAccess;
@@ -1083,20 +1778,42 @@ class FakeBackend implements Backend {
   Future<BotAccess> botAccess(String botId) async => BotAccess(
     visibility: BotAccessVisibilityEnum.private,
     createdBy: 'me',
-    entries: [BotAccessEntry(userId: 'u-ana', email: 'ana@acme.test', role: null, access: BotAccessEntryAccessEnum.chat)],
+    entries: [
+      BotAccessEntry(
+        userId: 'u-ana',
+        email: 'ana@acme.test',
+        role: null,
+        access: BotAccessEntryAccessEnum.chat,
+      ),
+    ],
     canAdmin: true,
     yourAccess: BotAccessYourAccessEnum.admin,
   );
   @override
-  Future<BotAccess> setBotAccess(String botId, SetBotAccessRequest request) async {
+  Future<BotAccess> setBotAccess(
+    String botId,
+    SetBotAccessRequest request,
+  ) async {
     savedAccess = request;
     return botAccess(botId);
   }
 
   List<WorkspaceMember> workspaceMembers = [
-    WorkspaceMember(userId: 'me', email: 'me@acme.test', role: WorkspaceMemberRoleEnum.owner),
-    WorkspaceMember(userId: 'u-ana', email: 'ana@acme.test', role: WorkspaceMemberRoleEnum.member),
-    WorkspaceMember(userId: 'u-ben', email: 'ben@acme.test', role: WorkspaceMemberRoleEnum.member),
+    WorkspaceMember(
+      userId: 'me',
+      email: 'me@acme.test',
+      role: WorkspaceMemberRoleEnum.owner,
+    ),
+    WorkspaceMember(
+      userId: 'u-ana',
+      email: 'ana@acme.test',
+      role: WorkspaceMemberRoleEnum.member,
+    ),
+    WorkspaceMember(
+      userId: 'u-ben',
+      email: 'ben@acme.test',
+      role: WorkspaceMemberRoleEnum.member,
+    ),
   ];
   @override
   Future<List<WorkspaceMember>> members(String orgId) async => workspaceMembers;
@@ -1107,21 +1824,33 @@ class FakeBackend implements Backend {
   Future<WelcomeChat> startWelcome({String? firstName}) async {
     welcomeCalls++;
     hasOrg = true;
-    return WelcomeChat(orgId: orgId, botId: botId, conversationId: convId, created: true);
+    return WelcomeChat(
+      orgId: orgId,
+      botId: botId,
+      conversationId: convId,
+      created: true,
+    );
   }
 
   // Password managers (D-128)
   final pmList = <PasswordManager>[];
   final pmActions = <String>[];
   @override
-  Future<List<PasswordManager>> passwordManagers(String orgId) async => List.of(pmList);
+  Future<List<PasswordManager>> passwordManagers(String orgId) async =>
+      List.of(pmList);
   @override
-  Future<PasswordManager> connectPasswordManager(CreatePasswordManagerRequest request) async {
+  Future<PasswordManager> connectPasswordManager(
+    CreatePasswordManagerRequest request,
+  ) async {
     pmActions.add('connect:${request.provider.value}:${request.scope.value}');
     final pm = PasswordManager(
       id: 'pm-1',
       scope: PasswordManagerScopeEnum.values.byName(request.scope.name),
-      provider: request.provider == CreatePasswordManagerRequestProviderEnum.n1password ? PasswordManagerProviderEnum.n1password : PasswordManagerProviderEnum.bitwarden,
+      provider:
+          request.provider ==
+              CreatePasswordManagerRequestProviderEnum.n1password
+          ? PasswordManagerProviderEnum.n1password
+          : PasswordManagerProviderEnum.bitwarden,
       name: request.name,
       url: request.url,
       allowedVaults: const [],
@@ -1136,11 +1865,22 @@ class FakeBackend implements Backend {
 
   @override
   Future<List<PasswordManagerVault>> passwordManagerVaults(String id) async => [
-    PasswordManagerVault(id: 'v-work', name: 'Work', allowed: false, logins: null),
-    PasswordManagerVault(id: 'v-home', name: 'Home', allowed: false, logins: null),
+    PasswordManagerVault(
+      id: 'v-work',
+      name: 'Work',
+      allowed: false,
+      logins: null,
+    ),
+    PasswordManagerVault(
+      id: 'v-home',
+      name: 'Home',
+      allowed: false,
+      logins: null,
+    ),
   ];
   @override
-  Future<void> setPasswordManagerVaults(String id, List<String> vaults) async => pmActions.add('vaults:$id:${vaults.join(',')}');
+  Future<void> setPasswordManagerVaults(String id, List<String> vaults) async =>
+      pmActions.add('vaults:$id:${vaults.join(',')}');
   @override
   Future<void> deletePasswordManager(String id) async {
     pmActions.add('delete:$id');
@@ -1171,7 +1911,10 @@ class FakeBackend implements Backend {
   @override
   Future<List<Replay>> replays(String botId) async => List.of(replayList);
   @override
-  Future<RunReplayResponse> runReplay(String id, Map<String, String> params) async {
+  Future<RunReplayResponse> runReplay(
+    String id,
+    Map<String, String> params,
+  ) async {
     replayActions.add('run:$id:${params['amount']}');
     return RunReplayResponse(conversationId: convId, runId: runId);
   }
@@ -1183,7 +1926,11 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<Replay> replayFromTeach(String teachId, String name, {String? description}) async {
+  Future<Replay> replayFromTeach(
+    String teachId,
+    String name, {
+    String? description,
+  }) async {
     replayActions.add('fromTeach:$teachId:$name');
     return replayList.first;
   }
@@ -1192,7 +1939,10 @@ class FakeBackend implements Backend {
   final proposals = <SkillProposal>[];
   final proposalActions = <String>[];
   @override
-  Future<List<SkillProposal>> skillProposals(String orgId, {String? botId}) async => List.of(proposals);
+  Future<List<SkillProposal>> skillProposals(
+    String orgId, {
+    String? botId,
+  }) async => List.of(proposals);
   @override
   Future<void> acceptSkillProposal(String id, {String? bodyMd}) async {
     proposalActions.add('accept:$id');
@@ -1214,7 +1964,15 @@ class FakeBackend implements Backend {
     successRate: 0.75,
     lastFailureAt: DateTime(2026, 11, 9),
     lastFailureRunId: null,
-    revisions: [SkillStatsRevisionsInner(id: 'rev-a', description: 'd', bodyMd: 'Old steps', byBot: true, createdAt: DateTime(2026, 11, 8))],
+    revisions: [
+      SkillStatsRevisionsInner(
+        id: 'rev-a',
+        description: 'd',
+        bodyMd: 'Old steps',
+        byBot: true,
+        createdAt: DateTime(2026, 11, 8),
+      ),
+    ],
   );
 
   // Knowledge sources (D-125)
@@ -1222,9 +1980,14 @@ class FakeBackend implements Backend {
   final knowledgeActions = <String>[];
   CreateKnowledgeSourceRequest? addedKnowledge;
   @override
-  Future<List<KnowledgeSource>> knowledgeSources(String orgId, {String? botId}) async => List.of(knowledgeList);
+  Future<List<KnowledgeSource>> knowledgeSources(
+    String orgId, {
+    String? botId,
+  }) async => List.of(knowledgeList);
   @override
-  Future<KnowledgeSource> addKnowledgeSource(CreateKnowledgeSourceRequest request) async {
+  Future<KnowledgeSource> addKnowledgeSource(
+    CreateKnowledgeSourceRequest request,
+  ) async {
     addedKnowledge = request;
     final k = KnowledgeSource(
       id: 'ks-${knowledgeList.length + 1}',
@@ -1244,7 +2007,8 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> resyncKnowledgeSource(String id) async => knowledgeActions.add('sync:$id');
+  Future<void> resyncKnowledgeSource(String id) async =>
+      knowledgeActions.add('sync:$id');
   @override
   Future<void> deleteKnowledgeSource(String id) async {
     knowledgeActions.add('delete:$id');
@@ -1269,7 +2033,9 @@ class FakeBackend implements Backend {
       config: request.config ?? const {},
       allowedSenders: request.allowedSenders,
       enabled: true,
-      webhookUrl: request.kind == ChannelKind.imessage ? null : 'https://api.example.com/hooks/channels/$id',
+      webhookUrl: request.kind == ChannelKind.imessage
+          ? null
+          : 'https://api.example.com/hooks/channels/$id',
       verifyToken: request.kind == ChannelKind.whatsapp ? 'verify-123' : null,
       lastInboundAt: null,
       lastError: null,
@@ -1280,11 +2046,26 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<Channel> updateChannel(String id, {String? name, List<String>? allowedSenders, bool? enabled}) async {
-    channelActions.add(['update:$id', if (allowedSenders != null) 'senders:${allowedSenders.join(',')}', if (enabled != null) 'enabled:$enabled'].join(' '));
+  Future<Channel> updateChannel(
+    String id, {
+    String? name,
+    List<String>? allowedSenders,
+    bool? enabled,
+  }) async {
+    channelActions.add(
+      [
+        'update:$id',
+        if (allowedSenders != null) 'senders:${allowedSenders.join(',')}',
+        if (enabled != null) 'enabled:$enabled',
+      ].join(' '),
+    );
     final i = channelList.indexWhere((c) => c.id == id);
     final c = channelList[i];
-    channelList[i] = Channel.fromJson({...c.toJson(), 'allowed_senders': ?allowedSenders, 'enabled': ?enabled});
+    channelList[i] = Channel.fromJson({
+      ...c.toJson(),
+      'allowed_senders': ?allowedSenders,
+      'enabled': ?enabled,
+    });
     return channelList[i];
   }
 
@@ -1339,7 +2120,11 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<WorkspaceFilesResult> importWorkspaceFiles(String orgId, Uint8List zip, {bool dryRun = false}) async {
+  Future<WorkspaceFilesResult> importWorkspaceFiles(
+    String orgId,
+    Uint8List zip, {
+    bool dryRun = false,
+  }) async {
     fileActions.add(dryRun ? 'dry' : 'import');
     return WorkspaceFilesResult(
       created: const ['ada/routines/weekly.md'],
@@ -1354,7 +2139,13 @@ class FakeBackend implements Backend {
   @override
   Future<GitSyncStatus> gitSync(String orgId) async => gitStatus;
   @override
-  Future<GitSyncStatus> setGitSync(String orgId, {required String repo, String? branch, String? path, bool enabled = true}) async {
+  Future<GitSyncStatus> setGitSync(
+    String orgId, {
+    required String repo,
+    String? branch,
+    String? path,
+    bool enabled = true,
+  }) async {
     fileActions.add('git:$repo:$branch:$path');
     gitStatus = GitSyncStatus(
       configured: true,
@@ -1386,8 +2177,14 @@ class FakeBackend implements Backend {
   BotTemplateFile? importedTemplate;
   final importActions = <String>[];
   @override
-  Future<AgentImportPlan> startAgentImport(String orgId, {Uint8List? zip, Map<String, Uint8List>? files}) async {
-    importActions.add(zip != null ? 'zip:${zip.length}' : 'files:${files?.keys.join(',')}');
+  Future<AgentImportPlan> startAgentImport(
+    String orgId, {
+    Uint8List? zip,
+    Map<String, Uint8List>? files,
+  }) async {
+    importActions.add(
+      zip != null ? 'zip:${zip.length}' : 'files:${files?.keys.join(',')}',
+    );
     return agentPlan();
   }
 
@@ -1401,18 +2198,44 @@ class FakeBackend implements Backend {
       description: 'Imported from OpenClaw',
       personaMd: 'You are Juno.',
       autonomy: BotTemplateFileAutonomyEnum.askRisky,
-      skills: [BotTemplateFileSkillsInner(name: 'triage', description: 'Triage the inbox', bodyMd: 'Sort.')],
-      routines: [BotTemplateFileRoutinesInner(name: 'Brief', instructionsMd: 'Brief me', scheduleCron: '0 7 * * *')],
+      skills: [
+        BotTemplateFileSkillsInner(
+          name: 'triage',
+          description: 'Triage the inbox',
+          bodyMd: 'Sort.',
+        ),
+      ],
+      routines: [
+        BotTemplateFileRoutinesInner(
+          name: 'Brief',
+          instructionsMd: 'Brief me',
+          scheduleCron: '0 7 * * *',
+        ),
+      ],
       memories: [
-        BotTemplateFileMemoriesInner(kind: BotTemplateFileMemoriesInnerKindEnum.preference, content: 'Prefers mornings'),
-        BotTemplateFileMemoriesInner(kind: BotTemplateFileMemoriesInnerKindEnum.fact, content: 'Old address'),
+        BotTemplateFileMemoriesInner(
+          kind: BotTemplateFileMemoriesInnerKindEnum.preference,
+          content: 'Prefers mornings',
+        ),
+        BotTemplateFileMemoriesInner(
+          kind: BotTemplateFileMemoriesInnerKindEnum.fact,
+          content: 'Old address',
+        ),
       ],
       connections: const [],
     ),
-    sources: AgentImportPlanSources(skills: const ['workspace/skills/triage/SKILL.md'], routines: const ['cron/jobs.json'], memories: const ['USER.md', 'MEMORY.md']),
-    leftovers: [AgentImportPlanLeftoversInner(path: 'workspace/notes/plan.md', size: 8)],
+    sources: AgentImportPlanSources(
+      skills: const ['workspace/skills/triage/SKILL.md'],
+      routines: const ['cron/jobs.json'],
+      memories: const ['USER.md', 'MEMORY.md'],
+    ),
+    leftovers: [
+      AgentImportPlanLeftoversInner(path: 'workspace/notes/plan.md', size: 8),
+    ],
     skipped: [AgentImportPlanSkippedInner(path: '.env', reason: 'secrets')],
-    notes: const ['"Reminder" ran once at a set time; not imported as a routine'],
+    notes: const [
+      '"Reminder" ran once at a set time; not imported as a routine',
+    ],
   );
   @override
   Future<int> writeAgentImportFiles(String importId, String botId) async {
@@ -1424,12 +2247,21 @@ class FakeBackend implements Backend {
   Future<String> memoryImportPrompt() async => 'FACT: … PREFERENCE: …';
   @override
   Future<List<ImportedMemoryItem>> parseMemoryImport(String text) async => [
-    ImportedMemoryItem(kind: ImportedMemoryItemKindEnum.fact, content: 'Has a dog'),
-    ImportedMemoryItem(kind: ImportedMemoryItemKindEnum.preference, content: 'Metric units'),
+    ImportedMemoryItem(
+      kind: ImportedMemoryItemKindEnum.fact,
+      content: 'Has a dog',
+    ),
+    ImportedMemoryItem(
+      kind: ImportedMemoryItemKindEnum.preference,
+      content: 'Metric units',
+    ),
   ];
   final savedMemories = <ImportedMemoryItem>[];
   @override
-  Future<int> saveImportedMemories(String botId, List<ImportedMemoryItem> memories) async {
+  Future<int> saveImportedMemories(
+    String botId,
+    List<ImportedMemoryItem> memories,
+  ) async {
     savedMemories.addAll(memories);
     return memories.length;
   }
@@ -1444,9 +2276,28 @@ class FakeBackend implements Backend {
     repo: 'acme/agent-plugins',
     path: 'plugins/weather',
     commit: '1' * 40,
-    skills: [PluginPreviewSkillsInner(name: 'plan-trip', description: 'Plan around the weather')],
-    servers: [PluginServerInfo(key: 'forecast', type: PluginServerInfoTypeEnum.stdio, command: './bin/forecast', args: const [], url: null)],
-    secrets: [PluginSecretInfo(name: 'WEATHER_KEY', description: 'API key', server: 'forecast')],
+    skills: [
+      PluginPreviewSkillsInner(
+        name: 'plan-trip',
+        description: 'Plan around the weather',
+      ),
+    ],
+    servers: [
+      PluginServerInfo(
+        key: 'forecast',
+        type: PluginServerInfoTypeEnum.stdio,
+        command: './bin/forecast',
+        args: const [],
+        url: null,
+      ),
+    ],
+    secrets: [
+      PluginSecretInfo(
+        name: 'WEATHER_KEY',
+        description: 'API key',
+        server: 'forecast',
+      ),
+    ],
     hosts: const [],
     warnings: const [],
   );
@@ -1470,7 +2321,12 @@ class FakeBackend implements Backend {
         integrationId: 'int-1',
         status: InstalledPluginServerStatusEnum.ok,
         error: null,
-        tools: [InstalledPluginServerAllOfTools(name: 'forecast', risk: InstalledPluginServerAllOfToolsRiskEnum.low)],
+        tools: [
+          InstalledPluginServerAllOfTools(
+            name: 'forecast',
+            risk: InstalledPluginServerAllOfToolsRiskEnum.low,
+          ),
+        ],
       ),
     ],
     hosts: const [],
@@ -1487,31 +2343,42 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<Plugin> installPlugin(String orgId, String botId, String url, String commit, Map<String, String> secrets) async {
+  Future<Plugin> installPlugin(
+    String orgId,
+    String botId,
+    String url,
+    String commit,
+    Map<String, String> secrets,
+  ) async {
     pluginActions.add('install:$commit:${secrets['WEATHER_KEY']}');
     pluginList.add(installed(commit));
     return pluginList.last;
   }
 
   @override
-  Future<PluginUpdatePreview> pluginUpdate(String id) async => PluginUpdatePreview(
-    upToDate: false,
-    fromCommit: '1' * 40,
-    toCommit: '2' * 40,
-    fromVersion: '1.0.0',
-    toVersion: '2.0.0',
-    skillsAdded: const [],
-    skillsRemoved: const [],
-    skillsChanged: const ['plan-trip'],
-    serversAdded: const ['tides'],
-    serversRemoved: const [],
-    serversChanged: const [],
-    hostsAdded: const [],
-    secretsAdded: const [],
-    preview: pluginPreview(),
-  );
+  Future<PluginUpdatePreview> pluginUpdate(String id) async =>
+      PluginUpdatePreview(
+        upToDate: false,
+        fromCommit: '1' * 40,
+        toCommit: '2' * 40,
+        fromVersion: '1.0.0',
+        toVersion: '2.0.0',
+        skillsAdded: const [],
+        skillsRemoved: const [],
+        skillsChanged: const ['plan-trip'],
+        serversAdded: const ['tides'],
+        serversRemoved: const [],
+        serversChanged: const [],
+        hostsAdded: const [],
+        secretsAdded: const [],
+        preview: pluginPreview(),
+      );
   @override
-  Future<Plugin> updatePlugin(String id, String commit, {Map<String, String> secrets = const {}}) async {
+  Future<Plugin> updatePlugin(
+    String id,
+    String commit, {
+    Map<String, String> secrets = const {},
+  }) async {
     pluginActions.add('update:$commit');
     pluginList[0] = installed(commit);
     return pluginList[0];
@@ -1529,22 +2396,23 @@ class FakeBackend implements Backend {
   TeachSessionStatusEnum teachStatus = TeachSessionStatusEnum.recording;
   TeachDraft? teachDraft;
   ({String name, String description, String body, bool tryNow})? savedTeach;
-  TeachStep teachStep(int seq, AddTeachStepRequest r, {String? secret}) => TeachStep(
-    seq: seq,
-    kind: TeachStepKindEnum.values.byName(r.kind.name),
-    x: r.x,
-    y: r.y,
-    button: r.button,
-    text: secret != null ? null : r.text,
-    key: r.key,
-    dx: r.dx,
-    dy: r.dy,
-    secretName: secret,
-    password: false,
-    url: 'https://finance.example.com',
-    hasScreenshot: true,
-    createdAt: DateTime(2026, 11, 10),
-  );
+  TeachStep teachStep(int seq, AddTeachStepRequest r, {String? secret}) =>
+      TeachStep(
+        seq: seq,
+        kind: TeachStepKindEnum.values.byName(r.kind.name),
+        x: r.x,
+        y: r.y,
+        button: r.button,
+        text: secret != null ? null : r.text,
+        key: r.key,
+        dx: r.dx,
+        dy: r.dy,
+        secretName: secret,
+        password: false,
+        url: 'https://finance.example.com',
+        hasScreenshot: true,
+        createdAt: DateTime(2026, 11, 10),
+      );
   TeachSession teachSession() => TeachSession(
     id: 'teach-1',
     botId: botId,
@@ -1553,7 +2421,10 @@ class FakeBackend implements Backend {
     conversationId: null,
     draft: teachDraft,
     skillId: null,
-    steps: [for (var i = 0; i < teachSteps.length; i++) teachStep(i + 1, teachSteps[i])],
+    steps: [
+      for (var i = 0; i < teachSteps.length; i++)
+        teachStep(i + 1, teachSteps[i]),
+    ],
     startedAt: DateTime(2026, 11, 10),
     stoppedAt: null,
   );
@@ -1585,9 +2456,24 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<SaveTeachResponse> saveTeach(String id, {required String name, required String description, required String body, bool tryNow = false}) async {
-    savedTeach = (name: name, description: description, body: body, tryNow: tryNow);
-    return SaveTeachResponse(skillId: 'skill-9', conversationId: tryNow ? convId : null, runId: tryNow ? runId : null);
+  Future<SaveTeachResponse> saveTeach(
+    String id, {
+    required String name,
+    required String description,
+    required String body,
+    bool tryNow = false,
+  }) async {
+    savedTeach = (
+      name: name,
+      description: description,
+      body: body,
+      tryNow: tryNow,
+    );
+    return SaveTeachResponse(
+      skillId: 'skill-9',
+      conversationId: tryNow ? convId : null,
+      runId: tryNow ? runId : null,
+    );
   }
 
   @override
@@ -1610,7 +2496,8 @@ class FakeBackend implements Backend {
   ];
   final pageActions = <String>[];
   @override
-  Future<List<BotPage>> pages(String orgId, {String? botId}) async => List.of(pageList);
+  Future<List<BotPage>> pages(String orgId, {String? botId}) async =>
+      List.of(pageList);
   @override
   Future<String> pageViewLink(String id, {bool pdf = false}) async {
     pageActions.add('${pdf ? 'pdf' : 'view'}:$id');
@@ -1618,9 +2505,15 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<String?> setPageVisibility(String id, BotPageVisibilityEnum visibility, {int? expiresInDays}) async {
+  Future<String?> setPageVisibility(
+    String id,
+    BotPageVisibilityEnum visibility, {
+    int? expiresInDays,
+  }) async {
     pageActions.add('${visibility.name}:$id');
-    return visibility == BotPageVisibilityEnum.public ? 'https://pages.example.com/s/public-$id' : null;
+    return visibility == BotPageVisibilityEnum.public
+        ? 'https://pages.example.com/s/public-$id'
+        : null;
   }
 
   @override
@@ -1633,7 +2526,11 @@ class FakeBackend implements Backend {
   @override
   Future<List<Conversation>> groupChats(String orgId) async => groups;
   @override
-  Future<Conversation> createGroupChat(String leadBotId, List<String> botIds, {String? title}) async {
+  Future<Conversation> createGroupChat(
+    String leadBotId,
+    List<String> botIds, {
+    String? title,
+  }) async {
     final c = Conversation(
       id: 'group-${groups.length + 1}',
       botId: leadBotId,
@@ -1659,42 +2556,84 @@ class FakeBackend implements Backend {
   Future<String?> activeRun(String conversationId) async => null;
   final sentAttachments = <List<AttachmentRef>>[];
   @override
-  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const []}) async {
+  Future<SendMessageResponse> send(
+    String conversationId,
+    String text, {
+    List<AttachmentRef> attachments = const [],
+    Map<String, Object?>? uiAction,
+    List<String> skills = const [],
+  }) async {
     sent.add(text);
     sentSkills.add(skills);
     sentAttachments.add(attachments);
     if (uiAction != null) sentUiActions.add(uiAction);
-    return SendMessageResponse(messageId: 'm1', runId: runId, conversationId: conversationId);
+    return SendMessageResponse(
+      messageId: 'm1',
+      runId: runId,
+      conversationId: conversationId,
+    );
   }
 
   @override
   Future<void> cancelRun(String runId) async => cancelled = true;
   @override
-  Stream<RunEventItem> watchRun(String runId, {int afterSeq = 0}) => runEventsController.stream;
+  Stream<RunEventItem> watchRun(String runId, {int afterSeq = 0}) =>
+      runEventsController.stream;
   @override
   Future<List<RunEventItem>> runEvents(String runId) async => storedEvents;
   @override
-  Future<List<RunSummary>> runs(String botId) async => [RunSummary(id: runId, status: 'completed', trigger: 'chat', createdAt: DateTime.now(), costUsd: 0.001)];
+  Future<List<RunSummary>> runs(String botId) async => [
+    RunSummary(
+      id: runId,
+      status: 'completed',
+      trigger: 'chat',
+      createdAt: DateTime.now(),
+      costUsd: 0.001,
+    ),
+  ];
 
   @override
   Future<List<Memory>> memories(String botId) async => [
-    Memory(id: 'mem1', kind: MemoryKindEnum.preference, content: 'Likes teal', importance: 0.8, pinned: true, createdAt: DateTime.now(), updatedAt: DateTime.now()),
+    Memory(
+      id: 'mem1',
+      kind: MemoryKindEnum.preference,
+      content: 'Likes teal',
+      importance: 0.8,
+      pinned: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ),
   ];
   @override
-  Future<void> updateMemory(String botId, String id, {String? content, bool? pinned}) async {}
+  Future<void> updateMemory(
+    String botId,
+    String id, {
+    String? content,
+    bool? pinned,
+  }) async {}
   @override
   Future<void> deleteMemory(String botId, String id) async {}
 
   // Memory backends (D-137)
-  MemoryBackend backend = MemoryBackend(provider: MemoryBackendProviderEnum.postgres, baseUrl: null, workspace: null, updatedAt: null);
+  MemoryBackend backend = MemoryBackend(
+    provider: MemoryBackendProviderEnum.postgres,
+    baseUrl: null,
+    workspace: null,
+    updatedAt: null,
+  );
   SetMemoryBackendRequest? setBackend;
   @override
   Future<MemoryBackend> memoryBackend(String orgId) async => backend;
   @override
-  Future<MemoryBackend> setMemoryBackend(String orgId, SetMemoryBackendRequest request) async {
+  Future<MemoryBackend> setMemoryBackend(
+    String orgId,
+    SetMemoryBackendRequest request,
+  ) async {
     setBackend = request;
     return backend = MemoryBackend(
-      provider: request.provider == SetMemoryBackendRequestProviderEnum.honcho ? MemoryBackendProviderEnum.honcho : MemoryBackendProviderEnum.supermemory,
+      provider: request.provider == SetMemoryBackendRequestProviderEnum.honcho
+          ? MemoryBackendProviderEnum.honcho
+          : MemoryBackendProviderEnum.supermemory,
       baseUrl: request.baseUrl,
       workspace: request.workspace,
       updatedAt: DateTime.utc(2026, 11, 3),
@@ -1702,12 +2641,26 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<MemoryBackend> removeMemoryBackend(String orgId) async => backend = MemoryBackend(provider: MemoryBackendProviderEnum.postgres, baseUrl: null, workspace: null, updatedAt: null);
+  Future<MemoryBackend> removeMemoryBackend(String orgId) async =>
+      backend = MemoryBackend(
+        provider: MemoryBackendProviderEnum.postgres,
+        baseUrl: null,
+        workspace: null,
+        updatedAt: null,
+      );
   @override
   Future<List<SkillView>> skills(String orgId) async => skillViews;
   List<SkillView> skillViews = const [];
   @override
-  Future<void> saveSkill(String orgId, {String? id, String? botId, required String name, required String description, required String bodyMd, bool enabled = true}) async {}
+  Future<void> saveSkill(
+    String orgId, {
+    String? id,
+    String? botId,
+    required String name,
+    required String description,
+    required String bodyMd,
+    bool enabled = true,
+  }) async {}
   @override
   Future<void> deleteSkill(String id) async {}
 
@@ -1729,9 +2682,17 @@ class FakeBackend implements Backend {
       createdAt: DateTime.now(),
     ),
   ];
-  final notificationsController = StreamController<NotificationView>.broadcast();
+  final notificationsController =
+      StreamController<NotificationView>.broadcast();
   List<NotificationView> storedNotifications = [
-    NotificationView(id: 'n1', kind: 'approval', title: 'Ada needs approval', body: 'Run a destructive shell command', link: '/approvals/appr1', createdAt: DateTime.now()),
+    NotificationView(
+      id: 'n1',
+      kind: 'approval',
+      title: 'Ada needs approval',
+      body: 'Run a destructive shell command',
+      link: '/approvals/appr1',
+      createdAt: DateTime.now(),
+    ),
   ];
   var notificationsRead = false;
   final devices = <String>[];
@@ -1742,10 +2703,20 @@ class FakeBackend implements Backend {
   final secretList = <Secret>[];
 
   @override
-  Future<List<Approval>> approvals(String orgId, {bool pendingOnly = true}) async => pendingApprovals.where((a) => !decisions.containsKey(a.id)).toList();
+  Future<List<Approval>> approvals(
+    String orgId, {
+    bool pendingOnly = true,
+  }) async =>
+      pendingApprovals.where((a) => !decisions.containsKey(a.id)).toList();
   @override
-  Future<Approval> decideApproval(String approvalId, {required bool approve, bool alwaysAllow = false}) async {
-    decisions[approvalId] = approve ? (alwaysAllow ? 'always' : 'approved') : 'denied';
+  Future<Approval> decideApproval(
+    String approvalId, {
+    required bool approve,
+    bool alwaysAllow = false,
+  }) async {
+    decisions[approvalId] = approve
+        ? (alwaysAllow ? 'always' : 'approved')
+        : 'denied';
     return pendingApprovals.firstWhere((a) => a.id == approvalId);
   }
 
@@ -1755,11 +2726,14 @@ class FakeBackend implements Backend {
   Future<void> markNotificationsRead() async => notificationsRead = true;
   final readNotifications = <String>[];
   @override
-  Future<void> markNotificationRead(String id) async => readNotifications.add(id);
+  Future<void> markNotificationRead(String id) async =>
+      readNotifications.add(id);
   @override
-  Stream<NotificationView> watchNotifications() => notificationsController.stream;
+  Stream<NotificationView> watchNotifications() =>
+      notificationsController.stream;
   @override
-  Future<void> registerDevice(String platform, String token) async => devices.add('$platform:$token');
+  Future<void> registerDevice(String platform, String token) async =>
+      devices.add('$platform:$token');
 
   @override
   Future<List<Routine>> routines(String botId) async => routineList;
@@ -1788,12 +2762,30 @@ class FakeBackend implements Backend {
       trigger: RoutineTrigger.values.firstWhere((t) => t.value == trigger),
       notify: true,
       enabled: true,
-      nextRunAt: trigger == 'schedule' ? DateTime(2026, 11, 11, 7) : (trigger == 'once' ? runAt : null),
+      nextRunAt: trigger == 'schedule'
+          ? DateTime(2026, 11, 11, 7)
+          : (trigger == 'once' ? runAt : null),
       lastRunAt: null,
       conversationId: null,
       createdAt: DateTime.now(),
-      webhookUrl: const ['schedule', 'once', 'calendar_event', 'message'].contains(trigger) ? null : 'http://localhost/hooks/custom/r1',
-      webhookSecret: const ['schedule', 'once', 'calendar_event', 'message'].contains(trigger) ? null : 'whsec_test',
+      webhookUrl:
+          const [
+            'schedule',
+            'once',
+            'calendar_event',
+            'message',
+          ].contains(trigger)
+          ? null
+          : 'http://localhost/hooks/custom/r1',
+      webhookSecret:
+          const [
+            'schedule',
+            'once',
+            'calendar_event',
+            'message',
+          ].contains(trigger)
+          ? null
+          : 'whsec_test',
     );
     routineList.add(Routine.fromJson(r.toJson()));
     return r;
@@ -1819,7 +2811,13 @@ class FakeBackend implements Backend {
   Future<List<Integration>> integrations(String orgId) async => integrationList;
   CalendarTriggerConfig? createdCalendar;
   @override
-  Future<Integration> createIntegration(String orgId, {required String kind, required String name, required Map<String, Object?> config, String? secret}) async {
+  Future<Integration> createIntegration(
+    String orgId, {
+    required String kind,
+    required String name,
+    required Map<String, Object?> config,
+    String? secret,
+  }) async {
     final i = Integration(
       id: 'i${integrationList.length + 1}',
       orgId: orgId,
@@ -1836,14 +2834,27 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<IntegrationTestResult> testIntegration(String integrationId) async => IntegrationTestResult(ok: true, tools: const ['add', 'subtract']);
+  Future<IntegrationTestResult> testIntegration(String integrationId) async =>
+      IntegrationTestResult(ok: true, tools: const ['add', 'subtract']);
   @override
   Future<Set<String>> botIntegrationIds(String botId) async => attached;
   @override
-  Future<void> setBotIntegration(String botId, String integrationId, bool enabled) async => enabled ? attached.add(integrationId) : attached.remove(integrationId);
+  Future<void> setBotIntegration(
+    String botId,
+    String integrationId,
+    bool enabled,
+  ) async =>
+      enabled ? attached.add(integrationId) : attached.remove(integrationId);
 
   // Built-in apps
-  static CatalogApp catalogApp(String id, String name, List<CatalogAppAuthEnum> auth, {bool popular = true, String color = '635BFF', bool? oauthAvailable}) => CatalogApp(
+  static CatalogApp catalogApp(
+    String id,
+    String name,
+    List<CatalogAppAuthEnum> auth, {
+    bool popular = true,
+    String color = '635BFF',
+    bool? oauthAvailable,
+  }) => CatalogApp(
     id: id,
     name: name,
     description: '$name for your bots.',
@@ -1852,15 +2863,30 @@ class FakeBackend implements Backend {
     homepage: 'https://$id.com',
     url: 'https://mcp.$id.com',
     auth: auth,
-    apiKey: auth.contains(CatalogAppAuthEnum.apiKey) ? CatalogAppApiKey(label: 'Secret key', url: 'https://dashboard.$id.com/keys', steps: const ['Open the dashboard.', 'Copy the key.']) : null,
+    apiKey: auth.contains(CatalogAppAuthEnum.apiKey)
+        ? CatalogAppApiKey(
+            label: 'Secret key',
+            url: 'https://dashboard.$id.com/keys',
+            steps: const ['Open the dashboard.', 'Copy the key.'],
+          )
+        : null,
     capabilities: const ['Look up customers', 'Create invoices'],
     popular: popular,
     oauthAvailable: oauthAvailable ?? auth.contains(CatalogAppAuthEnum.oauth),
   );
   final catalog = [
-    catalogApp('stripe', 'Stripe', [CatalogAppAuthEnum.oauth, CatalogAppAuthEnum.apiKey]),
+    catalogApp('stripe', 'Stripe', [
+      CatalogAppAuthEnum.oauth,
+      CatalogAppAuthEnum.apiKey,
+    ]),
     catalogApp('notion', 'Notion', [CatalogAppAuthEnum.oauth], color: '000000'),
-    catalogApp('cloudflare', 'Cloudflare Docs', [CatalogAppAuthEnum.none], popular: false, color: 'F38020'),
+    catalogApp(
+      'cloudflare',
+      'Cloudflare Docs',
+      [CatalogAppAuthEnum.none],
+      popular: false,
+      color: 'F38020',
+    ),
   ];
   final connectCalls = <(String app, String method, String? key)>[];
   final deleted = <String>[];
@@ -1874,8 +2900,16 @@ class FakeBackend implements Backend {
       status: IntegrationStatusEnum.ok,
       error: null,
       tools: [
-        IntegrationToolsInner(name: 'list_customers', description: 'List customers', risk: Risk.low),
-        IntegrationToolsInner(name: 'create_refund', description: 'Refund a payment', risk: Risk.high),
+        IntegrationToolsInner(
+          name: 'list_customers',
+          description: 'List customers',
+          risk: Risk.low,
+        ),
+        IntegrationToolsInner(
+          name: 'create_refund',
+          description: 'Refund a payment',
+          risk: Risk.high,
+        ),
       ],
       toolsCachedAt: DateTime(2026),
       createdAt: DateTime(2026),
@@ -1890,21 +2924,39 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<AppCatalog> appCatalog() async => AppCatalog(apps: catalog, redirectUri: catalogRedirectUri);
+  Future<AppCatalog> appCatalog() async =>
+      AppCatalog(apps: catalog, redirectUri: catalogRedirectUri);
   String catalogRedirectUri = 'http://localhost/oauth/callback';
   @override
-  Future<ConnectAppResponse> connectApp(String orgId, {required String appId, required String method, String? apiKey, String? integrationId}) async {
+  Future<ConnectAppResponse> connectApp(
+    String orgId, {
+    required String appId,
+    required String method,
+    String? apiKey,
+    String? integrationId,
+  }) async {
     connectCalls.add((appId, method, apiKey));
     if (method == 'oauth') {
-      return ConnectAppResponse(status: ConnectAppResponseStatusEnum.authorize, authorizeUrl: 'https://auth.$appId.com/authorize', flowId: 'flow-$appId');
+      return ConnectAppResponse(
+        status: ConnectAppResponseStatusEnum.authorize,
+        authorizeUrl: 'https://auth.$appId.com/authorize',
+        flowId: 'flow-$appId',
+      );
     }
-    return ConnectAppResponse(status: ConnectAppResponseStatusEnum.connected, integration: _connected(appId, method));
+    return ConnectAppResponse(
+      status: ConnectAppResponseStatusEnum.connected,
+      integration: _connected(appId, method),
+    );
   }
 
   @override
   Future<ConnectFlowStatus> connectStatus(String flowId) async {
-    if (pendingPolls-- > 0) return ConnectFlowStatus(status: ConnectFlowStatusStatusEnum.pending);
-    return ConnectFlowStatus(status: ConnectFlowStatusStatusEnum.connected, integration: _connected(flowId.replaceFirst('flow-', ''), 'oauth'));
+    if (pendingPolls-- > 0)
+      return ConnectFlowStatus(status: ConnectFlowStatusStatusEnum.pending);
+    return ConnectFlowStatus(
+      status: ConnectFlowStatusStatusEnum.connected,
+      integration: _connected(flowId.replaceFirst('flow-', ''), 'oauth'),
+    );
   }
 
   @override
@@ -1915,13 +2967,21 @@ class FakeBackend implements Backend {
 
   final toolRisks = <String, Map<String, String>>{};
   @override
-  Future<Integration> setToolRisks(String integrationId, Map<String, String> risks) async {
+  Future<Integration> setToolRisks(
+    String integrationId,
+    Map<String, String> risks,
+  ) async {
     toolRisks[integrationId] = risks;
     return integrationList.firstWhere((i) => i.id == integrationId);
   }
 
   @override
-  Future<List<ProviderApp>> providerApps(String integrationId, {String? query}) async => [ProviderApp(slug: 'gmail', name: 'Gmail', description: 'Email', logo: null)];
+  Future<List<ProviderApp>> providerApps(
+    String integrationId, {
+    String? query,
+  }) async => [
+    ProviderApp(slug: 'gmail', name: 'Gmail', description: 'Email', logo: null),
+  ];
   final providerConnects = <String>[];
   @override
   Future<String> connectProviderApp(String integrationId, String app) async {
@@ -1930,16 +2990,35 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<List<ProviderAccount>> providerAccounts(String integrationId) async => [for (final a in providerConnects) ProviderAccount(app: a, status: ProviderAccountStatusEnum.connected)];
+  Future<List<ProviderAccount>> providerAccounts(String integrationId) async =>
+      [
+        for (final a in providerConnects)
+          ProviderAccount(app: a, status: ProviderAccountStatusEnum.connected),
+      ];
 
   @override
   Future<List<Secret>> secrets(String orgId) async => secretList;
   @override
-  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts, bool totp = false}) async => secretList.add(
-    Secret(id: 's${secretList.length + 1}', orgId: orgId, name: name, allowedHosts: hosts, allowedBotIds: null, kind: totp ? SecretKind.totp : SecretKind.plain, createdAt: DateTime.now()),
+  Future<void> createSecret(
+    String orgId, {
+    required String name,
+    required String value,
+    required List<String> hosts,
+    bool totp = false,
+  }) async => secretList.add(
+    Secret(
+      id: 's${secretList.length + 1}',
+      orgId: orgId,
+      name: name,
+      allowedHosts: hosts,
+      allowedBotIds: null,
+      kind: totp ? SecretKind.totp : SecretKind.plain,
+      createdAt: DateTime.now(),
+    ),
   );
   @override
-  Future<void> deleteSecret(String secretId) async => secretList.removeWhere((s) => s.id == secretId);
+  Future<void> deleteSecret(String secretId) async =>
+      secretList.removeWhere((s) => s.id == secretId);
 
   final taskList = <Task>[
     Task(
@@ -1967,18 +3046,38 @@ class FakeBackend implements Backend {
     ),
   ];
   final taskCommentList = <String, List<TaskComment>>{
-    't1': [TaskComment(id: 'c1', taskId: 't1', authorType: TaskCommentAuthorTypeEnum.bot, authorUserId: null, authorBotId: botId, bodyMd: 'Started reading.', createdAt: DateTime(2026))],
+    't1': [
+      TaskComment(
+        id: 'c1',
+        taskId: 't1',
+        authorType: TaskCommentAuthorTypeEnum.bot,
+        authorUserId: null,
+        authorBotId: botId,
+        bodyMd: 'Started reading.',
+        createdAt: DateTime(2026),
+      ),
+    ],
   };
   @override
-  Future<List<Task>> tasks(String orgId, {String? projectId}) async => List.of(taskList);
+  Future<List<Task>> tasks(String orgId, {String? projectId}) async =>
+      List.of(taskList);
   @override
-  Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired}) async {
+  Future<Task> createTask(
+    String orgId, {
+    required String title,
+    String? details,
+    String? priority,
+    String? assigneeBotId,
+    bool? reviewRequired,
+  }) async {
     final t = taskList.first.rebuild(
       id: 't${taskList.length + 1}',
       title: title,
       detailsMd: details ?? '',
       assigneeBotId: assigneeBotId,
-      priority: TaskPriority.values.firstWhere((p) => p.value == (priority ?? 'none')),
+      priority: TaskPriority.values.firstWhere(
+        (p) => p.value == (priority ?? 'none'),
+      ),
       reviewRequired: reviewRequired ?? false,
       comments: 0,
     );
@@ -2003,8 +3102,12 @@ class FakeBackend implements Backend {
     taskList[i] = t.rebuild(
       title: title ?? t.title,
       detailsMd: details ?? t.detailsMd,
-      status: status == null ? t.status : TaskStatus.values.firstWhere((s) => s.value == status),
-      priority: priority == null ? t.priority : TaskPriority.values.firstWhere((p) => p.value == priority),
+      status: status == null
+          ? t.status
+          : TaskStatus.values.firstWhere((s) => s.value == status),
+      priority: priority == null
+          ? t.priority
+          : TaskPriority.values.firstWhere((p) => p.value == priority),
       assigneeBotId: assigneeBotId ?? t.assigneeBotId,
       assigneeUserId: assigneeUserId ?? t.assigneeUserId,
       reviewRequired: reviewRequired ?? t.reviewRequired,
@@ -2014,9 +3117,11 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> deleteTask(String taskId) async => taskList.removeWhere((t) => t.id == taskId);
+  Future<void> deleteTask(String taskId) async =>
+      taskList.removeWhere((t) => t.id == taskId);
   @override
-  Future<List<TaskComment>> taskComments(String taskId) async => List.of(taskCommentList[taskId] ?? const []);
+  Future<List<TaskComment>> taskComments(String taskId) async =>
+      List.of(taskCommentList[taskId] ?? const []);
   @override
   Future<TaskComment> addTaskComment(String taskId, String body) async {
     final c = TaskComment(
@@ -2038,10 +3143,29 @@ class FakeBackend implements Backend {
   Map<String, num>? setLimits;
 
   @override
-  Future<AdminOverview?> adminOverview() async =>
-      isOwner ? AdminOverview(version: '0.6.0', users: 3, orgs: 2, bots: 4, runs24h: 12, failedRuns24h: 1, cost24hUsd: 0.42, computersRunning: 1, devicesOnline: 1) : null;
+  Future<AdminOverview?> adminOverview() async => isOwner
+      ? AdminOverview(
+          version: '0.6.0',
+          users: 3,
+          orgs: 2,
+          bots: 4,
+          runs24h: 12,
+          failedRuns24h: 1,
+          cost24hUsd: 0.42,
+          computersRunning: 1,
+          devicesOnline: 1,
+        )
+      : null;
   @override
-  Future<List<AdminUser>> adminUsers() async => [AdminUser(id: 'u1', email: 'owner@example.com', createdAt: DateTime(2026), lastSignInAt: null, orgs: 1)];
+  Future<List<AdminUser>> adminUsers() async => [
+    AdminUser(
+      id: 'u1',
+      email: 'owner@example.com',
+      createdAt: DateTime(2026),
+      lastSignInAt: null,
+      orgs: 1,
+    ),
+  ];
   AdminOrg _org(Map<String, num> limits) => AdminOrg(
     id: orgId,
     name: 'Test Org',
@@ -2093,9 +3217,54 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<List<AdminService>> adminServices() async => [AdminService(name: 'Database', configured: true, healthy: true, detail: 'Postgres (Supabase)')];
+  Future<List<AdminService>> adminServices() async => [
+    AdminService(
+      name: 'Database',
+      configured: true,
+      healthy: true,
+      detail: 'Postgres (Supabase)',
+    ),
+  ];
   @override
-  Future<UpdateNotice> adminUpdates() async => UpdateNotice(current: '0.6.0', latest: '0.9.1', updateAvailable: true, url: 'https://example.com/r');
+  Future<UpdateNotice> adminUpdates() async => UpdateNotice(
+    current: '0.6.0',
+    latest: '0.9.1',
+    updateAvailable: true,
+    url: 'https://example.com/r',
+  );
+  var connectionSettings = ConnectionSettings(
+    composio: ConnectionSettingsComposioEnum.server,
+    composioKey: true,
+  );
+  @override
+  Future<ConnectionSettings> adminConnectionSettings() async =>
+      connectionSettings;
+  CloudModels cloudModels = CloudModels(
+    chat: 'meta/muse-ember',
+    background: 'meta/muse-ember',
+    image: 'google/gemini-nano-banana-2.1',
+    imageResolution: CloudModelsImageResolutionEnum.n1k,
+    live: 'gemini-3.8-live',
+    realtime: 'gpt-realtime-2.1',
+    tts: 'gemini-3.8-flash-lite-tts',
+    stt: 'gpt-4o-mini-transcribe',
+    embedding: 'text-embedding-3-small',
+    video: 'gemini-omni-1.2-flash',
+  );
+  @override
+  Future<CloudModels> adminCloudModels() async => cloudModels;
+  @override
+  Future<CloudModels> setAdminCloudModels(CloudModels models) async =>
+      cloudModels = models;
+  @override
+  Future<ConnectionSettings> setAdminConnectionSettings({
+    required bool serverComposio,
+  }) async => connectionSettings = ConnectionSettings(
+    composio: serverComposio
+        ? ConnectionSettingsComposioEnum.server
+        : ConnectionSettingsComposioEnum.own,
+    composioKey: connectionSettings.composioKey,
+  );
 
   // --- Phase 8: privacy and SSO --------------------------------------------
 
@@ -2114,7 +3283,10 @@ class FakeBackend implements Backend {
   @override
   Future<AccountDeletion> deleteAccount(String confirmEmail) async {
     deletedWith = confirmEmail;
-    return AccountDeletion(purgeAfter: DateTime.utc(2026, 11, 17), workspacesDeleted: const ['Test Org']);
+    return AccountDeletion(
+      purgeAfter: DateTime.utc(2026, 11, 17),
+      workspacesDeleted: const ['Test Org'],
+    );
   }
 
   @override
@@ -2139,7 +3311,13 @@ class FakeBackend implements Backend {
   @override
   Future<void> verifyTwoStep(String factorId, String code) async {
     if (code != '123456') throw Exception('Invalid code');
-    twoStep.add(TwoStepFactor(id: factorId, name: 'Authenticator 1', createdAt: DateTime(2026)));
+    twoStep.add(
+      TwoStepFactor(
+        id: factorId,
+        name: 'Authenticator 1',
+        createdAt: DateTime(2026),
+      ),
+    );
     twoStepVerified = true;
   }
 
@@ -2151,20 +3329,135 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> removeTwoStep(String factorId) async => twoStep.removeWhere((f) => f.id == factorId);
+  Future<void> removeTwoStep(String factorId) async =>
+      twoStep.removeWhere((f) => f.id == factorId);
   @override
   Future<void> renameTwoStep(String factorId, String name) async {
     final i = twoStep.indexWhere((f) => f.id == factorId);
-    if (i >= 0) twoStep[i] = TwoStepFactor(id: factorId, name: '$name · 1', createdAt: twoStep[i].createdAt);
+    if (i >= 0)
+      twoStep[i] = TwoStepFactor(
+        id: factorId,
+        name: '$name · 1',
+        createdAt: twoStep[i].createdAt,
+      );
   }
+
   @override
   Future<bool> requireTwoStep(String orgId) async => requireTwoStepValue;
   @override
-  Future<bool> setRequireTwoStep(String orgId, bool value) async => requireTwoStepValue = value;
+  Future<bool> setRequireTwoStep(String orgId, bool value) async =>
+      requireTwoStepValue = value;
   @override
-  Future<int> setRetentionDays(String orgId, int days) async => retention = days;
+  Future<int> setRetentionDays(String orgId, int days) async =>
+      retention = days;
   @override
   Future<void> signInWithSso(String email) async => ssoEmail = email;
+
+  // --- passkeys ---------------------------------------------------------------
+
+  var authMethodsValue = const AuthMethods();
+  @override
+  Future<AuthMethods> authMethods() async => authMethodsValue;
+  var passkeySignIns = 0;
+
+  /// False: the person closes the system sheet.
+  var passkeySheetFinishes = true;
+  @override
+  Future<bool> signInWithPasskey() async {
+    if (!passkeySheetFinishes) return false;
+    passkeySignIns++;
+    signedIn = true;
+    _auth.add(true);
+    return true;
+  }
+
+  final passkeyList = <PasskeyInfo>[];
+  @override
+  Future<List<PasskeyInfo>> passkeys() async => List.of(passkeyList);
+  @override
+  Future<bool> addPasskey() async {
+    if (!passkeySheetFinishes) return false;
+    passkeyList.add(
+      PasskeyInfo(
+        id: 'pk${passkeyList.length + 1}',
+        name: 'iCloud Keychain',
+        createdAt: DateTime(2026),
+      ),
+    );
+    return true;
+  }
+
+  @override
+  Future<void> renamePasskey(String id, String name) async {
+    final i = passkeyList.indexWhere((p) => p.id == id);
+    if (i >= 0)
+      passkeyList[i] = PasskeyInfo(
+        id: id,
+        name: name,
+        createdAt: passkeyList[i].createdAt,
+      );
+  }
+
+  @override
+  Future<void> removePasskey(String id) async =>
+      passkeyList.removeWhere((p) => p.id == id);
+
+  // --- password and email -------------------------------------------------------
+
+  String? passwordResetEmail;
+  @override
+  Future<void> sendPasswordReset(String email) async =>
+      passwordResetEmail = email;
+  @override
+  Future<void> verifyPasswordResetCode(String email, String code) async {
+    if (code != '123456') throw Exception('That code is wrong or has expired.');
+    signedIn = true;
+    _auth.add(true);
+    _setNewPasswordNeeded(true);
+  }
+
+  var _newPasswordNeeded = false;
+  final _newPasswordChanges = StreamController<bool>.broadcast();
+  void _setNewPasswordNeeded(bool v) {
+    _newPasswordNeeded = v;
+    _newPasswordChanges.add(v);
+  }
+
+  @override
+  bool get newPasswordNeeded => _newPasswordNeeded;
+  set newPasswordNeeded(bool v) => _setNewPasswordNeeded(v);
+  @override
+  Stream<bool> get newPasswordNeededChanges => _newPasswordChanges.stream;
+  @override
+  void skipNewPassword() => _setNewPasswordNeeded(false);
+
+  String? password;
+
+  /// The session is old: changing the password needs this code first.
+  String? reauthCode;
+  var reauthCodesSent = 0;
+  @override
+  Future<void> setPassword(String password, {String? code}) async {
+    if (reauthCode != null && code != reauthCode)
+      throw const ReauthenticationNeeded();
+    this.password = password;
+    _setNewPasswordNeeded(false);
+  }
+
+  @override
+  Future<void> sendReauthenticationCode() async => reauthCodesSent++;
+
+  @override
+  String? pendingEmail;
+  @override
+  Future<void> changeEmail(String email) async => pendingEmail = email;
+
+  var signedOutEverywhere = false;
+  @override
+  Future<void> signOutEverywhere() async {
+    signedOutEverywhere = true;
+    await signOut();
+  }
 
   // --- Phase 7: billing -----------------------------------------------------
 
@@ -2179,63 +3472,128 @@ class FakeBackend implements Backend {
   Future<BillingSummary> billing(String orgId) async => BillingSummary(
     enabled: billingEnabled,
     planCode: billingEnabled ? planCode : 'selfhost',
-    planName: billingEnabled ? (planCode == 'pro' ? 'Pro' : 'Free') : 'Self-hosted',
+    planName: billingEnabled
+        ? (planCode == 'pro' ? 'Pro' : 'Free')
+        : 'Self-hosted',
     interval: planCode == 'pro' ? 'month' : 'none',
-    limits: planCode == 'pro' ? const {'max_bots': 20, 'computer_hours': 100, 'monthly_credits_usd': 20} : const {'max_bots': 2},
+    limits: planCode == 'pro'
+        ? const {
+            'max_bots': 20,
+            'computer_hours': 100,
+            'monthly_credits_usd': 20,
+          }
+        : const {'max_bots': 2},
     unlimited: !billingEnabled,
     validUntil: planCode == 'pro' ? DateTime.utc(2026, 12, 10) : null,
     source_: billingSource,
     cancelAtPeriodEnd: false,
     creditsUsd: billingEnabled ? 1.0 : 0,
     subscriptions: const [],
-    providers: const [BillingSource.dodo, BillingSource.appStore, BillingSource.googlePlay],
+    providers: const [
+      BillingSource.dodo,
+      BillingSource.appStore,
+      BillingSource.googlePlay,
+    ],
   );
   @override
   Future<PlanCatalog> plans() async => PlanCatalog(
     enabled: billingEnabled,
     plans: [
-      Plan(code: 'free', name: 'Free', interval: PlanIntervalEnum.none, limits: const {'max_bots': 2}, priceLabel: null, web: false, storeProductIds: const {}),
+      Plan(
+        code: 'free',
+        name: 'Free',
+        interval: PlanIntervalEnum.none,
+        limits: const {'max_bots': 2},
+        priceLabel: null,
+        web: false,
+        storeProductIds: const {},
+      ),
       Plan(
         code: 'pro',
         name: 'Pro',
         interval: PlanIntervalEnum.month,
-        limits: const {'max_bots': 20, 'computer_hours': 100, 'monthly_credits_usd': 20},
+        limits: const {
+          'max_bots': 20,
+          'computer_hours': 100,
+          'monthly_credits_usd': 20,
+        },
         priceLabel: null,
         web: true,
-        storeProductIds: const {'app_store': 'dev.casama.pro.monthly', 'google_play': 'casama_pro:monthly'},
+        storeProductIds: const {
+          'app_store': 'dev.casama.pro.monthly',
+          'google_play': 'casama_pro:monthly',
+        },
       ),
     ],
-    packs: [CreditPack(code: 'credits_10', name: r'$10 of credits', creditsUsd: 10, web: true)],
+    packs: [
+      CreditPack(
+        code: 'credits_10',
+        name: r'$10 of credits',
+        creditsUsd: 10,
+        web: true,
+      ),
+    ],
   );
   @override
-  Future<String> checkoutUrl(String orgId, {String? planCode, String? packCode}) async {
+  Future<String> checkoutUrl(
+    String orgId, {
+    String? planCode,
+    String? packCode,
+  }) async {
     checkouts.add(planCode ?? packCode!);
     return 'https://checkout.example.com/${planCode ?? packCode}';
   }
 
   @override
-  Future<String> billingPortalUrl(String orgId) async => 'https://portal.example.com/cus_1';
+  Future<String> billingPortalUrl(String orgId) async =>
+      'https://portal.example.com/cus_1';
   @override
-  Future<BillingSummary> verifyPurchase(String orgId, {required String source, required String productId, String? transactionId, String? purchaseToken}) async {
+  Future<BillingSummary> verifyPurchase(
+    String orgId, {
+    required String source,
+    required String productId,
+    String? transactionId,
+    String? purchaseToken,
+  }) async {
     verified.add('$source:$productId:${transactionId ?? purchaseToken}');
     planCode = 'pro';
-    billingSource = source == 'app_store' ? BillingSummarySource_Enum.appStore : BillingSummarySource_Enum.googlePlay;
+    billingSource = source == 'app_store'
+        ? BillingSummarySource_Enum.appStore
+        : BillingSummarySource_Enum.googlePlay;
     return billing(orgId);
   }
 
   @override
   Future<BillingUsage> billingUsage(String orgId) async => BillingUsage(
     periodStart: DateTime.utc(2026, 11),
-    items: [BillingUsageItem(kind: 'computer_seconds', instance: 'home-server', quantity: 7200, costUsd: 0.1)],
+    items: [
+      BillingUsageItem(
+        kind: 'computer_seconds',
+        instance: 'home-server',
+        quantity: 7200,
+        costUsd: 0.1,
+      ),
+    ],
     totalUsd: 0.1,
     credits: const [],
   );
   @override
   Future<List<ConnectKey>> connectKeys(String orgId) async => [
-    for (final (i, n) in connectKeyNames.indexed) ConnectKey(id: 'k$i', instanceName: n, keyHint: 'kcc_abcd…wxyz', scopes: const ['computers', 'models'], lastUsedAt: null, createdAt: DateTime(2026)),
+    for (final (i, n) in connectKeyNames.indexed)
+      ConnectKey(
+        id: 'k$i',
+        instanceName: n,
+        keyHint: 'kcc_abcd…wxyz',
+        scopes: const ['computers', 'models'],
+        lastUsedAt: null,
+        createdAt: DateTime(2026),
+      ),
   ];
   @override
-  Future<CreatedConnectKey> createConnectKey(String orgId, String instanceName) async {
+  Future<CreatedConnectKey> createConnectKey(
+    String orgId,
+    String instanceName,
+  ) async {
     connectKeyNames.add(instanceName);
     return CreatedConnectKey(
       id: 'k${connectKeyNames.length - 1}',
@@ -2249,14 +3607,20 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> revokeConnectKey(String orgId, String keyId) async => connectKeyNames.removeAt(int.parse(keyId.substring(1)));
+  Future<void> revokeConnectKey(String orgId, String keyId) async =>
+      connectKeyNames.removeAt(int.parse(keyId.substring(1)));
 
   // --- Phase 6: companion ---------------------------------------------------
 
   LocalDevice? device;
   final deviceUpdates = <String>[];
 
-  LocalDevice _device({LocalCapabilities? caps, List<String>? roots, List<String>? bots, bool? enabled}) => LocalDevice(
+  LocalDevice _device({
+    LocalCapabilities? caps,
+    List<String>? roots,
+    List<String>? bots,
+    bool? enabled,
+  }) => LocalDevice(
     id: 'dev1',
     orgId: orgId,
     userId: 'me',
@@ -2277,15 +3641,33 @@ class FakeBackend implements Backend {
   @override
   Future<List<LocalDevice>> localDevices(String orgId) async => [?device];
   @override
-  Future<CreatedLocalDevice> createLocalDevice(String orgId, String name, String platform) async {
+  Future<CreatedLocalDevice> createLocalDevice(
+    String orgId,
+    String name,
+    String platform,
+  ) async {
     device = _device();
-    return CreatedLocalDevice.fromJson({...device!.toJson(), 'token': 'kdev_test'});
+    return CreatedLocalDevice.fromJson({
+      ...device!.toJson(),
+      'token': 'kdev_test',
+    });
   }
 
   @override
-  Future<LocalDevice> updateLocalDevice(String id, {Set<String>? capabilities, List<String>? roots, List<String>? botIds, bool? enabled}) async {
+  Future<LocalDevice> updateLocalDevice(
+    String id, {
+    Set<String>? capabilities,
+    List<String>? roots,
+    List<String>? botIds,
+    bool? enabled,
+  }) async {
     deviceUpdates.add(
-      [if (capabilities != null) 'caps:${(capabilities.toList()..sort()).join(',')}', if (botIds != null) 'bots:${botIds.join(',')}', if (enabled != null) 'enabled:$enabled'].join(' '),
+      [
+        if (capabilities != null)
+          'caps:${(capabilities.toList()..sort()).join(',')}',
+        if (botIds != null) 'bots:${botIds.join(',')}',
+        if (enabled != null) 'enabled:$enabled',
+      ].join(' '),
     );
     device = _device(
       caps: capabilities == null
@@ -2307,7 +3689,10 @@ class FakeBackend implements Backend {
 
   final localMcpSyncs = <List<LocalMcpServerInfo>>[];
   @override
-  Future<List<Integration>> setLocalMcpServers(String deviceId, List<LocalMcpServerInfo> servers) async {
+  Future<List<Integration>> setLocalMcpServers(
+    String deviceId,
+    List<LocalMcpServerInfo> servers,
+  ) async {
     localMcpSyncs.add(servers);
     return const [];
   }
@@ -2359,11 +3744,26 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> registerVoipToken(String token) async => callActions.add('voip:$token');
+  Future<void> registerVoipToken(String token) async =>
+      callActions.add('voip:$token');
 
+  /// What [voiceTool] answers for a tool (default: completed, "Found 2 memories").
+  final voiceToolResults = <String, VoiceToolResult>{};
+
+  /// When set, [voiceTool] waits for it (to see a tool while it runs).
+  Completer<void>? voiceToolGate;
+
+  /// Thrown by [voiceSession] when set (a call that can't start).
+  Object? voiceSessionError;
   @override
-  Future<VoiceSession> voiceSession(String botId, {String? conversationId, String? callId}) async {
+  Future<VoiceSession> voiceSession(
+    String botId, {
+    String? conversationId,
+    String? callId,
+  }) async {
     sessionCallId = callId;
+    final error = voiceSessionError;
+    if (error != null) throw error;
     return VoiceSession(
       provider: VoiceSessionProviderEnum.openai,
       model: 'gpt-realtime-2.1',
@@ -2378,13 +3778,32 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<VoiceToolResult> voiceTool(String botId, String conversationId, String callId, String name, Map<String, Object?> arguments) async {
+  Future<VoiceToolResult> voiceTool(
+    String botId,
+    String conversationId,
+    String callId,
+    String name,
+    Map<String, Object?> arguments,
+  ) async {
     voiceTools.add(name);
-    return VoiceToolResult(status: VoiceToolResultStatusEnum.completed, runId: runId, output: 'Found 2 memories', approvalId: null);
+    await voiceToolGate?.future;
+    return voiceToolResults[name] ??
+        VoiceToolResult(
+          status: VoiceToolResultStatusEnum.completed,
+          runId: runId,
+          output: 'Found 2 memories',
+          approvalId: null,
+        );
   }
 
   @override
-  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds, {String? provider, Map<String, int>? usage}) async {
+  Future<void> saveVoiceTranscript(
+    String conversationId,
+    List<(String, String)> turns,
+    int seconds, {
+    String? provider,
+    Map<String, int>? usage,
+  }) async {
     lastVoiceUsage = usage;
     savedTurns = turns;
     savedSeconds = seconds;
@@ -2394,7 +3813,9 @@ class FakeBackend implements Backend {
   Future<void> updateBotVoice(String botId, Map<String, Object?> voice) async =>
       botVoice = {...?botVoice, ...voice}..removeWhere((_, v) => v == null);
   @override
-  Future<Map<String, Object?>> loadBotVoice(String botId) async => {...?botVoice};
+  Future<Map<String, Object?>> loadBotVoice(String botId) async => {
+    ...?botVoice,
+  };
 
   // --- Phase 5 ---------------------------------------------------------------
 
@@ -2411,35 +3832,59 @@ class FakeBackend implements Backend {
     holderType: leaseHeld ? LeaseHolderTypeEnum.user : LeaseHolderTypeEnum.bot,
     holderId: leaseHeld ? 'me' : null,
     mode: LeaseModeEnum.control,
-    expiresAt: leaseHeld ? DateTime.now().add(const Duration(minutes: 15)) : null,
+    expiresAt: leaseHeld
+        ? DateTime.now().add(const Duration(minutes: 15))
+        : null,
     you: leaseHeld,
   );
 
   @override
-  Future<Computer> createComputer(String orgId, {required String name, required bool private, String? ownerBotId, String profile = 'headless'}) async {
+  Future<Computer> createComputer(
+    String orgId, {
+    required String name,
+    required bool private,
+    String? ownerBotId,
+    String profile = 'headless',
+  }) async {
     createdComputers.add('$name:$profile:$ownerBotId');
     return (await computers(orgId)).first;
   }
 
   @override
-  Future<Computer> updateComputer(String computerId, {String? name, String? profile, int? maxDesktops}) async {
-    computerUpdates.add('${name ?? ''}${profile ?? ''}${maxDesktops == null ? '' : 'desktops:$maxDesktops'}');
+  Future<Computer> updateComputer(
+    String computerId, {
+    String? name,
+    String? profile,
+    int? maxDesktops,
+  }) async {
+    computerUpdates.add(
+      '${name ?? ''}${profile ?? ''}${maxDesktops == null ? '' : 'desktops:$maxDesktops'}',
+    );
     return (await computers(orgId)).first;
   }
 
   @override
-  Future<void> deleteComputer(String computerId) async => deletedComputers.add(computerId);
+  Future<void> deleteComputer(String computerId) async =>
+      deletedComputers.add(computerId);
   @override
-  Future<void> setBotComputer(String botId, String? computerId) async => defaultComputer = computerId;
+  Future<void> setBotComputer(String botId, String? computerId) async =>
+      defaultComputer = computerId;
 
   @override
-  Future<StreamSession> streamSession(String computerId, {String mode = 'control'}) async => StreamSession(
+  Future<StreamSession> streamSession(
+    String computerId, {
+    String mode = 'control',
+  }) async => StreamSession(
     signalingUrl: 'ws://localhost/v1/computers/$computerId/stream?token=t',
     token: 't',
     mode: StreamMode.values.firstWhere((m) => m.value == mode),
     expiresAt: DateTime.now().add(const Duration(minutes: 5)),
     iceServers: [
-      IceServer(urls: const ['turn:localhost:3478?transport=udp'], username: 'u', credential: 'c'),
+      IceServer(
+        urls: const ['turn:localhost:3478?transport=udp'],
+        username: 'u',
+        credential: 'c',
+      ),
     ],
     iceTransportPolicy: StreamSessionIceTransportPolicyEnum.relay,
     screenshotUrl: 'http://localhost/v1/computers/$computerId/screenshot',
@@ -2488,29 +3933,51 @@ class FakeBackend implements Backend {
     ),
   ];
   @override
-  Future<Computer> startComputer(String id) async => (await computers(orgId)).first;
+  Future<Computer> startComputer(String id) async =>
+      (await computers(orgId)).first;
   @override
-  Future<Computer> stopComputer(String id) async => (await computers(orgId)).first;
+  Future<Computer> stopComputer(String id) async =>
+      (await computers(orgId)).first;
   @override
-  Future<List<ComputerFileEntry>> listFiles(String computerId, String path) async => const [];
+  Future<List<ComputerFileEntry>> listFiles(
+    String computerId,
+    String path,
+  ) async => const [];
   @override
-  Future<Uint8List> downloadFile(String computerId, String path) async => uploads[path] ?? Uint8List.fromList(utf8.encode('# Hello\n\nfile $path'));
+  Future<Uint8List> downloadFile(String computerId, String path) async =>
+      uploads[path] ?? Uint8List.fromList(utf8.encode('# Hello\n\nfile $path'));
   @override
-  Future<void> uploadFile(String computerId, String path, Uint8List bytes) async => uploads[path] = bytes;
+  Future<void> uploadFile(
+    String computerId,
+    String path,
+    Uint8List bytes,
+  ) async => uploads[path] = bytes;
   @override
   Future<void> deleteFile(String computerId, String path) async {}
   @override
   Future<List<Checkpoint>> checkpoints(String computerId) async => const [];
   @override
-  Future<void> restoreCheckpoint(String computerId, String checkpointId) async {}
+  Future<void> restoreCheckpoint(
+    String computerId,
+    String checkpointId,
+  ) async {}
   @override
   Future<Uint8List?> screenshot(String computerId) async => null;
   @override
-  Future<(Uri, Map<String, String>)> terminal(String computerId, {int cols = 100, int rows = 30}) async => (Uri.parse('ws://localhost/terminal'), <String, String>{});
+  Future<(Uri, Map<String, String>)> terminal(
+    String computerId, {
+    int cols = 100,
+    int rows = 30,
+  }) async => (Uri.parse('ws://localhost/terminal'), <String, String>{});
 }
 
 /// A connected ChatGPT plan owned by [owner] (the fake's user is 'me').
-Credential chatGptCredential(String orgId, {String owner = 'me', CredentialStatus status = CredentialStatus.ok, bool fallbackOnLimit = false}) => Credential(
+Credential chatGptCredential(
+  String orgId, {
+  String owner = 'me',
+  CredentialStatus status = CredentialStatus.ok,
+  bool fallbackOnLimit = false,
+}) => Credential(
   id: 'plan',
   orgId: orgId,
   provider: ProviderId.chatgpt,

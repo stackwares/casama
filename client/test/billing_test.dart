@@ -10,6 +10,7 @@ import 'package:casama_app/core/providers.dart';
 import 'package:casama_app/core/widgets.dart';
 import 'package:casama_app/features/billing/billing_screen.dart';
 import 'package:casama_app/l10n/generated/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show setSize;
 import 'fake_backend.dart';
@@ -56,6 +57,7 @@ Widget app(FakeBackend backend, {StorePurchases store = const NoStore(), TargetP
   final router = GoRouter(routes: [
     GoRoute(path: '/', builder: (_, _) => const BillingScreen()),
     GoRoute(path: '/settings/billing', builder: (_, _) => const BillingScreen()),
+    GoRoute(path: '/settings/usage', builder: (_, _) => const Text('usage page')),
   ]);
   return ProviderScope(
     overrides: [
@@ -97,6 +99,7 @@ void main() {
   });
 
   testWidgets('desktop and web: web checkout, credit packs, usage and Cloud Connect keys', (tester) async {
+    SharedPreferences.setMockInitialValues({});
     await setSize(tester, const Size(900, 1800));
     final backend = FakeBackend()..billingEnabled = true;
     final opened = <String>[];
@@ -113,8 +116,16 @@ void main() {
     await tester.tap(find.byKey(const Key('pack-credits_10')));
     await tester.pumpAndSettle();
     expect(opened.last, 'https://checkout.example.com/credits_10');
-    expect(find.text('Cloud computers: 2.00 h · home-server'), findsOneWidget);
+    // One row to Usage with the month's total; the full list lives there (D-182).
+    expect(find.text(r'This month so far: $0.10'), findsOneWidget);
+    expect(find.text('Cloud computers: 2.00 h · home-server'), findsNothing);
 
+    // Cloud Connect keys are under Advanced.
+    expect(find.byKey(const Key('createConnectKey')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('advanced-billing')));
+    await tester.tap(find.byKey(const Key('advanced-billing')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('createConnectKey')));
     await tester.tap(find.byKey(const Key('createConnectKey')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('instanceName')), 'home-server');
@@ -125,6 +136,30 @@ void main() {
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
     expect(find.text('kcc_abcd…wxyz'), findsOneWidget);
+  });
+
+  testWidgets('the plan stays up top, the usage row opens Usage, Cloud Connect keys fold under Advanced', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await setSize(tester, const Size(430, 1800));
+    await tester.pumpWidget(app(FakeBackend()..billingEnabled = true));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('currentPlan')), findsOneWidget);
+    expect(find.byKey(const Key('buyWeb-pro')), findsOneWidget);
+    expect(find.text('Charges by server, Cloud Connect keys'), findsOneWidget);
+    expect(find.byKey(const Key('createConnectKey')), findsNothing);
+    expect(find.byKey(const Key('billedItems')), findsNothing);
+
+    await tester.ensureVisible(find.byKey(const Key('advanced-billing')));
+    await tester.tap(find.byKey(const Key('advanced-billing')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('createConnectKey')), findsOneWidget);
+    // Each charge with the server it came from stays reachable here.
+    expect(find.byKey(const Key('billedItems')), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const Key('billingUsage')));
+    await tester.tap(find.byKey(const Key('billingUsage')));
+    await tester.pumpAndSettle();
+    expect(find.text('usage page'), findsOneWidget);
   });
 
   testWidgets('iOS outside the US: App Store purchase only, verified by the server, plus Restore Purchases', (tester) async {

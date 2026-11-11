@@ -1,0 +1,22 @@
+{
+  "v": 2,
+  "scheme": {
+    "light": {
+      "seed": "#C2412D",
+      "background": "#FFF6F3",
+      "onBackground": "#2E1410"
+    },
+    "dark": {
+      "seed": "#FF9E8A",
+      "background": "#1F0F0C",
+      "onBackground": "#FCE9E4"
+    }
+  },
+  "headingFont": "DM Serif Display",
+  "bodyFont": "Nunito",
+  "wallpaper": {
+    "pattern": "sea",
+    "palette": "sunset",
+    "intensity": 0.5
+  }
+}

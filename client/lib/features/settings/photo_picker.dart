@@ -12,7 +12,11 @@ import '../../theme/app_tokens.dart';
 
 /// A photo someone chose in [PhotoPicker].
 class PickedPhoto {
-  const PickedPhoto({required this.url, required this.author, required this.authorUrl});
+  const PickedPhoto({
+    required this.url,
+    required this.author,
+    required this.authorUrl,
+  });
   final String url;
   final String author;
   final String authorUrl;
@@ -45,12 +49,28 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
     super.dispose();
   }
 
-  void _load() => setState(() => _photos = ref.read(backendProvider).searchWallpapers(query: _search.text));
+  void _load() {
+    final photos = ref
+        .read(backendProvider)
+        .searchWallpapers(query: _search.text);
+    // The assignment's value is the future. A block keeps that out of setState's return value.
+    setState(() {
+      _photos = photos;
+    });
+  }
 
   void _choose(WallpaperPhoto p) {
     // Fire and forget: a failed count shouldn't stop someone from using the photo.
-    unawaited(ref.read(backendProvider).trackWallpaperDownload(p.downloadLocation).catchError((_) {}));
-    Navigator.pop(context, PickedPhoto(url: p.url, author: p.author, authorUrl: p.authorUrl));
+    unawaited(
+      ref
+          .read(backendProvider)
+          .trackWallpaperDownload(p.downloadLocation)
+          .catchError((_) {}),
+    );
+    Navigator.pop(
+      context,
+      PickedPhoto(url: p.url, author: p.author, authorUrl: p.authorUrl),
+    );
   }
 
   @override
@@ -58,7 +78,12 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md, AppSpace.md, 0),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.md,
+        AppSpace.md,
+        AppSpace.md,
+        0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -68,7 +93,10 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
             key: const Key('photoSearch'),
             controller: _search,
             textInputAction: TextInputAction.search,
-            decoration: InputDecoration(hintText: l10n.searchPhotos, prefixIcon: const Icon(LucideIcons.search, size: 20)),
+            decoration: InputDecoration(
+              hintText: l10n.searchPhotos,
+              prefixIcon: const Icon(LucideIcons.search, size: 20),
+            ),
             onChanged: (_) {
               _debounce?.cancel();
               _debounce = Timer(const Duration(milliseconds: 450), _load);
@@ -85,15 +113,25 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(l10n.photosUnavailable, style: context.textTheme.bodyMedium),
+                        Text(
+                          l10n.photosUnavailable,
+                          style: context.textTheme.bodyMedium,
+                        ),
                         TextButton(onPressed: _load, child: Text(l10n.retry)),
                       ],
                     ),
                   );
                 }
-                if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+                if (!snap.hasData)
+                  return const Center(child: CircularProgressIndicator());
                 final items = snap.data!;
-                if (items.isEmpty) return Center(child: Text(l10n.noPhotos, style: context.textTheme.bodyMedium));
+                if (items.isEmpty)
+                  return Center(
+                    child: Text(
+                      l10n.noPhotos,
+                      style: context.textTheme.bodyMedium,
+                    ),
+                  );
                 return LayoutBuilder(
                   builder: (context, c) => GridView.builder(
                     padding: const EdgeInsets.only(bottom: AppSpace.lg),
@@ -116,20 +154,37 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
                             child: Stack(
                               fit: StackFit.expand,
                               children: [
-                                Image.network(p.thumbUrl, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox()),
+                                Image.network(
+                                  p.thumbUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) => const SizedBox(),
+                                ),
                                 Align(
                                   alignment: Alignment.bottomLeft,
                                   child: Container(
                                     width: double.infinity,
-                                    padding: const EdgeInsets.fromLTRB(8, 14, 8, 6),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      8,
+                                      14,
+                                      8,
+                                      6,
+                                    ),
                                     decoration: const BoxDecoration(
-                                      gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black54]),
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.transparent,
+                                          Colors.black54,
+                                        ],
+                                      ),
                                     ),
                                     child: Text(
                                       p.author,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: context.textTheme.labelSmall?.copyWith(color: Colors.white),
+                                      style: context.textTheme.labelSmall
+                                          ?.copyWith(color: Colors.white),
                                     ),
                                   ),
                                 ),
@@ -146,7 +201,13 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
-            child: Text(l10n.photosFromUnsplash, textAlign: TextAlign.center, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+            child: Text(
+              l10n.photosFromUnsplash,
+              textAlign: TextAlign.center,
+              style: context.textTheme.labelSmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           ),
         ],
       ),

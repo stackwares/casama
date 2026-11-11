@@ -33,8 +33,30 @@ Future<void> openInAppBrowser(Uri url) async {
   await launchUrl(url, mode: mobile ? LaunchMode.inAppBrowserView : LaunchMode.externalApplication, webOnlyWindowName: '_blank');
 }
 
+/// Opens [page] through a single-use view link (or its PDF), never inside the app.
+Future<void> openBotPage(BuildContext context, WidgetRef ref, BotPage page, {bool pdf = false}) async {
+  final url = await runGuarded(context, () => ref.read(backendProvider).pageViewLink(page.id, pdf: pdf));
+  if (url != null) await ref.read(pageOpenerProvider)(Uri.parse(url));
+}
+
 class PagesScreen extends ConsumerWidget {
   const PagesScreen({super.key, this.botId});
+  final String? botId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    return SubPage(
+      title: context.l10n.pages,
+      subtitle: botId == null ? null : bots.where((b) => b.id == botId).firstOrNull?.name ?? '',
+      body: PagesList(botId: botId),
+    );
+  }
+}
+
+/// The pages list with its open, share and delete actions (the Pages screen and the Inbox's Pages filter).
+class PagesList extends ConsumerWidget {
+  const PagesList({super.key, this.botId});
   final String? botId;
 
   @override
@@ -44,10 +66,7 @@ class PagesScreen extends ConsumerWidget {
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     String botName(String id) => bots.where((b) => b.id == id).firstOrNull?.name ?? '';
 
-    Future<void> open(BotPage p, {bool pdf = false}) async {
-      final url = await runGuarded(context, () => backend.pageViewLink(p.id, pdf: pdf));
-      if (url != null) await ref.read(pageOpenerProvider)(Uri.parse(url));
-    }
+    Future<void> open(BotPage p, {bool pdf = false}) => openBotPage(context, ref, p, pdf: pdf);
 
     Future<void> setVisibility(BotPage p, BotPageVisibilityEnum v) async {
       if (v == BotPageVisibilityEnum.public) {
@@ -76,10 +95,7 @@ class PagesScreen extends ConsumerWidget {
       ref.invalidate(pagesProvider(botId));
     }
 
-    return SubPage(
-      title: l10n.pages,
-      subtitle: botId == null ? null : botName(botId!),
-      body: AsyncView(
+    return AsyncView(
         value: ref.watch(pagesProvider(botId)),
         onRetry: () => ref.invalidate(pagesProvider(botId)),
         data: (items) => items.isEmpty
@@ -135,7 +151,6 @@ class PagesScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-      ),
     );
   }
 }

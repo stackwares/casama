@@ -7,7 +7,7 @@ import '../../ui/mascot.dart';
 /// One bot on the sign-in screen: where it rests (fractions of the screen), how big it is (a
 /// fraction of the shorter side), and how it drifts.
 class _Float {
-  const _Float(this.mascot, this.x, this.y, this.size, this.phase, {this.speed = 1, this.animate = false});
+  const _Float(this.mascot, this.x, this.y, this.size, this.phase, {this.speed = 1});
   final Mascot mascot;
   final double x;
   final double y;
@@ -15,28 +15,25 @@ class _Float {
   final double phase;
   /// Whole cycles per 24 s loop (1 or 2), so the loop has no seam.
   final int speed;
-
-  /// Plays the mascot's own loop too (a few of them; ten playing at once is a lot of decoding).
-  final bool animate;
 }
 
 // Around the edges, leaving the middle band (the name and the tagline) and the bottom (the button)
 // clear. Some peek in from the sides.
 const _floats = [
   _Float(Mascot.starry, 0.30, 0.14, 0.15, 0.0, speed: 1),
-  _Float(Mascot.winky, 0.68, 0.19, 0.24, 1.3, animate: true),
-  _Float(Mascot.giggly, 0.05, 0.31, 0.25, 2.1, speed: 1, animate: true),
+  _Float(Mascot.winky, 0.68, 0.19, 0.24, 1.3),
+  _Float(Mascot.giggly, 0.05, 0.31, 0.25, 2.1, speed: 1),
   _Float(Mascot.lovey, 0.97, 0.34, 0.17, 3.4, speed: 2),
   _Float(Mascot.shy, 0.02, 0.50, 0.15, 4.2, speed: 2),
   _Float(Mascot.sleepy, 0.99, 0.53, 0.14, 0.7, speed: 1),
-  _Float(Mascot.thinker, 0.10, 0.70, 0.21, 5.0, speed: 1, animate: true),
+  _Float(Mascot.thinker, 0.10, 0.70, 0.21, 5.0, speed: 1),
   _Float(Mascot.cool, 0.45, 0.75, 0.15, 2.8, speed: 2),
-  _Float(Mascot.wow, 0.85, 0.71, 0.23, 1.9, speed: 1, animate: true),
+  _Float(Mascot.wow, 0.85, 0.71, 0.23, 1.9, speed: 1),
   _Float(Mascot.focused, 0.62, 0.05, 0.11, 3.9, speed: 2),
 ];
 
-/// The Casama bots drifting around the sign-in screen: each bobs, sways and tilts on its own slow
-/// loop. Still when the system asks for reduced motion.
+/// The Casama bots drifting around the sign-in screen: each plays its own Lottie loop while it
+/// bobs, sways and tilts on a slow drift. Still when the system asks for reduced motion.
 class FloatingMascots extends StatefulWidget {
   const FloatingMascots({super.key});
 
@@ -67,7 +64,8 @@ class _FloatingMascotsState extends State<FloatingMascots> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final still = MediaQuery.disableAnimationsOf(context);
+    // Under the sign-in sheet (or any page on top) the bots hold their still pose too.
+    final still = MediaQuery.disableAnimationsOf(context) || !(ModalRoute.of(context)?.isCurrent ?? true);
     return ExcludeSemantics(
       child: LayoutBuilder(
         builder: (context, box) {
@@ -95,7 +93,7 @@ class _FloatingMascotsState extends State<FloatingMascots> with SingleTickerProv
                           top: f.y * h - size / 2 + dy,
                           child: Transform.rotate(
                             angle: tilt,
-                            child: MascotImage(f.mascot, size: size, animate: f.animate && !still),
+                            child: MascotImage(f.mascot, size: size, animate: !still),
                           ),
                         );
                       },

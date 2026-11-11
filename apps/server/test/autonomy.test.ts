@@ -43,13 +43,13 @@ async function startServices() {
       await server.connect(transport);
       return transport.handleRequest(req, res, raw ? JSON.parse(raw) : undefined);
     }
-    // OpenRouter images (D-183): this workspace has an OpenRouter key, so images go there.
+    // OpenRouter images (D-185): this workspace has an OpenRouter key, so images go there.
     if (url.pathname === "/images")
       return json(res, 200, {
         data: [
           { b64_json: Buffer.from([137, 80, 78, 71]).toString("base64"), media_type: "image/png" },
         ],
-        usage: { cost: 0.04 },
+        usage: { cost: 0.0336 },
       });
     if (url.pathname === "/fal-ai/bytedance/seedream/v4.5/text-to-image")
       return json(res, 200, {
@@ -423,11 +423,11 @@ describe("Phase 4 gate", () => {
       { n: string }[]
     >`select count(*) as n from public.usage_ledger where run_id = ${runId} and kind = 'media_images'`;
     expect(Number(row?.n)).toBe(1);
-    // With an OpenRouter key, images are Qwen Image 3.0 Pro at OpenRouter's reported cost.
+    // With an OpenRouter key, images are Nano Banana 2.1 at OpenRouter's reported cost.
     const [priced] = await h.tdb.admin<{ model: string; cost_usd: string }[]>`
       select model, cost_usd from public.usage_ledger where run_id = ${runId} and kind = 'media_images'`;
-    expect(priced?.model).toBe("qwen/qwen-image-3-pro");
-    expect(Number(priced?.cost_usd)).toBeCloseTo(0.04, 6);
+    expect(priced?.model).toBe("google/gemini-nano-banana-2.1");
+    expect(Number(priced?.cost_usd)).toBeCloseTo(0.0336, 6);
   }, 60_000);
 
   it("a signed custom webhook starts its routine; a bad signature does not", async () => {

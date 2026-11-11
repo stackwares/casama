@@ -1,0 +1,22 @@
+{
+  "v": 2,
+  "scheme": {
+    "light": {
+      "seed": "#2F5DA8",
+      "background": "#F3F6FB",
+      "onBackground": "#121B2C"
+    },
+    "dark": {
+      "seed": "#9DBDF5",
+      "background": "#0D1420",
+      "onBackground": "#E3EBF8"
+    }
+  },
+  "headingFont": "Newsreader",
+  "bodyFont": "Source Sans 3",
+  "wallpaper": {
+    "pattern": "clouds",
+    "palette": "ocean",
+    "intensity": 0.4
+  }
+}

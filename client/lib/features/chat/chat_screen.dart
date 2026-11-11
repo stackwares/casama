@@ -21,6 +21,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/cover_image.dart';
+import '../../ui/motion.dart';
 import '../../ui/shell_header.dart';
 import '../files/file_preview.dart';
 import '../home/home_shell.dart';
@@ -95,6 +96,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   var _recording = false;
   var _transcribing = false;
   var _stickToBottom = true;
+  var _opening = true;
   late String? _focusPending = widget.focusMessageId;
   String? _highlight;
   final _focusKey = GlobalKey();
@@ -203,9 +205,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
       Future.microtask(() => ref.read(notificationsProvider.notifier).markBotChatRead(botId));
     }, fireImmediately: true);
-    Future.microtask(() {
+    Future.microtask(() async {
       final c = ref.read(chatControllerProvider(widget.botId).notifier)..group = widget.group;
-      return c.open(widget.conversationId);
+      try {
+        await c.open(widget.conversationId);
+      } finally {
+        if (mounted && _opening) setState(() => _opening = false);
+      }
     });
   }
 
@@ -215,8 +221,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (old.botId != widget.botId || old.conversationId != widget.conversationId || old.focusMessageId != widget.focusMessageId) {
       _rowCache.clear();
       _stickToBottom = true;
+      _opening = true;
       _focusPending = widget.focusMessageId;
-      Future.microtask(() => ref.read(chatControllerProvider(widget.botId).notifier).open(widget.conversationId));
+      Future.microtask(() async {
+        final c = ref.read(chatControllerProvider(widget.botId).notifier)..group = widget.group;
+        try {
+          await c.open(widget.conversationId);
+        } finally {
+          if (mounted && _opening) setState(() => _opening = false);
+        }
+      });
     }
   }
 
@@ -242,7 +256,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _onScroll() {
     if (!_scroll.hasClients) return;
-    final distance = _scroll.position.maxScrollExtent - _scroll.position.pixels;
+    final distance = _scroll.position.pixels;
     _stickToBottom = distance < 120;
     _showJump.value = distance > 400;
   }
@@ -259,7 +273,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         if (ctx != null) {
           Scrollable.ensureVisible(ctx, alignment: 0.3);
         } else if (tries > 0 && _scroll.hasClients) {
-          _scroll.jumpTo(_scroll.position.maxScrollExtent * (count <= 1 ? 0 : index / (count - 1)));
+          _scroll.jumpTo(_scroll.position.maxScrollExtent * (count <= 1 ? 0 : (count - 1 - index) / (count - 1)));
           exact(tries - 1);
         }
       });
@@ -278,15 +292,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _toEnd();
   }
 
-  /// Jumps to the end of the thread. Rows are built lazily, so the end first known is only an
-  /// estimate: the rows a jump builds can make the thread longer, so jump again until it holds.
-  void _toEnd([int tries = 6]) {
+  /// Jumps to the end of the thread (offset 0 in the bottom-anchored list).
+  void _toEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scroll.hasClients) return;
       final p = _scroll.position;
-      if (p.pixels == p.maxScrollExtent) return;
-      p.jumpTo(p.maxScrollExtent);
-      if (tries > 1) _toEnd(tries - 1);
+      if (p.pixels != 0) p.jumpTo(0);
     });
   }
 
@@ -305,18 +316,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       _toEnd();
       return false;
     }
-    final shrunk = before - viewport;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scroll.hasClients) return;
-      final p = _scroll.position;
-      p.jumpTo((p.pixels + shrunk).clamp(p.minScrollExtent, p.maxScrollExtent));
-    });
     return false;
   }
 
   void _jumpToLatest() {
     if (!_scroll.hasClients) return;
-    _scroll.animateTo(_scroll.position.maxScrollExtent, duration: AppMotion.of(context, const Duration(milliseconds: 380)), curve: AppMotion.curve);
+    _scroll.animateTo(0, duration: AppMotion.of(context, const Duration(milliseconds: 380)), curve: AppMotion.curve);
   }
 
   Future<void> _send([String? text]) async {
@@ -384,16 +389,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (audio != null) await ref.read(speechPlayerProvider).play(audio);
   }
 
-  String _modelLabel(Bot? bot) {
-    final choice = bot?.modelPolicy.primary;
-    if (choice == null) return '';
-    final options = ref.watch(modelOptionsProvider(choice.credentialId)).value?.items ?? const <ModelOption>[];
-    for (final o in options) {
-      if (o.id == choice.model) return o.name.contains(': ') ? o.name.split(': ').last : o.name;
-    }
-    return choice.model.split('/').last;
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -417,7 +412,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Simple chats by default: what the bot is doing in a few words, not each step (D-162).
     final showSteps = ref.watch(showBotStepsProvider);
     final layout = layoutFor(MediaQuery.sizeOf(context).width);
-    final status = chat.running ? l10n.botStatusWorking : (bot?.status == BotStatusEnum.waiting ? l10n.botStatusWaiting : _modelLabel(bot));
+    // Only what it's doing right now; an idle bot needs no subtitle (its model lives in its profile).
+    final status = chat.running ? l10n.botStatusWorking : (bot?.status == BotStatusEnum.waiting ? l10n.botStatusWaiting : null);
+    // The bot is working on its computer: this run has used it, or the computer is waking for it.
+    final computerInUse = ref.watch(chatControllerProvider(widget.botId).select(_computerInUse));
+    final computerLive = computerInUse || (chat.running && const {ComputerState.provisioning, ComputerState.starting}.contains(computer?.state));
 
     return Scaffold(
       appBar: ShellHeader(
@@ -439,25 +438,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         titleLeading: BotAvatar(name: name.isEmpty ? '?' : name, avatar: bot?.avatarUrl, size: 36, status: chat.running ? BotStatusEnum.working : bot?.status),
         onTitleTap: () => context.push('/bots/${widget.botId}/settings'),
         actions: [
-          // Phones keep the header light: new chat lives in the conversations sheet there.
-          if (layout != LayoutSize.phone)
-            HeaderIconButton(icon: LucideIcons.squarePen, tooltip: l10n.newChat, onPressed: chat.running || chat.empty ? null : controller.newChat),
-          HeaderIconButton(icon: LucideIcons.history, tooltip: l10n.conversations, onPressed: () => _showConversations(context, chat.conversationId)),
+          // Phones and tablets: a live way into the computer while the bot works on it.
+          if (layout != LayoutSize.desktop && computerLive)
+            _LiveDot(
+              live: true,
+              child: HeaderIconButton(icon: LucideIcons.monitor, tooltip: l10n.chatComputerLive, onPressed: () => context.push('/computer?bot=${widget.botId}')),
+            ),
           HeaderIconButton(
             key: const Key('callButton'),
             icon: LucideIcons.phone,
             tooltip: l10n.startCall,
             onPressed: () => context.push('/bots/${widget.botId}/call${chat.conversationId == null ? '' : '?c=${chat.conversationId}'}'),
           ),
-          _MoreMenu(botId: widget.botId, showComputer: layout != LayoutSize.desktop),
-          // Far right, next to the panel it opens and closes.
+          HeaderIconButton(
+            key: const Key('newChatButton'),
+            icon: LucideIcons.squarePen,
+            tooltip: l10n.newChat,
+            onPressed: chat.running || chat.empty ? null : controller.newChat,
+          ),
+          _MoreMenu(botId: widget.botId, showComputer: layout != LayoutSize.desktop, onConversations: () => _showConversations(context, chat.conversationId)),
+          // Far right, next to the panel it opens and closes; the live dot shows while the bot works on its computer.
           if (layout == LayoutSize.desktop)
-            HeaderIconButton(
-              key: const Key('computerPanelToggle'),
-              icon: LucideIcons.panelRight,
-              tooltip: ref.watch(computerPanelProvider) ? l10n.hideComputer : l10n.showComputer,
-              selected: ref.watch(computerPanelProvider),
-              onPressed: ref.read(computerPanelProvider.notifier).toggle,
+            _LiveDot(
+              live: computerLive,
+              child: HeaderIconButton(
+                key: const Key('computerPanelToggle'),
+                icon: LucideIcons.panelRight,
+                tooltip: ref.watch(computerPanelProvider) ? l10n.hideComputer : l10n.showComputer,
+                selected: ref.watch(computerPanelProvider),
+                onPressed: ref.read(computerPanelProvider.notifier).toggle,
+              ),
             ),
         ],
       ),
@@ -468,7 +478,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth);
             final background = Theme.of(context).scaffoldBackgroundColor;
             final Widget thread;
-            if (chat.loading) {
+            if (chat.loading || (_opening && chat.empty)) {
               thread = const Center(
                 child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)),
               );
@@ -486,31 +496,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   final focusId = _focusPending ?? _highlight;
                   final focusIndex = focusId == null ? -1 : rows.indexWhere((r) => r.key == ValueKey(focusId));
                   if (_focusPending != null && focusIndex >= 0) _scrollToFocus(_focusPending!, focusIndex, rows.length);
-                  return ListView.builder(
-                    controller: _scroll,
-                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: EdgeInsets.fromLTRB(side, AppSpace.md, side, AppSpace.xl),
-                    itemCount: rows.length,
-                    itemBuilder: (context, i) {
-                      final row = _rowWidget(rows[i]);
-                      final child = rows[i].fresh ? row.appMessageEntrance() : row;
-                      final focused = i == focusIndex;
-                      return Padding(
-                        key: focused ? _focusKey : rows[i].key,
-                        padding: EdgeInsets.only(top: i == 0 ? 0 : rows[i].gap),
-                        child: !focused
-                            ? child
-                            : AnimatedContainer(
-                                key: const Key('focusedMessage'),
-                                duration: const Duration(milliseconds: 400),
-                                decoration: BoxDecoration(
-                                  color: _highlight == focusId ? context.colorScheme.primary.withValues(alpha: 0.10) : Colors.transparent,
-                                  borderRadius: AppRadius.cardAll,
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: ListView.builder(
+                      controller: _scroll,
+                      reverse: true,
+                      shrinkWrap: true,
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.fromLTRB(side, AppSpace.md, side, AppSpace.xl),
+                      itemCount: rows.length,
+                      itemBuilder: (context, revIndex) {
+                        final i = rows.length - 1 - revIndex;
+                        final row = _rowWidget(rows[i]);
+                        final child = rows[i].fresh ? row.appMessageEntrance() : row;
+                        final focused = i == focusIndex;
+                        return Padding(
+                          key: focused ? _focusKey : rows[i].key,
+                          padding: EdgeInsets.only(top: i == 0 ? 0 : rows[i].gap),
+                          child: !focused
+                              ? child
+                              : AnimatedContainer(
+                                  key: const Key('focusedMessage'),
+                                  duration: const Duration(milliseconds: 400),
+                                  decoration: BoxDecoration(
+                                    color: _highlight == focusId ? context.colorScheme.primary.withValues(alpha: 0.10) : Colors.transparent,
+                                    borderRadius: AppRadius.cardAll,
+                                  ),
+                                  child: child,
                                 ),
-                                child: child,
-                              ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   );
                 },
               );
@@ -1241,15 +1257,19 @@ class _HeroMark extends StatelessWidget {
   }
 }
 
+/// The chat's … menu: its conversations, the computer (phones and tablets) and the bot's profile,
+/// where its memory, routines and apps live (and its activity, under Advanced).
 class _MoreMenu extends StatelessWidget {
-  const _MoreMenu({required this.botId, required this.showComputer});
+  const _MoreMenu({required this.botId, required this.showComputer, required this.onConversations});
   final String botId;
   final bool showComputer;
+  final VoidCallback onConversations;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    MenuItemButton item(IconData icon, String label, VoidCallback onPressed) => MenuItemButton(
+    MenuItemButton item(IconData icon, String label, VoidCallback onPressed, {Key? key}) => MenuItemButton(
+      key: key,
       leadingIcon: Icon(icon, size: 20),
       onPressed: onPressed,
       child: Padding(padding: const EdgeInsets.only(right: 24), child: Text(label)),
@@ -1260,18 +1280,74 @@ class _MoreMenu extends StatelessWidget {
       alignmentOffset: const Offset(-(menuWidth - 42), 6),
       style: const MenuStyle(minimumSize: WidgetStatePropertyAll(Size(menuWidth, 0)), maximumSize: WidgetStatePropertyAll(Size(menuWidth, double.infinity))),
       menuChildren: [
-        item(LucideIcons.activity, l10n.activity, () => context.push('/bots/$botId/activity')),
-        if (showComputer) item(LucideIcons.monitor, l10n.navComputer, () => context.push('/computer')),
-        item(LucideIcons.brain, l10n.memory, () => context.push('/bots/$botId/memory')),
-        item(LucideIcons.clock, l10n.routines, () => context.push('/bots/$botId/routines')),
-        item(LucideIcons.puzzle, l10n.botIntegrations, () => context.push('/bots/$botId/integrations')),
+        item(LucideIcons.history, l10n.conversations, onConversations, key: const Key('openConversations')),
+        if (showComputer) item(LucideIcons.monitor, l10n.navComputer, () => context.push('/computer?bot=$botId'), key: const Key('openComputer')),
         const Divider(),
-        item(LucideIcons.slidersHorizontal, l10n.botSettings, () => context.push('/bots/$botId/settings')),
+        item(LucideIcons.circleUser, l10n.botProfile, () => context.push('/bots/$botId/settings'), key: const Key('openBotProfile')),
       ],
-      builder: (context, controller, _) =>
-          HeaderIconButton(icon: LucideIcons.ellipsis, tooltip: l10n.moreActions, onPressed: () => controller.isOpen ? controller.close() : controller.open()),
+      builder: (context, controller, _) => HeaderIconButton(
+        key: const Key('chatMoreMenu'),
+        icon: LucideIcons.ellipsis,
+        tooltip: l10n.moreActions,
+        onPressed: () => controller.isOpen ? controller.close() : controller.open(),
+      ),
     );
   }
+}
+
+/// A small green dot that gently pulses on a header button while the bot works on its computer
+/// (still when the system asks to reduce motion).
+class _LiveDot extends StatelessWidget {
+  const _LiveDot({required this.live, required this.child});
+  final bool live;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        if (live)
+          Positioned(
+            top: 2,
+            right: 5,
+            child: IgnorePointer(
+              child: Pulse(
+                key: const Key('chatComputerLive'),
+                from: 0.8,
+                to: 1.1,
+                fadeFrom: 0.55,
+                duration: const Duration(milliseconds: 1100),
+                child: Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    color: context.appColors.positive,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: context.colorScheme.surface, width: 1.5),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Whether the run in progress has used the bot's computer since the person's last message: a
+/// computer step (terminal, desktop, browser, files) or the computer waking, unless it went back
+/// to sleep after.
+bool _computerInUse(ChatState c) {
+  if (!c.running) return false;
+  for (var i = c.entries.length - 1; i >= 0; i--) {
+    final e = c.entries[i];
+    if (e is MessageEntry && e.role == 'user') return false;
+    if (e is ToolEntry && const ['shell', 'desktop', 'computer', 'checkpoint', 'browser', 'files'].any(e.tool.startsWith)) return true;
+    if (e is NoticeEntry && e.kind == NoticeKind.computer) return !const {'sleeping', 'stopped', 'error'}.contains(e.text);
+  }
+  return false;
 }
 
 class _ConversationsSheet extends ConsumerWidget {

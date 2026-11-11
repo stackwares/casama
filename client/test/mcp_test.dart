@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/features/mcp/mcp_screens.dart';
 import 'package:casama_app/features/workspaces/spaces.dart';
 import 'package:casama_sdk/casama_sdk.dart' show McpKey;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -21,9 +22,14 @@ void main() {
   });
 
   testWidgets('workspace settings show the MCP address, keys and the approvals switch', (tester) async {
+    SharedPreferences.setMockInitialValues({});
     await setSize(tester, const Size(900, 3000));
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const WorkspaceSettingsScreen()));
+    await tester.pumpAndSettle();
+    // MCP lives under the workspace's Advanced fold (D-182).
+    await tester.ensureVisible(find.byKey(const Key('advanced-workspace.settings')));
+    await tester.tap(find.byKey(const Key('advanced-workspace.settings')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('mcpUrl')), findsOneWidget);
     await tester.tap(find.byKey(const Key('mcpApprovals')));
@@ -51,9 +57,14 @@ void main() {
   });
 
   testWidgets('revoking an MCP key asks first', (tester) async {
+    SharedPreferences.setMockInitialValues({});
     await setSize(tester, const Size(900, 3000));
     final backend = FakeBackend()..storedMcpKeys = [McpKey(id: 'k9', name: 'Laptop', hint: 'wxyz', lastUsedAt: null, createdAt: DateTime(2026))];
     await tester.pumpWidget(harness(backend, const WorkspaceSettingsScreen()));
+    await tester.pumpAndSettle();
+    // MCP lives under the workspace's Advanced fold (D-182).
+    await tester.ensureVisible(find.byKey(const Key('advanced-workspace.settings')));
+    await tester.tap(find.byKey(const Key('advanced-workspace.settings')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('revokeMcpKey-k9')));
     await tester.pumpAndSettle();

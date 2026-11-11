@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
@@ -12,10 +13,12 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
     this.subtitle,
     this.leading,
     this.titleLeading,
+    this.titleTrailing,
     this.actions = const [],
     this.bottom,
     this.onTitleTap,
     this.showBack,
+    this.phoneFallback,
   });
 
   final String title;
@@ -23,6 +26,9 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
 
   /// Before the title, after the back button (an avatar, for example).
   final Widget? titleLeading;
+
+  /// After the title (a chevron that says the title opens a menu, for example).
+  final Widget? titleTrailing;
 
   /// Replaces the back button.
   final Widget? leading;
@@ -33,6 +39,11 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
   /// Defaults to whether the route can pop.
   final bool? showBack;
 
+  /// For screens opened from the chats rather than a tab (settings, the computer, search): on
+  /// phones there is no tab bar to leave by, so the back button always shows and goes here when
+  /// there is nothing to pop (a deep link).
+  final String? phoneFallback;
+
   static const double toolbarHeight = 64;
 
   @override
@@ -41,7 +52,9 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final canPop = showBack ?? ModalRoute.of(context)?.impliesAppBarDismissal ?? false;
+    final routeCanPop = ModalRoute.of(context)?.impliesAppBarDismissal ?? false;
+    final phone = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
+    final canPop = showBack ?? (routeCanPop || (phoneFallback != null && phone));
     final titleBlock = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -69,6 +82,7 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
       children: [
         if (titleLeading != null) ...[titleLeading!, const SizedBox(width: AppSpace.sm)],
         Flexible(child: titleBlock),
+        if (titleTrailing != null) ...[const SizedBox(width: AppSpace.xs), titleTrailing!],
       ],
     );
     if (onTitleTap != null) {
@@ -91,7 +105,14 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
                     child: HeaderIconButton(
                       icon: LucideIcons.arrowLeft,
                       tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                      onPressed: () => Navigator.of(context).maybePop(),
+                      onPressed: () {
+                        final navigator = Navigator.of(context);
+                        if (phoneFallback != null && !navigator.canPop()) {
+                          GoRouter.of(context).go(phoneFallback!);
+                        } else {
+                          navigator.maybePop();
+                        }
+                      },
                     ),
                   ),
                 )

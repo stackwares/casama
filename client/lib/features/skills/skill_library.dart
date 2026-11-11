@@ -11,13 +11,8 @@ import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/form_sheet.dart';
 
-/// The skills library (D-104): the bundled catalog, GitHub import with a file preview, and updates
-/// with a diff.
-
-final skillCatalogProvider = FutureProvider.autoDispose<SkillCatalog>((ref) => ref.watch(backendProvider).skillCatalog());
-
-Future<void> showSkillCatalog(BuildContext context) =>
-    showAdaptiveSheet<void>(context: context, heightFactor: 0.9, dialogMaxWidth: 720, dialogMaxHeight: 760, builder: (_) => const _Catalog());
+/// The skills library (D-104): GitHub import with a file preview, and updates with a diff. The
+/// bundled catalog has its own page (skill_catalog_screen.dart).
 
 Future<void> showGitHubSkillImport(BuildContext context) =>
     showAdaptiveSheet<void>(context: context, heightFactor: 0.9, dialogMaxWidth: 760, dialogMaxHeight: 820, builder: (_) => const _GitHubImport());
@@ -45,98 +40,6 @@ class _ScopePicker extends ConsumerWidget {
         for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name)),
       ],
       onChanged: onChanged,
-    );
-  }
-}
-
-class _Catalog extends ConsumerStatefulWidget {
-  const _Catalog();
-
-  @override
-  ConsumerState<_Catalog> createState() => _CatalogState();
-}
-
-class _CatalogState extends ConsumerState<_Catalog> {
-  var _query = '';
-  String? _category;
-  String? _botId;
-  final _installed = <String>{};
-
-  Future<void> _install(CatalogSkill s) async {
-    final org = ref.read(currentOrgProvider);
-    if (org == null) return;
-    final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).installCatalogSkill(org.id, s.id, botId: _botId);
-      return true;
-    });
-    if (ok == true && mounted) {
-      setState(() => _installed.add(s.id));
-      ref.invalidate(skillsProvider);
-      showMessage(context, context.l10n.skillInstalled(s.name));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = context.colorScheme;
-    final catalog = ref.watch(skillCatalogProvider);
-    return Padding(
-      padding: const EdgeInsets.all(AppSpace.lg),
-      child: catalog.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(errorText(context, e))),
-        data: (cat) {
-          final q = _query.toLowerCase();
-          final items = cat.items
-              .where((s) => (_category == null || s.category == _category) && (q.isEmpty || s.name.contains(q) || s.description.toLowerCase().contains(q)))
-              .toList();
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: AppSpace.sm,
-            children: [
-              Text(l10n.skillCatalog, style: context.textTheme.titleLarge),
-              TextField(
-                key: const Key('catalogSearch'),
-                decoration: InputDecoration(hintText: l10n.searchSkills, prefixIcon: const Icon(LucideIcons.search, size: 20)),
-                onChanged: (v) => setState(() => _query = v.trim()),
-              ),
-              Wrap(
-                spacing: AppSpace.xs,
-                runSpacing: AppSpace.xs,
-                children: [
-                  ChoiceChip(label: Text(l10n.all), selected: _category == null, onSelected: (_) => setState(() => _category = null)),
-                  for (final c in cat.categories)
-                    ChoiceChip(key: Key('category-$c'), label: Text(c), selected: _category == c, onSelected: (_) => setState(() => _category = c)),
-                ],
-              ),
-              _ScopePicker(value: _botId, onChanged: (v) => setState(() => _botId = v)),
-              Expanded(
-                child: ListView(
-                  children: [
-                    for (final s in items)
-                      ListTile(
-                        key: Key('catalog-${s.id}'),
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(LucideIcons.bookOpen),
-                        title: Text(s.name),
-                        subtitle: Text(
-                          [s.description, if (s.files.isNotEmpty) l10n.skillFiles(s.files.length)].join(' · '),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: _installed.contains(s.id)
-                            ? Icon(LucideIcons.check, color: context.appColors.positive)
-                            : TextButton(key: Key('install-${s.id}'), onPressed: () => _install(s), child: Text(l10n.install)),
-                      ),
-                    if (items.isEmpty) Padding(padding: const EdgeInsets.all(AppSpace.lg), child: Text(l10n.noResults, style: TextStyle(color: scheme.onSurfaceVariant))),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
     );
   }
 }

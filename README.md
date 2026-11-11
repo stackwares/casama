@@ -46,7 +46,7 @@ every platform, the terminal, chat apps or your AI coding tools.
   servers, plugins, password managers and device data, with secrets kept out of the model's sight.
   [Connections](docs-site/guide/connections.md)
 - **Everywhere you are**: apps for iOS, Android, macOS, Windows, Linux and the web; chat apps such as
-  Telegram, Slack, WhatsApp, email and SMS; voice and phone calls; group chats with several bots.
+  Telegram, Slack, WhatsApp, email and SMS; voice calls; group chats with several bots.
 - **Built to build on**: an HTTP API, a CLI, a Dart SDK, an MCP server for AI apps, plugins,
   bot templates and agent-to-agent (A2A). [Build on Casama](docs-site/develop/api.md)
 - **Private by design**: row-level security on every table, encryption at rest, data export and

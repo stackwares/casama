@@ -238,7 +238,7 @@ export const skills = pgTable("skills", {
 	check("skills_description_check", sql`(char_length(description) >= 1) AND (char_length(description) <= 300)`),
 	check("skills_body_md_check", sql`char_length(body_md) <= 50000`),
 	check("skills_category_check", sql`char_length(category) <= 40`),
-	check("skills_source_check", sql`source = ANY (ARRAY['manual'::text, 'catalog'::text, 'github'::text, 'bot'::text, 'plugin'::text])`),
+	check("skills_source_check", sql`source = ANY (ARRAY['manual'::text, 'catalog'::text, 'github'::text, 'bot'::text, 'plugin'::text, 'gallery'::text])`),
 ]);
 
 export const runs = pgTable("runs", {

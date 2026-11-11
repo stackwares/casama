@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -30,7 +31,8 @@ class BackgroundScreen extends ConsumerWidget {
     final spec = ref.watch(appearanceProvider).wallpaper;
     final notifier = ref.read(appearanceProvider.notifier);
     void set(WallpaperSpec s) => notifier.setWallpaper(s);
-    WallpaperTheme preview(WallpaperSpec s) => WallpaperTheme.of(s.copyWith(everywhere: true), scheme);
+    WallpaperTheme preview(WallpaperSpec s) =>
+        WallpaperTheme.of(s.copyWith(everywhere: true), scheme);
 
     return SubPage(
       title: l10n.background,
@@ -51,10 +53,17 @@ class BackgroundScreen extends ConsumerWidget {
                 key: Key('pattern-${p.name}'),
                 label: p.label,
                 selected: spec.pattern == p,
-                onTap: () => set(spec.copyWith(pattern: p, intensity: spec.intensity == 0 ? 0.5 : null)),
+                onTap: () => set(
+                  spec.copyWith(
+                    pattern: p,
+                    intensity: spec.intensity == 0 ? 0.5 : null,
+                  ),
+                ),
                 child: Wallpaper(
                   force: true,
-                  specOverride: preview(spec.copyWith(pattern: p, intensity: 0.75)),
+                  specOverride: preview(
+                    spec.copyWith(pattern: p, intensity: 0.75),
+                  ),
                   child: const SizedBox.expand(),
                 ),
               );
@@ -69,14 +78,22 @@ class BackgroundScreen extends ConsumerWidget {
             for (final c in WallpaperPalette.values)
               _Swatch(
                 key: Key('palette-${c.name}'),
-                label: c == WallpaperPalette.theme ? l10n.backgroundThemeColors : c.label,
+                label: c == WallpaperPalette.theme
+                    ? l10n.backgroundThemeColors
+                    : c.label,
                 selected: spec.palette == c,
                 width: 76,
                 height: 64,
                 onTap: () => set(spec.copyWith(palette: c)),
                 child: Wallpaper(
                   force: true,
-                  specOverride: preview(spec.copyWith(palette: c, pattern: WallpaperPattern.none, clearPhoto: true)),
+                  specOverride: preview(
+                    spec.copyWith(
+                      palette: c,
+                      pattern: WallpaperPattern.none,
+                      clearPhoto: true,
+                    ),
+                  ),
                   child: const SizedBox.expand(),
                 ),
               ),
@@ -84,18 +101,33 @@ class BackgroundScreen extends ConsumerWidget {
         ),
         SectionHeader(title: l10n.patternStrength),
         AppCard(
-          padding: const EdgeInsets.fromLTRB(AppSpace.sm, AppSpace.xxs, AppSpace.sm, AppSpace.xxs),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.sm,
+            AppSpace.xxs,
+            AppSpace.sm,
+            AppSpace.xxs,
+          ),
           child: Row(
             children: [
-              Icon(LucideIcons.sparkle, size: 16, color: scheme.onSurfaceVariant),
+              Icon(
+                LucideIcons.sparkle,
+                size: 16,
+                color: scheme.onSurfaceVariant,
+              ),
               Expanded(
                 child: Slider(
                   key: const Key('patternStrength'),
                   value: spec.intensity,
-                  onChanged: spec.pattern == WallpaperPattern.none ? null : (v) => set(spec.copyWith(intensity: v)),
+                  onChanged: spec.pattern == WallpaperPattern.none
+                      ? null
+                      : (v) => set(spec.copyWith(intensity: v)),
                 ),
               ),
-              Icon(LucideIcons.sparkles, size: 22, color: scheme.onSurfaceVariant),
+              Icon(
+                LucideIcons.sparkles,
+                size: 22,
+                color: scheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -111,7 +143,9 @@ class BackgroundScreen extends ConsumerWidget {
         const SizedBox(height: AppSpace.md),
         Center(
           child: TextButton.icon(
-            onPressed: spec == const WallpaperSpec() ? null : () => set(const WallpaperSpec()),
+            onPressed: spec == const WallpaperSpec()
+                ? null
+                : () => set(const WallpaperSpec()),
             icon: const Icon(LucideIcons.rotateCcw, size: 18),
             label: Text(l10n.resetBackground),
           ),
@@ -123,7 +157,15 @@ class BackgroundScreen extends ConsumerWidget {
 
 /// A choice shown as a little picture with its name; the chosen one gets an accent ring.
 class _Swatch extends StatelessWidget {
-  const _Swatch({super.key, required this.label, required this.selected, required this.onTap, required this.child, this.width = 84, this.height = 84});
+  const _Swatch({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.child,
+    this.width = 84,
+    this.height = 84,
+  });
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -153,7 +195,12 @@ class _Swatch extends StatelessWidget {
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: selected ? scheme.primary : context.appColors.hairline, width: selected ? 2.5 : 1),
+                  border: Border.all(
+                    color: selected
+                        ? scheme.primary
+                        : context.appColors.hairline,
+                    width: selected ? 2.5 : 1,
+                  ),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(14),
@@ -168,8 +215,15 @@ class _Swatch extends StatelessWidget {
                             margin: const EdgeInsets.all(5),
                             width: 20,
                             height: 20,
-                            decoration: BoxDecoration(color: scheme.primary, shape: BoxShape.circle),
-                            child: Icon(LucideIcons.check, size: 12, color: scheme.onPrimary),
+                            decoration: BoxDecoration(
+                              color: scheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              LucideIcons.check,
+                              size: 12,
+                              color: scheme.onPrimary,
+                            ),
                           ),
                         ),
                     ],
@@ -181,7 +235,9 @@ class _Swatch extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: context.textTheme.labelMedium?.copyWith(fontWeight: selected ? FontWeight.w700 : FontWeight.w500),
+                style: context.textTheme.labelMedium?.copyWith(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
               ),
             ],
           ),
@@ -199,7 +255,11 @@ class _PhotoSection extends ConsumerWidget {
 
   Future<void> _pickOwn(BuildContext context) async {
     try {
-      final x = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 2400, imageQuality: 85);
+      final x = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 2400,
+        imageQuality: 85,
+      );
       if (x == null) return;
       final ext = x.name.toLowerCase().endsWith('.png') ? 'png' : 'jpg';
       final stored = await storeLocalImage(await x.readAsBytes(), ext: ext);
@@ -210,9 +270,17 @@ class _PhotoSection extends ConsumerWidget {
   }
 
   Future<void> _browse(BuildContext context, WidgetRef ref) async {
-    final photo = await showAdaptiveSheet<PickedPhoto>(context: context, heightFactor: 0.9, builder: (_) => const PhotoPicker());
+    final photo = await showAdaptiveSheet<PickedPhoto>(
+      context: context,
+      heightFactor: 0.9,
+      builder: (_) => const PhotoPicker(),
+    );
     if (photo == null) return;
-    onChanged(spec.copyWith(photo: photo.url).copyWithCredit(photo.author, photo.authorUrl));
+    onChanged(
+      spec
+          .copyWith(photo: photo.url)
+          .copyWithCredit(photo.author, photo.authorUrl),
+    );
   }
 
   @override
@@ -241,6 +309,12 @@ class _PhotoSection extends ConsumerWidget {
                 icon: const Icon(LucideIcons.images, size: 18),
                 label: Text(l10n.browsePhotos),
               ),
+            OutlinedButton.icon(
+              key: const Key('galleryWallpapers'),
+              onPressed: () => context.push('/settings/gallery?type=wallpaper'),
+              icon: const Icon(LucideIcons.layoutGrid, size: 18),
+              label: Text(l10n.gallery),
+            ),
             if (photo != null)
               TextButton.icon(
                 key: const Key('removePhoto'),
@@ -256,28 +330,63 @@ class _PhotoSection extends ConsumerWidget {
         ] else ...[
           if ((spec.photoCredit ?? '').isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: AppSpace.xs, left: AppSpace.xxs),
+              padding: const EdgeInsets.only(
+                top: AppSpace.xs,
+                left: AppSpace.xxs,
+              ),
               child: InkWell(
-                onTap: spec.photoCreditUrl == null ? null : () => launchUrl(Uri.parse(spec.photoCreditUrl!), mode: LaunchMode.externalApplication),
+                onTap: spec.photoCreditUrl == null
+                    ? null
+                    : () => launchUrl(
+                        Uri.parse(spec.photoCreditUrl!),
+                        mode: LaunchMode.externalApplication,
+                      ),
                 child: Text(
                   l10n.photoBy(spec.photoCredit!),
-                  style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, decoration: TextDecoration.underline),
+                  style: context.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
             ),
           const SizedBox(height: AppSpace.sm),
           AppCard(
-            padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.xxs, AppSpace.sm, AppSpace.xxs),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.md,
+              AppSpace.xxs,
+              AppSpace.sm,
+              AppSpace.xxs,
+            ),
             child: Column(
               children: [
                 for (final (label, key, value, apply) in [
-                  (l10n.photoBlur, 'photoBlur', spec.photoBlur, (double v) => spec.copyWith(photoBlur: v)),
-                  (l10n.photoDim, 'photoDim', spec.photoDim, (double v) => spec.copyWith(photoDim: v)),
+                  (
+                    l10n.photoBlur,
+                    'photoBlur',
+                    spec.photoBlur,
+                    (double v) => spec.copyWith(photoBlur: v),
+                  ),
+                  (
+                    l10n.photoDim,
+                    'photoDim',
+                    spec.photoDim,
+                    (double v) => spec.copyWith(photoDim: v),
+                  ),
                 ])
                   Row(
                     children: [
-                      SizedBox(width: 56, child: Text(label, style: context.textTheme.bodyMedium)),
-                      Expanded(child: Slider(key: Key(key), value: value, onChanged: (v) => onChanged(apply(v)))),
+                      SizedBox(
+                        width: 56,
+                        child: Text(label, style: context.textTheme.bodyMedium),
+                      ),
+                      Expanded(
+                        child: Slider(
+                          key: Key(key),
+                          value: value,
+                          onChanged: (v) => onChanged(apply(v)),
+                        ),
+                      ),
                     ],
                   ),
               ],

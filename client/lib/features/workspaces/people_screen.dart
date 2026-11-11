@@ -8,6 +8,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
@@ -20,9 +21,9 @@ final _pendingProvider = FutureProvider.autoDispose.family<List<PendingInvite>, 
 final _domainsProvider = FutureProvider.autoDispose.family<JoinDomains, String>((ref, orgId) => ref.watch(backendProvider).joinDomains(orgId));
 final _linksProvider = FutureProvider.autoDispose.family<List<InviteLink>, String>((ref, orgId) => ref.watch(backendProvider).inviteLinks(orgId));
 
-/// Settings → People (D-167): the standing invite link (copy, share, QR), a short code, email
-/// invites, requests waiting for approval, pending invites, members, joining by email domain and
-/// custom links.
+/// Settings → People (D-167): the standing invite link (copy, share, QR), requests waiting for
+/// approval, email invites, pending invites and members; a short code, joining by email domain and
+/// custom links fold under Advanced (D-182).
 class PeopleScreen extends ConsumerWidget {
   const PeopleScreen({super.key});
 
@@ -39,8 +40,6 @@ class PeopleScreen extends ConsumerWidget {
       children: [
         if (admin) ...[
           _InviteLinkCard(org: org),
-          const SizedBox(height: AppSpace.md),
-          _InviteCodeCard(orgId: org.id),
           _RequestsSection(orgId: org.id),
           SectionHeader(title: l10n.inviteByEmail),
           _EmailInviteCard(orgId: org.id),
@@ -61,12 +60,19 @@ class PeopleScreen extends ConsumerWidget {
               ),
           ],
         ),
-        if (admin) ...[
-          SectionHeader(title: l10n.joinByDomain),
-          _DomainCard(orgId: org.id),
-          const SizedBox(height: AppSpace.md),
-          _CustomLinks(orgId: org.id),
-        ],
+        // A code to type, joining by email domain and custom links fold away (D-182).
+        if (admin)
+          AdvancedSection(
+            id: 'workspace.people',
+            summary: l10n.peopleAdvancedSummary,
+            children: [
+              _InviteCodeCard(orgId: org.id),
+              SectionHeader(title: l10n.joinByDomain),
+              _DomainCard(orgId: org.id),
+              const SizedBox(height: AppSpace.md),
+              _CustomLinks(orgId: org.id),
+            ],
+          ),
         const SizedBox(height: AppSpace.lg),
       ],
     );
@@ -299,13 +305,16 @@ class _EmailInviteCardState extends ConsumerState<_EmailInviteCard> {
           children: [
             Text(l10n.sendInvitesYourself, style: c.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
             Text(l10n.sendInvitesYourselfHelp, style: c.textTheme.bodyMedium),
+            // A label and a copy button, not the raw token.
             for (final i in unsent)
               GroupedCard(
                 children: [
                   GroupedTile(
+                    key: Key('unsent-${i.email}'),
                     icon: LucideIcons.mail,
                     title: i.email,
-                    subtitle: base.isEmpty ? i.acceptToken : '$base/join/${i.acceptToken}',
+                    subtitle: l10n.inviteLinkToCopy,
+                    onTap: () => copyInvite(c, base.isEmpty ? i.acceptToken! : '$base/join/${i.acceptToken}'),
                     trailing: IconButton(
                       tooltip: l10n.copyLink,
                       icon: const Icon(LucideIcons.copy, size: 18),
@@ -593,13 +602,14 @@ class _CustomLinksState extends ConsumerState<_CustomLinks> {
             const SizedBox(height: AppSpace.md),
             GroupedCard(
               children: [
+                // What it is, who it's for and when it was made; not the token's first letters.
                 for (final l in links)
                   GroupedTile(
                     key: Key('link-${l.id}'),
                     icon: l.kind == InviteLinkKindEnum.code ? LucideIcons.hash : LucideIcons.link,
-                    title: '${l.tokenHint}… · ${l.role == InviteLinkRoleEnum.admin ? l10n.roleAdmin : l10n.roleMember}',
+                    title: '${l.kind == InviteLinkKindEnum.code ? l10n.inviteCode : l10n.inviteLink} · ${l.role == InviteLinkRoleEnum.admin ? l10n.roleAdmin : l10n.roleMember}',
                     subtitle: [
-                      if (l.kind == InviteLinkKindEnum.code) l10n.inviteCode,
+                      l10n.linkMade(relativeTime(l.createdAt, context)),
                       l10n.linkUses('${l.uses}${l.maxUses == null ? '' : '/${l.maxUses}'}'),
                       if (l.revokedAt != null) l10n.linkRevoked,
                     ].join(' · '),

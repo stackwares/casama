@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/server_address.dart';
 import '../../core/widgets.dart';
@@ -144,6 +145,9 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
 
   /// After a sign-in email goes out: where it went, the code typed from it, and when another may go.
   String? _sentTo;
+
+  /// The email that went out is a password reset (its code signs in, then asks for a new password).
+  var _resetting = false;
   final _code = TextEditingController();
   var _codeInvalid = false;
   var _resendIn = 0;
@@ -168,8 +172,15 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
           _email.text.trim(),
           _password.text,
         );
+        // The address needs confirming first: the same check-inbox step as a sign-in email
+        // (tap the link, or type its code).
         if (!signedIn && mounted) {
-          showMessage(context, context.l10n.confirmEmailSent);
+          setState(() {
+            _sentTo = _email.text.trim();
+            _code.clear();
+            _codeInvalid = false;
+            _startResendCountdown();
+          });
         }
       } else {
         await backend.signIn(_email.text.trim(), _password.text);
@@ -183,7 +194,8 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     final email = _sentTo ?? _email.text.trim();
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).sendMagicLink(email);
+      final backend = ref.read(backendProvider);
+      await (_resetting ? backend.sendPasswordReset(email) : backend.sendMagicLink(email));
       return true;
     });
     if (!mounted) return;
@@ -217,7 +229,8 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     if (email == null || code.length != OtpCodeField.length || _busy) return;
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).verifyEmailCode(email, code);
+      final backend = ref.read(backendProvider);
+      await (_resetting ? backend.verifyPasswordResetCode(email, code) : backend.verifyEmailCode(email, code));
       return true;
     });
     if (!mounted) return;
@@ -231,6 +244,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     _resendTimer?.cancel();
     setState(() {
       _sentTo = null;
+      _resetting = false;
       _resendIn = 0;
       _code.clear();
       _codeInvalid = false;
@@ -246,6 +260,40 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
       () => ref.read(backendProvider).signInWithProvider(name),
     );
     await Future<void>.delayed(const Duration(seconds: 2));
+    if (mounted) setState(() => _busy = false);
+  }
+
+  /// A reset email to the address typed above: its link or code signs in, then the app asks for a
+  /// new password.
+  Future<void> _forgotPassword() async {
+    final email = _email.text.trim();
+    if (!_validEmail(email)) {
+      showMessage(context, context.l10n.invalidEmail);
+      return;
+    }
+    setState(() => _busy = true);
+    final ok = await runGuarded(context, () async {
+      await ref.read(backendProvider).sendPasswordReset(email);
+      return true;
+    });
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (ok == true) {
+        _resetting = true;
+        _sentTo = email;
+        _code.clear();
+        _codeInvalid = false;
+        _startResendCountdown();
+      }
+    });
+  }
+
+  /// The system passkey sheet; closing it just leaves the options as they were.
+  Future<void> _passkey() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    await runGuarded(context, () => ref.read(backendProvider).signInWithPasskey());
     if (mounted) setState(() => _busy = false);
   }
 
@@ -353,6 +401,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
+    final methods = ref.watch(authMethodsProvider).value ?? const AuthMethods();
     final showApple =
         kIsWeb ||
         defaultTargetPlatform == TargetPlatform.iOS ||
@@ -411,6 +460,22 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
                   onPressed: _busy ? null : () => _provider('google'),
                 ),
                 const SizedBox(height: AppSpace.sm),
+                // A passkey signs in an account that already has one, so not when signing up.
+                if (methods.passkeys && !_signUp) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: pill(
+                      OutlinedButton.icon(
+                        key: const Key('passkeySignIn'),
+                        style: OutlinedButton.styleFrom(shape: const StadiumBorder()),
+                        onPressed: _busy ? null : _passkey,
+                        icon: const Icon(LucideIcons.keyRound, size: 20),
+                        label: Text(l10n.signInWithPasskey),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.sm),
+                ],
                 // Email and password stay folded away until asked for.
                 AnimatedSize(
                   duration: AppMotion.of(context, AppMotion.fast),
@@ -512,6 +577,15 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
                                       onFieldSubmitted: (_) => _submit(),
                                     ),
                               ),
+                              if (!_signUp)
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton(
+                                    key: const Key('forgotPassword'),
+                                    onPressed: _busy ? null : _forgotPassword,
+                                    child: Text(l10n.forgotPassword),
+                                  ),
+                                ),
                             ],
                             const SizedBox(height: AppSpace.md),
                             pill(
@@ -603,17 +677,19 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
                           children: [
                             const Divider(),
                             const SizedBox(height: AppSpace.xs),
-                            Center(
-                              child: TextButton.icon(
-                                key: const Key('ssoSignIn'),
-                                onPressed: _busy ? null : _sso,
-                                icon: const Icon(
-                                  LucideIcons.building2,
-                                  size: 18,
+                            // Only when the server has an identity provider set up.
+                            if (methods.sso)
+                              Center(
+                                child: TextButton.icon(
+                                  key: const Key('ssoSignIn'),
+                                  onPressed: _busy ? null : _sso,
+                                  icon: const Icon(
+                                    LucideIcons.building2,
+                                    size: 18,
+                                  ),
+                                  label: Text(l10n.continueWithSso),
                                 ),
-                                label: Text(l10n.continueWithSso),
                               ),
-                            ),
                             // A server on this computer, in one click (D-147).
                             if (localServerSupported)
                               Center(

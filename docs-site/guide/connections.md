@@ -53,8 +53,13 @@ shows the redirect address to register, which is `<your API address>/oauth/callb
 | Gmail, Calendar, Drive, Docs, Sheets, Slides, Contacts | `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` |
 | GitHub, Slack, Asana, HubSpot, Box, Figma    | An entry in `MCP_OAUTH_CLIENTS`                           |
 
-Until that's done, the connect sheet offers another way in: connect **Composio**, **Pipedream**
-or **Zapier** with one click (no API key), then ask your bot to use the app through it.
+Until that's done there are two other ways in:
+
+- **The server has a Composio key** (`COMPOSIO_API_KEY`, as on Casama Cloud): these apps show
+  **Sign in through Composio**. One click, and you sign in to the app itself; Composio handles the
+  connection on the server's account, and the bot gets the app's tools.
+- **No Composio key:** the connect sheet offers **Composio**, **Pipedream** or **Zapier** with one
+  click (sign in with your own account there), then ask your bot to use the app through it.
 
 Vendors only send people back to `https` or `localhost` addresses. A server on a private network
 address over `http` (local development) uses `http://localhost:<port>/oauth/callback`, so finish

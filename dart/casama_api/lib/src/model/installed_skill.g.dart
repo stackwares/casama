@@ -239,4 +239,5 @@ const _$InstalledSkillSource_EnumEnumMap = {
   InstalledSkillSource_Enum.catalog: 'catalog',
   InstalledSkillSource_Enum.github: 'github',
   InstalledSkillSource_Enum.bot: 'bot',
+  InstalledSkillSource_Enum.gallery: 'gallery',
 };

@@ -61,4 +61,19 @@ describe("model costs (docs/COSTS.md)", () => {
     );
     expect(small.map((m) => m.model)).toEqual(["claude-haiku-5-5"]);
   });
+
+  it("runs OpenRouter background work on Muse Ember, then the bot's own model", async () => {
+    const resolve = async (c: Array<{ credential_id: string; model: string } | undefined>) =>
+      c.filter((x) => !!x).map((x) => model("openrouter", x.model));
+    const chain = await backgroundChain(
+      { primary: { credential_id: "c1", model: "openai/gpt-6.1-sol" } },
+      resolve,
+    );
+    expect(chain.map((m) => m.model)).toEqual(["meta/muse-ember", "openai/gpt-6.1-sol"]);
+    const already = await backgroundChain(
+      { primary: { credential_id: "c1", model: "meta/muse-ember" } },
+      resolve,
+    );
+    expect(already.map((m) => m.model)).toEqual(["meta/muse-ember"]);
+  });
 });

@@ -10,6 +10,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
@@ -23,6 +24,9 @@ class CompanionScreen extends ConsumerWidget {
   const CompanionScreen({super.key});
 
   static const capabilityKeys = ['shell', 'files', 'browser', 'desktop', 'mcp'];
+
+  /// Shown under Advanced, with coding agents and local MCP servers (D-182).
+  static const expertCapabilityKeys = ['shell', 'mcp'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,6 +66,23 @@ class CompanionScreen extends ConsumerWidget {
                 }
                 final caps = capsOf(device);
                 final scheme = context.colorScheme;
+                Widget capTile(String c) => GroupedTile(
+                  key: Key('cap-$c'),
+                  icon: switch (c) {
+                    'shell' => LucideIcons.squareTerminal,
+                    'files' => LucideIcons.folder,
+                    'browser' => LucideIcons.globe,
+                    'mcp' => LucideIcons.plug,
+                    'messages' => LucideIcons.messageCircle,
+                    _ => LucideIcons.mousePointer2,
+                  },
+                  title: capLabel(c),
+                  onTap: () => runGuarded(context, () => controller.save(capabilities: caps.contains(c) ? ({...caps}..remove(c)) : {...caps, c})),
+                  trailing: Switch(
+                    value: caps.contains(c),
+                    onChanged: (v) => runGuarded(context, () => controller.save(capabilities: v ? {...caps, c} : ({...caps}..remove(c)))),
+                  ),
+                );
                 return ValueListenableBuilder(
                   valueListenable: companion.status,
                   builder: (context, status, _) {
@@ -108,23 +129,7 @@ class CompanionScreen extends ConsumerWidget {
                           children: [
                             // Messages (iMessage chat apps, D-134) only exists on a Mac.
                             for (final c in [...capabilityKeys, if (defaultTargetPlatform == TargetPlatform.macOS) 'messages'])
-                              GroupedTile(
-                                key: Key('cap-$c'),
-                                icon: switch (c) {
-                                  'shell' => LucideIcons.squareTerminal,
-                                  'files' => LucideIcons.folder,
-                                  'browser' => LucideIcons.globe,
-                                  'mcp' => LucideIcons.plug,
-                                  'messages' => LucideIcons.messageCircle,
-                                  _ => LucideIcons.mousePointer2,
-                                },
-                                title: capLabel(c),
-                                onTap: () => runGuarded(context, () => controller.save(capabilities: caps.contains(c) ? ({...caps}..remove(c)) : {...caps, c})),
-                                trailing: Switch(
-                                  value: caps.contains(c),
-                                  onChanged: (v) => runGuarded(context, () => controller.save(capabilities: v ? {...caps, c} : ({...caps}..remove(c)))),
-                                ),
-                              ),
+                              if (!expertCapabilityKeys.contains(c)) capTile(c),
                           ],
                         ),
                         Padding(padding: const EdgeInsets.fromLTRB(4, 8, 4, 0), child: FormNote(l10n.companionCapabilitiesHelp)),
@@ -159,11 +164,6 @@ class CompanionScreen extends ConsumerWidget {
                                 ),
                             ],
                           ),
-                        _CodingAgentsSection(
-                          shellOn: caps.contains('shell'),
-                          onAllow: () => runGuarded(context, () => controller.save(capabilities: {...caps, 'shell'})),
-                        ),
-                        _LocalMcpSection(device: device, enabled: caps.contains('mcp')),
                         SectionHeader(title: l10n.botsAllowed),
                         GroupedCard(
                           children: [
@@ -186,6 +186,19 @@ class CompanionScreen extends ConsumerWidget {
                           ],
                         ),
                         Padding(padding: const EdgeInsets.fromLTRB(4, 8, 4, 0), child: FormNote(l10n.botsAllowedHelp)),
+                        // Commands, local MCP servers and coding agents: for people who code (D-182).
+                        AdvancedSection(
+                          id: 'companion',
+                          summary: l10n.companionAdvancedSummary,
+                          children: [
+                            GroupedCard(children: [for (final c in expertCapabilityKeys) capTile(c)]),
+                            _CodingAgentsSection(
+                              shellOn: caps.contains('shell'),
+                              onAllow: () => runGuarded(context, () => controller.save(capabilities: {...caps, 'shell'})),
+                            ),
+                            _LocalMcpSection(device: device, enabled: caps.contains('mcp')),
+                          ],
+                        ),
                         const SizedBox(height: AppSpace.lg),
                         GroupedCard(
                           children: [GroupedTile(icon: LucideIcons.unlink, destructive: true, title: l10n.unpairComputer, onTap: () => runGuarded(context, controller.unpair))],
@@ -255,7 +268,8 @@ class _LocalMcpSection extends ConsumerWidget {
               await runGuarded(context, () => controller.saveMcpServers([...servers, added]));
             },
             icon: const Icon(LucideIcons.plus, size: 18),
-            label: Text(l10n.localMcpAdd),
+            // The header names what's added; the full label doesn't fit beside it on a small phone.
+            label: Text(l10n.add),
           ),
         ),
         if (servers.isEmpty)

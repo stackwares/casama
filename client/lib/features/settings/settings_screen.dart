@@ -7,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../voice/call_tools_sheet.dart';
 import '../chat/chat_detail.dart';
-import '../../core/backend.dart';
 import '../../core/billing.dart';
 import '../../core/mac_bridge.dart';
 import '../../core/updater.dart';
@@ -17,29 +16,19 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../theme/appearance.dart';
 import '../../theme/presets.dart';
-import '../../theme/wallpaper.dart';
 import '../../ui/adaptive_modal.dart';
-import '../../ui/bot_avatar.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/form_sheet.dart';
-import '../bots/a2a_sheet.dart';
 import '../voice/wake_word.dart';
 import '../voice/wake_word_sheet.dart';
-import '../bots/template_picker.dart';
-import '../bots/bot_template.dart';
-import '../../ui/mascot.dart';
 import '../../ui/page.dart';
-import '../bots/model_picker.dart';
 import 'about_you_screen.dart';
-import 'model_keys_screen.dart';
-import 'theme_screen.dart';
 import '../../ui/app_card.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 import '../admin/admin_screen.dart';
 import '../notifications/quiet_hours.dart';
-import '../notifications/checkins_sheet.dart';
 import '../companion/companion.dart';
-import '../../ui/glow_button.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key, this.pane = false, this.current = ''});
@@ -66,7 +55,8 @@ class SettingsScreen extends ConsumerWidget {
     void open(String path) => pane ? context.go(path) : context.push(path);
     bool sel(String path) => pane && current.startsWith(path);
     return Scaffold(
-      appBar: ShellHeader(title: l10n.settings),
+      // Opened from the person's avatar, not a tab (D-176): phones always get a way back.
+      appBar: ShellHeader(title: l10n.settings, phoneFallback: pane ? null : '/bots'),
       body: LayoutBuilder(
         builder: (context, constraints) {
           // Wide windows: the groups sit in two columns instead of one long, narrow list.
@@ -116,8 +106,62 @@ class SettingsScreen extends ConsumerWidget {
                     Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
                   ],
                 ),
-              ).appCardEntrance();
+              );
+          // Four groups (D-176): you, how the app looks, the workspace, and what bots connect to,
+          // then the rarely needed options folded under Advanced (D-182). Two columns on wide windows.
           final left = <Widget>[
+              SectionHeader(title: l10n.settingsYouSection),
+              GroupedCard(
+                children: [
+                  GroupedTile(
+                    key: const Key('settingsQuietHours'),
+                    icon: LucideIcons.moon,
+                    title: l10n.quietHours,
+                    subtitle: switch (ref.watch(quietHoursProvider).value) {
+                      final q? => quietSummary(context, q),
+                      null => l10n.off,
+                    },
+                    onTap: () => showQuietHours(context, ref),
+                  ),
+                  // Wake word (D-144): desktop and Android.
+                  if (wakeWordSupported)
+                    GroupedTile(
+                      key: const Key('settingsWakeWord'),
+                      icon: LucideIcons.audioLines,
+                      title: l10n.wakeWord,
+                      subtitle: ref.watch(wakeWordProvider).enabled ? l10n.wakeWordOnRow(ref.watch(wakeWordProvider).phrase) : l10n.wakeWordRow,
+                      onTap: () => showAdaptiveSheet<void>(context: context, builder: (_) => const WakeWordSheet()),
+                    ),
+                  GroupedTile(
+                    key: const Key('settingsAccount'),
+                    icon: LucideIcons.circleUser,
+                    title: l10n.account,
+                    subtitle: backend.userEmail ?? l10n.accountRow,
+                    onTap: () => open('/settings/account'), selected: sel('/settings/account'),
+                  ),
+                  GroupedTile(
+                    key: const Key('settingsTwoStep'),
+                    icon: LucideIcons.smartphone,
+                    title: l10n.twoStepSignIn,
+                    subtitle: org?.requireMfa == true && org?.role != OrgRole.member && !backend.twoStepVerified ? l10n.twoStepNeededForAdmin : l10n.twoStepHelp,
+                    onTap: () => open('/settings/two-step'), selected: sel('/settings/two-step'),
+                  ),
+                  // Passkeys (D-183): when the server has them and this device can make them.
+                  if (ref.watch(authMethodsProvider).value?.passkeys == true)
+                    GroupedTile(
+                      key: const Key('settingsPasskeys'),
+                      icon: LucideIcons.keyRound,
+                      title: l10n.passkeys,
+                      subtitle: l10n.passkeysRow,
+                      onTap: () => open('/settings/passkeys'), selected: sel('/settings/passkeys'),
+                    ),
+                  GroupedTile(key: const Key('settingsPrivacy'), icon: LucideIcons.shieldCheck, title: l10n.privacy, subtitle: l10n.privacyRowHelp, onTap: () => open('/settings/privacy'), selected: sel('/settings/privacy')),
+                ],
+              ),
+              SectionHeader(title: l10n.appearance),
+              const _AppearanceCard(),
+          ];
+          final right = <Widget>[
               SectionHeader(title: l10n.workspace),
               GroupedCard(
                 children: [
@@ -172,13 +216,14 @@ class SettingsScreen extends ConsumerWidget {
                       subtitle: billing!.planName,
                       onTap: () => open('/settings/billing'), selected: sel('/settings/billing'),
                     ),
+                  if (ref.watch(adminOverviewProvider).value != null)
+                    GroupedTile(key: const Key('settingsAdmin'), icon: LucideIcons.shieldUser, title: l10n.adminConsole, subtitle: l10n.adminRowHelp, onTap: () => open('/settings/admin'), selected: sel('/settings/admin')),
                 ],
               ),
-              SectionHeader(title: l10n.settingsBotsSection),
+              SectionHeader(title: l10n.settingsConnectionsSection),
               GroupedCard(
                 children: [
                   GroupedTile(icon: LucideIcons.keyRound, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys')),
-                  GroupedTile(icon: LucideIcons.bookOpen, title: l10n.skills, subtitle: l10n.skillsRowHelp, onTap: () => open('/settings/skills'), selected: sel('/settings/skills')),
                   GroupedTile(
                     key: const Key('settingsIntegrations'),
                     icon: LucideIcons.puzzle,
@@ -186,87 +231,71 @@ class SettingsScreen extends ConsumerWidget {
                     subtitle: l10n.integrationsRowHelp,
                     onTap: () => open('/settings/integrations'), selected: sel('/settings/integrations'),
                   ),
-                  GroupedTile(key: const Key('settingsSecrets'), icon: LucideIcons.lock, title: l10n.secrets, subtitle: l10n.secretsRowHelp, onTap: () => open('/settings/secrets'), selected: sel('/settings/secrets')),
-                  GroupedTile(key: const Key('settingsComputers'), icon: LucideIcons.monitor, title: l10n.computers, subtitle: l10n.computersRowHelp, onTap: () => open('/settings/computers'), selected: sel('/settings/computers')),
-                  // Device connections (D-149): data this device shares with your bots.
-                  GroupedTile(
-                    key: const Key('settingsDevices'),
-                    icon: LucideIcons.smartphone,
-                    title: l10n.deviceConnections,
-                    subtitle: l10n.deviceConnectionsRowHelp,
-                    onTap: () => open('/settings/devices'), selected: sel('/settings/devices'),
-                  ),
-                  if (ref.watch(companionProvider).supported)
-                    GroupedTile(
-                      key: const Key('settingsCompanion'),
-                      icon: LucideIcons.laptop,
-                      title: l10n.useThisComputer,
-                      subtitle: l10n.companionRowHelp,
-                      onTap: () => open('/settings/companion'), selected: sel('/settings/companion'),
-                    ),
-                  // Wake word (D-144): desktop and Android.
-                  if (wakeWordSupported)
-                    GroupedTile(
-                      key: const Key('settingsWakeWord'),
-                      icon: LucideIcons.audioLines,
-                      title: l10n.wakeWord,
-                      subtitle: ref.watch(wakeWordProvider).enabled ? l10n.wakeWordOnRow(ref.watch(wakeWordProvider).phrase) : l10n.wakeWordRow,
-                      onTap: () => showAdaptiveSheet<void>(context: context, builder: (_) => const WakeWordSheet()),
-                    ),
+                  GroupedTile(icon: LucideIcons.bookOpen, title: l10n.skills, subtitle: l10n.skillsRowHelp, onTap: () => open('/settings/skills'), selected: sel('/settings/skills')),
                 ],
               ),
-          ];
-          final right = <Widget>[
-              SectionHeader(title: l10n.appearance),
-              const _AppearanceCard(),
-              SectionHeader(title: l10n.settingsMoreSection),
-              GroupedCard(
+              // Everything most people never need, in one fold that stays open once opened (D-182).
+              AdvancedSection(
+                id: 'settings',
+                summary: l10n.settingsAdvancedSummary,
+                // Beside an open page inside it (wide windows), it stays open so the row shows.
+                forceOpen: const ['/settings/secrets', '/settings/computers', '/settings/devices', '/settings/companion'].any(sel),
                 children: [
-                  // Off by default: chats show what the bot is doing, not each step (D-162).
-                  SwitchListTile(
-                    key: const Key('showBotSteps'),
-                    secondary: Icon(LucideIcons.listTree, color: scheme.onSurfaceVariant),
-                    title: Text(l10n.showBotSteps),
-                    subtitle: Text(l10n.showBotStepsHelp),
-                    value: ref.watch(showBotStepsProvider),
-                    onChanged: ref.read(showBotStepsProvider.notifier).set,
+                  GroupedCard(
+                    children: [
+                      GroupedTile(key: const Key('settingsSecrets'), icon: LucideIcons.lock, title: l10n.secrets, subtitle: l10n.secretsRowHelp, onTap: () => open('/settings/secrets'), selected: sel('/settings/secrets')),
+                      GroupedTile(key: const Key('settingsComputers'), icon: LucideIcons.monitor, title: l10n.computers, subtitle: l10n.computersRowHelp, onTap: () => open('/settings/computers'), selected: sel('/settings/computers')),
+                      // Device connections (D-149): data this device shares with your bots.
+                      GroupedTile(
+                        key: const Key('settingsDevices'),
+                        icon: LucideIcons.smartphone,
+                        title: l10n.deviceConnections,
+                        subtitle: l10n.deviceConnectionsRowHelp,
+                        onTap: () => open('/settings/devices'), selected: sel('/settings/devices'),
+                      ),
+                      if (ref.watch(companionProvider).supported)
+                        GroupedTile(
+                          key: const Key('settingsCompanion'),
+                          icon: LucideIcons.laptop,
+                          title: l10n.useThisComputer,
+                          subtitle: l10n.companionRowHelp,
+                          onTap: () => open('/settings/companion'), selected: sel('/settings/companion'),
+                        ),
+                    ],
                   ),
-                  GroupedTile(
-                    key: const Key('settingsQuietHours'),
-                    icon: LucideIcons.moon,
-                    title: l10n.quietHours,
-                    subtitle: ref.watch(quietHoursProvider).whenOrNull(data: (q) => quietSummary(context, q)) ?? l10n.quietHoursHelp,
-                    onTap: () => showQuietHours(context, ref),
-                  ),
-                  GroupedTile(
-                    key: const Key('settingsTwoStep'),
-                    icon: LucideIcons.smartphone,
-                    title: l10n.twoStepSignIn,
-                    subtitle: org?.requireMfa == true && org?.role != OrgRole.member && !backend.twoStepVerified ? l10n.twoStepNeededForAdmin : l10n.twoStepHelp,
-                    onTap: () => open('/settings/two-step'), selected: sel('/settings/two-step'),
-                  ),
-                  GroupedTile(key: const Key('settingsPrivacy'), icon: LucideIcons.shieldCheck, title: l10n.privacy, subtitle: l10n.privacyRowHelp, onTap: () => open('/settings/privacy'), selected: sel('/settings/privacy')),
-                  if (ref.watch(adminOverviewProvider).value != null)
-                    GroupedTile(key: const Key('settingsAdmin'), icon: LucideIcons.shieldUser, title: l10n.adminConsole, subtitle: l10n.adminRowHelp, onTap: () => open('/settings/admin'), selected: sel('/settings/admin')),
-                  // Desktop downloads update themselves (the stores update theirs); Linux is told.
-                  if (selfUpdating || updateNoticeOnly) const _UpdatesRows(),
-                  // Mac: start with the system, ready for the quick-ask shortcut and the menu bar icon.
-                  if (ref.watch(launchAtLoginProvider).value case final on?)
-                    SwitchListTile(
-                      key: const Key('openAtLogin'),
-                      secondary: Icon(LucideIcons.power, color: scheme.onSurfaceVariant),
-                      title: Text(l10n.openAtLogin),
-                      subtitle: Text(l10n.openAtLoginHelp),
-                      value: on,
-                      onChanged: (v) async {
-                        await runGuarded(context, () => setLaunchAtLogin(v));
-                        ref.invalidate(launchAtLoginProvider);
-                      },
-                    ),
-                  GroupedTile(
-                    icon: LucideIcons.languages,
-                    title: l10n.language,
-                    trailing: Text(_languageName(Localizations.localeOf(context)), style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                  const SizedBox(height: AppSpace.sm),
+                  GroupedCard(
+                    children: [
+                      // Off by default: chats show what the bot is doing, not each step (D-162).
+                      SwitchListTile(
+                        key: const Key('showBotSteps'),
+                        secondary: Icon(LucideIcons.listTree, color: scheme.onSurfaceVariant),
+                        title: Text(l10n.showBotSteps),
+                        subtitle: Text(l10n.showBotStepsHelp),
+                        value: ref.watch(showBotStepsProvider),
+                        onChanged: ref.read(showBotStepsProvider.notifier).set,
+                      ),
+                      // Desktop downloads update themselves (the stores update theirs); Linux is told.
+                      if (selfUpdating || updateNoticeOnly) const _UpdatesRows(),
+                      // Mac: start with the system, ready for the quick-ask shortcut and the menu bar icon.
+                      if (ref.watch(launchAtLoginProvider).value case final on?)
+                        SwitchListTile(
+                          key: const Key('openAtLogin'),
+                          secondary: Icon(LucideIcons.power, color: scheme.onSurfaceVariant),
+                          title: Text(l10n.openAtLogin),
+                          subtitle: Text(l10n.openAtLoginHelp),
+                          value: on,
+                          onChanged: (v) async {
+                            await runGuarded(context, () => setLaunchAtLogin(v));
+                            ref.invalidate(launchAtLoginProvider);
+                          },
+                        ),
+                      GroupedTile(
+                        icon: LucideIcons.languages,
+                        title: l10n.language,
+                        trailing: Text(_languageName(Localizations.localeOf(context)), style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -319,7 +348,7 @@ String _roleLabel(BuildContext context, OrgRole role) => switch (role) {
   _ => context.l10n.roleMember,
 };
 
-/// Light or dark, plus the color scheme and background, each with a preview.
+/// Light or dark, and the theme (its page holds the color scheme, fonts and background, D-182).
 class _AppearanceCard extends ConsumerWidget {
   const _AppearanceCard();
 
@@ -329,7 +358,6 @@ class _AppearanceCard extends ConsumerWidget {
     final appearance = ref.watch(appearanceProvider);
     final notifier = ref.read(appearanceProvider.notifier);
     final scheme = context.colorScheme;
-    final wallpaper = appearance.wallpaper;
     Widget row({required Key key, required Widget leading, required String title, required String subtitle, required String route}) => InkWell(
       key: key,
       borderRadius: BorderRadius.circular(AppRadius.row),
@@ -382,444 +410,8 @@ class _AppearanceCard extends ConsumerWidget {
             subtitle: [...builtInPresets, ...ref.watch(savedThemesProvider)].where((p) => p.matches(appearance)).firstOrNull?.name ?? l10n.currentLook,
             route: '/settings/themes',
           ),
-          Divider(height: 1, indent: 56, color: context.appColors.hairline),
-          row(
-            key: const Key('settingsTheme'),
-            leading: SchemeDots(colors: appearance.scheme.colors(Theme.of(context).brightness), size: 18),
-            title: l10n.colorScheme,
-            subtitle: appearance.scheme.name,
-            route: '/settings/theme',
-          ),
-          Divider(height: 1, indent: 56, color: context.appColors.hairline),
-          row(
-            key: const Key('settingsFonts'),
-            leading: Text('Aa', style: context.textTheme.titleLarge?.copyWith(color: scheme.primary)),
-            title: l10n.fonts,
-            subtitle: '${appearance.headingFont} · ${appearance.bodyFont}',
-            route: '/settings/fonts',
-          ),
-          Divider(height: 1, indent: 56, color: context.appColors.hairline),
-          row(
-            key: const Key('settingsBackground'),
-            leading: Container(
-              width: 40,
-              height: 40,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.appColors.hairline),
-              ),
-              child: Wallpaper(force: true, specOverride: WallpaperTheme.of(wallpaper.copyWith(everywhere: true), scheme), child: const SizedBox.expand()),
-            ),
-            title: l10n.background,
-            subtitle: [
-              wallpaper.pattern.label,
-              wallpaper.palette == WallpaperPalette.theme ? l10n.backgroundThemeColors : wallpaper.palette.label,
-              if (!wallpaper.everywhere) l10n.chatsOnly,
-            ].join(' · '),
-            route: '/settings/background',
-          ),
         ],
       ),
-    );
-  }
-}
-
-/// Persona, name and autonomy for one bot.
-class BotSettingsScreen extends ConsumerStatefulWidget {
-  const BotSettingsScreen({super.key, required this.botId});
-  final String botId;
-
-  @override
-  ConsumerState<BotSettingsScreen> createState() => _BotSettingsScreenState();
-}
-
-class _BotSettingsScreenState extends ConsumerState<BotSettingsScreen> {
-  TextEditingController? _name;
-  TextEditingController? _persona;
-  String? _autonomy;
-  String? _credentialId;
-  String? _model;
-  String? _avatar;
-  var _avatarLoaded = false;
-  var _busy = false;
-
-  @override
-  void dispose() {
-    _name?.dispose();
-    _persona?.dispose();
-    super.dispose();
-  }
-
-  bool _dirty(Bot bot) =>
-      _name!.text.trim() != bot.name ||
-      _persona!.text != bot.personaMd ||
-      _autonomy != bot.autonomy.value ||
-      _credentialId != bot.modelPolicy.primary?.credentialId ||
-      _model != bot.modelPolicy.primary?.model ||
-      _avatar != bot.avatarUrl;
-
-  Future<void> _save(Bot bot) async {
-    final l10n = context.l10n;
-    setState(() => _busy = true);
-    final modelChanged = _credentialId != bot.modelPolicy.primary?.credentialId || _model != bot.modelPolicy.primary?.model;
-    final policy = modelChanged && _credentialId != null && (_model ?? '').isNotEmpty
-        ? {
-            ...bot.modelPolicy.toJson(),
-            'primary': {'credential_id': _credentialId, 'model': _model},
-          }
-        : null;
-    final ok = await runGuarded(context, () async {
-      await ref
-          .read(backendProvider)
-          .updateBot(bot.id, name: _name!.text.trim(), persona: _persona!.text, autonomy: _autonomy, modelPolicy: policy, avatarUrl: _avatar == bot.avatarUrl ? null : (_avatar ?? ''));
-      return true;
-    });
-    if (!mounted) return;
-    setState(() => _busy = false);
-    if (ok == true) {
-      ref.invalidate(botsProvider);
-      showMessage(context, l10n.saved);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = context.colorScheme;
-    final bot = ref.watch(botProvider(widget.botId));
-    if (bot == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    _name ??= TextEditingController(text: bot.name);
-    _persona ??= TextEditingController(text: bot.personaMd);
-    _autonomy ??= bot.autonomy.value;
-    _credentialId ??= bot.modelPolicy.primary?.credentialId;
-    _model ??= bot.modelPolicy.primary?.model;
-    if (!_avatarLoaded) {
-      _avatar = bot.avatarUrl;
-      _avatarLoaded = true;
-    }
-    final keys = (ref.watch(credentialsProvider).value ?? const <Credential>[])
-        .where((k) => const {ProviderId.openrouter, ProviderId.openai, ProviderId.anthropic, ProviderId.google, ProviderId.xai, ProviderId.openaiCompatible}.contains(k.provider))
-        .toList();
-    final computers = ref.watch(computersProvider).value ?? const <Computer>[];
-    final usable = computers.where((c) => c.kind == ComputerKindEnum.team || c.kind == ComputerKindEnum.local || c.ownerBotId == bot.id).toList();
-    final dirty = _dirty(bot);
-    final name = _name!.text.trim().isEmpty ? bot.name : _name!.text.trim();
-    final levels = [
-      ('ask_always', LucideIcons.hand, l10n.autonomyAskAlways, l10n.autonomyAskAlwaysHelp),
-      ('ask_risky', LucideIcons.shield, l10n.autonomyAskRisky, l10n.autonomyAskRiskyHelp),
-      ('autonomous', LucideIcons.zap, l10n.autonomyAutonomous, l10n.autonomyAutonomousHelp),
-    ];
-    return SubPage(
-      title: l10n.botSettings,
-      subtitle: bot.name,
-      actions: [
-        if (dirty)
-          Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: GlowButton(onPressed: _busy ? null : () => _save(bot), child: Text(l10n.save)),
-          ),
-      ],
-      children: [
-        AppCard(
-          padding: const EdgeInsets.all(AppSpace.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: AppSpace.md,
-            children: [
-              Row(
-                children: [
-                  BotAvatar(name: name, avatar: _avatar, size: 64, status: bot.status),
-                  const SizedBox(width: AppSpace.md),
-                  Expanded(
-                    child: TextField(
-                      controller: _name,
-                      decoration: InputDecoration(labelText: l10n.botName),
-                      onChanged: (_) => setState(() {}),
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: AppSpace.sm,
-                children: [
-                  Text(l10n.botIcon, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
-                  MascotPicker(value: _avatar, initials: botInitials(name), initialsLabel: l10n.botIconInitials, onChanged: (v) => setState(() => _avatar = v)),
-                ],
-              ),
-              TextField(
-                controller: _persona,
-                decoration: InputDecoration(labelText: l10n.persona, hintText: l10n.personaHint, alignLabelWithHint: true),
-                maxLines: 12,
-                minLines: 4,
-                onChanged: (_) => setState(() {}),
-              ),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
-                  key: const Key('loadPersona'),
-                  icon: const Icon(LucideIcons.swatchBook, size: 18),
-                  label: Text(l10n.loadPersona),
-                  onPressed: () async {
-                    final choice = await showPersonaGallery(context, allowBlank: false);
-                    final t = choice?.template;
-                    if (t == null || !context.mounted) return;
-                    if (_persona!.text.trim().isNotEmpty) {
-                      final ok = await showConfirm(context: context, title: l10n.replaceInstructionsTitle, message: l10n.replaceInstructionsBody(t.name), confirmLabel: l10n.replace);
-                      if (!ok) return;
-                    }
-                    setState(() => _persona!.text = t.persona ?? '');
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        SectionHeader(title: l10n.thinking0),
-        AppCard(
-          padding: const EdgeInsets.all(AppSpace.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: AppSpace.md,
-            children: [
-              DropdownButtonFormField<String>(
-                isExpanded: true,
-                key: ValueKey('botKey-${keys.length}'),
-                initialValue: keys.any((k) => k.id == _credentialId) ? _credentialId : null,
-                decoration: InputDecoration(labelText: l10n.modelKey, prefixIcon: const Icon(LucideIcons.keyRound, size: 20)),
-                items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} · ${providerLabel(k.provider)}', maxLines: 1, overflow: TextOverflow.ellipsis))],
-                onChanged: (v) => setState(() {
-                  _credentialId = v;
-                  for (final k in keys) {
-                    if (k.id == v) _model = ref.read(backendProvider).defaultModelFor(k.provider.value) ?? _model;
-                  }
-                }),
-              ),
-              ModelPickerField(credentialId: _credentialId, value: _model ?? '', onChanged: (m) => setState(() => _model = m)),
-            ],
-          ),
-        ),
-        SectionHeader(title: l10n.autonomy),
-        RadioGroup<String>(
-          groupValue: _autonomy,
-          onChanged: (v) => setState(() => _autonomy = v),
-          child: Column(
-            spacing: AppSpace.xs,
-            children: [
-              for (final (value, icon, title, help) in levels)
-                AppCard(
-                  key: Key('autonomy-$value'),
-                  onTap: () => setState(() => _autonomy = value),
-                  padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
-                  borderColor: _autonomy == value ? scheme.primary : null,
-                  borderWidth: _autonomy == value ? 1.5 : 1,
-                  color: _autonomy == value ? Color.alphaBlend(scheme.primary.withValues(alpha: 0.06), scheme.surfaceContainerLow) : null,
-                  child: Row(
-                    children: [
-                      Icon(icon, color: _autonomy == value ? scheme.primary : scheme.onSurfaceVariant),
-                      const SizedBox(width: AppSpace.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(title, style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700)),
-                            Text(help, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.35)),
-                          ],
-                        ),
-                      ),
-                      Radio<String>(value: value),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-        SectionHeader(title: l10n.computerAndTools),
-        GroupedCard(
-          children: [
-            Builder(
-              builder: (context) {
-                final current = usable.where((c) => c.id == bot.defaultComputerId).firstOrNull;
-                return GroupedTile(
-                  key: const Key('botComputer'),
-                  icon: LucideIcons.monitor,
-                  title: l10n.botComputer,
-                  subtitle: current?.name ?? l10n.botComputerAuto,
-                  trailing: Icon(LucideIcons.chevronsUpDown, color: scheme.onSurfaceVariant),
-                  onTap: () async {
-                    final picked = await showChoiceSheet<String?>(
-                      context,
-                      title: l10n.botComputer,
-                      subtitle: l10n.botComputerHelp,
-                      icon: LucideIcons.monitor,
-                      selected: current?.id,
-                      choices: [
-                        Choice(value: null, label: l10n.botComputerAuto, subtitle: l10n.botComputerDefault, icon: LucideIcons.wandSparkles),
-                        for (final c in usable)
-                          Choice(
-                            value: c.id,
-                            label: c.name,
-                            subtitle: [
-                              if ((c.kind == ComputerKindEnum.team ? l10n.teamComputer : l10n.privateComputer) != c.name) c.kind == ComputerKindEnum.team ? l10n.teamComputer : l10n.privateComputer,
-                              c.profile == ComputerProfileEnum.desktop ? l10n.profileDesktop : l10n.profileHeadless,
-                            ].join(' · '),
-                            icon: c.profile == ComputerProfileEnum.desktop ? LucideIcons.monitor : LucideIcons.squareTerminal,
-                          ),
-                      ],
-                    );
-                    if (picked == null || !context.mounted) return;
-                    await runGuarded(context, () => ref.read(backendProvider).setBotComputer(bot.id, picked.value));
-                    ref.invalidate(botsProvider);
-                  },
-                );
-              },
-            ),
-            GroupedTile(
-              key: const Key('botVoice'),
-              icon: LucideIcons.speech,
-              title: l10n.voiceSettings,
-              subtitle: l10n.voiceSettingsHelp,
-              onTap: () => showAdaptiveSheet<void>(
-                context: context,
-                builder: (_) => VoiceSettingsDialog(botId: bot.id),
-              ),
-            ),
-            GroupedTile(icon: LucideIcons.clock, title: l10n.routines, onTap: () => context.push('/bots/${bot.id}/routines')),
-            GroupedTile(icon: LucideIcons.puzzle, title: l10n.botIntegrations, onTap: () => context.push('/bots/${bot.id}/integrations')),
-            GroupedTile(icon: LucideIcons.brain, title: l10n.memory, onTap: () => context.push('/bots/${bot.id}/memory')),
-          ],
-        ),
-        const SizedBox(height: AppSpace.md),
-        GroupedCard(
-          children: [
-            Builder(
-              builder: (context) {
-                final folders = ref.watch(botFoldersProvider).value ?? const <BotFolder>[];
-                final current = folders.where((f) => f.id == bot.folderId).firstOrNull;
-                return GroupedTile(
-                  key: const Key('botFolder'),
-                  icon: LucideIcons.folder,
-                  title: l10n.botFolder,
-                  subtitle: current?.name ?? l10n.noFolder,
-                  trailing: Icon(LucideIcons.chevronsUpDown, color: scheme.onSurfaceVariant),
-                  onTap: () async {
-                    const fresh = '\u0000new';
-                    final picked = await showChoiceSheet<String?>(
-                      context,
-                      title: l10n.botFolder,
-                      icon: LucideIcons.folder,
-                      selected: current?.name,
-                      choices: [
-                        Choice(value: null, label: l10n.noFolder, icon: LucideIcons.folderMinus),
-                        for (final f in folders) Choice(value: f.name, label: f.name, icon: LucideIcons.folder),
-                        Choice(value: fresh, label: l10n.newFolder, icon: LucideIcons.folderPlus),
-                      ],
-                    );
-                    if (picked == null || !context.mounted) return;
-                    var name = picked.value;
-                    if (name == fresh) {
-                      name = (await showTextPrompt(context, title: l10n.newFolder, label: l10n.folderName, submitLabel: l10n.save, fieldKey: const Key('folderName')))?.trim();
-                      if (name == null || name.isEmpty || !context.mounted) return;
-                    }
-                    final org = ref.read(currentOrgProvider);
-                    if (org == null) return;
-                    await runGuarded(context, () => ref.read(backendProvider).setBotFolder(org.id, bot.id, name));
-                    ref
-                      ..invalidate(botsProvider)
-                      ..invalidate(botFoldersProvider);
-                  },
-                );
-              },
-            ),
-            GroupedTile(key: const Key('botSharing'), icon: LucideIcons.users, title: l10n.sharing, subtitle: l10n.sharingRow, onTap: () => context.push('/bots/${bot.id}/sharing')),
-            GroupedTile(key: const Key('botReplays'), icon: LucideIcons.listVideo, title: l10n.replays, subtitle: l10n.replaysRow, onTap: () => context.push('/bots/${bot.id}/replays')),
-            GroupedTile(key: const Key('botChatApps'), icon: LucideIcons.messagesSquare, title: l10n.chatApps, subtitle: l10n.chatAppsRow, onTap: () => context.push('/bots/${bot.id}/chat-apps')),
-            GroupedTile(key: const Key('botLinks'), icon: LucideIcons.link, title: l10n.links, subtitle: l10n.linksRow, onTap: () => context.push('/bots/${bot.id}/links')),
-            GroupedTile(
-              key: const Key('botA2a'),
-              icon: LucideIcons.bot,
-              title: l10n.a2aPublish,
-              subtitle: l10n.a2aPublishHelp,
-              onTap: () => showAdaptiveSheet<void>(
-                context: context,
-                builder: (_) => BotA2aSheet(botId: bot.id),
-              ),
-            ),
-            GroupedTile(key: const Key('botKnowledge'), icon: LucideIcons.library, title: l10n.knowledge, subtitle: l10n.knowledgeRow, onTap: () => context.push('/bots/${bot.id}/knowledge')),
-            GroupedTile(key: const Key('botPlugins'), icon: LucideIcons.puzzle, title: l10n.plugins, subtitle: l10n.pluginsRow, onTap: () => context.push('/bots/${bot.id}/plugins')),
-            GroupedTile(key: const Key('botPages'), icon: LucideIcons.fileText, title: l10n.pages, subtitle: l10n.pagesRow, onTap: () => context.push('/pages?bot=${bot.id}')),
-            GroupedTile(key: const Key('botWatchers'), icon: LucideIcons.eye, title: l10n.watchers, subtitle: l10n.watchersRow, onTap: () => context.push('/bots/${bot.id}/watchers')),
-            GroupedTile(key: const Key('botRules'), icon: LucideIcons.shieldCheck, title: l10n.actionRules, subtitle: l10n.actionRulesRow, onTap: () => context.push('/bots/${bot.id}/rules')),
-            GroupedTile(
-              key: const Key('botCheckins'),
-              icon: LucideIcons.sun,
-              title: l10n.checkins,
-              subtitle: ref.watch(botCheckinsProvider(bot.id)).value?.enabled == true ? l10n.on : l10n.off,
-              onTap: () => showCheckins(context, ref, bot.id),
-            ),
-            GroupedTile(
-              key: const Key('botQuiet'),
-              icon: LucideIcons.bellRing,
-              title: l10n.botNotifications,
-              subtitle: switch (ref.watch(botQuietProvider(bot.id)).value?.mode) {
-                'always' => l10n.quietAlways,
-                'custom' => l10n.quietCustom,
-                _ => l10n.quietDefault,
-              },
-              onTap: () => showBotQuiet(context, ref, bot.id),
-            ),
-            GroupedTile(
-              key: const Key('rerunSetup'),
-              icon: LucideIcons.sparkles,
-              title: l10n.rerunSetup,
-              subtitle: l10n.rerunSetupHelp,
-              onTap: () async {
-                final conv = await runGuarded(context, () => ref.read(backendProvider).startBotSetup(bot.id));
-                if (conv == null || !context.mounted) return;
-                ref.invalidate(botsProvider);
-                GoRouter.maybeOf(context)?.go('/bots/${bot.id}/chat?c=$conv');
-              },
-            ),
-            GroupedTile(key: const Key('shareBot'), icon: LucideIcons.share2, title: l10n.shareAsTemplate, subtitle: l10n.shareAsTemplateRow, onTap: () => showShareBot(context, bot)),
-            GroupedTile(key: const Key('botHistory'), icon: LucideIcons.history, title: l10n.settingsHistory, subtitle: l10n.settingsHistoryHelp, onTap: () => context.push('/bots/${bot.id}/history')),
-            GroupedTile(
-              key: const Key('archiveBot'),
-              icon: LucideIcons.archive,
-              title: l10n.archiveBot,
-              onTap: () async {
-                final ok = await showConfirm(
-                  context: context,
-                  title: l10n.archiveBotTitle(bot.name),
-                  message: l10n.archiveBotBody,
-                  confirmLabel: l10n.archive,
-                  destructive: true,
-                  icon: LucideIcons.archive,
-                  confirmKey: const Key('confirmArchive'),
-                );
-                if (!ok || !context.mounted) return;
-                final done = await runGuarded(context, () async {
-                  await ref.read(backendProvider).setBotArchived(bot.id, true);
-                  return true;
-                });
-                if (done != true || !context.mounted) return;
-                ref
-                  ..invalidate(botsProvider)
-                  ..invalidate(archivedBotsProvider);
-                showMessage(context, l10n.botArchived(bot.name));
-                GoRouter.maybeOf(context)?.go('/bots');
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpace.lg),
-        GlowButton.icon(
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-          onPressed: _busy || !dirty ? null : () => _save(bot),
-          icon: const Icon(LucideIcons.check, size: 20),
-          label: Text(l10n.saveChanges),
-        ),
-      ],
     );
   }
 }
@@ -880,7 +472,9 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final cloud = ref.watch(billingProvider).value?.enabled == true;
     String label(String p) => switch (p) {
+      'google' => 'Google',
       'elevenlabs' => 'ElevenLabs',
       'openai' => 'OpenAI',
       'cartesia' => 'Cartesia',
@@ -897,6 +491,12 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
       busy: _busy,
       onSubmit: _save,
       children: [
+        if (cloud)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpace.md),
+            child: Text(l10n.casamaCloudModelLocked),
+          ),
+        if (!cloud)
         DropdownButtonFormField<String?>(
           isExpanded: true,
           key: const Key('ttsProvider'),
@@ -904,7 +504,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
           decoration: InputDecoration(labelText: l10n.readAloudProvider, prefixIcon: const Icon(LucideIcons.volume2, size: 20)),
           items: [
             DropdownMenuItem(value: null, child: Text(l10n.automatic)),
-            for (final p in const ['elevenlabs', 'openai', 'cartesia', 'fish_audio']) DropdownMenuItem(value: p, child: Text(label(p))),
+            for (final p in const ['google', 'elevenlabs', 'openai', 'cartesia', 'fish_audio']) DropdownMenuItem(value: p, child: Text(label(p))),
           ],
           onChanged: (v) => setState(() => _tts = v),
         ),
@@ -912,6 +512,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
           controller: _voice,
           decoration: InputDecoration(labelText: l10n.voiceId, helperText: l10n.voiceIdHelp, prefixIcon: const Icon(LucideIcons.audioLines, size: 20)),
         ),
+        if (!cloud)
         DropdownButtonFormField<String?>(
           isExpanded: true,
           key: const Key('sttProvider'),

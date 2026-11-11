@@ -71,6 +71,7 @@ export async function startHarness(
       egressExemptCidrs?: string[];
       providerBases?: {
         fal?: string;
+        openrouter?: string;
         brave?: string;
         tavily?: string;
         openai?: string;
@@ -158,6 +159,7 @@ export async function startHarness(
       push: opts.worker.push,
       egressExemptCidrs: opts.worker.egressExemptCidrs,
       providerBases: opts.worker.providerBases,
+      serverGeminiKey: env.GOOGLE_AI_API_KEY,
       deviceWaitMs: opts.worker.deviceWaitMs,
       apiDatabaseRole: opts.worker.apiDatabaseRole,
       publicApiUrl:

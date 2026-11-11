@@ -80,12 +80,14 @@ Class | Method | HTTP request | Description
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**deleteActionRule**](doc/ActionRulesApi.md#deleteactionrule) | **DELETE** /v1/action-rules/{id} | 
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**listActionRules**](doc/ActionRulesApi.md#listactionrules) | **GET** /v1/action-rules | A bot&#39;s rules plus the workspace&#39;s (or only the workspace&#39;s without bot_id)
 [*AdminApi*](doc/AdminApi.md) | [**adminAbuseEvents**](doc/AdminApi.md#adminabuseevents) | **GET** /v1/admin/abuse | Recent abuse signals and actions (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminCloudModels**](doc/AdminApi.md#admincloudmodels) | **GET** /v1/admin/models | The models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminConnectionSettings**](doc/AdminApi.md#adminconnectionsettings) | **GET** /v1/admin/connections | How apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
 [*AdminApi*](doc/AdminApi.md) | [**adminOverview**](doc/AdminApi.md#adminoverview) | **GET** /v1/admin/overview | Instance totals (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminServices**](doc/AdminApi.md#adminservices) | **GET** /v1/admin/services | Configured providers and system health
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdates**](doc/AdminApi.md#adminupdates) | **GET** /v1/admin/updates | Whether a newer Casama release exists
 [*AdminApi*](doc/AdminApi.md) | [**adminUsers**](doc/AdminApi.md#adminusers) | **GET** /v1/admin/users | Everyone on this instance
+[*AdminApi*](doc/AdminApi.md) | [**setAdminCloudModels**](doc/AdminApi.md#setadmincloudmodels) | **PUT** /v1/admin/models | Change the models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminConnectionSettings**](doc/AdminApi.md#setadminconnectionsettings) | **PUT** /v1/admin/connections | Choose how apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setOrgLimits**](doc/AdminApi.md#setorglimits) | **PATCH** /v1/admin/orgs/{id}/limits | Set a workspace&#39;s quotas
 [*AdminApi*](doc/AdminApi.md) | [**suspendOrg**](doc/AdminApi.md#suspendorg) | **POST** /v1/admin/orgs/{id}/suspend | Suspend a workspace: stops its computers and runs, keeps its data
@@ -185,6 +187,8 @@ Class | Method | HTTP request | Description
 [*FilesApi*](doc/FilesApi.md) | [**importWorkspaceFiles**](doc/FilesApi.md#importworkspacefiles) | **POST** /v1/orgs/{id}/files/import | Create and update routines and skills from files (dry_run shows what would change)
 [*FilesApi*](doc/FilesApi.md) | [**runGitSync**](doc/FilesApi.md#rungitsync) | **POST** /v1/orgs/{id}/git-sync/run | Sync on the worker&#39;s next minute
 [*FilesApi*](doc/FilesApi.md) | [**setGitSync**](doc/FilesApi.md#setgitsync) | **PUT** /v1/orgs/{id}/git-sync | 
+[*GalleryApi*](doc/GalleryApi.md) | [**getGalleryItem**](doc/GalleryApi.md#getgalleryitem) | **GET** /v1/gallery/{type}/{id} | One gallery item, including the document the app applies
+[*GalleryApi*](doc/GalleryApi.md) | [**listGallery**](doc/GalleryApi.md#listgallery) | **GET** /v1/gallery | Themes, color schemes, wallpapers and skills from the open gallery (D-184)
 [*ImportApi*](doc/ImportApi.md) | [**getMemoryImportPrompt**](doc/ImportApi.md#getmemoryimportprompt) | **GET** /v1/memory-import/prompt | The prompt to paste into ChatGPT or Claude to get your saved memories
 [*ImportApi*](doc/ImportApi.md) | [**parseMemoryImport**](doc/ImportApi.md#parsememoryimport) | **POST** /v1/memory-import/parse | 
 [*ImportApi*](doc/ImportApi.md) | [**saveImportedMemories**](doc/ImportApi.md#saveimportedmemories) | **POST** /v1/bots/{id}/memories/import | Add the memories the person kept
@@ -439,6 +443,7 @@ Class | Method | HTTP request | Description
  - [CheckpointCreatedEvent](doc/CheckpointCreatedEvent.md)
  - [CheckpointCreatedEventPayload](doc/CheckpointCreatedEventPayload.md)
  - [CheckpointList](doc/CheckpointList.md)
+ - [CloudModels](doc/CloudModels.md)
  - [Computer](doc/Computer.md)
  - [ComputerFileEntry](doc/ComputerFileEntry.md)
  - [ComputerFileList](doc/ComputerFileList.md)
@@ -537,6 +542,10 @@ Class | Method | HTTP request | Description
  - [ForYouApproval](doc/ForYouApproval.md)
  - [ForYouBrief](doc/ForYouBrief.md)
  - [FulfillSecretRequestBody](doc/FulfillSecretRequestBody.md)
+ - [GalleryAuthor](doc/GalleryAuthor.md)
+ - [GalleryDetail](doc/GalleryDetail.md)
+ - [GalleryItem](doc/GalleryItem.md)
+ - [GalleryList](doc/GalleryList.md)
  - [GitHubSkillPreview](doc/GitHubSkillPreview.md)
  - [GitHubSkillPreviewRequest](doc/GitHubSkillPreviewRequest.md)
  - [GitSyncStatus](doc/GitSyncStatus.md)

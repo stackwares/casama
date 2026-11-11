@@ -1,11 +1,11 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/core/widgets.dart';
 import 'package:casama_app/features/bots/bots_screen.dart';
 import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'package:casama_app/ui/bot_avatar.dart';
@@ -25,15 +25,10 @@ void main() {
     expect(Mascot.fromAvatar('https://example.com/a.png'), isNull);
   });
 
-  testWidgets('every mascot ships an animated loop Flutter can decode, plus a still', (tester) async {
+  testWidgets('every mascot ships a still pose (the loops are checked in mascot_lottie_test)', (tester) async {
     await tester.runAsync(() async {
       for (final m in Mascot.values) {
-        final codec = await ui.instantiateImageCodec((await rootBundle.load(m.animatedAsset)).buffer.asUint8List());
-        expect(codec.frameCount, greaterThan(60), reason: m.name);
-        final frame = await codec.getNextFrame();
-        expect(frame.image.width, MascotImage.assetPx);
-        expect(frame.duration.inMilliseconds, inInclusiveRange(60, 100));
-        expect((await rootBundle.load(m.stillAsset)).lengthInBytes, greaterThan(1000));
+        expect((await rootBundle.load(m.stillAsset)).lengthInBytes, greaterThan(1000), reason: m.name);
       }
     });
   });
@@ -44,8 +39,11 @@ void main() {
     await tester.pumpWidget(app(const BotAvatar(name: 'Chief', avatar: 'mascot:giggly', size: 64)));
     expect(find.byType(MascotImage), findsOneWidget);
     expect(find.text('C'), findsNothing);
+    final lottie = tester.widget<LottieBuilder>(find.byType(LottieBuilder));
+    expect(lottie.lottie, isA<AssetLottie>().having((a) => a.assetName, 'asset', 'assets/mascots/giggly.json'));
+    // Until the loop has loaded, the still pose stands in.
     final image = tester.widget<Image>(find.byType(Image));
-    expect((image.image as ResizeImage).imageProvider, isA<AssetImage>().having((a) => a.assetName, 'asset', 'assets/mascots/giggly.webp'));
+    expect(((image.image as ResizeImage).imageProvider as AssetImage).assetName, 'assets/mascots/giggly.png');
   });
 
   testWidgets('small mascot avatars stay still; no mascot shows initials', (tester) async {
@@ -55,7 +53,15 @@ void main() {
     ])));
     final image = tester.widget<Image>(find.byType(Image));
     expect(((image.image as ResizeImage).imageProvider as AssetImage).assetName, 'assets/mascots/wow.png');
+    expect(find.byType(LottieBuilder), findsNothing);
     expect(find.text('C'), findsOneWidget);
+  });
+
+  testWidgets('with no bots, Chats shows the blank bot instead of an icon', (tester) async {
+    await tester.pumpWidget(app(EmptyState(illustration: const BlankBotImage(size: 132), title: 'No bots yet', message: 'Make one')));
+    final lottie = tester.widget<LottieBuilder>(find.byType(LottieBuilder));
+    expect(lottie.lottie, isA<AssetLottie>().having((a) => a.assetName, 'asset', 'assets/mascots/blank.json'));
+    expect(find.byType(Icon), findsNothing);
   });
 
   testWidgets('the Casama mark is one of the brand mascots', (tester) async {

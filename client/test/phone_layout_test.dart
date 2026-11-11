@@ -109,7 +109,7 @@ void main() {
     });
   }
 
-  testWidgets('back from bot settings returns to the chat it was opened from', (tester) async {
+  testWidgets('back from the bot profile returns to the chat it was opened from', (tester) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
@@ -131,13 +131,13 @@ void main() {
 
     router.go('/bots/$botId/chat');
     await settle();
-    // The bot's name in the chat header opens its settings.
+    // The bot's name in the chat header opens its profile.
     await tester.tap(find.text('Ada').first);
     await settle();
-    expect(find.text('Bot settings'), findsOneWidget);
+    expect(find.text('Bot profile'), findsOneWidget);
     await tester.tap(find.byTooltip('Back').first);
     await settle();
-    expect(find.text('Bot settings'), findsNothing);
+    expect(find.text('Bot profile'), findsNothing);
     expect(find.byKey(const Key('messageInput')).hitTestable(), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(minutes: 1));

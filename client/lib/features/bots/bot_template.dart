@@ -18,6 +18,7 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
+import '../routines/cron_words.dart';
 import 'model_picker.dart';
 
 /// Share a bot as a template (D-110): a file or a link with its instructions, skills, routines and
@@ -198,7 +199,7 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
                   for (final k in t.skills ?? const <BotTemplateFileSkillsInner>[])
                     GroupedTile(icon: LucideIcons.bookOpen, title: k.name, subtitle: k.description),
                   for (final r in t.routines ?? const <BotTemplateFileRoutinesInner>[])
-                    GroupedTile(icon: LucideIcons.clock, title: r.name, subtitle: r.scheduleCron),
+                    GroupedTile(icon: LucideIcons.clock, title: r.name, subtitle: scheduleWords(context, r.scheduleCron)),
                   for (final c in t.connections ?? const <BotTemplateFileConnectionsInner>[])
                     GroupedTile(icon: LucideIcons.plug, title: c.name, subtitle: l10n.connectAfterImport),
                 ],

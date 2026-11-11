@@ -10,6 +10,10 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 ///   --dart-define=POSTHOG_HOST=...        PostHog Cloud region or a self-hosted instance
 ///   --dart-define=ERROR_REPORTING=auto|sentry|posthog|none
 /// Payloads never carry message text, prompts, secrets or emails.
+///
+/// Native PostHog auto-init is disabled in the iOS and macOS Info.plists and the Android
+/// manifest. Without that, the plugin demands a token at process start and logs an error
+/// on every launch. [Posthog.setup] still runs here when a key is set.
 class Telemetry {
   static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
   static const posthogKey = String.fromEnvironment('POSTHOG_API_KEY');

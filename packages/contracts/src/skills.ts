@@ -9,7 +9,11 @@ export const CatalogSkill = z
     name: z.string(),
     description: z.string(),
     category: z.string(),
+    icon: z.string().nullable().optional().openapi({
+      description: "A Lucide icon name (kebab-case); apps fall back to the category's icon",
+    }),
     files: z.array(z.string()),
+    skill_md: z.string().optional().openapi({ description: "The raw SKILL.md, for a preview" }),
   })
   .openapi("CatalogSkill");
 
@@ -24,7 +28,7 @@ export const InstalledSkill = z
     bot_id: Uuid.nullable(),
     name: z.string(),
     description: z.string(),
-    source: z.enum(["manual", "catalog", "github", "bot"]),
+    source: z.enum(["manual", "catalog", "github", "bot", "gallery"]),
     source_ref: z.record(z.string(), z.unknown()),
     category: z.string().nullable(),
     file_count: z.number().int(),
@@ -38,7 +42,16 @@ export const InstallCatalogSkillRequest = z
     bot_id: Uuid.optional().openapi({
       description: "Install for one bot; default the whole workspace",
     }),
-    catalog_id: z.string().min(1).max(64),
+    catalog_id: z.string().min(1).max(64).optional(),
+    gallery_id: z
+      .string()
+      .min(1)
+      .max(64)
+      .optional()
+      .openapi({ description: "Install a skill from the gallery instead of the bundled catalog" }),
+  })
+  .refine((v) => Boolean(v.catalog_id) !== Boolean(v.gallery_id), {
+    message: "Give a catalog skill or a gallery skill.",
   })
   .openapi("InstallCatalogSkillRequest");
 

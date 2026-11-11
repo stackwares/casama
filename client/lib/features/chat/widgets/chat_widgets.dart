@@ -15,6 +15,7 @@ import '../../../theme/app_tokens.dart';
 import '../../files/file_preview.dart';
 import '../../settings/totp_scan.dart';
 import '../../../ui/app_card.dart';
+import '../../../ui/tool_words.dart';
 import '../../../ui/bot_avatar.dart';
 import '../../../ui/cover_image.dart';
 import '../../../ui/motion.dart';
@@ -30,7 +31,15 @@ import '../../devices/device_labels.dart';
 /// What you wrote: a bubble on the right in the accent tint, the tail corner tucked in, with any
 /// attached files above it.
 class UserBubble extends StatelessWidget {
-  const UserBubble({super.key, required this.text, this.attachments = const [], this.onEdit, this.siblingIndex = 1, this.siblingCount = 1, this.onBranch});
+  const UserBubble({
+    super.key,
+    required this.text,
+    this.attachments = const [],
+    this.onEdit,
+    this.siblingIndex = 1,
+    this.siblingCount = 1,
+    this.onBranch,
+  });
   final String text;
   final List<AttachmentRef> attachments;
 
@@ -55,13 +64,20 @@ class UserBubble extends StatelessWidget {
                 onPressed: siblingIndex > 1 ? () => onBranch!(-1) : null,
                 icon: const Icon(LucideIcons.chevronLeft),
               ),
-              Text('$siblingIndex/$siblingCount', style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+              Text(
+                '$siblingIndex/$siblingCount',
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
               IconButton(
                 key: const Key('branchNext'),
                 visualDensity: VisualDensity.compact,
                 iconSize: 16,
                 tooltip: context.l10n.nextVersion,
-                onPressed: siblingIndex < siblingCount ? () => onBranch!(1) : null,
+                onPressed: siblingIndex < siblingCount
+                    ? () => onBranch!(1)
+                    : null,
                 icon: const Icon(LucideIcons.chevronRight),
               ),
             ],
@@ -76,9 +92,14 @@ class UserBubble extends StatelessWidget {
             alignment: WrapAlignment.end,
             spacing: AppSpace.xs,
             runSpacing: AppSpace.xs,
-            children: [for (final a in attachments) AttachmentTile(attachment: a)],
+            children: [
+              for (final a in attachments) AttachmentTile(attachment: a),
+            ],
           ),
-        if (text.isNotEmpty) ...[if (attachments.isNotEmpty) const SizedBox(height: 6), _bubble(context)],
+        if (text.isNotEmpty) ...[
+          if (attachments.isNotEmpty) const SizedBox(height: 6),
+          _bubble(context),
+        ],
         ?branches,
       ],
     );
@@ -87,29 +108,50 @@ class UserBubble extends StatelessWidget {
   Widget _bubble(BuildContext context) {
     final scheme = context.colorScheme;
     // Opaque, so it reads the same on any wallpaper.
-    final base = context.isDark ? scheme.surfaceContainerHigh : scheme.surfaceContainerLowest;
+    final base = context.isDark
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainerLowest;
     return LayoutBuilder(
       builder: (context, constraints) => Align(
         alignment: AlignmentDirectional.centerEnd,
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: (constraints.maxWidth * 0.85).clamp(0, 560)),
+          constraints: BoxConstraints(
+            maxWidth: (constraints.maxWidth * 0.85).clamp(0, 560),
+          ),
           child: MessageActions(
             text: text,
             onEdit: onEdit,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Color.alphaBlend(scheme.primary.withValues(alpha: context.isDark ? 0.3 : 0.16), base),
+                color: Color.alphaBlend(
+                  scheme.primary.withValues(alpha: context.isDark ? 0.3 : 0.16),
+                  base,
+                ),
                 borderRadius: const BorderRadiusDirectional.only(
                   topStart: Radius.circular(20),
                   topEnd: Radius.circular(20),
                   bottomStart: Radius.circular(20),
                   bottomEnd: Radius.circular(6),
                 ),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.05), blurRadius: 6, offset: const Offset(0, 1))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: context.isDark ? 0.2 : 0.05,
+                    ),
+                    blurRadius: 6,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 11),
-                child: Text(text, style: context.textTheme.bodyLarge?.copyWith(height: 1.4)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.md,
+                  vertical: 11,
+                ),
+                child: Text(
+                  text,
+                  style: context.textTheme.bodyLarge?.copyWith(height: 1.4),
+                ),
               ),
             ),
           ),
@@ -134,7 +176,14 @@ class BotTurnHeader extends StatelessWidget {
           BotAvatar(name: name, avatar: avatar, size: 24),
           const SizedBox(width: AppSpace.xs),
           Flexible(
-            child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
@@ -145,7 +194,12 @@ class BotTurnHeader extends StatelessWidget {
 /// The bot's reply in a bubble that reads on any wallpaper. Copy, read aloud, select and share
 /// live in the message menu (long-press, or right-click with a mouse).
 class AssistantMessage extends StatelessWidget {
-  const AssistantMessage({super.key, required this.entry, this.onSpeak, this.status});
+  const AssistantMessage({
+    super.key,
+    required this.entry,
+    this.onSpeak,
+    this.status,
+  });
   final MessageEntry entry;
   final VoidCallback? onSpeak;
 
@@ -154,11 +208,14 @@ class AssistantMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (entry.text.isEmpty && entry.streaming) return WorkingIndicator(status: status ?? context.l10n.thinking);
+    if (entry.text.isEmpty && entry.streaming)
+      return WorkingIndicator(status: status ?? context.l10n.thinking);
     final scheme = context.colorScheme;
     final bubble = DecoratedBox(
       decoration: BoxDecoration(
-        color: context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
+        color: context.isDark
+            ? scheme.surfaceContainer
+            : scheme.surfaceContainerLowest,
         borderRadius: const BorderRadiusDirectional.only(
           topStart: Radius.circular(6),
           topEnd: Radius.circular(20),
@@ -166,17 +223,31 @@ class AssistantMessage extends StatelessWidget {
           bottomEnd: Radius.circular(20),
         ),
         border: Border.all(color: context.appColors.hairline),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, AppSpace.sm),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.md,
+          AppSpace.sm,
+          AppSpace.md,
+          AppSpace.sm,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             ChatMarkdown(data: entry.text, selectable: false),
             // Its own layer: the dots animate every frame without repainting the reply's text.
-            if (entry.streaming) ...[const SizedBox(height: AppSpace.xs), RepaintBoundary(child: _TypingDots(color: scheme.primary))],
+            if (entry.streaming) ...[
+              const SizedBox(height: AppSpace.xs),
+              RepaintBoundary(child: _TypingDots(color: scheme.primary)),
+            ],
           ],
         ),
       ),
@@ -185,7 +256,13 @@ class AssistantMessage extends StatelessWidget {
       alignment: AlignmentDirectional.centerStart,
       child: entry.streaming
           ? bubble
-          : MessageActions(text: entry.text, markdown: true, onSpeak: onSpeak, speakKey: Key('speak-${entry.id}'), child: bubble),
+          : MessageActions(
+              text: entry.text,
+              markdown: true,
+              onSpeak: onSpeak,
+              speakKey: Key('speak-${entry.id}'),
+              child: bubble,
+            ),
     );
   }
 }
@@ -199,8 +276,12 @@ class _TypingDots extends StatefulWidget {
   State<_TypingDots> createState() => _TypingDotsState();
 }
 
-class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderStateMixin {
-  late final _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
+class _TypingDotsState extends State<_TypingDots>
+    with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
 
   @override
   void didChangeDependencies() {
@@ -263,17 +344,34 @@ class WorkingIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final still = MediaQuery.disableAnimationsOf(context);
-    Widget sparkle = Icon(LucideIcons.sparkles, size: 18, color: scheme.primary);
+    Widget sparkle = Icon(
+      LucideIcons.sparkles,
+      size: 18,
+      color: scheme.primary,
+    );
     Widget text = Text(
       status,
       key: ValueKey(status),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+      style: context.textTheme.bodyMedium?.copyWith(
+        color: scheme.onSurfaceVariant,
+        fontWeight: FontWeight.w500,
+      ),
     );
     if (!still) {
-      sparkle = Pulse(from: 0.8, to: 1.1, fadeFrom: 0.55, duration: const Duration(milliseconds: 700), child: sparkle);
-      text = Shimmer(key: ValueKey(status), color: scheme.primary.withValues(alpha: 0.7), child: text);
+      sparkle = Pulse(
+        from: 0.8,
+        to: 1.1,
+        fadeFrom: 0.55,
+        duration: const Duration(milliseconds: 700),
+        child: sparkle,
+      );
+      text = Shimmer(
+        key: ValueKey(status),
+        color: scheme.primary.withValues(alpha: 0.7),
+        child: text,
+      );
     }
     return Semantics(
       liveRegion: true,
@@ -285,7 +383,10 @@ class WorkingIndicator extends StatelessWidget {
             sparkle,
             const SizedBox(width: AppSpace.xs),
             Flexible(
-              child: AnimatedSwitcher(duration: AppMotion.of(context, AppMotion.fast), child: text),
+              child: AnimatedSwitcher(
+                duration: AppMotion.of(context, AppMotion.fast),
+                child: text,
+              ),
             ),
           ],
         ),
@@ -306,7 +407,9 @@ class AttachmentTile extends ConsumerWidget {
     final scheme = context.colorScheme;
     void open() => scope?.open(path);
     if (attachment.isImage && scope?.computerId != null) {
-      final bytes = ref.watch(computerFileProvider((scope!.computerId!, path))).value;
+      final bytes = ref
+          .watch(computerFileProvider((scope!.computerId!, path)))
+          .value;
       return Tooltip(
         message: attachment.name,
         child: InkWell(
@@ -320,13 +423,25 @@ class AttachmentTile extends ConsumerWidget {
               height: 126,
               color: scheme.surfaceContainerHigh,
               child: bytes == null
-                  ? Center(child: Icon(LucideIcons.image, color: scheme.onSurfaceVariant))
+                  ? Center(
+                      child: Icon(
+                        LucideIcons.image,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    )
                   // Decoded at thumbnail size, not the photo's full resolution.
                   : Image(
-                      image: CoverMemoryImage.sized(bytes, const Size(168, 126), MediaQuery.devicePixelRatioOf(context)),
+                      image: CoverMemoryImage.sized(
+                        bytes,
+                        const Size(168, 126),
+                        MediaQuery.devicePixelRatioOf(context),
+                      ),
                       fit: BoxFit.cover,
                       gaplessPlayback: true,
-                      errorBuilder: (_, _, _) => Icon(LucideIcons.imageOff, color: scheme.onSurfaceVariant),
+                      errorBuilder: (_, _, _) => Icon(
+                        LucideIcons.imageOff,
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
             ),
           ),
@@ -348,7 +463,11 @@ class AttachmentTile extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(fileIconFor(attachment.name), size: 20, color: scheme.primary),
+              Icon(
+                fileIconFor(attachment.name),
+                size: 20,
+                color: scheme.primary,
+              ),
               const SizedBox(width: AppSpace.xs),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 220),
@@ -360,9 +479,17 @@ class AttachmentTile extends ConsumerWidget {
                       attachment.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+                      style: context.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    if (attachment.size > 0) Text(formatBytes(attachment.size), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                    if (attachment.size > 0)
+                      Text(
+                        formatBytes(attachment.size),
+                        style: context.textTheme.labelSmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -377,58 +504,39 @@ class AttachmentTile extends ConsumerWidget {
 // ---------------------------------------------------------------------------------------------
 // Tool steps
 
-/// A tool's action in plain words ("Ran a command"), with its icon.
-(String, IconData) toolLabel(AppLocalizations l10n, String tool) {
-  if (tool.startsWith('shell')) return (l10n.toolShell, LucideIcons.squareTerminal);
-  if (tool == 'files.read' || tool == 'files.list') return (l10n.toolFileRead, LucideIcons.fileText);
-  if (tool == 'files.write' || tool == 'files.edit') return (l10n.toolFileWrite, LucideIcons.notebookPen);
-  if (tool.startsWith('files')) return (l10n.toolFiles, LucideIcons.folder);
-  if (tool.startsWith('browser')) return (l10n.toolBrowser, LucideIcons.globe);
-  if (tool.startsWith('web') || tool.contains('search')) return (l10n.toolSearch, LucideIcons.telescope);
-  if (tool.startsWith('memory')) return (l10n.toolMemory, LucideIcons.brain);
-  if (tool.startsWith('skills')) return (l10n.toolSkill, LucideIcons.bookOpen);
-  if (tool.startsWith('checkpoint')) return (l10n.toolCheckpoint, LucideIcons.rotateCcw);
-  if (tool == 'computer.request_takeover') return (l10n.toolTakeover, LucideIcons.hand);
-  if (tool.startsWith('desktop') || tool.startsWith('computer')) return (l10n.toolDesktop, LucideIcons.mousePointer2);
-  if (tool.contains('delegate') || tool.contains('subagent')) return (l10n.toolDelegate, LucideIcons.users);
-  if (tool == 'routines.create') return (l10n.toolRoutineCreate, LucideIcons.alarmClockPlus);
-  if (tool == 'routines.delete') return (l10n.toolRoutineDelete, LucideIcons.alarmClockOff);
-  if (tool.startsWith('routines')) return (l10n.toolRoutines, LucideIcons.clock);
-  if (tool.startsWith('tasks')) return (l10n.toolTasks, LucideIcons.listChecks);
-  if (tool.startsWith('notify')) return (l10n.toolNotify, LucideIcons.bellRing);
-  if (tool.startsWith('http')) return (l10n.toolHttp, LucideIcons.globe);
-  if (tool.startsWith('media')) return (l10n.toolMedia, LucideIcons.sparkles);
-  if (tool == 'tools.load') return (l10n.toolLoad, LucideIcons.packageOpen);
-  return (l10n.toolOther(tool), LucideIcons.wrench);
-}
-
 /// What the bot is doing while a step runs, in everyday words ("Searching the web…"), for the
 /// working line. No tool names, commands or queries (D-162).
 String toolActivity(AppLocalizations l10n, String tool) {
-  if (tool == 'tools.load' || tool.startsWith('skills')) return l10n.activityReady;
-  if (tool.startsWith('web') || tool.contains('search')) return l10n.activitySearching;
+  if (tool == 'tools.load' || tool.startsWith('skills'))
+    return l10n.activityReady;
+  if (tool.startsWith('web') || tool.contains('search'))
+    return l10n.activitySearching;
   if (tool.startsWith('browser')) return l10n.activityBrowsing;
   if (tool.startsWith('files')) return l10n.activityFiles;
   if (tool.startsWith('media')) return l10n.activityImage;
-  if (tool.startsWith('memory') || tool.startsWith('knowledge')) return l10n.activityMemory;
-  if (tool.startsWith('routines') || tool.startsWith('tasks')) return l10n.activityScheduling;
-  if (tool.startsWith('shell') || tool.startsWith('desktop') || tool.startsWith('computer') || tool.startsWith('checkpoint')) return l10n.activityComputer;
-  if (tool.startsWith('http') || tool.contains('.') && !tool.startsWith('ui.') && !tool.startsWith('notify')) return l10n.activityApps;
+  if (tool.startsWith('memory') || tool.startsWith('knowledge'))
+    return l10n.activityMemory;
+  if (tool.startsWith('routines') || tool.startsWith('tasks'))
+    return l10n.activityScheduling;
+  if (tool.startsWith('shell') ||
+      tool.startsWith('desktop') ||
+      tool.startsWith('computer') ||
+      tool.startsWith('checkpoint'))
+    return l10n.activityComputer;
+  if (tool.startsWith('http') ||
+      tool.contains('.') &&
+          !tool.startsWith('ui.') &&
+          !tool.startsWith('notify'))
+    return l10n.activityApps;
   return l10n.activityWorking;
 }
 
 /// The server's lead-in for a failure it has no plain explanation for; the rest is technical.
 const _genericFailure = 'Something went wrong while the bot was working.';
 
-String toolSummary(ToolEntry t) {
-  final a = t.args;
-  final key = ['command', 'cmd', 'url', 'path', 'query', 'ref', 'label', 'name', 'content'].firstWhere((k) => a[k] != null, orElse: () => '');
-  if (key.isEmpty) return '';
-  final v = '${a[key]}'.replaceAll('\n', ' ');
-  return v.length > 90 ? '${v.substring(0, 87)}…' : v;
-}
-
-String formatDuration(int ms) => ms < 1000 ? '$ms ms' : '${(ms / 1000).toStringAsFixed(ms < 10000 ? 1 : 0)} s';
+String formatDuration(int ms) => ms < 1000
+    ? '$ms ms'
+    : '${(ms / 1000).toStringAsFixed(ms < 10000 ? 1 : 0)} s';
 
 /// Consecutive tool steps in one card. Long finished runs fold to their last steps.
 class ToolGroupCard extends StatefulWidget {
@@ -471,29 +579,43 @@ class _ToolGroupCardState extends State<ToolGroupCard> {
                     padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
                     child: Row(
                       children: [
-                        Icon(LucideIcons.chevronsUpDown, size: 18, color: context.colorScheme.onSurfaceVariant),
+                        Icon(
+                          LucideIcons.chevronsUpDown,
+                          size: 18,
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
                         const SizedBox(width: AppSpace.xs),
                         Expanded(
                           child: Text(
                             l10n.showMoreSteps(steps.length - visible.length),
-                            style: context.textTheme.labelLarge?.copyWith(color: context.colorScheme.onSurfaceVariant),
+                            style: context.textTheme.labelLarge?.copyWith(
+                              color: context.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                         Text(
                           '${l10n.toolSteps(steps.length)} · ${formatDuration(totalMs)}',
-                          style: context.textTheme.labelMedium?.copyWith(color: context.colorScheme.onSurfaceVariant, fontFeatures: AppText.tabular),
+                          style: context.textTheme.labelMedium?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                            fontFeatures: AppText.tabular,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
               for (var i = 0; i < visible.length; i++) ...[
-                if (i > 0 || folded) Divider(indent: 50, color: context.appColors.hairline),
+                if (i > 0 || folded)
+                  Divider(indent: 50, color: context.appColors.hairline),
                 _ToolStepRow(
                   key: ValueKey(visible[i].callId),
                   entry: visible[i],
                   open: _open.contains(visible[i].callId),
-                  onToggle: () => setState(() => _open.contains(visible[i].callId) ? _open.remove(visible[i].callId) : _open.add(visible[i].callId)),
+                  onToggle: () => setState(
+                    () => _open.contains(visible[i].callId)
+                        ? _open.remove(visible[i].callId)
+                        : _open.add(visible[i].callId),
+                  ),
                 ),
               ],
             ],
@@ -505,7 +627,12 @@ class _ToolGroupCardState extends State<ToolGroupCard> {
 }
 
 class _ToolStepRow extends StatelessWidget {
-  const _ToolStepRow({super.key, required this.entry, required this.open, required this.onToggle});
+  const _ToolStepRow({
+    super.key,
+    required this.entry,
+    required this.open,
+    required this.onToggle,
+  });
   final ToolEntry entry;
   final bool open;
   final VoidCallback onToggle;
@@ -515,23 +642,37 @@ class _ToolStepRow extends StatelessWidget {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final colors = context.appColors;
-    final (label, icon) = toolLabel(l10n, entry.tool);
+    // Everyday words, the same as on calls and over the computer view; the technical details are
+    // behind the chevron.
+    final words = toolWords(l10n, entry.tool, entry.args);
     final failed = entry.status == ToolStatus.failed;
-    final tint = failed ? colors.negative : scheme.primary;
-    final summary = toolSummary(entry);
+    final running = entry.status == ToolStatus.running;
+    final tint = failed ? colors.negative : toolTint(context, words.tone);
+    final label = running || failed ? words.doing : words.done;
+    final summary = words.detail ?? '';
     final Widget status = switch (entry.status) {
       ToolStatus.running => SizedBox(
         width: 14,
         height: 14,
-        child: CircularProgressIndicator(strokeWidth: 2, strokeCap: StrokeCap.round, color: scheme.primary),
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          strokeCap: StrokeCap.round,
+          color: scheme.primary,
+        ),
       ),
       ToolStatus.done => Text(
         formatDuration(entry.durationMs ?? 0),
-        style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontFeatures: AppText.tabular),
+        style: context.textTheme.labelMedium?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontFeatures: AppText.tabular,
+        ),
       ),
       ToolStatus.failed => Text(
         l10n.toolFailedLabel,
-        style: context.textTheme.labelMedium?.copyWith(color: colors.negative, fontWeight: FontWeight.w600),
+        style: context.textTheme.labelMedium?.copyWith(
+          color: colors.negative,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     };
     return Column(
@@ -543,15 +684,24 @@ class _ToolStepRow extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             child: Row(
               children: [
-                Container(
-                  width: 26,
-                  height: 26,
+                AnimatedContainer(
+                  duration: AppMotion.of(context, AppMotion.fast),
+                  width: 30,
+                  height: 30,
                   decoration: BoxDecoration(
-                    color: tint.withValues(alpha: context.isDark ? 0.2 : 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    color: tint.withValues(alpha: context.isDark ? 0.2 : 0.11),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(failed ? LucideIcons.circleAlert : icon, size: 15, color: tint),
+                  child: AnimatedSwitcher(
+                    duration: AppMotion.of(context, AppMotion.fast),
+                    child: Icon(
+                      failed ? LucideIcons.circleAlert : words.icon,
+                      key: ValueKey(failed),
+                      size: 16,
+                      color: tint,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: AppSpace.sm),
                 Expanded(
@@ -562,14 +712,19 @@ class _ToolStepRow extends StatelessWidget {
                         label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       if (summary.isNotEmpty)
                         Text(
                           summary,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppText.mono.copyWith(fontSize: 12, color: scheme.onSurfaceVariant, height: 1.35),
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            height: 1.35,
+                          ),
                         ),
                     ],
                   ),
@@ -580,7 +735,11 @@ class _ToolStepRow extends StatelessWidget {
                 AnimatedRotation(
                   turns: open ? 0.5 : 0,
                   duration: AppMotion.of(context, AppMotion.fast),
-                  child: Icon(LucideIcons.chevronDown, size: 18, color: scheme.onSurfaceVariant),
+                  child: Icon(
+                    LucideIcons.chevronDown,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -590,7 +749,9 @@ class _ToolStepRow extends StatelessWidget {
           duration: AppMotion.of(context, const Duration(milliseconds: 220)),
           curve: AppMotion.curve,
           alignment: Alignment.topCenter,
-          child: open ? _ToolDetails(entry: entry) : const SizedBox(width: double.infinity),
+          child: open
+              ? _ToolDetails(entry: entry)
+              : const SizedBox(width: double.infinity),
         ),
       ],
     );
@@ -615,12 +776,29 @@ class _ToolDetails extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  entry.tool,
-                  style: AppText.mono.copyWith(fontSize: 12, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '${l10n.toolDetails}  ',
+                        style: context.textTheme.labelMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      TextSpan(
+                        text: entry.tool,
+                        style: AppText.mono.copyWith(
+                          fontSize: 11.5,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              if (filePath != null && files != null && entry.status == ToolStatus.done)
+              if (filePath != null &&
+                  files != null &&
+                  entry.status == ToolStatus.done)
                 TextButton.icon(
                   key: Key('openToolFile-${entry.callId}'),
                   onPressed: () => files.open(filePath),
@@ -630,20 +808,37 @@ class _ToolDetails extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          CodePanel(text: const JsonEncoder.withIndent('  ').convert(entry.args)),
+          CodePanel(
+            text: const JsonEncoder.withIndent('  ').convert(entry.args),
+          ),
           if (entry.output.isNotEmpty) ...[
             const SizedBox(height: AppSpace.xs),
-            Text(l10n.toolOutput, style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
+            Text(
+              l10n.toolOutput,
+              style: context.textTheme.labelMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 4),
             CodePanel(text: entry.output, maxHeight: 240, reverse: true),
           ],
           if (entry.preview != null && entry.output.isEmpty) ...[
             const SizedBox(height: AppSpace.xs),
-            SelectableText(entry.preview!, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+            SelectableText(
+              entry.preview!,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           ],
           if (entry.error != null) ...[
             const SizedBox(height: AppSpace.xs),
-            SelectableText(entry.error!, style: context.textTheme.bodySmall?.copyWith(color: context.appColors.negative)),
+            SelectableText(
+              entry.error!,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: context.appColors.negative,
+              ),
+            ),
           ],
         ],
       ),
@@ -654,15 +849,106 @@ class _ToolDetails extends StatelessWidget {
 /// The file a tool step made or read, as a files API path (null when it isn't about a file).
 String? _toolFile(ToolEntry t) {
   final artifact = t.artifactPath;
-  if (artifact != null && artifact.isNotEmpty) return computerPathFromLink(artifact);
-  if (!t.tool.startsWith('files.') || t.tool == 'files.list' || t.tool == 'files.search' || t.tool == 'files.delete') return null;
+  if (artifact != null && artifact.isNotEmpty)
+    return computerPathFromLink(artifact);
+  if (!t.tool.startsWith('files.') ||
+      t.tool == 'files.list' ||
+      t.tool == 'files.search' ||
+      t.tool == 'files.delete')
+    return null;
   final p = t.args['path'];
   return p is String && p.isNotEmpty ? computerPathFromLink(p) : null;
 }
 
+/// "Details": the tool's name and exact arguments, folded away until asked for.
+class _TechnicalDetails extends StatefulWidget {
+  const _TechnicalDetails({required this.tool, required this.args});
+  final String tool;
+  final Map<String, Object?> args;
+
+  @override
+  State<_TechnicalDetails> createState() => _TechnicalDetailsState();
+}
+
+class _TechnicalDetailsState extends State<_TechnicalDetails> {
+  var _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const Key('approvalDetails'),
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+            onPressed: () => setState(() => _open = !_open),
+            icon: AnimatedRotation(
+              turns: _open ? 0.5 : 0,
+              duration: AppMotion.of(context, AppMotion.fast),
+              child: Icon(
+                LucideIcons.chevronDown,
+                size: 16,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            label: Text(
+              context.l10n.toolDetails,
+              style: context.textTheme.labelLarge?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: AppMotion.of(context, const Duration(milliseconds: 220)),
+          curve: AppMotion.curve,
+          alignment: Alignment.topCenter,
+          child: _open
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        widget.tool,
+                        style: AppText.mono.copyWith(
+                          fontSize: 11.5,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      CodePanel(
+                        text: const JsonEncoder.withIndent('  ')
+                            .convert(widget.args),
+                        maxLines: 8,
+                        maxHeight: 180,
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+  }
+}
+
 /// Monospaced text on the code surface (arguments, output).
 class CodePanel extends StatelessWidget {
-  const CodePanel({super.key, required this.text, this.maxHeight = 200, this.reverse = false, this.maxLines});
+  const CodePanel({
+    super.key,
+    required this.text,
+    this.maxHeight = 200,
+    this.reverse = false,
+    this.maxLines,
+  });
   final String text;
   final double maxHeight;
   final bool reverse;
@@ -683,7 +969,12 @@ class CodePanel extends StatelessWidget {
         reverse: reverse,
         child: maxLines == null
             ? SelectableText(text, style: AppText.mono.copyWith(fontSize: 12.5))
-            : Text(text, maxLines: maxLines, overflow: TextOverflow.ellipsis, style: AppText.mono.copyWith(fontSize: 12.5)),
+            : Text(
+                text,
+                maxLines: maxLines,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.mono.copyWith(fontSize: 12.5),
+              ),
       ),
     );
   }
@@ -694,7 +985,14 @@ class CodePanel extends StatelessWidget {
 
 /// A short note in the thread (memory saved, checkpoint, computer state, run ended), centered.
 class NoticeLine extends StatelessWidget {
-  const NoticeLine({super.key, required this.entry, this.onRestore, this.onDetails, this.onUndo, this.plain = false});
+  const NoticeLine({
+    super.key,
+    required this.entry,
+    this.onRestore,
+    this.onDetails,
+    this.onUndo,
+    this.plain = false,
+  });
   final NoticeEntry entry;
 
   /// "Saved to your profile" (D-169): takes the fact back out.
@@ -716,55 +1014,130 @@ class NoticeLine extends StatelessWidget {
     final muted = scheme.onSurfaceVariant;
     final (icon, text, color) = switch (entry.kind) {
       NoticeKind.memory => (LucideIcons.brain, l10n.remembered, muted),
-      NoticeKind.profileSaved => (LucideIcons.userRound, l10n.savedToProfile, muted),
-      NoticeKind.skill => (LucideIcons.bookOpen, l10n.skillLoaded(entry.text), muted),
-      NoticeKind.checkpoint => (LucideIcons.rotateCcw, l10n.checkpointSaved(entry.text), muted),
-      NoticeKind.computer => (LucideIcons.monitor, l10n.computerState(entry.text), muted),
-      NoticeKind.failed => (LucideIcons.circleAlert, plain && entry.text.startsWith(_genericFailure) ? l10n.runFailedPlain : l10n.runFailed(entry.text), colors.negative),
-      NoticeKind.cancelled => (LucideIcons.circleStop, l10n.runCancelled, muted),
-      NoticeKind.userControl => (LucideIcons.hand, l10n.pausedUserInControl, colors.warning),
+      NoticeKind.profileSaved => (
+        LucideIcons.userRound,
+        l10n.savedToProfile,
+        muted,
+      ),
+      NoticeKind.skill => (
+        LucideIcons.bookOpen,
+        l10n.skillLoaded(entry.text),
+        muted,
+      ),
+      NoticeKind.checkpoint => (
+        LucideIcons.rotateCcw,
+        l10n.checkpointSaved(entry.text),
+        muted,
+      ),
+      NoticeKind.computer => (
+        LucideIcons.monitor,
+        l10n.computerState(entry.text),
+        muted,
+      ),
+      NoticeKind.failed => (
+        LucideIcons.circleAlert,
+        plain && entry.text.startsWith(_genericFailure)
+            ? l10n.runFailedPlain
+            : l10n.runFailed(entry.text),
+        colors.negative,
+      ),
+      NoticeKind.cancelled => (
+        LucideIcons.circleStop,
+        l10n.runCancelled,
+        muted,
+      ),
+      NoticeKind.userControl => (
+        LucideIcons.hand,
+        l10n.pausedUserInControl,
+        colors.warning,
+      ),
       NoticeKind.botControl => (LucideIcons.bot, l10n.botBackInControl, muted),
-      NoticeKind.modelFallback => (LucideIcons.arrowRightLeft, l10n.modelFallbackNotice(entry.text), colors.warning),
+      NoticeKind.modelFallback => (
+        LucideIcons.arrowRightLeft,
+        l10n.modelFallbackNotice(entry.text),
+        colors.warning,
+      ),
       NoticeKind.info => (LucideIcons.info, entry.text, colors.warning),
-      NoticeKind.routine => (LucideIcons.alarmClock, l10n.routineRan(entry.text), muted),
+      NoticeKind.routine => (
+        LucideIcons.alarmClock,
+        l10n.routineRan(entry.text),
+        muted,
+      ),
     };
     final failed = entry.kind == NoticeKind.failed;
-    final restorable = (entry.kind == NoticeKind.checkpoint && onRestore != null || entry.kind == NoticeKind.profileSaved && onUndo != null) && entry.refId != null;
+    final restorable =
+        (entry.kind == NoticeKind.checkpoint && onRestore != null ||
+            entry.kind == NoticeKind.profileSaved && onUndo != null) &&
+        entry.refId != null;
     final details = failed && onDetails != null;
     return Center(
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-        key: details ? const Key('errorDetails') : null,
-        onTap: details ? onDetails : null,
-        borderRadius: BorderRadius.circular(failed ? AppRadius.row : AppRadius.pill),
-        child: Container(
-        padding: EdgeInsets.fromLTRB(12, restorable ? 2 : 6, restorable || details ? 4 : 12, restorable ? 2 : 6),
-        decoration: BoxDecoration(
-          color: failed ? colors.negative.withValues(alpha: 0.08) : scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(failed ? AppRadius.row : AppRadius.pill),
-          border: Border.all(color: failed ? colors.negative.withValues(alpha: 0.24) : colors.hairline),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 15, color: color),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(text, style: context.textTheme.labelMedium?.copyWith(color: color, height: 1.3)),
+          key: details ? const Key('errorDetails') : null,
+          onTap: details ? onDetails : null,
+          borderRadius: BorderRadius.circular(
+            failed ? AppRadius.row : AppRadius.pill,
+          ),
+          child: Container(
+            padding: EdgeInsets.fromLTRB(
+              12,
+              restorable ? 2 : 6,
+              restorable || details ? 4 : 12,
+              restorable ? 2 : 6,
             ),
-            if (restorable && entry.kind == NoticeKind.profileSaved)
-              TextButton(key: const Key('undoProfileFact'), onPressed: () => onUndo!(entry.refId!), child: Text(l10n.undo))
-            else if (restorable)
-              TextButton(onPressed: () => onRestore!(entry.refId!), child: Text(l10n.restore)),
-            if (details) ...[
-              const SizedBox(width: 6),
-              Text(l10n.details, style: context.textTheme.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700)),
-              Icon(LucideIcons.chevronRight, size: 16, color: color),
-            ],
-          ],
-        ),
-      ),
+            decoration: BoxDecoration(
+              color: failed
+                  ? colors.negative.withValues(alpha: 0.08)
+                  : scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(
+                failed ? AppRadius.row : AppRadius.pill,
+              ),
+              border: Border.all(
+                color: failed
+                    ? colors.negative.withValues(alpha: 0.24)
+                    : colors.hairline,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 15, color: color),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    text,
+                    style: context.textTheme.labelMedium?.copyWith(
+                      color: color,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+                if (restorable && entry.kind == NoticeKind.profileSaved)
+                  TextButton(
+                    key: const Key('undoProfileFact'),
+                    onPressed: () => onUndo!(entry.refId!),
+                    child: Text(l10n.undo),
+                  )
+                else if (restorable)
+                  TextButton(
+                    onPressed: () => onRestore!(entry.refId!),
+                    child: Text(l10n.restore),
+                  ),
+                if (details) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.details,
+                    style: context.textTheme.labelMedium?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Icon(LucideIcons.chevronRight, size: 16, color: color),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -789,7 +1162,13 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
     HapticFeedback.mediumImpact();
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).decideApproval(widget.entry.approvalId, approve: approve, alwaysAllow: always);
+      await ref
+          .read(backendProvider)
+          .decideApproval(
+            widget.entry.approvalId,
+            approve: approve,
+            alwaysAllow: always,
+          );
       return true;
     });
     if (!mounted) return;
@@ -812,15 +1191,25 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
     final decision = e.decision ?? _localDecision;
     final high = e.risk == 'high';
     final accent = high ? colors.negative : colors.warning;
-    final (action, _) = toolLabel(l10n, e.tool);
+    final words = toolWords(l10n, e.tool, e.args);
+    // Everyday words up front. The command stays on the card, because this is the moment
+    // someone decides; everything else technical stays behind Details.
+    final focus = words.detail ?? toolApprovalFocus(e.args);
     return _ActionCard(
       key: const Key('chatApproval'),
       accent: accent,
       icon: high ? LucideIcons.shieldAlert : LucideIcons.shieldCheck,
-      title: l10n.needsApprovalFor(widget.botName, e.tool),
-      badge: StatusLabel(text: high ? l10n.riskHigh : (e.risk == 'low' ? l10n.riskLow : l10n.riskMedium), color: accent, pill: true),
-      subtitle: action,
-      body: CodePanel(text: const JsonEncoder.withIndent('  ').convert(e.args), maxLines: 8, maxHeight: 180),
+      title: l10n.toolNeedsOkTitle(widget.botName),
+      badge: StatusLabel(
+        text: high
+            ? l10n.riskHigh
+            : (e.risk == 'low' ? l10n.riskLow : l10n.riskMedium),
+        color: accent,
+        pill: true,
+      ),
+      subtitle: focus == null ? words.doing : '${words.doing}: $focus',
+      // The exact request, for anyone who wants to check it.
+      body: _TechnicalDetails(tool: e.tool, args: e.args),
       footer: decision != null
           ? _Outcome(
               text: switch (decision) {
@@ -828,17 +1217,35 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
                 'denied' => l10n.denied,
                 _ => l10n.expired,
               },
-              color: decision == 'approved' ? colors.positive : (decision == 'denied' ? colors.negative : context.colorScheme.onSurfaceVariant),
-              icon: decision == 'approved' ? LucideIcons.circleCheck : (decision == 'denied' ? LucideIcons.circleX : LucideIcons.clock),
+              color: decision == 'approved'
+                  ? colors.positive
+                  : (decision == 'denied'
+                        ? colors.negative
+                        : context.colorScheme.onSurfaceVariant),
+              icon: decision == 'approved'
+                  ? LucideIcons.circleCheck
+                  : (decision == 'denied'
+                        ? LucideIcons.circleX
+                        : LucideIcons.clock),
             )
           : Wrap(
               alignment: WrapAlignment.end,
               spacing: AppSpace.xs,
               runSpacing: AppSpace.xs,
               children: [
-                TextButton(onPressed: _busy ? null : () => _decide(true, always: true), child: Text(l10n.alwaysAllow)),
-                OutlinedButton(onPressed: _busy ? null : () => _decide(false), child: Text(l10n.deny)),
-                GlowButton(key: const Key('chatApprove'), onPressed: _busy ? null : () => _decide(true), child: Text(l10n.approve)),
+                TextButton(
+                  onPressed: _busy ? null : () => _decide(true, always: true),
+                  child: Text(l10n.alwaysAllow),
+                ),
+                OutlinedButton(
+                  onPressed: _busy ? null : () => _decide(false),
+                  child: Text(l10n.deny),
+                ),
+                GlowButton(
+                  key: const Key('chatApprove'),
+                  onPressed: _busy ? null : () => _decide(true),
+                  child: Text(l10n.approve),
+                ),
               ],
             ),
     );
@@ -847,7 +1254,12 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
 
 /// A bot asking a person to take over its screen (a sign-in, a captcha).
 class TakeoverPrompt extends StatelessWidget {
-  const TakeoverPrompt({super.key, required this.entry, required this.botName, required this.onOpen});
+  const TakeoverPrompt({
+    super.key,
+    required this.entry,
+    required this.botName,
+    required this.onOpen,
+  });
   final TakeoverEntry entry;
   final String botName;
   final VoidCallback onOpen;
@@ -861,7 +1273,10 @@ class TakeoverPrompt extends StatelessWidget {
       accent: colors.info,
       icon: LucideIcons.hand,
       title: l10n.botNeedsHelp(botName),
-      body: Text(entry.reason, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
+      body: Text(
+        entry.reason,
+        style: context.textTheme.bodyMedium?.copyWith(height: 1.4),
+      ),
       footer: entry.outcome != null
           ? _Outcome(
               text: switch (entry.outcome) {
@@ -869,8 +1284,12 @@ class TakeoverPrompt extends StatelessWidget {
                 'dismissed' => l10n.takeoverDismissed,
                 _ => l10n.expired,
               },
-              color: entry.outcome == 'completed' ? colors.positive : context.colorScheme.onSurfaceVariant,
-              icon: entry.outcome == 'completed' ? LucideIcons.circleCheck : LucideIcons.circleMinus,
+              color: entry.outcome == 'completed'
+                  ? colors.positive
+                  : context.colorScheme.onSurfaceVariant,
+              icon: entry.outcome == 'completed'
+                  ? LucideIcons.circleCheck
+                  : LucideIcons.circleMinus,
             )
           : Align(
               alignment: Alignment.centerRight,
@@ -940,13 +1359,19 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
       key: const Key('chatSecret'),
       accent: colors.warning,
       icon: LucideIcons.keyRound,
-      title: e.totp ? l10n.totpRequestTitle(widget.botName, e.service) : l10n.secretRequestTitle(widget.botName, e.service),
+      title: e.totp
+          ? l10n.totpRequestTitle(widget.botName, e.service)
+          : l10n.secretRequestTitle(widget.botName, e.service),
       subtitle: l10n.secretRequestHosts(e.hosts.join(', ')),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: AppSpace.sm,
         children: [
-          if (e.reason.isNotEmpty) Text(e.reason, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
+          if (e.reason.isNotEmpty)
+            Text(
+              e.reason,
+              style: context.textTheme.bodyMedium?.copyWith(height: 1.4),
+            ),
           if (outcome == null)
             TextField(
               key: const Key('secretValue'),
@@ -958,16 +1383,24 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
               keyboardType: TextInputType.visiblePassword,
               autofillHints: const <String>[],
               decoration: InputDecoration(
-                labelText: e.totp ? '${e.name} · ${l10n.totpSeedLabel}' : e.name,
+                labelText: e.totp
+                    ? '${e.name} · ${l10n.totpSeedLabel}'
+                    : e.name,
                 helperText: e.totp ? l10n.totpSeedHelp : l10n.secretRequestHelp,
                 prefixIcon: const Icon(LucideIcons.lock, size: 18),
                 suffixIcon: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (e.totp) TotpScanButton(onScanned: (link) => setState(() => _value.text = link)),
+                    if (e.totp)
+                      TotpScanButton(
+                        onScanned: (link) => setState(() => _value.text = link),
+                      ),
                     IconButton(
                       tooltip: _obscure ? l10n.show : l10n.hide,
-                      icon: Icon(_obscure ? LucideIcons.eye : LucideIcons.eyeOff, size: 18),
+                      icon: Icon(
+                        _obscure ? LucideIcons.eye : LucideIcons.eyeOff,
+                        size: 18,
+                      ),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ],
@@ -984,14 +1417,22 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
                 'declined' => l10n.secretDeclined,
                 _ => l10n.expired,
               },
-              color: outcome == 'fulfilled' ? colors.positive : context.colorScheme.onSurfaceVariant,
-              icon: outcome == 'fulfilled' ? LucideIcons.circleCheck : LucideIcons.circleMinus,
+              color: outcome == 'fulfilled'
+                  ? colors.positive
+                  : context.colorScheme.onSurfaceVariant,
+              icon: outcome == 'fulfilled'
+                  ? LucideIcons.circleCheck
+                  : LucideIcons.circleMinus,
             )
           : Row(
               mainAxisAlignment: MainAxisAlignment.end,
               spacing: AppSpace.sm,
               children: [
-                TextButton(key: const Key('secretDecline'), onPressed: _busy ? null : () => _answer(false), child: Text(l10n.decline)),
+                TextButton(
+                  key: const Key('secretDecline'),
+                  onPressed: _busy ? null : () => _answer(false),
+                  child: Text(l10n.decline),
+                ),
                 GlowButton.icon(
                   key: const Key('secretSave'),
                   onPressed: _busy ? null : () => _answer(true),
@@ -1006,7 +1447,11 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
 
 /// "Allow `<bot>` to use your calendar?" (D-149): one tap grants or skips; revoke in Settings.
 class DeviceAccessPrompt extends ConsumerStatefulWidget {
-  const DeviceAccessPrompt({super.key, required this.entry, required this.botName});
+  const DeviceAccessPrompt({
+    super.key,
+    required this.entry,
+    required this.botName,
+  });
   final DeviceAccessEntry entry;
   final String botName;
 
@@ -1023,9 +1468,14 @@ class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
     super.initState();
     // Already allowed (from an earlier card or Settings): show it as done.
     unawaited(
-      ref.read(backendProvider).deviceGrants(botId: widget.entry.botId).then((g) {
-        if (mounted && g.any((x) => x.kind == widget.entry.kind)) setState(() => _allowed ??= true);
-      }).catchError((_) {}),
+      ref
+          .read(backendProvider)
+          .deviceGrants(botId: widget.entry.botId)
+          .then((g) {
+            if (mounted && g.any((x) => x.kind == widget.entry.kind))
+              setState(() => _allowed ??= true);
+          })
+          .catchError((_) {}),
     );
   }
 
@@ -1033,7 +1483,9 @@ class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
     if (!allow) return setState(() => _allowed = false);
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
-      await ref.read(backendProvider).setDeviceGrant(widget.entry.botId, widget.entry.kind, true);
+      await ref
+          .read(backendProvider)
+          .setDeviceGrant(widget.entry.botId, widget.entry.kind, true);
       return true;
     });
     if (!mounted) return;
@@ -1055,18 +1507,33 @@ class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
       icon: LucideIcons.smartphone,
       title: l10n.deviceAccessTitle(widget.botName, what),
       subtitle: l10n.deviceAccessHelp,
-      body: e.reason.isEmpty ? const SizedBox.shrink() : Text(e.reason, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
+      body: e.reason.isEmpty
+          ? const SizedBox.shrink()
+          : Text(
+              e.reason,
+              style: context.textTheme.bodyMedium?.copyWith(height: 1.4),
+            ),
       footer: _allowed != null
           ? _Outcome(
-              text: _allowed! ? l10n.deviceAccessAllowed(what) : l10n.deviceAccessSkipped,
-              color: _allowed! ? colors.positive : context.colorScheme.onSurfaceVariant,
-              icon: _allowed! ? LucideIcons.circleCheck : LucideIcons.circleMinus,
+              text: _allowed!
+                  ? l10n.deviceAccessAllowed(what)
+                  : l10n.deviceAccessSkipped,
+              color: _allowed!
+                  ? colors.positive
+                  : context.colorScheme.onSurfaceVariant,
+              icon: _allowed!
+                  ? LucideIcons.circleCheck
+                  : LucideIcons.circleMinus,
             )
           : Row(
               mainAxisAlignment: MainAxisAlignment.end,
               spacing: AppSpace.sm,
               children: [
-                TextButton(key: const Key('deviceAccessSkip'), onPressed: _busy ? null : () => _answer(false), child: Text(l10n.notNow)),
+                TextButton(
+                  key: const Key('deviceAccessSkip'),
+                  onPressed: _busy ? null : () => _answer(false),
+                  child: Text(l10n.notNow),
+                ),
                 GlowButton.icon(
                   key: const Key('deviceAccessAllow'),
                   onPressed: _busy ? null : () => _answer(true),
@@ -1095,7 +1562,10 @@ class _Outcome extends StatelessWidget {
           text,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: context.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.w700),
+          style: context.textTheme.labelLarge?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     ],
@@ -1127,7 +1597,10 @@ class _ActionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpace.md),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(accent.withValues(alpha: dark ? 0.08 : 0.05), context.colorScheme.surfaceContainerLow),
+        color: Color.alphaBlend(
+          accent.withValues(alpha: dark ? 0.08 : 0.05),
+          context.colorScheme.surfaceContainerLow,
+        ),
         borderRadius: AppRadius.cardAll,
         border: Border.all(color: accent.withValues(alpha: dark ? 0.35 : 0.3)),
       ),
@@ -1152,7 +1625,13 @@ class _ActionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, height: 1.3)),
+                    Text(
+                      title,
+                      style: context.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        height: 1.3,
+                      ),
+                    ),
                     if (subtitle != null || badge != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -1162,7 +1641,13 @@ class _ActionCard extends StatelessWidget {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             ?badge,
-                            if (subtitle != null) Text(subtitle!, style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+                            if (subtitle != null)
+                              Text(
+                                subtitle!,
+                                style: context.textTheme.bodySmall?.copyWith(
+                                  color: context.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                           ],
                         ),
                       ),

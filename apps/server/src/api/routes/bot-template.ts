@@ -2,10 +2,19 @@
 import { createHash, randomBytes } from "node:crypto";
 import { type BotTemplateFile, routes } from "@casama/contracts";
 import { contentKeys, type Database, type JwtClaims, withUserSession } from "@casama/db";
-import { isValidCron, isValidTimezone, nextRunAt } from "@casama/domain";
+import {
+  CLOUD_LOCKED_MODEL,
+  defaultModelFor,
+  isValidCron,
+  isValidTimezone,
+  nextRunAt,
+  PLATFORM_OPENROUTER_CREDENTIAL_ID,
+} from "@casama/domain";
 import type { OpenAPIHono, z } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { enforceLimit } from "../../billing/limits.ts";
+import { modelOverrides } from "../../env.ts";
+import { getCloudModels } from "../../services/cloud-models.ts";
 import { checkBundle } from "../../services/skills.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -175,15 +184,26 @@ export function registerBotTemplateRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
       if (!isValidCron(r.schedule_cron))
         throw new ApiError(400, "invalid_cron", `Routine "${r.name}" has an invalid schedule.`);
     await enforceLimit(db, body.org_id, "max_bots");
+    const cloud =
+      deps.env.BILLING_ENABLED && Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY);
+    const cloudKey = cloud || body.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
+    const model = cloud
+      ? (await getCloudModels(deps.db)).chat
+      : cloudKey && deps.env.BILLING_ENABLED
+        ? (defaultModelFor("openrouter", modelOverrides(deps.env)) ?? CLOUD_LOCKED_MODEL)
+        : body.model;
+    const credentialId = cloud ? PLATFORM_OPENROUTER_CREDENTIAL_ID : body.credential_id;
     const botId = await withUserSession(db, claims, async (tx) => {
-      const [cred] = await tx.execute<{ id: string }>(sql`
+      if (!cloudKey) {
+        const [cred] = await tx.execute<{ id: string }>(sql`
         select id from public.model_credentials where id = ${body.credential_id}::uuid and org_id = ${body.org_id}::uuid`);
-      if (!cred)
-        throw new ApiError(400, "credential_not_found", "Pick a model key from this workspace");
+        if (!cred)
+          throw new ApiError(400, "credential_not_found", "Pick a model key from this workspace");
+      }
       const [b] = await tx.execute<{ id: string }>(sql`
         insert into public.bots (org_id, created_by, name, persona_md, model_policy, autonomy, avatar_url)
         values (${body.org_id}::uuid, ${claims.sub}::uuid, ${t.name}, ${t.persona_md},
-                ${JSON.stringify({ primary: { credential_id: body.credential_id, model: body.model } })}::jsonb,
+                ${JSON.stringify({ primary: { credential_id: credentialId, model } })}::jsonb,
                 ${t.autonomy}, ${t.avatar?.startsWith("mascot:") ? t.avatar : null})
         returning id`);
       if (!b) throw new ApiError(403, "forbidden", "You can't create bots in this workspace");

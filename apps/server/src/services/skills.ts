@@ -32,6 +32,8 @@ export interface SkillBundle {
 export interface CatalogSkill extends SkillBundle {
   id: string;
   category: string;
+  /** A Lucide icon name, or null to use the category's icon. */
+  icon: string | null;
 }
 
 const SAFE_PATH = SKILL_SAFE_PATH;
@@ -90,10 +92,12 @@ export function loadCatalog(dir = process.env.SKILLS_CATALOG_DIR ?? DEFAULT_CATA
   if (!existsSync(join(dir, "catalog.json"))) return { dir, skills: [], categories: [] };
   const index = JSON.parse(readFileSync(join(dir, "catalog.json"), "utf8")) as {
     categories: string[];
-    skills: Record<string, string>;
+    skills: Record<string, string | { category: string; icon?: string }>;
   };
   const skills: CatalogSkill[] = [];
-  for (const [id, category] of Object.entries(index.skills)) {
+  for (const [id, entry] of Object.entries(index.skills)) {
+    const { category, icon } =
+      typeof entry === "string" ? { category: entry, icon: undefined } : entry;
     const folder = join(dir, id);
     const files = walk(folder)
       .filter((p) => p !== "SKILL.md")
@@ -105,6 +109,7 @@ export function loadCatalog(dir = process.env.SKILLS_CATALOG_DIR ?? DEFAULT_CATA
     skills.push({
       id,
       category,
+      icon: icon ?? null,
       ...bundleFrom(readFileSync(join(folder, "SKILL.md"), "utf8"), files),
     });
   }

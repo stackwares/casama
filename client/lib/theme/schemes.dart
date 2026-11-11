@@ -6,7 +6,11 @@ enum SchemeFamily { brand, purple, blue, teal, green, warm, red, neutral }
 
 /// One color scheme the person can pick: Casama's own, or one of FlexColorScheme's built-ins.
 class ThemeChoice {
-  const ThemeChoice({required this.id, required this.data, required this.family});
+  const ThemeChoice({
+    required this.id,
+    required this.data,
+    required this.family,
+  });
 
   /// Stored in preferences: `casama` or a [FlexScheme] name.
   final String id;
@@ -15,7 +19,8 @@ class ThemeChoice {
 
   String get name => data.name;
   String get description => data.description;
-  FlexSchemeColor colors(Brightness b) => b == Brightness.dark ? data.dark : data.light;
+  FlexSchemeColor colors(Brightness b) =>
+      b == Brightness.dark ? data.dark : data.light;
 }
 
 /// Casama's brand scheme, from the app icon: plum and lilac for the cloud, the orb's sky blue and
@@ -57,12 +62,64 @@ SchemeFamily _familyOf(Color c) {
   return SchemeFamily.purple;
 }
 
+/// Gallery schemes saved on this device, keyed by `gallery:<id>`.
+final gallerySchemeChoices = <String, ThemeChoice>{};
+
+Color colorFromHex(String hex) {
+  final n = int.parse(hex.substring(1), radix: 16);
+  return Color(0xFF000000 | n);
+}
+
+String hexFromColor(Color color) {
+  final rgb = color.toARGB32() & 0xFFFFFF;
+  return '#${rgb.toRadixString(16).padLeft(6, '0')}';
+}
+
+/// A scheme built from the gallery's light and dark seeds.
+ThemeChoice galleryChoiceFromSeeds({
+  required String id,
+  required String name,
+  required String light,
+  required String dark,
+}) {
+  final lightColor = colorFromHex(light);
+  return ThemeChoice(
+    id: id,
+    family: _familyOf(lightColor),
+    data: FlexSchemeData(
+      name: name,
+      description: 'From the gallery',
+      light: FlexSchemeColor.from(
+        primary: lightColor,
+        brightness: Brightness.light,
+      ),
+      dark: FlexSchemeColor.from(
+        primary: colorFromHex(dark),
+        brightness: Brightness.dark,
+      ),
+    ),
+  );
+}
+
 /// Every scheme in the picker, Casama first.
 final List<ThemeChoice> themeChoices = [
-  const ThemeChoice(id: 'casama', data: casamaScheme, family: SchemeFamily.brand),
+  const ThemeChoice(
+    id: 'casama',
+    data: casamaScheme,
+    family: SchemeFamily.brand,
+  ),
   for (final s in FlexScheme.values)
     if (s != FlexScheme.custom && FlexColor.schemes[s] != null)
-      ThemeChoice(id: s.name, data: FlexColor.schemes[s]!, family: _familyOf(FlexColor.schemes[s]!.light.primary)),
+      ThemeChoice(
+        id: s.name,
+        data: FlexColor.schemes[s]!,
+        family: _familyOf(FlexColor.schemes[s]!.light.primary),
+      ),
 ];
 
-ThemeChoice themeChoiceById(String id) => themeChoices.firstWhere((c) => c.id == id, orElse: () => themeChoices.first);
+ThemeChoice themeChoiceById(String id) =>
+    gallerySchemeChoices[id] ??
+    themeChoices.firstWhere(
+      (c) => c.id == id,
+      orElse: () => themeChoices.first,
+    );

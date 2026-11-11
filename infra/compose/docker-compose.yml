@@ -72,6 +72,7 @@ x-casama: &casama
     MCP_OAUTH_CLIENTS: ${MCP_OAUTH_CLIENTS:-}
     COMPOSIO_API_KEY: ${COMPOSIO_API_KEY:-}
     UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY:-}
+    GALLERY_URL: ${GALLERY_URL:-https://gallery.casama.ai}
     TREG_API_KEY: ${TREG_API_KEY:-}
     DEFAULT_MODEL_OPENROUTER: ${DEFAULT_MODEL_OPENROUTER:-}
     DEFAULT_MODEL_OPENAI: ${DEFAULT_MODEL_OPENAI:-}
@@ -170,6 +171,13 @@ services:
       GOTRUE_SMTP_USER: ${SMTP_USER:-}
       GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
       GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-}
+      # Passkeys (D-183), off until set. In the browser they work under your own domain:
+      # PASSKEY_RP_ID is that domain without https://, PASSKEY_RP_ORIGINS the addresses the web
+      # app is served from. The store apps only use passkeys made for casama.ai.
+      GOTRUE_PASSKEY_ENABLED: ${PASSKEYS_ENABLED:-false}
+      GOTRUE_WEBAUTHN_RP_DISPLAY_NAME: Casama
+      GOTRUE_WEBAUTHN_RP_ID: ${PASSKEY_RP_ID:-}
+      GOTRUE_WEBAUTHN_RP_ORIGINS: ${PASSKEY_RP_ORIGINS:-${CASAMA_PUBLIC_URL}}
       # SAML SSO (enterprise, ee/): workspaces register their identity provider through the API.
       GOTRUE_SAML_ENABLED: ${SAML_ENABLED:-true}
       GOTRUE_SAML_PRIVATE_KEY: ${SAML_PRIVATE_KEY}

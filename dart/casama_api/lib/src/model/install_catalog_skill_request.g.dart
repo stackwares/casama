@@ -11,7 +11,9 @@ abstract class _$InstallCatalogSkillRequestCWProxy {
 
   InstallCatalogSkillRequest botId(String? botId);
 
-  InstallCatalogSkillRequest catalogId(String catalogId);
+  InstallCatalogSkillRequest catalogId(String? catalogId);
+
+  InstallCatalogSkillRequest galleryId(String? galleryId);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -24,7 +26,8 @@ abstract class _$InstallCatalogSkillRequestCWProxy {
   InstallCatalogSkillRequest call({
     String orgId,
     String? botId,
-    String catalogId,
+    String? catalogId,
+    String? galleryId,
   });
 }
 
@@ -43,8 +46,12 @@ class _$InstallCatalogSkillRequestCWProxyImpl
   InstallCatalogSkillRequest botId(String? botId) => call(botId: botId);
 
   @override
-  InstallCatalogSkillRequest catalogId(String catalogId) =>
+  InstallCatalogSkillRequest catalogId(String? catalogId) =>
       call(catalogId: catalogId);
+
+  @override
+  InstallCatalogSkillRequest galleryId(String? galleryId) =>
+      call(galleryId: galleryId);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -59,6 +66,7 @@ class _$InstallCatalogSkillRequestCWProxyImpl
     Object? orgId = const $CopyWithPlaceholder(),
     Object? botId = const $CopyWithPlaceholder(),
     Object? catalogId = const $CopyWithPlaceholder(),
+    Object? galleryId = const $CopyWithPlaceholder(),
   }) {
     return InstallCatalogSkillRequest(
       orgId: orgId == const $CopyWithPlaceholder() || orgId == null
@@ -69,10 +77,14 @@ class _$InstallCatalogSkillRequestCWProxyImpl
           ? _value.botId
           // ignore: cast_nullable_to_non_nullable
           : botId as String?,
-      catalogId: catalogId == const $CopyWithPlaceholder() || catalogId == null
+      catalogId: catalogId == const $CopyWithPlaceholder()
           ? _value.catalogId
           // ignore: cast_nullable_to_non_nullable
-          : catalogId as String,
+          : catalogId as String?,
+      galleryId: galleryId == const $CopyWithPlaceholder()
+          ? _value.galleryId
+          // ignore: cast_nullable_to_non_nullable
+          : galleryId as String?,
     );
   }
 }
@@ -95,11 +107,12 @@ InstallCatalogSkillRequest _$InstallCatalogSkillRequestFromJson(
   'InstallCatalogSkillRequest',
   json,
   ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['org_id', 'catalog_id']);
+    $checkKeys(json, requiredKeys: const ['org_id']);
     final val = InstallCatalogSkillRequest(
       orgId: $checkedConvert('org_id', (v) => v as String),
       botId: $checkedConvert('bot_id', (v) => v as String?),
-      catalogId: $checkedConvert('catalog_id', (v) => v as String),
+      catalogId: $checkedConvert('catalog_id', (v) => v as String?),
+      galleryId: $checkedConvert('gallery_id', (v) => v as String?),
     );
     return val;
   },
@@ -107,6 +120,7 @@ InstallCatalogSkillRequest _$InstallCatalogSkillRequestFromJson(
     'orgId': 'org_id',
     'botId': 'bot_id',
     'catalogId': 'catalog_id',
+    'galleryId': 'gallery_id',
   },
 );
 
@@ -115,5 +129,6 @@ Map<String, dynamic> _$InstallCatalogSkillRequestToJson(
 ) => <String, dynamic>{
   'org_id': instance.orgId,
   'bot_id': ?instance.botId,
-  'catalog_id': instance.catalogId,
+  'catalog_id': ?instance.catalogId,
+  'gallery_id': ?instance.galleryId,
 };

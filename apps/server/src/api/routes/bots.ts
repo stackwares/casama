@@ -2,19 +2,29 @@ import {
   existingWelcome,
   handleWelcomeAction,
   memoryStoreFor,
+  PLATFORM_OPENROUTER_CREDENTIAL_ID,
   type StoredMemory,
   startWelcome,
   storeFromConfig,
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
-import { parseMentions, templateById } from "@casama/domain";
+import {
+  CLOUD_LOCKED_MODEL,
+  cloudRunPolicy,
+  defaultModelFor,
+  FEATURED_MODELS,
+  lockCloudPolicy,
+  parseMentions,
+  templateById,
+} from "@casama/domain";
 import { withSpan } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { streamSSE } from "hono/streaming";
 import { enforceLimit } from "../../billing/limits.ts";
 import { modelOverrides } from "../../env.ts";
+import { getCloudModels } from "../../services/cloud-models.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -81,6 +91,35 @@ const runOut = (r: RunRow) => ({
 });
 
 type CredRow = typeof modelCredentials.$inferSelect;
+
+/** Casama Cloud's shared key is not a row. It cannot be renamed, tested or deleted (D-186). */
+function rejectCloudKey(id: string) {
+  if (id === PLATFORM_OPENROUTER_CREDENTIAL_ID)
+    throw new ApiError(
+      403,
+      "forbidden",
+      "Casama Cloud's key stays with the workspace. Add your own key to use another model.",
+    );
+}
+
+function cloudCredential(orgId: string) {
+  return {
+    id: PLATFORM_OPENROUTER_CREDENTIAL_ID,
+    org_id: orgId,
+    provider: "openrouter" as const,
+    label: "Casama Cloud",
+    base_url: null,
+    key_hint: null,
+    last_tested_at: null,
+    last_test_ok: null,
+    owner_user_id: null,
+    status: "ok" as const,
+    account: null,
+    fallback_on_limit: false,
+    created_at: "2026-11-11T00:00:00.000Z",
+  };
+}
+
 export const credOut = (c: CredRow) => ({
   id: c.id,
   org_id: c.orgId,
@@ -166,13 +205,25 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       .filter(Boolean)
       .map((c) => (c as { credential_id: string }).credential_id);
     if (!ids.length) return;
+    // Casama's shared key is not a row. It is valid only while the server has one (D-186).
+    if (ids.includes(PLATFORM_OPENROUTER_CREDENTIAL_ID) && !deps.env.CLOUD_MODEL_UPSTREAM_KEY)
+      throw new ApiError(
+        400,
+        "validation_failed",
+        "model_policy refers to a credential outside this organization",
+        {
+          errors: [{ path: "model_policy", message: "Unknown credential" }],
+        },
+      );
+    const own = ids.filter((id) => id !== PLATFORM_OPENROUTER_CREDENTIAL_ID);
+    if (!own.length) return;
     const found = await withUserSession(db, claims, (tx) =>
       tx
         .select({ id: modelCredentials.id })
         .from(modelCredentials)
-        .where(and(eq(modelCredentials.orgId, orgId), inArray(modelCredentials.id, ids))),
+        .where(and(eq(modelCredentials.orgId, orgId), inArray(modelCredentials.id, own))),
     );
-    if (new Set(found.map((r) => r.id)).size !== new Set(ids).size) {
+    if (new Set(found.map((r) => r.id)).size !== new Set(own).size) {
       throw new ApiError(
         400,
         "validation_failed",
@@ -192,8 +243,17 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     );
     if (!(org[0] as { ok?: boolean } | undefined)?.ok)
       throw new ApiError(404, "org_not_found", "Organization not found");
-    await checkPolicy(claims, body.org_id, body.model_policy);
     await enforceLimit(db, body.org_id, "max_bots");
+    const modelPolicy =
+      deps.env.BILLING_ENABLED && deps.env.CLOUD_MODEL_UPSTREAM_KEY
+        ? cloudRunPolicy(await getCloudModels(db))
+        : deps.env.BILLING_ENABLED
+          ? lockCloudPolicy(
+              body.model_policy ?? {},
+              defaultModelFor("openrouter", modelOverrides(deps.env)) ?? CLOUD_LOCKED_MODEL,
+            )
+          : (body.model_policy ?? {});
+    await checkPolicy(claims, body.org_id, modelPolicy);
     const [bot] = await withUserSession(db, claims, (tx) =>
       tx
         .insert(bots)
@@ -206,7 +266,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             body.persona_md?.trim() ||
             (body.template_id ? (templateById(body.template_id)?.persona ?? "") : ""),
           avatarUrl: body.avatar_url,
-          modelPolicy: body.model_policy ?? {},
+          modelPolicy,
           autonomy:
             body.autonomy ??
             (body.template_id ? templateById(body.template_id)?.autonomy : undefined) ??
@@ -518,7 +578,11 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
       if (conv.welcome) {
         const r = await handleWelcomeAction(
-          { db, modelOverrides: modelOverrides(deps.env) },
+          {
+            db,
+            modelOverrides: modelOverrides(deps.env),
+            platformModel: Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY),
+          },
           { orgId: conv.org_id, botId: conv.bot_id, conversationId: id, userId: claims.sub },
           {
             name: ui_action.name,
@@ -865,12 +929,17 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         .where(eq(modelCredentials.orgId, org_id))
         .orderBy(modelCredentials.createdAt),
     );
-    return c.json({ items: rows.map(credOut) }, 200);
+    const items: Array<ReturnType<typeof credOut> | ReturnType<typeof cloudCredential>> =
+      rows.map(credOut);
+    // Own keys stay first. Casama's key is last so a new bot prefers a key the workspace added.
+    if (deps.env.CLOUD_MODEL_UPSTREAM_KEY) items.push(cloudCredential(org_id));
+    return c.json({ items }, 200);
   });
 
   app.openapi(routes.testCredential, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
+    rejectCloudKey(id);
     const body = (await c.req.json().catch(() => ({}))) as { model?: unknown };
     const model =
       typeof body.model === "string" && body.model.length <= 200 ? body.model : undefined;
@@ -908,6 +977,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.updateCredential, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
+    rejectCloudKey(id);
     const body = c.req.valid("json");
     const [cred] = await withUserSession(db, claims, (tx) =>
       tx.select().from(modelCredentials).where(eq(modelCredentials.id, id)),
@@ -938,6 +1008,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.deleteCredential, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
+    rejectCloudKey(id);
     const [cred] = await withUserSession(db, claims, (tx) =>
       tx.select().from(modelCredentials).where(eq(modelCredentials.id, id)),
     );
@@ -969,6 +1040,26 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.listCredentialModels, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
+    if (id === PLATFORM_OPENROUTER_CREDENTIAL_ID) {
+      if (!deps.env.CLOUD_MODEL_UPSTREAM_KEY)
+        throw new ApiError(404, "credential_not_found", "Credential not found");
+      const [member] = await withUserSession(db, claims, (tx) =>
+        tx.execute<{ ok: boolean }>(
+          sql`select true as ok from public.memberships where user_id = ${claims.sub}::uuid limit 1`,
+        ),
+      );
+      if (!member?.ok) throw new ApiError(404, "credential_not_found", "Credential not found");
+      const featured = FEATURED_MODELS.openrouter ?? [];
+      // Casama Cloud runs one model. A self-hosted server that set the key keeps the short list.
+      const locked = deps.env.BILLING_ENABLED
+        ? (await getCloudModels(db)).chat
+        : (defaultModelFor("openrouter", modelOverrides(deps.env)) ?? CLOUD_LOCKED_MODEL);
+      const known = featured.find((m) => m.id === locked);
+      const items = deps.env.BILLING_ENABLED
+        ? [{ id: locked, name: known?.name ?? locked, featured: true }]
+        : featured.map((m) => ({ ...m, featured: true }));
+      return c.json({ items, source: "featured" as const }, 200);
+    }
     // RLS limits this to members of the key's workspace; the key itself never leaves the worker.
     const [cred] = await withUserSession(db, claims, (tx) =>
       tx.select().from(modelCredentials).where(eq(modelCredentials.id, id)),

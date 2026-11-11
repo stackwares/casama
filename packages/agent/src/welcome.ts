@@ -12,6 +12,7 @@ import { randomUUID } from "node:crypto";
 import type { Database } from "@casama/db";
 import { contentKeys } from "@casama/db";
 import { defaultModelFor } from "@casama/domain";
+import { PLATFORM_OPENROUTER_CREDENTIAL_ID } from "./credentials.ts";
 import { sql } from "drizzle-orm";
 import { surfaceMessages } from "./tools/ui.ts";
 
@@ -34,7 +35,10 @@ export interface WelcomeState {
     | "name"
     | "focus"
     | "scope"
+    | "model"
     | "connect"
+    | "phone"
+    | "invite"
     | "first_value"
     | "offer_setup"
     | "interview"
@@ -274,94 +278,105 @@ const listLabels = (focus: Focus[], other?: string) =>
     )
     .join(", ");
 
-/** The intro for the picks, the main connection card, and the model / invite cards when needed. */
-export function introMessage(s: WelcomeState, o: { hasModel: boolean }) {
-  const focus = s.focus.length ? s.focus : [];
-  const intro = focus.length
-    ? `Great. ${focus.map((f) => INTRO[f]).join(" ")}`
+/** One setup question at a time. A model, a connection, the phone, and an invite never share a message. */
+type SetupPrompt = "model" | "connect" | "phone" | "invite";
+
+const focusIntro = (s: WelcomeState) =>
+  s.focus.length
+    ? `Great. ${s.focus.map((f) => INTRO[f]).join(" ")}`
     : "No problem. I can help with email and calendar, projects, code, research and errands. Here's how to get the most out of me.";
-  const apps = [...new Set(focus.flatMap((f) => MAIN_CONNECTION[f]))].slice(0, 3);
-  const parts: Array<Record<string, unknown>> = [{ type: "text", text: intro }];
-  if (!o.hasModel) parts.push(modelCard());
-  if (apps.length) {
-    const names = apps.map((a) => APP_NAMES[a] ?? a);
-    parts.push(
-      card(
-        column(
-          ["t", "apps", "row"],
-          [
-            text(
-              "t",
-              `Connect ${names.join(" or ")} so I can ${focus.includes("coding") ? "work on your code" : "see what you're working with"}. You choose what I can do, and I ask before anything risky.`,
-            ),
-            { id: "apps", component: "Row", children: apps.map((a) => `c_${a}`) },
-            ...apps.flatMap((a, i) =>
-              button(
-                `c_${a}`,
-                `Connect ${APP_NAMES[a] ?? a}`,
-                "app:connect",
-                { app: a },
-                i === 0 ? "primary" : "default",
-              ),
-            ),
-            { id: "row", component: "Row", children: ["more", "next"] },
-            ...button(
-              "more",
-              "More apps",
-              "app:route",
-              { path: "/settings/integrations" },
-              "borderless",
-            ),
-            ...button("next", "Done, next", "welcome.next"),
-          ],
+
+const laterBots = (s: WelcomeState) => {
+  const names = [...new Set(s.focus.flatMap((f) => STARTER_FOR[f]))].map((t) =>
+    t.replaceAll("-", " "),
+  );
+  if (!names.length) return "";
+  const phrase = (name: string) => `${/^[aeiou]/i.test(name) ? "an" : "a"} ${name}`;
+  return `Later you might add ${names.map(phrase).join(" or ")} bot; I can set one up when you're ready.`;
+};
+
+/** The next single question after "just me / team / business", if one is still waiting. */
+function setupPrompts(s: WelcomeState, hasModel: boolean): SetupPrompt[] {
+  const prompts: SetupPrompt[] = [];
+  if (!hasModel) prompts.push("model");
+  if (s.focus.some((f) => MAIN_CONNECTION[f].length > 0)) prompts.push("connect");
+  if (s.focus.some((f) => f === "health" || f === "errands")) prompts.push("phone");
+  if (s.scope === "team" || s.scope === "business") prompts.push("invite");
+  return prompts;
+}
+
+function connectCard(s: WelcomeState) {
+  const apps = [...new Set(s.focus.flatMap((f) => MAIN_CONNECTION[f]))].slice(0, 3);
+  const names = apps.map((a) => APP_NAMES[a] ?? a);
+  return card(
+    column(
+      ["t", "apps", "row"],
+      [
+        text(
+          "t",
+          `Connect ${names.join(" or ")} so I can ${s.focus.includes("coding") ? "work on your code" : "see what you're working with"}. You choose what I can do, and I ask before anything risky.`,
         ),
-      ),
-    );
-  } else parts.push(...firstTaskMessage(s));
-  // Phone connections (Wave 4, D-149/D-150): health, places and the phone's calendar live on the phone.
-  const phone = focus.filter((f) => f === "health" || f === "errands");
-  if (phone.length)
-    parts.push(
-      card(
-        column(
-          ["t", "row"],
-          [
-            text(
-              "t",
-              focus.includes("health")
-                ? "Share your sleep, activity and workouts from your phone (Apple Health or Health Connect). You choose each kind, and only I can read it, only in your chats."
-                : "Share your phone's calendar and places with me, so I can plan around your day. You choose each kind.",
-            ),
-            { id: "row", component: "Row", children: ["phone"] },
-            ...button(
-              "phone",
-              "Choose what to share",
-              "app:route",
-              { path: "/settings/devices" },
-              apps.length ? "default" : "primary",
-            ),
-          ],
+        { id: "apps", component: "Row", children: apps.map((a) => `c_${a}`) },
+        ...apps.flatMap((a, i) =>
+          button(
+            `c_${a}`,
+            `Connect ${APP_NAMES[a] ?? a}`,
+            "app:connect",
+            { app: a },
+            i === 0 ? "primary" : "default",
+          ),
         ),
-      ),
-    );
-  if (s.scope === "team" || s.scope === "business")
-    parts.push(
-      card(
-        column(
-          ["t", "inv"],
-          [
-            text(
-              "t",
-              s.scope === "team"
-                ? "Want your team in here? Invite them; they get their own chats with shared bots."
-                : "Bring in the people you work with; shared bots can help everyone.",
-            ),
-            ...button("inv", "Invite people", "app:invite"),
-          ],
+        { id: "row", component: "Row", children: ["more", "next"] },
+        ...button("more", "More apps", "app:route", { path: "/settings/integrations" }, "borderless"),
+        ...button("next", "Done, next", "welcome.next"),
+      ],
+    ),
+  );
+}
+
+function phoneCard(s: WelcomeState) {
+  return card(
+    column(
+      ["t", "row"],
+      [
+        text(
+          "t",
+          s.focus.includes("health")
+            ? "Share your sleep, activity and workouts from your phone (Apple Health or Health Connect). You choose each kind, and only I can read it, only in your chats."
+            : "Share your phone's calendar and places with me, so I can plan around your day. You choose each kind.",
         ),
-      ),
-    );
-  return parts;
+        { id: "row", component: "Row", children: ["phone", "next"] },
+        ...button("phone", "Choose what to share", "app:route", { path: "/settings/devices" }, "primary"),
+        ...button("next", "Done, next", "welcome.next"),
+      ],
+    ),
+  );
+}
+
+function inviteCard(s: WelcomeState) {
+  return card(
+    column(
+      ["t", "row"],
+      [
+        text(
+          "t",
+          s.scope === "team"
+            ? "Want your team in here? Invite them; they get their own chats with shared bots."
+            : "Bring in the people you work with; shared bots can help everyone.",
+        ),
+        { id: "row", component: "Row", children: ["inv", "next"] },
+        ...button("inv", "Invite people", "app:invite", {}, "primary"),
+        ...button("next", "Done, next", "welcome.next"),
+      ],
+    ),
+  );
+}
+
+function onePrompt(kind: SetupPrompt, s: WelcomeState) {
+  if (kind === "model") return [modelCard()];
+  if (kind === "connect") return [connectCard(s)];
+  if (kind === "phone") return [phoneCard(s)];
+  return [inviteCard(s)];
 }
 
 /**
@@ -370,34 +385,33 @@ export function introMessage(s: WelcomeState, o: { hasModel: boolean }) {
  */
 export function modelCard(again = false) {
   return card(
-    column(again ? ["t", "row", "row2"] : ["t", "row"], [
-      text(
-        "t",
-        again
-          ? "I need a model before I can do that. Pick one way, then tap Continue:"
-          : "First, I need a model to think with. Pick one way:",
-      ),
-      { id: "row", component: "Row", children: ["chatgpt", "key", "local"] },
-      // The app starts ChatGPT sign-in itself where it can (desktop) and explains elsewhere.
-      ...button(
-        "chatgpt",
-        "Continue with ChatGPT",
-        "app:route",
-        { path: "/settings/keys", provider: "chatgpt" },
-        "primary",
-      ),
-      ...button("key", "Add a model key", "app:route", { path: "/settings/keys" }),
-      ...button("local", "Use a local model", "app:route", {
-        path: "/settings/keys",
-        provider: "openai_compatible",
-      }),
-      ...(again
-        ? [
-            { id: "row2", component: "Row", children: ["next"] },
-            ...button("next", "Continue", "welcome.next"),
-          ]
-        : []),
-    ]),
+    column(
+      ["t", "row", "row2"],
+      [
+        text(
+          "t",
+          again
+            ? "I need a model before I can do that. Pick one way, then tap Continue:"
+            : "First, I need a model to think with. Pick one way:",
+        ),
+        { id: "row", component: "Row", children: ["chatgpt", "key", "local"] },
+        // The app starts ChatGPT sign-in itself where it can (desktop) and explains elsewhere.
+        ...button(
+          "chatgpt",
+          "Continue with ChatGPT",
+          "app:route",
+          { path: "/settings/keys", provider: "chatgpt" },
+          "primary",
+        ),
+        ...button("key", "Add a model key", "app:route", { path: "/settings/keys" }),
+        ...button("local", "Use a local model", "app:route", {
+          path: "/settings/keys",
+          provider: "openai_compatible",
+        }),
+        { id: "row2", component: "Row", children: ["next"] },
+        ...button("next", "Continue", "welcome.next"),
+      ],
+    ),
   );
 }
 
@@ -529,6 +543,7 @@ export async function ensureBotModel(
   botId: string,
   orgId: string,
   overrides: Record<string, string | undefined> = {},
+  platformModel = false,
 ) {
   const [b] = await db.execute<{ primary: unknown }>(
     sql`select model_policy -> 'primary' as primary from public.bots where id = ${botId}::uuid`,
@@ -545,7 +560,14 @@ export async function ensureBotModel(
     );
     return true;
   }
-  return false;
+  // Casama Cloud's shared OpenRouter key: a workspace with no key of its own still has a model.
+  if (!platformModel) return false;
+  const model = defaultModelFor("openrouter", overrides);
+  if (!model) return false;
+  await db.execute(
+    sql`update public.bots set model_policy = jsonb_set(coalesce(model_policy, '{}'::jsonb), '{primary}', ${JSON.stringify({ credential_id: PLATFORM_OPENROUTER_CREDENTIAL_ID, model })}::jsonb) where id = ${botId}::uuid`,
+  );
+  return true;
 }
 
 /** A bot message with no model behind it: a completed run, its events, and the message. */
@@ -610,6 +632,8 @@ export interface WelcomeAction {
 export interface WelcomeDeps {
   db: Database;
   modelOverrides?: Record<string, string | undefined>;
+  /** This server has Casama Cloud's shared model key, so the model card is skipped. */
+  platformModel?: boolean;
 }
 
 /**
@@ -639,7 +663,7 @@ export async function handleWelcomeAction(
       values (${c.orgId}::uuid, ${c.botId}::uuid, 'preference', ${contentKeys.seal(c.orgId, content.slice(0, 8000))}, 0.8, true)`);
   /** A user message and a queued normal run (the model's turn). */
   const modelTurn = async (text: string, purpose?: string) => {
-    await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides);
+    await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel);
     const [run] = await db.execute<{ id: string }>(sql`
       insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
       values (${c.orgId}::uuid, ${c.botId}::uuid, ${c.conversationId}::uuid, ${c.userId}::uuid, 'chat') returning id`);
@@ -714,21 +738,30 @@ export async function handleWelcomeAction(
               ? "Uses Casama with their team."
               : "Uses Casama for their business.",
         );
-      const hasModel = await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides);
-      const apps = s.focus.flatMap((f) => MAIN_CONNECTION[f]);
-      s.step = apps.length ? "connect" : "first_value";
-      const starters = [...new Set(s.focus.flatMap((f) => STARTER_FOR[f]))];
-      const parts = introMessage(s, { hasModel });
-      if (starters.length)
-        parts.push({
-          type: "text",
-          text: `Later you might add a ${starters.map((t) => t.replaceAll("-", " ")).join(" or a ")} bot; I can set one up when you're ready.`,
-        });
-      return scripted(parts);
+      const hasModel = await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel);
+      const prompts = setupPrompts(s, hasModel);
+      const lead = [focusIntro(s), laterBots(s)].filter(Boolean).join("\n\n");
+      const first = prompts[0];
+      if (!first) {
+        s.step = "first_value";
+        return scripted([{ type: "text", text: lead }, ...firstTaskMessage(s)]);
+      }
+      s.step = first;
+      return scripted([{ type: "text", text: lead }, ...onePrompt(first, s)]);
     }
     case "welcome.next": {
-      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides)))
+      const hasModel = await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel);
+      if (!hasModel) {
+        s.step = "model";
         return scripted([modelCard(true)]);
+      }
+      const prompts = setupPrompts(s, true);
+      const at = prompts.indexOf(s.step as SetupPrompt);
+      const next = at === -1 ? prompts[0] : prompts[at + 1];
+      if (next) {
+        s.step = next;
+        return scripted(onePrompt(next, s));
+      }
       const calendarOrMail = await hasConnection(db, c.orgId, [
         "google_calendar",
         "gmail",
@@ -743,7 +776,7 @@ export async function handleWelcomeAction(
       s.step = "first_value";
       return scripted(firstTaskMessage(s));
     case "welcome.catchup":
-      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides)))
+      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel)))
         return scripted([modelCard(true)]);
       s.step = "first_value";
       return modelTurn(CATCHUP_TEXT);
@@ -755,7 +788,7 @@ export async function handleWelcomeAction(
           ...firstTaskMessage(s),
         ]);
       // Nothing would answer without a model; keep the task card for after one is added.
-      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides)))
+      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel)))
         return scripted([modelCard(true)]);
       s.step = "first_value";
       const prefix =
@@ -764,7 +797,7 @@ export async function handleWelcomeAction(
       return modelTurn(`${prefix}${t}`.slice(0, 4000));
     }
     case "welcome.setup":
-      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides)))
+      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel)))
         return scripted([modelCard(true)]);
       s.step = "interview";
       await db.execute(

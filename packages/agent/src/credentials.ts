@@ -1,5 +1,10 @@
 import type { Database } from "@casama/db";
-import { DEFAULT_MODELS, DEFAULT_REASONING_EFFORT } from "@casama/domain";
+import {
+  CLOUD_LOCKED_MODEL,
+  DEFAULT_MODELS,
+  DEFAULT_REASONING_EFFORT,
+  PLATFORM_OPENROUTER_CREDENTIAL_ID,
+} from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { ChatGptAuthError, type ChatGptTokens, refreshTokens, tokensFrom } from "./chatgpt-auth.ts";
 import { CHATGPT_API_URL } from "./gateway/chatgpt.ts";
@@ -9,6 +14,8 @@ import {
   type ProviderId,
   type ResolvedModel,
 } from "./gateway/types.ts";
+
+export { CLOUD_LOCKED_MODEL, PLATFORM_OPENROUTER_CREDENTIAL_ID };
 
 export interface ChatGptConfig {
   /** OpenAI's auth server (tests point it at a fake). */
@@ -49,10 +56,29 @@ export class CredentialResolver {
   private readonly db: Database;
   private readonly chatgpt: ChatGptConfig;
   private readonly gateway?: AiGatewayConfig;
-  constructor(db: Database, opts: { chatgpt?: ChatGptConfig; aiGateway?: AiGatewayConfig } = {}) {
+  /** Casama Cloud's OpenRouter key. Workspaces without their own key run on this. */
+  private readonly platformOpenRouterKey?: string;
+  constructor(
+    db: Database,
+    opts: {
+      chatgpt?: ChatGptConfig;
+      aiGateway?: AiGatewayConfig;
+      platformOpenRouterKey?: string;
+    } = {},
+  ) {
     this.db = db;
     this.chatgpt = opts.chatgpt ?? {};
     this.gateway = opts.aiGateway;
+    this.platformOpenRouterKey = opts.platformOpenRouterKey;
+  }
+
+  /** The shared Cloud model, when this server has one. */
+  platformChoice(model?: string): ModelChoice | null {
+    if (!this.platformOpenRouterKey) return null;
+    return {
+      credential_id: PLATFORM_OPENROUTER_CREDENTIAL_ID,
+      model: model || CLOUD_LOCKED_MODEL,
+    };
   }
 
   /** Cloudflare AI Gateway (D-145): calls without their own base URL go through it, for caching, logs and limits. */
@@ -72,6 +98,22 @@ export class CredentialResolver {
   }
 
   async resolve(orgId: string, choice: ModelChoice, ctx?: ResolveContext): Promise<ResolvedModel> {
+    const reasoningEffort =
+      choice.reasoning_effort ??
+      (Object.values(DEFAULT_MODELS).includes(choice.model) ? DEFAULT_REASONING_EFFORT : undefined);
+    if (choice.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID) {
+      if (!this.platformOpenRouterKey) throw new Error("model_credential_not_found");
+      return {
+        provider: "openrouter",
+        model: choice.model || CLOUD_LOCKED_MODEL,
+        apiKey: this.platformOpenRouterKey,
+        ...this.viaGateway("openrouter", null),
+        credentialId: choice.credential_id,
+        reasoningEffort,
+        platformKey: true,
+        openRouterUser: orgId,
+      };
+    }
     const rows = await this.db.execute<{
       provider: ProviderId;
       base_url: string | null;
@@ -86,10 +128,6 @@ export class CredentialResolver {
       where c.id = ${choice.credential_id}::uuid and c.org_id = ${orgId}::uuid`);
     const row = rows[0];
     if (!row) throw new Error("model_credential_not_found");
-    // The default model runs at the default effort unless the bot says otherwise (D-064).
-    const reasoningEffort =
-      choice.reasoning_effort ??
-      (Object.values(DEFAULT_MODELS).includes(choice.model) ? DEFAULT_REASONING_EFFORT : undefined);
     if (row.provider === "chatgpt") {
       const fallbackOnLimit = row.settings?.fallback_on_limit === true;
       const fail = (code: string, message: string, retryable: boolean) =>

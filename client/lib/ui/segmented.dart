@@ -10,7 +10,8 @@ class AppSegmentedControl<T extends Object> extends StatelessWidget {
   final List<T> values;
   final Map<T, String> labels;
   final Map<T, IconData>? icons;
-  final T groupValue;
+  /// Null (or a value not in [values]) selects nothing, e.g. while a choice from elsewhere is picked.
+  final T? groupValue;
   final ValueChanged<T>? onValueChanged;
 
   @override
@@ -20,7 +21,7 @@ class AppSegmentedControl<T extends Object> extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: CupertinoSlidingSegmentedControl<T>(
-        groupValue: groupValue,
+        groupValue: values.contains(groupValue) ? groupValue : null,
         onValueChanged: (v) {
           if (v != null) onValueChanged?.call(v);
         },

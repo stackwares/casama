@@ -1,0 +1,16 @@
+{
+  "name": "Weekly report",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "writing"
+  ],
+  "category": "work",
+  "icon": "calendar-check",
+  "featured": false,
+  "version": 1
+}

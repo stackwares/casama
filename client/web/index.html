@@ -31,8 +31,22 @@
 
   <title>Casama</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Launch screen until Flutter draws its first frame (image from scripts/casama-splash.py). -->
+  <style>
+    html, body { margin: 0; height: 100%; background: #FCF3FB; }
+    #splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+    #splash img { width: 160px; height: auto; }
+    @media (prefers-color-scheme: dark) { html, body { background: #25102F; } }
+  </style>
 </head>
 <body>
+  <div id="splash" aria-hidden="true"><img src="splash/casama.png" alt=""></div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var s = document.getElementById('splash');
+      if (s) s.remove();
+    });
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

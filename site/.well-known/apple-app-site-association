@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["V8V5US964Z.ai.casama.app"],
+        "components": [{ "/": "/gallery/*" }]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["V8V5US964Z.ai.casama.app"]
+  }
+}

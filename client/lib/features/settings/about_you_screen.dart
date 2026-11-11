@@ -14,9 +14,12 @@ import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
 import '../bots/agent_import.dart';
 
-final aboutYouProvider = FutureProvider.autoDispose<AboutYouView>((ref) => ref.watch(backendProvider).aboutYou());
-final userFactsProvider = FutureProvider.autoDispose<List<UserFactView>>((ref) => ref.watch(backendProvider).userFacts());
-final profileSharedProvider = FutureProvider.autoDispose.family<bool, String>((ref, orgId) => ref.watch(backendProvider).profileSharedIn(orgId));
+final aboutYouProvider = FutureProvider<AboutYouView>((ref) async {
+  if (ref.watch(signedInProvider).value == false) return const AboutYouView();
+  return ref.watch(backendProvider).aboutYou();
+});
+final userFactsProvider = FutureProvider<List<UserFactView>>((ref) => ref.watch(backendProvider).userFacts());
+final profileSharedProvider = FutureProvider.family<bool, String>((ref, orgId) => ref.watch(backendProvider).profileSharedIn(orgId));
 
 /// About you (D-169): what bots call the person, how they like replies, what they shared, and the
 /// facts bots learned in chat. Private to the person.

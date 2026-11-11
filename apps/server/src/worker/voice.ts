@@ -2,13 +2,13 @@
  * Voice work that needs provider keys (only the worker reads Vault): transcription, read-aloud
  * audio (cached per message and voice) and realtime call sessions (D-065).
  */
+import type { CloudModelAssignment } from "@casama/domain";
 import {
   createGeminiLiveSession,
   createRealtimeSession,
   DEFAULT_GEMINI_LIVE_MODEL,
   DEFAULT_REALTIME_MODEL,
   integrationToolName,
-  REALTIME_CREDENTIALS,
   type RealtimeProviderId,
   type RealtimeTool,
   START_TASK_TOOL,
@@ -19,6 +19,7 @@ import {
   TTS_PROVIDERS,
   type TtsProviderId,
   transcribe,
+  ttsCostUsd,
   VOICE_CALL_TOOLS,
   VOICE_PRICES,
   type VoiceBases,
@@ -39,6 +40,13 @@ export interface VoiceRuntime {
   realtimeModel?: string;
   /** Gemini Live model (default gemini-3.8-live). */
   geminiLiveModel?: string;
+  /**
+   * The server's own Google AI key (GOOGLE_AI_API_KEY): live calls in workspaces without their own
+   * Gemini or OpenAI key use it. On Casama Cloud those calls are paid from credits.
+   */
+  serverGeminiKey?: string;
+  /** Casama Cloud's live assignment (D-188). Unset on a self-hosted server. */
+  cloudModels?: () => Promise<CloudModelAssignment>;
 }
 
 type BotVoice = {
@@ -124,7 +132,9 @@ export async function voiceTranscribe(
 ) {
   const bot = await botVoice(rt.db, botId);
   if (bot.org_id !== orgId) throw new Error("bot_not_found");
-  const k = await rt.key(orgId, ordered(bot.voice.stt_provider, STT_PROVIDERS));
+  const assigned = await rt.cloudModels?.();
+  // On Casama Cloud the person cannot pick a dictation service.
+  const k = await rt.key(orgId, assigned ? STT_PROVIDERS : ordered(bot.voice.stt_provider, STT_PROVIDERS));
   if (!k?.key)
     return { ok: false as const, error: "Add an OpenAI or Deepgram key to use dictation." };
   const r = await transcribe(
@@ -136,6 +146,7 @@ export async function voiceTranscribe(
       bases: rt.bases,
       fetch: rt.fetch,
       language,
+      model: k.provider === "openai" ? assigned?.stt : undefined,
     },
   );
   const seconds = Math.ceil(r.seconds ?? 0);
@@ -160,11 +171,16 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
     where m.id = ${messageId}::uuid and m.org_id = ${orgId}::uuid`);
   if (!m) return { ok: false as const, error: "Message not found." };
   const bot = await botVoice(rt.db, m.bot_id);
-  const k = await rt.key(orgId, ordered(bot.voice.tts_provider, TTS_PROVIDERS));
+  const assigned = await rt.cloudModels?.();
+  const google = assigned ? await rt.key(orgId, ["google"]) : null;
+  const k =
+    assigned && (google?.key || rt.serverGeminiKey)
+      ? { provider: "google", key: google?.key ?? rt.serverGeminiKey ?? null }
+      : await rt.key(orgId, assigned ? TTS_PROVIDERS : ordered(bot.voice.tts_provider, TTS_PROVIDERS));
   if (!k?.key)
     return {
       ok: false as const,
-      error: "Add an ElevenLabs, OpenAI, Cartesia or Fish Audio key to read aloud.",
+      error: "Add a Google AI, OpenAI, ElevenLabs, Cartesia or Fish Audio key to read aloud.",
     };
   const voiceKey = `${k.provider}:${bot.voice.tts_voice ?? ""}`;
   const [cached] = await rt.db.execute<{ mime: string }>(sql`
@@ -180,6 +196,7 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
   const r = await synthesize(k.provider as TtsProviderId, k.key, text, bot.voice.tts_voice, {
     bases: rt.bases,
     fetch: rt.fetch,
+    model: k.provider === "google" ? assigned?.tts : undefined,
   });
   await rt.db.execute(sql`insert into public.tts_cache (message_id, voice_key, mime, audio)
     values (${messageId}::uuid, ${voiceKey}, ${r.mime}, ${Buffer.from(r.audio)})
@@ -190,7 +207,7 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
     m.bot_id,
     "tts_chars",
     text.length,
-    (text.length / 1000) * VOICE_PRICES.ttsPerThousandChars,
+    ttsCostUsd(k.provider as TtsProviderId, text.length, r.audio),
   );
   return { ok: true as const, voiceKey, cached: false };
 }
@@ -210,24 +227,23 @@ export async function voiceSession(
 ) {
   const bot = await botVoice(rt.db, botId);
   if (bot.org_id !== orgId) throw new Error("bot_not_found");
-  // Gemini Live when there's a Google AI key (cheaper), else OpenAI Realtime.
-  const preferred = bot.voice.realtime_provider;
-  const order = preferred
-    ? [
-        ...REALTIME_CREDENTIALS.filter((c) => c.provider === preferred),
-        ...REALTIME_CREDENTIALS.filter((c) => c.provider !== preferred),
-      ]
-    : REALTIME_CREDENTIALS;
-  const k = await rt.key(
-    orgId,
-    order.map((c) => c.credential),
-  );
+  const assigned = await rt.cloudModels?.();
+  // Every call, including a phone call, uses Gemini Live when a Google key exists: the
+  // workspace's own, otherwise the server's. OpenAI Realtime is only the last resort (D-187).
+  const google = await rt.key(orgId, ["google"]);
+  const openai = await rt.key(orgId, ["openai"]);
+  const k = google?.key
+    ? google
+    : rt.serverGeminiKey
+      ? { provider: "google", key: rt.serverGeminiKey }
+      : openai;
   if (!k?.key)
     return {
       ok: false as const,
+      code: "voice_key_missing",
       error: "Live calls need a Google AI (Gemini) or OpenAI key.",
     };
-  const provider = order.find((c) => c.credential === k.provider)?.provider ?? "openai";
+  const provider = k.provider === "google" ? "gemini" : "openai";
   // Calls get a small conversational tool set (each definition goes with the session and may
   // count on every turn); bigger jobs go to a normal chat run through start_task.
   const defs = rt.tools
@@ -257,14 +273,14 @@ export async function voiceSession(
     bot.persona_md,
     phone
       ? ""
-      : "Use tools when needed; tell the user briefly what you are doing. Some actions may need their approval in the Casama app. For anything that needs your computer, files, the browser, connected apps or several steps, use start_task: it runs in the chat and the result appears there.",
+      : 'Use tools when needed. Before you use a tool, always say a few words first so the caller isn\'t left in silence (like "Let me check that for you" or "One moment, looking that up"), then wait for the result before answering. If a tool says it is still working, tell the caller and keep the conversation going. Some actions may need their approval in the Casama app. For anything that needs your computer, files, the browser, connected apps or several steps, use start_task: it runs in the chat and the result appears there.',
     greeting,
   ]
     .filter(Boolean)
     .join("\n\n");
   if (provider === "gemini") {
     const s = await createGeminiLiveSession(k.key, {
-      model: rt.geminiLiveModel ?? DEFAULT_GEMINI_LIVE_MODEL,
+      model: assigned?.live ?? rt.geminiLiveModel ?? DEFAULT_GEMINI_LIVE_MODEL,
       voice: bot.voice.realtime_voice,
       instructions,
       tools,
@@ -274,13 +290,14 @@ export async function voiceSession(
     return { ok: true as const, ...s, tools: tools.length };
   }
   const s = await createRealtimeSession(k.key, {
-    model: rt.realtimeModel ?? DEFAULT_REALTIME_MODEL,
+    model: assigned?.realtime ?? rt.realtimeModel ?? DEFAULT_REALTIME_MODEL,
     voice: bot.voice.realtime_voice,
     instructions,
     tools,
     bases: rt.bases,
     fetch: rt.fetch,
     phone,
+    transcriptionModel: assigned?.stt,
   });
   return { ok: true as const, ...s, setup: null, tools: tools.length };
 }

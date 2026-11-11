@@ -34,6 +34,7 @@ import { registerCheckinRoutes } from "./routes/checkins.ts";
 import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerDeviceDataRoutes } from "./routes/device-data.ts";
 import { registerEncryptionRoutes } from "./routes/encryption.ts";
+import { registerGalleryRoutes } from "./routes/gallery.ts";
 import { registerJoiningRoutes } from "./routes/joining.ts";
 import { registerKnowledgeRoutes } from "./routes/knowledge.ts";
 import { registerLinkRoutes } from "./routes/links.ts";
@@ -235,6 +236,7 @@ export function createApp(deps: AppDeps) {
   registerBillingRoutes(app, deps);
   registerPrivacyRoutes(app, deps);
   registerAppearanceRoutes(app, deps, deps.wallpapers);
+  registerGalleryRoutes(app, deps);
   registerAppRoutes(app, deps, deps.apps);
   registerSearchRoutes(app, deps);
   registerSkillRoutes(app, deps);

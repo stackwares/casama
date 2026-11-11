@@ -221,7 +221,7 @@ export class ComputerService {
           return h;
         }
       }
-      await this.checkCanStart(c.org_id);
+      await this.checkCanStart(c.org_id, { credits: c.kind !== "local" });
       await this.setState(computerId, c.snapshot_ref ? "starting" : "provisioning", emit);
       try {
         const spec = {
@@ -241,20 +241,31 @@ export class ComputerService {
     });
   }
 
-  /** Throws workspace_suspended or email_unverified when a computer must not start (D-094). */
-  async checkCanStart(orgId: string) {
+  /**
+   * Throws workspace_suspended or email_unverified when a computer must not start (D-094).
+   * With credits, a credit-gated workspace that has nothing left cannot start a hosted computer.
+   */
+  async checkCanStart(orgId: string, opts: { credits?: boolean } = {}) {
     const [o] = await this.db.execute<{
       suspended: boolean;
       plan: string | null;
       verified: boolean;
+      gate: boolean | null;
+      credits: string | null;
+      unbilled: string | null;
     }>(sql`
       select o.suspended_at is not null as suspended,
              (select e.plan_code from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as plan,
-             public.worker_owner_email_verified(o.id) as verified
+             public.worker_owner_email_verified(o.id) as verified,
+             (select (e.limits->>'credit_gate')::boolean from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as gate,
+             (select balance_after from public.credit_ledger where org_id = o.id order by seq desc limit 1) as credits,
+             (select coalesce(sum(cost_usd), 0) from public.usage_ledger where org_id = o.id and billable and billed_at is null) as unbilled
       from public.organizations o where o.id = ${orgId}::uuid`);
     if (o?.suspended) throw new Error("workspace_suspended");
     if (this.requireVerifiedEmail && (o?.plan ?? "free") === "free" && !o?.verified)
       throw new Error("email_unverified");
+    if (opts.credits && o?.gate && Number(o.credits ?? 0) - Number(o.unbilled ?? 0) <= 0)
+      throw new Error("out_of_credits");
   }
 
   async touch(computerId: string) {

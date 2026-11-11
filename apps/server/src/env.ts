@@ -65,6 +65,11 @@ export const EnvSchema = z.object({
   /** Worker: the server's SearXNG for web search without a workspace key (D-179), e.g. http://searxng:8080. */
   SEARXNG_URL: z.url().optional(),
   UNSPLASH_API_URL: z.url().default("https://api.unsplash.com"),
+  /**
+   * Open gallery of themes, schemes, wallpapers and skills (D-184). `off` turns it off.
+   * The default is the public site; a fetch failure leaves the bundled looks in place.
+   */
+  GALLERY_URL: z.string().default("https://gallery.casama.ai"),
   /** Casama Cloud only (D-070). Self-hosted servers keep it off: no paywall, unlimited use. */
   BILLING_ENABLED: bool.default(false),
   /** Dodo Payments (web, desktop, credit packs). */
@@ -115,9 +120,16 @@ export const EnvSchema = z.object({
   TREG_API_URL: z.url().optional(),
   /** Calls for you (D-141): overrides for Twilio's API and OpenAI's realtime WebSocket (tests, proxies). */
   TWILIO_API_URL: z.url().optional(),
+  /** Phone calls through Twilio are off for now: bots get no voice.call tool unless this is on. */
+  PHONE_CALLS: bool.default(false),
   OPENAI_REALTIME_URL: z.string().optional(),
   /** Live calls on Gemini Live (when a workspace has a Google AI key); default gemini-3.8-live. */
   GEMINI_LIVE_MODEL: z.string().optional(),
+  /**
+   * The server's own Google AI key: live calls in workspaces without a Gemini or OpenAI key of
+   * their own use it. With billing on (Casama Cloud) those calls are paid from credits.
+   */
+  GOOGLE_AI_API_KEY: z.string().optional(),
   /** Payments (D-142): override for Stripe's API (tests, proxies). */
   STRIPE_API_URL: z.url().optional(),
   /** Cloudflare AI Gateway (D-145): model calls go through it; the token is for authenticated gateways. */

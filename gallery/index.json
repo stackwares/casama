@@ -1,0 +1,1122 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "coral",
+      "type": "scheme",
+      "name": "Coral",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "red"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "65b20a62c76c22e3d3ca0921ac31b431bc7697837043afabd7d7719718ec296a",
+      "size": 396,
+      "document": {
+        "light": {
+          "seed": "#C2412D",
+          "background": "#FFF6F3",
+          "onBackground": "#2E1410"
+        },
+        "dark": {
+          "seed": "#FF9E8A",
+          "background": "#1F0F0C",
+          "onBackground": "#FCE9E4"
+        }
+      },
+      "files": [
+        "schemes/coral/item.json",
+        "schemes/coral/scheme.json"
+      ]
+    },
+    {
+      "id": "ember",
+      "type": "scheme",
+      "name": "Ember",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "879e05b408cc1e5de1df140e481ecdf9b8bbaba517e36899861646561920469a",
+      "size": 339,
+      "document": {
+        "light": {
+          "seed": "#C4552A",
+          "background": "#FFF8F3",
+          "onBackground": "#2A140C"
+        },
+        "dark": {
+          "seed": "#FFB089",
+          "background": "#2A140C",
+          "onBackground": "#FFF1E8"
+        }
+      },
+      "files": [
+        "schemes/ember/item.json",
+        "schemes/ember/scheme.json"
+      ]
+    },
+    {
+      "id": "fjord",
+      "type": "scheme",
+      "name": "Fjord",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "blue",
+        "cool"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "76069606b163a7fb76d30dbbc9d8056aa4e3a64dc9d0fcaf57651ff2c64134d3",
+      "size": 396,
+      "document": {
+        "light": {
+          "seed": "#2F5DA8",
+          "background": "#F3F6FB",
+          "onBackground": "#121B2C"
+        },
+        "dark": {
+          "seed": "#9DBDF5",
+          "background": "#0D1420",
+          "onBackground": "#E3EBF8"
+        }
+      },
+      "files": [
+        "schemes/fjord/item.json",
+        "schemes/fjord/scheme.json"
+      ]
+    },
+    {
+      "id": "ink",
+      "type": "scheme",
+      "name": "Ink",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "neutral",
+        "mono"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "312cb69a8c7ac7bae62fe59ceeaf0f7d403218bb9ef4a21961c96ef30f4f1ada",
+      "size": 398,
+      "document": {
+        "light": {
+          "seed": "#3A3F47",
+          "background": "#F6F6F5",
+          "onBackground": "#161718"
+        },
+        "dark": {
+          "seed": "#C9CDD4",
+          "background": "#121314",
+          "onBackground": "#ECEDEE"
+        }
+      },
+      "files": [
+        "schemes/ink/item.json",
+        "schemes/ink/scheme.json"
+      ]
+    },
+    {
+      "id": "lagoon",
+      "type": "scheme",
+      "name": "Lagoon",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "teal"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "1674540712616c377d55abe1266a9ba1e04ac9ea24826c764942874c769b0c53",
+      "size": 339,
+      "document": {
+        "light": {
+          "seed": "#0E6E78",
+          "background": "#F4FBFC",
+          "onBackground": "#102226"
+        },
+        "dark": {
+          "seed": "#8FE8E2",
+          "background": "#0C2428",
+          "onBackground": "#E7F6F5"
+        }
+      },
+      "files": [
+        "schemes/lagoon/item.json",
+        "schemes/lagoon/scheme.json"
+      ]
+    },
+    {
+      "id": "marigold",
+      "type": "scheme",
+      "name": "Marigold",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "yellow"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "a66e62a106ab7a2e285d47673e77f7993fcb59f78c3259c168515cd822b265dd",
+      "size": 402,
+      "document": {
+        "light": {
+          "seed": "#A35F00",
+          "background": "#FFF8EE",
+          "onBackground": "#2B1D08"
+        },
+        "dark": {
+          "seed": "#FFC266",
+          "background": "#1E1608",
+          "onBackground": "#FBEFDC"
+        }
+      },
+      "files": [
+        "schemes/marigold/item.json",
+        "schemes/marigold/scheme.json"
+      ]
+    },
+    {
+      "id": "moss",
+      "type": "scheme",
+      "name": "Moss",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "green",
+        "calm"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "3c148a2fb32771cae7284e2f93ae08249f621c8fbbf9ef67e50e58431f705b8f",
+      "size": 396,
+      "document": {
+        "light": {
+          "seed": "#3F6B2A",
+          "background": "#F5F8F1",
+          "onBackground": "#1B2414"
+        },
+        "dark": {
+          "seed": "#A8D88A",
+          "background": "#121A0E",
+          "onBackground": "#E6F0DE"
+        }
+      },
+      "files": [
+        "schemes/moss/item.json",
+        "schemes/moss/scheme.json"
+      ]
+    },
+    {
+      "id": "plum",
+      "type": "scheme",
+      "name": "Plum",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "purple"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "cd56e1e7643326ceee0f47032f6f18c11423fa36317389eafb4cd546a1d7d7c5",
+      "size": 386,
+      "document": {
+        "light": {
+          "seed": "#7A3F8F",
+          "background": "#FAF5FB",
+          "onBackground": "#24122A"
+        },
+        "dark": {
+          "seed": "#DDB0EE",
+          "background": "#1B1020",
+          "onBackground": "#F3E6F7"
+        }
+      },
+      "files": [
+        "schemes/plum/item.json",
+        "schemes/plum/scheme.json"
+      ]
+    },
+    {
+      "id": "code-review",
+      "type": "skill",
+      "name": "Code review",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "code"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "aadb6a77c71d101ad10f92d8b0805f37ec35e50f3a4821de7f2b16115aa0dd90",
+      "size": 1313,
+      "category": "build",
+      "icon": "git-pull-request",
+      "description": "Review a code change for bugs first, then clarity and tests, and report findings ranked by severity with file and line.",
+      "files": [
+        "skills/code-review/LICENSE.txt",
+        "skills/code-review/SKILL.md",
+        "skills/code-review/item.json"
+      ]
+    },
+    {
+      "id": "csv-cleanup",
+      "type": "skill",
+      "name": "CSV cleanup",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "data",
+        "spreadsheets"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "fc19dee4d66e7931aca3994c6496daa8439124055e3c0eca369d03a09ebbbda7",
+      "size": 2387,
+      "category": "data",
+      "icon": "sheet",
+      "description": "Clean a messy CSV file - trim spaces, normalize headers, drop empty and duplicate rows - and report what changed.",
+      "files": [
+        "skills/csv-cleanup/LICENSE.txt",
+        "skills/csv-cleanup/SKILL.md",
+        "skills/csv-cleanup/item.json",
+        "skills/csv-cleanup/scripts/clean.py"
+      ]
+    },
+    {
+      "id": "meeting-notes",
+      "type": "skill",
+      "name": "Meeting notes",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "86c17a71ac6c979bf88d0994b7c837e315011b9c4f697ae05d07be3c9ddb2e96",
+      "size": 1329,
+      "category": "work",
+      "icon": "notebook-pen",
+      "description": "Turn a meeting transcript or rough notes into a short summary with decisions, action items and open questions.",
+      "files": [
+        "skills/meeting-notes/LICENSE.txt",
+        "skills/meeting-notes/SKILL.md",
+        "skills/meeting-notes/item.json"
+      ]
+    },
+    {
+      "id": "research-brief",
+      "type": "skill",
+      "name": "Research brief",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "research"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "361a7bf18f1ae2338b045c33fa899dfbe8fd60def307c9b4ba10306a516187b2",
+      "size": 1232,
+      "category": "research",
+      "icon": "file-search",
+      "description": "Research a question on the web and write a sourced brief with the answer first, key facts, disagreements and links.",
+      "files": [
+        "skills/research-brief/LICENSE.txt",
+        "skills/research-brief/SKILL.md",
+        "skills/research-brief/item.json"
+      ]
+    },
+    {
+      "id": "trip-planner",
+      "type": "skill",
+      "name": "Trip planner",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "travel",
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "fcd841b8fdd5573146ec23335508b06f9f2c7185caf848b472c0e9f94603204b",
+      "size": 1179,
+      "category": "life",
+      "icon": "plane",
+      "description": "Plan a trip day by day within a budget, with travel times, bookings to make and a packing list.",
+      "files": [
+        "skills/trip-planner/LICENSE.txt",
+        "skills/trip-planner/SKILL.md",
+        "skills/trip-planner/item.json"
+      ]
+    },
+    {
+      "id": "weekly-report",
+      "type": "skill",
+      "name": "Weekly report",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work",
+        "writing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "0bffc8c6bc46633e21253e7df6b01455ea3e66a9c06068db74548551d50258b4",
+      "size": 1162,
+      "category": "work",
+      "icon": "calendar-check",
+      "description": "Write a concise weekly status report from tickets, chats and notes, grouped into done, in progress, blocked and next.",
+      "files": [
+        "skills/weekly-report/LICENSE.txt",
+        "skills/weekly-report/SKILL.md",
+        "skills/weekly-report/item.json"
+      ]
+    },
+    {
+      "id": "ember",
+      "type": "theme",
+      "name": "Ember",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "4e350bbb6ccb1478ca4ccd75cba05142001134b0f01222f428c199cd4fe036b8",
+      "size": 606,
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#C4552A",
+            "background": "#FFF8F3",
+            "onBackground": "#2A140C"
+          },
+          "dark": {
+            "seed": "#FFB089",
+            "background": "#2A140C",
+            "onBackground": "#FFF1E8"
+          }
+        },
+        "headingFont": "Bricolage Grotesque",
+        "bodyFont": "Onest",
+        "wallpaper": {
+          "pattern": "doodles",
+          "palette": "sunset",
+          "intensity": 0.45
+        }
+      },
+      "files": [
+        "themes/ember/item.json",
+        "themes/ember/theme.json"
+      ]
+    },
+    {
+      "id": "lagoon",
+      "type": "theme",
+      "name": "Lagoon",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "teal",
+        "calm"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "1afff5b410ab1fa48725b496aff0020e33b06983ad5f8da0ca9fc9a2a4f0c45f",
+      "size": 508,
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#0E6E78",
+            "background": "#F4FBFC",
+            "onBackground": "#102226"
+          },
+          "dark": {
+            "seed": "#8FE8E2",
+            "background": "#0C2428",
+            "onBackground": "#E7F6F5"
+          }
+        },
+        "headingFont": "Fraunces",
+        "bodyFont": "Figtree",
+        "wallpaper": {
+          "pattern": "sea",
+          "palette": "ocean",
+          "intensity": 0.5
+        }
+      },
+      "files": [
+        "themes/lagoon/item.json",
+        "themes/lagoon/theme.json"
+      ]
+    },
+    {
+      "id": "marigold",
+      "type": "theme",
+      "name": "Marigold",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "e930ad5c49b5a08495294d70652ac8eb288d3bcb87825b3c9672c6ef44a1afa0",
+      "size": 601,
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#A35F00",
+            "background": "#FFF8EE",
+            "onBackground": "#2B1D08"
+          },
+          "dark": {
+            "seed": "#FFC266",
+            "background": "#1E1608",
+            "onBackground": "#FBEFDC"
+          }
+        },
+        "headingFont": "Young Serif",
+        "bodyFont": "DM Sans",
+        "wallpaper": {
+          "pattern": "treats",
+          "palette": "peach",
+          "intensity": 0.45
+        }
+      },
+      "files": [
+        "themes/marigold/item.json",
+        "themes/marigold/theme.json"
+      ]
+    },
+    {
+      "id": "nightshift",
+      "type": "theme",
+      "name": "Nightshift",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "neutral",
+        "focus"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "a056644f0f6d8009cf21d4ef54c0f3d6638d22a8537e255267c758804a93fb6e",
+      "size": 611,
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#3A3F47",
+            "background": "#F6F6F5",
+            "onBackground": "#161718"
+          },
+          "dark": {
+            "seed": "#C9CDD4",
+            "background": "#121314",
+            "onBackground": "#ECEDEE"
+          }
+        },
+        "headingFont": "Space Grotesk",
+        "bodyFont": "IBM Plex Sans",
+        "wallpaper": {
+          "pattern": "tech",
+          "palette": "graphite",
+          "intensity": 0.4
+        }
+      },
+      "files": [
+        "themes/nightshift/item.json",
+        "themes/nightshift/theme.json"
+      ]
+    },
+    {
+      "id": "north",
+      "type": "theme",
+      "name": "North",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "blue",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "45c224e20191706fb51ed86992ee1b7c7daa40d9827b8bb89e2b6bdcf9977c99",
+      "size": 599,
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#2F5DA8",
+            "background": "#F3F6FB",
+            "onBackground": "#121B2C"
+          },
+          "dark": {
+            "seed": "#9DBDF5",
+            "background": "#0D1420",
+            "onBackground": "#E3EBF8"
+          }
+        },
+        "headingFont": "Newsreader",
+        "bodyFont": "Source Sans 3",
+        "wallpaper": {
+          "pattern": "clouds",
+          "palette": "ocean",
+          "intensity": 0.4
+        }
+      },
+      "files": [
+        "themes/north/item.json",
+        "themes/north/theme.json"
+      ]
+    },
+    {
+      "id": "orchard",
+      "type": "theme",
+      "name": "Orchard",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "green",
+        "calm"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "542fd23301682648d056eb856ca43f8cca00cf25aa17bd4ee80209821aa60463",
+      "size": 592,
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#3F6B2A",
+            "background": "#F5F8F1",
+            "onBackground": "#1B2414"
+          },
+          "dark": {
+            "seed": "#A8D88A",
+            "background": "#121A0E",
+            "onBackground": "#E6F0DE"
+          }
+        },
+        "headingFont": "Lora",
+        "bodyFont": "Work Sans",
+        "wallpaper": {
+          "pattern": "garden",
+          "palette": "forest",
+          "intensity": 0.5
+        }
+      },
+      "files": [
+        "themes/orchard/item.json",
+        "themes/orchard/theme.json"
+      ]
+    },
+    {
+      "id": "postcard",
+      "type": "theme",
+      "name": "Postcard",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "sea"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "69602bcb6810fb9d946c3f4a62b36cffef55666dcf731ec270401150bc0249b7",
+      "size": 598,
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#C2412D",
+            "background": "#FFF6F3",
+            "onBackground": "#2E1410"
+          },
+          "dark": {
+            "seed": "#FF9E8A",
+            "background": "#1F0F0C",
+            "onBackground": "#FCE9E4"
+          }
+        },
+        "headingFont": "DM Serif Display",
+        "bodyFont": "Nunito",
+        "wallpaper": {
+          "pattern": "sea",
+          "palette": "sunset",
+          "intensity": 0.5
+        }
+      },
+      "files": [
+        "themes/postcard/item.json",
+        "themes/postcard/theme.json"
+      ]
+    },
+    {
+      "id": "velvet",
+      "type": "theme",
+      "name": "Velvet",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "purple",
+        "night"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "7dba5c94eaa759f637a56ec53d97eceb63d356ef10d8038d47b92a86c075dde6",
+      "size": 603,
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#7A3F8F",
+            "background": "#FAF5FB",
+            "onBackground": "#24122A"
+          },
+          "dark": {
+            "seed": "#DDB0EE",
+            "background": "#1B1020",
+            "onBackground": "#F3E6F7"
+          }
+        },
+        "headingFont": "Playfair Display",
+        "bodyFont": "Manrope",
+        "wallpaper": {
+          "pattern": "space",
+          "palette": "casama",
+          "intensity": 0.5
+        }
+      },
+      "files": [
+        "themes/velvet/item.json",
+        "themes/velvet/theme.json"
+      ]
+    },
+    {
+      "id": "aurora",
+      "type": "wallpaper",
+      "name": "Aurora",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "night",
+        "green"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "08b30ed90d53b048f70674b17371fcc49ae9f5051828c092098cf2baba2fd1af",
+      "size": 292207,
+      "document": {
+        "kind": "image",
+        "file": "aurora.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/aurora/aurora.jpg",
+        "wallpapers/aurora/item.json",
+        "wallpapers/aurora/thumb.jpg",
+        "wallpapers/aurora/wallpaper.json"
+      ]
+    },
+    {
+      "id": "circuit",
+      "type": "wallpaper",
+      "name": "Circuit",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "tech",
+        "neutral"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "80fb8f115db1a4c55a3c0b125dd4fef3b883dab7517aa3e1aa57fa9d2f99f727",
+      "size": 290,
+      "document": {
+        "kind": "pattern",
+        "pattern": "tech",
+        "palette": "graphite",
+        "intensity": 0.8
+      },
+      "files": [
+        "wallpapers/circuit/item.json",
+        "wallpapers/circuit/wallpaper.json"
+      ]
+    },
+    {
+      "id": "dune",
+      "type": "wallpaper",
+      "name": "Dune",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "e01a087c1c219b9a85d1c923bc5d1faadb1730b4e63555be7e1b64347881f249",
+      "size": 173276,
+      "document": {
+        "kind": "image",
+        "file": "dune.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/dune/dune.jpg",
+        "wallpapers/dune/item.json",
+        "wallpapers/dune/thumb.jpg",
+        "wallpapers/dune/wallpaper.json"
+      ]
+    },
+    {
+      "id": "dusk",
+      "type": "wallpaper",
+      "name": "Dusk",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "sunset",
+        "warm"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 2,
+      "sha256": "b94064c20b79ef81e529ddd48d89d52e736a6bcd1ea75a4577391975ee12806d",
+      "size": 192623,
+      "document": {
+        "kind": "image",
+        "file": "dusk.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/dusk/dusk.jpg",
+        "wallpapers/dusk/item.json",
+        "wallpapers/dusk/thumb.jpg",
+        "wallpapers/dusk/wallpaper.json"
+      ]
+    },
+    {
+      "id": "fog",
+      "type": "wallpaper",
+      "name": "Fog",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "calm",
+        "cool"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "d0c730d2884af10af900a01765de313e5df295552c05075a2f3119c4065c3d24",
+      "size": 219123,
+      "document": {
+        "kind": "image",
+        "file": "fog.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/fog/fog.jpg",
+        "wallpapers/fog/item.json",
+        "wallpapers/fog/thumb.jpg",
+        "wallpapers/fog/wallpaper.json"
+      ]
+    },
+    {
+      "id": "greenhouse",
+      "type": "wallpaper",
+      "name": "Greenhouse",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "garden",
+        "green"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "56615f706745ccf9a91127ce9b9792be1540c690da683a61ef90c27ef9460b5c",
+      "size": 292,
+      "document": {
+        "kind": "pattern",
+        "pattern": "garden",
+        "palette": "mint",
+        "intensity": 0.75
+      },
+      "files": [
+        "wallpapers/greenhouse/item.json",
+        "wallpapers/greenhouse/wallpaper.json"
+      ]
+    },
+    {
+      "id": "margins",
+      "type": "wallpaper",
+      "name": "Margins",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "doodles"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "f600d735d298b08d54cc87a6c8a258339e02228c1398e09a5d61bae45ed0f35b",
+      "size": 282,
+      "document": {
+        "kind": "pattern",
+        "pattern": "doodles",
+        "palette": "lavender",
+        "intensity": 0.75
+      },
+      "files": [
+        "wallpapers/margins/item.json",
+        "wallpapers/margins/wallpaper.json"
+      ]
+    },
+    {
+      "id": "night-sky",
+      "type": "wallpaper",
+      "name": "Night sky",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "space"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "ac15c512036435fef2290d3c69fe6179b6bd137106dd535e66d8044726676f31",
+      "size": 277,
+      "document": {
+        "kind": "pattern",
+        "pattern": "space",
+        "palette": "casama",
+        "intensity": 0.85
+      },
+      "files": [
+        "wallpapers/night-sky/item.json",
+        "wallpapers/night-sky/wallpaper.json"
+      ]
+    },
+    {
+      "id": "picnic",
+      "type": "wallpaper",
+      "name": "Picnic",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "treats",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "0c0818b3e89ddae44e9c22bec77bc2247ab945b884b5bcbb13ade7bf168ba703",
+      "size": 292,
+      "document": {
+        "kind": "pattern",
+        "pattern": "treats",
+        "palette": "cotton",
+        "intensity": 0.75
+      },
+      "files": [
+        "wallpapers/picnic/item.json",
+        "wallpapers/picnic/wallpaper.json"
+      ]
+    },
+    {
+      "id": "purr",
+      "type": "wallpaper",
+      "name": "Purr",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "pets",
+        "warm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "44827befd3496776c56360e4c1334a867037590d95fa4c8c81c75d4526846294",
+      "size": 282,
+      "document": {
+        "kind": "pattern",
+        "pattern": "pets",
+        "palette": "peach",
+        "intensity": 0.75
+      },
+      "files": [
+        "wallpapers/purr/item.json",
+        "wallpapers/purr/wallpaper.json"
+      ]
+    },
+    {
+      "id": "tide",
+      "type": "wallpaper",
+      "name": "Tide",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "sea"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 2,
+      "sha256": "380b1243c6d3a7ba76dfc15b70d1586c945e9db20df30682024b127d628c9ce1",
+      "size": 267,
+      "document": {
+        "kind": "pattern",
+        "pattern": "sea",
+        "palette": "ocean",
+        "intensity": 0.75
+      },
+      "files": [
+        "wallpapers/tide/item.json",
+        "wallpapers/tide/wallpaper.json"
+      ]
+    }
+  ]
+}

@@ -497,11 +497,14 @@ def defs(bot):
     clip += f'<ellipse cx="{FILL[0]}" cy="{FILL[1]}" rx="{FILL[2]}" ry="{FILL[3]}"/>'
     t0, t1, t2 = bot.pal['tail']
     o0, o1, o2, o3 = bot.pal['orb']
-    h = bot.pal['hue']
-    b0, b1, b2, b3 = hls(h, .9, .94), hls(h, .8, .82), hls(h, .75, .7), hls(h, .7, .59)
-    shade, rim = hls(h, .55, .45), hls(h, .5, .48)
-    sclera = hls(h, .6, .93)
-    i0, i1, i2 = hls(h, .85, .66), hls(h, .7, .34), hls(h, .6, .12)
+    if 'body' in bot.pal:  # explicit colours (the lavender brand cloud)
+        b0, b1, b2, b3, shade, rim, sclera, i0, i1, i2 = bot.pal['body']
+    else:
+        h = bot.pal['hue']
+        b0, b1, b2, b3 = hls(h, .9, .94), hls(h, .8, .82), hls(h, .75, .7), hls(h, .7, .59)
+        shade, rim = hls(h, .55, .45), hls(h, .5, .48)
+        sclera = hls(h, .6, .93)
+        i0, i1, i2 = hls(h, .85, .66), hls(h, .7, .34), hls(h, .6, .12)
     ck = bot.pal.get('cheek', '#FF6F8C')
     return f'''<defs>
     <linearGradient id="kcBody" gradientUnits="userSpaceOnUse" x1="96" y1="62" x2="150" y2="226">
@@ -572,6 +575,9 @@ def orb_markup(bot, animated):
     elif bot.orb == 'star':
         shape = (f'<path d="{star_d(OX, OY + 1, ORB_R * 1.2)}" fill="url(#kcOrb)" stroke="url(#kcOrb)" stroke-width="5" stroke-linejoin="round"/>'
                  f'<ellipse cx="{f(OX - 3)}" cy="{f(OY - 5)}" rx="3.5" ry="2.4" fill="#FFFFFF" opacity=".92"/>')
+    elif bot.orb == 'plus':
+        shape = (f'<path d="{sparkle_d(OX, OY, ORB_R * 1.35)}" fill="url(#kcOrb)" stroke="url(#kcOrb)" stroke-width="3" stroke-linejoin="round"/>'
+                 f'<path d="{sparkle_d(OX, OY, ORB_R * .55)}" fill="#FFFFFF" opacity=".9"/>')
     elif bot.orb == 'moon':
         shape = (f'<path d="{moon_d(OX, OY, ORB_R + 1)}" fill="url(#kcOrb)"/>'
                  f'<circle cx="{f(OX - 8)}" cy="{f(OY + 5)}" r="2.6" fill="{bot.pal["orb"][3]}" opacity=".45"/>'
@@ -1177,11 +1183,110 @@ def wow():
     return b
 
 
+def cloud_union_d():
+    """The cloud silhouette as one path (every circle wound the same way), for tints over the body."""
+    d = ''
+    for x, y, r in PUFFS:
+        d += f"M{f(x - r)} {f(y)}A{f(r)} {f(r)} 0 1 0 {f(x + r)} {f(y)}A{f(r)} {f(r)} 0 1 0 {f(x - r)} {f(y)}Z"
+    x, y, rx, ry = FILL
+    return d + f"M{f(x - rx)} {f(y)}A{f(rx)} {f(ry)} 0 1 0 {f(x + rx)} {f(y)}A{f(rx)} {f(ry)} 0 1 0 {f(x - rx)} {f(y)}Z"
+
+
+BLANK_PAL = dict(body=('#FFFFFF', '#F6F5FA', '#E6E4EF', '#CDCADB', '#A9A5BF', '#A19DB8', '#ECEAF4', '#8E8AA8', '#4B4766', '#1E1B2E'),
+                 cheek='#FF9AAE', tail=('#B9B3E2', '#F1C9E6', '#BDEBF3'), orb=('#FFFFFF', '#F6E8FF', '#D8C8FF', '#A497E6'),
+                 glow='#E6DAFF')
+TRY_ON = ['#FF8A7A', '#FFD25E', '#5EE0B8', '#6CC8FF', '#B48CFF']  # coral, sunshine, mint, sky, violet
+
+
+def blank():
+    """Not one of the ten: the bot that isn't made yet, for empty states (no bots yet)."""
+    b = Bot('blank', 'New bot', 'Not made yet: dozes, peeks at the New bot button, wakes, tries on colours, beckons, dozes off.',
+            BLANK_PAL, 'plus')
+    k = KR
+    dot = lambda e, kk: (f'<ellipse cx="{e[0]}" cy="{e[1]}" rx="{f(8.5 * kk)}" ry="{f(10.5 * kk)}" fill="{INK}"/>'
+                         f'<circle cx="{f(e[0] + 3 * kk)}" cy="{f(e[1] - 4 * kk)}" r="{f(3 * kk)}" fill="#FFFFFF"/>')
+    sleep_d = lambda e, kk: f"M{pt((e[0] - 9 * kk, e[1] + 1))}Q{pt((e[0], e[1] + 8 * kk))} {pt((e[0] + 9 * kk, e[1] + 1))}"
+    # colours it tries on, under the face
+    for i, c in enumerate(TRY_ON):
+        b.add('face', f'<g class="tint{i}"><path d="{cloud_union_d()}" fill="{c}" opacity=".42"/></g>', 'anim')
+    cheeks_both(b)
+    b.add('face', f'<g class="dotL"><g class="look">{dot(EL, 1)}</g></g>')
+    b.add('face', f'<g class="dotR"><g class="look">{dot(ER, k)}</g></g>')
+    b.add('face', stroke(sleep_d(EL, 1), 'sleepL', w=5), 'anim')
+    b.add('face', stroke(sleep_d(ER, k), 'sleepR', w=5), 'anim')
+    b.add('face', stroke(smile_d(7, 7), 'smile', CORAL, 4.5))
+    b.add('face', o_mouth('mouthO', 5, 6, 3), 'anim')
+    b.add('face', grin('grin'), 'anim')
+    zc = '#B3A9E6'
+    b.add('head', f'<g class="zz">{stroke(z_d(212, 112, 15), color="#FFFFFF", w=7.5)}{stroke(z_d(212, 112, 15), color=zc, w=4.5)}</g>', 'anim')
+    b.anim('zz', (212, 112), rise([.25], 1.5, 16, -50, .5, 1.1), timing='linear')
+
+    def opened(spans):
+        """A dot eye: open (with a little pop) during spans, shut otherwise."""
+        fr = [F(0, o=0, sx=1, sy=.2)]
+        for t0, t1 in spans:
+            fr += [F(t0, o=0, sy=.2), F(t0 + .02, o=1), F(t0 + .14, sy=1.12), F(t0 + .22, sy=1),
+                   F(t1 - .12, sy=1), F(t1, o=1, sy=.2), F(t1 + .02, o=0)]
+        return fr
+
+    def shut(spans):
+        fr = [F(0, o=1)]
+        for t0, t1 in spans:
+            fr += [F(t0 + .01, o=1), F(t0 + .03, o=0), F(t1 - .01, o=0), F(t1 + .01, o=1)]
+        return fr
+
+    awake = (3.0, 7.35)
+    b.anim('dotL', EL[:2], opened([awake]) + [F(6.32, sy=1), F(6.38, sy=.15), F(6.46, sy=1)])
+    b.anim('dotR', ER[:2], opened([(1.7, 2.45), awake]) + [F(6.32, sy=1), F(6.38, sy=.15), F(6.46, sy=1)])
+    b.anim('sleepL', None, shut([awake]))
+    b.anim('sleepR', None, shut([(1.7, 2.45), awake]))
+    b.anim('look', None, [F(0, x=0, y=0), F(1.7, x=3, y=4), F(2.45), F(2.6, x=0, y=0), F(3.5), F(3.7, x=0, y=-3),
+                          F(5.4), F(5.62, x=4, y=5), F(6.8), F(7.0, x=0, y=0)])
+    b.anim('smile', (MX, MY + 3), hide([(2.96, 3.42), (3.56, 5.5), (6.86, 7.42)]))
+    b.anim('mouthO', (MX, MY + 3), show([(2.98, 3.38), (6.9, 7.38)], pop=.4))
+    b.anim('grin', (MX, MY + 1), show([(3.6, 5.45)], pop=.5))
+    for i in range(len(TRY_ON)):
+        t = 3.72 + i * .34
+        b.anim(f'tint{i}', None, [F(0, o=0), F(t, o=0), F(t + .14, o=1), F(t + .3, o=1), F(t + .46, o=0)])
+        b.spark('head', f'try{i}', [44, 214, 60, 226, 120][i], [96, 98, 64, 150, 40][i], 8 + (i % 2) * 2, TRY_ON[i], [t + .05], .5)
+    b.body = ([F(0, x=0, y=0, sx=1, sy=1), F(.8, sx=1.025, sy=.975), F(1.6, sx=1, sy=1), F(2.4, sx=1.02, sy=.98), F(2.9, sx=1, sy=1)]
+              + bounce(3.0, 12) + jiggle(3.72, 5.4, .17, 3) + [F(5.5, y=0)]
+              + [F(7.4, sx=1, sy=1), F(7.7, sx=1.025, sy=.975), F(8, sx=1, sy=1)])
+    b.tilt = [F(0, r=5), F(1.6), F(1.75, r=3), F(2.45), F(2.6, r=5), F(2.95), F(3.1, r=0), F(5.5), F(5.7, r=4), F(6.8),
+              F(7.0, r=0), F(7.3), F(7.7, r=5)]
+    b.tail = tail_mix([(.8, -1, -2), (1.6, 1, 2), (2.4, -1, -2)], bounce_tail(3.0), sway(3.7, 5.4, .34, 1.2, 2.4),
+                      [(5.6, 3, 6), (5.85, -3.5, -7), (6.1, 3.5, 7), (6.35, -3, -6), (6.6, 1.5, 3), (6.85, 0, 0), (7.6, -1, -2)])
+    b.glow = [F(0, o=.3, s=.85), F(1.7, o=.55, s=1), F(2.45), F(2.6, o=.3, s=.85), F(3.0, o=.8, s=1.2), F(3.4, o=.55, s=1)]
+    for i in range(len(TRY_ON)):
+        t = 3.72 + i * .34
+        b.glow += [F(t, o=.55, s=1), F(t + .15, o=.9, s=1.15)]
+    b.glow += [F(5.5, o=.6, s=1), F(5.7, o=.95, s=1.3), F(6.0, o=.7, s=1.1), F(6.3, o=.95, s=1.3), F(6.8, o=.6, s=1),
+               F(7.4, o=.3, s=.85)]
+    b.ball = [F(0, s=1, r=0), F(2.98), F(3.1, s=1.2, r=0), F(3.3, s=1), F(3.62, r=0), F(5.45, s=1, r=180), F(5.7, s=1.15),
+              F(5.9, s=1), F(6.2, s=1.15), F(6.4, s=1), F(8, r=180)]
+    return b
+
+
 BOTS = [winky, sleepy, starry, lovey, cool, thinker, giggly, shy, focused, wow]
+
+# The app icon's own cloud: Winky in the original lavender. Written as casama-brand.svg (still only) for the
+# launch screens (scripts/casama-splash.py).
+BRAND_BODY = ('#FFFCF8', '#F7EEFB', '#E2D2F6', '#C9B1EC', '#A88BDB', '#9C7DD6', '#E9DDF6', '#B07AF0', '#6A2BA8', '#2A0C40')
+
+
+def brand():
+    b = winky()
+    b.key, b.title = 'brand', 'Casama'
+    b.pal = {**b.pal, 'body': BRAND_BODY, 'cheek': '#FF8F9E'}
+    return b
 
 if __name__ == '__main__':
     for make in BOTS:
         bot = make()
         open(f"{OUT}/casama-{bot.key}.svg", 'w').write(build(bot, False))
         open(f"{OUT}/casama-{bot.key}-animated.svg", 'w').write(build(bot, True))
+    open(f"{OUT}/casama-brand.svg", 'w').write(build(brand(), False))
+    b = blank()  # for empty states, not offered as a bot icon
+    open(f"{OUT}/casama-blank.svg", 'w').write(build(b, False))
+    open(f"{OUT}/casama-blank-animated.svg", 'w').write(build(b, True))
     print('ok', len(BOTS))

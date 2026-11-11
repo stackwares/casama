@@ -1,6 +1,7 @@
 /**
- * Image and video generation behind one interface (D-182, D-183): images on OpenRouter (Qwen
- * Image 3.0 Pro) when the workspace has an OpenRouter key, else fal; video on fal.
+ * Image and video generation behind one interface (D-185, D-189): images on OpenRouter (Gemini
+ * Nano Banana 2.1 at 1K) when the workspace has an OpenRouter key, else fal. Video is Gemini Omni
+ * Flash 1.2 when a Google AI key exists, else fal.
  */
 export interface MediaResult {
   /** Where to download it; empty when the bytes come inline (`data`). */
@@ -58,8 +59,8 @@ export class FalMediaProvider implements MediaProvider {
       apiKey: opts.apiKey,
       syncBase: (opts.syncBase ?? "https://fal.run").replace(/\/$/, ""),
       queueBase: (opts.queueBase ?? "https://queue.fal.run").replace(/\/$/, ""),
-      // Seedream 4.5: arena rank 38 for $0.04 an image, fal's best value among strong models
-      // (D-183). Workspaces with an OpenRouter key get Qwen Image 3.0 Pro instead.
+      // Seedream 4.5: arena rank 38 for $0.04 an image, the fal fallback when there is no
+      // OpenRouter key. Workspaces with an OpenRouter key get Nano Banana 2.1 instead (D-185).
       imageModel: opts.imageModel ?? "fal-ai/bytedance/seedream/v4.5/text-to-image",
       videoModel: opts.videoModel ?? "fal-ai/ltx-video",
       pollMs: opts.pollMs ?? 2000,
@@ -191,10 +192,16 @@ export function falImageCost(model: string, width?: number, height?: number): nu
 }
 
 // ---------------------------------------------------------------------------
-// OpenRouter images (D-183): POST /api/v1/images, base64 results, exact cost in `usage.cost`.
+// OpenRouter images (D-185): POST /api/v1/images, base64 results, exact cost in `usage.cost`.
+
+/** Default image model on OpenRouter: Gemini Nano Banana 2.1, pinned to 1K (D-185). */
+export const OPENROUTER_IMAGE_MODEL = "google/gemini-nano-banana-2.1";
+/** 1K is $0.0336; 2K is $0.0504 and 4K is $0.113, so the request names the tier. */
+export const OPENROUTER_IMAGE_RESOLUTION = "1K";
 
 /** OpenRouter list prices per image at 1K (2026-11-11), for when a response has no cost. */
 export const OPENROUTER_IMAGE_PRICES: Record<string, number> = {
+  "google/gemini-nano-banana-2.1": 0.0336,
   "qwen/qwen-image-3-pro": 0.04,
   "qwen/qwen-image-3": 0.03,
   "bytedance-seed/seedream-5-0-pro": 0.045,
@@ -210,16 +217,17 @@ export class OpenRouterMediaProvider implements MediaProvider {
   private readonly base: string;
   private readonly fetchImpl: typeof fetch;
   private readonly imageModel: string;
+  private readonly resolution: string;
   constructor(
     key: string,
-    opts: { base?: string; fetch?: typeof fetch; imageModel?: string } = {},
+    opts: { base?: string; fetch?: typeof fetch; imageModel?: string; resolution?: string } = {},
   ) {
     this.key = key;
     this.base = (opts.base ?? "https://openrouter.ai/api/v1").replace(/\/$/, "");
     this.fetchImpl = opts.fetch ?? fetch;
-    // Qwen Image 3.0 Pro: arena rank 14 of 84 for $0.04 an image; the top five (GPT Image) cost
-    // about $0.13. Seedream 5.0 Pro is close behind at $0.045.
-    this.imageModel = opts.imageModel ?? "qwen/qwen-image-3-pro";
+    // Nano Banana 2.1: LM Arena rank 7 and Artificial Analysis rank 6, about $0.034 at 1K.
+    this.imageModel = opts.imageModel ?? OPENROUTER_IMAGE_MODEL;
+    this.resolution = opts.resolution ?? OPENROUTER_IMAGE_RESOLUTION;
   }
 
   async generateImage(input: {
@@ -235,6 +243,7 @@ export class OpenRouterMediaProvider implements MediaProvider {
         model,
         prompt: input.prompt,
         aspect_ratio: ASPECT[input.size ?? "square"],
+        resolution: this.resolution,
         n: 1,
       }),
       signal: AbortSignal.timeout(180_000),
@@ -264,7 +273,90 @@ export class OpenRouterMediaProvider implements MediaProvider {
   }
 
   async generateVideo(): Promise<MediaResult> {
-    throw new Error("Video needs a fal.ai key in Model keys.");
+    throw new Error("Video needs a Google AI or fal.ai key in Model keys.");
+  }
+}
+
+/** Gemini Omni Flash 1.2 video (D-189): Interactions API, MP4 inline, 720p, 3–15 seconds. */
+export const GEMINI_VIDEO_MODEL = "gemini-omni-1.2-flash";
+/** 720p: 5,792 video tokens a second at $12 per million (Google, 2026-11-10). */
+export const GEMINI_VIDEO_PER_SECOND = 0.0695;
+
+export class GeminiVideoProvider implements MediaProvider {
+  readonly id = "gemini";
+  private readonly key: string;
+  private readonly base: string;
+  private readonly fetchImpl: typeof fetch;
+  private readonly model: string;
+  constructor(
+    key: string,
+    opts: { base?: string; fetch?: typeof fetch; model?: string } = {},
+  ) {
+    this.key = key;
+    this.base = (opts.base ?? "https://generativelanguage.googleapis.com").replace(/\/$/, "");
+    this.fetchImpl = opts.fetch ?? fetch;
+    this.model = opts.model ?? GEMINI_VIDEO_MODEL;
+  }
+
+  async generateImage(): Promise<MediaResult[]> {
+    throw new Error("Images need an OpenRouter or fal.ai key in Model keys.");
+  }
+
+  async generateVideo(input: { prompt: string; durationS?: number; model?: string; size?: "square" | "portrait" | "landscape" }) {
+    const model = input.model ?? this.model;
+    const seconds = Math.min(15, Math.max(3, input.durationS ?? 5));
+    const res = await this.fetchImpl(`${this.base}/v1beta/interactions`, {
+      method: "POST",
+      headers: { "x-goog-api-key": this.key, "content-type": "application/json" },
+      body: JSON.stringify({
+        model,
+        input: input.prompt,
+        response_format: {
+          type: "video",
+          duration: `${seconds}s`,
+          aspect_ratio: input.size === "portrait" ? "9:16" : "16:9",
+          resolution: "720p",
+        },
+      }),
+      signal: AbortSignal.timeout(300_000),
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: { message?: string };
+      usage?: { cost?: number };
+      output_video?: { data?: string; mime_type?: string; mimeType?: string };
+      steps?: Array<{
+        type?: string;
+        content?: Array<{ type?: string; data?: string; mime_type?: string; mimeType?: string }>;
+      }>;
+    };
+    if (!res.ok)
+      throw new Error(
+        `Gemini returned ${res.status}: ${String(body.error?.message ?? "").slice(0, 300)}`,
+      );
+    let data = body.output_video?.data;
+    let mime = body.output_video?.mime_type ?? body.output_video?.mimeType;
+    for (const step of [...(body.steps ?? [])].reverse()) {
+      if (data) break;
+      if (step.type !== "model_output") continue;
+      for (const part of [...(step.content ?? [])].reverse()) {
+        if (part.type === "video" && part.data) {
+          data = part.data;
+          mime = part.mime_type ?? part.mimeType;
+          break;
+        }
+      }
+    }
+    if (!data) throw new Error("Gemini returned no video");
+    const cost =
+      typeof body.usage?.cost === "number" ? body.usage.cost : seconds * GEMINI_VIDEO_PER_SECOND;
+    return {
+      url: "",
+      data: Uint8Array.from(Buffer.from(data, "base64")),
+      contentType: mime ?? "video/mp4",
+      durationS: seconds,
+      model,
+      costUsd: cost,
+    };
   }
 }
 
@@ -283,7 +375,7 @@ export class MediaRouter implements MediaProvider {
     return this.images.generateImage(input);
   }
   generateVideo(input: Parameters<MediaProvider["generateVideo"]>[0]) {
-    if (!this.video) throw new Error("Video needs a fal.ai key in Model keys.");
+    if (!this.video) throw new Error("Video needs a Google AI or fal.ai key in Model keys.");
     return this.video.generateVideo(input);
   }
 }

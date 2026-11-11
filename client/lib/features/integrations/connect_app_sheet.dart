@@ -311,7 +311,7 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
         if (_method == CatalogAppAuthEnum.apiKey) ..._keyFields(context),
         if (oauthBlocked) _adminSetup(context),
         if (_method == CatalogAppAuthEnum.managed) ...[
-          Text(l10n.connectManagedHelp, textAlign: TextAlign.center, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+          Text(l10n.connectManagedHelp(app.name), textAlign: TextAlign.center, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
           const SizedBox(height: AppSpace.md),
         ],
         if (_method == CatalogAppAuthEnum.none) ...[

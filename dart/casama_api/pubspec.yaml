@@ -1,8 +1,9 @@
 name: casama_api
 version: 0.8.0
 description: Generated REST client for the Casama API (dio + json_serializable), used by casama_sdk. Do not edit by hand.
-homepage: https://docs.casama.ai/develop/sdk
-issue_tracker: https://docs.casama.ai/faq
+homepage: https://github.com/stackwares/casama
+repository: https://github.com/stackwares/casama/tree/main/dart/casama_api
+issue_tracker: https://github.com/stackwares/casama/issues
 
 
 resolution: workspace

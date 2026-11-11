@@ -1,6 +1,7 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/widgets.dart';
@@ -49,7 +50,11 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
     final q = _search.text.trim().toLowerCase();
     return [
       for (final c in themeChoices)
-        if ((_family == null || c.family == _family) && (q.isEmpty || c.name.toLowerCase().contains(q) || c.description.toLowerCase().contains(q))) c,
+        if ((_family == null || c.family == _family) &&
+            (q.isEmpty ||
+                c.name.toLowerCase().contains(q) ||
+                c.description.toLowerCase().contains(q)))
+          c,
     ];
   }
 
@@ -63,11 +68,29 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
       title: l10n.colorScheme,
       children: [
         const AppearancePreview(),
+        const SizedBox(height: AppSpace.sm),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            key: const Key('gallerySchemes'),
+            onPressed: () => context.push('/settings/gallery?type=scheme'),
+            icon: const Icon(LucideIcons.layoutGrid, size: 18),
+            label: Text(l10n.gallery),
+          ),
+        ),
         const SizedBox(height: AppSpace.md),
         AppSegmentedControl<ThemeMode>(
           values: const [ThemeMode.light, ThemeMode.system, ThemeMode.dark],
-          labels: {ThemeMode.light: l10n.themeLight, ThemeMode.system: l10n.themeSystem, ThemeMode.dark: l10n.themeDark},
-          icons: const {ThemeMode.light: LucideIcons.sun, ThemeMode.system: LucideIcons.sunMoon, ThemeMode.dark: LucideIcons.moon},
+          labels: {
+            ThemeMode.light: l10n.themeLight,
+            ThemeMode.system: l10n.themeSystem,
+            ThemeMode.dark: l10n.themeDark,
+          },
+          icons: const {
+            ThemeMode.light: LucideIcons.sun,
+            ThemeMode.system: LucideIcons.sunMoon,
+            ThemeMode.dark: LucideIcons.moon,
+          },
           groupValue: appearance.mode,
           onValueChanged: notifier.setMode,
         ),
@@ -81,7 +104,8 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
             suffixIcon: _search.text.isEmpty
                 ? null
                 : IconButton(
-                    tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+                    tooltip: MaterialLocalizations.of(context)
+                        .deleteButtonTooltip,
                     icon: const Icon(LucideIcons.x, size: 18),
                     onPressed: () => setState(_search.clear),
                   ),
@@ -101,7 +125,11 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
                     key: Key('family-${f?.name ?? 'all'}'),
                     selected: _family == f,
                     showCheckmark: false,
-                    label: Text(f == null ? l10n.familyAll : schemeFamilyLabel(context, f)),
+                    label: Text(
+                      f == null
+                          ? l10n.familyAll
+                          : schemeFamilyLabel(context, f),
+                    ),
                     onSelected: (_) => setState(() => _family = f),
                   ),
                 ),
@@ -115,7 +143,9 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
             child: Text(
               l10n.noThemesFound,
               textAlign: TextAlign.center,
-              style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceVariant),
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
             ),
           )
         else
@@ -133,8 +163,11 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
                   childAspectRatio: 0.92,
                 ),
                 itemCount: shown.length,
-                itemBuilder: (context, i) =>
-                    _SchemeTile(choice: shown[i], selected: shown[i].id == appearance.schemeId, onTap: () => notifier.setScheme(shown[i].id)),
+                itemBuilder: (context, i) => _SchemeTile(
+                  choice: shown[i],
+                  selected: shown[i].id == appearance.schemeId,
+                  onTap: () => notifier.setScheme(shown[i].id),
+                ),
               );
             },
           ),
@@ -145,7 +178,11 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
 
 /// One scheme: its colors as a tiny card, the name, and a check when it's the current one.
 class _SchemeTile extends StatelessWidget {
-  const _SchemeTile({required this.choice, required this.selected, required this.onTap});
+  const _SchemeTile({
+    required this.choice,
+    required this.selected,
+    required this.onTap,
+  });
   final ThemeChoice choice;
   final bool selected;
   final VoidCallback onTap;
@@ -156,7 +193,9 @@ class _SchemeTile extends StatelessWidget {
     final brightness = Theme.of(context).brightness;
     final c = choice.colors(brightness);
     final dark = brightness == Brightness.dark;
-    final card = dark ? Color.lerp(c.primaryContainer, Colors.black, 0.55)! : Color.lerp(c.primaryContainer, Colors.white, 0.45)!;
+    final card = dark
+        ? Color.lerp(c.primaryContainer, Colors.black, 0.55)!
+        : Color.lerp(c.primaryContainer, Colors.white, 0.45)!;
     return Semantics(
       button: true,
       selected: selected,
@@ -165,7 +204,10 @@ class _SchemeTile extends StatelessWidget {
         color: dark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: selected ? scheme.primary : context.appColors.hairline, width: selected ? 2 : 1),
+          side: BorderSide(
+            color: selected ? scheme.primary : context.appColors.hairline,
+            width: selected ? 2 : 1,
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -178,7 +220,10 @@ class _SchemeTile extends StatelessWidget {
               children: [
                 Expanded(
                   child: Container(
-                    decoration: BoxDecoration(color: card, borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(
+                      color: card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     padding: const EdgeInsets.all(10),
                     child: Stack(
                       children: [
@@ -189,7 +234,10 @@ class _SchemeTile extends StatelessWidget {
                           child: Container(
                             width: 44,
                             height: 12,
-                            decoration: BoxDecoration(color: c.secondary.withValues(alpha: 0.85), borderRadius: BorderRadius.circular(6)),
+                            decoration: BoxDecoration(
+                              color: c.secondary.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
                           ),
                         ),
                         Positioned(
@@ -198,7 +246,10 @@ class _SchemeTile extends StatelessWidget {
                           child: Container(
                             width: 36,
                             height: 12,
-                            decoration: BoxDecoration(color: c.primary, borderRadius: BorderRadius.circular(6)),
+                            decoration: BoxDecoration(
+                              color: c.primary,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
                           ),
                         ),
                         Positioned(
@@ -206,7 +257,11 @@ class _SchemeTile extends StatelessWidget {
                           bottom: 0,
                           child: Row(
                             children: [
-                              for (final dot in [c.primary, c.secondary, c.tertiary])
+                              for (final dot in [
+                                c.primary,
+                                c.secondary,
+                                c.tertiary,
+                              ])
                                 Container(
                                   width: 18,
                                   height: 18,
@@ -227,8 +282,15 @@ class _SchemeTile extends StatelessWidget {
                             child: Container(
                               width: 22,
                               height: 22,
-                              decoration: BoxDecoration(color: scheme.primary, shape: BoxShape.circle),
-                              child: Icon(LucideIcons.check, size: 14, color: scheme.onPrimary),
+                              decoration: BoxDecoration(
+                                color: scheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                LucideIcons.check,
+                                size: 14,
+                                color: scheme.onPrimary,
+                              ),
                             ),
                           ),
                       ],
@@ -241,7 +303,9 @@ class _SchemeTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: context.textTheme.labelLarge?.copyWith(fontWeight: selected ? FontWeight.w700 : FontWeight.w600),
+                  style: context.textTheme.labelLarge?.copyWith(
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -260,13 +324,19 @@ class SchemeDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ring = context.isDark ? context.colorScheme.surfaceContainerLow : context.colorScheme.surfaceContainerLowest;
+    final ring = context.isDark
+        ? context.colorScheme.surfaceContainerLow
+        : context.colorScheme.surfaceContainerLowest;
     return SizedBox(
       width: size * 2.2,
       height: size,
       child: Stack(
         children: [
-          for (final (i, c) in [colors.tertiary, colors.secondary, colors.primary].indexed)
+          for (final (i, c) in [
+            colors.tertiary,
+            colors.secondary,
+            colors.primary,
+          ].indexed)
             Positioned(
               left: (2 - i) * size * 0.6,
               child: Container(

@@ -1,9 +1,10 @@
-/** Media providers and prices (D-182, D-183). */
+/** Media providers and prices (D-185). */
 import { describe, expect, it } from "vitest";
 import {
   FalMediaProvider,
   falImageCost,
   MEDIA_PRICES,
+  GeminiVideoProvider,
   MediaRouter,
   OpenRouterMediaProvider,
 } from "../src/media.ts";
@@ -35,7 +36,7 @@ describe("media prices", () => {
     expect(img?.costUsd).toBeCloseTo(0.04, 6);
   });
 
-  it("OpenRouter images: Qwen Image 3.0 Pro, inline bytes, the cost OpenRouter reports", async () => {
+  it("OpenRouter images: Nano Banana 2.1 at 1K, inline bytes, the cost OpenRouter reports", async () => {
     let sent: Record<string, unknown> = {};
     let auth = "";
     const fake = (async (url: string, init: RequestInit) => {
@@ -52,7 +53,12 @@ describe("media prices", () => {
       size: "landscape",
     });
     expect(auth).toBe("Bearer sk-or");
-    expect(sent).toMatchObject({ model: "qwen/qwen-image-3-pro", aspect_ratio: "16:9", n: 1 });
+    expect(sent).toMatchObject({
+      model: "google/gemini-nano-banana-2.1",
+      aspect_ratio: "16:9",
+      resolution: "1K",
+      n: 1,
+    });
     expect(img).toMatchObject({ url: "", contentType: "image/png", costUsd: 0.0412 });
     expect([...(img?.data ?? [])]).toEqual([137, 80, 78, 71]);
   });
@@ -63,7 +69,7 @@ describe("media prices", () => {
     const [img] = await new OpenRouterMediaProvider("k", { fetch: noCost }).generateImage({
       prompt: "x",
     });
-    expect(img?.costUsd).toBe(0.04);
+    expect(img?.costUsd).toBeCloseTo(0.0336, 6);
     const broke = (async () =>
       Response.json(
         { error: { message: "Insufficient credits" } },
@@ -80,8 +86,35 @@ describe("media prices", () => {
     });
     const onlyImages = new MediaRouter(images, null);
     expect((await onlyImages.generateImage({ prompt: "x" }))[0]?.model).toBe(
-      "qwen/qwen-image-3-pro",
+      "google/gemini-nano-banana-2.1",
     );
-    expect(() => onlyImages.generateVideo({ prompt: "x" })).toThrow("fal.ai key");
+    expect(() => onlyImages.generateVideo({ prompt: "x" })).toThrow("Google AI or fal.ai key");
+  });
+
+  it("Gemini video is Omni Flash 1.2 at 720p, saved inline, priced per second", async () => {
+    let sent: Record<string, unknown> = {};
+    let auth = "";
+    const mp4 = Buffer.from("mp4").toString("base64");
+    const fake = (async (url: string, init: RequestInit) => {
+      expect(url).toBe("http://gemini.test/v1beta/interactions");
+      auth = new Headers(init.headers).get("x-goog-api-key") ?? "";
+      sent = JSON.parse(String(init.body));
+      return Response.json({
+        steps: [{ type: "model_output", content: [{ type: "video", data: mp4, mime_type: "video/mp4" }] }],
+      });
+    }) as unknown as typeof fetch;
+    const video = await new GeminiVideoProvider("gem-key", {
+      base: "http://gemini.test",
+      fetch: fake,
+    }).generateVideo({ prompt: "a lighthouse", durationS: 1, size: "portrait" });
+    expect(auth).toBe("gem-key");
+    expect(sent).toMatchObject({
+      model: "gemini-omni-1.2-flash",
+      input: "a lighthouse",
+      response_format: { type: "video", duration: "3s", aspect_ratio: "9:16", resolution: "720p" },
+    });
+    expect(video).toMatchObject({ contentType: "video/mp4", durationS: 3, model: "gemini-omni-1.2-flash" });
+    expect(video.costUsd).toBeCloseTo(3 * 0.0695, 6);
+    expect(Buffer.from(video.data ?? []).toString()).toBe("mp4");
   });
 });

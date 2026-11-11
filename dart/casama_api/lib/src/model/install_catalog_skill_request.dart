@@ -24,7 +24,9 @@ class InstallCatalogSkillRequest {
 
      this.botId,
 
-    required  this.catalogId,
+     this.catalogId,
+
+     this.galleryId,
   });
 
   @JsonKey(
@@ -55,12 +57,25 @@ class InstallCatalogSkillRequest {
   @JsonKey(
     
     name: r'catalog_id',
-    required: true,
+    required: false,
     includeIfNull: false,
   )
 
 
-  final String catalogId;
+  final String? catalogId;
+
+
+
+      /// Install a skill from the gallery instead of the bundled catalog
+  @JsonKey(
+    
+    name: r'gallery_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? galleryId;
 
 
 
@@ -70,13 +85,15 @@ class InstallCatalogSkillRequest {
     bool operator ==(Object other) => identical(this, other) || other is InstallCatalogSkillRequest &&
       other.orgId == orgId &&
       other.botId == botId &&
-      other.catalogId == catalogId;
+      other.catalogId == catalogId &&
+      other.galleryId == galleryId;
 
     @override
     int get hashCode =>
         orgId.hashCode +
         botId.hashCode +
-        catalogId.hashCode;
+        catalogId.hashCode +
+        galleryId.hashCode;
 
   factory InstallCatalogSkillRequest.fromJson(Map<String, dynamic> json) => _$InstallCatalogSkillRequestFromJson(json);
 

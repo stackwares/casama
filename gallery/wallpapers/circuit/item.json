@@ -1,0 +1,14 @@
+{
+  "name": "Circuit",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "tech",
+    "neutral"
+  ],
+  "featured": false,
+  "version": 1
+}

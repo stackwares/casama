@@ -43,8 +43,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       final w = await ref.read(backendProvider).startWelcome();
       if (!mounted) return;
       ref.read(selectedOrgIdProvider.notifier).select(w.orgId);
-      // Leave only once this page has finished coming in: navigating back into the app while the
-      // previous page is still animating out would build the app shell twice.
+      // The redirect still has the empty workspace list from before this space existed. Opening
+      // the chat first sends the route straight back here, and this page then stays on the spinner.
+      // Reload the list before leaving. Doing it in the same frame as the navigation built the
+      // shell twice, so the bot list waits until the chat is on screen.
+      await ref.refresh(organizationsProvider.future);
+      if (!mounted) return;
       final entering = ModalRoute.of(context)?.animation;
       if (entering != null && entering.status != AnimationStatus.completed) {
         final done = Completer<void>();
@@ -58,10 +62,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       }
       final router = GoRouter.maybeOf(context);
       router?.go('/bots/${w.botId}/chat?c=${w.conversationId}');
-      // Refresh the lists once the chat is on screen: invalidating them makes the router re-check
-      // its redirects, and doing both in one frame built the shell twice (a duplicate navigator).
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.invalidate(organizationsProvider);
         ref.invalidate(botsProvider);
       });
     } catch (e) {

@@ -43,6 +43,7 @@ Widget _app(FakeBackend backend, {FakeCallConnector? calls}) {
 }
 
 void main() {
+  CallScreen.motion = false;
   testWidgets('desktop: a ringing banner; answering opens the live call where the bot speaks first', (tester) async {
     await setSize(tester, const Size(1000, 800));
     final backend = FakeBackend()..ringing.add(_call('call-1', 'The deploy failed; roll back?'));

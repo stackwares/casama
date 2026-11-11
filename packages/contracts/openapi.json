@@ -7130,6 +7130,85 @@
           "created_at"
         ]
       },
+      "CloudModels": {
+        "type": "object",
+        "properties": {
+          "chat": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "OpenRouter model for chat on Casama's key."
+          },
+          "background": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "OpenRouter model for summaries, memory and briefs."
+          },
+          "image": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "OpenRouter image model."
+          },
+          "image_resolution": {
+            "type": "string",
+            "enum": [
+              "1K",
+              "2K",
+              "4K"
+            ]
+          },
+          "live": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Gemini Live model for calls."
+          },
+          "realtime": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "OpenAI Realtime model, used only with no Google key."
+          },
+          "tts": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Gemini text-to-speech model for read aloud."
+          },
+          "stt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "OpenAI transcription model for dictation."
+          },
+          "embedding": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "OpenAI embedding model."
+          },
+          "video": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Video model. Gemini Omni Flash (gemini-omni-1.2-flash) on a Google AI key, or a fal model id when that is the only video key."
+          }
+        },
+        "required": [
+          "chat",
+          "background",
+          "image",
+          "image_resolution",
+          "live",
+          "realtime",
+          "tts",
+          "stt",
+          "embedding",
+          "video"
+        ]
+      },
       "ConnectionSettings": {
         "type": "object",
         "properties": {
@@ -8554,7 +8633,8 @@
               "manual",
               "catalog",
               "github",
-              "bot"
+              "bot",
+              "gallery"
             ]
           },
           "source_ref": {
@@ -8684,11 +8764,22 @@
           "category": {
             "type": "string"
           },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A Lucide icon name (kebab-case); apps fall back to the category's icon"
+          },
           "files": {
             "type": "array",
             "items": {
               "type": "string"
             }
+          },
+          "skill_md": {
+            "type": "string",
+            "description": "The raw SKILL.md, for a preview"
           }
         },
         "required": [
@@ -8715,11 +8806,16 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 64
+          },
+          "gallery_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "Install a skill from the gallery instead of the bundled catalog"
           }
         },
         "required": [
-          "org_id",
-          "catalog_id"
+          "org_id"
         ]
       },
       "InstallGitHubSkillRequest": {
@@ -10785,6 +10881,147 @@
         },
         "required": [
           "enabled"
+        ]
+      },
+      "GalleryDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/GalleryItem"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "document": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "additionalProperties": {}
+              },
+              "skill_md": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "document",
+              "skill_md"
+            ]
+          }
+        ]
+      },
+      "GalleryAuthor": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "GalleryItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "theme",
+              "scheme",
+              "wallpaper",
+              "skill"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "author": {
+            "$ref": "#/components/schemas/GalleryAuthor"
+          },
+          "license": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "retired": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string",
+            "description": "A skill's Lucide icon name."
+          },
+          "description": {
+            "type": "string",
+            "description": "A skill's one-line description."
+          },
+          "document": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "A theme, scheme or wallpaper document, so a list can draw previews without fetching each item."
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name",
+          "author",
+          "license",
+          "tags",
+          "featured",
+          "retired",
+          "version",
+          "sha256",
+          "files"
+        ]
+      },
+      "GalleryList": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "description": "False when the gallery host could not be read. Built-in looks still apply."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GalleryItem"
+            }
+          }
+        },
+        "required": [
+          "available",
+          "items"
         ]
       },
       "TelephonySettings": {
@@ -22546,6 +22783,106 @@
         }
       }
     },
+    "/v1/admin/models": {
+      "get": {
+        "operationId": "adminCloudModels",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The models Casama Cloud runs (owner only)",
+        "responses": {
+          "200": {
+            "description": "The models Casama Cloud runs (owner only)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloudModels"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setAdminCloudModels",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Change the models Casama Cloud runs (owner only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudModels"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloudModels"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/connections": {
       "get": {
         "operationId": "adminConnectionSettings",
@@ -27650,6 +27987,170 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/gallery/{type}/{id}": {
+      "get": {
+        "operationId": "getGalleryItem",
+        "tags": [
+          "gallery"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "One gallery item, including the document the app applies",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "theme",
+                "scheme",
+                "wallpaper",
+                "skill"
+              ]
+            },
+            "required": true,
+            "name": "type",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GalleryDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/gallery": {
+      "get": {
+        "operationId": "listGallery",
+        "tags": [
+          "gallery"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Themes, color schemes, wallpapers and skills from the open gallery (D-184)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "theme",
+                "scheme",
+                "wallpaper",
+                "skill"
+              ]
+            },
+            "required": false,
+            "name": "type",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 24
+            },
+            "required": false,
+            "name": "tag",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "featured",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gallery",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GalleryList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/problem+json": {
                 "schema": {

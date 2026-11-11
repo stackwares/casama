@@ -1,0 +1,7 @@
+{
+  "name": "casama-gallery",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": ".", "not_found_handling": "404-page" },
+  "routes": [{ "pattern": "gallery.casama.ai", "custom_domain": true }],
+  "workers_dev": false
+}

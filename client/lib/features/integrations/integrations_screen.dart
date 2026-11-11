@@ -9,10 +9,10 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
-import '../../ui/shell_header.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/segmented.dart';
@@ -115,7 +115,6 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
     return SubPage(
       title: l10n.appsTitle,
       subtitle: l10n.appsSubtitle,
-      actions: [HeaderIconButton(key: const Key('addIntegration'), icon: LucideIcons.squareTerminal, tooltip: l10n.customServer, onPressed: _addCustom)],
       body: AsyncView(
         value: connections,
         onRetry: () => ref.invalidate(integrationsProvider),
@@ -144,6 +143,23 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
                 error: (e, _) => FormNote(errorText(context, e), icon: LucideIcons.triangleAlert),
                 data: (cat) => _browse(context, cat, items),
               ),
+            // Hubs and custom servers, folded on both tabs (D-182): the one way to add a server by hand.
+            _Readable(
+              start: tab == _HubTab.browse,
+              child: AdvancedSection(
+                id: 'integrations',
+                summary: l10n.integrationsAdvancedSummary,
+                children: [
+                  GroupedCard(
+                    children: [
+                      GroupedTile(key: const Key('setupComposio'), icon: LucideIcons.blocks, title: 'Composio', subtitle: l10n.composioHelp, onTap: () => showProviderSetup(context, ProviderKind.composio)),
+                      GroupedTile(key: const Key('setupPipedream'), icon: LucideIcons.cable, title: 'Pipedream', subtitle: l10n.pipedreamHelp, onTap: () => showProviderSetup(context, ProviderKind.pipedream)),
+                      GroupedTile(key: const Key('addIntegration'), icon: LucideIcons.squareTerminal, title: l10n.customServer, subtitle: l10n.customServerHelp, onTap: _addCustom),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -235,17 +251,6 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
               );
             },
           ),
-        SectionHeader(title: l10n.moreWays),
-        _Readable(
-          start: true,
-          child: GroupedCard(
-          children: [
-            GroupedTile(key: const Key('setupComposio'), icon: LucideIcons.blocks, title: 'Composio', subtitle: l10n.composioHelp, onTap: () => showProviderSetup(context, ProviderKind.composio)),
-            GroupedTile(key: const Key('setupPipedream'), icon: LucideIcons.cable, title: 'Pipedream', subtitle: l10n.pipedreamHelp, onTap: () => showProviderSetup(context, ProviderKind.pipedream)),
-            GroupedTile(icon: LucideIcons.squareTerminal, title: l10n.customServer, subtitle: l10n.customServerHelp, onTap: _addCustom),
-          ],
-        ),
-        ),
       ],
     );
   }
@@ -254,6 +259,8 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
 String _authLabel(BuildContext context, CatalogApp a) {
   final l10n = context.l10n;
   if (a.auth.contains(CatalogAppAuthEnum.oauth) && a.oauthAvailable) return l10n.authOneClick;
+  // Through the server's Composio account (D-172): still one click for the person.
+  if (a.auth.contains(CatalogAppAuthEnum.managed)) return l10n.authOneClick;
   if (a.auth.contains(CatalogAppAuthEnum.none)) return l10n.authNone;
   if (a.auth.contains(CatalogAppAuthEnum.apiKey)) return l10n.authApiKey;
   return l10n.authAdminSetup;
@@ -334,7 +341,7 @@ class _FeaturedApp extends StatelessWidget {
                 const SizedBox(height: AppSpace.sm),
                 Row(
                   children: [
-                    Icon(app.oauthAvailable && app.auth.contains(CatalogAppAuthEnum.oauth) ? LucideIcons.zap : LucideIcons.keyRound, size: 13, color: brand),
+                    Icon((app.oauthAvailable && app.auth.contains(CatalogAppAuthEnum.oauth)) || app.auth.contains(CatalogAppAuthEnum.managed) ? LucideIcons.zap : LucideIcons.keyRound, size: 13, color: brand),
                     const SizedBox(width: 4),
                     Text(
                       _authLabel(context, app),
@@ -742,7 +749,8 @@ class BotIntegrationsScreen extends ConsumerWidget {
                           icon: integrationKindIcon(i.kind),
                           leading: AppLogo.forIntegration(i, app: catalogAppFor(ref, i), size: 36),
                           title: catalogAppFor(ref, i)?.name ?? i.name,
-                          subtitle: [integrationKindLabel(context, i.kind), if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length)].join(' · '),
+                          // No "MCP server" / "OpenAPI" label here (D-182); the connection's page still says.
+                          subtitle: i.tools.isEmpty ? null : l10n.toolCount(i.tools.length),
                           onTap: () => set(i, !attached.contains(i.id)),
                           trailing: Switch(value: attached.contains(i.id), onChanged: (v) => set(i, v)),
                         ),

@@ -14,6 +14,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
@@ -30,7 +31,8 @@ final usageReportProvider = FutureProvider.family<UsageReport?, UsagePeriod>((re
 });
 
 /// Settings → Usage: what bots cost and used in a period, with charts by day, bot and model;
-/// export as CSV or JSON, or hand the numbers to a bot to explain (D-087).
+/// export as CSV, or hand the numbers to a bot to explain (D-087). Tokens and the JSON export fold
+/// under Advanced (D-182).
 class UsageScreen extends ConsumerStatefulWidget {
   const UsageScreen({super.key});
 
@@ -91,18 +93,17 @@ class _Report extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        LayoutBuilder(
-          builder: (context, c) {
-            final tiles = [
-              _Stat(key: const Key('usageSpend'), label: l10n.totalSpend, value: formatUsd(report.totalCostUsd), icon: LucideIcons.banknote, accent: true),
-              _Stat(label: l10n.tokensIn, value: compactNumber(_tokensIn), icon: LucideIcons.arrowDownToLine),
-              _Stat(label: l10n.tokensOut, value: compactNumber(_tokensOut), icon: LucideIcons.arrowUpFromLine),
-              _Stat(label: l10n.runsLabel, value: '${report.runs ?? 0}', icon: LucideIcons.zap),
-            ];
-            final perRow = c.maxWidth > 560 ? 4 : 2;
-            final w = (c.maxWidth - AppSpace.sm * (perRow - 1)) / perRow;
-            return Wrap(spacing: AppSpace.sm, runSpacing: AppSpace.sm, children: [for (final t in tiles) SizedBox(width: w, child: t)]);
-          },
+        // What it cost and how often bots ran; tokens are under Advanced (D-182).
+        Row(
+          spacing: AppSpace.sm,
+          children: [
+            Expanded(
+              child: _Stat(key: const Key('usageSpend'), label: l10n.totalSpend, value: formatUsd(report.totalCostUsd), icon: LucideIcons.banknote, accent: true),
+            ),
+            Expanded(
+              child: _Stat(label: l10n.runsLabel, value: '${report.runs ?? 0}', icon: LucideIcons.zap),
+            ),
+          ],
         ),
         if (empty) ...[
           const SizedBox(height: AppSpace.lg),
@@ -164,13 +165,35 @@ class _Report extends StatelessWidget {
                 label: Text(l10n.exportCsv),
               ),
             ),
-            Builder(
-              builder: (button) => OutlinedButton.icon(
-                key: const Key('exportUsageJson'),
-                onPressed: () => _export(button, csv: false),
-                icon: const Icon(LucideIcons.braces, size: 18),
-                label: Text(l10n.exportJson),
-              ),
+          ],
+        ),
+        AdvancedSection(
+          id: 'usage',
+          summary: l10n.usageAdvancedSummary,
+          children: [
+            GroupedCard(
+              children: [
+                GroupedTile(
+                  key: const Key('usageTokensIn'),
+                  icon: LucideIcons.arrowDownToLine,
+                  title: l10n.tokensIn,
+                  trailing: Text(compactNumber(_tokensIn), style: context.textTheme.titleSmall?.copyWith(fontFeatures: AppText.tabular)),
+                ),
+                GroupedTile(
+                  key: const Key('usageTokensOut'),
+                  icon: LucideIcons.arrowUpFromLine,
+                  title: l10n.tokensOut,
+                  trailing: Text(compactNumber(_tokensOut), style: context.textTheme.titleSmall?.copyWith(fontFeatures: AppText.tabular)),
+                ),
+                Builder(
+                  builder: (tile) => GroupedTile(
+                    key: const Key('exportUsageJson'),
+                    icon: LucideIcons.braces,
+                    title: l10n.exportJson,
+                    onTap: () => _export(tile, csv: false),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -333,13 +356,28 @@ class _Bars extends StatelessWidget {
   }
 }
 
-class _ModelBreakdown extends StatelessWidget {
+/// Model ids to the names people know ("Claude Sonnet 5.5"), from the model lists of the keys this
+/// workspace's bots use. An id none of them names is shown as it is.
+Map<String, String> _modelNames(WidgetRef ref) {
+  final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+  final keys = {
+    for (final b in bots)
+      for (final c in [?b.modelPolicy.primary, ...?b.modelPolicy.fallbacks]) c.credentialId,
+  };
+  return {
+    for (final k in keys)
+      for (final o in ref.watch(modelOptionsProvider(k)).value?.items ?? const <ModelOption>[]) o.id: o.name.contains(': ') ? o.name.split(': ').last : o.name,
+  };
+}
+
+class _ModelBreakdown extends ConsumerWidget {
   const _ModelBreakdown({required this.models});
   final List<UsageReportByModelInner> models;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.colorScheme;
+    final names = _modelNames(ref);
     // The scheme's accent first, then theme hues that keep their contrast in light and dark.
     final colors = context.appColors;
     final palette = [scheme.primary, colors.warning, scheme.tertiary, colors.positive, colors.info, scheme.secondary];
@@ -355,7 +393,12 @@ class _ModelBreakdown extends StatelessWidget {
                 Container(width: 10, height: 10, decoration: BoxDecoration(color: palette[i % palette.length], shape: BoxShape.circle)),
                 const SizedBox(width: AppSpace.xs),
                 Expanded(
-                  child: Text(m.model ?? context.l10n.otherModel, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodyMedium),
+                  child: Text(
+                    m.model == null ? context.l10n.otherModel : names[m.model] ?? m.model!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.bodyMedium,
+                  ),
                 ),
                 Text(formatUsd(m.costUsd), style: context.textTheme.labelLarge?.copyWith(fontFeatures: AppText.tabular)),
               ],

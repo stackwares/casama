@@ -3,7 +3,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'for_you.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
@@ -21,89 +20,323 @@ import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/form_sheet.dart';
+import '../pages/pages_screen.dart';
+import '../skills/skill_proposals.dart';
+import 'for_you.dart';
 
-/// Approvals waiting for you, notifications, and the shared task board.
-class InboxScreen extends ConsumerWidget {
-  /// -1: For you (D-114), 0: approvals, 1: notifications.
-  const InboxScreen({super.key, this.initialTab = -1});
-  final int initialTab;
+/// What the Inbox shows: everything, only what waits on a decision, morning briefs, or pages.
+enum InboxFilter {
+  all,
+  needsYou,
+  briefs,
+  pages;
+
+  /// `/inbox?tab=0` opened the Approvals tab before the filters; it opens Needs you now.
+  static InboxFilter fromTab(String? tab) => tab == '0' ? needsYou : all;
+}
+
+/// Requests waiting for you (approvals, takeovers, suggestions, skill ideas), then morning briefs,
+/// notifications and new pages in one list, with filter chips.
+class InboxScreen extends ConsumerStatefulWidget {
+  const InboxScreen({super.key, this.initialFilter = InboxFilter.all});
+  final InboxFilter initialFilter;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InboxScreen> createState() => _InboxScreenState();
+}
+
+class _InboxScreenState extends ConsumerState<InboxScreen> {
+  late var _filter = widget.initialFilter;
+
+  @override
+  void didUpdateWidget(InboxScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialFilter != widget.initialFilter) _filter = widget.initialFilter;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final pending = ref.watch(approvalsProvider).value?.length ?? 0;
-    return DefaultTabController(
-      length: 3,
-      initialIndex: (initialTab + 1).clamp(0, 2),
-      child: Scaffold(
-        appBar: ShellHeader(
-          title: l10n.inbox,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(52),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpace.sm, 0, AppSpace.sm, AppSpace.xs),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TabBar(
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  padding: EdgeInsets.zero,
-                  tabs: [
-                    Tab(key: const Key('tabForYou'), height: 40, text: l10n.forYou),
-                    Tab(height: 40, text: pending == 0 ? l10n.approvals : l10n.approvalsCount(pending)),
-                    Tab(height: 40, text: l10n.notifications),
-                  ],
-                ),
+    final needsYou = _needsYouCount(ref);
+    String label(InboxFilter f) => switch (f) {
+      InboxFilter.all => l10n.filterAll,
+      InboxFilter.needsYou => needsYou == 0 ? l10n.inboxNeedsYou : l10n.inboxNeedsYouCount(needsYou),
+      InboxFilter.briefs => l10n.inboxBriefs,
+      InboxFilter.pages => l10n.pages,
+    };
+    return Scaffold(
+      appBar: ShellHeader(
+        title: l10n.inbox,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(52),
+          child: SizedBox(
+            height: 52,
+            // Scrolls sideways, so the chips never wrap or overflow on a small phone.
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(AppSpace.md, 0, AppSpace.md, AppSpace.xxs),
+              child: Row(
+                spacing: AppSpace.xs,
+                children: [
+                  for (final f in InboxFilter.values)
+                    ChoiceChip(
+                      key: Key('inboxFilter-${f.name}'),
+                      showCheckmark: false,
+                      label: Text(label(f)),
+                      selected: _filter == f,
+                      onSelected: (_) => setState(() => _filter = f),
+                    ),
+                ],
               ),
             ),
           ),
         ),
-        body: const TabBarView(children: [ForYouList(), ApprovalsList(), NotificationsList()]),
+      ),
+      body: _filter == InboxFilter.pages ? const PagesList() : _InboxFeed(filter: _filter),
+    );
+  }
+}
+
+/// Pending approvals, takeover requests, suggestions and skill ideas: what waits on a decision.
+int _needsYouCount(WidgetRef ref) =>
+    (ref.watch(approvalsProvider).value?.length ?? 0) +
+    (ref.watch(takeoversProvider).value?.length ?? 0) +
+    (ref.watch(forYouProvider).value?.suggestions.length ?? 0) +
+    (ref.watch(skillProposalsProvider).value?.length ?? 0);
+
+/// Whether [n] asks for a decision that is still waiting in Needs you, so Updates doesn't show it
+/// twice. Answered requests stay in Updates.
+bool _waitingAbove(NotificationView n, Set<String> approvalIds, Set<String> takeoverIds) {
+  if (!n.isRequest || n.link == null) return false;
+  final uri = Uri.tryParse(n.link!);
+  if (uri == null) return false;
+  final path = uri.pathSegments;
+  if (path.length == 2 && path.first == 'approvals') return approvalIds.contains(path[1]);
+  final takeover = uri.queryParameters['takeover'];
+  return takeover != null && takeoverIds.contains(takeover);
+}
+
+/// The All, Needs you and Briefs filters of the Inbox.
+class _InboxFeed extends ConsumerWidget {
+  const _InboxFeed({required this.filter});
+  final InboxFilter filter;
+
+  /// How far back published pages show among the updates (the Pages filter lists them all).
+  static const _recentPages = Duration(days: 7);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final all = filter == InboxFilter.all;
+    final approvals = ref.watch(approvalsProvider);
+    final forYou = ref.watch(forYouProvider);
+    final notifications = ref.watch(notificationsProvider);
+    final takeovers = ref.watch(takeoversProvider).value ?? const <TakeoverRequest>[];
+    final proposals = ref.watch(skillProposalsProvider).value ?? const <SkillProposal>[];
+    final pages = all ? ref.watch(pagesProvider(null)).value ?? const <BotPage>[] : const <BotPage>[];
+    final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    String botName(String id) => bots.where((b) => b.id == id).firstOrNull?.name ?? '';
+
+    // The lists this filter is made of; the rest fill in when they arrive.
+    final sources = <AsyncValue<Object?>>[if (filter != InboxFilter.briefs) approvals, forYou, if (all) notifications];
+    final failed = sources.where((s) => s.hasError && !s.hasValue).toList();
+    final AsyncValue<void> state = sources.any((s) => s.isLoading && !s.hasValue)
+        ? const AsyncLoading()
+        : failed.length == sources.length
+        ? AsyncError(failed.first.error!, failed.first.stackTrace ?? StackTrace.current)
+        : const AsyncData(null);
+
+    Future<void> refresh() async {
+      ref.invalidate(approvalsProvider);
+      ref.invalidate(takeoversProvider);
+      ref.invalidate(forYouProvider);
+      ref.invalidate(skillProposalsProvider);
+      if (all) {
+        ref.invalidate(notificationsProvider);
+        ref.invalidate(pagesProvider(null));
+      }
+    }
+
+    return AsyncView(
+      value: state,
+      onRetry: refresh,
+      data: (_) {
+        final pending = approvals.value ?? const <Approval>[];
+        final suggestions = forYou.value?.suggestions ?? const <Suggestion>[];
+        final decisions = filter == InboxFilter.briefs
+            ? const <Widget>[]
+            : <Widget>[
+                for (final t in takeovers)
+                  Padding(
+                    key: ValueKey(('takeover', t.id)),
+                    padding: const EdgeInsets.only(bottom: AppSpace.sm),
+                    child: TakeoverCard(takeover: t),
+                  ),
+                for (final (i, a) in pending.indexed)
+                  Padding(
+                    key: ValueKey(('approval', a.id)),
+                    padding: const EdgeInsets.only(bottom: AppSpace.sm),
+                    child: ApprovalCard(approval: a).appListItemEntrance(i),
+                  ),
+                for (final s in suggestions) SuggestionCard(key: ValueKey(('suggestion', s.id)), s: s, botName: botName(s.botId)),
+                for (final p in proposals) SkillProposalCard(key: ValueKey(('proposal', p.id)), proposal: p, botName: botName(p.botId)),
+              ];
+
+        // Updates: briefs, notifications and new pages, newest first.
+        final approvalIds = {for (final a in pending) a.id};
+        final takeoverIds = {for (final t in takeovers) t.id};
+        final notes = all ? [for (final n in notifications.value ?? const <NotificationView>[]) if (!_waitingAbove(n, approvalIds, takeoverIds)) n] : const <NotificationView>[];
+        final since = DateTime.now().subtract(_recentPages);
+        final updates = <(DateTime, Object)>[
+          if (filter != InboxFilter.needsYou)
+            for (final b in forYou.value?.briefs ?? const <ForYouBrief>[]) (b.createdAt, b),
+          for (final n in notes) (n.createdAt, n),
+          for (final p in pages)
+            if (p.createdAt.isAfter(since)) (p.createdAt, p),
+        ]..sort((a, b) => b.$1.compareTo(a.$1));
+        // Rows in a row share one card; a brief breaks the run with its own card.
+        final updateWidgets = <Widget>[];
+        var rows = <Widget>[];
+        void flushRows() {
+          if (rows.isEmpty) return;
+          updateWidgets.add(Padding(padding: const EdgeInsets.only(bottom: AppSpace.sm), child: GroupedCard(children: rows)));
+          rows = [];
+        }
+
+        for (final (_, item) in updates) {
+          switch (item) {
+            case ForYouBrief b:
+              flushRows();
+              updateWidgets.add(Padding(key: ValueKey(('brief', b.botId)), padding: const EdgeInsets.only(bottom: AppSpace.sm), child: BriefCard(brief: b)));
+            case NotificationView n:
+              rows.add(_NotificationRow(notification: n));
+            case BotPage p:
+              rows.add(_PageUpdateRow(page: p, botName: botName(p.botId)));
+          }
+        }
+        flushRows();
+
+        final hasUnread = notes.any((n) => n.readAt == null);
+        final children = <Widget>[
+          if (failed.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: AppSpace.sm), child: InlineError(error: failed.first.error!, onRetry: refresh)),
+          if (all && decisions.isNotEmpty) SectionHeader(title: l10n.inboxNeedsYou, count: '${decisions.length}', padding: const EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.xs, AppSpace.xxs, AppSpace.xs)),
+          ...decisions,
+          if (all && updateWidgets.isNotEmpty)
+            SectionHeader(
+              title: l10n.inboxUpdates,
+              padding: EdgeInsets.fromLTRB(AppSpace.xxs, decisions.isEmpty ? AppSpace.xs : AppSpace.lg, AppSpace.xxs, AppSpace.xs),
+              trailing: hasUnread
+                  ? TextButton.icon(
+                      key: const Key('markAllRead'),
+                      onPressed: () => runGuarded(context, ref.read(notificationsProvider.notifier).markAllRead),
+                      icon: const Icon(LucideIcons.checkCheck, size: 18),
+                      label: Text(l10n.markAllRead),
+                    )
+                  : null,
+            ),
+          ...updateWidgets,
+        ];
+        if (children.isEmpty) {
+          return switch (filter) {
+            InboxFilter.needsYou => EmptyState(icon: LucideIcons.circleCheckBig, title: l10n.inboxNeedsYouEmpty, message: l10n.inboxNeedsYouEmptyHelp),
+            InboxFilter.briefs => EmptyState(icon: LucideIcons.sun, title: l10n.noBriefs, message: l10n.forYouEmptyHelp),
+            _ => EmptyState(icon: LucideIcons.inbox, title: l10n.forYouEmpty, message: l10n.inboxEmptyHelp),
+          };
+        }
+        return RefreshIndicator(
+          onRefresh: refresh,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final side = pageSide(constraints.maxWidth);
+              return ListView(
+                // Ends above the floating tab bar (the shell sets the bottom padding to its height).
+                padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
+                children: children,
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// "Ada published Weekly sales" among the updates; opens the page the way the Pages list does.
+class _PageUpdateRow extends ConsumerWidget {
+  const _PageUpdateRow({required this.page, required this.botName});
+  final BotPage page;
+  final String botName;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final p = page;
+    return InkWell(
+      key: Key('pageUpdate-${p.id}'),
+      onTap: () => openBotPage(context, ref, p),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpace.md, 12, AppSpace.md, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _RowIcon(icon: LucideIcons.fileText, color: scheme.primary),
+            const SizedBox(width: AppSpace.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.botPublishedPage(botName.isEmpty ? l10n.aBot : botName, p.title),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpace.xs),
+                      Text(relativeTime(p.createdAt, context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    switch (p.visibility) {
+                      BotPageVisibilityEnum.public => l10n.pagePublic,
+                      BotPageVisibilityEnum.workspace => l10n.pageWorkspace,
+                      _ => l10n.pagePrivate,
+                    },
+                    style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.35),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class ApprovalsList extends ConsumerWidget {
-  const ApprovalsList({super.key});
+/// The tinted icon tile at the start of an update row.
+class _RowIcon extends StatelessWidget {
+  const _RowIcon({required this.icon, required this.color});
+  final IconData icon;
+  final Color color;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final takeovers = ref.watch(takeoversProvider).value ?? const <TakeoverRequest>[];
-    return AsyncView(
-      value: ref.watch(approvalsProvider),
-      onRetry: () => ref.invalidate(approvalsProvider),
-      data: (items) => items.isEmpty && takeovers.isEmpty
-          ? EmptyState(icon: LucideIcons.shieldCheck, title: l10n.noApprovals, message: l10n.noApprovalsHelp)
-          : RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(approvalsProvider);
-                ref.invalidate(takeoversProvider);
-              },
-              child: LayoutBuilder(
-                builder: (context, constraints) => ListView(
-                  padding: EdgeInsets.fromLTRB(
-                    pageSide(constraints.maxWidth),
-                    AppSpace.xs,
-                    pageSide(constraints.maxWidth),
-                    AppSpace.xl + MediaQuery.paddingOf(context).bottom,
-                  ),
-                  children: [
-                    for (final t in takeovers)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpace.sm),
-                        child: TakeoverCard(takeover: t),
-                      ),
-                    for (final (i, a) in items.indexed)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpace.sm),
-                        child: ApprovalCard(approval: a).appListItemEntrance(i),
-                      ),
-                  ],
-                ),
-              ),
-            ),
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: context.isDark ? 0.2 : 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.icon),
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 19, color: color),
     );
   }
 }
@@ -268,46 +501,6 @@ class ApprovalScreen extends ConsumerWidget {
   }
 }
 
-class NotificationsList extends ConsumerWidget {
-  const NotificationsList({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final value = ref.watch(notificationsProvider);
-    final hasUnread = (value.value ?? const <NotificationView>[]).any((n) => n.readAt == null);
-    return AsyncView(
-      value: value,
-      onRetry: () => ref.invalidate(notificationsProvider),
-      data: (items) => items.isEmpty
-          ? EmptyState(icon: LucideIcons.bell, title: l10n.noNotifications, message: l10n.noNotificationsHelp)
-          : RefreshIndicator(
-              onRefresh: () async => ref.invalidate(notificationsProvider),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final side = pageSide(constraints.maxWidth);
-                  return ListView(
-                    padding: EdgeInsets.fromLTRB(side, AppSpace.xxs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
-                    children: [
-                      if (hasUnread)
-                        Align(
-                          alignment: AlignmentDirectional.centerEnd,
-                          child: TextButton.icon(
-                            onPressed: () => runGuarded(context, ref.read(notificationsProvider.notifier).markAllRead),
-                            icon: const Icon(LucideIcons.checkCheck, size: 18),
-                            label: Text(l10n.markAllRead),
-                          ),
-                        ),
-                      GroupedCard(children: [for (final n in items) _NotificationRow(notification: n)]),
-                    ],
-                  );
-                },
-              ),
-            ),
-    );
-  }
-}
-
 class _NotificationRow extends ConsumerWidget {
   const _NotificationRow({required this.notification});
   final NotificationView notification;
@@ -336,16 +529,7 @@ class _NotificationRow extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: context.isDark ? 0.2 : 0.12),
-                borderRadius: BorderRadius.circular(AppRadius.icon),
-              ),
-              alignment: Alignment.center,
-              child: Icon(icon, size: 19, color: color),
-            ),
+            _RowIcon(icon: icon, color: color),
             const SizedBox(width: AppSpace.sm),
             Expanded(
               child: Column(

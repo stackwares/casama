@@ -378,13 +378,14 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       const info = await discoverOAuthServerInfo(a.url, { fetchFn: fetchImpl as never });
       const metadata = info.authorizationServerMetadata;
       const resource = info.resourceMetadata?.resource;
-      // Google's servers announce every scope they accept (Gmail's include full mailbox access),
-      // so Google apps ask only for the catalog's; other apps follow what the server announces.
+      // Scopes the catalog chose win over what the server announces (Google's include full mailbox
+      // access, GitHub's include publishing packages); an empty list sends none (Asana rejects
+      // any scope). Apps without a choice follow what the server announces.
       const announced = (info.resourceMetadata?.scopes_supported as string[] | undefined)?.join(
         " ",
       );
-      const chosen = a.scopes?.length ? a.scopes.join(" ") : undefined;
-      const scopes = isGoogleApp(a) ? (chosen ?? announced) : (announced ?? chosen);
+      const scopes =
+        a.scopes !== undefined ? (a.scopes.length ? a.scopes.join(" ") : undefined) : announced;
       let client: OAuthClient | undefined = clients[a.id];
       if (!client && a.oauthClient === "cimd") client = { client_id: cimdUrl(c) };
       if (!client) {

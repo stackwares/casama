@@ -37,6 +37,41 @@ void main() {
 
   });
 
+  testWidgets('the chat stays open once the new workspace is in the list', (tester) async {
+    await setSize(tester, const Size(900, 900));
+    final backend = FakeBackend()..hasOrg = false;
+    final container = ProviderContainer(overrides: [backendProvider.overrideWithValue(backend)]);
+    addTearDown(container.dispose);
+    final router = GoRouter(
+      initialLocation: '/welcome',
+      redirect: (_, state) {
+        final hasOrg = (container.read(organizationsProvider).value ?? const []).isNotEmpty;
+        if (!hasOrg && state.matchedLocation != '/welcome') return '/welcome';
+        return null;
+      },
+      routes: [
+        GoRoute(path: '/welcome', builder: (_, _) => const WelcomeScreen()),
+        GoRoute(path: '/bots/:id/chat', builder: (_, s) => Text('chat ${s.pathParameters['id']} ${s.uri.queryParameters['c']}')),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    );
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.text('chat $botId $convId'), findsOneWidget);
+    expect(find.byKey(const Key('welcomeLoading')), findsNothing);
+  });
+
   testWidgets('"Set up manually" opens the wizard', (tester) async {
     await setSize(tester, const Size(900, 900));
     final backend = _SlowWelcome()..hasOrg = false;

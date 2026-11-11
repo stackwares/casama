@@ -5,6 +5,9 @@ const repo = "https://github.com/stackwares/casama";
 export default defineConfig({
   title: "Casama",
   description: "Self-hostable AI teammates with their own computers.",
+  sitemap: {
+    hostname: "https://docs.casama.ai",
+  },
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: [/^\/api\//],

@@ -48,7 +48,10 @@ export interface CatalogApp {
    * admin created with the vendor (MCP_OAUTH_CLIENTS, or GOOGLE_OAUTH_CLIENT_ID for Google).
    */
   oauthClient?: "dcr" | "cimd" | "preregistered";
-  /** Scopes to ask for when the server doesn't announce them. */
+  /**
+   * Scopes to ask for, used instead of what the server announces; an empty list sends none
+   * (Asana rejects any). Unset: whatever the server announces.
+   */
   scopes?: string[];
   /** Shown on the connect sheet, e.g. a preview or approval caveat. */
   note?: string;
@@ -80,6 +83,8 @@ export const APP_CATALOG: CatalogApp[] = [
     url: "https://api.githubcopilot.com/mcp/",
     auth: ["api_key", "oauth"],
     oauthClient: "preregistered",
+    // The server announces package publishing, gists and more; ask for what its tools need.
+    scopes: ["repo", "read:org", "read:user", "user:email", "read:project", "notifications"],
     apiKey: {
       label: "Personal access token",
       placeholder: "github_pat_…",
@@ -294,6 +299,7 @@ export const APP_CATALOG: CatalogApp[] = [
     url: "https://mcp.asana.com/v2/mcp",
     auth: ["oauth"],
     oauthClient: "preregistered",
+    scopes: [], // Asana's MCP apps take no scope parameter.
     note: "Asana needs an app your server admin registers with Asana (client ID and secret).",
     capabilities: ["Create and assign tasks", "Track projects", "Search work"],
   },

@@ -9,7 +9,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/form_sheet.dart';
 
 /// Check-ins for one bot (D-114): off by default; a morning brief and a scan every few hours.
-final botCheckinsProvider = FutureProvider.autoDispose.family<BotCheckins, String>((ref, id) => ref.watch(backendProvider).botCheckins(id));
+final botCheckinsProvider = FutureProvider.family<BotCheckins, String>((ref, id) => ref.watch(backendProvider).botCheckins(id));
 
 Future<void> showCheckins(BuildContext context, WidgetRef ref, String botId) async {
   final current = await runGuarded(context, () => ref.read(botCheckinsProvider(botId).future));

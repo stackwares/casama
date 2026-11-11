@@ -57,7 +57,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 ```
 
 - **dart/computerd**: HTTP daemon inside each computer: streamed exec with kill and timeouts (process groups), files, search, home-directory archive and restore, a WebSocket terminal, screenshots and input when a display exists. Compiled to one native binary.
-- **infra/images/computer**: `Dockerfile.headless` (Ubuntu 24.04, Node.js 24, Python, Playwright's Chromium, agent-browser, computerd) and `Dockerfile.desktop` (adds Xvfb, Openbox, AT-SPI, agent-desktop, xdotool). Both build for arm64 and amd64.
+- **infra/images/computer**: `Dockerfile.headless` (Ubuntu 24.04, Node.js 24, Python, Playwright's Chromium, agent-browser, computerd, plus LibreOffice, pandoc, Poppler, qpdf and Tesseract for the document skills) and `Dockerfile.desktop` (adds Xvfb, Openbox, AT-SPI, agent-desktop, xdotool). Both build for arm64 and amd64.
 - **packages/sandbox**: the `SandboxProvider` interface, the `computerd` client, object stores (filesystem and S3), the Docker provider, the supervisor client, the provider contract suite (`sandboxContract`) and a throwaway test stack.
 - **apps/supervisor**: the supervisor HTTP API and terminal WebSocket proxy.
 - **infra/egress-proxy**: the egress proxy with its control API.
@@ -153,11 +153,11 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Search (D-103)
 
-- `public.search_workspace` (security invoker; `messages.tsv`, trigram indexes), `GET /v1/search` (`apps/server/src/api/routes/search.ts`, plus file search on awake computers), and `client/lib/features/search/search_view.dart` (Cmd/Ctrl+K, phone tab, jump to message).
+- `public.search_workspace` (security invoker; `messages.tsv`, trigram indexes), `GET /v1/search` (`apps/server/src/api/routes/search.ts`, plus file search on awake computers), and `client/lib/features/search/search_view.dart` (Cmd/Ctrl+K, the round button beside the phone tab bar (D-176), jump to message).
 
 ## Skills library (D-104)
 
-- `skills/` (bundled catalog), `apps/server/src/services/skills.ts` (catalog, `GitHubReader`), `apps/server/src/api/routes/skills.ts`, `skill_files`, agent `tools/skills.ts` (`skills.create`, `skills.update`, `approvalDetails`), `skills.load` file sync, and the app's `skill_library.dart` plus the composer's `/` picker.
+- `skills/` (bundled catalog), `apps/server/src/services/skills.ts` (catalog, `GitHubReader`), `apps/server/src/api/routes/skills.ts`, `skill_files`, agent `tools/skills.ts` (`skills.create`, `skills.update`, `approvalDetails`), `skills.load` file sync, and the app's `skill_catalog_screen.dart`, `skill_visuals.dart` (icons, category colors, titles) and `skill_library.dart`, plus the composer's `/` picker.
 
 ## Setup interview and starter bots (D-105)
 

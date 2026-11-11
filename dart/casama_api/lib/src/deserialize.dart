@@ -72,6 +72,7 @@ import 'package:casama_api/src/model/checkpoint.dart';
 import 'package:casama_api/src/model/checkpoint_created_event.dart';
 import 'package:casama_api/src/model/checkpoint_created_event_payload.dart';
 import 'package:casama_api/src/model/checkpoint_list.dart';
+import 'package:casama_api/src/model/cloud_models.dart';
 import 'package:casama_api/src/model/computer.dart';
 import 'package:casama_api/src/model/computer_file_entry.dart';
 import 'package:casama_api/src/model/computer_file_list.dart';
@@ -167,6 +168,10 @@ import 'package:casama_api/src/model/for_you.dart';
 import 'package:casama_api/src/model/for_you_approval.dart';
 import 'package:casama_api/src/model/for_you_brief.dart';
 import 'package:casama_api/src/model/fulfill_secret_request_body.dart';
+import 'package:casama_api/src/model/gallery_author.dart';
+import 'package:casama_api/src/model/gallery_detail.dart';
+import 'package:casama_api/src/model/gallery_item.dart';
+import 'package:casama_api/src/model/gallery_list.dart';
 import 'package:casama_api/src/model/git_hub_skill_preview.dart';
 import 'package:casama_api/src/model/git_hub_skill_preview_request.dart';
 import 'package:casama_api/src/model/git_sync_status.dart';
@@ -654,6 +659,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CheckpointCreatedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CheckpointList':
           return CheckpointList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CloudModels':
+          return CloudModels.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Computer':
           return Computer.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerFileEntry':
@@ -853,6 +860,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ForYouBrief.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'FulfillSecretRequestBody':
           return FulfillSecretRequestBody.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GalleryAuthor':
+          return GalleryAuthor.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GalleryDetail':
+          return GalleryDetail.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GalleryItem':
+          return GalleryItem.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GalleryList':
+          return GalleryList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GitHubSkillPreview':
           return GitHubSkillPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GitHubSkillPreviewRequest':

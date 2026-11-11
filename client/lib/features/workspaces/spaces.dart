@@ -16,6 +16,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
@@ -305,7 +306,8 @@ class _NewSpaceSheetState extends ConsumerState<NewSpaceSheet> {
   }
 }
 
-/// Settings → Workspace: name and look; People has the invites (D-167).
+/// Settings → Workspace: name, look and People up top (People has the invites, D-167); the
+/// technical setup folds under Advanced (D-182).
 class WorkspaceSettingsScreen extends ConsumerStatefulWidget {
   const WorkspaceSettingsScreen({super.key});
 
@@ -386,27 +388,33 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
             ),
           ],
         ),
-        const SizedBox(height: AppSpace.lg),
-        GroupedCard(
+        // The setup most workspaces never touch, in one fold that stays open once opened (D-182).
+        AdvancedSection(
+          id: 'workspace.settings',
+          summary: admin ? l10n.workspaceAdvancedSummary : l10n.passwordManagers,
           children: [
-            GroupedTile(
-              key: const Key('passwordManagers'),
-              icon: LucideIcons.keyRound,
-              title: l10n.passwordManagers,
-              subtitle: l10n.passwordManagersRow,
-              onTap: () => context.push('/password-managers'),
+            GroupedCard(
+              children: [
+                GroupedTile(
+                  key: const Key('passwordManagers'),
+                  icon: LucideIcons.keyRound,
+                  title: l10n.passwordManagers,
+                  subtitle: l10n.passwordManagersRow,
+                  onTap: () => context.push('/password-managers'),
+                ),
+              ],
             ),
+            if (admin) ...[const SizedBox(height: AppSpace.lg), BotToBotSwitch(orgId: org.id)],
+            if (admin) ...[const SizedBox(height: AppSpace.lg), A2aSwitch(orgId: org.id)],
+            if (admin && phoneCallsEnabled) ...[const SizedBox(height: AppSpace.lg), PhoneCallsSection(orgId: org.id)],
+            if (admin) ...[const SizedBox(height: AppSpace.lg), SecretStoreSection(orgId: org.id)],
+            if (admin) ...[const SizedBox(height: AppSpace.lg), MemoryBackendSection(orgId: org.id)],
+            if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), EncryptionSection(orgId: org.id)],
+            if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), PaymentsSection(orgId: org.id)],
+            if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
+            if (admin) ...[const SizedBox(height: AppSpace.lg), WorkspaceFilesSection(orgId: org.id)],
           ],
         ),
-        if (admin) ...[const SizedBox(height: AppSpace.lg), BotToBotSwitch(orgId: org.id)],
-        if (admin) ...[const SizedBox(height: AppSpace.lg), A2aSwitch(orgId: org.id)],
-        if (admin) ...[const SizedBox(height: AppSpace.lg), PhoneCallsSection(orgId: org.id)],
-        if (admin) ...[const SizedBox(height: AppSpace.lg), SecretStoreSection(orgId: org.id)],
-        if (admin) ...[const SizedBox(height: AppSpace.lg), MemoryBackendSection(orgId: org.id)],
-        if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), EncryptionSection(orgId: org.id)],
-        if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), PaymentsSection(orgId: org.id)],
-        if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
-        if (admin) ...[const SizedBox(height: AppSpace.lg), WorkspaceFilesSection(orgId: org.id)],
       ],
     );
   }
@@ -686,6 +694,10 @@ class A2aSwitch extends ConsumerWidget {
 }
 
 final _telephonyProvider = FutureProvider.autoDispose.family<TelephonySettings, String>((ref, orgId) => ref.watch(backendProvider).telephony(orgId));
+
+/// Phone calls through Twilio are off for now; the setup stays. Build with
+/// `--dart-define=PHONE_CALLS=true` to show the section.
+const phoneCallsEnabled = bool.fromEnvironment('PHONE_CALLS');
 
 /// Calls for you (D-141): the workspace's Twilio account (admins).
 class PhoneCallsSection extends ConsumerWidget {

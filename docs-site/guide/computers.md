@@ -43,6 +43,7 @@ Every computer starts from Casama's image, based on Ubuntu 24.04:
 | --- | --- |
 | Shell and tools | bash, git, curl, wget, jq, ripgrep, zip and unzip, nano, vim, OpenSSH client, build tools |
 | Languages | Node.js 24, Python 3 with pip and venv |
+| Documents | LibreOffice, pandoc, Poppler, qpdf and Tesseract, for the PDF, Word, Excel and PowerPoint skills |
 | Browser | Chromium, driven by the bot through agent-browser |
 | Desktop computers only | A desktop with a taskbar (**Browser**, **Terminal**, **Text editor**), accessibility tooling so the bot can use apps, and the live view streamer |
 

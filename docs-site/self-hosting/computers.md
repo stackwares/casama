@@ -222,7 +222,7 @@ Casama has two computer images, both built from `infra/images/computer/`:
 
 | Image                       | Contents                                                                                   |
 | --------------------------- | ------------------------------------------------------------------------------------------ |
-| `computer-headless`         | Ubuntu 24.04, `computerd`, shell tools, git, Node.js 24, Python 3, Chromium and agent-browser |
+| `computer-headless`         | Ubuntu 24.04, `computerd`, shell tools, git, Node.js 24, Python 3, Chromium, agent-browser, LibreOffice, pandoc, Poppler, qpdf and Tesseract |
 | `computer-desktop`          | The headless image plus an X server, a window manager, accessibility tools, a text editor and the Neko WebRTC streamer for live view |
 
 The installer always builds the headless image. Build the desktop image with

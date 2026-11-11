@@ -12,6 +12,7 @@ import '../search/search_view.dart';
 import '../groups/group_chats.dart';
 import '../../core/providers.dart';
 import '../../ui/bot_activity.dart';
+import '../settings/me_avatar.dart';
 import '../settings/settings_screen.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -20,15 +21,28 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/floating_tab_chrome.dart';
 import '../../ui/glass.dart';
 import '../../ui/casama_mark.dart';
+import '../../core/billing.dart';
+import '../../core/mac_bridge.dart';
+import '../../core/updater.dart';
+import '../../theme/presets.dart';
+import '../../ui/advanced_section.dart';
+import '../admin/admin_screen.dart';
 import '../bots/bots_screen.dart';
+import '../chat/chat_detail.dart';
 import '../computer/computer_screen.dart';
+import '../notifications/checkins_sheet.dart';
+import '../notifications/quiet_hours.dart';
+import '../settings/about_you_screen.dart';
 import '../../ui/glow_button.dart';
 import '../workspaces/spaces.dart';
 import '../voice/phone_calls.dart';
 import '../voice/wake_word.dart';
+import '../../ui/mascot.dart';
 
-/// Phone: floating tab bar. Tablet: navigation rail. Desktop: a sidebar with the bot list, the
-/// chat, and the bot's computer beside it.
+/// Three places on every size (D-176): Chats, Inbox and Tasks. Phone: a floating tab bar with a
+/// round search button beside it. Tablet: a navigation rail. Desktop: a sidebar with the chats, the
+/// chat, and the bot's computer beside it. Settings sits behind the person's avatar; a bot's
+/// computer lives in its chat.
 enum LayoutSize { phone, tablet, desktop }
 
 LayoutSize layoutFor(double width) => switch (AppBreakpoints.of(width)) {
@@ -100,42 +114,66 @@ class HomeShell extends ConsumerWidget {
   final String location;
   final Widget child;
 
+  /// The selected place, or -1 on screens outside them (settings, search, the computer).
   int get _index {
-    if (location.startsWith('/inbox') || location.startsWith('/approvals')) return 1;
-    if (location.startsWith('/tasks')) return 2;
-    if (location.startsWith('/computer')) return 3;
-    if (location.startsWith('/settings')) return 4;
-    if (location.startsWith('/search')) return 5;
-    return 0;
+    if (location.startsWith('/inbox') || location.startsWith('/approvals') || location == '/pages') return 1;
+    if (location.startsWith('/tasks') || location.startsWith('/projects')) return 2;
+    if (location == '/' || location.startsWith('/bots') || location.startsWith('/groups') || location.startsWith('/quick-ask')) return 0;
+    return -1;
   }
 
   String? get _botId => RegExp(r'^/bots/([^/]+)').firstMatch(location)?.group(1);
 
-  /// Screens opened from a tab (a chat, a settings page): on phones they take the whole screen.
-  bool get _isDetail => _botId != null || location.startsWith('/groups/') || location == '/pages' || location.startsWith('/computer/') || RegExp(r'^/settings/.+').hasMatch(location) || location.startsWith('/approvals/') || location.startsWith('/quick-ask');
+  /// Screens opened from a tab (a chat, settings, the computer, search): on phones they take the
+  /// whole screen, with a back button.
+  bool get _isDetail =>
+      _botId != null ||
+      location.startsWith('/groups/') ||
+      location == '/pages' ||
+      location.startsWith('/projects') ||
+      location.startsWith('/computer') ||
+      location.startsWith('/settings') ||
+      location == '/search' ||
+      location.startsWith('/approvals/') ||
+      location.startsWith('/quick-ask');
 
-  List<_Dest> _destinations(BuildContext context, {bool phone = false}) {
+  List<_Dest> _destinations(BuildContext context) {
     final l10n = context.l10n;
     return [
-      _Dest('/bots', LucideIcons.messagesSquare, LucideIcons.messagesSquare, l10n.navBots),
+      _Dest('/bots', LucideIcons.messagesSquare, LucideIcons.messagesSquare, l10n.navChats),
       _Dest('/inbox', LucideIcons.inbox, LucideIcons.inbox, l10n.inbox),
-      _Dest('/tasks', LucideIcons.squareKanban, LucideIcons.squareKanban, l10n.navBoard),
-      _Dest('/computer', LucideIcons.monitor, LucideIcons.monitor, l10n.navComputer),
-      _Dest('/settings', LucideIcons.settings, LucideIcons.settings, l10n.navSettings),
-      // Phones get search as a tab; larger windows use Cmd/Ctrl+K and the sidebar button (D-103).
-      if (phone) _Dest('/search', LucideIcons.search, LucideIcons.search, l10n.search),
+      _Dest('/tasks', LucideIcons.listTodo, LucideIcons.listTodo, l10n.navTasks),
     ];
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(aboutYouProvider, (_, _) {});
+    ref.listen(quietHoursProvider, (_, _) {});
+    ref.listen(authMethodsProvider, (_, _) {});
+    ref.listen(usageMonthProvider, (_, _) {});
+    ref.listen(billingProvider, (_, _) {});
+    ref.listen(adminOverviewProvider, (_, _) {});
+    ref.listen(computersProvider, (_, _) {});
+    ref.listen(credentialsProvider, (_, _) {});
+    ref.listen(savedThemesProvider, (_, _) {});
+    ref.listen(advancedOpenProvider, (_, _) {});
+    ref.listen(showBotStepsProvider, (_, _) {});
+    ref.listen(computerPanelWidthProvider, (_, _) {});
+    ref.listen(launchAtLoginProvider, (_, _) {});
+    ref.listen(autoUpdateChecksProvider, (_, _) {});
+    ref.listen(appVersionProvider, (_, _) {});
+    if (_botId case final botId?) {
+      ref.listen(botQuietProvider(botId), (_, _) {});
+      ref.listen(botCheckinsProvider(botId), (_, _) {});
+    }
     final size = layoutFor(MediaQuery.sizeOf(context).width);
     final badge = ref.watch(inboxBadgeProvider);
     final inner = ref.watch(currentOrgProvider)?.suspended == true ? _SuspendedBanner(child: this.child) : this.child;
     final child = IncomingCallBanner(child: inner);
     // The wake word listens while the app is open (D-144).
     if (wakeWordSupported) ref.watch(wakeWordProvider);
-    final dests = _destinations(context, phone: size == LayoutSize.phone);
+    final dests = _destinations(context);
     void go(int i) => context.go(dests[i].path);
     final shell = _buildShell(context, ref, size, badge, child, dests, go);
     if (size == LayoutSize.phone) return shell;
@@ -178,6 +216,8 @@ class HomeShell extends ConsumerWidget {
                     currentIndex: _index,
                     onDestinationSelected: go,
                     destinations: [for (final d in dests) FloatingTabDestination(icon: d.icon, selectedIcon: d.selectedIcon, label: d.label, badge: d.path == '/inbox' ? badge : 0)],
+                    // Search floats beside the tabs and opens over them (Cmd/Ctrl+K on larger windows, D-103).
+                    action: FloatingTabAction(key: const Key('tabSearch'), icon: LucideIcons.search, label: context.l10n.search, onPressed: () => showWorkspaceSearch(context)),
                   ),
                 ),
               ),
@@ -195,7 +235,7 @@ class HomeShell extends ConsumerWidget {
         body: Row(
           children: [
             _NavSurface(
-              child: _Rail(dests: dests, index: _index, badge: badge, onSelected: go),
+              child: _Rail(dests: dests, index: _index, badge: badge, onSelected: go, settingsOpen: location.startsWith('/settings')),
             ),
             Expanded(
               child: MediaQuery.removePadding(context: context, removeLeft: true, child: child),
@@ -267,11 +307,12 @@ class _NavSurface extends StatelessWidget {
 }
 
 class _Rail extends StatelessWidget {
-  const _Rail({required this.dests, required this.index, required this.badge, required this.onSelected});
+  const _Rail({required this.dests, required this.index, required this.badge, required this.onSelected, required this.settingsOpen});
   final List<_Dest> dests;
   final int index;
   final int badge;
   final ValueChanged<int> onSelected;
+  final bool settingsOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +320,7 @@ class _Rail extends StatelessWidget {
     final tt = context.textTheme;
     return NavigationRail(
       backgroundColor: Colors.transparent,
-      selectedIndex: index,
+      selectedIndex: index < 0 ? null : index,
       onDestinationSelected: onSelected,
       labelType: NavigationRailLabelType.all,
       indicatorColor: scheme.primary.withValues(alpha: 0.16),
@@ -288,6 +329,38 @@ class _Rail extends StatelessWidget {
       selectedLabelTextStyle: tt.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
       unselectedLabelTextStyle: tt.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w500),
       leading: const Padding(padding: EdgeInsets.only(top: 12, bottom: 20), child: WorkspaceSwitcher(compact: true)),
+      // Search under the places; the person's avatar (Settings) at the bottom, as in the sidebar.
+      trailingAtBottom: true,
+      trailing: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              key: const Key('railSearch'),
+              tooltip: '${context.l10n.search} (⌘K)',
+              icon: Icon(LucideIcons.search, color: scheme.onSurfaceVariant),
+              onPressed: () => showWorkspaceSearch(context),
+            ),
+            const SizedBox(height: 12),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: settingsOpen ? scheme.primary : Colors.transparent, width: 2),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: InkWell(
+                  key: const Key('railMe'),
+                  customBorder: const CircleBorder(),
+                  onTap: () => context.go('/settings'),
+                  child: Tooltip(message: context.l10n.settings, child: const MeAvatar(size: 36)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
       destinations: [
         for (final d in dests)
           NavigationRailDestination(
@@ -429,24 +502,26 @@ class _Sidebar extends ConsumerWidget {
             ),
             Divider(height: 1, color: context.appColors.hairline),
             const SizedBox(height: 6),
-            _SidebarItem(
-              key: const Key('sidebarPages'),
-              leading: Icon(LucideIcons.fileText, size: 21, color: location == '/pages' ? scheme.primary : scheme.onSurfaceVariant),
-              label: l10n.pages,
-              selected: location == '/pages',
-              onTap: () => context.go('/pages'),
-            ),
+            // The other two places, then the person: their avatar opens Settings.
             for (var i = 0; i < dests.length; i++)
               if (dests[i].path != '/bots')
                 _SidebarItem(
                   key: Key('sidebar-nav-${dests[i].path}'),
                   leading: Icon(i == index ? dests[i].selectedIcon : dests[i].icon, size: 21, color: i == index ? scheme.primary : scheme.onSurfaceVariant),
                   label: dests[i].label,
-                  subtitle: dests[i].path == '/settings' ? ref.watch(backendProvider).userEmail : null,
                   selected: i == index,
                   trailing: dests[i].path == '/inbox' && badge > 0 ? CountPill(badge) : null,
                   onTap: () => onSelected(i),
                 ),
+            _SidebarItem(
+              key: const Key('sidebarMe'),
+              height: 52,
+              leading: const MeAvatar(size: 30),
+              label: meLabel(ref),
+              subtitle: l10n.settings,
+              selected: location.startsWith('/settings'),
+              onTap: () => context.go('/settings'),
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -554,6 +629,7 @@ class _SelectBotPlaceholder extends ConsumerWidget {
     final hasBots = (ref.watch(botsProvider).value ?? const []).isNotEmpty;
     return EmptyState(
       icon: LucideIcons.messagesSquare,
+      illustration: hasBots ? null : const BlankBotImage(size: 132),
       title: hasBots ? l10n.selectBot : l10n.noBots,
       message: l10n.selectBotHelp,
       action: GlowButton.icon(onPressed: onCreate, icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),

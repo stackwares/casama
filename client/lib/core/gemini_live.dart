@@ -8,6 +8,7 @@ import 'package:casama_sdk/casama_sdk.dart' show VoiceSession;
 import 'package:record/record.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import 'call_audio.dart';
 import 'voice.dart';
 
 /// Gemini Live's audio: 16 kHz 16-bit PCM from the mic, 24 kHz 16-bit PCM back.
@@ -209,8 +210,12 @@ abstract class PcmAudio {
 class DevicePcmAudio implements PcmAudio {
   final _recorder = AudioRecorder();
   StreamSubscription<Uint8List>? _mic;
-  AudioSource? _stream;
+  Future<AudioSource>? _stream;
   SoundHandle? _handle;
+
+  /// Audio arrives in many small pieces; they're queued one after another so they play in order
+  /// on one stream (starting the player once, not once per piece).
+  Future<void> _queue = Future.value();
 
   @override
   Future<void> startMic(void Function(Uint8List pcm16k) onChunk) async {
@@ -233,6 +238,14 @@ class DevicePcmAudio implements PcmAudio {
       ),
     );
     _mic = s.listen(onChunk);
+    // Calls start on the speaker; the call screen can switch to the earpiece or a headset.
+    if (CallAudioRoutes.supported) {
+      try {
+        await DeviceCallAudioRoutes().select(const CallRoute(CallRouteKind.speaker));
+      } catch (e) {
+        debugPrint('call audio: could not switch to the speaker: $e');
+      }
+    }
   }
 
   @override
@@ -242,11 +255,11 @@ class DevicePcmAudio implements PcmAudio {
     if (await _recorder.isRecording()) await _recorder.stop();
   }
 
-  Future<void> _ensurePlayer() async {
+  /// One player and one buffer stream for the whole call, made once.
+  Future<AudioSource> _player() => _stream ??= () async {
     final soloud = SoLoud.instance;
     if (!soloud.isInitialized) await soloud.init();
-    if (_stream != null) return;
-    _stream = soloud.setBufferStream(
+    return soloud.setBufferStream(
       bufferingType: BufferingType.released,
       // Start as soon as a little audio is in: replies should feel instant.
       bufferingTimeNeeds: 0.1,
@@ -254,37 +267,42 @@ class DevicePcmAudio implements PcmAudio {
       channels: Channels.mono,
       format: BufferType.s16le,
     );
-  }
+  }();
 
   @override
   void play(Uint8List pcm24k) {
-    unawaited(() async {
-      await _ensurePlayer();
-      final stream = _stream!;
-      SoLoud.instance.addAudioDataStream(stream, pcm24k);
-      _handle ??= SoLoud.instance.play(stream);
-    }());
+    _queue = _queue.then((_) async {
+      final soloud = SoLoud.instance;
+      final stream = await _player();
+      soloud.addAudioDataStream(stream, pcm24k);
+      // (Re)start the voice if it isn't playing (first piece, or it ended after a long pause).
+      final h = _handle;
+      if (h == null || !soloud.getIsValidVoiceHandle(h)) _handle = soloud.play(stream);
+    }).catchError((Object e) => debugPrint('call audio: playback failed: $e'));
   }
 
   @override
   void flush() {
-    final stream = _stream;
-    if (stream == null) return;
-    try {
-      SoLoud.instance.resetBufferStream(stream);
-    } catch (_) {
-      // Already ended: nothing queued to drop.
-    }
+    _queue = _queue.then((_) async {
+      final s = _stream;
+      if (s == null) return;
+      try {
+        SoLoud.instance.resetBufferStream(await s);
+      } catch (_) {
+        // Already ended: nothing queued to drop.
+      }
+    });
   }
 
   @override
   Future<void> dispose() async {
     await stopMic();
     await _recorder.dispose();
+    await _queue;
     final h = _handle;
-    if (h != null) await SoLoud.instance.stop(h);
+    if (h != null && SoLoud.instance.getIsValidVoiceHandle(h)) await SoLoud.instance.stop(h);
     final s = _stream;
-    if (s != null) await SoLoud.instance.disposeSource(s);
+    if (s != null) await SoLoud.instance.disposeSource(await s);
     _handle = null;
     _stream = null;
   }
@@ -294,6 +312,47 @@ class DevicePcmAudio implements PcmAudio {
 /// (which locks the bot's instructions, tools and voice), the mic streamed up as PCM, and the
 /// reply played as it arrives. Connections last about 10 minutes, so the call resumes the same
 /// session on a new connection when Google says the current one is ending.
+/// Loudness of a Gemini Live call: the microphone as it's captured, and the bot's voice in 50 ms
+/// steps timed to when each piece plays (audio arrives ahead of playback).
+class _GeminiLevels implements CallLevels {
+  static const _step = Duration(milliseconds: 50);
+  static const _stepBytes = geminiOutputRate * 2 ~/ 20;
+
+  double _mic = 0;
+  DateTime _micAt = DateTime(0);
+  var muted = false;
+  final _out = <(DateTime, double)>[];
+
+  void heard(Uint8List pcm) {
+    _mic = pcmLevel(pcm);
+    _micAt = DateTime.now();
+  }
+
+  /// [pcm] starts playing at [at].
+  void queued(Uint8List pcm, DateTime at) {
+    for (var i = 0; i < pcm.length; i += _stepBytes) {
+      _out.add((at, pcmLevel(pcm, i, i + _stepBytes)));
+      at = at.add(_step);
+    }
+  }
+
+  void clear() => _out.clear();
+
+  @override
+  double get input =>
+      muted || DateTime.now().difference(_micAt) > const Duration(milliseconds: 300) ? 0 : _mic;
+
+  @override
+  double get output {
+    final now = DateTime.now();
+    while (_out.isNotEmpty && !_out.first.$1.add(_step).isAfter(now)) {
+      _out.removeAt(0);
+    }
+    if (_out.isEmpty || _out.first.$1.isAfter(now)) return 0;
+    return _out.first.$2;
+  }
+}
+
 class GeminiLiveCall implements VoiceCall {
   GeminiLiveCall._(this._session, this._audio, this._connect);
 
@@ -303,6 +362,7 @@ class GeminiLiveCall implements VoiceCall {
 
   final _state = ValueNotifier(CallState.connecting);
   final _speaking = ValueNotifier(false);
+  final _levels = _GeminiLevels();
   late final _ev = GeminiLiveEvents(
     send: _send,
     onAudio: _onAudio,
@@ -408,6 +468,7 @@ class GeminiLiveCall implements VoiceCall {
 
   void _onMic(Uint8List pcm) {
     if (_muted || !_ev.ready || _ended) return;
+    _levels.heard(pcm);
     _send({
       'realtimeInput': {
         'audio': {
@@ -423,6 +484,7 @@ class GeminiLiveCall implements VoiceCall {
     // Track when the queued audio will finish, to drive the speaking avatar.
     final now = DateTime.now();
     final start = _playingUntil.isAfter(now) ? _playingUntil : now;
+    _levels.queued(pcm, start);
     _playingUntil = start.add(
       Duration(microseconds: pcm.length * 1000000 ~/ (geminiOutputRate * 2)),
     );
@@ -436,6 +498,7 @@ class GeminiLiveCall implements VoiceCall {
 
   void _onInterrupted() {
     _audio.flush();
+    _levels.clear();
     _speakingTimer?.cancel();
     _playingUntil = DateTime.now();
     _speaking.value = false;
@@ -456,8 +519,29 @@ class GeminiLiveCall implements VoiceCall {
   Map<String, int>? get usage => _ev.hasUsage ? Map.of(_ev.usage) : null;
 
   @override
+  CallLevels get levels => _levels;
+
+  @override
+  CallAudioRoutes? get routes => _audio is DevicePcmAudio && CallAudioRoutes.supported ? DeviceCallAudioRoutes() : null;
+
+  @override
   void sendToolResult(String callId, String output) =>
       _send(_ev.toolResponse(callId, output));
+
+  @override
+  void tellModel(String note) => _send({
+    'clientContent': {
+      'turns': [
+        {
+          'role': 'user',
+          'parts': [
+            {'text': note},
+          ],
+        },
+      ],
+      'turnComplete': true,
+    },
+  });
 
   @override
   void setMuted(bool muted) {
@@ -467,6 +551,7 @@ class GeminiLiveCall implements VoiceCall {
       });
     }
     _muted = muted;
+    _levels.muted = muted;
   }
 
   @override

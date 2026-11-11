@@ -102,6 +102,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- PostHog stays off until Dart calls setup() with a build-time key (D-063). Native auto-init
+	     would otherwise log an error on every launch because the token is not in this file. -->
+	<key>com.posthog.posthog.AUTO_INIT</key>
+	<false/>
+	<key>com.posthog.posthog.CAPTURE_PUSH_NOTIFICATION_OPENED</key>
+	<false/>
 	<!-- Phone-call voice (D-135): PushKit VoIP pushes ring through CallKit; the live call keeps audio. -->
 	<key>UIBackgroundModes</key>
 	<array>

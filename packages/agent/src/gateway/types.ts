@@ -30,6 +30,10 @@ export interface ResolvedModel {
   fallbackOnLimit?: boolean;
   /** Extra request headers (an authenticated Cloudflare AI Gateway, D-145). */
   headers?: Record<string, string>;
+  /** Casama Cloud's shared OpenRouter key (D-186). */
+  platformKey?: boolean;
+  /** Sent as OpenRouter's `user`, so one workspace can't get the whole account blocked. */
+  openRouterUser?: string;
 }
 
 export type ChatMessage =
@@ -59,6 +63,8 @@ export interface Usage {
   cachedInputTokens?: number;
   /** Input tokens written to the prompt cache (Anthropic charges these at 1.25×). */
   cacheWriteTokens?: number;
+  /** What the provider reported the call cost, in USD (OpenRouter's `usage.cost`). */
+  providerCostUsd?: number;
 }
 
 export type GatewayEvent =

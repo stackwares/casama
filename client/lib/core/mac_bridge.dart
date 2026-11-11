@@ -61,7 +61,7 @@ Future<void> _menu(Ref ref, String action) async {
 }
 
 /// "Open at login" (macOS 13+): null where the system can't do it.
-final launchAtLoginProvider = FutureProvider.autoDispose<bool?>((ref) async {
+final launchAtLoginProvider = FutureProvider<bool?>((ref) async {
   if (!_isMac) return null;
   try {
     return await _channel.invokeMethod<bool>('launchAtLogin');

@@ -22,6 +22,8 @@ final adminOverviewProvider = FutureProvider<AdminOverview?>((ref) async {
 final _adminUpdatesProvider = FutureProvider<UpdateNotice>((r) => r.watch(backendProvider).adminUpdates());
 final _adminUsersProvider = FutureProvider<List<AdminUser>>((r) => r.watch(backendProvider).adminUsers());
 final _adminServicesProvider = FutureProvider<List<AdminService>>((r) => r.watch(backendProvider).adminServices());
+final _connectionSettingsProvider = FutureProvider.autoDispose<ConnectionSettings>((r) => r.watch(backendProvider).adminConnectionSettings());
+final _cloudModelsProvider = FutureProvider.autoDispose<CloudModels>((r) => r.watch(backendProvider).adminCloudModels());
 final _adminOrgsProvider = FutureProvider.autoDispose<List<AdminOrg>>((r) => r.watch(backendProvider).adminOrgs());
 final _adminAbuseProvider = FutureProvider.autoDispose<List<AbuseEvent>>((r) => r.watch(backendProvider).adminAbuseEvents());
 
@@ -375,6 +377,9 @@ class _Services extends ConsumerWidget {
       value: services,
       data: (items) => PageColumn(
         children: [
+          const _CloudModelsCard(),
+          const _ConnectionSettingsCard(),
+          const SizedBox(height: AppSpace.lg),
           GroupedCard(
             children: [
               for (final s in items)
@@ -397,6 +402,179 @@ class _Services extends ConsumerWidget {
   }
 }
 
+
+/// The models Casama Cloud runs (D-188). A save reaches every server within a few seconds.
+class _CloudModelsCard extends ConsumerWidget {
+  const _CloudModelsCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final models = ref.watch(_cloudModelsProvider).value;
+    if (models == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.cloudModelsTitle),
+        GroupedCard(
+          children: [
+            GroupedTile(
+              key: const Key('cloudModels'),
+              icon: LucideIcons.sparkles,
+              title: models.chat,
+              subtitle: l10n.cloudModelsHelp,
+              onTap: () async {
+                final next = await showAdaptiveSheet<CloudModels>(
+                  context: context,
+                  builder: (_) => _CloudModelsSheet(current: models),
+                );
+                if (next == null || !context.mounted) return;
+                final ok = await runGuarded(context, () => ref.read(backendProvider).setAdminCloudModels(next));
+                if (ok != null) ref.invalidate(_cloudModelsProvider);
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.lg),
+      ],
+    );
+  }
+}
+
+class _CloudModelsSheet extends StatefulWidget {
+  const _CloudModelsSheet({required this.current});
+  final CloudModels current;
+
+  @override
+  State<_CloudModelsSheet> createState() => _CloudModelsSheetState();
+}
+
+class _CloudModelsSheetState extends State<_CloudModelsSheet> {
+  late final _chat = TextEditingController(text: widget.current.chat);
+  late final _background = TextEditingController(text: widget.current.background);
+  late final _image = TextEditingController(text: widget.current.image);
+  late final _live = TextEditingController(text: widget.current.live);
+  late final _realtime = TextEditingController(text: widget.current.realtime);
+  late final _tts = TextEditingController(text: widget.current.tts);
+  late final _stt = TextEditingController(text: widget.current.stt);
+  late final _embedding = TextEditingController(text: widget.current.embedding);
+  late final _video = TextEditingController(text: widget.current.video);
+  late var _resolution = widget.current.imageResolution;
+
+  @override
+  void dispose() {
+    for (final c in [_chat, _background, _image, _live, _realtime, _tts, _stt, _embedding, _video]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    InputDecoration field(String label) => InputDecoration(labelText: label);
+    Widget box(Key key, TextEditingController controller, String label) => TextField(
+      key: key,
+      controller: controller,
+      decoration: field(label),
+    );
+    return FormSheet(
+      icon: LucideIcons.sparkles,
+      title: l10n.cloudModelsTitle,
+      subtitle: l10n.cloudModelsHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveCloudModels'),
+      onSubmit: () {
+        final values = [_chat, _background, _image, _live, _realtime, _tts, _stt, _embedding, _video];
+        if (values.any((c) => c.text.trim().isEmpty)) return;
+        Navigator.pop(
+          context,
+          widget.current.copyWith(
+            chat: _chat.text.trim(),
+            background: _background.text.trim(),
+            image: _image.text.trim(),
+            imageResolution: _resolution,
+            live: _live.text.trim(),
+            realtime: _realtime.text.trim(),
+            tts: _tts.text.trim(),
+            stt: _stt.text.trim(),
+            embedding: _embedding.text.trim(),
+            video: _video.text.trim(),
+          ),
+        );
+      },
+      children: [
+        box(const Key('cloudChat'), _chat, 'Chat'),
+        box(const Key('cloudBackground'), _background, 'Background'),
+        box(const Key('cloudImage'), _image, 'Images'),
+        DropdownButtonFormField<CloudModelsImageResolutionEnum>(
+          key: const Key('cloudImageResolution'),
+          initialValue: _resolution,
+          decoration: field('Image size'),
+          items: [
+            for (final r in CloudModelsImageResolutionEnum.values)
+              DropdownMenuItem(value: r, child: Text(r.value)),
+          ],
+          onChanged: (v) {
+            if (v != null) setState(() => _resolution = v);
+          },
+        ),
+        box(const Key('cloudLive'), _live, 'Calls'),
+        box(const Key('cloudRealtime'), _realtime, 'Call fallback'),
+        box(const Key('cloudTts'), _tts, 'Read aloud'),
+        box(const Key('cloudStt'), _stt, 'Dictation'),
+        box(const Key('cloudEmbedding'), _embedding, 'Embeddings'),
+        box(const Key('cloudVideo'), _video, 'Video'),
+      ],
+    );
+  }
+}
+
+/// How apps without their own sign-in connect (D-173): Casama's Composio account (one click) or
+/// people's own accounts. Takes effect on the server within seconds.
+class _ConnectionSettingsCard extends ConsumerWidget {
+  const _ConnectionSettingsCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final settings = ref.watch(_connectionSettingsProvider).value;
+    if (settings == null) return const SizedBox.shrink();
+    final server = settings.composio == ConnectionSettingsComposioEnum.server && settings.composioKey;
+    Future<void> choose(bool serverComposio) async {
+      await runGuarded(context, () => ref.read(backendProvider).setAdminConnectionSettings(serverComposio: serverComposio));
+      ref.invalidate(_connectionSettingsProvider);
+      ref.invalidate(appCatalogProvider);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.connectionsTitle),
+        GroupedCard(
+          children: [
+            GroupedTile(
+              key: const Key('connectionsServer'),
+              icon: server ? LucideIcons.circleCheck : LucideIcons.circle,
+              iconColor: server ? context.colorScheme.primary : null,
+              title: l10n.connectionsServerComposio,
+              subtitle: settings.composioKey ? l10n.connectionsServerComposioHelp : l10n.connectionsNoComposioKey,
+              onTap: settings.composioKey && !server ? () => choose(true) : null,
+            ),
+            GroupedTile(
+              key: const Key('connectionsOwn'),
+              icon: !server ? LucideIcons.circleCheck : LucideIcons.circle,
+              iconColor: !server ? context.colorScheme.primary : null,
+              title: l10n.connectionsOwnAccounts,
+              subtitle: l10n.connectionsOwnAccountsHelp,
+              onTap: server ? () => choose(false) : null,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
 
 /// Recent abuse signals and actions (D-094).
 class _Abuse extends ConsumerWidget {

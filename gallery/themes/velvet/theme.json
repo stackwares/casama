@@ -1,0 +1,22 @@
+{
+  "v": 2,
+  "scheme": {
+    "light": {
+      "seed": "#7A3F8F",
+      "background": "#FAF5FB",
+      "onBackground": "#24122A"
+    },
+    "dark": {
+      "seed": "#DDB0EE",
+      "background": "#1B1020",
+      "onBackground": "#F3E6F7"
+    }
+  },
+  "headingFont": "Playfair Display",
+  "bodyFont": "Manrope",
+  "wallpaper": {
+    "pattern": "space",
+    "palette": "casama",
+    "intensity": 0.5
+  }
+}

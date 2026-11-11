@@ -11,6 +11,23 @@ import 'local_cache.dart';
 /// The backend; overridden in main() and in tests.
 final backendProvider = Provider<Backend>((ref) => throw UnimplementedError('backendProvider must be overridden'));
 
+/// Sign-ins the server turns on beyond email, Google and Apple (SSO, passkeys). Hidden when the
+/// server can't say.
+final authMethodsProvider = FutureProvider<AuthMethods>((ref) async {
+  try {
+    return await ref.watch(backendProvider).authMethods();
+  } catch (_) {
+    return const AuthMethods();
+  }
+});
+
+/// After a reset link or code, until a new password is chosen or skipped.
+final newPasswordNeededProvider = StreamProvider<bool>((ref) async* {
+  final backend = ref.watch(backendProvider);
+  yield backend.newPasswordNeeded;
+  yield* backend.newPasswordNeededChanges;
+});
+
 /// Signed-in state, updated from the backend's auth stream.
 final signedInProvider = StreamProvider<bool>((ref) async* {
   final backend = ref.watch(backendProvider);

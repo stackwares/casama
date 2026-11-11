@@ -30,6 +30,23 @@ describe("checkBudget", () => {
     });
     expect(checkBudget({ ...base, credits: 0.01 })).toEqual({ ok: true });
     expect(checkBudget({ ...base, credits: null })).toEqual({ ok: true });
+    expect(checkBudget({ ...base, credits: 1, unbilledUsd: 1 })).toMatchObject({
+      code: "out_of_credits",
+    });
+    expect(checkBudget({ ...base, credits: 0.02, reserveUsd: 0.05 })).toMatchObject({
+      code: "out_of_credits",
+    });
+    expect(checkBudget({ ...base, credits: 1, unbilledUsd: 0.2, reserveUsd: 0.05 })).toEqual({
+      ok: true,
+    });
+  });
+
+  it("stops Casama's key at the workspace's daily cap", () => {
+    expect(checkBudget({ ...base, cloudToday: 0.25, cloudDailyCap: 0.25 })).toMatchObject({
+      code: "cloud_daily_cap",
+    });
+    expect(checkBudget({ ...base, cloudToday: 0.1, cloudDailyCap: 0.25 })).toEqual({ ok: true });
+    expect(checkBudget({ ...base, cloudToday: 100, cloudDailyCap: null })).toEqual({ ok: true });
   });
 
   it("monthly computer hours from the plan", () => {

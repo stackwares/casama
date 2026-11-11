@@ -436,8 +436,8 @@ Tools are registered in one registry with a Zod schema, a risk level, a capabili
 ### Model gateway
 
 - Providers at launch: OpenAI, Anthropic, Google, xAI, OpenRouter, and any OpenAI-compatible endpoint (Ollama, vLLM), plus the user's ChatGPT plan (below).
-- Default model: GPT-6 Luna at medium reasoning effort (`openai/gpt-6-luna` on OpenRouter, `gpt-6-luna` on OpenAI), preselected in onboarding, new bots and the CLI, configurable per server and never applied over a model the user picked (D-064).
-- Each bot has a primary model, an ordered fallback list and a cheap model for internal steps (memory extraction, summaries, titles).
+- Default model: Muse Ember on OpenRouter (`meta/muse-ember`) and GPT-6 Luna on a direct OpenAI key (`gpt-6-luna`), at medium reasoning effort. Preselected in onboarding, new bots and the CLI, configurable per server, and never applied over a model the user picked (D-064, D-187).
+- Each bot has a primary model, an ordered fallback list and a cheap model for internal steps (memory extraction, summaries, titles). With no cheap model, OpenRouter bots use Muse Ember (D-187).
 - Failover on 429, 5xx or timeout, with exponential backoff; every attempt is logged to Langfuse.
 - Capabilities per model (tools, vision, context window, caching) live in a registry, which decides which tools and context strategy apply.
 
@@ -513,7 +513,7 @@ Each adapter in `packages/sandbox` passes the same contract test suite.
 
 | Image             | Contents                                                                                                                | Default size                 |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| computer-headless | Ubuntu 24.04, computerd, bash, git, Node.js, Python, common CLIs, Chromium, agent-browser                               | 1 vCPU, 1 GB RAM, 10 GB disk |
+| computer-headless | Ubuntu 24.04, computerd, bash, git, Node.js, Python, common CLIs, Chromium, agent-browser, LibreOffice, pandoc, Poppler, qpdf, Tesseract | 1 vCPU, 1 GB RAM, 10 GB disk |
 | computer-desktop  | Headless image plus X server, lightweight window manager, AT-SPI accessibility, agent-desktop, xdotool, WebRTC streamer | 2 vCPU, 3 GB RAM, 10 GB disk |
 
 Images are versioned and published to GHCR for amd64 and arm64. A running headless computer switches to desktop on demand by restarting into the desktop image with the same home volume.
@@ -918,6 +918,7 @@ After launch, Casama builds these features to lead the open-source agent platfor
 | Desktop context        | Quick ask attaches the selection, front window, browser tab or a screenshot; bots search the user's files, watch folders and write an end-of-day recap                                          | The hotkey on selected text in any app sends it with the window title; a PDF dropped in Downloads starts a "file it" routine                                                         | 4    |
 | Attention rules        | Proactive messages wait while the user is asleep, focused, driving or in a meeting unless urgent, and each says why it was sent                                                                 | A non-urgent suggestion during a calendar meeting arrives in the next brief instead of as a push                                                                                     | 4    |
 | About you              | Each person keeps one profile every bot reads: what to call them, pronouns, about me, how they like replies, and facts bots learn in chat                                                       | A name set in About you is used by a bot in another workspace; a fact learned in a personal space never reaches a team space unless the person turns it on there                     | 4    |
+| Gallery                | An open-source gallery of themes, color schemes, wallpapers and skills that the apps browse and install; Casama curates it remotely, anyone contributes by pull request | A theme merged into the gallery repo shows up in the app's gallery within 30 minutes without an app release, installs in one tap and keeps working offline; a retired item disappears from browsing but stays installed |
 
 ### Local MCP servers on the user's computer
 
@@ -977,7 +978,7 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 ### Skills library
 
 - Skills use the open Agent Skills format (a folder with a `SKILL.md` file and front matter, plus optional files), so community skills work unchanged. Extra files live in object storage and sync to `~/skills/<name>/` on the computer when the skill loads.
-- Catalog: curated skills ship in the repo's `skills/` folder with each release. The app browses them with search and categories and installs a skill to the workspace or to one bot.
+- Catalog: curated skills ship in the repo's `skills/` folder with each release. The app browses them with search and categories and installs a skill to the workspace or to one bot. Once the Gallery is live, the catalog comes from the gallery and `skills/` stays as the offline fallback.
 - GitHub import: a repo or folder URL, public or private through the GitHub connection. Casama pins the commit, shows the files before install and shows a diff before any update. Scripts in a skill run only on the computer.
 - Save as a skill: new tools `skills.create` and `skills.update` (medium risk; the approval card shows the text or the diff). "Save that as a skill" turns the method used in the conversation into one.
 - `/` picker: typing `/` in the composer lists skills; picking one attaches it to the message so the run loads it up front.
@@ -1110,7 +1111,7 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
   | Personal errands    | Calendar                                                         | "What's one errand I can take off your plate?" |
   | Something else      | Chosen by the bot from the description once a model is available | Model-written                                  |
 
-- No model yet (self-hosted): before anything that needs the model, an inline card offers Continue with ChatGPT, a model key or a local model. Casama Cloud's starter credits skip this card.
+- No model yet (self-hosted): before anything that needs the model, an inline card offers Continue with ChatGPT, a model key or a local model. Casama Cloud skips this card: the server's OpenRouter key (D-186) is the model, paid from credits, until the workspace adds its own.
 - First value: with email or calendar connected, a catch-up run (after an explicit consent line) reads the next 14 days of calendar and, only if inbox access was granted, the last 14 days of email. It posts "Here's what I noticed" (3–5 items), up to three one-tap task cards and a morning brief offer (check-ins). Without connections, the bot posts the first task card for the pick.
 - The setup interview (D-105) then runs in the same chat with two or three questions, followed by a "What I learned" card listing the memories saved (up to 10) to edit or delete. Then the chat is open.
 - The picks are saved as memories, shape the personal bot's instructions, choose which starter bots it suggests and set what check-ins cover. "My team" or "My business" adds an invite-link card and suggests shared bots.
@@ -1264,6 +1265,19 @@ Bots should know who they are talking to without the person filling in a form. E
 - Every proactive message (check-ins, suggestions, triggers) carries an urgency. Non-urgent ones wait while the user is asleep, in a Focus mode, driving, in a calendar meeting or in quiet hours, and are bundled into the next brief. Non-urgent proactive pushes are capped at 5 per bot per day.
 - "Why am I seeing this?" on each proactive message lists the data and rule behind it, with "Less like this" (saved as a memory).
 
+### Gallery
+
+One open-source gallery for the things that make Casama look and work the way people like: themes, color schemes, wallpapers and skills (later starter bots). Casama curates it and changes what every app sees without a release; anyone can contribute by pull request (D-184).
+
+- **Repo:** a public repo `stackwares/casama-gallery`, separate from the app so contributors don't need the app's toolchain. One folder per item: `themes/<id>/theme.json`, `schemes/<id>/scheme.json`, `wallpapers/<id>/wallpaper.json` plus its image, `skills/<id>/SKILL.md` plus files. Every item names its author (name, optional link) and license: CC0-1.0 or CC-BY-4.0 for looks, MIT or Apache-2.0 for skills. Items taken from elsewhere keep their original license and credit. Photos found through Unsplash's API can't be re-hosted here (their terms require hotlinking); use photo search for those.
+- **Formats (data only, nothing runs in the app):** a theme is the existing `casama-theme:` JSON (scheme, fonts, wallpaper) at version 2, which may carry its own colors inline; version-1 share codes still import. A color scheme is seed colors for light and dark that the app turns into a full scheme; the checker rejects text/background pairs below WCAG AA. A wallpaper is either a pattern (up to 24 Lucide glyph names, a gradient and a strength) or an image (WebP or JPEG, long edge up to 3840 px, up to 2 MB, metadata stripped). Fonts must be from the app's font list; an unknown font falls back to the default.
+- **Contributing:** a pull request, or "Share to gallery" in Settings → Themes, which opens a prefilled GitHub issue form with the theme code and a preview. CI runs `casama-gallery-check` (schemas from `@casama/domain`, license and author present, image limits, contrast, font list, the skill rules from plugin-check) and renders preview images. Casama maintainers review and merge; skills with scripts need a second maintainer's approval.
+- **Publishing:** a merge to `main` builds `index.json` (schema version, then every item's id, type, name, author, license, tags, version, size, SHA-256, preview URL, and `featured` / `retired` flags) and the item files, and deploys them as a static site at `gallery.casama.ai`: the same Cloudflare static hosting as the website and docs. That site is also a browsable web gallery whose "Open in Casama" links (`https://casama.ai/gallery/<type>/<id>`, an app link) open the item in the app.
+- **Curating remotely:** featuring, ordering and retiring are fields in the repo, so a merge changes the gallery in every app within the cache time. Retiring hides an item from browsing; installed copies are local and keep working. A takedown removes the files on the next deploy.
+- **Server:** `GALLERY_URL` (default `https://gallery.casama.ai`; empty turns the gallery off; self-hosters can point it at a fork). The API fetches `index.json` with ETag every 15 minutes and serves `GET /v1/gallery` (filter by type, tag, search) and `GET /v1/gallery/{type}/{id}`. Gallery skills install through `POST /v1/skills/install` with source `gallery`, checked against the index's SHA-256. If the gallery can't be reached, the bundled `skills/` catalog and built-in looks are shown.
+- **App:** a Gallery section in Settings → Themes (featured, new, search, light/dark filter), in the color scheme picker and in Background next to photo search. Tapping an item previews it live; Use applies it and saves it on the device, so it works offline. The Skills library shows gallery skills with the same search and categories. Images load straight from `gallery.casama.ai` and are cached on the device. Every item shows its author and license, with a Report link.
+- **Costs:** none at the start (Cloudflare static hosting is free, with no bandwidth charge). Move images to R2 only if they outgrow the static hosting limits (20,000 files, 25 MiB each).
+
 ## Build plan
 
 The plan is backend-first: Phases 0 to 2 build a working backend you test from the Dart CLI, Phase 3 adds the Flutter app so real testers can use the MVP, and monetization waits until Phase 7. Each phase ends at a gate whose criteria must pass before the next one starts, and every phase leaves a deployable system.
@@ -1404,6 +1418,7 @@ Build these only after v1 launch unless the product owner reprioritizes. (Reprio
 - [x] Wave 3: phone-call voice, encryption at rest, memory backends, paid data services, additional `SandboxProvider` adapters (Boat, boxd, CreateOS, Novita, Railway-backed runners, Kubernetes, Incus, Alibaba Wuying) passing the contract suite, agent-to-agent (A2A), calls for you, payments, linked agents, voice upgrades, and the ops extras (boxd, CreateOS and Alibaba Wuying deferred for lack of public APIs, D-139)
 - [x] Wave 4: device connections, health data, device triggers, desktop context, attention rules
 - [x] About you: one profile per person that every bot reads (D-169)
+- [ ] Gallery: open-source themes, color schemes, wallpapers and skills, curated remotely (D-184)
 
 ## Open decisions and risks
 

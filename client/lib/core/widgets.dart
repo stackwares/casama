@@ -119,10 +119,15 @@ class InlineError extends StatelessWidget {
   }
 }
 
-/// Centered empty or error state: a soft circle with the icon, a title, a muted line and an action.
+/// Centered empty or error state: a soft circle with the icon (or an [illustration]), a title, a
+/// muted line and an action.
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, required this.icon, required this.message, this.title, this.action, this.isError = false});
-  final IconData icon;
+  const EmptyState({super.key, this.icon, this.illustration, required this.message, this.title, this.action, this.isError = false})
+    : assert(icon != null || illustration != null);
+  final IconData? icon;
+
+  /// Shown instead of the icon circle (the animated blank bot on "no bots yet").
+  final Widget? illustration;
 
   /// Bold line above [message]; when null, [message] is shown as the title.
   final String? title;
@@ -144,13 +149,14 @@ class EmptyState extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), shape: BoxShape.circle),
-                  child: Icon(icon, size: 32, color: accent),
-                ),
-                const SizedBox(height: 20),
+                illustration ??
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), shape: BoxShape.circle),
+                      child: Icon(icon, size: 32, color: accent),
+                    ),
+                SizedBox(height: illustration == null ? 20 : 12),
                 Text(
                   title ?? message,
                   textAlign: TextAlign.center,

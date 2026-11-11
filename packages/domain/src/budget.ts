@@ -11,6 +11,13 @@ export interface BudgetState {
   quotaLimit?: number | null;
   /** Prepaid credit balance when the plan is credit-gated (Casama Cloud, D-070); null = no gate. */
   credits?: number | null;
+  /** Billable usage not yet turned into a credit deduction (settlement runs once a minute). */
+  unbilledUsd?: number;
+  /** Credits this call must still have left before it starts (a worst-case estimate). */
+  reserveUsd?: number;
+  /** What this workspace has been charged today for Casama's model key, and that day's cap. */
+  cloudToday?: number;
+  cloudDailyCap?: number | null;
   /** Computer-seconds this month and the plan's monthly computer hours. */
   computerSeconds?: number;
   computerHours?: number | null;
@@ -25,6 +32,8 @@ export type BudgetVerdict =
         | "daily_budget_exceeded"
         | "quota_exceeded"
         | "out_of_credits"
+        | "cloud_daily_cap"
+        | "cloud_model_not_allowed"
         | "computer_hours_exceeded";
       message: string;
     };
@@ -34,12 +43,22 @@ const over = (spent: number, limit?: number | null) =>
 
 /** Checked at run start and after every model step. */
 export function checkBudget(s: BudgetState): BudgetVerdict {
-  if (s.credits != null && s.credits <= 0)
+  if (over(s.cloudToday ?? 0, s.cloudDailyCap))
     return {
       ok: false,
-      code: "out_of_credits",
-      message: "The workspace is out of credits. Add credits or change plans in Billing.",
+      code: "cloud_daily_cap",
+      message:
+        "This workspace reached its daily limit on Casama's models. It resets at midnight UTC, or add your own key.",
     };
+  if (s.credits != null) {
+    const left = s.credits - (s.unbilledUsd ?? 0);
+    if (left <= 0 || (s.reserveUsd != null && left < s.reserveUsd))
+      return {
+        ok: false,
+        code: "out_of_credits",
+        message: "The workspace is out of credits. Add credits or change plans in Billing.",
+      };
+  }
   if (over((s.computerSeconds ?? 0) / 3600, s.computerHours))
     return {
       ok: false,

@@ -78,4 +78,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('ticket-t1')), findsOneWidget);
   });
+
+  testWidgets('the project filter in the header lists projects and the way to manage them', (tester) async {
+    await setSize(tester, const Size(1500, 900));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const BoardScreen()));
+    await tester.pumpAndSettle();
+    expect(find.text('Tasks'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('projectFilter')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('openProjects')), findsOneWidget);
+    // t1 belongs to no project, so it leaves the board while Launch site is chosen.
+    await tester.tap(find.byKey(const Key('projectFilter-p1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('column-todo')), findsOneWidget);
+    expect(find.byKey(const Key('ticket-t1')), findsNothing);
+    await tester.tap(find.byKey(const Key('projectFilter')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('projectFilter-all')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('ticket-t1')), findsOneWidget);
+  });
 }

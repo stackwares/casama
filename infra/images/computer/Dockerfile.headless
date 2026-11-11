@@ -1,4 +1,5 @@
-# Headless computer: Ubuntu 24.04, computerd, shell tools, Node.js, Python, Chromium, agent-browser.
+# Headless computer: Ubuntu 24.04, computerd, shell tools, Node.js, Python, Chromium,
+# agent-browser, and the document tools the catalog skills call (LibreOffice, pandoc, Poppler).
 # Build from the repo root:
 #   docker build -f infra/images/computer/Dockerfile.headless -t casama/computer-headless:dev .
 
@@ -33,6 +34,16 @@ RUN npm install -g agent-browser@${AGENT_BROWSER_VERSION} playwright@${PLAYWRIGH
     && test -n "$CHROME" && ln -sf "$CHROME" /usr/local/bin/chrome \
     && chmod -R a+rX /opt/browser \
     && chrome --version
+
+# Document skills (pdf, docx, xlsx, pptx) call these by name and treat them as already installed.
+# LibreOffice is for conversion; the bot cannot apt-install later (it is not root).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libreoffice-writer libreoffice-calc libreoffice-impress \
+      poppler-utils pandoc qpdf tesseract-ocr \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip3 install --break-system-packages --no-cache-dir \
+      pypdf pdfplumber pandas reportlab pytesseract pdf2image openpyxl Pillow defusedxml lxml 'markitdown[pptx]' \
+    && npm install -g docx pptxgenjs
 
 # Unprivileged user; home is the only persistent, writable place (plus /tmp).
 RUN userdel -r ubuntu 2>/dev/null || true \

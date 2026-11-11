@@ -226,6 +226,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSettings => 'Settings';
 
   @override
+  String get navChats => 'Chats';
+
+  @override
+  String get navTasks => 'Tasks';
+
+  @override
+  String get settingsYouSection => 'You';
+
+  @override
+  String get settingsConnectionsSection => 'Connections';
+
+  @override
+  String get advanced => 'Advanced';
+
+  @override
+  String get settingsAdvancedSummary =>
+      'Secrets, computers, devices, bot steps';
+
+  @override
   String get bots => 'Bots';
 
   @override
@@ -455,6 +474,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modelKeys => 'Model keys';
 
   @override
+  String get moreProviders => 'More providers';
+
+  @override
+  String get integrationsAdvancedSummary =>
+      'Composio, Pipedream, custom servers';
+
+  @override
+  String get toolPermissions => 'Tool permissions';
+
+  @override
+  String get devicesAdvancedSummary =>
+      'How long it\'s kept, private models, bots with access';
+
+  @override
+  String get companionAdvancedSummary =>
+      'Commands, local tools (MCP), coding agents';
+
+  @override
   String get noKeys => 'No model keys yet.';
 
   @override
@@ -476,6 +513,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get botSettings => 'Bot settings';
+
+  @override
+  String get botProfile => 'Bot profile';
+
+  @override
+  String get botAdvancedSummary =>
+      'Chat apps, links, rules, watchers, plugins, activity';
+
+  @override
+  String get botActivityRow => 'Every run, step by step';
+
+  @override
+  String get createBotAdvancedSummary => 'Model key and model';
+
+  @override
+  String get botProfileSection => 'Profile';
+
+  @override
+  String get botBrain => 'Brain';
+
+  @override
+  String get botAbilities => 'Abilities';
+
+  @override
+  String get botSchedule => 'Schedule';
+
+  @override
+  String get botAdvanced => 'Advanced';
+
+  @override
+  String get chatComputerLive => 'Working on its computer';
 
   @override
   String get autonomy => 'Autonomy';
@@ -739,6 +807,135 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routines => 'Routines';
 
   @override
+  String get routineAdvancedSummary =>
+      'GitHub and webhook triggers, cron, timezone';
+
+  @override
+  String get routineRepeatDaily => 'Every day';
+
+  @override
+  String get routineRepeatWeekdays => 'Weekdays';
+
+  @override
+  String get routineRepeatWeekly => 'Every week';
+
+  @override
+  String get routineDay => 'Day';
+
+  @override
+  String routineTimesIn(String timezone) {
+    return 'Times are in $timezone';
+  }
+
+  @override
+  String routineCustomSchedule(String schedule) {
+    return 'Custom: $schedule';
+  }
+
+  @override
+  String get routineOtherTriggers => 'Other triggers';
+
+  @override
+  String cronEveryMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Every $n minutes',
+      one: 'Every minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cronEveryHours(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Every $n hours',
+      one: 'Every hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cronHourlyAt(String minute) {
+    return 'Every hour at :$minute';
+  }
+
+  @override
+  String cronDailyAt(String time) {
+    return 'Every day at $time';
+  }
+
+  @override
+  String cronWeekdaysAt(String time) {
+    return 'Weekdays at $time';
+  }
+
+  @override
+  String cronWeekendsAt(String time) {
+    return 'Weekends at $time';
+  }
+
+  @override
+  String cronDaysAt(String days, String time) {
+    return '$days at $time';
+  }
+
+  @override
+  String cronMonthlyAt(int day, String time) {
+    return 'Day $day of every month at $time';
+  }
+
+  @override
+  String cronAnd(String items, String last) {
+    return '$items and $last';
+  }
+
+  @override
+  String cronDays(String day) {
+    String _temp0 = intl.Intl.selectLogic(day, {
+      'sun': 'Sundays',
+      'mon': 'Mondays',
+      'tue': 'Tuesdays',
+      'wed': 'Wednesdays',
+      'thu': 'Thursdays',
+      'fri': 'Fridays',
+      'sat': 'Saturdays',
+      'other': '$day',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String cronDay(String day) {
+    String _temp0 = intl.Intl.selectLogic(day, {
+      'sun': 'Sunday',
+      'mon': 'Monday',
+      'tue': 'Tuesday',
+      'wed': 'Wednesday',
+      'thu': 'Thursday',
+      'fri': 'Friday',
+      'sat': 'Saturday',
+      'other': '$day',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get computerAdvancedTabsShow => 'Show terminal and checkpoints';
+
+  @override
+  String get computerAdvancedTabsHide => 'Hide terminal and checkpoints';
+
+  @override
+  String get headlessScreenNoteSettings =>
+      'This computer has no desktop, so this shows its browser (blank until the bot opens a page). To watch and control apps live, switch it to a desktop in computer settings.';
+
+  @override
+  String get openComputerSettings => 'Open computer settings';
+
+  @override
   String get runNow => 'Run now';
 
   @override
@@ -832,11 +1029,6 @@ class AppLocalizationsEn extends AppLocalizations {
       one: 'Connected, 1 tool',
     );
     return '$_temp0';
-  }
-
-  @override
-  String needsApprovalFor(String bot, String tool) {
-    return '$bot needs your approval to use $tool';
   }
 
   @override
@@ -1080,6 +1272,223 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callFailed => 'The call could not connect.';
 
   @override
+  String get callListening => 'Listening';
+
+  @override
+  String get callSpeaking => 'Speaking';
+
+  @override
+  String get callWorking => 'Working on it';
+
+  @override
+  String get callMutedState => 'Muted';
+
+  @override
+  String get callCaptions => 'Captions';
+
+  @override
+  String get callSpeaker => 'Speaker';
+
+  @override
+  String get callEarpiece => 'Phone';
+
+  @override
+  String get callBluetooth => 'Bluetooth';
+
+  @override
+  String get callHeadphones => 'Headphones';
+
+  @override
+  String get callAudioOutput => 'Play the call through';
+
+  @override
+  String toolDoing(String tool) {
+    String _temp0 = intl.Intl.selectLogic(tool, {
+      'memory_search': 'Searching your memories',
+      'memory_write': 'Saving that to memory',
+      'memory': 'Updating its memory',
+      'knowledge_search': 'Looking through your knowledge',
+      'web_search': 'Searching the web',
+      'web': 'Reading a web page',
+      'browser_open': 'Opening a website',
+      'browser_click': 'Clicking on the page',
+      'browser_type': 'Typing on the page',
+      'browser_press': 'Pressing a key',
+      'browser_scroll': 'Scrolling the page',
+      'browser_look': 'Looking at the page',
+      'desktop_click': 'Clicking on the screen',
+      'desktop_type': 'Typing',
+      'desktop_press': 'Pressing keys',
+      'desktop_launch': 'Opening an app',
+      'desktop_look': 'Looking at the screen',
+      'shell': 'Working on its computer',
+      'files_read': 'Reading a file',
+      'files_write': 'Writing a file',
+      'files_list': 'Looking through files',
+      'files_search': 'Searching files',
+      'http': 'Contacting a service',
+      'data_search': 'Looking for data',
+      'data_call': 'Getting data',
+      'skills_load': 'Getting a skill ready',
+      'skills_create': 'Learning a new skill',
+      'skills_update': 'Improving a skill',
+      'checkpoint': 'Saving a restore point',
+      'takeover': 'Asking you to take over',
+      'delegate': 'Asking a helper',
+      'routines_list': 'Checking your routines',
+      'routines_create': 'Setting up a routine',
+      'routines_update': 'Updating a routine',
+      'routines_delete': 'Removing a routine',
+      'watchers_create': 'Setting up a watcher',
+      'watchers_list': 'Checking your watchers',
+      'watchers_delete': 'Removing a watcher',
+      'tasks_list': 'Checking your tasks',
+      'tasks_create': 'Adding a task',
+      'tasks': 'Updating your tasks',
+      'notify_user': 'Sending you a note',
+      'usage_report': 'Checking usage',
+      'device_read': 'Reading your device data',
+      'device_access': 'Asking for device access',
+      'pages_publish': 'Publishing a page',
+      'pages': 'Updating a page',
+      'media': 'Making an image',
+      'projects': 'Planning a project',
+      'payments': 'Asking to make a payment',
+      'voice_call': 'Calling a business',
+      'voice_call_user': 'Calling you',
+      'tools_load': 'Getting ready',
+      'ui_show': 'Showing you something',
+      'start_task': 'Starting this in the chat',
+      'other': 'Working on it',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String toolDid(String tool) {
+    String _temp0 = intl.Intl.selectLogic(tool, {
+      'memory_search': 'Searched your memories',
+      'memory_write': 'Saved to memory',
+      'memory': 'Updated its memory',
+      'knowledge_search': 'Looked through your knowledge',
+      'web_search': 'Searched the web',
+      'web': 'Read a web page',
+      'browser_open': 'Opened a website',
+      'browser_click': 'Clicked on the page',
+      'browser_type': 'Typed on the page',
+      'browser_press': 'Pressed a key',
+      'browser_scroll': 'Scrolled the page',
+      'browser_look': 'Looked at the page',
+      'desktop_click': 'Clicked on the screen',
+      'desktop_type': 'Typed',
+      'desktop_press': 'Pressed keys',
+      'desktop_launch': 'Opened an app',
+      'desktop_look': 'Looked at the screen',
+      'shell': 'Worked on its computer',
+      'files_read': 'Read a file',
+      'files_write': 'Wrote a file',
+      'files_list': 'Looked through files',
+      'files_search': 'Searched files',
+      'http': 'Contacted a service',
+      'data_search': 'Looked for data',
+      'data_call': 'Got data',
+      'skills_load': 'Used a skill',
+      'skills_create': 'Learned a new skill',
+      'skills_update': 'Improved a skill',
+      'checkpoint': 'Saved a restore point',
+      'takeover': 'Asked you to take over',
+      'delegate': 'Asked a helper',
+      'routines_list': 'Checked your routines',
+      'routines_create': 'Set up a routine',
+      'routines_update': 'Updated a routine',
+      'routines_delete': 'Removed a routine',
+      'watchers_create': 'Set up a watcher',
+      'watchers_list': 'Checked your watchers',
+      'watchers_delete': 'Removed a watcher',
+      'tasks_list': 'Checked your tasks',
+      'tasks_create': 'Added a task',
+      'tasks': 'Updated your tasks',
+      'notify_user': 'Sent you a note',
+      'usage_report': 'Checked usage',
+      'device_read': 'Read your device data',
+      'device_access': 'Asked for device access',
+      'pages_publish': 'Published a page',
+      'pages': 'Updated a page',
+      'media': 'Made an image',
+      'projects': 'Planned a project',
+      'payments': 'Asked to make a payment',
+      'voice_call': 'Called a business',
+      'voice_call_user': 'Called you',
+      'tools_load': 'Got ready',
+      'ui_show': 'Showed you something',
+      'start_task': 'Started in the chat',
+      'other': 'Done',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String toolUsingApp(String app) {
+    return 'Using $app';
+  }
+
+  @override
+  String toolUsedApp(String app) {
+    return 'Used $app';
+  }
+
+  @override
+  String get toolDetails => 'Details';
+
+  @override
+  String toolNeedsOkTitle(String bot) {
+    return '$bot needs your OK';
+  }
+
+  @override
+  String get callToolFailed => 'That didn\'t work';
+
+  @override
+  String get callToolNeedsOk => 'Needs your OK to go ahead';
+
+  @override
+  String get callToolAllow => 'Allow';
+
+  @override
+  String get callToolNotNow => 'Not now';
+
+  @override
+  String get callToolAllowed => 'Allowed. The result will show in the chat';
+
+  @override
+  String get callToolDeclined => 'You said not now';
+
+  @override
+  String get callToolBackground =>
+      'Still working. The result will show in the chat';
+
+  @override
+  String get callToolInChat => 'The result will show in the chat';
+
+  @override
+  String callToolSeconds(int seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String get callNeedsKeyTitle => 'Calls need a voice key';
+
+  @override
+  String get callNeedsKeyBody =>
+      'Live calls run on Google\'s Gemini Live, so this workspace needs a Google AI key. Google gives you one free in AI Studio: create it there, then add it under Model keys and calls work right away. Only workspace owners and admins can add keys.';
+
+  @override
+  String get callAddKey => 'Add a Google AI key';
+
+  @override
+  String get callGetFreeKey => 'Get a free key from Google';
+
+  @override
   String get unmute => 'Unmute';
 
   @override
@@ -1231,6 +1640,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminServices => 'Services';
+
+  @override
+  String get cloudModelsTitle => 'Cloud models';
+
+  @override
+  String get cloudModelsHelp =>
+      'Casama Cloud runs these. A change reaches every server within a few seconds. People on Cloud cannot pick their own.';
+
+  @override
+  String get connectionsTitle => 'App connections';
+
+  @override
+  String get connectionsServerComposio => 'Casama\'s Composio account';
+
+  @override
+  String get connectionsServerComposioHelp =>
+      'Apps without their own sign-in connect in one click through this server\'s Composio account.';
+
+  @override
+  String get connectionsOwnAccounts => 'People\'s own accounts';
+
+  @override
+  String get connectionsOwnAccountsHelp =>
+      'People connect those apps with their own Composio, Pipedream or Zapier account.';
+
+  @override
+  String get connectionsNoComposioKey =>
+      'Add COMPOSIO_API_KEY to this server to use Casama\'s account.';
 
   @override
   String get notInstanceOwner =>
@@ -1552,44 +1989,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get selectBotHelp =>
       'Pick a bot on the left, or create one to get started.';
-
-  @override
-  String get toolShell => 'Ran a command';
-
-  @override
-  String get toolFileRead => 'Read a file';
-
-  @override
-  String get toolFileWrite => 'Wrote a file';
-
-  @override
-  String get toolFiles => 'Worked with files';
-
-  @override
-  String get toolBrowser => 'Used the browser';
-
-  @override
-  String get toolSearch => 'Searched the web';
-
-  @override
-  String get toolMemory => 'Checked memory';
-
-  @override
-  String get toolSkill => 'Used a skill';
-
-  @override
-  String get toolCheckpoint => 'Saved a checkpoint';
-
-  @override
-  String get toolDesktop => 'Used the desktop';
-
-  @override
-  String get toolDelegate => 'Asked another bot';
-
-  @override
-  String toolOther(String tool) {
-    return 'Used $tool';
-  }
 
   @override
   String toolSteps(int count) {
@@ -1943,30 +2342,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get toolRoutineCreate => 'Scheduled a routine';
-
-  @override
-  String get toolRoutineDelete => 'Deleted a routine';
-
-  @override
-  String get toolRoutines => 'Checked routines';
-
-  @override
-  String get toolTasks => 'Updated the task board';
-
-  @override
-  String get toolNotify => 'Sent you a notification';
-
-  @override
-  String get toolHttp => 'Called a web API';
-
-  @override
-  String get toolMedia => 'Made an image';
-
-  @override
-  String get toolTakeover => 'Asked you to take over';
-
-  @override
   String get secretsHelp =>
       'Bots put a secret in requests by its name. It\'s only sent to the hosts you allow and the model never sees it.';
 
@@ -2021,6 +2396,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get modelKeysIntro =>
       'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.';
+
+  @override
+  String get casamaCloudKeyHint => 'Paid from your credits';
+
+  @override
+  String get casamaCloudIncluded => 'Included';
+
+  @override
+  String get casamaCloudModelLocked => 'Casama chooses this model.';
 
   @override
   String modelKeysFor(String workspace) {
@@ -3026,6 +3410,150 @@ class AppLocalizationsEn extends AppLocalizations {
       'Ask for a code from an authenticator app whenever you sign in.';
 
   @override
+  String get signInWithPasskey => 'Sign in with a passkey';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get accountRow => 'Email, password and signing out everywhere';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get passwordResetTitle => 'Reset your password';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get newPasswordAgain => 'New password again';
+
+  @override
+  String get passwordsDontMatch => 'The passwords don\'t match';
+
+  @override
+  String get newPasswordTitle => 'Choose a new password';
+
+  @override
+  String get newPasswordBody =>
+      'You\'re signed in. Pick a new password for signing in with your email.';
+
+  @override
+  String get savePassword => 'Save password';
+
+  @override
+  String get passwordSaved => 'Password saved.';
+
+  @override
+  String get passwordTitle => 'Password';
+
+  @override
+  String get passwordRow =>
+      'Set or change the password for signing in with your email';
+
+  @override
+  String get passwordHelp =>
+      'Use at least 6 characters. You can still sign in with Google, Apple, a passkey or an email link.';
+
+  @override
+  String passwordCodeSent(String email) {
+    return 'To keep your account safe, enter the code we just emailed to $email.';
+  }
+
+  @override
+  String get changeEmailTitle => 'Change email';
+
+  @override
+  String get changeEmailHelp =>
+      'We\'ll email a confirmation link to your current address and to the new one. The change happens once both are confirmed.';
+
+  @override
+  String get newEmail => 'New email';
+
+  @override
+  String get changeEmailSend => 'Send confirmation';
+
+  @override
+  String get changeEmailRow => 'Change the email you sign in with';
+
+  @override
+  String changeEmailSent(String email) {
+    return 'Check both inboxes. $email becomes your email once both links are confirmed.';
+  }
+
+  @override
+  String changeEmailPending(String email) {
+    return 'Waiting for confirmation: $email';
+  }
+
+  @override
+  String get signOutEverywhere => 'Sign out everywhere';
+
+  @override
+  String get signOutEverywhereHelp =>
+      'Every phone, computer and browser, including this one';
+
+  @override
+  String get signOutEverywhereConfirm =>
+      'Sign out on every device, including this one? Use this if you lost a device or think someone else is signed in.';
+
+  @override
+  String get passkeySuggestTitle => 'Sign in faster next time?';
+
+  @override
+  String get passkeySuggestBody =>
+      'Add a passkey and sign in with Face ID, a fingerprint or your screen lock. No password or email needed.';
+
+  @override
+  String get passkeys => 'Passkeys';
+
+  @override
+  String get passkeysRow =>
+      'Sign in with Face ID, a fingerprint or your screen lock';
+
+  @override
+  String get passkeysHelp =>
+      'A passkey signs you in with Face ID, a fingerprint or your screen lock, with no password or email. Each phone, computer or password manager keeps its own.';
+
+  @override
+  String get passkeyAdd => 'Add a passkey';
+
+  @override
+  String get passkeyAddAnother => 'Add another passkey';
+
+  @override
+  String get passkeyAdded => 'Passkey added. Next time, sign in with it.';
+
+  @override
+  String get passkeyRename => 'Rename';
+
+  @override
+  String get passkeyRenameTitle => 'Rename passkey';
+
+  @override
+  String get passkeyNameLabel => 'Name';
+
+  @override
+  String get passkeyRemove => 'Remove';
+
+  @override
+  String passkeyRemoveConfirm(String name) {
+    return 'Remove \"$name\"? You won\'t be able to sign in with it any more.';
+  }
+
+  @override
+  String passkeyAddedOn(String date) {
+    return 'Added $date';
+  }
+
+  @override
+  String passkeyLastUsed(String when) {
+    return 'Last used $when';
+  }
+
+  @override
   String get twoStepSetUp => 'Set up an authenticator app';
 
   @override
@@ -3215,6 +3743,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newTicket => 'New ticket';
+
+  @override
+  String get allProjects => 'All projects';
+
+  @override
+  String get manageProjects => 'Manage projects';
+
+  @override
+  String get filterByProject => 'Filter by project';
+
+  @override
+  String get moveTo => 'Move to';
+
+  @override
+  String get noMatchingTickets => 'No matching tickets';
+
+  @override
+  String get noMatchingTicketsHelp => 'No tickets match these filters.';
+
+  @override
+  String get clearFilters => 'Clear filters';
 
   @override
   String get ticketTitle => 'Title';
@@ -3871,6 +4420,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forYou => 'For you';
+
+  @override
+  String get inboxNeedsYou => 'Needs you';
+
+  @override
+  String inboxNeedsYouCount(int n) {
+    return 'Needs you ($n)';
+  }
+
+  @override
+  String get inboxBriefs => 'Briefs';
+
+  @override
+  String get inboxUpdates => 'Updates';
+
+  @override
+  String get inboxEmptyHelp =>
+      'Requests, morning briefs, notifications and new pages from your bots show up here.';
+
+  @override
+  String get inboxNeedsYouEmpty => 'Nothing needs you right now';
+
+  @override
+  String get inboxNeedsYouEmptyHelp =>
+      'When a bot needs a decision, your help or has an idea, it shows up here.';
+
+  @override
+  String get noBriefs => 'No morning briefs yet';
+
+  @override
+  String botPublishedPage(String bot, String title) {
+    return '$bot published $title';
+  }
 
   @override
   String get forYouEmpty => 'Nothing for you right now';
@@ -4870,8 +5452,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectManaged => 'Sign in through Composio';
 
   @override
-  String get connectManagedHelp =>
-      'Casama reads your inbox through Composio\'s Google sign-in for now. You can disconnect any time.';
+  String connectManagedHelp(String app) {
+    return 'Casama connects $app through Composio, which handles the sign-in. You can disconnect any time.';
+  }
 
   @override
   String get sharing => 'Sharing';
@@ -5436,9 +6019,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linksRevoke => 'Unlink';
 
   @override
-  String get callAvatar => 'Avatar';
-
-  @override
   String get wakeWord => 'Wake word';
 
   @override
@@ -5791,9 +6371,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each step it takes, with commands and technical errors. Off, chats show what it\'s doing in a few words and its answer.';
 
   @override
-  String get toolLoad => 'Got its tools ready';
-
-  @override
   String get activityReady => 'Getting ready…';
 
   @override
@@ -6060,6 +6637,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get people => 'People';
 
   @override
+  String get workspaceAdvancedSummary =>
+      'Secrets, memory, encryption, payments, MCP';
+
+  @override
+  String get peopleAdvancedSummary => 'Invite code, email domain, custom links';
+
+  @override
+  String get inviteLinkToCopy => 'Invite link, ready to copy';
+
+  @override
+  String linkMade(String when) {
+    return 'Made $when';
+  }
+
+  @override
+  String get billingAdvancedSummary => 'Charges by server, Cloud Connect keys';
+
+  @override
+  String get billingChargesSummary => 'Charges by server';
+
+  @override
+  String get billingUsageRow => 'What bots used and what it cost';
+
+  @override
+  String billingUsageSoFar(String amount) {
+    return 'This month so far: $amount';
+  }
+
+  @override
+  String get usageAdvancedSummary => 'Tokens in and out, JSON export';
+
+  @override
   String get peopleHelp => 'Invite people and decide who gets in.';
 
   @override
@@ -6240,4 +6849,179 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nameStepHint => 'Your name';
+
+  @override
+  String get skillCatalogSubtitle =>
+      'Ready-made skills your bots load when a task calls for one.';
+
+  @override
+  String get skillCategoryWork => 'Work';
+
+  @override
+  String get skillCategoryWriting => 'Writing';
+
+  @override
+  String get skillCategoryResearch => 'Research';
+
+  @override
+  String get skillCategoryData => 'Data';
+
+  @override
+  String get skillCategoryMoney => 'Money';
+
+  @override
+  String get skillCategoryBuild => 'Build';
+
+  @override
+  String get skillCategoryLife => 'Life';
+
+  @override
+  String skillCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skills',
+      one: '1 skill',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get skillInstalledBadge => 'Installed';
+
+  @override
+  String skillInstalledFor(String names) {
+    return 'Installed for $names';
+  }
+
+  @override
+  String installSkillFor(String name) {
+    return 'Install $name for';
+  }
+
+  @override
+  String skillUseHint(String name) {
+    return 'Bots load it on their own when a task fits, or type /$name in a chat to use it.';
+  }
+
+  @override
+  String get skillAlreadyEverywhere => 'Installed everywhere it can be.';
+
+  @override
+  String get gallery => 'Gallery';
+
+  @override
+  String get galleryHelp =>
+      'Themes, color schemes, wallpapers and skills other people contribute. Using one saves it on this device.';
+
+  @override
+  String get galleryEmpty => 'Nothing in the gallery matches.';
+
+  @override
+  String get galleryOffline =>
+      'The gallery can\'t be reached right now. The built-in looks and skills are still here.';
+
+  @override
+  String get galleryUse => 'Use';
+
+  @override
+  String get galleryInstall => 'Install';
+
+  @override
+  String get galleryReport => 'Report';
+
+  @override
+  String get galleryShare => 'Share to gallery';
+
+  @override
+  String galleryBy(String name) {
+    return 'By $name';
+  }
+
+  @override
+  String get galleryFeatured => 'Featured';
+
+  @override
+  String get galleryAll => 'All';
+
+  @override
+  String get galleryThemes => 'Themes';
+
+  @override
+  String get gallerySchemes => 'Colors';
+
+  @override
+  String get galleryWallpapers => 'Wallpapers';
+
+  @override
+  String get gallerySkills => 'Skills';
+
+  @override
+  String get fromGallery => 'Gallery';
+
+  @override
+  String galleryApplied(String name) {
+    return 'Using $name';
+  }
+
+  @override
+  String get gallerySeeAll => 'See all';
+
+  @override
+  String get galleryInUse => 'In use';
+
+  @override
+  String galleryInstalled(String name) {
+    return 'Installed $name';
+  }
+
+  @override
+  String get galleryPreviewDark => 'Preview in dark';
+
+  @override
+  String get galleryPreviewLight => 'Preview in light';
+
+  @override
+  String get galleryClearSearch => 'Clear search';
+
+  @override
+  String get galleryOfflineTitle => 'The gallery is offline';
+
+  @override
+  String galleryNoMatches(String query) {
+    return 'Nothing matches “$query”';
+  }
+
+  @override
+  String get galleryInstructions => 'Instructions';
+
+  @override
+  String galleryPatternOn(String pattern, String palette) {
+    return '$pattern on $palette';
+  }
+
+  @override
+  String get galleryImage => 'Image';
+
+  @override
+  String get galleryLightAndDark => 'Light and dark';
+
+  @override
+  String get galleryContribute =>
+      'Made a look you like? Share it, and everyone on Casama can find it here.';
+
+  @override
+  String get galleryTypeTheme => 'Theme';
+
+  @override
+  String get galleryTypeScheme => 'Color scheme';
+
+  @override
+  String get galleryTypeWallpaper => 'Wallpaper';
+
+  @override
+  String get galleryTypeSkill => 'Skill';
+
+  @override
+  String get galleryBehindChats => 'Behind your chats';
 }

@@ -6,6 +6,7 @@ import { verifyLicense } from "@casama/ee";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { suspendOrg, unsuspendOrg } from "../../services/abuse.ts";
+import { getCloudModels, setCloudModels } from "../../services/cloud-models.ts";
 import {
   getConnectionSettings,
   setConnectionSettings,
@@ -48,6 +49,18 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await requireOwner(requireClaims(c.get("claims")));
     const settings = await getConnectionSettings(db);
     return c.json({ ...settings, composio_key: !!env.COMPOSIO_API_KEY }, 200);
+  });
+
+  app.openapi(routes.adminCloudModels, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    return c.json(await getCloudModels(db), 200);
+  });
+
+  app.openapi(routes.setAdminCloudModels, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const saved = await setCloudModels(db, c.req.valid("json"));
+    deps.logger.info("cloud models changed", { chat: saved.chat, live: saved.live, image: saved.image });
+    return c.json(saved, 200);
   });
 
   app.openapi(routes.setAdminConnectionSettings, async (c) => {

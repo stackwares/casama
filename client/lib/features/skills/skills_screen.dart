@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
@@ -14,13 +15,18 @@ import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
+import 'skill_catalog_screen.dart';
 import 'skill_library.dart';
 
 /// Skills: Markdown instruction packs that bots load on demand.
 class SkillsScreen extends ConsumerWidget {
   const SkillsScreen({super.key});
 
-  Future<void> _edit(BuildContext context, WidgetRef ref, [SkillView? skill]) async {
+  Future<void> _edit(
+    BuildContext context,
+    WidgetRef ref, [
+    SkillView? skill,
+  ]) async {
     await showAdaptiveSheet<void>(
       context: context,
       dialogMaxWidth: 680,
@@ -33,12 +39,28 @@ class SkillsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final skills = ref.watch(skillsProvider);
+    // For each catalog skill's own icon; rows fall back to category icons until it loads.
+    final catalog = ref.watch(skillCatalogProvider).value;
     return SubPage(
       title: l10n.skills,
       actions: [
-        HeaderIconButton(key: const Key('openCatalog'), icon: LucideIcons.library, tooltip: l10n.skillCatalog, onPressed: () => showSkillCatalog(context)),
-        HeaderIconButton(key: const Key('openGitHubImport'), icon: LucideIcons.gitBranch, tooltip: l10n.importFromGitHub, onPressed: () => showGitHubSkillImport(context)),
-        HeaderIconButton(icon: LucideIcons.plus, tooltip: l10n.newSkill, onPressed: () => _edit(context, ref)),
+        HeaderIconButton(
+          key: const Key('openCatalog'),
+          icon: LucideIcons.library,
+          tooltip: l10n.skillCatalog,
+          onPressed: () => openSkillCatalog(context),
+        ),
+        HeaderIconButton(
+          key: const Key('openGitHubImport'),
+          icon: LucideIcons.gitBranch,
+          tooltip: l10n.importFromGitHub,
+          onPressed: () => showGitHubSkillImport(context),
+        ),
+        HeaderIconButton(
+          icon: LucideIcons.plus,
+          tooltip: l10n.newSkill,
+          onPressed: () => _edit(context, ref),
+        ),
       ],
       body: AsyncView(
         value: skills,
@@ -54,11 +76,22 @@ class SkillsScreen extends ConsumerWidget {
                   children: [
                     GlowButton.icon(
                       key: const Key('browseCatalog'),
-                      onPressed: () => showSkillCatalog(context),
+                      onPressed: () => openSkillCatalog(context),
                       icon: const Icon(LucideIcons.library, size: 18),
                       label: Text(l10n.skillCatalog),
                     ),
-                    TextButton.icon(onPressed: () => _edit(context, ref), icon: const Icon(LucideIcons.plus, size: 18), label: Text(l10n.newSkill)),
+                    OutlinedButton.icon(
+                      key: const Key('browseGallery'),
+                      onPressed: () =>
+                          context.push('/settings/gallery?type=skill'),
+                      icon: const Icon(LucideIcons.layoutGrid, size: 18),
+                      label: Text(l10n.gallery),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _edit(context, ref),
+                      icon: const Icon(LucideIcons.plus, size: 18),
+                      label: Text(l10n.newSkill),
+                    ),
                   ],
                 ),
               )
@@ -71,14 +104,17 @@ class SkillsScreen extends ConsumerWidget {
                       for (final s in items)
                         GroupedTile(
                           key: Key('skill-${s.id}'),
-                          icon: LucideIcons.bookOpen,
-                          iconColor: s.enabled ? null : context.colorScheme.onSurfaceVariant,
+                          icon: installedSkillLook(context, s, catalog).$1,
+                          iconColor: s.enabled
+                              ? installedSkillLook(context, s, catalog).$2
+                              : context.colorScheme.onSurfaceVariant,
                           title: s.name,
                           subtitle: [
                             s.description,
                             switch (s.source) {
                               'github' => 'GitHub ${s.sourceRef['repo'] ?? ''}',
                               'catalog' => l10n.fromCatalog,
+                              'gallery' => l10n.fromGallery,
                               'bot' => l10n.savedByBot,
                               _ => null,
                             },
@@ -90,29 +126,49 @@ class SkillsScreen extends ConsumerWidget {
                               IconButton(
                                 key: Key('skillStats-${s.id}'),
                                 tooltip: l10n.skillStats,
-                                icon: const Icon(LucideIcons.chartColumn, size: 18),
-                                onPressed: () => showAdaptiveSheet<void>(context: context, builder: (_) => SkillStatsSheet(skillId: s.id, name: s.name)),
+                                icon: const Icon(
+                                  LucideIcons.chartColumn,
+                                  size: 18,
+                                ),
+                                onPressed: () => showAdaptiveSheet<void>(
+                                  context: context,
+                                  builder: (_) => SkillStatsSheet(
+                                    skillId: s.id,
+                                    name: s.name,
+                                  ),
+                                ),
                               ),
                               if (s.source == 'github')
                                 IconButton(
                                   key: Key('checkUpdate-${s.id}'),
                                   tooltip: l10n.checkForUpdates,
-                                  icon: const Icon(LucideIcons.refreshCw, size: 18),
+                                  icon: const Icon(
+                                    LucideIcons.refreshCw,
+                                    size: 18,
+                                  ),
                                   onPressed: () => showSkillUpdate(context, s),
                                 ),
                               Switch(
-                            value: s.enabled,
-                            onChanged: (v) async {
-                              final org = ref.read(currentOrgProvider)!;
-                              await runGuarded(
-                                context,
-                                () => ref
-                                    .read(backendProvider)
-                                    .saveSkill(org.id, id: s.id, botId: s.botId, name: s.name, description: s.description, bodyMd: s.bodyMd, enabled: v),
-                              );
-                              ref.invalidate(skillsProvider);
-                            },
-                          ),
+                                value: s.enabled,
+                                onChanged: (v) async {
+                                  final org = ref.read(currentOrgProvider)!;
+                                  await runGuarded(
+                                    context,
+                                    () => ref
+                                        .read(backendProvider)
+                                        .saveSkill(
+                                          org.id,
+                                          id: s.id,
+                                          botId: s.botId,
+                                          name: s.name,
+                                          description: s.description,
+                                          bodyMd: s.bodyMd,
+                                          enabled: v,
+                                        ),
+                                  );
+                                  ref.invalidate(skillsProvider);
+                                },
+                              ),
                             ],
                           ),
                         ),
@@ -135,7 +191,9 @@ class _SkillEditor extends ConsumerStatefulWidget {
 
 class _SkillEditorState extends ConsumerState<_SkillEditor> {
   late final _name = TextEditingController(text: widget.skill?.name ?? '');
-  late final _description = TextEditingController(text: widget.skill?.description ?? '');
+  late final _description = TextEditingController(
+    text: widget.skill?.description ?? '',
+  );
   late final _body = TextEditingController(text: widget.skill?.bodyMd ?? '');
   var _busy = false;
 
@@ -171,16 +229,27 @@ class _SkillEditorState extends ConsumerState<_SkillEditor> {
 
   Future<void> _delete() async {
     final l10n = context.l10n;
-    final ok = await showConfirm(context: context, title: l10n.deleteSkillTitle(widget.skill!.name), confirmLabel: l10n.delete, destructive: true);
+    final ok = await showConfirm(
+      context: context,
+      title: l10n.deleteSkillTitle(widget.skill!.name),
+      confirmLabel: l10n.delete,
+      destructive: true,
+    );
     if (!ok || !mounted) return;
-    await runGuarded(context, () => ref.read(backendProvider).deleteSkill(widget.skill!.id));
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).deleteSkill(widget.skill!.id),
+    );
     if (mounted) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final valid = _name.text.trim().isNotEmpty && _description.text.trim().isNotEmpty && _body.text.trim().isNotEmpty;
+    final valid =
+        _name.text.trim().isNotEmpty &&
+        _description.text.trim().isNotEmpty &&
+        _body.text.trim().isNotEmpty;
     return FormSheet(
       icon: LucideIcons.bookOpen,
       title: widget.skill == null ? l10n.newSkill : l10n.editSkill,
@@ -194,7 +263,9 @@ class _SkillEditorState extends ConsumerState<_SkillEditor> {
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: _busy ? null : _delete,
-                style: TextButton.styleFrom(foregroundColor: context.colorScheme.error),
+                style: TextButton.styleFrom(
+                  foregroundColor: context.colorScheme.error,
+                ),
                 icon: const Icon(LucideIcons.trash2, size: 18),
                 label: Text(l10n.deleteSkill),
               ),
@@ -202,7 +273,11 @@ class _SkillEditorState extends ConsumerState<_SkillEditor> {
       children: [
         TextField(
           controller: _name,
-          decoration: InputDecoration(labelText: l10n.skillName, hintText: 'weekly-report', prefixIcon: const Icon(LucideIcons.hash, size: 20)),
+          decoration: InputDecoration(
+            labelText: l10n.skillName,
+            hintText: 'weekly-report',
+            prefixIcon: const Icon(LucideIcons.hash, size: 20),
+          ),
           onChanged: (_) => setState(() {}),
         ),
         TextField(
@@ -217,7 +292,11 @@ class _SkillEditorState extends ConsumerState<_SkillEditor> {
         TextField(
           controller: _body,
           style: AppText.mono.copyWith(fontSize: 14),
-          decoration: InputDecoration(labelText: l10n.skillBody, alignLabelWithHint: true, hintText: l10n.skillBodyHint),
+          decoration: InputDecoration(
+            labelText: l10n.skillBody,
+            alignLabelWithHint: true,
+            hintText: l10n.skillBodyHint,
+          ),
           maxLines: 14,
           minLines: 6,
           onChanged: (_) => setState(() {}),

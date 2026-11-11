@@ -129,17 +129,67 @@ enum WallpaperPalette {
   theme('Theme', []),
   casama(
     'Casama',
-    [Color(0xFFEEE2FB), Color(0xFFFBE3EE), Color(0xFFDDE9FF), Color(0xFFDDF7F5)],
-    dark: [Color(0xFF25102F), Color(0xFF34123A), Color(0xFF151F3F), Color(0xFF0F292E)],
+    [
+      Color(0xFFEEE2FB),
+      Color(0xFFFBE3EE),
+      Color(0xFFDDE9FF),
+      Color(0xFFDDF7F5),
+    ],
+    dark: [
+      Color(0xFF25102F),
+      Color(0xFF34123A),
+      Color(0xFF151F3F),
+      Color(0xFF0F292E),
+    ],
   ),
-  lavender('Lavender', [Color(0xFFE7DEFF), Color(0xFFF3E6FF), Color(0xFFDCD3FF), Color(0xFFFBEFFF)]),
-  cotton('Cotton candy', [Color(0xFFFFDDEB), Color(0xFFE1E4FF), Color(0xFFFFE9F2), Color(0xFFDCEFFF)]),
-  peach('Peach', [Color(0xFFFFE3D3), Color(0xFFFFD6DF), Color(0xFFFFF0D4), Color(0xFFFFE2EA)]),
-  sunset('Sunset', [Color(0xFFFFD9BF), Color(0xFFFFC9D6), Color(0xFFF2D3FF), Color(0xFFFFE6C2)]),
-  mint('Mint', [Color(0xFFD5F5E7), Color(0xFFE3FAF3), Color(0xFFCDEFDE), Color(0xFFEDFBEF)]),
-  ocean('Ocean', [Color(0xFFD4EAFF), Color(0xFFCFF1F8), Color(0xFFDDE3FF), Color(0xFFC9E8FF)]),
-  forest('Forest', [Color(0xFFDDEDD2), Color(0xFFCFE8D7), Color(0xFFECF2D0), Color(0xFFD6ECE3)]),
-  graphite('Graphite', [Color(0xFFE9EBEF), Color(0xFFE1E4EA), Color(0xFFEEF0F3), Color(0xFFDDE1E7)]);
+  lavender('Lavender', [
+    Color(0xFFE7DEFF),
+    Color(0xFFF3E6FF),
+    Color(0xFFDCD3FF),
+    Color(0xFFFBEFFF),
+  ]),
+  cotton('Cotton candy', [
+    Color(0xFFFFDDEB),
+    Color(0xFFE1E4FF),
+    Color(0xFFFFE9F2),
+    Color(0xFFDCEFFF),
+  ]),
+  peach('Peach', [
+    Color(0xFFFFE3D3),
+    Color(0xFFFFD6DF),
+    Color(0xFFFFF0D4),
+    Color(0xFFFFE2EA),
+  ]),
+  sunset('Sunset', [
+    Color(0xFFFFD9BF),
+    Color(0xFFFFC9D6),
+    Color(0xFFF2D3FF),
+    Color(0xFFFFE6C2),
+  ]),
+  mint('Mint', [
+    Color(0xFFD5F5E7),
+    Color(0xFFE3FAF3),
+    Color(0xFFCDEFDE),
+    Color(0xFFEDFBEF),
+  ]),
+  ocean('Ocean', [
+    Color(0xFFD4EAFF),
+    Color(0xFFCFF1F8),
+    Color(0xFFDDE3FF),
+    Color(0xFFC9E8FF),
+  ]),
+  forest('Forest', [
+    Color(0xFFDDEDD2),
+    Color(0xFFCFE8D7),
+    Color(0xFFECF2D0),
+    Color(0xFFD6ECE3),
+  ]),
+  graphite('Graphite', [
+    Color(0xFFE9EBEF),
+    Color(0xFFE1E4EA),
+    Color(0xFFEEF0F3),
+    Color(0xFFDDE1E7),
+  ]);
 
   const WallpaperPalette(this.label, this.light, {this.dark});
   final String label;
@@ -164,7 +214,8 @@ enum WallpaperPalette {
     final base = light;
     if (!isDark) return base;
     // Night versions: the same hues, deep and quiet.
-    return dark ?? [for (final c in base) Color.lerp(c, const Color(0xFF0C0B11), 0.86)!];
+    return dark ??
+        [for (final c in base) Color.lerp(c, const Color(0xFF0C0B11), 0.86)!];
   }
 }
 
@@ -253,12 +304,15 @@ class WallpaperSpec {
 
   factory WallpaperSpec.fromJson(Map<String, Object?> j) {
     const d = WallpaperSpec();
-    double unit(Object? v, double fallback) => v is num ? v.toDouble().clamp(0, 1) : fallback;
+    double unit(Object? v, double fallback) =>
+        v is num ? v.toDouble().clamp(0, 1) : fallback;
     return WallpaperSpec(
       pattern: WallpaperPattern.values.asNameMap()[j['pattern']] ?? d.pattern,
       palette: WallpaperPalette.values.asNameMap()[j['palette']] ?? d.palette,
       intensity: unit(j['intensity'], d.intensity),
-      everywhere: j['everywhere'] is bool ? j['everywhere']! as bool : d.everywhere,
+      everywhere: j['everywhere'] is bool
+          ? j['everywhere']! as bool
+          : d.everywhere,
       photo: j['photo'] as String?,
       photoBlur: unit(j['photoBlur'], d.photoBlur),
       photoDim: unit(j['photoDim'], d.photoDim),
@@ -268,26 +322,42 @@ class WallpaperSpec {
   }
 
   @override
-  bool operator ==(Object other) => other is WallpaperSpec && const DeepCollectionEqualityLite().equals(toJson(), other.toJson());
+  bool operator ==(Object other) =>
+      other is WallpaperSpec &&
+      const DeepCollectionEqualityLite().equals(toJson(), other.toJson());
 
   @override
-  int get hashCode => Object.hashAll(toJson().entries.map((e) => Object.hash(e.key, e.value)));
+  int get hashCode =>
+      Object.hashAll(toJson().entries.map((e) => Object.hash(e.key, e.value)));
 }
 
 /// Map equality for flat JSON maps, without pulling in package:collection.
 class DeepCollectionEqualityLite {
   const DeepCollectionEqualityLite();
-  bool equals(Map<String, Object?> a, Map<String, Object?> b) => a.length == b.length && a.entries.every((e) => b[e.key] == e.value);
+  bool equals(Map<String, Object?> a, Map<String, Object?> b) =>
+      a.length == b.length && a.entries.every((e) => b[e.key] == e.value);
 }
 
 /// The wallpaper as the theme carries it, so every page can paint it without reaching for state.
 class WallpaperTheme extends ThemeExtension<WallpaperTheme> {
-  const WallpaperTheme({required this.spec, required this.colors, required this.ink, required this.surface});
+  const WallpaperTheme({
+    required this.spec,
+    required this.colors,
+    required this.ink,
+    required this.surface,
+  });
 
   factory WallpaperTheme.of(WallpaperSpec spec, ColorScheme scheme) {
     final isDark = scheme.brightness == Brightness.dark;
-    final ink = isDark ? Color.lerp(scheme.primary, Colors.white, 0.35)! : Color.lerp(scheme.primary, Colors.black, 0.25)!;
-    return WallpaperTheme(spec: spec, colors: spec.palette.colorsFor(scheme), ink: ink, surface: scheme.surface);
+    final ink = isDark
+        ? Color.lerp(scheme.primary, Colors.white, 0.35)!
+        : Color.lerp(scheme.primary, Colors.black, 0.25)!;
+    return WallpaperTheme(
+      spec: spec,
+      colors: spec.palette.colorsFor(scheme),
+      ink: ink,
+      surface: scheme.surface,
+    );
   }
 
   final WallpaperSpec spec;
@@ -304,7 +374,12 @@ class WallpaperTheme extends ThemeExtension<WallpaperTheme> {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is! WallpaperTheme || other.spec != spec || other.ink != ink || other.surface != surface || other.colors.length != colors.length) return false;
+    if (other is! WallpaperTheme ||
+        other.spec != spec ||
+        other.ink != ink ||
+        other.surface != surface ||
+        other.colors.length != colors.length)
+      return false;
     for (var i = 0; i < colors.length; i++) {
       if (other.colors[i] != colors[i]) return false;
     }
@@ -315,15 +390,27 @@ class WallpaperTheme extends ThemeExtension<WallpaperTheme> {
   int get hashCode => Object.hash(spec, ink, surface, Object.hashAll(colors));
 
   @override
-  WallpaperTheme copyWith({WallpaperSpec? spec, List<Color>? colors, Color? ink, Color? surface}) =>
-      WallpaperTheme(spec: spec ?? this.spec, colors: colors ?? this.colors, ink: ink ?? this.ink, surface: surface ?? this.surface);
+  WallpaperTheme copyWith({
+    WallpaperSpec? spec,
+    List<Color>? colors,
+    Color? ink,
+    Color? surface,
+  }) => WallpaperTheme(
+    spec: spec ?? this.spec,
+    colors: colors ?? this.colors,
+    ink: ink ?? this.ink,
+    surface: surface ?? this.surface,
+  );
 
   @override
   WallpaperTheme lerp(covariant WallpaperTheme? other, double t) {
     if (other == null) return this;
     return WallpaperTheme(
       spec: t < 0.5 ? spec : other.spec,
-      colors: [for (var i = 0; i < colors.length && i < other.colors.length; i++) Color.lerp(colors[i], other.colors[i], t)!],
+      colors: [
+        for (var i = 0; i < colors.length && i < other.colors.length; i++)
+          Color.lerp(colors[i], other.colors[i], t)!,
+      ],
       ink: Color.lerp(ink, other.ink, t)!,
       surface: Color.lerp(surface, other.surface, t)!,
     );
@@ -333,7 +420,12 @@ class WallpaperTheme extends ThemeExtension<WallpaperTheme> {
 /// Paints the wallpaper behind [child]. Pages get it from [WallpaperPageTransitionsBuilder];
 /// chats use `force` so they keep it when the wallpaper is set to chats only.
 class Wallpaper extends StatefulWidget {
-  const Wallpaper({super.key, required this.child, this.force = false, this.specOverride});
+  const Wallpaper({
+    super.key,
+    required this.child,
+    this.force = false,
+    this.specOverride,
+  });
   final Widget child;
   final bool force;
 
@@ -352,7 +444,9 @@ class _WallpaperState extends State<Wallpaper> {
   final _watched = <Animation<double>>[];
 
   void _settled(AnimationStatus s) {
-    if ((s == AnimationStatus.completed || s == AnimationStatus.dismissed) && mounted) setState(() => _epoch++);
+    if ((s == AnimationStatus.completed || s == AnimationStatus.dismissed) &&
+        mounted)
+      setState(() => _epoch++);
   }
 
   @override
@@ -360,7 +454,9 @@ class _WallpaperState extends State<Wallpaper> {
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
     final now = [?route?.animation, ?route?.secondaryAnimation];
-    if (now.length == _watched.length && now.indexed.every((e) => identical(e.$2, _watched[e.$1]))) return;
+    if (now.length == _watched.length &&
+        now.indexed.every((e) => identical(e.$2, _watched[e.$1])))
+      return;
     for (final a in _watched) {
       a.removeStatusListener(_settled);
     }
@@ -400,7 +496,9 @@ class _WallpaperState extends State<Wallpaper> {
                 theme: theme,
                 plain: plain,
                 photo: photo,
-                screen: specOverride != null ? null : MediaQuery.sizeOf(context),
+                screen: specOverride != null
+                    ? null
+                    : MediaQuery.sizeOf(context),
                 textDirection: Directionality.of(context),
               ),
             ),
@@ -419,8 +517,19 @@ class WallpaperPageTransitionsBuilder extends PageTransitionsBuilder {
   final PageTransitionsBuilder base;
 
   @override
-  Widget buildTransitions<T>(PageRoute<T> route, BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) =>
-      base.buildTransitions(route, context, animation, secondaryAnimation, Wallpaper(child: child));
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => base.buildTransitions(
+    route,
+    context,
+    animation,
+    secondaryAnimation,
+    Wallpaper(child: child),
+  );
 }
 
 /// Loads the wallpaper photo, if there is one, and hands the decoded image to [builder]. Until it
@@ -460,20 +569,30 @@ class _PhotoLoaderState extends State<_PhotoLoader> {
     }
     // Decoded no larger than this display (a 24-megapixel photo is ~100 MB as pixels otherwise).
     final display = View.maybeOf(context)?.display.size;
-    final longest = display == null ? 2560 : math.max(display.width, display.height).round().clamp(1024, 2560);
-    final provider = ResizeImage.resizeIfNeeded(longest, longest, imageProviderFor(source));
-    final stream = (provider is ResizeImage ? ResizeImage(provider.imageProvider, width: longest, height: longest, policy: ResizeImagePolicy.fit) : provider).resolve(
-      createLocalImageConfiguration(context),
+    final longest = display == null
+        ? 2560
+        : math.max(display.width, display.height).round().clamp(1024, 2560);
+    final provider = ResizeImage.resizeIfNeeded(
+      longest,
+      longest,
+      imageProviderFor(source),
     );
+    final stream =
+        (provider is ResizeImage
+                ? ResizeImage(
+                    provider.imageProvider,
+                    width: longest,
+                    height: longest,
+                    policy: ResizeImagePolicy.fit,
+                  )
+                : provider)
+            .resolve(createLocalImageConfiguration(context));
     if (stream.key == _stream?.key) return;
     _stop();
     _stream = stream;
-    _listener = ImageStreamListener(
-      (info, _) {
-        if (mounted) setState(() => _info = info);
-      },
-      onError: (e, _) => debugPrint('wallpaper photo: $e'),
-    );
+    _listener = ImageStreamListener((info, _) {
+      if (mounted) setState(() => _info = info);
+    }, onError: (e, _) => debugPrint('wallpaper photo: $e'));
     stream.addListener(_listener!);
   }
 
@@ -490,11 +609,19 @@ class _PhotoLoaderState extends State<_PhotoLoader> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.builder(widget.source == null ? null : _info?.image);
+  Widget build(BuildContext context) =>
+      widget.builder(widget.source == null ? null : _info?.image);
 }
 
 class _WallpaperLayer extends LeafRenderObjectWidget {
-  const _WallpaperLayer({required this.theme, required this.plain, required this.screen, required this.textDirection, this.photo, this.epoch = 0});
+  const _WallpaperLayer({
+    required this.theme,
+    required this.plain,
+    required this.screen,
+    required this.textDirection,
+    this.photo,
+    this.epoch = 0,
+  });
   final WallpaperTheme theme;
 
   /// Bumped to repaint after the page moved (see [_WallpaperState]).
@@ -530,12 +657,17 @@ class _WallpaperLayer extends LeafRenderObjectWidget {
 }
 
 class _RenderWallpaper extends RenderBox {
-  _RenderWallpaper({required WallpaperTheme theme, required bool plain, required Size? screen, required TextDirection textDirection, ui.Image? photo})
-    : _theme = theme,
-      _photo = photo,
-      _plain = plain,
-      _screen = screen,
-      _textDirection = textDirection;
+  _RenderWallpaper({
+    required WallpaperTheme theme,
+    required bool plain,
+    required Size? screen,
+    required TextDirection textDirection,
+    ui.Image? photo,
+  }) : _theme = theme,
+       _photo = photo,
+       _plain = plain,
+       _screen = screen,
+       _textDirection = textDirection;
 
   WallpaperTheme _theme;
   set theme(WallpaperTheme v) {
@@ -606,7 +738,12 @@ class _RenderWallpaper extends RenderBox {
     }
     // Paint in window coordinates so neighbouring panes (sidebar, chat, computer panel) join up.
     final global = _screen == null ? Offset.zero : localToGlobal(Offset.zero);
-    final world = Rect.fromLTWH(offset.dx - global.dx, offset.dy - global.dy, (_screen ?? size).width, (_screen ?? size).height);
+    final world = Rect.fromLTWH(
+      offset.dx - global.dx,
+      offset.dy - global.dy,
+      (_screen ?? size).width,
+      (_screen ?? size).height,
+    );
     canvas.save();
     canvas.clipRect(rect);
     final spec = _theme.spec;
@@ -614,19 +751,38 @@ class _RenderWallpaper extends RenderBox {
     if (photo != null) {
       _paintPhoto(canvas, world, rect, photo, spec, _theme.surface);
     } else {
-      _paintGradient(canvas, world, _theme.colors, cover: world.expandToInclude(rect));
+      _paintGradient(
+        canvas,
+        world,
+        _theme.colors,
+        cover: world.expandToInclude(rect),
+      );
     }
     if (spec.pattern != WallpaperPattern.none && spec.intensity > 0) {
       final dark = _theme.surface.computeLuminance() < 0.2;
       final alpha = (dark ? 0.16 : 0.22) * spec.intensity;
-      _paintPattern(canvas, rect, world.topLeft, spec.pattern, _theme.ink.withValues(alpha: alpha.clamp(0, 1)), _pixelRatio);
+      _paintPattern(
+        canvas,
+        rect,
+        world.topLeft,
+        spec.pattern,
+        _theme.ink.withValues(alpha: alpha.clamp(0, 1)),
+        _pixelRatio,
+      );
     }
     canvas.restore();
   }
 
   /// The photo covering the whole window, blurred and dimmed toward the surface color so text on
   /// top stays readable.
-  static void _paintPhoto(Canvas canvas, Rect world, Rect painted, ui.Image photo, WallpaperSpec spec, Color surface) {
+  static void _paintPhoto(
+    Canvas canvas,
+    Rect world,
+    Rect painted,
+    ui.Image photo,
+    WallpaperSpec spec,
+    Color surface,
+  ) {
     final sigma = spec.photoBlur * 40;
     // Drawn a little larger than the window so the blur doesn't fade at the edges, and always over
     // everything painted (a frame painted mid-transition may sit partly outside the window).
@@ -643,22 +799,39 @@ class _RenderWallpaper extends RenderBox {
           ..isAntiAlias = false,
       );
     } else {
-      final src = Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble());
+      final src =
+          Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble());
       final fitted = applyBoxFit(BoxFit.cover, src.size, target.size);
       final paint = Paint()
         ..filterQuality = FilterQuality.medium
         ..isAntiAlias = false;
-      canvas.drawImageRect(photo, Alignment.center.inscribe(fitted.source, src), target, paint);
+      canvas.drawImageRect(
+        photo,
+        Alignment.center.inscribe(fitted.source, src),
+        target,
+        paint,
+      );
     }
     if (spec.photoDim > 0) {
-      canvas.drawRect(cover, Paint()..color = surface.withValues(alpha: spec.photoDim * 0.85));
+      canvas.drawRect(
+        cover,
+        Paint()..color = surface.withValues(alpha: spec.photoDim * 0.85),
+      );
     }
   }
 
-  static void _paintGradient(Canvas canvas, Rect world, List<Color> c, {Rect? cover}) {
+  static void _paintGradient(
+    Canvas canvas,
+    Rect world,
+    List<Color> c, {
+    Rect? cover,
+  }) {
     final base = cover ?? world;
     if (c.length < 4) {
-      canvas.drawRect(base, Paint()..color = c.isEmpty ? Colors.transparent : c.first);
+      canvas.drawRect(
+        base,
+        Paint()..color = c.isEmpty ? Colors.transparent : c.first,
+      );
       return;
     }
     canvas.drawRect(base, Paint()..color = c[0]);
@@ -667,11 +840,20 @@ class _RenderWallpaper extends RenderBox {
     // window but drawn over everything painted: a page cached mid-transition sits partly outside the
     // window, and clipping the blobs to the window left that part bare base color, a dark strip that
     // slid in with the page.
-    for (final (color, at) in [(c[1], const Offset(0.85, 0.12)), (c[2], const Offset(0.15, 0.55)), (c[3], const Offset(0.7, 0.92))]) {
-      final center = Offset(world.left + world.width * at.dx, world.top + world.height * at.dy);
+    for (final (color, at) in [
+      (c[1], const Offset(0.85, 0.12)),
+      (c[2], const Offset(0.15, 0.55)),
+      (c[3], const Offset(0.7, 0.92)),
+    ]) {
+      final center = Offset(
+        world.left + world.width * at.dx,
+        world.top + world.height * at.dy,
+      );
       canvas.drawRect(
         base,
-        Paint()..shader = RadialGradient(colors: [color, color.withValues(alpha: 0)]).createShader(Rect.fromCircle(center: center, radius: r)),
+        Paint()
+          ..shader = RadialGradient(colors: [color, color.withValues(alpha: 0)])
+              .createShader(Rect.fromCircle(center: center, radius: r)),
       );
     }
   }
@@ -679,7 +861,14 @@ class _RenderWallpaper extends RenderBox {
   // The blurred photo, made once at a fraction of the window's size and then only stretched: a
   // Gaussian blur over the whole window on every frame is the most a page could cost the GPU, and
   // a blurred picture loses nothing at low resolution. Pages share it.
-  static ({ui.Image photo, double sigma, int width, int height, ui.Image image})? _blur;
+  static ({
+    ui.Image photo,
+    double sigma,
+    int width,
+    int height,
+    ui.Image image,
+  })?
+  _blur;
 
   static ui.Image _blurredPhoto(ui.Image photo, double sigma, Size target) {
     // Small enough to be cheap, large enough that the blur still spans 4 pixels.
@@ -688,10 +877,16 @@ class _RenderWallpaper extends RenderBox {
     int step(double v) => math.max(16, ((v / scale) / 16).ceil() * 16);
     final width = step(target.width), height = step(target.height);
     final cached = _blur;
-    if (cached != null && cached.sigma == sigma && cached.width == width && cached.height == height && cached.photo.isCloneOf(photo)) return cached.image;
+    if (cached != null &&
+        cached.sigma == sigma &&
+        cached.width == width &&
+        cached.height == height &&
+        cached.photo.isCloneOf(photo))
+      return cached.image;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    final src = Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble());
+    final src =
+        Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble());
     final size = Size(width.toDouble(), height.toDouble());
     final fitted = applyBoxFit(BoxFit.cover, src.size, size);
     canvas.drawImageRect(
@@ -700,14 +895,24 @@ class _RenderWallpaper extends RenderBox {
       Offset.zero & size,
       Paint()
         ..filterQuality = FilterQuality.medium
-        ..imageFilter = ui.ImageFilter.blur(sigmaX: sigma / scale, sigmaY: sigma / scale, tileMode: TileMode.clamp),
+        ..imageFilter = ui.ImageFilter.blur(
+          sigmaX: sigma / scale,
+          sigmaY: sigma / scale,
+          tileMode: TileMode.clamp,
+        ),
     );
     final picture = recorder.endRecording();
     final image = picture.toImageSync(width, height);
     picture.dispose();
     // The old picture may still be on screen in a layer, which keeps its own reference.
     cached?.photo.dispose();
-    _blur = (photo: photo.clone(), sigma: sigma, width: width, height: height, image: image);
+    _blur = (
+      photo: photo.clone(),
+      sigma: sigma,
+      width: width,
+      height: height,
+      image: image,
+    );
     return image;
   }
 
@@ -749,12 +954,20 @@ class _RenderWallpaper extends RenderBox {
         final glyph = pattern.glyphs[rnd.nextInt(pattern.glyphs.length)];
         final size = 17 + rnd.nextDouble() * 10;
         // Offset every other row by half a cell so the doodles don't line up in columns.
-        final x = (col + 0.5 + (row.isOdd ? 0.5 : 0)) * cell + (rnd.nextDouble() - 0.5) * cell * 0.35;
+        final x =
+            (col + 0.5 + (row.isOdd ? 0.5 : 0)) * cell +
+            (rnd.nextDouble() - 0.5) * cell * 0.35;
         final y = (row + 0.5) * cell + (rnd.nextDouble() - 0.5) * cell * 0.35;
         final painter = TextPainter(
           text: TextSpan(
             text: String.fromCharCode(glyph.codePoint),
-            style: TextStyle(fontFamily: glyph.fontFamily, package: glyph.fontPackage, fontSize: size, color: ink, height: 1),
+            style: TextStyle(
+              fontFamily: glyph.fontFamily,
+              package: glyph.fontPackage,
+              fontSize: size,
+              color: ink,
+              height: 1,
+            ),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
@@ -763,11 +976,18 @@ class _RenderWallpaper extends RenderBox {
         for (final dx in const [0.0, -_tile, _tile]) {
           for (final dy in const [0.0, -_tile, _tile]) {
             final px = x + dx, py = y + dy;
-            if (px < -size || px > _tile + size || py < -size || py > _tile + size) continue;
+            if (px < -size ||
+                px > _tile + size ||
+                py < -size ||
+                py > _tile + size)
+              continue;
             canvas.save();
             canvas.translate(px, py);
             canvas.rotate(angle);
-            painter.paint(canvas, Offset(-painter.width / 2, -painter.height / 2));
+            painter.paint(
+              canvas,
+              Offset(-painter.width / 2, -painter.height / 2),
+            );
             canvas.restore();
           }
         }
@@ -777,7 +997,14 @@ class _RenderWallpaper extends RenderBox {
     return _tiles[key] = recorder.endRecording();
   }
 
-  static void _paintPattern(Canvas canvas, Rect rect, Offset origin, WallpaperPattern pattern, Color ink, double pixelRatio) {
+  static void _paintPattern(
+    Canvas canvas,
+    Rect rect,
+    Offset origin,
+    WallpaperPattern pattern,
+    Color ink,
+    double pixelRatio,
+  ) {
     final mask = _maskFor(pattern, pixelRatio);
     // Image pixels to canvas: scaled to one tile, and anchored at the window's origin so panes join.
     final s = _tile / mask.width;
@@ -791,7 +1018,13 @@ class _RenderWallpaper extends RenderBox {
     canvas.drawRect(
       rect,
       Paint()
-        ..shader = ImageShader(mask, TileMode.repeated, TileMode.repeated, matrix, filterQuality: FilterQuality.low)
+        ..shader = ImageShader(
+          mask,
+          TileMode.repeated,
+          TileMode.repeated,
+          matrix,
+          filterQuality: FilterQuality.low,
+        )
         ..colorFilter = ColorFilter.mode(ink, BlendMode.srcIn),
     );
   }

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casama Gallery</title>
+<meta name="description" content="Themes, color schemes, wallpapers and skills for Casama, free and open source. See each one as it looks in the app, then open it in Casama.">
+<link rel="canonical" href="https://gallery.casama.ai/">
+<meta property="og:title" content="Casama Gallery">
+<meta property="og:description" content="Themes, color schemes, wallpapers and skills for Casama, free and open source.">
+<meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121412" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="gallery.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#content">Skip to the gallery</a>
+<header class="bar">
+  <div class="wrap bar-inner">
+    <a class="logo" href="https://casama.ai" aria-label="Casama home">casama</a>
+    <span class="crumb" aria-hidden="true">/</span>
+    <a class="crumb-page" href="/">Gallery</a>
+    <nav class="bar-nav" aria-label="Gallery">
+      <a href="#contribute">Contribute</a>
+      <a href="https://github.com/stackwares/casama-gallery">GitHub</a>
+      <a class="btn primary" href="https://casama.ai">Get Casama</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <div class="title-row">
+    <h1>Gallery</h1>
+    <p class="sub" id="summary">Themes, color schemes, wallpapers and skills for Casama, free and open source. See each one as it looks in the app, then open it in Casama.</p>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Kinds" id="tabs"></div>
+
+  <div class="toolbar">
+    <label class="search">
+      <span class="sr-only">Search the gallery</span>
+      <span class="search-icon" id="search-icon"></span>
+      <input type="search" id="q" placeholder="Search looks and skills" autocomplete="off" spellcheck="false">
+    </label>
+    <p class="count" id="count" aria-live="polite"></p>
+    <div class="seg" role="group" aria-label="Preview in">
+      <button type="button" data-mode="light" aria-pressed="true">Light</button>
+      <button type="button" data-mode="dark" aria-pressed="false">Dark</button>
+    </div>
+  </div>
+
+  <div id="content" tabindex="-1"></div>
+  <noscript><p class="note">The gallery draws its previews with JavaScript. Every item is listed in <a href="index.json">index.json</a>.</p></noscript>
+
+  <section class="contribute" id="contribute" aria-labelledby="contribute-title">
+    <div class="contribute-text">
+      <h2 id="contribute-title">Add your own look or skill</h2>
+      <p>The gallery is a GitHub repository. Each item is a folder with a short <code>item.json</code> and its file. A pull request adds it, and once it is merged every Casama app sees it within half an hour, with no app update.</p>
+      <ol class="steps">
+        <li>Fork <a href="https://github.com/stackwares/casama-gallery">stackwares/casama-gallery</a>.</li>
+        <li>Add a folder under <code>themes/</code>, <code>schemes/</code>, <code>wallpapers/</code> or <code>skills/</code> with <code>item.json</code> and its <code>theme.json</code>, <code>scheme.json</code>, <code>wallpaper.json</code> or <code>SKILL.md</code>.</li>
+        <li>Run <code>node check.mjs</code>. It checks the license, text contrast, fonts and file sizes, and updates <code>index.json</code>.</li>
+        <li>Open a pull request. Casama reviews it; skills with scripts get a second review.</li>
+      </ol>
+      <p class="small">Looks use CC0 1.0 or CC BY 4.0, skills MIT or Apache 2.0. Photos from Unsplash's API can't be added here: use your own. In the app, Settings → Themes → Share to gallery fills in an issue with your current look.</p>
+    </div>
+    <pre class="sample" aria-label="themes/lagoon/item.json"><code>// themes/lagoon/item.json
+{
+  "name": "Lagoon",
+  "author": { "name": "Casama",
+              "url": "https://casama.ai" },
+  "license": "CC0-1.0",
+  "tags": ["teal", "calm"],
+  "featured": true,
+  "version": 1
+}</code></pre>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <p class="foot-name">casama gallery</p>
+    <p class="small">Made in the open by Casama and its contributors. Every item lists its author and license. Developers: the whole catalog is <a href="index.json">index.json</a>. Pattern glyphs are <a href="https://lucide.dev">Lucide</a> icons (ISC).</p>
+    <p class="small"><a href="https://casama.ai/privacy">Privacy</a> · <a href="https://casama.ai/terms">Terms</a> · <a href="https://github.com/stackwares/casama-gallery/issues/new">Report an item</a></p>
+  </div>
+</footer>
+
+<dialog class="detail" id="detail" aria-labelledby="detail-title"></dialog>
+
+<script src="gallery.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

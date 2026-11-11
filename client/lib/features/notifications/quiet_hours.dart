@@ -13,8 +13,15 @@ import '../../ui/form_sheet.dart';
 /// approvals (from a chat you're in) still come through. Each bot can be let through or given its
 /// own hours.
 
-final quietHoursProvider = FutureProvider.autoDispose<QuietHoursView>((ref) => ref.watch(backendProvider).quietHours());
-final botQuietProvider = FutureProvider.autoDispose.family<BotQuietView, String>((ref, botId) => ref.watch(backendProvider).botQuiet(botId));
+final quietHoursProvider = FutureProvider<QuietHoursView>((ref) async {
+  if (ref.watch(signedInProvider).value == false) {
+    return const QuietHoursView(enabled: false, start: '22:00', end: '07:00');
+  }
+  return ref.watch(backendProvider).quietHours();
+});
+final botQuietProvider = FutureProvider.family<BotQuietView, String>(
+  (ref, botId) => ref.watch(backendProvider).botQuiet(botId),
+);
 
 String quietSummary(BuildContext context, QuietHoursView q) =>
     q.enabled ? context.l10n.quietHoursRange(q.start, q.end) : context.l10n.off;

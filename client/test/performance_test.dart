@@ -204,4 +204,53 @@ void main() {
       expect(identical(after[i], before[i]), isTrue, reason: 'block $i was parsed again');
     }
   });
+
+  testWidgets('opening a chat with history never flashes empty suggestions or top of thread', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final backend = FakeBackend()
+      ..storedMessages = [
+        for (var i = 1; i <= 20; i++)
+          ChatMessageView(
+            id: 'm$i',
+            role: i.isOdd ? 'user' : 'assistant',
+            text: 'History line $i with enough words to fill the thread vertically.',
+            createdAt: DateTime(2026, 1, 1, 10, i),
+          ),
+      ];
+    final container = ProviderContainer(
+      overrides: [
+        backendProvider.overrideWithValue(backend),
+        localCacheProvider.overrideWithValue(const NoCache()),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    Widget buildChat() => UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const ChatScreen(botId: botId, conversationId: convId),
+      ),
+    );
+
+    await tester.pumpWidget(buildChat());
+    // Frame 1: before open() microtask completes, empty-state starter cards must not flash.
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.textContaining('Research'), findsNothing);
+
+    // Next frame: messages arrive and the bottom of the history is immediately visible on Frame 1
+    // without needing post-frame scroll jumps from the top of the thread.
+    await tester.pump();
+    expect(find.textContaining('History line 20'), findsOneWidget);
+    expect(find.textContaining('History line 1 '), findsNothing);
+
+    // Re-opening the chat keeps existing messages on screen without flashing a spinner.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpWidget(buildChat());
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.textContaining('History line 20'), findsOneWidget);
+  });
 }

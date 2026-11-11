@@ -101,6 +101,15 @@ GOOGLE_AUTH_CLIENT_ID=
 GOOGLE_AUTH_SECRET=
 EOF
   fi
+  if ! grep -q "^PASSKEYS_ENABLED=" "$ENV_FILE"; then
+    cat >>"$ENV_FILE" <<'EOF'
+
+# Passkeys. Off until set. RP id is the domain without https://. Origins are the web app addresses.
+PASSKEYS_ENABLED=false
+PASSKEY_RP_ID=
+PASSKEY_RP_ORIGINS=
+EOF
+  fi
 else
   if [[ -z "$domain" && "$local" -eq 0 ]]; then
     if [[ -t 0 ]]; then
@@ -157,6 +166,10 @@ APPLE_AUTH_SECRET=
 GOOGLE_AUTH_ENABLED=false
 GOOGLE_AUTH_CLIENT_ID=
 GOOGLE_AUTH_SECRET=
+# Passkeys. Off until set. RP id is the domain without https://. Origins are the web app addresses.
+PASSKEYS_ENABLED=false
+PASSKEY_RP_ID=
+PASSKEY_RP_ORIGINS=
 EMAIL_AUTOCONFIRM=true
 INSTANCE_ADMIN_EMAILS=
 RESEND_API_KEY=

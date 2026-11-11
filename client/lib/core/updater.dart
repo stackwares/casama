@@ -76,7 +76,7 @@ Future<void> setAutoUpdateChecks(bool on) async {
   }
 }
 
-final autoUpdateChecksProvider = FutureProvider.autoDispose<bool?>((ref) async => selfUpdating ? autoUpdateChecks() : null);
+final autoUpdateChecksProvider = FutureProvider<bool?>((ref) async => selfUpdating ? autoUpdateChecks() : null);
 
 /// This app's version ("0.8.0").
 final appVersionProvider = FutureProvider<String>((ref) async => (await PackageInfo.fromPlatform()).version);

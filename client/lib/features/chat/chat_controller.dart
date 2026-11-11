@@ -221,21 +221,95 @@ class ChatController extends Notifier<ChatState> {
   }
 
   /// Opens a conversation (or the most recent one when null).
-  ChatState _fromMessages(String id, List<ChatMessageView> messages, {bool offline = false}) => ChatState(
-        conversationId: id,
-        offline: offline,
-        entries: [
-          for (final m in messages) ...[
-            // A routine's run starts with its instructions; the chat shows that it ran instead.
-            if (m.routineName != null)
-              NoticeEntry(kind: NoticeKind.routine, text: m.routineName!, at: m.createdAt)
-            else if (m.text.isNotEmpty || m.attachments.isNotEmpty || m.ui.isEmpty)
-              MessageEntry(id: m.id, role: m.role, text: m.text, attachments: m.attachments, siblingIndex: m.siblingIndex, siblingCount: m.siblingCount, botId: m.botId),
-            for (final u in m.ui) UiEntry(surfaceId: u.surfaceId, messages: u.messages),
-          ],
+  ChatState _fromMessages(
+    String id,
+    List<ChatMessageView> messages, {
+    bool offline = false,
+  }) {
+    final prevMessages = state.conversationId == id
+        ? <String, MessageEntry>{
+            for (final e in state.entries)
+              if (e is MessageEntry) e.id: e,
+          }
+        : const <String, MessageEntry>{};
+    return ChatState(
+      conversationId: id,
+      offline: offline,
+      entries: [
+        for (final m in messages) ...[
+          // A routine's run starts with its instructions; the chat shows that it ran instead.
+          if (m.routineName != null)
+            NoticeEntry(
+              kind: NoticeKind.routine,
+              text: m.routineName!,
+              at: m.createdAt,
+            )
+          else if (m.text.isNotEmpty || m.attachments.isNotEmpty || m.ui.isEmpty)
+            switch (prevMessages[m.id]) {
+              final prev?
+                  when prev.role == m.role &&
+                      prev.text == m.text &&
+                      !prev.streaming &&
+                      prev.botId == m.botId &&
+                      prev.siblingIndex == m.siblingIndex &&
+                      prev.siblingCount == m.siblingCount &&
+                      _sameAttachments(prev.attachments, m.attachments) =>
+                prev,
+              _ => MessageEntry(
+                id: m.id,
+                role: m.role,
+                text: m.text,
+                attachments: m.attachments,
+                siblingIndex: m.siblingIndex,
+                siblingCount: m.siblingCount,
+                botId: m.botId,
+              ),
+            },
+          for (final u in m.ui)
+            UiEntry(surfaceId: u.surfaceId, messages: u.messages),
         ],
-        answeredUi: {for (final m in messages) ?m.uiActionSurface},
-      );
+      ],
+      answeredUi: {for (final m in messages) ?m.uiActionSurface},
+    );
+  }
+
+  static bool _sameAttachments(List<AttachmentRef> a, List<AttachmentRef> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].path != b[i].path ||
+          a[i].name != b[i].name ||
+          a[i].mimeType != b[i].mimeType ||
+          a[i].size != b[i].size) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static bool _sameEntries(List<ChatEntry> a, List<ChatEntry> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (!identical(a[i], b[i])) return false;
+    }
+    return true;
+  }
+
+  static bool _sameSet(Set<String> a, Set<String> b) =>
+      a.length == b.length && a.containsAll(b);
+
+  void _setIfChanged(ChatState next) {
+    if (state.conversationId == next.conversationId &&
+        state.loading == next.loading &&
+        state.offline == next.offline &&
+        state.activeRunId == next.activeRunId &&
+        _sameEntries(state.entries, next.entries) &&
+        _sameSet(state.answeredUi, next.answeredUi)) {
+      return;
+    }
+    state = next;
+  }
 
   /// Opens a conversation: saved messages show at once (D-112), then the server's replace them.
   /// Offline, the saved ones stay with a note.
@@ -244,17 +318,45 @@ class ChatController extends Notifier<ChatState> {
   bool group = false;
 
   Future<void> open(String? conversationId) async {
-    await _sub?.cancel();
-    state = const ChatState(loading: true);
+    final sub = _sub;
+    _sub = null;
+    unawaited(sub?.cancel());
+    final keepCurrent =
+        state.entries.isNotEmpty &&
+        (conversationId == null || conversationId == state.conversationId);
+    if (!keepCurrent) {
+      state = const ChatState(loading: true);
+    }
     final cache = ref.read(localCacheProvider);
     var id = conversationId;
+    var showingCached = keepCurrent;
+
+    Future<void> loadCached(String targetId) async {
+      final cached = await cacheRead(cache, 'msgs:$targetId');
+      if (cached is List && cached.isNotEmpty) {
+        try {
+          _setIfChanged(
+            _fromMessages(targetId, [
+              for (final j in cached)
+                ChatMessageView.fromJson(Map<String, dynamic>.from(j as Map)),
+            ]),
+          );
+          showingCached = true;
+        } catch (_) {}
+      }
+    }
+
     if (id == null) {
+      final saved =
+          state.conversationId ?? await cacheRead(cache, 'lastconv:$botId');
+      if (saved is String && !showingCached) {
+        await loadCached(saved);
+      }
       try {
         final list = await _backend.conversations(botId);
         id = list.isEmpty ? null : list.first.id;
         unawaited(cacheWrite(cache, 'lastconv:$botId', id));
       } catch (_) {
-        final saved = await cacheRead(cache, 'lastconv:$botId');
         if (saved is! String) rethrow;
         id = saved;
       }
@@ -264,13 +366,8 @@ class ChatController extends Notifier<ChatState> {
       return;
     }
     final key = 'msgs:$id';
-    final cached = await cacheRead(cache, key);
-    var showingCached = false;
-    if (cached is List && cached.isNotEmpty) {
-      try {
-        state = _fromMessages(id, [for (final j in cached) ChatMessageView.fromJson(Map<String, dynamic>.from(j as Map))]);
-        showingCached = true;
-      } catch (_) {}
+    if (!showingCached || state.conversationId != id) {
+      await loadCached(id);
     }
     final List<ChatMessageView> messages;
     try {
@@ -282,8 +379,16 @@ class ChatController extends Notifier<ChatState> {
       }
       rethrow;
     }
-    unawaited(cacheWrite(cache, key, [for (final m in messages.length > 100 ? messages.sublist(messages.length - 100) : messages) m.toJson()]));
-    state = _fromMessages(id, messages);
+    unawaited(
+      cacheWrite(cache, key, [
+        for (final m
+            in messages.length > 100
+                ? messages.sublist(messages.length - 100)
+                : messages)
+          m.toJson(),
+      ]),
+    );
+    _setIfChanged(_fromMessages(id, messages));
     final active = await _backend.activeRun(id);
     if (active != null) _attach(active);
   }

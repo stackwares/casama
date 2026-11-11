@@ -30,6 +30,23 @@ void main() {
     expect(find.text('Postgres (Supabase)'), findsOneWidget);
   });
 
+  testWidgets('the owner chooses how apps without their own sign-in connect', (tester) async {
+    await setSize(tester, const Size(900, 1200));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const AdminScreen()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(Tab, 'Services'));
+    await tester.pumpAndSettle();
+    expect(find.text('App connections'), findsOneWidget);
+    expect(find.text("Casama's Composio account"), findsOneWidget);
+    await tester.tap(find.byKey(const Key('connectionsOwn')));
+    await tester.pumpAndSettle();
+    expect(backend.connectionSettings.composio.value, 'own');
+    await tester.tap(find.byKey(const Key('connectionsServer')));
+    await tester.pumpAndSettle();
+    expect(backend.connectionSettings.composio.value, 'server');
+  });
+
   testWidgets('the owner suspends a workspace, lifts it, and reviews abuse', (tester) async {
     await setSize(tester, const Size(900, 1000));
     final backend = FakeBackend();

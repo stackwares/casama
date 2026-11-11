@@ -12,8 +12,11 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../projects/projects_screen.dart' show projectsProvider;
 
-/// The ticket board (D-098): one column per status, drag to move, filters, and a ticket sheet.
+/// The Tasks tab, the ticket board (D-098): filters, a ticket sheet, and on tablets and desktops
+/// one column per status with drag to move. Phones get one list grouped by status instead, where a
+/// long press moves a ticket.
 class BoardScreen extends ConsumerStatefulWidget {
   const BoardScreen({super.key});
 
@@ -58,15 +61,33 @@ Color _statusColor(BuildContext context, TaskStatus s) {
   };
 }
 
+/// [tasks] in [s], in board order.
+List<Task> _inStatus(Iterable<Task> tasks, TaskStatus s) => tasks.where((t) => t.status == s).toList()..sort((a, b) => a.position.compareTo(b.position));
+
 class _BoardScreenState extends ConsumerState<BoardScreen> {
   var _owner = _Owner.all;
   TaskPriority? _priority;
+  String? _project;
 
-  bool _keep(Task t, String? me) {
+  bool _keep(Task t, String? me, String? project) {
     if (_owner == _Owner.mine && t.assigneeUserId != me) return false;
     if (_owner == _Owner.bots && t.assigneeBotId == null) return false;
     if (_priority != null && t.priority != _priority) return false;
+    if (project != null && t.projectId != project) return false;
     return true;
+  }
+
+  void _clearFilters() => setState(() {
+    _owner = _Owner.all;
+    _priority = null;
+    _project = null;
+  });
+
+  /// Phones: a long press offers the other statuses, since columns don't fit to drag between.
+  Future<void> _moveSheet(Task t, List<Task> items) async {
+    final to = await showAdaptiveSheet<TaskStatus>(context: context, builder: (_) => _MoveSheet(task: t));
+    if (to == null || !mounted) return;
+    await _move(t, to, items.where((x) => x.status == to).toList());
   }
 
   Future<void> _move(Task t, TaskStatus to, List<Task> column) async {
@@ -88,10 +109,16 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final me = ref.watch(backendProvider).userId;
+    final compact = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
+    // Above the phone's floating tab bar (the shell sets it as the bottom padding).
+    final barInset = compact ? MediaQuery.paddingOf(context).bottom : 0.0;
+    final projects = ref.watch(projectsProvider);
+    // A project that's gone (deleted, or another workspace's) stops filtering.
+    final project = projects.hasValue ? projects.value!.where((p) => p.id == _project).firstOrNull?.id : _project;
     return SubPage(
-      title: l10n.board,
+      title: l10n.navTasks,
       actions: [
-        IconButton(key: const Key('openProjects'), tooltip: l10n.projects, icon: const Icon(LucideIcons.target), onPressed: () => context.push('/projects')),
+        _ProjectFilter(selected: project, onChanged: (id) => setState(() => _project = id)),
         IconButton(key: const Key('newTicket'), tooltip: l10n.newTicket, icon: const Icon(LucideIcons.plus), onPressed: _newTicket),
       ],
       maxWidth: double.infinity,
@@ -99,35 +126,59 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
         value: ref.watch(tasksProvider),
         onRetry: () => ref.invalidate(tasksProvider),
         data: (items) {
-          final shown = items.where((t) => _keep(t, me)).toList();
+          final shown = items.where((t) => _keep(t, me, project)).toList();
+          final filters = [
+            for (final (o, label) in [(_Owner.all, l10n.filterAll), (_Owner.mine, l10n.filterMine), (_Owner.bots, l10n.filterBots)])
+              ChoiceChip(key: Key('filter-${o.name}'), label: Text(label), selected: _owner == o, onSelected: (_) => setState(() => _owner = o)),
+            DropdownButton<TaskPriority?>(
+              key: const Key('filterPriority'),
+              value: _priority,
+              hint: Text(l10n.priority),
+              underline: const SizedBox.shrink(),
+              items: [
+                DropdownMenuItem<TaskPriority?>(value: null, child: Text(l10n.priority)),
+                for (final p in TaskPriority.values) DropdownMenuItem(value: p, child: Text(priorityLabel(context, p))),
+              ],
+              onChanged: (p) => setState(() => _priority = p),
+            ),
+          ];
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.sm),
-                child: Wrap(
-                  spacing: AppSpace.sm,
-                  runSpacing: AppSpace.xs,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    for (final (o, label) in [(_Owner.all, l10n.filterAll), (_Owner.mine, l10n.filterMine), (_Owner.bots, l10n.filterBots)])
-                      ChoiceChip(key: Key('filter-${o.name}'), label: Text(label), selected: _owner == o, onSelected: (_) => setState(() => _owner = o)),
-                    DropdownButton<TaskPriority?>(
-                      key: const Key('filterPriority'),
-                      value: _priority,
-                      hint: Text(l10n.priority),
-                      underline: const SizedBox.shrink(),
-                      items: [
-                        DropdownMenuItem<TaskPriority?>(value: null, child: Text(l10n.priority)),
-                        for (final p in TaskPriority.values) DropdownMenuItem(value: p, child: Text(priorityLabel(context, p))),
-                      ],
-                      onChanged: (p) => setState(() => _priority = p),
-                    ),
-                  ],
+              if (compact)
+                // One line of filters that scrolls sideways, so the tickets get the height.
+                SingleChildScrollView(
+                  key: const Key('ticketFilters'),
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.fromLTRB(AppSpace.gutter, 0, AppSpace.gutter, AppSpace.xs),
+                  child: Row(spacing: AppSpace.xs, children: filters),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.sm),
+                  child: Wrap(spacing: AppSpace.sm, runSpacing: AppSpace.xs, crossAxisAlignment: WrapCrossAlignment.center, children: filters),
                 ),
-              ),
               if (items.isEmpty)
-                Expanded(child: EmptyState(icon: LucideIcons.squareKanban, title: l10n.noTickets, message: l10n.noTicketsHelp))
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: barInset),
+                    child: EmptyState(icon: LucideIcons.squareKanban, title: l10n.noTickets, message: l10n.noTicketsHelp),
+                  ),
+                )
+              else if (compact && shown.isEmpty)
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: barInset),
+                    child: EmptyState(
+                      icon: LucideIcons.listFilter,
+                      title: l10n.noMatchingTickets,
+                      message: l10n.noMatchingTicketsHelp,
+                      action: TextButton(key: const Key('clearFilters'), onPressed: _clearFilters, child: Text(l10n.clearFilters)),
+                    ),
+                  ),
+                )
+              else if (compact)
+                Expanded(child: _GroupedList(tasks: shown, bottom: AppSpace.xxl + barInset, onLongPress: (t) => _moveSheet(t, items)))
               else
                 Expanded(
                   child: ListView(
@@ -137,7 +188,7 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
                       for (final s in BoardScreen.statuses)
                         _Column(
                           status: s,
-                          tasks: (shown.where((t) => t.status == s).toList()..sort((a, b) => a.position.compareTo(b.position))),
+                          tasks: _inStatus(shown, s),
                           onDrop: (t) => _move(t, s, shown.where((x) => x.status == s).toList()),
                         ),
                     ],
@@ -146,6 +197,156 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// The project filter in the header: all projects or one, and the way to manage them.
+class _ProjectFilter extends ConsumerWidget {
+  const _ProjectFilter({required this.selected, required this.onChanged});
+
+  /// The project shown, or null for all of them.
+  final String? selected;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final projects = ref.watch(projectsProvider).value ?? const <Project>[];
+    final current = projects.where((p) => p.id == selected).firstOrNull;
+    final compact = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
+    final fill = context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest;
+    final on = current != null;
+    Widget check(bool selected) => Icon(selected ? LucideIcons.check : null, size: 18);
+    return MenuAnchor(
+      alignmentOffset: const Offset(0, 6),
+      menuChildren: [
+        MenuItemButton(key: const Key('projectFilter-all'), leadingIcon: check(current == null), onPressed: () => onChanged(null), child: Text(l10n.allProjects)),
+        for (final p in projects)
+          MenuItemButton(
+            key: Key('projectFilter-${p.id}'),
+            leadingIcon: check(p.id == current?.id),
+            onPressed: () => onChanged(p.id),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 260),
+              child: Text(p.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          ),
+        const Divider(height: AppSpace.xs),
+        MenuItemButton(
+          key: const Key('openProjects'),
+          leadingIcon: const Icon(LucideIcons.target, size: 18),
+          onPressed: () => context.push('/projects'),
+          child: Padding(padding: const EdgeInsets.only(right: AppSpace.md), child: Text(l10n.manageProjects)),
+        ),
+      ],
+      builder: (context, controller, _) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        child: Tooltip(
+          message: l10n.filterByProject,
+          child: TextButton(
+            key: const Key('projectFilter'),
+            onPressed: () => controller.isOpen ? controller.close() : controller.open(),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, 36),
+              maximumSize: Size(compact ? 168 : 260, 36),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.only(left: 14, right: 10),
+              shape: const StadiumBorder(),
+              backgroundColor: on ? scheme.primary.withValues(alpha: 0.14) : fill,
+              foregroundColor: on ? scheme.primary : scheme.onSurface,
+              side: BorderSide(color: on ? scheme.primary.withValues(alpha: 0.4) : context.appColors.hairline),
+              textStyle: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(child: Text(current?.title ?? l10n.allProjects, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                const SizedBox(width: 4),
+                const Icon(LucideIcons.chevronDown, size: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Phones: the tickets in one list, a section per status that has any.
+class _GroupedList extends StatelessWidget {
+  const _GroupedList({required this.tasks, required this.bottom, required this.onLongPress});
+  final List<Task> tasks;
+  final double bottom;
+  final void Function(Task) onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final groups = [
+      for (final s in BoardScreen.statuses)
+        if (_inStatus(tasks, s) case final inStatus when inStatus.isNotEmpty) (s, inStatus),
+    ];
+    return ListView(
+      key: const Key('ticketList'),
+      padding: EdgeInsets.fromLTRB(AppSpace.gutter, 0, AppSpace.gutter, bottom),
+      children: [
+        for (final (i, (s, inStatus)) in groups.indexed) ...[
+          _StatusHeader(status: s, count: inStatus.length, first: i == 0),
+          for (final t in inStatus) _Card(task: t, onLongPress: () => onLongPress(t)),
+        ],
+      ],
+    );
+  }
+}
+
+class _StatusHeader extends StatelessWidget {
+  const _StatusHeader({required this.status, required this.count, required this.first});
+  final TaskStatus status;
+  final int count;
+  final bool first;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      key: Key('section-${status.value}'),
+      padding: EdgeInsets.fromLTRB(AppSpace.xxs, first ? AppSpace.xs : AppSpace.md, AppSpace.xxs, AppSpace.xs),
+      child: Row(
+        children: [
+          Icon(LucideIcons.circleDot, size: 14, color: _statusColor(context, status)),
+          const SizedBox(width: 6),
+          Expanded(child: SectionHeader(title: statusLabel(context, status), count: '$count', padding: EdgeInsets.zero)),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Move to": the statuses a ticket isn't in.
+class _MoveSheet extends StatelessWidget {
+  const _MoveSheet({required this.task});
+  final Task task;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SheetTitle(context.l10n.moveTo, subtitle: task.title),
+          for (final s in BoardScreen.statuses)
+            if (s != task.status)
+              ListTile(
+                key: Key('moveTo-${s.value}'),
+                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpace.lg),
+                leading: Icon(LucideIcons.circleDot, size: 18, color: _statusColor(context, s)),
+                title: Text(statusLabel(context, s)),
+                onTap: () => Navigator.pop(context, s),
+              ),
+          const SizedBox(height: AppSpace.sm),
+        ],
       ),
     );
   }
@@ -208,8 +409,11 @@ class _Column extends ConsumerWidget {
 }
 
 class _Card extends ConsumerWidget {
-  const _Card({required this.task});
+  const _Card({required this.task, this.onLongPress});
   final Task task;
+
+  /// Phones only; on wider windows a long press starts a drag instead.
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -222,6 +426,7 @@ class _Card extends ConsumerWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => showAdaptiveSheet<void>(context: context, builder: (_) => TicketSheet(taskId: task.id)),
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(AppSpace.md),
           child: Column(

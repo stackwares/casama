@@ -20,6 +20,7 @@ lib/src/api/credentials_api.dart
 lib/src/api/devices_api.dart
 lib/src/api/encryption_api.dart
 lib/src/api/files_api.dart
+lib/src/api/gallery_api.dart
 lib/src/api/import_api.dart
 lib/src/api/integrations_api.dart
 lib/src/api/knowledge_api.dart
@@ -132,6 +133,7 @@ lib/src/model/checkpoint.dart
 lib/src/model/checkpoint_created_event.dart
 lib/src/model/checkpoint_created_event_payload.dart
 lib/src/model/checkpoint_list.dart
+lib/src/model/cloud_models.dart
 lib/src/model/computer.dart
 lib/src/model/computer_file_entry.dart
 lib/src/model/computer_file_list.dart
@@ -230,6 +232,10 @@ lib/src/model/for_you.dart
 lib/src/model/for_you_approval.dart
 lib/src/model/for_you_brief.dart
 lib/src/model/fulfill_secret_request_body.dart
+lib/src/model/gallery_author.dart
+lib/src/model/gallery_detail.dart
+lib/src/model/gallery_item.dart
+lib/src/model/gallery_list.dart
 lib/src/model/git_hub_skill_preview.dart
 lib/src/model/git_hub_skill_preview_request.dart
 lib/src/model/git_sync_status.dart

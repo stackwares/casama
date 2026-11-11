@@ -3,6 +3,7 @@ import { DEFAULT_MODELS, defaultModelFor } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { modelOverrides } from "../../env.ts";
 import { abuseControlsOn, signupProofKinds } from "../../services/abuse.ts";
+import { getCloudModels } from "../../services/cloud-models.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { chatGptSignInEnabled } from "./chatgpt.ts";
 
@@ -26,20 +27,22 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       : c.json({ status: "degraded" as const, checks }, 503);
   });
 
-  app.openapi(routes.getConfig, (c) =>
-    c.json(
+  app.openapi(routes.getConfig, async (c) => {
+    const defaults = Object.fromEntries(
+      Object.keys(DEFAULT_MODELS).map((p) => [
+        p,
+        defaultModelFor(p, modelOverrides(deps.env)) as string,
+      ]),
+    );
+    if (deps.env.BILLING_ENABLED) defaults.openrouter = (await getCloudModels(deps.db)).chat;
+    return c.json(
       {
         product_name: PRODUCT_NAME,
         api_version: API_VERSION,
         supabase_url: deps.env.SUPABASE_URL,
         supabase_anon_key: deps.env.SUPABASE_ANON_KEY,
         billing_enabled: deps.env.BILLING_ENABLED,
-        default_models: Object.fromEntries(
-          Object.keys(DEFAULT_MODELS).map((p) => [
-            p,
-            defaultModelFor(p, modelOverrides(deps.env)) as string,
-          ]),
-        ),
+        default_models: defaults,
         default_reasoning_effort: deps.env.DEFAULT_REASONING_EFFORT,
         wallpapers_enabled: Boolean(deps.env.UNSPLASH_ACCESS_KEY),
         chatgpt_sign_in: chatGptSignInEnabled(deps.env),
@@ -47,6 +50,6 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         trace_url_template: deps.env.TRACE_URL_TEMPLATE ?? null,
       },
       200,
-    ),
-  );
+    );
+  });
 }

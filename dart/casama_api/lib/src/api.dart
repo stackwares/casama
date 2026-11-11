@@ -23,6 +23,7 @@ import 'package:casama_api/src/api/credentials_api.dart';
 import 'package:casama_api/src/api/devices_api.dart';
 import 'package:casama_api/src/api/encryption_api.dart';
 import 'package:casama_api/src/api/files_api.dart';
+import 'package:casama_api/src/api/gallery_api.dart';
 import 'package:casama_api/src/api/import_api.dart';
 import 'package:casama_api/src/api/integrations_api.dart';
 import 'package:casama_api/src/api/knowledge_api.dart';
@@ -198,6 +199,12 @@ class CasamaApi {
   /// by doing that all interceptors will not be executed
   FilesApi getFilesApi() {
     return FilesApi(dio);
+  }
+
+  /// Get GalleryApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  GalleryApi getGalleryApi() {
+    return GalleryApi(dio);
   }
 
   /// Get ImportApi instance, base route and serializer can be overridden by a given but be careful,

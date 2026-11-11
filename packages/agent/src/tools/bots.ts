@@ -4,7 +4,7 @@
  * give any bot (itself included) more autonomy or budget than it has.
  */
 import type { Database } from "@casama/db";
-import { templateById } from "@casama/domain";
+import { PLATFORM_OPENROUTER_CREDENTIAL_ID, templateById } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "../acting.ts";
@@ -29,8 +29,22 @@ type BotRow = {
   archived_at: Date | null;
 };
 
-export function registerBotTools(registry: ToolRegistry, deps: { db: Database }) {
+export function registerBotTools(
+  registry: ToolRegistry,
+  deps: { db: Database; lockCloudModel?: boolean },
+) {
   const { db } = deps;
+  const onCasamaKey = (policy: Record<string, unknown> | null | undefined) => {
+    const primary = policy?.primary as { credential_id?: string } | undefined;
+    return primary?.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
+  };
+  const refuseCloudModel = (policy: Record<string, unknown> | null | undefined) => {
+    if (!deps.lockCloudModel || !onCasamaKey(policy)) return;
+    throw new ToolError(
+      "cloud_model_locked",
+      "Casama chooses the model on this key. Add your own model key to pick one.",
+    );
+  };
 
   const load = async (orgId: string, ref: string) => {
     const [b] = await db.execute<BotRow>(sql`
@@ -115,7 +129,9 @@ export function registerBotTools(registry: ToolRegistry, deps: { db: Database })
         .string()
         .max(200)
         .optional()
-        .describe("A model id on your own model key (default: your model)"),
+        .describe(
+          "A model id on your own model key (default: your model). Casama's key keeps Casama's model.",
+        ),
       budget: BUDGET.optional(),
       copy_tools: z.boolean().optional().describe("Give it the same integrations you have"),
     }),
@@ -139,7 +155,10 @@ export function registerBotTools(registry: ToolRegistry, deps: { db: Database })
       if (max !== null && Number(max) > 0 && n >= Number(max))
         throw new ToolError("bot_limit", `This workspace's plan allows ${max} bots.`);
       const policy = structuredClone(me.model_policy ?? {}) as { primary?: { model?: string } };
-      if (args.model && policy.primary) policy.primary.model = args.model;
+      if (args.model) {
+        refuseCloudModel(me.model_policy);
+        if (policy.primary) policy.primary.model = args.model;
+      }
       const budget = {
         per_run_usd: args.budget?.per_run_usd ?? Math.min(1, me.budget?.per_run_usd ?? 1),
         daily_usd: args.budget?.daily_usd ?? Math.min(10, me.budget?.daily_usd ?? 10),
@@ -176,7 +195,11 @@ export function registerBotTools(registry: ToolRegistry, deps: { db: Database })
       name: z.string().min(1).max(80).optional(),
       instructions: z.string().max(20_000).optional(),
       autonomy: AUTONOMY.optional(),
-      model: z.string().max(200).optional(),
+      model: z
+        .string()
+        .max(200)
+        .optional()
+        .describe("A model id on your own model key. Casama's key keeps Casama's model."),
       budget: BUDGET.optional(),
     }),
     async execute(args, ctx) {
@@ -188,6 +211,7 @@ export function registerBotTools(registry: ToolRegistry, deps: { db: Database })
       cap(me, args.autonomy, args.budget);
       const policy = structuredClone(target.model_policy ?? {}) as { primary?: { model?: string } };
       if (args.model) {
+        refuseCloudModel(target.model_policy);
         if (!policy.primary)
           throw new ToolError("no_model", `${target.name} has no model key to switch models on.`);
         policy.primary.model = args.model;

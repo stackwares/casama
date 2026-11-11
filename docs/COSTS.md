@@ -46,18 +46,18 @@ mailboxes, domain, Apple), plus E2B's $150 if we use it for computers.
 | What | Our cost | How it's metered today (`usage_ledger.kind`, price in code) | Verdict |
 |---|---|---|---|
 | **Bot computers** | E2B: 2 vCPU / 4 GiB ≈ **$0.166 / hour**. Daytona: same ≈ **$0.166 / hour**. Own Hetzner servers: CPX42 runs about 4 computers of that size for €65 / month, ≈ **$0.025 / hour each if fully used** | `computer_seconds` at the provider's rate (D-180): E2B and Daytona $0.0504 per vCPU-hour + $0.0162 per GiB-hour; Docker $0.003 per vCPU-hour + $0.005 per GB-hour (1 vCPU / 1 GB ≈ $0.008 / hour); `COMPUTER_RATES` overrides | ✅ Real rates |
-| **Models on our keys** (credits) | Per 1M tokens in / out: GPT-6.1 Sol $2 / $10, GPT-6 Luna $0.10 / $0.50, Claude Opus 5.5 $4 / $20, Sonnet 5.5 $2 / $10, Haiku 5.5 $0.10 / $0.50, Gemini 3.1 Pro $2 / $12, Gemini 3.8 Flash $0.75 / $3.75 (**doubles on 2027-01-01**), Grok 4.7 $2 / $6. Through OpenRouter: plus **5.5%** on credit purchases | `tokens_in` / `tokens_out` at OpenRouter's live prices, refreshed daily, for OpenRouter and direct models alike; the table only as a fallback (D-181) | ✅ Live prices; nothing on OpenRouter at $0. ☐ OpenRouter's 5.5% fee (markup setting) |
+| **Models on our keys** (credits) | Per 1M tokens in / out: GPT-6.1 Sol $2 / $10, GPT-6 Luna $0.10 / $0.50, Claude Opus 5.5 $4 / $20, Sonnet 5.5 $2 / $10, Haiku 5.5 $0.10 / $0.50, Gemini 3.1 Pro $2 / $12, Gemini 3.8 Flash $0.75 / $3.75 (**doubles on 2027-01-01**), Grok 4.7 $2 / $6. Through OpenRouter: plus **5.5%** on credit purchases | `tokens_in` / `tokens_out` at OpenRouter's reported `usage.cost` when the response has it, otherwise the live price list (D-181). On Casama's key, with billing on: that cost × 1.055 × 1.3 (D-186) | ✅ Live cost, fee and 1.3 markup on Casama's key |
 | **Voice calls, OpenAI Realtime** | Audio $32 in / $64 out per 1M tokens ≈ $0.02 / min listening + $0.08 / min speaking. Mini model: about a third | `voice_seconds`, **$0.06 / min** estimate | ⚠️ Close for a balanced call; long bot monologues cost more. Price from reported token usage, like Gemini |
 | **Voice calls, Gemini Live** | $3 in / $12 out per 1M audio tokens ≈ $0.005 + $0.018 per min | `voice_seconds`, priced from the call's own token counts | ✅ |
-| **Dictation (speech to text)** | OpenAI mini transcribe $0.003 / min; Deepgram $0.0077 / min | `stt_seconds`, $0.003 / min | ✅ for OpenAI mini; ❌ if Deepgram is used on our key |
-| **Read aloud (text to speech)** | OpenAI tts-1 $15 per 1M characters; ElevenLabs $40–80 per 1M | $0.015 per 1k characters | ✅ for OpenAI; ❌ for ElevenLabs on our key |
+| **Dictation (speech to text)** | OpenAI `gpt-4o-mini-transcribe` $0.003 / min. Gemini 3.5 Transcribe is about $0.005 / min once the transcript is included, so dictation stays on OpenAI (D-187). Deepgram Nova-3 $0.0077 / min | `stt_seconds`, $0.003 / min | ✅ for OpenAI mini; ❌ if Deepgram is used on our key |
+| **Read aloud (text to speech)** | Gemini 3.8 Flash-Lite TTS about $0.011 per 1k characters through 2026-12-31 ($6 per 1M audio tokens, 25 tokens a second), then about $0.022. OpenAI `gpt-4o-mini-tts` about $0.018 a minute of speech. ElevenLabs Flash $40 per 1M characters | Gemini at the audio rate above; other providers $0.015 per 1k characters (D-187) | ✅ |
 | **Phone calls (Twilio)** | Outbound $0.014 / min, inbound $0.0085 / min, **Media Streams +$0.0044 / min**, plus the voice model per minute | `phone_minutes`, $0.014 / min only | ❌ Missing Media Streams and the voice model's cost in the same call |
 | **Phone numbers** | $1.15 / month (local US), $2.15 (toll-free) | Not charged | ❌ Charge monthly per number held |
 | **SMS** | $0.0083 per segment plus carrier fees ($0.0025–0.007) | Not metered separately | ❌ |
 | **Apps through Composio** (our account) | Free up to 20k calls and 1k connected accounts a month. Then (Pro) **$0.002 per call** (Slack, Gmail, Calendar, Sheets, Jira, HubSpot), $0.01 (Salesforce, YouTube, Reddit), $0.0005 (others); **$0.10 once** per connected account past 1k | Not metered | ❌ Add a `app_calls` kind and cap it per plan |
 | **Web search** | Brave $5 per 1k searches; Tavily $0.008 per search; Exa $4–7 per 1k; our own SearXNG $0 (runs on the API server) | `search_queries`, priced per provider (D-179) | ✅ Metered. Workspace keys pay their own; without one, SearXNG (free). Cloud never pays per search today |
-| **Images** | Per image: Qwen Image 3.0 Pro $0.04 on OpenRouter (default with an OpenRouter key; arena rank 14 of 84), Seedream 5.0 Pro $0.045 on OpenRouter / $0.0675 on fal (rank 17), Seedream 4.5 $0.04 (fal default; rank 38), GPT Image 2.x about $0.13 (ranks 1–5). Budget: fal FLUX.2 klein 4B or Z-Image Turbo $0.005 per megapixel (ranks 72 and 61) | `media_images` at OpenRouter's reported cost or fal's list price per model (D-182, D-183); unknown models at $0.04 | ✅ Per model |
-| **Video** | fal per second: PixVerse V6 $0.005, MiniMax H3 Max Turbo $0.025, Grok Imagine $0.05, LTX-2.3 $0.04–0.06, Wan 3 $0.05–0.20, Kling 2.5 / 2.6 Pro $0.07, Kling v3 $0.14 | `media_video_seconds`, priced per model (D-182); unknown models at $0.10 / second | ✅ Per model (high for unknown ones) |
+| **Images** | Per image at 1K: Gemini Nano Banana 2.1 $0.034 on OpenRouter (default with an OpenRouter key; LM Arena rank 7, Artificial Analysis rank 6). GPT Image 2.6 medium about $0.043 (LM Arena ranks 2–4); its max tier about $0.21 (ranks 1–4). Seedream 4.5 $0.04 is the fal fallback (rank 38). Budget: fal FLUX.2 klein 4B or Z-Image Turbo $0.005 per megapixel (ranks 72 and 61) | `media_images` at OpenRouter's reported cost or fal's list price per model (D-185); unknown models at $0.04 | ✅ Per model |
+| **Video** | Gemini Omni Flash 1.2 at 720p, about $0.07 a second, when a Google AI key exists (D-189). Otherwise fal: PixVerse V6 $0.005, MiniMax H3 Max Turbo $0.025, Grok Imagine $0.05, LTX about $0.04–0.10 | `media_video_seconds` at $0.0695 a second for Omni Flash, or fal's list price; unknown models at $0.10 / second | ✅ |
 | **Paid data (places, emails, SEO)** | What the data seller charges | `data_calls`, cost + 20% | ✅ (consider +30% to cover payment fees) |
 | **Memory embeddings** | OpenAI text-embedding-3-small $0.02 per 1M tokens | Not metered | ✅ Negligible |
 | **Live view and take control** (TURN relay) | Our own coturn on the server: bandwidth only (about €1 / TB over 20 TB). Cloudflare TURN $0.05 / GB if we switch | `stream_seconds` (not priced) | ✅ For now |
@@ -113,9 +113,10 @@ Ranked by saving. ✅ = done, ☐ = to do.
      cache matching prefixes on their own.
    - ✅ Cached and cache-write tokens are recorded and priced (`costOf`): reads at 0.1× input (0.25× on
      Gemini), Anthropic writes at 1.25×.
-   - ✅ Background work (conversation summaries, memory) runs on the provider's small model (Claude
-     Haiku 5.5, GPT-6 Luna, Gemini 3.5 Flash-Lite) when the bot hasn't picked a cheap model,
-     falling back to its main model.
+   - ✅ Background work (conversation summaries, memory) runs on Muse Ember when the bot is on
+     OpenRouter, and on the provider's small model otherwise (Claude Haiku 5.5, GPT-6 Luna,
+     Gemini 3.5 Flash-Lite), when the bot hasn't picked a cheap model (D-187). It falls back to
+     the main model.
    - ✅ Onboarding already puts the person's own AI first (ChatGPT subscription, own key, local
      model); Casama credits aren't offered there.
    - ☐ Batch APIs (50% off) for work that can wait hours. Routines run at set times, so only for
@@ -124,8 +125,9 @@ Ranked by saving. ✅ = done, ☐ = to do.
 3. **Apps:** ☐ connect directly wherever the app allows (free); register our own GitHub, Asana and
    HubSpot apps (free, needs Oliver's sign-in); for the rest, our own app inside Composio ($0.0003 a
    call instead of $0.002, free connections, Casama on the sign-in screen).
-4. **Voice and phone:** ✅ Gemini Live is the default voice (about $0.02 a minute against about $0.10
-   for OpenAI Realtime). ☐ Compare Telnyx and other carriers with Twilio.
+4. **Voice and phone:** ✅ Gemini Live is the call for in-app and phone calls whenever a Google key
+   exists (the workspace's, else the server's). OpenAI Realtime is only the last resort (D-187).
+   ☐ Compare Telnyx and other carriers with Twilio.
 5. **Search:** ✅ our own SearXNG (free) for workspaces without a Brave or Tavily key (D-179; turn it
    on in production with `--search`). ☐ Cache results;
    Gemini grounding's 5,000 free searches a month.

@@ -10,7 +10,9 @@ import type { AppDeps, AppEnv } from "../types.ts";
 
 const { bots, conversations } = schema;
 const MAX_AUDIO = 10 * 1024 * 1024;
-const TOOL_WAIT_MS = 25_000;
+// A voice tool waits at most this long before answering "still working" (the result then goes
+// to the chat), so the caller isn't left in silence for long.
+const TOOL_WAIT_MS = 12_000;
 
 function requireClaims(claims: JwtClaims | undefined): JwtClaims {
   if (!claims) throw new ApiError(401, "unauthorized", "Missing or invalid bearer token");
@@ -34,10 +36,22 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       throw new ApiError(404, "conversation_not_found", "Conversation not found");
     return conv;
   };
-  const unwrap = <T>(r: ({ ok: true } & T) | { ok: false; error: string }): T => {
-    if (!r.ok) throw new ApiError(409, "voice_unavailable", r.error);
+  const unwrap = <T>(r: ({ ok: true } & T) | { ok: false; error: string; code?: string }): T => {
+    if (!r.ok) throw new ApiError(409, r.code ?? "voice_unavailable", r.error);
     return r;
   };
+  /**
+   * Whether a workspace's live calls run on the server's own Google AI key (it has no Gemini or
+   * OpenAI key of its own). On Casama Cloud those calls are paid from the workspace's credits.
+   */
+  const onServerKey = async (orgId: string) => {
+    if (!deps.env.GOOGLE_AI_API_KEY) return false;
+    const [own] = await db.execute(sql`
+      select 1 from public.model_credentials
+      where org_id = ${orgId}::uuid and provider in ('google', 'openai') and vault_secret_id is not null limit 1`);
+    return !own;
+  };
+  const billsCalls = async (orgId: string) => !!deps.billing?.enabled && (await onServerKey(orgId));
 
   app.openapi(routes.transcribeAudio, async (c) => {
     const claims = requireClaims(c.get("claims"));
@@ -122,6 +136,17 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           )
         )[0];
     if (!conv) throw new Error("conversation insert returned nothing");
+    // Calls included on Casama Cloud are paid from credits: none left, no call.
+    if (
+      deps.billing &&
+      (await billsCalls(bot.orgId)) &&
+      (await deps.billing.balance(bot.orgId)) <= 0
+    )
+      throw new ApiError(
+        402,
+        "out_of_credits",
+        "Live calls are paid from your workspace's credits, and there are none left.",
+      );
     const s = unwrap(await deps.workflows.voiceSession(bot.orgId, bot.id, greeting));
     return c.json(
       {
@@ -260,10 +285,12 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await db.execute(
       sql`update public.conversations set last_message_at = now() where id = ${conv.id}::uuid`,
     );
+    // Calls on the server's key on Casama Cloud come out of credits (at Google's price).
+    const billable = seconds > 0 && (await billsCalls(conv.orgId));
     if (seconds > 0)
-      await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, meta)
-        values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${cost},
-                ${JSON.stringify({ provider: provider ?? "openai", ...(usage ? { tokens: usage } : { estimated: true }) })}::jsonb)`);
+      await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
+        values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${cost}, ${billable},
+                ${JSON.stringify({ provider: provider ?? "openai", ...(usage ? { tokens: usage } : { estimated: true }), ...(billable ? { key: "server" } : {}) })}::jsonb)`);
     return c.json({ saved: turns.length }, 200);
   });
 

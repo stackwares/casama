@@ -11,10 +11,12 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/shell_header.dart';
 import '../files/file_preview.dart';
 
 /// One search box over the workspace (D-103): messages, chats, memories, skills, routines, tickets
-/// and files on awake computers, grouped by type. Cmd/Ctrl+K on desktop and web, a tab on phones.
+/// and files on awake computers, grouped by type. Cmd/Ctrl+K on desktop and web, the round button
+/// beside the tab bar on phones (D-176).
 Future<void> showWorkspaceSearch(BuildContext context) => showAdaptiveSheet<void>(
       context: context,
       heightFactor: 0.9,
@@ -23,12 +25,15 @@ Future<void> showWorkspaceSearch(BuildContext context) => showAdaptiveSheet<void
       builder: (_) => const SearchView(inSheet: true),
     );
 
-/// Search as a full screen (the phone tab).
+/// Search as a full screen, for links to `/search`; the app itself opens [showWorkspaceSearch].
 class SearchScreen extends StatelessWidget {
   const SearchScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const Scaffold(body: SafeArea(child: SearchView()));
+  Widget build(BuildContext context) => Scaffold(
+    appBar: ShellHeader(title: context.l10n.search, phoneFallback: '/bots'),
+    body: const SafeArea(top: false, child: SearchView()),
+  );
 }
 
 class SearchView extends ConsumerStatefulWidget {

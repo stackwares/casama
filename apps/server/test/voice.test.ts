@@ -32,6 +32,17 @@ async function mockVoiceProviders() {
         res.writeHead(200, { "content-type": "audio/mpeg" });
         return res.end(Buffer.from("ID3-fake-mp3"));
       }
+      if (path.endsWith(":generateContent")) {
+        return json({
+          candidates: [
+            {
+              content: {
+                parts: [{ inlineData: { data: Buffer.alloc(48).toString("base64") } }],
+              },
+            },
+          ],
+        });
+      }
       if (path === "/v1beta/auth_tokens") return json({ name: "auth_tokens/gemini-test-token" });
       if (path === "/v1/realtime/client_secrets")
         return json({
@@ -119,6 +130,44 @@ describe("voice (Phase 6)", () => {
     mock?.close();
   });
 
+  it("a workspace with no live-call key is told which key it needs", async () => {
+    const other = await h.user("voice-nokey@example.com");
+    const org = (
+      await j(
+        await h.request("/v1/orgs", {
+          method: "POST",
+          token: other.token,
+          json: { name: "No keys" },
+        }),
+      )
+    ).id;
+    const llm = await j(
+      await h.request("/v1/credentials", {
+        method: "POST",
+        token: other.token,
+        json: { org_id: org, provider: "openrouter", label: "llm", api_key: "sk-other" },
+      }),
+    );
+    const bot = await j(
+      await h.request("/v1/bots", {
+        method: "POST",
+        token: other.token,
+        json: {
+          org_id: org,
+          name: "Quiet",
+          model_policy: { primary: { credential_id: llm.id, model: "fixture-main" } },
+        },
+      }),
+    );
+    const res = await h.request("/v1/voice/session", {
+      method: "POST",
+      token: other.token,
+      json: { bot_id: bot.id },
+    });
+    expect(res.status).toBe(409);
+    expect((await j(res)).code).toBe("voice_key_missing");
+  });
+
   it("dictation transcribes with the org's own key and records usage", async () => {
     const res = await h.request(`/v1/voice/transcribe?bot_id=${botId}`, {
       method: "POST",
@@ -171,10 +220,11 @@ describe("voice (Phase 6)", () => {
     expect(Buffer.from(await first.arrayBuffer()).toString()).toBe("ID3-fake-mp3");
     const second = await h.request(`/v1/messages/${m?.id}/speech`, { token: owner.token });
     expect(second.status).toBe(200);
-    expect(mock.calls.filter((c) => c.path.startsWith("/v1/text-to-speech/"))).toHaveLength(1);
-    expect(
-      mock.calls.find((c) => c.path.startsWith("/v1/text-to-speech/"))?.headers["xi-api-key"],
-    ).toBe("el-voice-key");
+    // No Google key yet, so automatic read-aloud uses the OpenAI key ahead of ElevenLabs.
+    expect(mock.calls.filter((c) => c.path === "/v1/audio/speech")).toHaveLength(1);
+    expect(mock.calls.find((c) => c.path === "/v1/audio/speech")?.headers.authorization).toBe(
+      "Bearer sk-voice-openai-key",
+    );
   }, 60_000);
 
   it("a live call session carries the persona and the bot's tools; tool calls run with approvals", async () => {
@@ -308,6 +358,19 @@ describe("voice (Phase 6)", () => {
       slidingWindow: { targetTokens: 16000 },
     });
     expect(setup.realtimeInputConfig.turnCoverage).toBe("TURN_INCLUDES_ONLY_ACTIVITY");
+
+    const [spoken] = await h.handle.db.execute<{ id: string }>(sql`
+      insert into public.messages (org_id, conversation_id, role, content)
+      values (${orgId}::uuid, ${convId}::uuid, 'assistant', '[{"type":"text","text":"The fern is watered."}]'::jsonb)
+      returning id`);
+    const audio = await h.request(`/v1/messages/${spoken?.id}/speech`, { token: owner.token });
+    expect(audio.status).toBe(200);
+    expect(audio.headers.get("content-type")).toBe("audio/wav");
+    const tts = mock.calls.findLast((c) => c.path.endsWith(":generateContent"));
+    expect(tts?.headers["x-goog-api-key"]).toBe("gemini-voice-key");
+    expect(JSON.parse(Buffer.from(tts?.body ?? "{}", "latin1").toString("utf8")).generationConfig).toMatchObject({
+      speechConfig: { voiceConfig: { voice: "Kore" } },
+    });
   }, 60_000);
 
   it("connected-app tools a bot chose for calls join the voice set", async () => {

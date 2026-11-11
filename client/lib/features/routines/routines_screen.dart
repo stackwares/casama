@@ -10,6 +10,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/app_card.dart';
 import '../../ui/page.dart';
@@ -17,6 +18,7 @@ import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
 import '../bots/channels_screen.dart' show channelKindName;
+import 'cron_words.dart';
 
 /// A bot's routines: one-time, repeating (cron in a timezone), or webhook-triggered.
 class RoutinesScreen extends ConsumerWidget {
@@ -131,7 +133,7 @@ class _RoutineCard extends ConsumerWidget {
     final scheme = context.colorScheme;
     final r = routine;
     final (icon, schedule) = switch (r.trigger) {
-      RoutineTrigger.schedule => (LucideIcons.repeat, l10n.routineSchedule(r.scheduleCron ?? '', r.timezone)),
+      RoutineTrigger.schedule => (LucideIcons.repeat, l10n.routineSchedule(scheduleWords(context, r.scheduleCron ?? ''), r.timezone)),
       RoutineTrigger.once => (LucideIcons.alarmClock, l10n.routineOnce),
       RoutineTrigger.github => (LucideIcons.codeXml, l10n.routineGithub),
       RoutineTrigger.webhook => (LucideIcons.webhook, l10n.routineWebhook),
@@ -226,8 +228,12 @@ class _RoutineCard extends ConsumerWidget {
   }
 }
 
-/// Common schedules so people don't have to write cron by hand.
-const schedulePresets = <(String, String)>[('0 7 * * *', 'everyDayAt7'), ('0 9 * * 1-5', 'weekdaysAt9'), ('0 * * * *', 'everyHour'), ('0 9 * * 1', 'mondaysAt9')];
+/// How often a repeating routine runs, picked without cron (D-182). Each writes a cron string.
+const repeatChoices = ['daily', 'weekdays', 'weekly', 'hourly'];
+
+/// The triggers most people use; GitHub and webhooks wait under Advanced (D-182).
+const _mainTriggers = ['once', 'schedule', 'calendar_event', 'message'];
+const _advancedTriggers = ['github', 'webhook'];
 
 class NewRoutineSheet extends ConsumerStatefulWidget {
   const NewRoutineSheet({super.key, required this.botId});
@@ -240,9 +246,14 @@ class NewRoutineSheet extends ConsumerStatefulWidget {
 class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
   final _name = TextEditingController();
   final _instructions = TextEditingController();
-  final _cron = TextEditingController(text: schedulePresets.first.$1);
+  final _cron = TextEditingController(text: '0 9 * * *');
   final _timezone = TextEditingController(text: DateTime.now().timeZoneName.contains('/') ? DateTime.now().timeZoneName : 'America/Chicago');
   var _trigger = 'once';
+  // Repeats (D-182): how often and when, written into [_cron]. Null while the cron typed under
+  // Advanced is something the picker can't show (it reads as custom, in words).
+  String? _repeat = 'daily';
+  var _time = const TimeOfDay(hour: 9, minute: 0);
+  var _weekday = 1;
   // Calendar triggers (D-132)
   String? _calendarId;
   var _offset = -15;
@@ -265,14 +276,48 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
     super.dispose();
   }
 
-  String _presetLabel(String key) {
+  String _repeatLabel(String key) {
     final l10n = context.l10n;
     return switch (key) {
-      'everyDayAt7' => l10n.everyDayAt7,
-      'weekdaysAt9' => l10n.weekdaysAt9,
-      'everyHour' => l10n.everyHour,
-      _ => l10n.mondaysAt9,
+      'daily' => l10n.routineRepeatDaily,
+      'weekdays' => l10n.routineRepeatWeekdays,
+      'weekly' => l10n.routineRepeatWeekly,
+      _ => l10n.everyHour,
     };
+  }
+
+  /// The picker's choice as cron.
+  void _writeCron() {
+    final (m, h) = (_time.minute, _time.hour);
+    _cron.text = switch (_repeat) {
+      'hourly' => '0 * * * *',
+      'weekdays' => '$m $h * * 1-5',
+      'weekly' => '$m $h * * $_weekday',
+      _ => '$m $h * * *',
+    };
+  }
+
+  /// A cron typed by hand: the picker follows when it can show it, and reads as custom otherwise.
+  void _readCron() {
+    final shape = parseCron(_cron.text);
+    _repeat = switch (shape) {
+      CronDaily() => 'daily',
+      CronWeekly(weekdays: true) => 'weekdays',
+      CronWeekly(:final days) when days.length == 1 => 'weekly',
+      CronHourly(minute: 0) => 'hourly',
+      _ => null,
+    };
+    if (shape case CronDaily(:final hour, :final minute) || CronWeekly(:final hour, :final minute)) _time = TimeOfDay(hour: hour, minute: minute);
+    if (shape case CronWeekly(:final days) when days.length == 1) _weekday = days.single;
+  }
+
+  Future<void> _pickRepeatTime() async {
+    final time = await showTimePicker(context: context, initialTime: _time);
+    if (time == null || !mounted) return;
+    setState(() {
+      _time = time;
+      _writeCron();
+    });
   }
 
   Future<void> _pickTime() async {
@@ -292,6 +337,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
         _name.text.trim().isNotEmpty &&
         _instructions.text.trim().isNotEmpty &&
         (_trigger != 'once' || _runAt.isAfter(DateTime.now())) &&
+        (_trigger != 'schedule' || _cron.text.trim().isNotEmpty) &&
         (_trigger != 'calendar_event' || _calendarId != null) &&
         (_trigger != 'message' || _msgKind != null || [_msgSender, _msgSubject, _msgText].any((c) => c.text.trim().isNotEmpty));
     final now = DateTime.now();
@@ -322,15 +368,9 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
           ),
           const SizedBox(height: AppSpace.md),
           AppSegmentedControl<String>(
-            values: const ['once', 'schedule', 'calendar_event', 'message', 'github', 'webhook'],
-            labels: {
-              'once': l10n.triggerOnce,
-              'schedule': l10n.triggerSchedule,
-              'calendar_event': l10n.triggerCalendar,
-              'message': l10n.triggerMessage,
-              'github': l10n.triggerGithub,
-              'webhook': l10n.triggerWebhook,
-            },
+            values: _mainTriggers,
+            labels: {'once': l10n.triggerOnce, 'schedule': l10n.triggerSchedule, 'calendar_event': l10n.triggerCalendar, 'message': l10n.triggerMessage},
+            // An Advanced trigger stays picked (and shown below) until one of these is tapped.
             groupValue: _trigger,
             onValueChanged: (v) => setState(() => _trigger = v),
           ),
@@ -419,22 +459,102 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
             Wrap(
               spacing: 8,
               runSpacing: 4,
-              children: [for (final p in schedulePresets) ChoiceChip(label: Text(_presetLabel(p.$2)), selected: _cron.text == p.$1, onSelected: (_) => setState(() => _cron.text = p.$1))],
+              children: [
+                for (final r in repeatChoices)
+                  ChoiceChip(
+                    key: Key('repeat-$r'),
+                    label: Text(_repeatLabel(r)),
+                    selected: _repeat == r,
+                    onSelected: (_) => setState(() {
+                      _repeat = r;
+                      _writeCron();
+                    }),
+                  ),
+              ],
             ),
-            const SizedBox(height: AppSpace.sm),
-            TextField(
-              key: const Key('routineCron'),
-              controller: _cron,
-              decoration: InputDecoration(labelText: l10n.cronExpression, helperText: l10n.cronHelp),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: AppSpace.sm),
-            TextField(
-              key: const Key('routineTimezone'),
-              controller: _timezone,
-              decoration: InputDecoration(labelText: l10n.timezone),
-            ),
+            if (_repeat == null) ...[
+              const SizedBox(height: AppSpace.xs),
+              Text(
+                l10n.routineCustomSchedule(scheduleWords(context, _cron.text)),
+                key: const Key('routineCustomSchedule'),
+                style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceVariant),
+              ),
+            ] else if (_repeat != 'hourly') ...[
+              const SizedBox(height: AppSpace.sm),
+              Row(
+                children: [
+                  if (_repeat == 'weekly') ...[
+                    Expanded(
+                      // Keyed by the day, so a day read from a typed cron shows here too.
+                      child: KeyedSubtree(
+                        key: ValueKey('weekday-$_weekday'),
+                        child: DropdownButtonFormField<int>(
+                          key: const Key('routineWeekday'),
+                          isExpanded: true,
+                          initialValue: _weekday,
+                          decoration: InputDecoration(labelText: l10n.routineDay),
+                          items: [for (final d in const [1, 2, 3, 4, 5, 6, 0]) DropdownMenuItem(value: d, child: Text(l10n.cronDay(cronDayKey(d))))],
+                          onChanged: (v) => setState(() {
+                            _weekday = v ?? _weekday;
+                            _writeCron();
+                          }),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.sm),
+                  ],
+                  OutlinedButton.icon(
+                    key: const Key('routineTime'),
+                    onPressed: _pickRepeatTime,
+                    icon: const Icon(LucideIcons.clock, size: 18),
+                    label: Text(_time.format(context)),
+                  ),
+                ],
+              ),
+            ],
+            if (_timezone.text.trim().isNotEmpty) ...[
+              const SizedBox(height: AppSpace.xs),
+              Text(
+                l10n.routineTimesIn(_timezone.text.trim()),
+                key: const Key('routineTimesIn'),
+                style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant),
+              ),
+            ],
           ],
+          // GitHub and webhook triggers, the raw cron and the timezone (D-182). It stays open while
+          // one of them is in use, so the routine's current setup is never folded away.
+          AdvancedSection(
+            id: 'routine.editor',
+            summary: l10n.routineAdvancedSummary,
+            forceOpen: _advancedTriggers.contains(_trigger) || (_trigger == 'schedule' && _repeat == null),
+            children: [
+              Text(l10n.routineOtherTriggers, style: context.textTheme.labelLarge?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+              const SizedBox(height: AppSpace.xs),
+              AppSegmentedControl<String>(
+                key: const Key('routineAdvancedTrigger'),
+                values: _advancedTriggers,
+                labels: {'github': l10n.triggerGithub, 'webhook': l10n.triggerWebhook},
+                groupValue: _trigger,
+                onValueChanged: (v) => setState(() => _trigger = v),
+              ),
+              if (_trigger == 'schedule') ...[
+                const SizedBox(height: AppSpace.sm),
+                TextField(
+                  key: const Key('routineCron'),
+                  controller: _cron,
+                  decoration: InputDecoration(labelText: l10n.cronExpression, helperText: l10n.cronHelp),
+                  onChanged: (_) => setState(_readCron),
+                ),
+                const SizedBox(height: AppSpace.sm),
+                TextField(
+                  key: const Key('routineTimezone'),
+                  controller: _timezone,
+                  decoration: InputDecoration(labelText: l10n.timezone),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ],
+            ],
+          ),
           const SizedBox(height: AppSpace.md),
           GlowButton(
             key: const Key('createRoutine'),

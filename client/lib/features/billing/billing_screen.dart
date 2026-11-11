@@ -13,6 +13,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
@@ -154,8 +155,14 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                       ),
                     ),
                   ),
-                const _UsageSection(),
-                if (isAdmin) const _CloudConnectSection(),
+                const _UsageRow(),
+                // Each charge with the server it came from, and the keys for your own server
+                // reaching Casama Cloud, fold away (D-182).
+                AdvancedSection(
+                  id: 'billing',
+                  summary: isAdmin ? l10n.billingAdvancedSummary : l10n.billingChargesSummary,
+                  children: [const _BilledItems(), if (isAdmin) const _CloudConnectSection()],
+                ),
               ],
             ),
           );
@@ -356,8 +363,9 @@ class _CurrentPlan extends StatelessWidget {
   }
 }
 
-class _UsageSection extends ConsumerWidget {
-  const _UsageSection();
+/// This month's billed charges one by one, with the server each came from (under Advanced).
+class _BilledItems extends ConsumerWidget {
+  const _BilledItems();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -376,9 +384,10 @@ class _UsageSection extends ConsumerWidget {
     }
 
     return Column(
+      key: const Key('billedItems'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHeader(title: l10n.thisMonth),
+        SectionHeader(title: l10n.thisMonth, padding: const EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.xs, AppSpace.xxs, AppSpace.xs)),
         if (usage.items.isEmpty)
           AppCard(child: FormNote(l10n.noBillableUsage, icon: LucideIcons.receiptText))
         else
@@ -396,6 +405,32 @@ class _UsageSection extends ConsumerWidget {
             ],
           ),
       ],
+    );
+  }
+}
+
+/// One row to Settings → Usage, which has the full breakdown, with this month's billed total.
+class _UsageRow extends ConsumerWidget {
+  const _UsageRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final usage = ref.watch(_usageProvider).value;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpace.lg),
+      child: GroupedCard(
+        children: [
+          GroupedTile(
+            key: const Key('billingUsage'),
+            icon: LucideIcons.chartColumn,
+            title: l10n.usage,
+            subtitle: usage == null ? l10n.billingUsageRow : l10n.billingUsageSoFar('\$${usage.totalUsd.toStringAsFixed(2)}'),
+            showChevron: true,
+            onTap: () => context.push('/settings/usage'),
+          ),
+        ],
+      ),
     );
   }
 }

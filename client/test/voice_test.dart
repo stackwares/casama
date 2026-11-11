@@ -18,6 +18,7 @@ Widget voiceHarness(FakeBackend backend, {FakeDictation? dictation, FakePlayer? 
     GoRoute(path: '/', builder: (_, _) => home),
     GoRoute(path: '/bots/:id/chat', builder: (_, s) => Text('chat ${s.uri.queryParameters['c']}')),
     GoRoute(path: '/bots/:id/call', builder: (_, s) => Text('call ${s.uri.queryParameters['c']}')),
+    GoRoute(path: '/settings/keys', builder: (_, s) => Text('keys ${s.uri.queryParameters['provider']}')),
   ]);
   return ProviderScope(
     overrides: [
@@ -35,6 +36,7 @@ Widget voiceHarness(FakeBackend backend, {FakeDictation? dictation, FakePlayer? 
 }
 
 void main() {
+  CallScreen.motion = false;
   testWidgets('dictation records, transcribes and fills the message box', (tester) async {
     await setSize(tester, const Size(500, 900));
     final backend = FakeBackend();

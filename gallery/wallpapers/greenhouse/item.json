@@ -1,0 +1,14 @@
+{
+  "name": "Greenhouse",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "garden",
+    "green"
+  ],
+  "featured": false,
+  "version": 1
+}

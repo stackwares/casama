@@ -6,7 +6,12 @@ import 'package:casama_sdk/casama_sdk.dart';
 /// A message as shown in a conversation (final messages only; live text comes from run events).
 /// A file attached to a message, stored on the bot's computer ([path] is under its home folder).
 class AttachmentRef {
-  const AttachmentRef({required this.path, required this.name, required this.mimeType, required this.size});
+  const AttachmentRef({
+    required this.path,
+    required this.name,
+    required this.mimeType,
+    required this.size,
+  });
   final String path;
   final String name;
   final String mimeType;
@@ -14,8 +19,84 @@ class AttachmentRef {
 
   bool get isImage => mimeType.startsWith('image/');
 
-  Map<String, Object?> toJson() => {'path': path, 'name': name, 'mime_type': mimeType, 'size': size};
-  static AttachmentRef fromJson(Map<String, dynamic> j) => AttachmentRef(path: j['path'] as String, name: j['name'] as String, mimeType: j['mime_type'] as String, size: (j['size'] as num).toInt());
+  Map<String, Object?> toJson() => {
+    'path': path,
+    'name': name,
+    'mime_type': mimeType,
+    'size': size,
+  };
+  static AttachmentRef fromJson(Map<String, dynamic> j) => AttachmentRef(
+    path: j['path'] as String,
+    name: j['name'] as String,
+    mimeType: j['mime_type'] as String,
+    size: (j['size'] as num).toInt(),
+  );
+}
+
+/// One item from the open gallery (D-184). [document] is the theme, scheme or wallpaper JSON.
+class GalleryItem {
+  const GalleryItem({
+    required this.id,
+    required this.type,
+    required this.name,
+    required this.authorName,
+    required this.license,
+    this.authorUrl,
+    this.tags = const [],
+    this.featured = false,
+    this.category,
+    this.icon,
+    this.description,
+    this.document,
+    this.skillMd,
+  });
+
+  final String id;
+  final String type;
+  final String name;
+  final String authorName;
+  final String? authorUrl;
+  final String license;
+  final List<String> tags;
+  final bool featured;
+  final String? category;
+
+  /// A skill's Lucide icon name and one-line description.
+  final String? icon;
+  final String? description;
+
+  /// A look's document (theme, scheme or wallpaper). Lists carry it, so cards draw previews.
+  final Map<String, Object?>? document;
+  final String? skillMd;
+
+  factory GalleryItem.fromJson(Map<String, dynamic> j) {
+    final author = j['author'];
+    final authorMap = author is Map
+        ? author.cast<String, dynamic>()
+        : const <String, dynamic>{};
+    final document = j['document'];
+    return GalleryItem(
+      id: j['id'] as String,
+      type: j['type'] as String,
+      name: j['name'] as String,
+      authorName: authorMap['name'] as String? ?? '',
+      authorUrl: authorMap['url'] as String?,
+      license: j['license'] as String? ?? '',
+      tags: [for (final t in (j['tags'] as List? ?? const [])) '$t'],
+      featured: j['featured'] == true,
+      category: j['category'] as String?,
+      icon: j['icon'] as String?,
+      description: j['description'] as String?,
+      document: document is Map ? document.cast<String, Object?>() : null,
+      skillMd: j['skill_md'] as String?,
+    );
+  }
+}
+
+class GalleryPage {
+  const GalleryPage({required this.available, required this.items});
+  final bool available;
+  final List<GalleryItem> items;
 }
 
 /// An interactive UI a bot showed (D-086): one A2UI surface and the messages that build it.
@@ -30,8 +111,13 @@ List<UiPart> uiPartsOf(Object? content) => content is! List
     ? const []
     : [
         for (final p in content.whereType<Map>())
-          if (p['type'] == 'ui' && p['surface_id'] is String && p['messages'] is List)
-            UiPart(surfaceId: p['surface_id'] as String, messages: List<Object?>.from(p['messages'] as List)),
+          if (p['type'] == 'ui' &&
+              p['surface_id'] is String &&
+              p['messages'] is List)
+            UiPart(
+              surfaceId: p['surface_id'] as String,
+              messages: List<Object?>.from(p['messages'] as List),
+            ),
       ];
 
 class ChatMessageView {
@@ -72,7 +158,10 @@ class ChatMessageView {
     text: j['text'] as String? ?? '',
     createdAt: DateTime.parse(j['created_at'] as String),
     runId: j['run_id'] as String?,
-    attachments: [for (final a in (j['attachments'] as List? ?? const [])) AttachmentRef.fromJson(a as Map<String, dynamic>)],
+    attachments: [
+      for (final a in (j['attachments'] as List? ?? const []))
+        AttachmentRef.fromJson(a as Map<String, dynamic>),
+    ],
     siblingIndex: (j['sibling_index'] as num?)?.toInt() ?? 1,
     siblingCount: (j['sibling_count'] as num?)?.toInt() ?? 1,
     botId: j['bot_id'] as String?,
@@ -101,7 +190,17 @@ class ChatMessageView {
 }
 
 class SkillView {
-  const SkillView({required this.id, required this.name, required this.description, required this.bodyMd, required this.enabled, this.botId, this.source = 'manual', this.sourceRef = const {}});
+  const SkillView({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.bodyMd,
+    required this.enabled,
+    this.botId,
+    this.source = 'manual',
+    this.sourceRef = const {},
+    this.category,
+  });
   final String id;
   final String name;
   final String description;
@@ -112,6 +211,9 @@ class SkillView {
   /// manual, catalog, github or bot (D-104).
   final String source;
   final Map<String, Object?> sourceRef;
+
+  /// The catalog category it came from (work, writing, …), for its icon.
+  final String? category;
 }
 
 class NotificationView {
@@ -151,7 +253,8 @@ class NotificationView {
 
   /// Requests the person answers (approvals, takeovers): counted from the pending list, not as
   /// unread notifications, and marked read on the server once answered anywhere.
-  bool get isRequest => kind == 'approval_request' || kind == 'approval' || kind == 'takeover';
+  bool get isRequest =>
+      kind == 'approval_request' || kind == 'approval' || kind == 'takeover';
 
   /// Attention rules (D-153): why a proactive message was sent, and whether it waited for the brief.
   final String? whyRule;
@@ -168,7 +271,13 @@ class NotificationView {
 }
 
 class RunSummary {
-  const RunSummary({required this.id, required this.status, required this.trigger, required this.createdAt, required this.costUsd});
+  const RunSummary({
+    required this.id,
+    required this.status,
+    required this.trigger,
+    required this.createdAt,
+    required this.costUsd,
+  });
   final String id;
   final String status;
   final String trigger;
@@ -178,15 +287,50 @@ class RunSummary {
 
 /// An authenticator app registered for two-step sign-in (D-093).
 class TwoStepFactor {
-  const TwoStepFactor({required this.id, required this.name, required this.createdAt});
+  const TwoStepFactor({
+    required this.id,
+    required this.name,
+    required this.createdAt,
+  });
   final String id;
   final String name;
   final DateTime createdAt;
 }
 
 /// A new authenticator being set up: scan the QR code (SVG) or type the key, then verify a code.
+/// Sign-in methods the server turns on beyond email, Google and Apple.
+class AuthMethods {
+  const AuthMethods({this.sso = false, this.passkeys = false});
+  final bool sso;
+  final bool passkeys;
+}
+
+/// Changing the password needs a code from the account's email first (the session is old).
+class ReauthenticationNeeded implements Exception {
+  const ReauthenticationNeeded();
+}
+
+/// One of the person's passkeys.
+class PasskeyInfo {
+  const PasskeyInfo({
+    required this.id,
+    required this.name,
+    required this.createdAt,
+    this.lastUsedAt,
+  });
+  final String id;
+  final String name;
+  final DateTime createdAt;
+  final DateTime? lastUsedAt;
+}
+
 class TwoStepEnrollment {
-  const TwoStepEnrollment({required this.factorId, required this.secret, required this.uri, required this.qrSvg});
+  const TwoStepEnrollment({
+    required this.factorId,
+    required this.secret,
+    required this.uri,
+    required this.qrSvg,
+  });
   final String factorId;
   final String secret;
   final String uri;
@@ -197,17 +341,39 @@ class TwoStepEnrollment {
 /// commands go to the Casama API. Widget tests use a fake.
 /// Quiet hours (D-109): "HH:MM" local times; the window may cross midnight.
 class QuietHoursView {
-  const QuietHoursView({required this.enabled, required this.start, required this.end});
+  const QuietHoursView({
+    required this.enabled,
+    required this.start,
+    required this.end,
+  });
   final bool enabled;
   final String start;
   final String end;
-  Map<String, Object?> toJson() => {'enabled': enabled, 'start': start, 'end': end};
-  static QuietHoursView? fromJson(Object? j) => j is Map ? QuietHoursView(enabled: j['enabled'] == true, start: '${j['start'] ?? '22:00'}', end: '${j['end'] ?? '07:00'}') : null;
+  Map<String, Object?> toJson() => {
+    'enabled': enabled,
+    'start': start,
+    'end': end,
+  };
+  static QuietHoursView? fromJson(Object? j) => j is Map
+      ? QuietHoursView(
+          enabled: j['enabled'] == true,
+          start: '${j['start'] ?? '22:00'}',
+          end: '${j['end'] ?? '07:00'}',
+        )
+      : null;
 }
 
 /// About you (D-169): what bots call the person and what the person shared about themselves.
 class AboutYouView {
-  const AboutYouView({this.displayName, this.preferredName, this.pronouns, this.about = '', this.replyStyle = '', this.learn = true, this.nameAsked = true});
+  const AboutYouView({
+    this.displayName,
+    this.preferredName,
+    this.pronouns,
+    this.about = '',
+    this.replyStyle = '',
+    this.learn = true,
+    this.nameAsked = true,
+  });
   final String? displayName;
   final String? preferredName;
   final String? pronouns;
@@ -228,7 +394,14 @@ class AboutYouView {
     return d.isEmpty ? '' : d.split(RegExp(r'\s+')).first;
   }
 
-  AboutYouView copyWith({String? preferredName, String? pronouns, String? about, String? replyStyle, bool? learn, bool? nameAsked}) => AboutYouView(
+  AboutYouView copyWith({
+    String? preferredName,
+    String? pronouns,
+    String? about,
+    String? replyStyle,
+    bool? learn,
+    bool? nameAsked,
+  }) => AboutYouView(
     displayName: displayName,
     preferredName: preferredName ?? this.preferredName,
     pronouns: pronouns ?? this.pronouns,
@@ -241,7 +414,13 @@ class AboutYouView {
 
 /// A fact a bot learned about the person (About you, D-169); private to them.
 class UserFactView {
-  const UserFactView({required this.id, required this.kind, required this.content, this.pinned = false, required this.updatedAt});
+  const UserFactView({
+    required this.id,
+    required this.kind,
+    required this.content,
+    this.pinned = false,
+    required this.updatedAt,
+  });
   final String id;
 
   /// fact or preference.
@@ -268,7 +447,14 @@ class BotFolder {
 
 /// A bot's settings before one change (D-100): what changed, who changed it, and the old values.
 class BotRevision {
-  const BotRevision({required this.id, required this.snapshot, required this.changedFields, this.changedByUser, this.changedByBot, required this.createdAt});
+  const BotRevision({
+    required this.id,
+    required this.snapshot,
+    required this.changedFields,
+    this.changedByUser,
+    this.changedByBot,
+    required this.createdAt,
+  });
   final String id;
   final Map<String, Object?> snapshot;
   final List<String> changedFields;
@@ -285,6 +471,7 @@ abstract class Backend {
   String? get userId;
   Future<void> signIn(String email, String password);
   Future<bool> signUp(String email, String password);
+
   /// Emails a sign-in link that also carries a 6-digit code, for another device or the desktop app.
   Future<void> sendMagicLink(String email);
 
@@ -292,6 +479,46 @@ abstract class Backend {
   Future<void> verifyEmailCode(String email, String code);
   Future<void> signInWithProvider(String provider);
   Future<void> signOut();
+
+  /// What the server offers on the sign-in screen beyond email, Google and Apple.
+  Future<AuthMethods> authMethods();
+
+  /// Signs in with a passkey. False when the person closed the system sheet.
+  Future<bool> signInWithPasskey();
+
+  // Passkeys on this account
+  Future<List<PasskeyInfo>> passkeys();
+
+  /// Makes a passkey on this device. False when the person closed the system sheet.
+  Future<bool> addPasskey();
+  Future<void> renamePasskey(String id, String name);
+  Future<void> removePasskey(String id);
+
+  // Password and email
+  /// Emails a reset link that also carries a 6-digit code.
+  Future<void> sendPasswordReset(String email);
+
+  /// Signs in with the code from a reset email; the app then asks for a new password.
+  Future<void> verifyPasswordResetCode(String email, String code);
+
+  /// True after a reset link or code until a new password is chosen (or skipped).
+  bool get newPasswordNeeded;
+  Stream<bool> get newPasswordNeededChanges;
+  void skipNewPassword();
+
+  /// Sets or changes the password. Throws [ReauthenticationNeeded] when the session is too old
+  /// to change it without a code: [sendReauthenticationCode] emails one, then call again with it.
+  Future<void> setPassword(String password, {String? code});
+  Future<void> sendReauthenticationCode();
+
+  /// The address waiting for confirmation after [changeEmail], if any.
+  String? get pendingEmail;
+
+  /// Starts an email change; both addresses get a confirmation link.
+  Future<void> changeEmail(String email);
+
+  /// Signs out this device and every other one.
+  Future<void> signOutEverywhere();
 
   /// The server's default model for a provider (GPT-6 Luna on OpenRouter and OpenAI), if any.
   String? defaultModelFor(String provider);
@@ -301,9 +528,19 @@ abstract class Backend {
   Future<Organization> createOrganization(String name);
   Future<void> acceptInvite(String token);
   // Spaces (D-099)
-  Future<Organization> updateOrg(String orgId, {String? name, String? icon, String? color});
+  Future<Organization> updateOrg(
+    String orgId, {
+    String? name,
+    String? icon,
+    String? color,
+  });
   Future<List<InviteLink>> inviteLinks(String orgId);
-  Future<CreatedInviteLink> createInviteLink(String orgId, {String role = 'member', int? expiresInDays, int? maxUses});
+  Future<CreatedInviteLink> createInviteLink(
+    String orgId, {
+    String role = 'member',
+    int? expiresInDays,
+    int? maxUses,
+  });
   Future<void> revokeInviteLink(String orgId, String linkId);
   Future<OrganizationWithRole> acceptInviteLink(String token);
   Future<List<WorkspaceBadge>> workspaceBadges();
@@ -311,31 +548,65 @@ abstract class Backend {
   // Joining (D-165)
   /// The workspace's standing invite link (admins); made on first use.
   Future<CreatedInviteLink> defaultInvite(String orgId);
-  Future<CreatedInviteLink> updateDefaultInvite(String orgId, {bool? requiresApproval, bool reset = false});
+  Future<CreatedInviteLink> updateDefaultInvite(
+    String orgId, {
+    bool? requiresApproval,
+    bool reset = false,
+  });
+
   /// A short code (XXXX-XXXX) valid for 48 hours.
-  Future<CreatedInviteLink> createInviteCode(String orgId, {String role = 'member'});
+  Future<CreatedInviteLink> createInviteCode(
+    String orgId, {
+    String role = 'member',
+  });
+
   /// What a link, code or email invite opens; works signed out.
   Future<InvitePreview> previewInvite(String invite);
   Future<JoinResult> joinWithInvite(String invite);
   Future<List<JoinRequest>> joinRequests(String orgId);
-  Future<JoinRequest> decideJoinRequest(String orgId, String requestId, bool approve);
+  Future<JoinRequest> decideJoinRequest(
+    String orgId,
+    String requestId,
+    bool approve,
+  );
   Future<List<PendingInvite>> pendingInvites(String orgId);
-  Future<List<Invite>> inviteMany(String orgId, List<String> emails, {bool admin = false});
+  Future<List<Invite>> inviteMany(
+    String orgId,
+    List<String> emails, {
+    bool admin = false,
+  });
   Future<Invite> resendInvite(String orgId, String inviteId);
   Future<void> revokeInvite(String orgId, String inviteId);
   Future<JoinDomains> joinDomains(String orgId);
-  Future<JoinDomains> setJoinDomain(String orgId, bool enabled, {String? domain});
+  Future<JoinDomains> setJoinDomain(
+    String orgId,
+    bool enabled, {
+    String? domain,
+  });
   Future<List<JoinableWorkspace>> joinableWorkspaces();
   Future<OrganizationWithRole> joinByDomain(String orgId);
 
   // Model keys
   Future<List<Credential>> credentials(String orgId);
-  Future<Credential> addCredential(String orgId, ProviderId provider, String label, {String? apiKey, String? baseUrl});
-  Future<CredentialTestResult> testCredential(String credentialId, {String? model});
+  Future<Credential> addCredential(
+    String orgId,
+    ProviderId provider,
+    String label, {
+    String? apiKey,
+    String? baseUrl,
+  });
+  Future<CredentialTestResult> testCredential(
+    String credentialId, {
+    String? model,
+  });
 
   /// Models the key can use, recommended first (live from the provider, or Casama's short list).
   Future<ModelOptionList> models(String credentialId);
-  Future<Credential> updateCredential(String credentialId, {String? label, bool? fallbackOnLimit});
+  Future<Credential> updateCredential(
+    String credentialId, {
+    String? label,
+    bool? fallbackOnLimit,
+  });
 
   /// Deletes a key and its Vault secret; a ChatGPT sign-in is revoked first.
   Future<void> deleteCredential(String credentialId);
@@ -355,12 +626,31 @@ abstract class Backend {
 
   /// Group chats (D-118).
   Future<List<Conversation>> groupChats(String orgId);
-  Future<Conversation> createGroupChat(String leadBotId, List<String> botIds, {String? title});
-  Future<Bot> createBot(String orgId, {required String name, required String credentialId, required String model, String persona, String? templateId, String? avatarUrl});
+  Future<Conversation> createGroupChat(
+    String leadBotId,
+    List<String> botIds, {
+    String? title,
+  });
+  Future<Bot> createBot(
+    String orgId, {
+    required String name,
+    required String credentialId,
+    required String model,
+    String persona,
+    String? templateId,
+    String? avatarUrl,
+  });
   Future<List<Template>> templates();
 
   /// [avatarUrl]: `mascot:<name>` for a cloud bot, '' to go back to initials, null to leave it.
-  Future<void> updateBot(String botId, {String? name, String? persona, String? autonomy, Map<String, Object?>? modelPolicy, String? avatarUrl});
+  Future<void> updateBot(
+    String botId, {
+    String? name,
+    String? persona,
+    String? autonomy,
+    Map<String, Object?>? modelPolicy,
+    String? avatarUrl,
+  });
   Future<UsageReport> usage(String orgId, {String period});
 
   /// Workspace search (D-103), including files on awake computers.
@@ -381,7 +671,14 @@ abstract class Backend {
   Future<BotTemplateFile> exportBot(String botId, {bool memories = false});
   Future<BotShareLink> createBotShare(String botId, {bool memories = false});
   Future<BotTemplateFile> getBotShare(String token);
-  Future<ImportBotResponse> importBot(String orgId, BotTemplateFile template, {required String credentialId, required String model, bool memories = true, bool routines = true});
+  Future<ImportBotResponse> importBot(
+    String orgId,
+    BotTemplateFile template, {
+    required String credentialId,
+    required String model,
+    bool memories = true,
+    bool routines = true,
+  });
   // Quiet hours (D-109)
   Future<QuietHoursView> quietHours();
   Future<void> setQuietHours(QuietHoursView hours);
@@ -426,11 +723,21 @@ abstract class Backend {
   Future<String?> activeRun(String conversationId);
 
   /// [skills]: skills picked with / in the composer (D-104).
-  Future<SendMessageResponse> send(String conversationId, String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const []});
+  Future<SendMessageResponse> send(
+    String conversationId,
+    String text, {
+    List<AttachmentRef> attachments = const [],
+    Map<String, Object?>? uiAction,
+    List<String> skills = const [],
+  });
   Future<void> cancelRun(String runId);
 
   /// Edits a sent message: forks there and reruns (D-108).
-  Future<SendMessageResponse> editMessage(String conversationId, String messageId, String text);
+  Future<SendMessageResponse> editMessage(
+    String conversationId,
+    String messageId,
+    String text,
+  );
 
   /// Shows the branch containing [messageId].
   Future<void> switchBranch(String conversationId, String messageId);
@@ -443,26 +750,63 @@ abstract class Backend {
 
   // Memory and skills
   Future<List<Memory>> memories(String botId);
-  Future<void> updateMemory(String botId, String id, {String? content, bool? pinned});
+  Future<void> updateMemory(
+    String botId,
+    String id, {
+    String? content,
+    bool? pinned,
+  });
   Future<void> deleteMemory(String botId, String id);
   // Memory backends (D-137)
   Future<MemoryBackend> memoryBackend(String orgId);
-  Future<MemoryBackend> setMemoryBackend(String orgId, SetMemoryBackendRequest request);
+  Future<MemoryBackend> setMemoryBackend(
+    String orgId,
+    SetMemoryBackendRequest request,
+  );
   Future<MemoryBackend> removeMemoryBackend(String orgId);
   Future<List<SkillView>> skills(String orgId);
-  Future<void> saveSkill(String orgId, {String? id, String? botId, required String name, required String description, required String bodyMd, bool enabled = true});
+  Future<void> saveSkill(
+    String orgId, {
+    String? id,
+    String? botId,
+    required String name,
+    required String description,
+    required String bodyMd,
+    bool enabled = true,
+  });
   Future<void> deleteSkill(String id);
   // Skills library (D-104)
   Future<SkillCatalog> skillCatalog();
-  Future<void> installCatalogSkill(String orgId, String catalogId, {String? botId});
+  Future<void> installCatalogSkill(
+    String orgId,
+    String catalogId, {
+    String? botId,
+  });
+  // Gallery (D-184)
+  Future<GalleryPage> gallery({String? type, String? query});
+  Future<GalleryItem> galleryItem(String type, String id);
+  Future<void> installGallerySkill(
+    String orgId,
+    String galleryId, {
+    String? botId,
+  });
   Future<GitHubSkillPreview> previewGitHubSkill(String orgId, String url);
-  Future<void> installGitHubSkill(String orgId, String url, String commit, {String? botId});
+  Future<void> installGitHubSkill(
+    String orgId,
+    String url,
+    String commit, {
+    String? botId,
+  });
   Future<SkillUpdateCheck> checkSkillUpdate(String skillId);
   Future<void> applySkillUpdate(String skillId, String commit);
 
   // Approvals and notifications
   Future<List<Approval>> approvals(String orgId, {bool pendingOnly = true});
-  Future<Approval> decideApproval(String approvalId, {required bool approve, bool alwaysAllow = false});
+  Future<Approval> decideApproval(
+    String approvalId, {
+    required bool approve,
+    bool alwaysAllow = false,
+  });
   Future<List<NotificationView>> notifications();
   Future<void> markNotificationsRead();
   Future<void> markNotificationRead(String id);
@@ -490,33 +834,62 @@ abstract class Backend {
 
   // Integrations and secrets
   Future<List<Integration>> integrations(String orgId);
-  Future<Integration> createIntegration(String orgId, {required String kind, required String name, required Map<String, Object?> config, String? secret});
+  Future<Integration> createIntegration(
+    String orgId, {
+    required String kind,
+    required String name,
+    required Map<String, Object?> config,
+    String? secret,
+  });
   Future<IntegrationTestResult> testIntegration(String integrationId);
   Future<Set<String>> botIntegrationIds(String botId);
-  Future<void> setBotIntegration(String botId, String integrationId, bool enabled);
+  Future<void> setBotIntegration(
+    String botId,
+    String integrationId,
+    bool enabled,
+  );
 
   // Built-in apps (D-089)
   Future<AppCatalog> appCatalog();
 
   /// Connects an app: done at once with an API key, or a sign-in to open for OAuth.
-  Future<ConnectAppResponse> connectApp(String orgId, {required String appId, required String method, String? apiKey, String? integrationId});
+  Future<ConnectAppResponse> connectApp(
+    String orgId, {
+    required String appId,
+    required String method,
+    String? apiKey,
+    String? integrationId,
+  });
   Future<ConnectFlowStatus> connectStatus(String flowId);
   Future<void> deleteIntegration(String integrationId);
-  Future<Integration> setToolRisks(String integrationId, Map<String, String> risks);
+  Future<Integration> setToolRisks(
+    String integrationId,
+    Map<String, String> risks,
+  );
   Future<List<ProviderApp>> providerApps(String integrationId, {String? query});
   Future<String> connectProviderApp(String integrationId, String app);
   Future<List<ProviderAccount>> providerAccounts(String integrationId);
   Future<List<Secret>> secrets(String orgId);
 
   /// [totp]: a sign-in code seed (otpauth:// link or base32 key) bots use as {{totp:NAME}} (D-102).
-  Future<void> createSecret(String orgId, {required String name, required String value, required List<String> hosts, bool totp = false});
+  Future<void> createSecret(
+    String orgId, {
+    required String name,
+    required String value,
+    required List<String> hosts,
+    bool totp = false,
+  });
   Future<void> deleteSecret(String secretId);
 
   // Task board
   Future<List<Task>> tasks(String orgId, {String? projectId});
   // Hosted MCP (D-117)
   Future<McpAuthRequestInfo> mcpAuthRequest(String id);
-  Future<String> decideMcpAuthRequest(String id, {required String orgId, required bool approve});
+  Future<String> decideMcpAuthRequest(
+    String id, {
+    required String orgId,
+    required bool approve,
+  });
   Future<List<McpKey>> mcpKeys(String orgId);
   Future<CreatedMcpKey> createMcpKey(String orgId, String name);
   Future<void> revokeMcpKey(String orgId, String keyId);
@@ -526,7 +899,10 @@ abstract class Backend {
   Future<bool> allowBotToBot(String orgId);
   // Secret store (D-145)
   Future<SecretStoreSettings> secretStore(String orgId);
-  Future<SecretStoreSettings> setSecretStore(String orgId, SetSecretStoreRequest request);
+  Future<SecretStoreSettings> setSecretStore(
+    String orgId,
+    SetSecretStoreRequest request,
+  );
   Future<SecretStoreSettings> removeSecretStore(String orgId);
   // Linked agents (D-143)
   Future<List<BotLink>> botLinks(String botId);
@@ -536,12 +912,18 @@ abstract class Backend {
   Future<List<LinkExchange>> linkExchanges(String id);
   // Payments (D-142)
   Future<PaymentSettings> paymentSettings(String orgId);
-  Future<PaymentSettings> setPaymentSettings(String orgId, SetPaymentSettingsRequest request);
+  Future<PaymentSettings> setPaymentSettings(
+    String orgId,
+    SetPaymentSettingsRequest request,
+  );
   Future<PaymentSettings> removePaymentSettings(String orgId);
   Future<List<PaymentRequest>> paymentRequests(String orgId);
   // Calls for you (D-141)
   Future<TelephonySettings> telephony(String orgId);
-  Future<TelephonySettings> setTelephony(String orgId, SetTelephonyRequest request);
+  Future<TelephonySettings> setTelephony(
+    String orgId,
+    SetTelephonyRequest request,
+  );
   Future<TelephonySettings> removeTelephony(String orgId);
   Future<OutboundCall> outboundCall(String id);
   Future<OutboundCall> endOutboundCall(String id);
@@ -564,7 +946,9 @@ abstract class Backend {
   Future<WelcomeChat> startWelcome({String? firstName});
   // Password managers (D-128)
   Future<List<PasswordManager>> passwordManagers(String orgId);
-  Future<PasswordManager> connectPasswordManager(CreatePasswordManagerRequest request);
+  Future<PasswordManager> connectPasswordManager(
+    CreatePasswordManagerRequest request,
+  );
   Future<List<PasswordManagerVault>> passwordManagerVaults(String id);
   Future<void> setPasswordManagerVaults(String id, List<String> vaults);
   Future<void> deletePasswordManager(String id);
@@ -572,7 +956,11 @@ abstract class Backend {
   Future<List<Replay>> replays(String botId);
   Future<RunReplayResponse> runReplay(String id, Map<String, String> params);
   Future<void> deleteReplay(String id);
-  Future<Replay> replayFromTeach(String teachId, String name, {String? description});
+  Future<Replay> replayFromTeach(
+    String teachId,
+    String name, {
+    String? description,
+  });
   // Self-improving skills (D-126)
   Future<List<SkillProposal>> skillProposals(String orgId, {String? botId});
   Future<void> acceptSkillProposal(String id, {String? bodyMd});
@@ -580,34 +968,68 @@ abstract class Backend {
   Future<SkillStats> skillStats(String skillId);
   // Knowledge sources (D-125)
   Future<List<KnowledgeSource>> knowledgeSources(String orgId, {String? botId});
-  Future<KnowledgeSource> addKnowledgeSource(CreateKnowledgeSourceRequest request);
+  Future<KnowledgeSource> addKnowledgeSource(
+    CreateKnowledgeSourceRequest request,
+  );
   Future<void> resyncKnowledgeSource(String id);
   Future<void> deleteKnowledgeSource(String id);
   // Chat apps (D-134)
   Future<List<Channel>> channels(String botId);
   Future<Channel> createChannel(CreateChannelRequest request);
-  Future<Channel> updateChannel(String id, {String? name, List<String>? allowedSenders, bool? enabled});
+  Future<Channel> updateChannel(
+    String id, {
+    String? name,
+    List<String>? allowedSenders,
+    bool? enabled,
+  });
   Future<void> deleteChannel(String id);
   Future<List<ChannelEvent>> channelEvents(String id);
   // Routines and skills as files (D-124)
   Future<Uint8List> exportWorkspaceFiles(String orgId);
-  Future<WorkspaceFilesResult> importWorkspaceFiles(String orgId, Uint8List zip, {bool dryRun = false});
+  Future<WorkspaceFilesResult> importWorkspaceFiles(
+    String orgId,
+    Uint8List zip, {
+    bool dryRun = false,
+  });
   Future<GitSyncStatus> gitSync(String orgId);
-  Future<GitSyncStatus> setGitSync(String orgId, {required String repo, String? branch, String? path, bool enabled = true});
+  Future<GitSyncStatus> setGitSync(
+    String orgId, {
+    required String repo,
+    String? branch,
+    String? path,
+    bool enabled = true,
+  });
   Future<GitSyncStatus> runGitSync(String orgId);
   Future<GitSyncStatus> deleteGitSync(String orgId);
   // Import an agent (D-122)
-  Future<AgentImportPlan> startAgentImport(String orgId, {Uint8List? zip, Map<String, Uint8List>? files});
+  Future<AgentImportPlan> startAgentImport(
+    String orgId, {
+    Uint8List? zip,
+    Map<String, Uint8List>? files,
+  });
   Future<int> writeAgentImportFiles(String importId, String botId);
   Future<String> memoryImportPrompt();
   Future<List<ImportedMemoryItem>> parseMemoryImport(String text);
-  Future<int> saveImportedMemories(String botId, List<ImportedMemoryItem> memories);
+  Future<int> saveImportedMemories(
+    String botId,
+    List<ImportedMemoryItem> memories,
+  );
   // Plugins (D-121)
   Future<List<Plugin>> plugins(String botId);
   Future<PluginPreview> previewPlugin(String orgId, String url);
-  Future<Plugin> installPlugin(String orgId, String botId, String url, String commit, Map<String, String> secrets);
+  Future<Plugin> installPlugin(
+    String orgId,
+    String botId,
+    String url,
+    String commit,
+    Map<String, String> secrets,
+  );
   Future<PluginUpdatePreview> pluginUpdate(String id);
-  Future<Plugin> updatePlugin(String id, String commit, {Map<String, String> secrets = const {}});
+  Future<Plugin> updatePlugin(
+    String id,
+    String commit, {
+    Map<String, String> secrets = const {},
+  });
   Future<void> uninstallPlugin(String id);
   // Teach a task by showing it (D-120)
   Future<TeachSession> startTeach(String computerId, String botId);
@@ -615,14 +1037,24 @@ abstract class Backend {
   Future<TeachStep> addTeachStep(String id, AddTeachStepRequest step);
   Future<TeachStep> markTeachSecret(String id, int seq, String name);
   Future<TeachSession> stopTeach(String id);
-  Future<SaveTeachResponse> saveTeach(String id, {required String name, required String description, required String body, bool tryNow = false});
+  Future<SaveTeachResponse> saveTeach(
+    String id, {
+    required String name,
+    required String description,
+    required String body,
+    bool tryNow = false,
+  });
   Future<void> cancelTeach(String id);
   // Pages (D-119): opened in the system browser, never embedded.
   Future<List<BotPage>> pages(String orgId, {String? botId});
   Future<String> pageViewLink(String id, {bool pdf = false});
 
   /// Returns the new public link when made public.
-  Future<String?> setPageVisibility(String id, BotPageVisibilityEnum visibility, {int? expiresInDays});
+  Future<String?> setPageVisibility(
+    String id,
+    BotPageVisibilityEnum visibility, {
+    int? expiresInDays,
+  });
   Future<void> deletePage(String id);
   // Watchers (D-116)
   Future<List<Watcher>> watchers(String botId);
@@ -630,7 +1062,14 @@ abstract class Backend {
   Future<void> deleteWatcher(String id);
   // Action rules (D-115)
   Future<List<ActionRule>> actionRules(String orgId, {String? botId});
-  Future<void> createActionRule(String orgId, {String? botId, required String category, required String rule, List<String> domains = const [], double? maxAmount});
+  Future<void> createActionRule(
+    String orgId, {
+    String? botId,
+    required String category,
+    required String rule,
+    List<String> domains = const [],
+    double? maxAmount,
+  });
   Future<void> deleteActionRule(String id);
   // Check-ins (D-114)
   Future<BotCheckins> botCheckins(String botId);
@@ -640,16 +1079,44 @@ abstract class Backend {
   Future<void> dismissSuggestion(String id, {bool dontSuggestAgain = false});
   // Projects (D-113)
   Future<List<Project>> projects(String orgId);
-  Future<Project> createProject(String orgId, {required String title, required String goal, String doneCriteria, required String leadBotId, double? budgetUsd});
+  Future<Project> createProject(
+    String orgId, {
+    required String title,
+    required String goal,
+    String doneCriteria,
+    required String leadBotId,
+    double? budgetUsd,
+  });
   Future<ProjectDetail> project(String projectId);
-  Future<void> updateProject(String projectId, {String? status, double? budgetUsd});
+  Future<void> updateProject(
+    String projectId, {
+    String? status,
+    double? budgetUsd,
+  });
   Future<void> approveProjectPlan(String projectId);
   Future<void> signOffMilestone(String projectId, String milestoneId);
   // Ticket board (D-098)
-  Future<Task> createTask(String orgId, {required String title, String? details, String? priority, String? assigneeBotId, bool? reviewRequired});
+  Future<Task> createTask(
+    String orgId, {
+    required String title,
+    String? details,
+    String? priority,
+    String? assigneeBotId,
+    bool? reviewRequired,
+  });
 
   /// Changes a ticket; assigning a new bot starts its work.
-  Future<Task> updateTask(String taskId, {String? title, String? details, String? status, String? priority, String? assigneeBotId, String? assigneeUserId, bool? reviewRequired, double? position});
+  Future<Task> updateTask(
+    String taskId, {
+    String? title,
+    String? details,
+    String? status,
+    String? priority,
+    String? assigneeBotId,
+    String? assigneeUserId,
+    bool? reviewRequired,
+    double? position,
+  });
   Future<void> deleteTask(String taskId);
   Future<List<TaskComment>> taskComments(String taskId);
 
@@ -668,6 +1135,16 @@ abstract class Backend {
   Future<AdminOrg> setOrgLimits(String orgId, Map<String, num> limits);
   Future<List<AdminService>> adminServices();
   Future<UpdateNotice> adminUpdates();
+
+  /// How apps without their own sign-in connect (D-173): the server's Composio account or people's own.
+  Future<ConnectionSettings> adminConnectionSettings();
+  Future<ConnectionSettings> setAdminConnectionSettings({
+    required bool serverComposio,
+  });
+
+  /// The models Casama Cloud runs. The instance owner can change them without a restart (D-188).
+  Future<CloudModels> adminCloudModels();
+  Future<CloudModels> setAdminCloudModels(CloudModels models);
 
   // Privacy and SSO (Phase 8)
   Future<Uint8List> exportMyData();
@@ -703,9 +1180,19 @@ abstract class Backend {
   // Billing (Phase 7). `BillingSummary.enabled` is false on self-hosted servers (no paywall).
   Future<BillingSummary> billing(String orgId);
   Future<PlanCatalog> plans();
-  Future<String> checkoutUrl(String orgId, {String? planCode, String? packCode});
+  Future<String> checkoutUrl(
+    String orgId, {
+    String? planCode,
+    String? packCode,
+  });
   Future<String> billingPortalUrl(String orgId);
-  Future<BillingSummary> verifyPurchase(String orgId, {required String source, required String productId, String? transactionId, String? purchaseToken});
+  Future<BillingSummary> verifyPurchase(
+    String orgId, {
+    required String source,
+    required String productId,
+    String? transactionId,
+    String? purchaseToken,
+  });
   Future<BillingUsage> billingUsage(String orgId);
   Future<List<ConnectKey>> connectKeys(String orgId);
   Future<CreatedConnectKey> createConnectKey(String orgId, String instanceName);
@@ -715,17 +1202,34 @@ abstract class Backend {
   /// The API's base URL (the companion opens its WebSocket there).
   String get apiUrl;
   Future<List<LocalDevice>> localDevices(String orgId);
-  Future<CreatedLocalDevice> createLocalDevice(String orgId, String name, String platform);
-  Future<LocalDevice> updateLocalDevice(String id, {Set<String>? capabilities, List<String>? roots, List<String>? botIds, bool? enabled});
+  Future<CreatedLocalDevice> createLocalDevice(
+    String orgId,
+    String name,
+    String platform,
+  );
+  Future<LocalDevice> updateLocalDevice(
+    String id, {
+    Set<String>? capabilities,
+    List<String>? roots,
+    List<String>? botIds,
+    bool? enabled,
+  });
 
   /// Registers this computer's local MCP servers (no secrets) as local_mcp integrations (D-096).
-  Future<List<Integration>> setLocalMcpServers(String deviceId, List<LocalMcpServerInfo> servers);
+  Future<List<Integration>> setLocalMcpServers(
+    String deviceId,
+    List<LocalMcpServerInfo> servers,
+  );
   Future<void> deleteLocalDevice(String id);
 
   // Voice (Phase 6)
   Future<String> transcribe(String botId, Uint8List audio, String mime);
   Future<Uint8List> speech(String messageId);
-  Future<VoiceSession> voiceSession(String botId, {String? conversationId, String? callId});
+  Future<VoiceSession> voiceSession(
+    String botId, {
+    String? conversationId,
+    String? callId,
+  });
   // Phone-call voice (D-135)
   Future<List<PhoneCall>> ringingCalls();
   Future<PhoneCall> answerCall(String id);
@@ -733,8 +1237,21 @@ abstract class Backend {
 
   /// iOS PushKit token, so calls ring through CallKit.
   Future<void> registerVoipToken(String token);
-  Future<VoiceToolResult> voiceTool(String botId, String conversationId, String callId, String name, Map<String, Object?> arguments);
-  Future<void> saveVoiceTranscript(String conversationId, List<(String, String)> turns, int seconds, {String? provider, Map<String, int>? usage});
+  Future<VoiceToolResult> voiceTool(
+    String botId,
+    String conversationId,
+    String callId,
+    String name,
+    Map<String, Object?> arguments,
+  );
+  Future<void> saveVoiceTranscript(
+    String conversationId,
+    List<(String, String)> turns,
+    int seconds, {
+    String? provider,
+    Map<String, int>? usage,
+  });
+
   /// Changes some of a bot's voice settings; a null value clears that setting, others are kept.
   Future<void> updateBotVoice(String botId, Map<String, Object?> voice);
 
@@ -742,8 +1259,19 @@ abstract class Backend {
   Future<Map<String, Object?>> loadBotVoice(String botId);
 
   // Computers: management (Phase 5)
-  Future<Computer> createComputer(String orgId, {required String name, required bool private, String? ownerBotId, String profile});
-  Future<Computer> updateComputer(String computerId, {String? name, String? profile, int? maxDesktops});
+  Future<Computer> createComputer(
+    String orgId, {
+    required String name,
+    required bool private,
+    String? ownerBotId,
+    String profile,
+  });
+  Future<Computer> updateComputer(
+    String computerId, {
+    String? name,
+    String? profile,
+    int? maxDesktops,
+  });
   Future<void> deleteComputer(String computerId);
   Future<void> setBotComputer(String botId, String? computerId);
 
@@ -758,13 +1286,31 @@ abstract class Backend {
 
   // Device connections (D-149): data this person shares from their devices.
   Future<List<DeviceSource>> deviceSources();
-  Future<DeviceSource> saveDeviceSource(String key, {required String name, required String platform, required Map<String, DeviceKindSettings> kinds});
+  Future<DeviceSource> saveDeviceSource(
+    String key, {
+    required String name,
+    required String platform,
+    required Map<String, DeviceKindSettings> kinds,
+  });
   Future<void> deleteDeviceSource(String key);
-  Future<int> uploadDeviceReadings(String key, List<DeviceReadingInput> readings, {String? requestId});
+  Future<int> uploadDeviceReadings(
+    String key,
+    List<DeviceReadingInput> readings, {
+    String? requestId,
+  });
   Future<List<DeviceRequest>> deviceRequests(String key);
-  Future<void> answerDeviceRequest(String id, {required bool ok, Map<String, Object?>? result, String? error});
+  Future<void> answerDeviceRequest(
+    String id, {
+    required bool ok,
+    Map<String, Object?>? result,
+    String? error,
+  });
   Future<List<DeviceGrant>> deviceGrants({String? botId});
-  Future<List<DeviceGrant>> setDeviceGrant(String botId, DeviceKind kind, bool allowed);
+  Future<List<DeviceGrant>> setDeviceGrant(
+    String botId,
+    DeviceKind kind,
+    bool allowed,
+  );
 
   /// Fires when a run asks one of this person's devices for something (its request id).
   Stream<String> watchDeviceRequests();
@@ -775,7 +1321,12 @@ abstract class Backend {
   // Device triggers (D-151).
   Future<int> reportDeviceEvents(String key, List<DeviceEventInput> events);
   Future<List<DevicePlace>> devicePlaces();
-  Future<DevicePlace> saveDevicePlace({required String name, required double latitude, required double longitude, int? radiusM});
+  Future<DevicePlace> saveDevicePlace({
+    required String name,
+    required double latitude,
+    required double longitude,
+    int? radiusM,
+  });
   Future<void> deleteDevicePlace(String id);
   Future<List<TakeoverRequest>> takeovers(String orgId);
   Future<void> dismissTakeover(String takeoverId, {String? note});
@@ -791,5 +1342,9 @@ abstract class Backend {
   Future<List<Checkpoint>> checkpoints(String computerId);
   Future<void> restoreCheckpoint(String computerId, String checkpointId);
   Future<Uint8List?> screenshot(String computerId);
-  Future<(Uri, Map<String, String>)> terminal(String computerId, {int cols, int rows});
+  Future<(Uri, Map<String, String>)> terminal(
+    String computerId, {
+    int cols,
+    int rows,
+  });
 }

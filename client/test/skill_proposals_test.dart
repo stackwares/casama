@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:casama_app/features/inbox/for_you.dart';
+import 'package:casama_app/features/inbox/inbox_screen.dart';
 import 'package:casama_app/features/skills/skill_proposals.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 
@@ -27,16 +27,17 @@ void main() {
     expect(lineDiff('a\nb\nc', 'a\nB\nc'), [(' ', 'a'), ('-', 'b'), ('+', 'B'), (' ', 'c')]);
   });
 
-  testWidgets('For you shows skill ideas and edits as a diff; save and dismiss', (tester) async {
-    await setSize(tester, const Size(900, 1600));
+  testWidgets('the inbox shows skill ideas and edits as a diff; save and dismiss', (tester) async {
+    await setSize(tester, const Size(900, 2000));
     final backend = FakeBackend()
       ..proposals.addAll([
         proposal('p1', SkillProposalKindEnum.new_),
         proposal('p2', SkillProposalKindEnum.edit, previous: '1. Query sales for the month.\n2. Summarize.'),
       ]);
-    await tester.pumpWidget(harness(backend, const Scaffold(body: ForYouList())));
+    await tester.pumpWidget(harness(backend, const InboxScreen(initialFilter: InboxFilter.needsYou)));
     await tester.pumpAndSettle();
-    expect(find.text('Skill ideas'), findsOneWidget);
+    expect(find.byKey(const Key('proposal-p1')), findsOneWidget);
+    expect(find.byKey(const Key('proposal-p2')), findsOneWidget);
     expect(find.text('Uses: crm.query'), findsOneWidget);
     expect(find.text('- 1. Query sales for the month.'), findsOneWidget);
     expect(find.text('+ 1. Query sales for 7 days.'), findsOneWidget);

@@ -16,11 +16,14 @@ The first public release. Highlights:
 - Bots with instructions, a model policy with fallbacks, memory, skills, budgets and an autonomy
   level; personas and starter bots to start from; a welcome chat that sets up your first bot.
 - Any model through your own keys (OpenAI, Anthropic, Google, xAI, OpenRouter, OpenAI-compatible
-  endpoints including local models), or a ChatGPT plan.
+  endpoints including local models), or a ChatGPT plan. On Casama Cloud, a workspace with no key
+  of its own runs on Casama's OpenRouter key and pays for those calls from credits.
 - Chats with attachments, interactive cards, edit and resend, search, shortcuts and offline reading;
   group chats with several bots; pages.
 - Memory with optional external backends; knowledge sources (files, websites, GitHub, connections);
-  a skill catalog, GitHub import and self-improving skills.
+  a catalog of 38 ready-made skills in seven categories (including PDF, Word, Excel and
+  PowerPoint skills), GitHub import and self-improving skills. A Gallery in Settings for themes,
+  color schemes, wallpapers and skills from `gallery.casama.ai`, with the bundled looks as the fallback.
 - About you: one private profile every bot reads (what to call you, pronouns, how you like
   replies, about me, and facts bots learn in chat), shared into team workspaces only when you
   turn it on there.
@@ -28,10 +31,15 @@ The first public release. Highlights:
 ### Voice
 
 - Live voice calls run on Gemini Live when the workspace has a Google AI key (much cheaper per
-  minute), with OpenAI Realtime as the fallback; phone calls through Twilio use it too.
+  minute), with OpenAI Realtime as the fallback.
 - Cheaper calls: a small voice tool set with bigger jobs handed to the chat, a capped context,
   silence left out of turns, idle calls hung up after 2 minutes, and the real per-call cost
   recorded in usage. Each bot can add chosen connected-app tools to its calls.
+- A new call screen: the bot's mascot animated for the call (listening, and talking while it
+  speaks), with live captions.
+- Calls work without a key of your own on Casama Cloud (paid from credits) and on servers with a
+  server-wide `GOOGLE_AI_API_KEY`; otherwise the call screen shows where to get a free key and where
+  to add it.
 
 ### Computers
 
@@ -46,13 +54,15 @@ The first public release. Highlights:
 - Routines on schedules, webhooks, calendar events, messages and device events; watchers,
   check-ins, projects and a ticket board.
 - Built-in app connections, Composio and Pipedream, MCP servers, plugins (Agent Plugins 1.0),
-  password managers, paid data services, chat apps, voice and phone calls, device connections and
+  password managers, paid data services, chat apps, voice calls, device connections and
   health summaries, payments with approval, linked agents and agent-to-agent (A2A).
 
 ### Control, teams and privacy
 
 - Approvals, action rules, a loop guard, quiet hours and attention rules; usage and budgets.
 - Workspaces with roles, invites and spaces; two-step sign-in; SAML single sign-on (enterprise).
+- Sign in with Apple, Google, a passkey, an email link or code, or a password; new accounts confirm
+  their email.
 - Row-level security on every table, encryption at rest, data export, account deletion, retention
   settings, and telemetry off by default.
 

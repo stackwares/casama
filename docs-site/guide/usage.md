@@ -122,7 +122,8 @@ Owners and admins can change plans and buy credits. Members see the plan and usa
 
 ### What credits pay for
 
-Credits pay for what Casama Cloud provides: cloud computer time, live view time, and model calls
+Credits pay for what Casama Cloud provides: cloud computer time, live view time, live voice calls
+(when the workspace has no Gemini or OpenAI key of its own, at Google's price), and model calls
 through [Cloud Connect](/guide/cloud-connect). Usage is deducted from the balance every minute.
 Model calls on your own model keys are never charged; you pay your provider directly.
 

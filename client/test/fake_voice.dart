@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:casama_app/core/call_audio.dart';
 import 'package:casama_app/core/voice.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 
@@ -52,10 +53,17 @@ class FakeCall implements VoiceCall {
   Stream<CallToolRequest> get toolCalls => _tools.stream;
   @override
   void sendToolResult(String callId, String output) => results[callId] = output;
+  final notes = <String>[];
+  @override
+  void tellModel(String note) => notes.add(note);
   @override
   void setMuted(bool m) => muted = m;
   @override
   Map<String, int>? usage;
+  @override
+  CallLevels? levels;
+  @override
+  CallAudioRoutes? routes;
   @override
   Future<void> hangUp() async {
     hungUp = true;

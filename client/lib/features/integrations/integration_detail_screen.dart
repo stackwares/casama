@@ -8,6 +8,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
@@ -99,22 +100,28 @@ class _IntegrationDetailScreenState extends ConsumerState<IntegrationDetailScree
           ],
           SectionHeader(title: l10n.botsWithAccess),
           _BotAccess(integration: integration, onChanged: (b, v) => _setBot(integration, b, v)),
-          if (integration.tools.isNotEmpty) ...[
-            SectionHeader(title: l10n.toolsTitle, count: '${integration.tools.length}'),
-            FormNote(l10n.toolsHelp),
-            const SizedBox(height: AppSpace.sm),
-            GroupedCard(
+          // How freely each tool may run: folded, the defaults suit most people (D-182).
+          if (integration.tools.isNotEmpty)
+            AdvancedSection(
+              id: 'integration.tools',
+              title: l10n.toolPermissions,
+              summary: l10n.toolCount(integration.tools.length),
               children: [
-                for (final t in integration.tools)
-                  _ToolRow(
-                    key: Key('tool-${t.name}'),
-                    tool: t,
-                    risk: _risks[t.name] ?? t.risk?.value ?? 'medium',
-                    onChanged: (r) => _setRisk(integration, t.name, r),
-                  ),
+                FormNote(l10n.toolsHelp),
+                const SizedBox(height: AppSpace.sm),
+                GroupedCard(
+                  children: [
+                    for (final t in integration.tools)
+                      _ToolRow(
+                        key: Key('tool-${t.name}'),
+                        tool: t,
+                        risk: _risks[t.name] ?? t.risk?.value ?? 'medium',
+                        onChanged: (r) => _setRisk(integration, t.name, r),
+                      ),
+                  ],
+                ),
               ],
             ),
-          ],
           const SizedBox(height: AppSpace.xl),
           Center(
             child: TextButton.icon(

@@ -811,7 +811,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       if (!provider)
         throw new ToolError(
           "no_media_provider",
-          "No media generation key is configured. Add a fal.ai key in Model keys.",
+          "No video generation key is configured. Add a Google AI or fal.ai key in Model keys.",
         );
       const video = await provider.generateVideo({
         prompt: args.prompt,
@@ -821,8 +821,9 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model)
         values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'media_video_seconds', ${seconds}, ${video.costUsd ?? seconds * MEDIA_PRICES.videoPerSecond}, ${video.model ?? provider.id})`);
       const path = await saveMedia(ctx, video, "mp4").catch(() => null);
+      const where = video.url ? `Generated video: ${video.url}` : "Generated video";
       return {
-        content: `Generated video: ${video.url}${path ? `\nSaved to ~/workspace/${path}` : ""}`,
+        content: `${where}${path ? `\nSaved to ~/workspace/${path}` : video.url ? "" : " (no computer to save it to)"}`,
         preview: path ?? "video generated",
         artifactPath: path,
       };

@@ -5,7 +5,9 @@
  */
 
 export type SttProviderId = "openai" | "deepgram";
-export type TtsProviderId = "openai" | "elevenlabs" | "cartesia" | "fish_audio";
+export type TtsProviderId = "google" | "openai" | "elevenlabs" | "cartesia" | "fish_audio";
+/** Read-aloud model (D-187). Cheaper than gpt-4o-mini-tts and ElevenLabs Flash. */
+export const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts";
 
 export const DEFAULT_REALTIME_MODEL = "gpt-realtime-2.1";
 /** Live calls: Gemini Live when the workspace has a Google AI key, else OpenAI Realtime. */
@@ -155,10 +157,15 @@ export const emptyGeminiUsage = (): GeminiLiveUsage => ({
   output_audio_tokens: 0,
   output_text_tokens: 0,
 });
+// Dictation stays on OpenAI. Gemini 3.5 Transcribe's own page puts a file at about $0.005 a
+// minute once the transcript text is included; gpt-4o-mini-transcribe is $0.003 (D-187).
 export const STT_PROVIDERS: SttProviderId[] = ["openai", "deepgram"];
-export const TTS_PROVIDERS: TtsProviderId[] = ["elevenlabs", "openai", "cartesia", "fish_audio"];
+// Gemini Flash-Lite TTS first: about $0.009 a minute of speech through 2026, against about
+// $0.018 for gpt-4o-mini-tts and $0.032 for ElevenLabs Flash (D-187).
+export const TTS_PROVIDERS: TtsProviderId[] = ["google", "openai", "elevenlabs", "cartesia", "fish_audio"];
 
 export const DEFAULT_VOICES: Record<TtsProviderId, string> = {
+  google: DEFAULT_GEMINI_VOICE,
   openai: "alloy",
   elevenlabs: "21m00Tcm4TlvDq8EAChM", // "Rachel", a stock ElevenLabs voice
   cartesia: "a0e99841-438c-4a64-b679-ae501e7d6091",
@@ -194,7 +201,7 @@ export async function transcribe(
   apiKey: string,
   audio: Uint8Array,
   mime: string,
-  opts: { bases?: VoiceBases; fetch?: typeof fetch; language?: string } = {},
+  opts: { bases?: VoiceBases; fetch?: typeof fetch; language?: string; model?: string } = {},
 ): Promise<{ text: string; seconds: number | null }> {
   const f = opts.fetch ?? fetch;
   if (provider === "deepgram") {
@@ -228,7 +235,7 @@ export async function transcribe(
         ? "ogg"
         : "webm";
   form.set("file", new Blob([new Uint8Array(audio)], { type: mime }), `audio.${ext}`);
-  form.set("model", "gpt-4o-mini-transcribe");
+  form.set("model", opts.model ?? "gpt-4o-mini-transcribe");
   if (opts.language) form.set("language", opts.language);
   const res = await ok(
     await f(`${base}/v1/audio/transcriptions`, {
@@ -242,16 +249,17 @@ export async function transcribe(
   return { text: j.text ?? "", seconds: j.duration ?? null };
 }
 
-/** Speaks text with the user's key; returns MP3 audio. */
+/** Speaks text with the user's key. Gemini returns WAV; the others return MP3. */
 export async function synthesize(
   provider: TtsProviderId,
   apiKey: string,
   text: string,
   voice: string | undefined,
-  opts: { bases?: VoiceBases; fetch?: typeof fetch } = {},
+  opts: { bases?: VoiceBases; fetch?: typeof fetch; model?: string } = {},
 ): Promise<{ audio: Uint8Array; mime: string }> {
   const f = opts.fetch ?? fetch;
   const v = voice || DEFAULT_VOICES[provider];
+  if (provider === "google") return synthesizeGemini(apiKey, text, v, opts);
   let res: Response;
   switch (provider) {
     case "openai":
@@ -322,6 +330,8 @@ export async function createRealtimeSession(
     fetch?: typeof fetch;
     /** A phone call (D-141): 8 kHz G.711 μ-law audio in and out, as telephony carries. */
     phone?: boolean;
+    /** OpenAI transcription model for the caller's speech. */
+    transcriptionModel?: string;
   },
 ) {
   const f = opts.fetch ?? fetch;
@@ -341,7 +351,7 @@ export async function createRealtimeSession(
           audio: {
             // Barge-in (D-144): the person talking over the bot interrupts its reply.
             input: {
-              transcription: { model: "gpt-4o-mini-transcribe" },
+              transcription: { model: opts.transcriptionModel ?? "gpt-4o-mini-transcribe" },
               turn_detection: {
                 type: "server_vad",
                 interrupt_response: true,
@@ -524,9 +534,90 @@ export async function createGeminiLiveSession(
 export const VOICE_PRICES = {
   sttPerMinute: 0.003,
   ttsPerThousandChars: 0.015,
+  /** Gemini 3.8 Flash-Lite TTS, about 800 characters of speech a minute (D-187). */
+  geminiTtsPerThousandChars: 0.011,
   realtimePerMinute: 0.06,
   geminiLivePerMinute: 0.02,
 };
+
+/** What one read-aloud cost. Gemini bills the audio, and that rate doubles on 2027-01-01. */
+export function ttsCostUsd(provider: TtsProviderId, chars: number, audio?: Uint8Array, now = new Date()): number {
+  if (provider !== "google") return (chars / 1000) * VOICE_PRICES.ttsPerThousandChars;
+  const perMillion = now >= new Date("2027-01-01T00:00:00Z") ? 12 : 6;
+  const seconds = wavDurationS(audio);
+  if (seconds != null) return seconds * 25 * (perMillion / 1_000_000);
+  return (chars / 1000) * (perMillion === 12 ? 0.0225 : VOICE_PRICES.geminiTtsPerThousandChars);
+}
+
+/** Seconds of 16-bit mono audio in a WAV, when the header is one we wrote or Gemini returned. */
+export function wavDurationS(audio: Uint8Array | undefined): number | null {
+  if (!audio || audio.length < 44 || audio[0] !== 0x52 || audio[1] !== 0x49) return null;
+  const view = new DataView(audio.buffer, audio.byteOffset, audio.byteLength);
+  const rate = view.getUint32(24, true);
+  const bytes = view.getUint32(40, true);
+  if (!rate || !bytes) return null;
+  return bytes / 2 / rate;
+}
+
+/** Gemini returns a WAV. Raw 24 kHz PCM gets a header so players can open it. */
+export function asWav(audio: Uint8Array, sampleRate = 24_000): Uint8Array {
+  if (audio.length >= 12 && audio[0] === 0x52 && audio[1] === 0x49 && audio[2] === 0x46 && audio[3] === 0x46)
+    return audio;
+  const header = new ArrayBuffer(44);
+  const v = new DataView(header);
+  const str = (at: number, s: string) => {
+    for (let i = 0; i < s.length; i++) v.setUint8(at + i, s.charCodeAt(i));
+  };
+  str(0, "RIFF");
+  v.setUint32(4, 36 + audio.length, true);
+  str(8, "WAVE");
+  str(12, "fmt ");
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, sampleRate, true);
+  v.setUint32(28, sampleRate * 2, true);
+  v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true);
+  str(36, "data");
+  v.setUint32(40, audio.length, true);
+  const out = new Uint8Array(44 + audio.length);
+  out.set(new Uint8Array(header), 0);
+  out.set(audio, 44);
+  return out;
+}
+
+async function synthesizeGemini(
+  apiKey: string,
+  text: string,
+  voice: string,
+  opts: { bases?: VoiceBases; fetch?: typeof fetch; model?: string },
+): Promise<{ audio: Uint8Array; mime: string }> {
+  const f = opts.fetch ?? fetch;
+  const base = (opts.bases?.gemini ?? "https://generativelanguage.googleapis.com").replace(/\/$/, "");
+  const voiceName = GEMINI_VOICES.includes(voice) || voice.startsWith("voice_") ? voice : DEFAULT_GEMINI_VOICE;
+  const model = opts.model ?? GEMINI_TTS_MODEL;
+  const res = await ok(
+    await f(`${base}/v1beta/models/${model}:generateContent`, {
+      method: "POST",
+      headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text }] }],
+        generationConfig: {
+          responseModalities: ["AUDIO"],
+          speechConfig: { voiceConfig: { voice: voiceName } },
+        },
+      }),
+    }),
+    "Gemini",
+  );
+  const body = (await res.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ inlineData?: { data?: string } }> } }>;
+  };
+  const b64 = body.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData?.data;
+  if (!b64) throw new VoiceError("Gemini returned no audio");
+  return { audio: asWav(Uint8Array.from(Buffer.from(b64, "base64"))), mime: "audio/wav" };
+}
 
 /** Telephony audio (8 kHz G.711 μ-law) ⇄ the 16-bit PCM Gemini Live speaks. */
 export function mulawToPcm16(mulaw: Uint8Array): Int16Array {

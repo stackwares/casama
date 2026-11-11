@@ -23,6 +23,12 @@ jobs:
       - uses: supabase/setup-cli@v1
       - run: pnpm install --frozen-lockfile
       - name: Local Supabase and migrations
+        env:
+          # Google sign-in is on in config.toml. Placeholders keep Auth from refusing to boot.
+          GOOGLE_AUTH_CLIENT_ID: ci-placeholder.apps.googleusercontent.com
+          GOOGLE_AUTH_SECRET: ci-placeholder
+          SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID: ai.casama.app.signin
+          SUPABASE_AUTH_EXTERNAL_APPLE_SECRET: ci-placeholder
         run: supabase start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector
       - name: Computer and sandbox images
         run: docker compose -f infra/compose/docker-compose.dev.yml --profile images build supervisor egress computer-headless

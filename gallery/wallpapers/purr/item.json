@@ -1,0 +1,14 @@
+{
+  "name": "Purr",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "pets",
+    "warm"
+  ],
+  "featured": false,
+  "version": 1
+}

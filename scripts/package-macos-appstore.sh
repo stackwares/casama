@@ -14,6 +14,7 @@ cd "$(dirname "$0")/../client"
 version=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
 flutter build macos --release \
   --dart-define=CASAMA_DISTRIBUTION=appstore \
+  --dart-define=CASAMA_SIGNED_MAC=true \
   --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://cloud.casama.ai}" \
   --dart-define-from-file=config/firebase.json
 app="build/macos/Build/Products/Release/casama_app.app"

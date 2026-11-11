@@ -14,11 +14,13 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
+import '../settings/me_avatar.dart';
 import '../settings/model_keys_screen.dart';
 import 'model_picker.dart';
 import 'template_picker.dart';
@@ -50,7 +52,7 @@ class BotsList extends ConsumerWidget {
       onRetry: () => ref.invalidate(botsProvider),
       data: (items) => items.isEmpty
           ? EmptyState(
-              icon: LucideIcons.bot,
+              illustration: const BlankBotImage(size: 132),
               title: l10n.noBots,
               message: l10n.noBotsHelp,
               action: Column(
@@ -58,18 +60,6 @@ class BotsList extends ConsumerWidget {
                 spacing: AppSpace.sm,
                 children: [
                   GlowButton.icon(onPressed: () => showCreateBot(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
-                  TextButton.icon(
-                    key: const Key('importBotFile'),
-                    icon: const Icon(LucideIcons.fileDown, size: 18),
-                    label: Text(l10n.importBot),
-                    onPressed: () => importBotFromFile(context),
-                  ),
-                  TextButton.icon(
-                    key: const Key('importAgent'),
-                    icon: const Icon(LucideIcons.folderInput, size: 18),
-                    label: Text(l10n.importAgent),
-                    onPressed: () => importAgentFolder(context, ref),
-                  ),
                   if (archived.isNotEmpty)
                     TextButton.icon(
                       key: const Key('archivedBots'),
@@ -77,6 +67,30 @@ class BotsList extends ConsumerWidget {
                       label: Text('${l10n.archivedBots} (${archived.length})'),
                       onPressed: () => showArchivedBots(context),
                     ),
+                  AdvancedSection(
+                    id: 'chats.empty',
+                    compact: true,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        spacing: AppSpace.xs,
+                        children: [
+                          TextButton.icon(
+                            key: const Key('importBotFile'),
+                            icon: const Icon(LucideIcons.fileDown, size: 18),
+                            label: Text(l10n.importBot),
+                            onPressed: () => importBotFromFile(context),
+                          ),
+                          TextButton.icon(
+                            key: const Key('importAgent'),
+                            icon: const Icon(LucideIcons.folderInput, size: 18),
+                            label: Text(l10n.importAgent),
+                            onPressed: () => importAgentFolder(context, ref),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
             )
@@ -222,13 +236,17 @@ class BotsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final org = ref.watch(currentOrgProvider);
+    // Phones: the person's avatar (Settings) on the left, the workspace under the title (tap to
+    // switch), and "+" on the right. Tablets have both in the rail already (D-176).
+    final phone = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
     return Scaffold(
       appBar: ShellHeader(
-        title: context.l10n.bots,
+        title: context.l10n.navChats,
         subtitle: org?.name,
+        leading: phone ? const Padding(padding: EdgeInsets.only(left: 12), child: Center(child: MeButton())) : null,
+        titleTrailing: org == null ? null : Icon(LucideIcons.chevronsUpDown, size: 16, color: context.colorScheme.onSurfaceVariant),
         onTitleTap: () => showSpacesSheet(context, ref),
         actions: [
-          const WorkspaceSwitcher(compact: true),
           HeaderIconButton(key: const Key('createMenu'), icon: LucideIcons.plus, tooltip: context.l10n.createMenuTitle, onPressed: () => showCreateMenu(context, ref)),
         ],
       ),
@@ -270,12 +288,26 @@ Future<void> showCreateMenu(BuildContext context, WidgetRef ref) async {
                 if (bots.length >= 2) row('group', LucideIcons.usersRound, l10n.newGroupChat, l10n.createGroupHelp),
               ],
             ),
-            const SizedBox(height: AppSpace.sm),
-            GroupedCard(
+            if (archived.isNotEmpty) ...[
+              const SizedBox(height: AppSpace.sm),
+              GroupedCard(
+                children: [
+                  row('archived', LucideIcons.archive, '${l10n.archivedBots} (${archived.length})', l10n.archivedBotsHelp),
+                ],
+              ),
+            ],
+            const SizedBox(height: AppSpace.xs),
+            AdvancedSection(
+              id: 'chats.create',
+              compact: true,
               children: [
-                row('importBot', LucideIcons.fileDown, l10n.importBot, l10n.importBotHelp),
-                row('importAgent', LucideIcons.folderInput, l10n.importAgent, l10n.importAgentHelp),
-                if (archived.isNotEmpty) row('archived', LucideIcons.archive, '${l10n.archivedBots} (${archived.length})', l10n.archivedBotsHelp),
+                const SizedBox(height: AppSpace.xs),
+                GroupedCard(
+                  children: [
+                    row('importBot', LucideIcons.fileDown, l10n.importBot, l10n.importBotHelp),
+                    row('importAgent', LucideIcons.folderInput, l10n.importAgent, l10n.importAgentHelp),
+                  ],
+                ),
               ],
             ),
           ],
@@ -326,6 +358,10 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
   String? _avatar = Mascot.random().avatarValue;
   var _busy = false;
 
+  /// The key and model sit under Advanced (D-182) because one is picked for you. When the key it
+  /// picks has no default model, choosing one is a required step, so they stay in sight instead.
+  var _modelInSight = false;
+
   /// Keys that run chat models; search, image and voice keys can't drive a bot.
   static const _chatProviders = {
     ProviderId.openrouter,
@@ -368,7 +404,32 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
     if (_credentialId == null || !keys.any((k) => k.id == _credentialId)) {
       _credentialId = keys.isEmpty ? null : keys.first.id;
       _fillDefaultModel(keys);
+      if (_credentialId != null && _model.isEmpty) _modelInSight = true;
     }
+    final needsKey = keysAsync.hasValue && keys.isEmpty;
+    final keyFields = [
+      DropdownButtonFormField<String>(
+        isExpanded: true,
+        key: ValueKey('key-$_credentialId-${keys.length}'),
+        initialValue: _credentialId,
+        decoration: InputDecoration(labelText: l10n.modelKey),
+        items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} · ${providerLabel(k.provider)}'))],
+        onChanged: (v) => setState(() {
+          _credentialId = v;
+          _modelPicked = false;
+          _fillDefaultModel(keys);
+        }),
+      ),
+      const SizedBox(height: 8),
+      ModelPickerField(
+        credentialId: _credentialId,
+        value: _model,
+        onChanged: (m) => setState(() {
+          _model = m;
+          _modelPicked = true;
+        }),
+      ),
+    ];
     return SingleChildScrollView(
       padding: widget.embedded ? EdgeInsets.zero : const EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.md),
       child: Column(
@@ -422,34 +483,16 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
             onChanged: (v) => setState(() => _avatar = v),
           ),
           const SizedBox(height: AppSpace.sm),
-          if (keysAsync.hasValue && keys.isEmpty) ...[
+          // A missing key is a required step, so it's asked for in plain sight.
+          if (needsKey) ...[
             Text(l10n.addModelKeyFirst, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 8),
             AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
-          ] else ...[
-            DropdownButtonFormField<String>(
-              isExpanded: true,
-              key: ValueKey('key-$_credentialId-${keys.length}'),
-              initialValue: _credentialId,
-              decoration: InputDecoration(labelText: l10n.modelKey),
-              items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} · ${providerLabel(k.provider)}'))],
-              onChanged: (v) => setState(() {
-                _credentialId = v;
-                _modelPicked = false;
-                _fillDefaultModel(keys);
-              }),
-            ),
             const SizedBox(height: 8),
-            ModelPickerField(
-              credentialId: _credentialId,
-              value: _model,
-              onChanged: (m) => setState(() {
-                _model = m;
-                _modelPicked = true;
-              }),
-            ),
+          ] else if (_modelInSight) ...[
+            ...keyFields,
+            const SizedBox(height: 8),
           ],
-          const SizedBox(height: 8),
           TextField(
             key: const Key('botInstructions'),
             controller: _persona,
@@ -457,6 +500,8 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
             minLines: 3,
             maxLines: 8,
           ),
+          // The key and model already picked for you, folded until asked for (D-182).
+          if (!needsKey && !_modelInSight) AdvancedSection(id: 'bot.create', summary: l10n.createBotAdvancedSummary, children: [const SizedBox(height: AppSpace.xs), ...keyFields]),
           const SizedBox(height: 12),
           const SizedBox(height: AppSpace.xs),
           GlowButton(

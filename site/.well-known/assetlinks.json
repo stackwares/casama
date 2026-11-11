@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.get_login_creds",
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ai.casama.app",
+      "sha256_cert_fingerprints": [
+        "88:A7:3E:08:FE:2B:20:AD:E5:8C:8C:10:0E:64:14:DE:17:7A:EE:A3:80:7A:21:75:96:3C:BB:52:77:A4:BA:7C"
+      ]
+    }
+  }
+]

@@ -1,3 +1,5 @@
+import { cloudOpenRouterCharge } from "@casama/domain";
+
 /** Capabilities and prices per model. Unknown models get conservative defaults. */
 export interface ModelCapabilities {
   contextWindow: number;
@@ -180,4 +182,14 @@ export function costOf(
       usage.outputTokens * c.outputPrice) /
     1_000_000
   );
+}
+
+/**
+ * Credits a call on Casama's key must have left before it starts (D-186).
+ * 8k input and 2k output, with output tripled because reasoning models write past the cap.
+ */
+export function cloudCallReserveUsd(model: string): number {
+  const c = capabilitiesOf(model, "openrouter");
+  const raw = (8_000 * c.inputPrice + 6_000 * c.outputPrice) / 1_000_000;
+  return cloudOpenRouterCharge(raw);
 }

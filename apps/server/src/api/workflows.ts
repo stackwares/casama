@@ -67,7 +67,7 @@ export interface Workflows {
   close(): Promise<void>;
 }
 
-export type VoiceResult<T> = ({ ok: true } & T) | { ok: false; error: string };
+export type VoiceResult<T> = ({ ok: true } & T) | { ok: false; error: string; code?: string };
 
 const withTimeout = <T>(p: Promise<T>, ms: number, what: string) =>
   Promise.race([

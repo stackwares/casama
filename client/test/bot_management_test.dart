@@ -4,7 +4,7 @@ import 'package:casama_app/core/backend.dart';
 import 'package:casama_app/features/bots/bot_history_screen.dart';
 import 'package:casama_app/features/bots/bots_screen.dart';
 import 'package:casama_app/features/home/home_shell.dart';
-import 'package:casama_app/features/settings/settings_screen.dart';
+import 'package:casama_app/features/bots/bot_profile_screen.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -28,7 +28,7 @@ void main() {
   testWidgets('a bot moves into a new folder and can be archived and brought back', (tester) async {
     await setSize(tester, const Size(1200, 1800));
     final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const BotSettingsScreen(botId: botId)));
+    await tester.pumpWidget(harness(backend, const BotProfileScreen(botId: botId)));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('botFolder')));
     await tester.tap(find.byKey(const Key('botFolder')));
@@ -41,7 +41,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.botFolder, 'Research');
 
+    // Archive sits alone at the very end, in sight without opening Advanced.
     await tester.ensureVisible(find.byKey(const Key('archiveBot')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('archiveBot')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('confirmArchive')));

@@ -13,6 +13,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:xterm/xterm.dart';
 
 import 'live_view_screen.dart';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
@@ -21,6 +22,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
@@ -52,28 +54,46 @@ class ComputerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final computers = ref.watch(computersProvider);
+    // A bot's own pick wins, so the profile tile and the chat open the computer the chat uses.
+    final defaultComputerId = botId == null
+        ? null
+        : ref.watch(botProvider(botId!))?.defaultComputerId;
     final body = AsyncView(
       value: computers,
       onRetry: () => ref.invalidate(computersProvider),
       data: (list) {
-        final c = botId == null ? computerForBot(list, '') : computerForBot(list, botId!);
-        if (c == null) return EmptyState(icon: LucideIcons.laptop, message: l10n.somethingWentWrong);
+        final c = computerForBot(
+          list,
+          botId ?? '',
+          defaultComputerId: defaultComputerId,
+        );
+        if (c == null)
+          return EmptyState(
+            icon: LucideIcons.laptop,
+            message: l10n.somethingWentWrong,
+          );
         return ComputerPanel(computer: c, embedded: embedded);
       },
     );
     if (embedded) return body;
     return Scaffold(
-      appBar: ShellHeader(title: l10n.computerTitle),
+      // Opened from a chat or Settings, not a tab (D-176): phones always get a way back.
+      appBar: ShellHeader(title: l10n.computerTitle, phoneFallback: '/bots'),
       body: body,
     );
   }
 }
 
 /// Whether a computer is on its way up (the screen shows progress and polls faster).
-bool computerWaking(ComputerState s) => s == ComputerState.provisioning || s == ComputerState.starting;
+bool computerWaking(ComputerState s) =>
+    s == ComputerState.provisioning || s == ComputerState.starting;
 
 class ComputerPanel extends ConsumerStatefulWidget {
-  const ComputerPanel({super.key, required this.computer, this.embedded = false});
+  const ComputerPanel({
+    super.key,
+    required this.computer,
+    this.embedded = false,
+  });
   final Computer computer;
 
   /// In the side panel next to the chat (large screens): desktop computers show the live view
@@ -90,6 +110,9 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
   Timer? _poll;
   late final AppLifecycleListener _lifecycle;
   String? _action; // 'start' | 'sleep' while a button's request runs
+  // The tab that's open, by name, so it keeps its place when Terminal and Checkpoints come and go.
+  var _tab = 'screen';
+  var _tabIds = const <String>[];
 
   @override
   void initState() {
@@ -106,7 +129,10 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
 
   void _schedule() {
     _poll?.cancel();
-    _poll = Timer.periodic(Duration(seconds: computerWaking(widget.computer.state) ? 3 : 10), (_) => _refresh());
+    _poll = Timer.periodic(
+      Duration(seconds: computerWaking(widget.computer.state) ? 3 : 10),
+      (_) => _refresh(),
+    );
   }
 
   void _refresh() {
@@ -132,11 +158,27 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final computer = widget.computer;
-    final running = computer.state == ComputerState.running || computer.state == ComputerState.idle;
+    final running =
+        computer.state == ComputerState.running ||
+        computer.state == ComputerState.idle;
     final waking = computerWaking(computer.state) || _action == 'start';
     final failed = computer.state == ComputerState.error;
+    // Screen and Files always; Terminal and Checkpoints once Advanced is opened here (D-182).
+    final advanced = ref
+        .watch(advancedOpenProvider)
+        .contains(computerTabsAdvancedId);
+    final tabIds = [
+      for (final t in const ['screen', 'terminal', 'files', 'checkpoints'])
+        if (advanced || t == 'screen' || t == 'files') t,
+    ];
+    _tabIds = tabIds;
+    final tabIndex = tabIds.indexOf(_tab);
+    if (tabIndex < 0) _tab = tabIds.first;
     return DefaultTabController(
-      length: 4,
+      // A new controller when tabs come or go; the open tab stays when it still exists.
+      key: ValueKey(tabIds.length),
+      length: tabIds.length,
+      initialIndex: tabIndex < 0 ? 0 : tabIndex,
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
@@ -145,21 +187,34 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, AppSpace.sm),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.md,
+                  AppSpace.sm,
+                  AppSpace.md,
+                  AppSpace.sm,
+                ),
                 child: Row(
                   children: [
                     Container(
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: (running ? context.appColors.working : context.colorScheme.onSurfaceVariant).withValues(alpha: 0.12),
+                        color:
+                            (running
+                                    ? context.appColors.working
+                                    : context.colorScheme.onSurfaceVariant)
+                                .withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(AppRadius.icon),
                       ),
                       alignment: Alignment.center,
                       child: Icon(
-                        computer.profile == ComputerProfileEnum.desktop ? LucideIcons.monitor : LucideIcons.squareTerminal,
+                        computer.profile == ComputerProfileEnum.desktop
+                            ? LucideIcons.monitor
+                            : LucideIcons.squareTerminal,
                         size: 20,
-                        color: running ? context.appColors.working : context.colorScheme.onSurfaceVariant,
+                        color: running
+                            ? context.appColors.working
+                            : context.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(width: AppSpace.sm),
@@ -171,7 +226,9 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                             computer.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                            style: context.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Row(
@@ -183,16 +240,30 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                       ? l10n.stateStarting
                                       : _action == 'sleep'
                                       ? l10n.computerGoingToSleep
-                                      : computerStateLabel(context, computer.state),
+                                      : computerStateLabel(
+                                          context,
+                                          computer.state,
+                                        ),
                                   color: failed
                                       ? context.appColors.negative
-                                      : (running || waking ? context.appColors.working : context.colorScheme.onSurfaceVariant),
+                                      : (running || waking
+                                            ? context.appColors.working
+                                            : context
+                                                  .colorScheme
+                                                  .onSurfaceVariant),
                                   pill: true,
                                 ),
                               ),
                               if (waking || _action == 'sleep') ...[
                                 const SizedBox(width: 6),
-                                SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 1.6, color: context.appColors.working)),
+                                SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.6,
+                                    color: context.appColors.working,
+                                  ),
+                                ),
                               ],
                             ],
                           ),
@@ -203,7 +274,9 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                 computer.error!,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: context.textTheme.bodySmall?.copyWith(color: context.appColors.negative),
+                                style: context.textTheme.bodySmall?.copyWith(
+                                  color: context.appColors.negative,
+                                ),
                               ),
                             ),
                         ],
@@ -215,7 +288,14 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                         if (running)
                           OutlinedButton.icon(
                             key: const Key('computerSleep'),
-                            onPressed: _action != null ? null : () => _run('sleep', () => ref.read(backendProvider).stopComputer(computer.id)),
+                            onPressed: _action != null
+                                ? null
+                                : () => _run(
+                                    'sleep',
+                                    () => ref
+                                        .read(backendProvider)
+                                        .stopComputer(computer.id),
+                                  ),
                             icon: const Icon(LucideIcons.moon, size: 18),
                             label: Text(l10n.computerSleep),
                           )
@@ -223,11 +303,33 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                           FilledButton.tonalIcon(
                             key: const Key('computerStart'),
                             // Already waking: the button shows progress instead of starting it twice.
-                            onPressed: waking || _action != null ? null : () => _run('start', () => ref.read(backendProvider).startComputer(computer.id)),
+                            onPressed: waking || _action != null
+                                ? null
+                                : () => _run(
+                                    'start',
+                                    () => ref
+                                        .read(backendProvider)
+                                        .startComputer(computer.id),
+                                  ),
                             icon: waking
-                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                : Icon(failed ? LucideIcons.rotateCw : LucideIcons.power, size: 18),
-                            label: Text(waking ? l10n.stateStarting : (failed ? l10n.retry : l10n.computerWake)),
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Icon(
+                                    failed
+                                        ? LucideIcons.rotateCw
+                                        : LucideIcons.power,
+                                    size: 18,
+                                  ),
+                            label: Text(
+                              waking
+                                  ? l10n.stateStarting
+                                  : (failed ? l10n.retry : l10n.computerWake),
+                            ),
                           ),
                       ],
                     ),
@@ -236,39 +338,81 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: TabBar(
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.start,
-                    padding: EdgeInsets.zero,
-                    tabs: [
-                      _IconTab(icon: LucideIcons.monitor, text: l10n.screen),
-                      _IconTab(icon: LucideIcons.squareTerminal, text: l10n.terminal),
-                      _IconTab(icon: LucideIcons.folder, text: l10n.files),
-                      _IconTab(icon: LucideIcons.history, text: l10n.checkpoints),
-                    ],
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TabBar(
+                          isScrollable: true,
+                          tabAlignment: TabAlignment.start,
+                          padding: EdgeInsets.zero,
+                          tabs: [
+                            for (final t in tabIds)
+                              switch (t) {
+                                'terminal' => _IconTab(
+                                  icon: LucideIcons.squareTerminal,
+                                  text: l10n.terminal,
+                                ),
+                                'files' => _IconTab(
+                                  icon: LucideIcons.folder,
+                                  text: l10n.files,
+                                ),
+                                'checkpoints' => _IconTab(
+                                  icon: LucideIcons.history,
+                                  text: l10n.checkpoints,
+                                ),
+                                _ => _IconTab(
+                                  icon: LucideIcons.monitor,
+                                  text: l10n.screen,
+                                ),
+                              },
+                          ],
+                        ),
+                      ),
+                    ),
+                    _AdvancedTabsToggle(open: advanced),
+                  ],
                 ),
               ),
               const SizedBox(height: AppSpace.xs),
               Expanded(
-                child: TabBarView(
-                  children: [
-                    computer.profile == ComputerProfileEnum.desktop
-                        ? (widget.embedded ? _InlineLive(computer: computer) : _LiveEntry(computer: computer))
-                        : Column(
-                            children: [
-                              _DesktopSwitch(computer: computer),
-                              Expanded(
-                                child: running ? _ScreenTab(computerId: computer.id) : EmptyState(icon: LucideIcons.moon, message: l10n.computerAsleep),
-                              ),
-                            ],
+                child: _TabWatch(
+                  onChanged: (i) {
+                    if (i < _tabIds.length) _tab = _tabIds[i];
+                  },
+                  child: TabBarView(
+                    children: [
+                      for (final t in tabIds)
+                        switch (t) {
+                          'terminal' => TerminalTab(computerId: computer.id),
+                          'files' => FilesTab(computerId: computer.id),
+                          'checkpoints' => CheckpointsTab(
+                            computerId: computer.id,
                           ),
-                    TerminalTab(computerId: computer.id),
-                    FilesTab(computerId: computer.id),
-                    CheckpointsTab(computerId: computer.id),
-                  ],
+                          _ =>
+                            computer.profile == ComputerProfileEnum.desktop
+                                ? (widget.embedded
+                                      ? _InlineLive(computer: computer)
+                                      : _LiveEntry(computer: computer))
+                                : Column(
+                                    children: [
+                                      const _HeadlessNote(),
+                                      Expanded(
+                                        child: running
+                                            ? _ScreenTab(
+                                                computerId: computer.id,
+                                              )
+                                            : EmptyState(
+                                                icon: LucideIcons.moon,
+                                                message: l10n.computerAsleep,
+                                              ),
+                                      ),
+                                    ],
+                                  ),
+                        },
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -277,6 +421,77 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
       ),
     );
   }
+}
+
+/// The [AdvancedSection] id whose open state shows the Terminal and Checkpoints tabs (D-182).
+const computerTabsAdvancedId = 'computer.tabs';
+
+/// At the end of the tab row: shows or hides Terminal and Checkpoints, remembered on this device
+/// like any Advanced section (D-182).
+class _AdvancedTabsToggle extends ConsumerWidget {
+  const _AdvancedTabsToggle({required this.open});
+  final bool open;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final color = open ? scheme.primary : scheme.onSurfaceVariant;
+    return Tooltip(
+      message: open
+          ? l10n.computerAdvancedTabsHide
+          : l10n.computerAdvancedTabsShow,
+      child: Semantics(
+        toggled: open,
+        child: TextButton.icon(
+          key: const Key('advanced-$computerTabsAdvancedId'),
+          style: TextButton.styleFrom(
+            foregroundColor: color,
+            visualDensity: VisualDensity.compact,
+          ),
+          onPressed: () => ref
+              .read(advancedOpenProvider.notifier)
+              .set(computerTabsAdvancedId, !open),
+          icon: Icon(LucideIcons.slidersHorizontal, size: 16, color: color),
+          label: Text(l10n.advanced),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tells [onChanged] which tab is open, including after a swipe.
+class _TabWatch extends StatefulWidget {
+  const _TabWatch({required this.onChanged, required this.child});
+  final ValueChanged<int> onChanged;
+  final Widget child;
+
+  @override
+  State<_TabWatch> createState() => _TabWatchState();
+}
+
+class _TabWatchState extends State<_TabWatch> {
+  TabController? _controller;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final c = DefaultTabController.of(context);
+    if (c == _controller) return;
+    _controller?.removeListener(_changed);
+    _controller = c..addListener(_changed);
+  }
+
+  void _changed() => widget.onChanged(_controller!.index);
+
+  @override
+  void dispose() {
+    _controller?.removeListener(_changed);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// A pill tab with a leading icon.
@@ -288,7 +503,9 @@ class _IconTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Phones keep all four tabs in view; the icons come back where there is room.
-    final roomy = AppBreakpoints.of(MediaQuery.sizeOf(context).width) != WindowSize.compact;
+    final roomy =
+        AppBreakpoints.of(MediaQuery.sizeOf(context).width) !=
+        WindowSize.compact;
     return Tab(
       height: 40,
       child: Row(
@@ -310,7 +527,9 @@ class _LiveEntry extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final awake = computer.state == ComputerState.running || computer.state == ComputerState.idle;
+    final awake =
+        computer.state == ComputerState.running ||
+        computer.state == ComputerState.idle;
     return EmptyState(
       icon: awake ? LucideIcons.monitorPlay : LucideIcons.moon,
       message: awake ? l10n.liveViewHelp : l10n.liveViewWakesHelp,
@@ -352,7 +571,10 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
 
   Future<void> _wake() async {
     setState(() => _waking = true);
-    await runGuarded(context, () => ref.read(backendProvider).startComputer(widget.computer.id));
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).startComputer(widget.computer.id),
+    );
     if (!mounted) return;
     setState(() => _waking = false);
     ref.invalidate(computersProvider);
@@ -362,12 +584,17 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final c = widget.computer;
-    final awake = c.state == ComputerState.running || c.state == ComputerState.idle;
+    final awake =
+        c.state == ComputerState.running || c.state == ComputerState.idle;
     if (_expanded) {
       return EmptyState(
         icon: LucideIcons.maximize2,
         message: l10n.liveShownFullScreen,
-        action: OutlinedButton.icon(onPressed: () => Navigator.of(context).maybePop(), icon: const Icon(LucideIcons.minimize2, size: 18), label: Text(l10n.liveMinimize)),
+        action: OutlinedButton.icon(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(LucideIcons.minimize2, size: 18),
+          label: Text(l10n.liveMinimize),
+        ),
       );
     }
     if (!awake) {
@@ -378,35 +605,44 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
         action: GlowButton.icon(
           key: const Key('openLiveView'),
           onPressed: waking ? null : _wake,
-          icon: waking ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(LucideIcons.sunrise),
+          icon: waking
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(LucideIcons.sunrise),
           label: Text(waking ? l10n.stateStarting : l10n.wakeAndWatch),
         ),
       );
     }
-    return LiveViewScreen(key: ValueKey(c.id), computerId: c.id, embedded: true, onExpand: _expand);
+    return LiveViewScreen(
+      key: ValueKey(c.id),
+      computerId: c.id,
+      embedded: true,
+      onExpand: _expand,
+    );
   }
 }
 
-/// Headless computers only have a browser; offer the desktop profile (restarts, files are kept).
-class _DesktopSwitch extends ConsumerStatefulWidget {
-  const _DesktopSwitch({required this.computer});
-  final Computer computer;
-
-  @override
-  ConsumerState<_DesktopSwitch> createState() => _DesktopSwitchState();
-}
-
-class _DesktopSwitchState extends ConsumerState<_DesktopSwitch> {
-  var _busy = false;
+/// Headless computers only have a browser. Switching to a desktop lives in Settings > Computers
+/// (one place for it, D-182); this says so and links there.
+class _HeadlessNote extends StatelessWidget {
+  const _HeadlessNote();
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, AppSpace.xxs),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.md,
+        AppSpace.sm,
+        AppSpace.md,
+        AppSpace.xxs,
+      ),
       child: AppCard(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -416,25 +652,24 @@ class _DesktopSwitchState extends ConsumerState<_DesktopSwitch> {
                 Icon(LucideIcons.info, size: 18, color: scheme.primary),
                 const SizedBox(width: AppSpace.xs),
                 Expanded(
-                  child: Text(l10n.headlessScreenNote, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+                  child: Text(
+                    l10n.headlessScreenNoteSettings,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpace.sm),
             Align(
               alignment: AlignmentDirectional.centerEnd,
-              child: FilledButton.tonalIcon(
-                key: const Key('switchToDesktop'),
-                icon: const Icon(LucideIcons.monitor, size: 18),
-                label: Text(l10n.switchToDesktop),
-                onPressed: _busy
-                    ? null
-                    : () async {
-                        setState(() => _busy = true);
-                        await runGuarded(context, () => ref.read(backendProvider).updateComputer(widget.computer.id, profile: 'desktop'));
-                        ref.invalidate(computersProvider);
-                        if (mounted) setState(() => _busy = false);
-                      },
+              child: TextButton.icon(
+                key: const Key('openComputerSettings'),
+                icon: const Icon(LucideIcons.settings, size: 16),
+                label: Text(l10n.openComputerSettings),
+                onPressed: () =>
+                    GoRouter.maybeOf(context)?.push('/settings/computers'),
               ),
             ),
           ],
@@ -488,10 +723,16 @@ class _ScreenTabState extends ConsumerState<_ScreenTab> {
       return EmptyState(
         icon: LucideIcons.monitor,
         message: context.l10n.noScreen,
-        action: OutlinedButton.icon(onPressed: _load, icon: const Icon(LucideIcons.rotateCw, size: 18), label: Text(context.l10n.refresh)),
+        action: OutlinedButton.icon(
+          onPressed: _load,
+          icon: const Icon(LucideIcons.rotateCw, size: 18),
+          label: Text(context.l10n.refresh),
+        ),
       );
     }
-    return InteractiveViewer(child: Center(child: Image.memory(_png!, gaplessPlayback: true)));
+    return InteractiveViewer(
+      child: Center(child: Image.memory(_png!, gaplessPlayback: true)),
+    );
   }
 }
 
@@ -504,7 +745,8 @@ class TerminalTab extends ConsumerStatefulWidget {
   ConsumerState<TerminalTab> createState() => _TerminalTabState();
 }
 
-class _TerminalTabState extends ConsumerState<TerminalTab> with AutomaticKeepAliveClientMixin {
+class _TerminalTabState extends ConsumerState<TerminalTab>
+    with AutomaticKeepAliveClientMixin {
   final _terminal = Terminal(maxLines: 5000);
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _sub;
@@ -521,12 +763,22 @@ class _TerminalTabState extends ConsumerState<TerminalTab> with AutomaticKeepAli
   }
 
   Future<void> _connect() async {
-    final (uri, _) = await ref.read(backendProvider).terminal(widget.computerId, cols: _terminal.viewWidth, rows: _terminal.viewHeight);
+    final (uri, _) = await ref
+        .read(backendProvider)
+        .terminal(
+          widget.computerId,
+          cols: _terminal.viewWidth,
+          rows: _terminal.viewHeight,
+        );
     final channel = WebSocketChannel.connect(uri);
     await channel.ready;
     _terminal.onOutput = (data) => channel.sink.add(utf8.encode(data));
     _sub = channel.stream.listen(
-      (msg) => _terminal.write(msg is String ? msg : utf8.decode(msg as List<int>, allowMalformed: true)),
+      (msg) => _terminal.write(
+        msg is String
+            ? msg
+            : utf8.decode(msg as List<int>, allowMalformed: true),
+      ),
       onDone: () {
         if (!mounted) return;
         _terminal.write('\r\n${context.l10n.terminalDisconnected}\r\n');
@@ -613,12 +865,20 @@ class _FilesTabState extends ConsumerState<FilesTab> {
     final bytes = await file.readAsBytes();
     if (!mounted) return;
     final target = _path.isEmpty ? file.name : '$_path/${file.name}';
-    await runGuarded(context, () => ref.read(backendProvider).uploadFile(widget.computerId, target, bytes));
+    await runGuarded(
+      context,
+      () => ref
+          .read(backendProvider)
+          .uploadFile(widget.computerId, target, bytes),
+    );
     _reload();
   }
 
   Future<void> _download(ComputerFileEntry e, {Rect? origin}) async {
-    final bytes = await runGuarded(context, () => ref.read(backendProvider).downloadFile(widget.computerId, e.path));
+    final bytes = await runGuarded(
+      context,
+      () => ref.read(backendProvider).downloadFile(widget.computerId, e.path),
+    );
     if (bytes == null || !mounted) return;
     await shareFiles(
       [XFile.fromData(bytes, name: e.name)],
@@ -629,9 +889,17 @@ class _FilesTabState extends ConsumerState<FilesTab> {
 
   Future<void> _delete(ComputerFileEntry e) async {
     final l10n = context.l10n;
-    final ok = await showConfirm(context: context, title: l10n.deleteFileTitle(e.name), confirmLabel: l10n.delete, destructive: true);
+    final ok = await showConfirm(
+      context: context,
+      title: l10n.deleteFileTitle(e.name),
+      confirmLabel: l10n.delete,
+      destructive: true,
+    );
     if (!ok || !mounted) return;
-    await runGuarded(context, () => ref.read(backendProvider).deleteFile(widget.computerId, e.path));
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).deleteFile(widget.computerId, e.path),
+    );
     _reload();
   }
 
@@ -646,11 +914,20 @@ class _FilesTabState extends ConsumerState<FilesTab> {
         return Column(
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.sm),
+              padding: EdgeInsets.fromLTRB(
+                side,
+                AppSpace.xs,
+                side,
+                AppSpace.sm,
+              ),
               child: Row(
                 children: [
                   if (_path.isNotEmpty) ...[
-                    IconButton.filledTonal(tooltip: l10n.up, onPressed: () => _open(_parent), icon: const Icon(LucideIcons.arrowUp, size: 20)),
+                    IconButton.filledTonal(
+                      tooltip: l10n.up,
+                      onPressed: () => _open(_parent),
+                      icon: const Icon(LucideIcons.arrowUp, size: 20),
+                    ),
                     const SizedBox(width: AppSpace.xs),
                   ],
                   Expanded(
@@ -663,10 +940,25 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                           constraints: BoxConstraints(minWidth: bar.maxWidth),
                           child: Row(
                             children: [
-                              _Crumb(icon: LucideIcons.house, label: 'workspace', onTap: crumbs.isEmpty ? null : () => _open('')),
+                              _Crumb(
+                                icon: LucideIcons.house,
+                                label: 'workspace',
+                                onTap: crumbs.isEmpty ? null : () => _open(''),
+                              ),
                               for (var i = 0; i < crumbs.length; i++) ...[
-                                Icon(LucideIcons.chevronRight, size: 18, color: scheme.onSurfaceVariant),
-                                _Crumb(label: crumbs[i], onTap: i == crumbs.length - 1 ? null : () => _open(crumbs.sublist(0, i + 1).join('/'))),
+                                Icon(
+                                  LucideIcons.chevronRight,
+                                  size: 18,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                                _Crumb(
+                                  label: crumbs[i],
+                                  onTap: i == crumbs.length - 1
+                                      ? null
+                                      : () => _open(
+                                          crumbs.sublist(0, i + 1).join('/'),
+                                        ),
+                                ),
                               ],
                             ],
                           ),
@@ -674,8 +966,16 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                       ),
                     ),
                   ),
-                  IconButton(tooltip: l10n.refresh, onPressed: _reload, icon: const Icon(LucideIcons.rotateCw)),
-                  FilledButton.tonalIcon(onPressed: _upload, icon: const Icon(LucideIcons.upload, size: 18), label: Text(l10n.upload)),
+                  IconButton(
+                    tooltip: l10n.refresh,
+                    onPressed: _reload,
+                    icon: const Icon(LucideIcons.rotateCw),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: _upload,
+                    icon: const Icon(LucideIcons.upload, size: 18),
+                    label: Text(l10n.upload),
+                  ),
                 ],
               ),
             ),
@@ -683,24 +983,42 @@ class _FilesTabState extends ConsumerState<FilesTab> {
               child: FutureBuilder<List<ComputerFileEntry>>(
                 future: _entries,
                 builder: (context, snap) {
-                  if (snap.hasError) return EmptyState(icon: LucideIcons.circleAlert, isError: true, message: errorText(context, snap.error!));
-                  if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+                  if (snap.hasError)
+                    return EmptyState(
+                      icon: LucideIcons.circleAlert,
+                      isError: true,
+                      message: errorText(context, snap.error!),
+                    );
+                  if (!snap.hasData)
+                    return const Center(child: CircularProgressIndicator());
                   final items = [...snap.data!]
                     ..sort((a, b) {
-                      final ad = a.type.name == 'dir', bd = b.type.name == 'dir';
+                      final ad = a.type.name == 'dir',
+                          bd = b.type.name == 'dir';
                       if (ad != bd) return ad ? -1 : 1;
-                      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+                      return a.name.toLowerCase().compareTo(
+                        b.name.toLowerCase(),
+                      );
                     });
                   if (items.isEmpty) {
                     return EmptyState(
                       icon: LucideIcons.folderOpen,
                       title: l10n.emptyFolder,
                       message: l10n.emptyFolderHelp,
-                      action: OutlinedButton.icon(onPressed: _upload, icon: const Icon(LucideIcons.upload, size: 18), label: Text(l10n.upload)),
+                      action: OutlinedButton.icon(
+                        onPressed: _upload,
+                        icon: const Icon(LucideIcons.upload, size: 18),
+                        label: Text(l10n.upload),
+                      ),
                     );
                   }
                   return ListView(
-                    padding: EdgeInsets.fromLTRB(side, 0, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
+                    padding: EdgeInsets.fromLTRB(
+                      side,
+                      0,
+                      side,
+                      AppSpace.xl + MediaQuery.paddingOf(context).bottom,
+                    ),
                     children: [
                       GroupedCard(
                         children: [
@@ -710,34 +1028,61 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                                 icon: LucideIcons.folder,
                                 iconColor: context.appColors.warning,
                                 title: e.name,
-                                onTap: () => _open(_path.isEmpty ? e.name : '$_path/${e.name}'),
+                                onTap: () => _open(
+                                  _path.isEmpty ? e.name : '$_path/${e.name}',
+                                ),
                               )
                             else
                               GroupedTile(
                                 icon: fileIconFor(e.name),
                                 title: e.name,
                                 subtitle: formatBytes(e.size),
-                                onTap: () => showComputerFile(context, computerId: widget.computerId, path: e.path),
+                                onTap: () => showComputerFile(
+                                  context,
+                                  computerId: widget.computerId,
+                                  path: e.path,
+                                ),
                                 trailing: Builder(
                                   // The share sheet points at this button on iPad and macOS.
                                   builder: (anchor) => PopupMenuButton<String>(
                                     tooltip: l10n.moreActions,
-                                    icon: Icon(LucideIcons.ellipsisVertical, color: scheme.onSurfaceVariant),
+                                    icon: Icon(
+                                      LucideIcons.ellipsisVertical,
+                                      color: scheme.onSurfaceVariant,
+                                    ),
                                     onSelected: (v) async {
-                                      if (v == 'download') await _download(e, origin: shareOrigin(anchor));
+                                      if (v == 'download')
+                                        await _download(
+                                          e,
+                                          origin: shareOrigin(anchor),
+                                        );
                                       if (v == 'delete') await _delete(e);
                                     },
                                     itemBuilder: (_) => [
                                       PopupMenuItem(
                                         value: 'download',
-                                        child: ListTile(dense: true, leading: const Icon(LucideIcons.share), title: Text(l10n.download)),
+                                        child: ListTile(
+                                          dense: true,
+                                          leading: const Icon(
+                                            LucideIcons.share,
+                                          ),
+                                          title: Text(l10n.download),
+                                        ),
                                       ),
                                       PopupMenuItem(
                                         value: 'delete',
                                         child: ListTile(
                                           dense: true,
-                                          leading: Icon(LucideIcons.trash2, color: scheme.error),
-                                          title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
+                                          leading: Icon(
+                                            LucideIcons.trash2,
+                                            color: scheme.error,
+                                          ),
+                                          title: Text(
+                                            l10n.delete,
+                                            style: TextStyle(
+                                              color: scheme.error,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -776,7 +1121,14 @@ class _Crumb extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[Icon(icon, size: 16, color: current ? scheme.onSurface : scheme.primary), const SizedBox(width: 4)],
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 16,
+                color: current ? scheme.onSurface : scheme.primary,
+              ),
+              const SizedBox(width: 4),
+            ],
             Text(
               label,
               style: context.textTheme.labelLarge?.copyWith(
@@ -820,22 +1172,39 @@ class _CheckpointsTabState extends ConsumerState<CheckpointsTab> {
             message: errorText(context, snap.error!),
             isError: true,
             action: FilledButton.tonalIcon(
-              onPressed: () => setState(() => _items = ref.read(backendProvider).checkpoints(widget.computerId)),
+              onPressed: () {
+                final items = ref
+                    .read(backendProvider)
+                    .checkpoints(widget.computerId);
+                setState(() {
+                  _items = items;
+                });
+              },
               icon: const Icon(LucideIcons.rotateCw, size: 18),
               label: Text(context.l10n.retry),
             ),
           );
         }
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snap.hasData)
+          return const Center(child: CircularProgressIndicator());
         final items = snap.data!;
         if (items.isEmpty) {
-          return EmptyState(icon: LucideIcons.history, title: context.l10n.noCheckpointsTitle, message: context.l10n.noCheckpoints);
+          return EmptyState(
+            icon: LucideIcons.history,
+            title: context.l10n.noCheckpointsTitle,
+            message: context.l10n.noCheckpoints,
+          );
         }
         return LayoutBuilder(
           builder: (context, constraints) {
             final side = pageSide(constraints.maxWidth);
             return ListView(
-              padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
+              padding: EdgeInsets.fromLTRB(
+                side,
+                AppSpace.xs,
+                side,
+                AppSpace.xl + MediaQuery.paddingOf(context).bottom,
+              ),
               children: [
                 FormNote(context.l10n.checkpointsHelp),
                 const SizedBox(height: AppSpace.md),
@@ -848,8 +1217,15 @@ class _CheckpointsTabState extends ConsumerState<CheckpointsTab> {
                         title: cp.label,
                         subtitle: relativeTime(cp.createdAt, context),
                         trailing: OutlinedButton.icon(
-                          onPressed: () => confirmRestore(context, ref, widget.computerId, cp.id),
-                          style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+                          onPressed: () => confirmRestore(
+                            context,
+                            ref,
+                            widget.computerId,
+                            cp.id,
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                          ),
                           icon: const Icon(LucideIcons.rotateCcw, size: 16),
                           label: Text(context.l10n.restore),
                         ),

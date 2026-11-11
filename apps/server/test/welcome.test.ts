@@ -118,14 +118,13 @@ describe("welcome chat", () => {
     const intro = await last();
     const all = actions(intro);
     expect(intro[0]?.text).toContain("repositories");
-    // No model yet: the model card first. Coding: GitHub, not Google. Team: an invite card.
+    // One card at a time. No model yet, so only the model card. GitHub and the invite wait.
     expect(all.filter((a) => a.name === "app:route").map((a) => a.context?.path)).toContain(
       "/settings/keys",
     );
-    expect(all.filter((a) => a.name === "app:connect").map((a) => a.context?.app)).toEqual([
-      "github",
-    ]);
-    expect(all.some((a) => a.name === "app:invite")).toBe(true);
+    expect(all.filter((a) => a.name === "app:connect")).toEqual([]);
+    expect(all.some((a) => a.name === "app:invite")).toBe(false);
+    expect(all.some((a) => a.name === "welcome.next")).toBe(true);
     const mems = await h.tdb.admin<
       { content: string }[]
     >`select content from public.memories where bot_id = ${w.bot_id} order by created_at`;
@@ -170,7 +169,17 @@ describe("welcome chat", () => {
       },
     });
     await h.tdb.admin`update public.bots set autonomy = 'autonomous' where id = ${w.bot_id}`;
-    await act(await last(), "welcome.next", {}, "Done, next");
+    await act(await last(), "welcome.next", {}, "Continue");
+    const connect = await last();
+    expect(actions(connect).filter((a) => a.name === "app:connect").map((a) => a.context?.app)).toEqual([
+      "github",
+    ]);
+    expect(actions(connect).some((a) => a.name === "app:invite")).toBe(false);
+    await act(connect, "welcome.next", {}, "Done, next");
+    const invite = await last();
+    expect(actions(invite).some((a) => a.name === "app:invite")).toBe(true);
+    expect(actions(invite).some((a) => a.name === "app:connect")).toBe(false);
+    await act(invite, "welcome.next", {}, "Done, next");
     const task = await last();
     expect(components(task).find((c) => c.component === "TextField")?.label).toContain(
       "github.com",
