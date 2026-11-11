@@ -109,6 +109,23 @@ services:
     networks: [control]
     restart: unless-stopped
 
+  # Free web search (D-179): `--profile search`, then SEARXNG_URL=http://127.0.0.1:18080 in .env
+  # (the API and worker run on the host in development).
+  searxng:
+    image: searxng/searxng:2026.10.29-c15647b5a
+    container_name: casama-searxng
+    profiles: [search]
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET:-}
+    volumes:
+      - ./selfhost/searxng/settings.yml:/etc/searxng/settings.yml:ro
+    ports:
+      - "127.0.0.1:18080:8080"
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETGID, SETUID]
+    networks: [control, egress]
+    restart: unless-stopped
+
   # Build-only services so `compose build` also builds the computer images.
   computer-headless:
     build:
