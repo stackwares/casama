@@ -57,6 +57,8 @@ export interface Usage {
   outputTokens: number;
   /** Input tokens served from the provider's prompt cache, when it reports them. */
   cachedInputTokens?: number;
+  /** Input tokens written to the prompt cache (Anthropic charges these at 1.25×). */
+  cacheWriteTokens?: number;
 }
 
 export type GatewayEvent =

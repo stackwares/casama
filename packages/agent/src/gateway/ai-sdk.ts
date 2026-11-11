@@ -62,6 +62,10 @@ export function languageModel(m: ResolvedModel): LanguageModel {
 export function reasoningOptions(
   m: ResolvedModel,
 ): Record<string, Record<string, JSONValue>> | undefined {
+  // Anthropic only caches prompts it's asked to: cache everything up to the newest message, so
+  // the instructions, tools and conversation so far are read back at a tenth of the price on the
+  // next turn (OpenAI, Gemini and xAI cache matching prefixes on their own). See docs/COSTS.md.
+  if (m.provider === "anthropic") return { anthropic: { cacheControl: { type: "ephemeral" } } };
   if (!m.reasoningEffort) return undefined;
   if (m.provider === "openai") return { openai: { reasoningEffort: m.reasoningEffort } };
   if (m.provider === "openrouter")
@@ -191,6 +195,12 @@ export class AiSdkGateway implements ModelGateway {
             usage: {
               inputTokens: part.totalUsage.inputTokens ?? 0,
               outputTokens: part.totalUsage.outputTokens ?? 0,
+              ...(part.totalUsage.inputTokenDetails?.cacheReadTokens
+                ? { cachedInputTokens: part.totalUsage.inputTokenDetails.cacheReadTokens }
+                : {}),
+              ...(part.totalUsage.inputTokenDetails?.cacheWriteTokens
+                ? { cacheWriteTokens: part.totalUsage.inputTokenDetails.cacheWriteTokens }
+                : {}),
             },
           };
         }

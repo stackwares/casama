@@ -88,6 +88,56 @@ With our own Hetzner servers for computers (about $0.025 an hour each, if kept b
 hours cost about $2.50, and the break-even price drops to about **$31 a month on the web, $35 on iOS**. **Computers are the
 biggest lever:** either run them on our own servers or include far fewer hours per plan.
 
+## Lowering costs (so prices can come down)
+
+Ranked by saving. ✅ = done, ☐ = to do.
+
+1. **Bot computers on our own dense servers** (biggest lever, up to 15× cheaper): a dedicated server
+   such as Hetzner AX102 (16 cores, 128 GB, €159 / month) holds about 28 standard computers, because
+   bots mostly wait on the model (CPU can be shared; memory is the limit). That is about **$0.01 per
+   computer-hour** against $0.17 on E2B or Daytona. Also: headless by default (1–2 GB instead of 4;
+   the desktop only when needed), sleep after about 5 minutes idle (sleep and wake already work),
+   a small warm pool (built), EU servers (US ones cost about twice as much). ☐ Needs a server.
+2. **Models on our keys:**
+   - ✅ Anthropic prompt caching: Claude requests ask for caching, so the instructions, tools and
+     conversation so far are read back at a tenth of the price next turn. OpenAI, Gemini and xAI
+     cache matching prefixes on their own.
+   - ✅ Cached and cache-write tokens are recorded and priced (`costOf`): reads at 0.1× input (0.25× on
+     Gemini), Anthropic writes at 1.25×.
+   - ✅ Background work (conversation summaries, memory) runs on the provider's small model (Claude
+     Haiku 5.5, GPT-6 Luna, Gemini 3.5 Flash-Lite) when the bot hasn't picked a cheap model,
+     falling back to its main model.
+   - ✅ Onboarding already puts the person's own AI first (ChatGPT subscription, own key, local
+     model); Casama credits aren't offered there.
+   - ☐ Batch APIs (50% off) for work that can wait hours. Routines run at set times, so only for
+     truly deferrable jobs.
+   - ☐ Call the big providers directly with our keys instead of OpenRouter (saves its 5.5% fee).
+3. **Apps:** ☐ connect directly wherever the app allows (free); register our own GitHub, Asana and
+   HubSpot apps (free, needs Oliver's sign-in); for the rest, our own app inside Composio ($0.0003 a
+   call instead of $0.002, free connections, Casama on the sign-in screen).
+4. **Voice and phone:** ✅ Gemini Live is the default voice (about $0.02 a minute against about $0.10
+   for OpenAI Realtime). ☐ Compare Telnyx and other carriers with Twilio.
+5. **Search:** ☐ our own SearXNG by default, Brave or Tavily as the paid fallback; cache results;
+   Gemini grounding's 5,000 free searches a month.
+6. **Platform and fees:** our own Postgres on the same server (not Supabase Cloud); R2 for snapshots
+   (no egress fees); our own TURN (built); free tiers for PostHog and Sentry at first; yearly plans
+   and $10+ credit packs so Dodo's $0.40 fee matters less; web checkout links on iOS in the US where
+   Apple must allow them (re-check the 2026 rules).
+
+**What it allows** (computers at about $0.01 an hour, most apps off Composio, credits at 1.4× cost,
+smaller included credits):
+
+| Plan | Price | Our cost if fully used | Margin after fees (web / iOS) |
+|---|---|---|---|
+| Plus: 30 computer hours, $5 credits | **$15** | about $4.00 | 71% / 69% |
+| Pro: 100 hours, $10 credits, 1 phone number | **$39** | about $9.80 | 73% / 70% |
+| Max: 400 hours, $50 credits, 3 numbers | **$149** | about $45.00 | 68% / 65% |
+
+Competitors for reference (third-party reports, 2026): Manus $20 / $40 / $200, SuperGrok $30 /
+$100 / $300, Lindy $29.99 / $99.99 / $199.99, ChatGPT and Claude $20 / $100 / $200. Without the
+cheaper infrastructure the suggestion is $24 / $59 / $199 (see the plan table in the pricing
+discussion); with it, $15 / $39 / $149 undercuts every product that gives bots their own computer.
+
 ## To fix before charging anyone
 
 1. **Computer time:** charge the real provider rate (vCPU-seconds plus GiB-seconds of RAM for E2B and

@@ -83,7 +83,31 @@ export function capabilitiesOf(model: string): ModelCapabilities {
   return DEFAULT;
 }
 
-export function costOf(model: string, usage: { inputTokens: number; outputTokens: number }) {
+/**
+ * What a call cost, in USD. Cached input is read back at a tenth of the input price on models that
+ * cache (Anthropic, OpenAI; Gemini is a quarter, so a tenth may undercharge slightly there),
+ * and Anthropic charges cache writes at 1.25×. Input tokens include cached and written ones.
+ */
+export function costOf(
+  model: string,
+  usage: {
+    inputTokens: number;
+    outputTokens: number;
+    cachedInputTokens?: number;
+    cacheWriteTokens?: number;
+  },
+) {
   const c = capabilitiesOf(model);
-  return (usage.inputTokens * c.inputPrice + usage.outputTokens * c.outputPrice) / 1_000_000;
+  const cached = c.caching ? Math.min(usage.cachedInputTokens ?? 0, usage.inputTokens) : 0;
+  const written = c.caching ? Math.min(usage.cacheWriteTokens ?? 0, usage.inputTokens - cached) : 0;
+  const fresh = usage.inputTokens - cached - written;
+  const readFactor = /gemini/.test(model.toLowerCase()) ? 0.25 : 0.1;
+  const writeFactor = /claude/.test(model.toLowerCase()) ? 1.25 : 1;
+  return (
+    (fresh * c.inputPrice +
+      cached * c.inputPrice * readFactor +
+      written * c.inputPrice * writeFactor +
+      usage.outputTokens * c.outputPrice) /
+    1_000_000
+  );
 }

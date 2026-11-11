@@ -11,6 +11,7 @@ import {
   parseMentions,
   RUN_DEFAULTS,
   resolveActionRule,
+  SMALL_MODELS,
   toolCategory,
 } from "@casama/domain";
 import type { Logger } from "@casama/observability";
@@ -1848,7 +1849,7 @@ async function compact(
   ) => Promise<ResolvedModel[]>,
   busFn: () => Promise<EventBus>,
 ) {
-  const chain = await chainFor([info.policy.cheap ?? info.policy.primary]);
+  const chain = await backgroundChain(info.policy, chainFor);
   const transcript = older
     .filter((m) => m.role !== "tool")
     .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
@@ -2076,7 +2077,7 @@ async function extractStep(
   // Personal device data (calendar, health, places…) stays out of the bot's memory, which every
   // user of the bot can read (audit 2026-11; D-091).
   if ((await deviceDataOfRun(deps.db, info.runId).catch(() => [])).length) return 0;
-  const chain = await chainFor([info.policy.cheap ?? info.policy.primary]);
+  const chain = await backgroundChain(info.policy, chainFor);
   const cheap = chain[0];
   if (!cheap) return 0;
   const gateway = { stream: withFallback(deps.gateway, chain, deps.fallback) };
@@ -2138,7 +2139,7 @@ async function learnStep(
   busFn: () => Promise<EventBus>,
 ) {
   if (!info.current?.text || info.group) return null;
-  const chain = await chainFor([info.policy.cheap ?? info.policy.primary]);
+  const chain = await backgroundChain(info.policy, chainFor);
   const cheap = chain[0];
   if (!cheap) return null;
   const stream = withFallback(deps.gateway, chain, deps.fallback);
@@ -2696,4 +2697,26 @@ async function memoryOf(deps: RunDeps, db: Database, orgId: string) {
   if (deps.memoryFor) return deps.memoryFor(orgId);
   const { memoryStoreFor } = await import("./memory-store.ts");
   return memoryStoreFor(db, orgId, await deps.embedderFor(orgId), deps.fetch);
+}
+
+/**
+ * The models a bot's background work runs on (summaries, memory): its own cheap model when it has
+ * one, otherwise the same provider's small model with the main model as the fallback, so a bot on
+ * a large model doesn't pay large-model prices for housekeeping (docs/COSTS.md).
+ */
+export async function backgroundChain(
+  policy: {
+    primary?: { credential_id: string; model: string };
+    cheap?: { credential_id: string; model: string };
+  },
+  chainFor: (
+    c: Array<{ credential_id: string; model: string } | undefined>,
+  ) => Promise<ResolvedModel[]>,
+): Promise<ResolvedModel[]> {
+  if (policy.cheap) return chainFor([policy.cheap]);
+  const primary = (await chainFor([policy.primary]))[0];
+  if (!primary) return [];
+  const small = SMALL_MODELS[primary.provider];
+  if (!small || small === primary.model) return [primary];
+  return [{ ...primary, model: small, reasoningEffort: undefined }, primary];
 }

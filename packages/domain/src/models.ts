@@ -10,6 +10,16 @@ export const DEFAULT_MODELS: Readonly<Record<string, string>> = {
 };
 export const DEFAULT_REASONING_EFFORT: ReasoningEffort = "medium";
 
+/**
+ * Each provider's small model, for a bot's background work (conversation summaries, memory,
+ * routine briefs) when the bot hasn't picked a cheap model of its own (docs/COSTS.md).
+ */
+export const SMALL_MODELS: Readonly<Record<string, string>> = {
+  openai: "gpt-6-luna",
+  anthropic: "claude-haiku-5-5",
+  google: "gemini-3.5-flash-lite",
+};
+
 /** The default model for a provider, if Casama has one (others need the user to pick). */
 export function defaultModelFor(
   provider: string,
