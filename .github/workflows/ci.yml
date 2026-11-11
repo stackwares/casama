@@ -13,7 +13,8 @@ jobs:
     name: Lint, typecheck, tests
     runs-on: ubuntu-24.04
     env:
-      PG_BIN: /usr/lib/postgresql/16/bin
+      # Same major version as production and local development: drizzle-kit pulls differ across versions.
+      PG_BIN: /usr/lib/postgresql/17/bin
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v6
@@ -30,7 +31,8 @@ jobs:
             echo "http://archive.ubuntu.com/ubuntu/	priority:1" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           fi
           for i in 1 2 3; do
-            sudo apt-get update && sudo apt-get install -y postgresql-16-pgvector && break
+            sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y &&
+              sudo apt-get install -y postgresql-17 postgresql-17-pgvector postgresql-server-dev-17 && break
             [ "$i" = 3 ] && exit 1
             sleep 20
           done
