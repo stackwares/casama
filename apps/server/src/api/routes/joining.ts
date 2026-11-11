@@ -15,6 +15,11 @@ import {
 } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
+import {
+  type BrandedEmail,
+  renderEmailHtml,
+  renderEmailText,
+} from "../../services/email-layout.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso, newToken, sha256Hex } from "../util.ts";
@@ -838,10 +843,22 @@ export async function sendInviteEmail(deps: AppDeps, orgId: string, email: strin
   const name = org?.name ?? "a workspace";
   const link = `${deps.env.PUBLIC_APP_URL.replace(/\/$/, "")}/join/${token}`;
   try {
+    const message: BrandedEmail = {
+      mascot: "wow",
+      preheader: `Join ${name} on ${PRODUCT_NAME}`,
+      title: `You're invited to ${name}`,
+      intro: [
+        `You've been invited to join ${name} on ${PRODUCT_NAME}, where AI teammates work for you on their own computers.`,
+        `Sign in with ${email} to accept.`,
+      ],
+      button: { label: "Join the workspace", url: link },
+      note: "This link expires in 7 days. If you weren't expecting it, you can ignore this email.",
+    };
     await deps.email.send({
       to: email,
       subject: `You're invited to ${name} on ${PRODUCT_NAME}`,
-      text: `You've been invited to join ${name} on ${PRODUCT_NAME}.\n\nJoin: ${link}\n\nSign in with ${email} to accept. This link expires in 7 days.`,
+      text: renderEmailText(message),
+      html: renderEmailHtml(message),
     });
     return true;
   } catch (err) {
