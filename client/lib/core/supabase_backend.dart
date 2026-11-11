@@ -12,6 +12,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'apple_sign_in.dart';
+import 'desktop_sign_in.dart';
 import 'passkeys.dart';
 import 'backend.dart';
 import 'chatgpt_connect.dart';
@@ -139,8 +140,19 @@ class SupabaseBackend implements Backend {
         await _signInWithAppleNative()) {
       return;
     }
+    final oauthProvider = provider == 'apple'
+        ? sb.OAuthProvider.apple
+        : sb.OAuthProvider.google;
+    if (_loopback) {
+      return _signInThroughLoopback(
+        (redirect) async => (await supabase.auth.getOAuthSignInUrl(
+          provider: oauthProvider,
+          redirectTo: redirect,
+        )).url,
+      );
+    }
     final opened = await supabase.auth.signInWithOAuth(
-      provider == 'apple' ? sb.OAuthProvider.apple : sb.OAuthProvider.google,
+      oauthProvider,
       redirectTo: _authRedirect,
       // The default on iOS is the system Safari sheet. A casama:// return leaves that sheet on a
       // blank page, and closeInAppWebView cannot dismiss it. The in-app web view can be closed.
@@ -152,6 +164,43 @@ class SupabaseBackend implements Backend {
     if (opened && !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       _closeSheetOnSignIn();
     }
+  }
+
+  /// Windows and Linux don't open casama:// links, so the browser comes back to 127.0.0.1.
+  static bool get _loopback => !kIsWeb && loopbackSignInPlatform;
+
+  /// Opens the browser at the sign-in page [signInUrl] builds for the loopback address, then
+  /// returns: the listener finishes the sign-in in the background (the code is swapped for a
+  /// session, which signs the app in), so the buttons don't stay busy if the person gives up.
+  Future<void> _signInThroughLoopback(
+    Future<String> Function(String redirect) signInUrl,
+  ) async {
+    final loopback = await LoopbackSignIn.start();
+    try {
+      final url = Uri.parse(await signInUrl(loopback.redirectUrl));
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        throw const sb.AuthException('Could not open the browser.');
+      }
+    } catch (_) {
+      await loopback.close();
+      rethrow;
+    }
+    unawaited(
+      loopback.wait((query) async {
+        final code = query['code'];
+        if (code == null) {
+          return query['error_description'] ??
+              query['error'] ??
+              'The sign-in page did not send a sign-in code.';
+        }
+        try {
+          await supabase.auth.exchangeCodeForSession(code);
+          return null;
+        } on sb.AuthException catch (e) {
+          return e.message;
+        }
+      }),
+    );
   }
 
   /// The casama:// link back signs the person in, but the in-app page stays up blank, so close it
@@ -2810,12 +2859,20 @@ class SupabaseBackend implements Backend {
       (await api.admin.setAdminCloudModels(cloudModels: models)).data!;
   @override
   Future<ConnectionSettings> setAdminConnectionSettings({
-    required bool serverComposio,
+    bool? serverComposio,
+    bool? googleDirect,
   }) async => (await api.admin.setAdminConnectionSettings(
     setConnectionSettingsRequest: SetConnectionSettingsRequest(
-      composio: serverComposio
+      composio: serverComposio == null
+          ? null
+          : serverComposio
           ? SetConnectionSettingsRequestComposioEnum.server
           : SetConnectionSettingsRequestComposioEnum.own,
+      google: googleDirect == null
+          ? null
+          : googleDirect
+          ? SetConnectionSettingsRequestGoogleEnum.direct
+          : SetConnectionSettingsRequestGoogleEnum.composio,
     ),
   )).data!;
 
@@ -2948,10 +3005,14 @@ class SupabaseBackend implements Backend {
       )).data!.runEventRetentionDays;
   @override
   Future<void> signInWithSso(String email) async {
-    await supabase.auth.signInWithSSO(
-      domain: email.split('@').last.trim().toLowerCase(),
-      redirectTo: _authRedirect,
-    );
+    final domain = email.split('@').last.trim().toLowerCase();
+    if (_loopback) {
+      return _signInThroughLoopback(
+        (redirect) =>
+            supabase.auth.getSSOSignInUrl(domain: domain, redirectTo: redirect),
+      );
+    }
+    await supabase.auth.signInWithSSO(domain: domain, redirectTo: _authRedirect);
   }
 
   // --- billing (Phase 7) ---------------------------------------------------

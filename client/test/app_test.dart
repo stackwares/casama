@@ -179,6 +179,28 @@ void main() {
     expect(backend.providerSignIns, ['google']);
   });
 
+  testWidgets('Continue with Apple is offered off Apple platforms too', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      final backend = FakeBackend()..signedIn = false;
+      await tester.pumpWidget(harness(backend, const SignInScreen()));
+      await tester.tap(find.byKey(const Key('openSignIn')));
+      await tester.pumpAndSettle();
+      // Google leads on Android; Apple follows and opens the browser flow.
+      expect(
+        tester.getTopLeft(find.byKey(const Key('googleSignIn'))).dy,
+        lessThan(tester.getTopLeft(find.byKey(const Key('appleSignIn'))).dy),
+      );
+      await tester.tap(find.byKey(const Key('appleSignIn')));
+      await tester.pump(const Duration(seconds: 3));
+      expect(backend.providerSignIns, ['apple']);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
   testWidgets('sign-in validates email and password', (tester) async {
     await tester.pumpWidget(
       harness(FakeBackend()..signedIn = false, const SignInScreen()),
@@ -193,6 +215,7 @@ void main() {
     await tester.pump();
     expect(find.text('Enter a valid email address'), findsOneWidget);
     expect(find.text('Use at least 6 characters'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('toggleMode')));
     await tester.tap(find.byKey(const Key('toggleMode')));
     await tester.pump();
     expect(find.text('Create your account'), findsOneWidget);

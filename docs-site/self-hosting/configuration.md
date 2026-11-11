@@ -186,7 +186,7 @@ EMAIL_AUTOCONFIRM=false
 | `SIGNUP_HOOK_ENABLED`    | `false`                          | `true` makes Supabase Auth call Casama's sign-up hook. Needed for the allowlist.                                                         |
 | `AUTH_HOOK_SECRET`       | (empty)                          | The hook's signing secret, `v1,whsec_<base64>`. Shared by Auth and the API.                                                              |
 | `SIGNUP_HOOK_URI`        | Set by the installer             | Where Auth calls the hook: `https://<domain>/hooks/auth/before-user-created`. Empty for `--local`.                                       |
-| `ADDITIONAL_REDIRECT_URLS` | `casama://app/login-callback`  | Redirect URLs Supabase Auth accepts after sign-in, comma-separated. Keep the default for the apps.                                       |
+| `ADDITIONAL_REDIRECT_URLS` | `casama://app/login-callback,http://127.0.0.1:*/auth/callback` | Redirect URLs Supabase Auth accepts after sign-in, comma-separated. Keep the default for the apps: iPhone, Mac and Android come back on `casama://`, Windows and Linux on a listener on `127.0.0.1`. |
 | `SAML_ENABLED`           | `true`                           | SAML SSO in Supabase Auth. Workspaces register their identity provider through the API (needs an enterprise license).                    |
 | `ABUSE_CONTROLS`         | `auto` (off when self-hosted)    | `auto`, `on` or `off`. Sign-up proofs, verified email before computers start, and suspension on egress abuse. Meant for Casama Cloud.    |
 | `EGRESS_ABUSE`           | `off`                            | `on` makes the egress proxy refuse mail and crypto-mining traffic from computers and report it.                                          |
@@ -263,7 +263,8 @@ A passkey belongs to its domain. Changing `PASSKEY_RP_ID` later means everyone a
 
 iPhone and Mac use Apple's system sheet, so they need `ai.casama.app` in the client id list.
 Android, Windows, Linux and the web open the browser, which is what the secret is for. Keep
-`casama://app/login-callback` in `ADDITIONAL_REDIRECT_URLS`. If the web app is served from another
+`casama://app/login-callback` (Android) and `http://127.0.0.1:*/auth/callback` (Windows and Linux)
+in `ADDITIONAL_REDIRECT_URLS`. If the web app is served from another
 address, add that address too.
 
 ## Models and AI Gateway

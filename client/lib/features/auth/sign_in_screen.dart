@@ -12,6 +12,7 @@ import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../theme/wallpaper.dart';
 import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/brand_sign_in_buttons.dart';
@@ -42,13 +43,15 @@ class SignInScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final statusBar = MediaQuery.paddingOf(context).top;
-    return Scaffold(
-      // Plain, so the bots are the only thing moving on it.
-      backgroundColor: scheme.surface,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: FloatingMascots()),
-          ProgressiveFade(child: SafeArea(
+    // Always the brand look here, whatever the person picked in Settings → Background: the still
+    // clouds doodles on the Casama gradient, faint enough that the bots stay the only thing moving.
+    return Wallpaper(
+      force: true,
+      specOverride: WallpaperTheme.of(_welcomeWallpaper, scheme),
+      child: Scaffold(
+      backgroundColor: Colors.transparent,
+      body: FloatingMascots(
+          child: ProgressiveFade(child: SafeArea(
             top: false,
             bottom: false,
             child: Center(
@@ -128,11 +131,17 @@ class SignInScreen extends ConsumerWidget {
               ),
             ),
           )),
-        ],
+      ),
       ),
     );
   }
 }
+
+const _welcomeWallpaper = WallpaperSpec(
+  pattern: WallpaperPattern.clouds,
+  palette: WallpaperPalette.casama,
+  intensity: 0.35,
+);
 
 /// Apple and Google up front; email and password, a magic link, SSO and self-hosting folded behind reveals.
 class SignInOptions extends ConsumerStatefulWidget {
@@ -420,7 +429,9 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final methods = ref.watch(authMethodsProvider).value ?? const AuthMethods();
-    final showApple =
+    // Continue with Apple is on every platform: Apple's own sheet on iOS and macOS, the browser
+    // everywhere else. It leads where Apple people are (iOS, macOS, web); Google leads elsewhere.
+    final appleFirst =
         kIsWeb ||
         defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.macOS;
@@ -428,6 +439,16 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
         Uri.tryParse(ref.read(backendProvider).apiUrl)?.host ??
         ref.read(backendProvider).apiUrl;
     Widget pill(Widget button) => SizedBox(height: 50, child: button);
+    final apple = AppleSignInButton(
+      key: const Key('appleSignIn'),
+      label: l10n.continueWithApple,
+      onPressed: _busy ? null : () => _provider('apple'),
+    );
+    final google = GoogleSignInButton(
+      key: const Key('googleSignIn'),
+      label: l10n.continueWithGoogle,
+      onPressed: _busy ? null : () => _provider('google'),
+    );
     // Signed in (password, a link, Google or Apple): the sheet goes with the sign-in screen.
     ref.listen(signedInProvider, (_, next) {
       if (next.value == true && mounted) Navigator.of(context).maybePop();
@@ -464,21 +485,11 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
                   ),
                 ),
                 const SizedBox(height: AppSpace.lg),
-                // Apple first where it lives, then Google: the two ways most people come in.
-                if (showApple) ...[
-                  AppleSignInButton(
-                    key: const Key('appleSignIn'),
-                    label: l10n.continueWithApple,
-                    onPressed: _busy ? null : () => _provider('apple'),
-                  ),
+                // Apple and Google: the two ways most people come in.
+                for (final button in appleFirst ? [apple, google] : [google, apple]) ...[
+                  button,
                   const SizedBox(height: AppSpace.sm),
                 ],
-                GoogleSignInButton(
-                  key: const Key('googleSignIn'),
-                  label: l10n.continueWithGoogle,
-                  onPressed: _busy ? null : () => _provider('google'),
-                ),
-                const SizedBox(height: AppSpace.sm),
                 // A passkey signs in an account that already has one, so not when signing up.
                 if (methods.passkeys && !_signUp) ...[
                   SizedBox(
