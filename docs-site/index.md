@@ -1,23 +1,47 @@
 ---
 layout: home
+title: Kasama
+titleTemplate: AI teammates with their own computers
 hero:
   name: Kasama
   text: AI teammates with their own computers
-  tagline: Bots that remember, work on real computers, ask before risky steps, and run on your server with any model.
+  tagline: Bots that remember, work on real computers, ask before risky steps, and run on your own server with any model.
+  image:
+    src: /logo.png
+    alt: Kasama
   actions:
     - theme: brand
       text: Quick start
       link: /quick-start
     - theme: alt
-      text: Self-host in 15 minutes
-      link: /self-hosting
+      text: What is Kasama?
+      link: /introduction
+    - theme: alt
+      text: Self-host
+      link: /self-hosting/
 features:
-  - title: Persistent bots
-    details: Each bot has a persona, memory, skills and a budget, and keeps working on routines and webhooks while you are away.
-  - title: Real computers
-    details: Every bot gets a sandboxed Linux computer with a shell, files and a browser. Watch it live and take control any time.
+  - title: Bots that keep going
+    details: Each bot has instructions, memory, skills and a budget, and keeps working on schedules, webhooks and triggers while you're away.
+    link: /guide/bots
+    linkText: Bots and models
+  - title: A real computer each
+    details: A sandboxed Linux computer with a shell, files and a browser. Watch it live and take control at any time.
+    link: /guide/computers
+    linkText: Computers
   - title: You stay in charge
-    details: Autonomy levels, approvals for risky actions, checkpoints before destructive commands, and a full run timeline.
+    details: Autonomy levels, approvals for risky actions, action rules, checkpoints before destructive commands and a full timeline of every run.
+    link: /guide/autonomy
+    linkText: Autonomy and approvals
+  - title: Works with your tools
+    details: Built-in app connections, MCP servers, plugins, chat apps, voice and phone calls, and an API, CLI and SDK to build on.
+    link: /guide/connections
+    linkText: Apps and connections
+  - title: Any model
+    details: Bring your own key for OpenAI, Anthropic, Google, xAI, OpenRouter or any OpenAI-compatible endpoint, including local models, or sign in with a ChatGPT plan.
+    link: /guide/bots
+    linkText: Choose a model
   - title: Yours to run
-    details: Apache-2.0, one install script, any model (OpenRouter, OpenAI, Anthropic, Google, xAI, or local Ollama). No paywall when self-hosted.
+    details: Apache-2.0, one install script, and no paywall when you self-host. Apps for iOS, Android, macOS, Windows, Linux and the web.
+    link: /self-hosting/
+    linkText: Self-hosting
 ---

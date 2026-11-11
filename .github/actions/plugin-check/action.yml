@@ -1,0 +1,27 @@
+name: Check a Kasama plugin
+description: Checks an Agent Plugins 1.0 package the way Kasama checks it at install.
+branding:
+  icon: check-circle
+  color: purple
+inputs:
+  path:
+    description: The plugin folder, relative to the repository root.
+    default: "."
+  strict:
+    description: Also fail when Kasama would skip or ignore something (a skill, a server, a field).
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 24
+    # The checker needs nothing installed: it runs from this action's own copy of the Kasama repo.
+    - shell: bash
+      env:
+        PLUGIN_PATH: ${{ inputs.path }}
+        STRICT: ${{ inputs.strict }}
+      run: |
+        args=("$PLUGIN_PATH")
+        if [ "$STRICT" = "true" ]; then args+=(--strict); fi
+        node "$GITHUB_ACTION_PATH/../../../packages/plugin-check/src/main.ts" "${args[@]}"

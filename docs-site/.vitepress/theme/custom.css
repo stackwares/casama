@@ -1,0 +1,18 @@
+/* Kasama's accent (the same teal as the marketing page), light and dark. */
+:root {
+  --vp-c-brand-1: #0f6b5c;
+  --vp-c-brand-2: #148a76;
+  --vp-c-brand-3: #0f6b5c;
+  --vp-c-brand-soft: rgba(15, 107, 92, 0.14);
+}
+
+.dark {
+  --vp-c-brand-1: #5cc4ae;
+  --vp-c-brand-2: #7fd3c1;
+  --vp-c-brand-3: #2f9e88;
+  --vp-c-brand-soft: rgba(92, 196, 174, 0.16);
+}
+
+:root {
+  --vp-home-hero-name-color: var(--vp-c-brand-1);
+}

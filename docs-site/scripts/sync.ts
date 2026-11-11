@@ -1,9 +1,8 @@
-/** Copies shared docs and the OpenAPI document into the site before a build. */
+/** Copies the OpenAPI document into the site and writes the API reference page before a build. */
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const root = new URL("../../", import.meta.url);
 const here = new URL("../", import.meta.url);
-copyFileSync(new URL("docs/SELF_HOST.md", root), new URL("self-hosting.md", here));
 mkdirSync(new URL("public/api/", here), { recursive: true });
 copyFileSync(
   new URL("packages/contracts/openapi.json", root),
@@ -23,4 +22,4 @@ writeFileSync(
 </html>
 `,
 );
-console.log(`synced self-hosting guide and OpenAPI ${version}`);
+console.log(`synced OpenAPI ${version}`);

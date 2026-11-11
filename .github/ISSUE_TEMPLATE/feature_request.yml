@@ -4,8 +4,13 @@ labels: [enhancement]
 body:
   - type: textarea
     id: problem
-    attributes: { label: Problem, description: What are you trying to do? }
+    attributes:
+      { label: Problem, description: What are you trying to do, and what gets in the way? }
     validations: { required: true }
   - type: textarea
     id: proposal
-    attributes: { label: Proposal }
+    attributes: { label: Proposal, description: What would you like Kasama to do? }
+  - type: textarea
+    id: alternatives
+    attributes:
+      { label: Alternatives, description: Workarounds or other approaches you've considered. }

@@ -4,7 +4,7 @@ This is the as-built view. [SPEC.md](../SPEC.md) is the target; this file tracks
 
 ## Status
 
-**Phases 0 to 6 (backend, bots and chat, computers, the Flutter app, autonomy and integrations, live computer, reach and Flutter extras): built.** See "Build status" at the end.
+**v1 (Phases 0 to 8) and the post-v1 roadmap (Waves 1 to 4): built; the public launch is pending.** See "Build status" at the end, [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) for the launch gate and [AUDIT-2026-11.md](AUDIT-2026-11.md) for the latest full audit. User-facing documentation is in [`docs-site/`](../docs-site/).
 
 ## Components today
 
@@ -181,7 +181,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Bot templates (D-110)
 
-- `BotTemplateFile` (contracts), `apps/server/src/api/routes/bot-template.ts` (export, share links in `bot_shares`, import), `docs/BOT-TEMPLATE-FORMAT.md`, and the app's `features/bots/bot_template.dart` (share sheet, import preview, `/import/<token>`).
+- `BotTemplateFile` (contracts), `apps/server/src/api/routes/bot-template.ts` (export, share links in `bot_shares`, import), `docs-site/develop/bot-templates.md`, and the app's `features/bots/bot_template.dart` (share sheet, import preview, `/import/<token>`).
 
 ## Shortcuts (D-111)
 
@@ -209,7 +209,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Hosted MCP endpoint (D-117)
 
-- `apps/server/src/api/routes/mcp.ts` (`/mcp` with `@kasama/mcp` tools over in-process API calls, the OAuth server, consent, API keys), `mcp_clients`/`mcp_auth_requests`/`mcp_tokens`, `organizations.mcp_decide_approvals`, `docs/MCP.md`, and the app's consent screen and Connect AI apps section.
+- `apps/server/src/api/routes/mcp.ts` (`/mcp` with `@kasama/mcp` tools over in-process API calls, the OAuth server, consent, API keys), `mcp_clients`/`mcp_auth_requests`/`mcp_tokens`, `organizations.mcp_decide_approvals`, `docs-site/guide/mcp.md`, and the app's consent screen and Connect AI apps section.
 
 ## Group chats (D-118)
 
@@ -225,7 +225,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Plugins (D-121)
 
-- `packages/domain/src/agent-plugins.ts` (Agent Plugins 1.0 checks), `packages/agent/src/plugins.ts` (`syncPluginComputer`, `computerMcpFor`) and `ComputerMcpAdapter` in `integrations.ts`, `plugins`/`plugin_files` plus `skills.plugin_id`/`integrations.plugin_id`, `apps/server/src/api/routes/plugins.ts`, computerd `PUT /mcp-servers`, the supervisor's `/computers/:ref/mcp*` passthrough, `SandboxHandle.setMcpServers|mcpFetch`, and the bot's Plugins screen.
+- `packages/domain/src/agent-plugins.ts` (Agent Plugins 1.0 checks), `packages/agent/src/plugins.ts` (`syncPluginComputer`, `computerMcpFor`) and `ComputerMcpAdapter` in `integrations.ts`, `plugins`/`plugin_files` plus `skills.plugin_id`/`integrations.plugin_id`, `apps/server/src/api/routes/plugins.ts`, computerd `PUT /mcp-servers`, the supervisor's `/computers/:ref/mcp*` passthrough, `SandboxHandle.setMcpServers|mcpFetch`, and the bot's Plugins screen. Developer kit (D-160): `docs-site/develop/plugins.md`, `examples/hello-plugin`, `packages/plugin-check` and the `.github/actions/plugin-check` action.
 
 ## Import an agent (D-122)
 
@@ -332,7 +332,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - **Enterprise** (D-073): `ee/` (`@kasama/ee`): license keys, `/v1/orgs/{id}/audit-log/export`, `/v1/orgs/{id}/sso`.
 - **Telemetry** (D-074): opt-in weekly ping; `/telemetry/v1/ping` on Kasama Cloud.
 - **Metrics** (D-075): `/metrics`; `infra/monitoring/` (Prometheus, alerts, Grafana).
-- **Self-host** (D-076): `install.sh`, `infra/compose/docker-compose.yml`, `kasama selfhost`, `deploy/`, `docs/SELF_HOST.md`, `docs-site/`.
+- **Self-host** (D-076): `install.sh`, `infra/compose/docker-compose.yml`, `kasama selfhost`, `deploy/`, `docs-site/self-hosting/`.
 - **MCP server** (D-077): `packages/mcp`.
 - **Evals and load** (D-078): `packages/evals`, `apps/server/load`.
 - **Launch prep**: `site/`, `client/store/`, `docs/launch/`, `scripts/package-*`, `client/shorebird.yaml`; gate status in `docs/LAUNCH_CHECKLIST.md`, security in `docs/SECURITY_REVIEW.md`.
@@ -388,4 +388,4 @@ Keys go into Supabase Vault through the API's server role and are never returned
 | 7 Monetization          | Built                  | Gate verified locally against provider fakes: a Dodo web purchase unlocked the plan in the app on the iOS Simulator, the Android emulator and macOS (same workspace entitlement); an App Store purchase unlocked the web API; Dodo cancel and refund, App Store refund and expiry, and Play voided-purchase notifications removed access; a self-hosted instance ran a bot's command on a cloud computer through Cloud Connect and the time showed on the cloud bill. One live model call through the Cloud Connect proxy to OpenRouter. Real Dodo, Apple and Google accounts not used       |
 | 8 Production and launch | Built (launch pending) | Locally verified: k6 load test (200 bots woken at once, 100 concurrent chat streams) p95 time to first token 0.14 s and 0.82 s with recorded models; evals quick subset 100% (fixtures) and a 3-task live run 100%; security review with a cross-tenant sweep of all API routes and sandbox penetration checks (one memory-limit bug fixed); fresh self-host install in 2 min 47 s with a cold build, then a bot ran a command on a computer. Store approval and the public launch need Oliver                                                                                               |
 
-Known gaps carried forward: attachments have a table but no upload flow yet (Phase 3 app); the worker uses the server's database connection instead of a dedicated least-privilege role (D-016); live provider calls are wired but only exercised with recorded fixtures here.
+Known gaps carried forward: live provider calls are wired but mostly exercised with recorded fixtures (a few live checks run through `scripts/live-check.sh`); real store, payment and hosted-sandbox accounts are pending (see [NEEDS-FROM-OLIVER.md](NEEDS-FROM-OLIVER.md)). Attachments (D-082) and the least-privilege worker role (D-095) were built after this table was first written.

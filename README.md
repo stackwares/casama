@@ -1,97 +1,125 @@
-# Kasama
+<p align="center">
+  <img src="client/assets/branding/kasama_mascot_icon.png" width="96" alt="Kasama">
+</p>
 
-**Persistent AI teammates you can self-host.** Each bot has its own chats, memory, routines and a sandboxed computer. You reach it from Kasama's own apps (web, iOS, Android, desktop) and the terminal, and it runs on your own model keys.
+<h1 align="center">Kasama</h1>
 
-> Status: v1 feature-complete (Phases 0 to 8 built) plus the post-v1 roadmap (Waves 1 to 4), public launch pending. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for what exists and [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md) for the launch gate.
+<p align="center">
+  <strong>AI teammates with their own computers, on your own server.</strong><br>
+  Bots that remember, work on real computers, ask before risky steps, and run on any model.
+</p>
+
+<p align="center">
+  <a href="docs-site/quick-start.md">Quick start</a> ·
+  <a href="docs-site/introduction.md">What is Kasama</a> ·
+  <a href="docs-site/self-hosting/index.md">Self-hosting</a> ·
+  <a href="docs-site/develop/api.md">Build on Kasama</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+---
+
+Kasama gives you bots that keep working after you close the chat. Each one has its own instructions,
+memory, skills and a sandboxed Linux computer with a shell, files and a browser. Bots research,
+write, code and run tasks on schedules and triggers, and they ask before doing anything risky. You
+run the whole thing with one script, bring your own model keys, and reach your bots from apps on
+every platform, the terminal, chat apps or your AI coding tools.
+
+> **Status:** feature-complete and preparing for the first public release. Expect rough edges, and
+> please [report them](https://github.com/stackwares/kasama/issues).
+
+## Features
+
+- **Persistent bots**: instructions, memory, [skills](docs-site/guide/skills.md),
+  [knowledge sources](docs-site/guide/memory.md) and budgets, with personas and templates to start
+  from.
+- **A real computer each**: an isolated Linux computer that sleeps when idle. Watch it live, take
+  control, restore checkpoints, or lend your own machine through the desktop app.
+  [Computers](docs-site/guide/computers.md)
+- **Works while you're away**: schedules, webhooks, calendar, message and device triggers, watchers
+  and check-ins. [Routines](docs-site/guide/routines.md)
+- **You stay in charge**: autonomy levels, approvals, action rules, budgets, a loop guard and a full
+  timeline of every run. [Autonomy](docs-site/guide/autonomy.md)
+- **Any model**: OpenAI, Anthropic, Google, xAI, OpenRouter or any OpenAI-compatible endpoint
+  (including local models), or sign in with a ChatGPT plan. [Bots and models](docs-site/guide/bots.md)
+- **Connected to your tools**: built-in apps (GitHub, Notion, Linear, Slack, Google and more), MCP
+  servers, plugins, password managers and device data, with secrets kept out of the model's sight.
+  [Connections](docs-site/guide/connections.md)
+- **Everywhere you are**: apps for iOS, Android, macOS, Windows, Linux and the web; chat apps such as
+  Telegram, Slack, WhatsApp, email and SMS; voice and phone calls; group chats with several bots.
+- **Built to build on**: an HTTP API, a CLI, a Dart SDK, an MCP server for AI apps, plugins,
+  bot templates and agent-to-agent (A2A). [Build on Kasama](docs-site/develop/api.md)
+- **Private by design**: row-level security on every table, encryption at rest, data export and
+  deletion, and telemetry off unless you turn it on. [Privacy](docs-site/guide/privacy.md)
 
 ## Self-host in about 15 minutes
 
+You need a machine with Docker.
+
 ```sh
 git clone https://github.com/stackwares/kasama && cd kasama
-./install.sh --domain kasama.example.com    # or --local for a trial on this machine
+./install.sh --local                          # a trial on this machine
+./install.sh --domain kasama.example.com      # or a server with a domain pointed at it
 ```
 
-Then open the app, choose **Use a different server**, and create the first account (the instance owner). Details: [docs/SELF_HOST.md](docs/SELF_HOST.md).
+Then open the app, choose your server under **More options** on the sign-in screen, and create the
+first account, which becomes the server's owner. The full guide covers requirements, configuration,
+upgrades and backups: [Self-hosting](docs-site/self-hosting/index.md).
 
-## Why Kasama
+Self-hosting has no paywall and no limits. Kasama Cloud, the hosted service, is optional, and
+[Cloud Connect](docs-site/guide/cloud-connect.md) lets your own server borrow its computers or model
+credits.
 
-- **Self-hosted**: one command brings up the whole stack on your own server.
-- **Any model**: OpenAI, Anthropic, Google, xAI, OpenRouter or any OpenAI-compatible endpoint, including local models via Ollama.
-- **Real computers**: every bot gets an isolated Linux computer that sleeps when idle; watch it live and take control, or lend your own machine through the desktop app.
-- **You stay in charge**: autonomy levels, approvals for risky steps, checkpoints, budgets and a full run timeline.
-- **Everywhere**: apps for iOS, Android, macOS, Windows, Linux and web, a CLI, a Dart SDK and an MCP server for coding tools.
-- **Works where you do**: chat apps (Telegram, email, SMS, Slack, WhatsApp, iMessage and more), group chats with several bots, pages, voice and phone calls.
-- **Knows your day, if you let it**: device connections share calendar, contacts, places and health summaries per bot, only in your own chats; routines start when you wake up, arrive somewhere or a file lands in a folder.
-- **Grows with you**: skills that improve themselves, teach-by-showing replays, plugins, linked bots between people, agent-to-agent (A2A) and payments with approval.
-- **No paywall when self-hosted**; Kasama Cloud and Cloud Connect are optional.
+## Documentation
+
+The documentation lives in [`docs-site/`](docs-site/) (a VitePress site; `pnpm --filter @kasama/docs dev`
+serves it locally).
+
+|                       |                                                                                                                                                                                                                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Get started**       | [What is Kasama](docs-site/introduction.md) · [Quick start](docs-site/quick-start.md) · [FAQ](docs-site/faq.md)                                                                                                                                                                                 |
+| **Guides**            | [Bots](docs-site/guide/bots.md) · [Chat](docs-site/guide/chat.md) · [Computers](docs-site/guide/computers.md) · [Routines](docs-site/guide/routines.md) · [Connections](docs-site/guide/connections.md) · [Autonomy](docs-site/guide/autonomy.md) · [Workspaces](docs-site/guide/workspaces.md) |
+| **Self-hosting**      | [Install](docs-site/self-hosting/index.md) · [Configuration](docs-site/self-hosting/configuration.md) · [Operations](docs-site/self-hosting/operations.md) · [Troubleshooting](docs-site/self-hosting/troubleshooting.md)                                                                       |
+| **Build on Kasama**   | [HTTP API](docs-site/develop/api.md) · [CLI](docs-site/develop/cli.md) · [Dart SDK](docs-site/develop/sdk.md) · [Plugins](docs-site/develop/plugins.md) · [Webhooks](docs-site/develop/webhooks.md)                                                                                             |
+| **Project internals** | [Architecture](docs/ARCHITECTURE.md) · [Decision log](docs/DECISIONS.md) · [Product spec](SPEC.md)                                                                                                                                                                                              |
 
 ## Repository layout
 
-| Path                     | What it is                                                    |
-| ------------------------ | ------------------------------------------------------------- |
-| `apps/server`            | TypeScript API and worker (`MODE=api` / `MODE=worker`)        |
-| `packages/contracts`     | Zod schemas, OpenAPI spec, run event schema (source of truth) |
-| `packages/db`            | Drizzle schema and the RLS session helper                     |
-| `packages/domain`        | Pure domain logic                                             |
-| `packages/observability` | OpenTelemetry and error reporting                             |
-| `packages/agent`         | Agent runtime, tools, model gateway                           |
-| `packages/sandbox`       | Computer providers (Docker, E2B, Daytona, local, cloud)       |
-| `packages/evals`         | Eval suite and baseline                                       |
-| `packages/mcp`           | Kasama MCP server                                             |
-| `apps/supervisor`        | Sandbox supervisor (the only service with Docker access)      |
-| `client`                 | Flutter app                                                   |
-| `ee`                     | Enterprise features (commercial license)                      |
-| `docs-site`              | Documentation site (VitePress)                                |
-| `deploy`                 | One-click deploy templates                                    |
-| `dart/cli`               | `kasama` command-line client                                  |
-| `dart/kasama_sdk`        | Generated Dart API client                                     |
-| `supabase/`              | SQL migrations with row-level security, pgTAP tests           |
-| `infra/compose`          | Docker Compose for local development and self-hosting         |
-| `infra/monitoring`       | Prometheus, alert rules and Grafana dashboard                 |
-
-## Local development
-
-Requirements: Node.js 26+, pnpm, Dart 3, the Supabase CLI and Docker.
-
-```sh
-pnpm install
-supabase start            # local Postgres, Auth, Realtime, Storage
-cp .env.example .env      # fill in values printed by `supabase status`
-pnpm dev                  # API on :8787, worker alongside
-```
-
-API reference: http://localhost:8787/docs
-
-CLI:
-
-```sh
-cd dart/cli
-dart run bin/kasama.dart signup --email you@example.com
-dart run bin/kasama.dart login --email you@example.com
-dart run bin/kasama.dart org create "My team"
-dart run bin/kasama.dart org use my-team
-dart run bin/kasama.dart credential add --provider openrouter --label Main      # prompts for the key
-dart run bin/kasama.dart bot create Ada --credential <id>   # model defaults to openai/gpt-6-luna for OpenRouter keys
-dart run bin/kasama.dart chat Ada "What can you do?"
-```
-
-Run the worker next to the API (`MODE=worker`). Without model keys, `KASAMA_MODEL_FIXTURES=apps/server/test/fixtures/chat.json` replays recorded responses.
-
-## The app
-
-```sh
-cd client
-flutter run -d macos --dart-define=KASAMA_API_URL=http://localhost:8787   # or chrome, an iOS simulator, an emulator
-```
-
-The app reads the Supabase URL and key from the API, so the API URL is the only setting.
+| Path                                             | What it is                                                                        |
+| ------------------------------------------------ | --------------------------------------------------------------------------------- |
+| `apps/server`                                    | TypeScript API and worker, one codebase (`MODE=api` or `MODE=worker`)             |
+| `apps/supervisor`                                | Sandbox supervisor: the only service with access to Docker or a computer provider |
+| `packages/contracts`                             | Zod schemas, routes and the OpenAPI document: the source of truth for the API     |
+| `packages/agent`                                 | Agent runtime: the run loop, tools, model gateway, memory and integrations        |
+| `packages/db`                                    | Drizzle schema and the row-level-security session helper                          |
+| `packages/domain`                                | Pure domain logic with no I/O                                                     |
+| `packages/sandbox`                               | Computer providers (Docker, E2B, Daytona and others)                              |
+| `packages/mcp`                                   | The Kasama MCP server for AI apps and coding tools                                |
+| `packages/plugin-check`                          | Checks a plugin the way Kasama does at install                                    |
+| `packages/evals`, `packages/observability`       | Eval suite; OpenTelemetry and error reporting                                     |
+| `client`                                         | The Flutter app (iOS, Android, macOS, Windows, Linux, web)                        |
+| `dart/cli`, `dart/kasama_sdk`, `dart/kasama_api` | The `kasama` CLI, the Dart SDK and the generated API client                       |
+| `dart/computerd`                                 | The agent that runs inside every computer                                         |
+| `supabase`                                       | SQL migrations with row-level security, and pgTAP tests                           |
+| `infra`                                          | Docker Compose, computer images, egress proxy, TURN, Helm chart, monitoring       |
+| `deploy`                                         | One-click deploy templates                                                        |
+| `skills`, `examples`                             | The built-in skill catalog; an SDK sample app and an example plugin               |
+| `docs-site`, `docs`                              | Public documentation; architecture, decisions and project records                 |
+| `ee`                                             | Enterprise features under the Kasama Enterprise License                           |
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Every commit needs a DCO sign-off (`git commit -s`).
+Contributions are welcome, from typo fixes to features. [CONTRIBUTING.md](CONTRIBUTING.md) explains
+the development setup, the checks and how to send a change. Every commit needs a
+[DCO](https://developercertificate.org/) sign-off (`git commit -s`). Please follow the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
+- **Questions and ideas**: [GitHub Discussions](https://github.com/stackwares/kasama/discussions)
+- **Bugs and feature requests**: [GitHub Issues](https://github.com/stackwares/kasama/issues)
+- **Security issues**: please report privately, as described in [SECURITY.md](SECURITY.md)
 
 ## License
 
-Apache-2.0 for everything outside `ee/`, which is under the [Kasama Enterprise License](ee/LICENSE) (source-available; production use needs a license key). See [LICENSE](LICENSE).
-
-Telemetry is off by default; see [docs/SELF_HOST.md](docs/SELF_HOST.md#privacy) for the opt-in ping.
+Apache-2.0 for everything outside `ee/`, which is source-available under the
+[Kasama Enterprise License](ee/LICENSE) and needs a license key in production. See
+[LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

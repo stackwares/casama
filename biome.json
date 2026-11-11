@@ -15,6 +15,7 @@
       "!client",
       "!supabase",
       "!docs-site/**/*.md",
+      "!**/SKILL.md",
       "!site",
       "!infra/helm/**/templates"
     ]
