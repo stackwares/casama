@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Mac App Store build (scripts/package-macos-appstore.sh): sandboxed, and only what that build
+     uses. Controlling this Mac for bots, the local server, reading other apps (Apple Events) and
+     folder watching are off in it (KASAMA_DISTRIBUTION=appstore), so their entitlements are absent.
+     The direct download keeps Release.entitlements (no sandbox, hardened runtime, notarized). -->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<!-- ChatGPT plan sign-in listens on a loopback port for its callback (D-091). -->
+	<key>com.apple.security.network.server</key>
+	<true/>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+	<key>com.apple.security.personal-information.addressbook</key>
+	<true/>
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+	<key>com.apple.security.files.downloads.read-write</key>
+	<true/>
+</dict>
+</plist>

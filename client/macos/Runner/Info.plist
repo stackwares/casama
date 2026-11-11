@@ -2,6 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.kasama.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kasama</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSContactsUsageDescription</key>
 	<string>Your bots can look up people you know, only when you turn on Contacts in Device connections.</string>
 	<key>NSAppleEventsUsageDescription</key>
@@ -19,13 +30,33 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>Kasama</string>
+	<key>CFBundleDisplayName</key>
+	<string>Kasama</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- Sparkle (direct download only): updates must be signed with the matching private key
+	     (login Keychain, account "kasama"; backup in ~/.config/kasama). The Mac App Store build
+	     never starts the updater. -->
+	<key>SUPublicEDKey</key>
+	<string>GjC+He1N0LPq8LjS8d8BCclJL3MnzTS/vy2CtXSxlLY=</string>
+	<!-- Checks every 6 hours and installs on quit, without Sparkle's first-run question; Settings
+	     turns automatic checks off (kasama/mac setAutoUpdateChecks). -->
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUAutomaticallyUpdate</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>21600</integer>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<!-- Only standard HTTPS and the OS's own encryption: no export-compliance questions per upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>

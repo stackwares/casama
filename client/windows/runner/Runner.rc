@@ -110,6 +110,13 @@ END
 
 
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// WinSparkle: updates must carry a DSA signature from the matching private key
+// (~/.config/kasama/winsparkle-dsa-private.pem on the release machine).
+//
+DSAPub      DSAPEM      "..\\dsa_pub.pem"
+
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
