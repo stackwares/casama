@@ -149,8 +149,8 @@ invite page, whose **Open in Casama** button opens the app and points it at your
 
 ## Email
 
-Supabase Auth sends sign-in links, confirmations and password resets through SMTP. Casama itself
-sends invites through Resend.
+Supabase Auth sends sign-in links, confirmations and password resets through SMTP. Casama sends
+invites through the same SMTP server, or through Resend when `RESEND_API_KEY` is set.
 
 | Name                | Default                        | What it does                                                                                          |
 | ------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------- |
@@ -160,7 +160,7 @@ sends invites through Resend.
 | `SMTP_PASS`         | (empty)                        | SMTP password.                                                                                        |
 | `SMTP_ADMIN_EMAIL`  | (empty)                        | The address Auth emails come from.                                                                    |
 | `EMAIL_AUTOCONFIRM` | `true`                         | Confirm new accounts without an email. Set `false` once SMTP works.                                   |
-| `RESEND_API_KEY`    | (empty)                        | Resend key for invite emails. Without it, an invite returns a code for the inviter to share.          |
+| `RESEND_API_KEY`    | (empty)                        | Resend key for invite emails, used instead of SMTP. With neither, an invite returns a code to share.  |
 | `EMAIL_FROM`        | `Casama <no-reply@localhost>`  | Sender for Casama's own emails.                                                                       |
 
 To turn on email confirmation and sign-in links:
@@ -389,6 +389,7 @@ the in-app inbox still shows every notification.
 | `GOOGLE_OAUTH_CLIENT_SECRET`  | (empty)   | Its secret.                                                                                                                                                     |
 | `MCP_OAUTH_CLIENTS`           | (empty)   | OAuth clients for apps that don't support automatic registration, as JSON by app id: `{"slack":{"client_id":"...","client_secret":"..."}}`.                     |
 | `COMPOSIO_API_KEY`            | (empty)   | A server-wide Composio key that enables Composio's managed sign-in for inbox apps such as Gmail.                                                                |
+| `SEARXNG_URL`                 | (empty)   | A SearXNG instance for web search in workspaces without a Brave Search or Tavily key. Free: `./install.sh --search` runs one (`http://searxng:8080`). Its settings must allow JSON results. |
 | `UNSPLASH_ACCESS_KEY`         | (empty)   | Wallpaper photo search in Appearance. Without it, the app offers its own patterns and photos.                                                                   |
 
 Register `https://casama.example.com/oauth/callback` as the redirect URI in each OAuth app. See

@@ -62,6 +62,8 @@ export const EnvSchema = z.object({
   CHATGPT_API_URL: z.url().default("https://api.openai.com/v1"),
   /** Optional wallpaper photo search (D-087). Unset: the app offers its own patterns and photos. */
   UNSPLASH_ACCESS_KEY: z.string().optional(),
+  /** Worker: the server's SearXNG for web search without a workspace key (D-179), e.g. http://searxng:8080. */
+  SEARXNG_URL: z.url().optional(),
   UNSPLASH_API_URL: z.url().default("https://api.unsplash.com"),
   /** Casama Cloud only (D-070). Self-hosted servers keep it off: no paywall, unlimited use. */
   BILLING_ENABLED: bool.default(false),

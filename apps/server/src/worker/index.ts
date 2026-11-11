@@ -47,6 +47,7 @@ import {
   registerTeachTools,
   registerToolsLoad,
   registerWatcherTools,
+  SearxngSearchProvider,
   StripeIssuingProvider,
   TavilySearchProvider,
   TregProvider,
@@ -142,6 +143,8 @@ export interface WorkerOptions {
   realtimeModel?: string;
   /** Gemini Live model for live calls (default gemini-3.8-live). */
   geminiLiveModel?: string;
+  /** The server's SearXNG (SEARXNG_URL, D-179): web search for workspaces without their own key. */
+  searxngUrl?: string;
   /** ChatGPT plan sign-in endpoints; defaults are OpenAI's (tests point them at a fake). */
   chatgpt?: { authUrl?: string; apiUrl?: string };
   /** Casama Cloud abuse controls (D-094): free workspaces need a verified owner email for computers. */
@@ -274,7 +277,9 @@ export async function startWorker(opts: WorkerOptions) {
     },
     searchFor: async (orgId) => {
       const k = await providerKey(orgId, ["brave_search", "tavily"]);
-      if (!k?.key) return null;
+      if (!k?.key)
+        // The server owner's own instance (a configured, trusted address, so not egress-filtered).
+        return opts.searxngUrl ? new SearxngSearchProvider(opts.searxngUrl) : null;
       return k.provider === "tavily"
         ? new TavilySearchProvider(k.key, { base: opts.providerBases?.tavily, fetch: fetchOut })
         : new BraveSearchProvider(k.key, { base: opts.providerBases?.brave, fetch: fetchOut });

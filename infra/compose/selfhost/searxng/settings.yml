@@ -1,0 +1,26 @@
+# SearXNG for Casama's web.search (D-179): reached only by the worker on the internal network,
+# so no rate limiter or public UI. Docs: https://docs.searxng.org/admin/settings/
+use_default_settings: true
+
+general:
+  instance_name: "Casama search"
+  enable_metrics: false
+
+search:
+  safe_search: 1
+  autocomplete: ""
+  # Casama asks for JSON; HTML stays for checking it by hand.
+  formats:
+    - html
+    - json
+
+server:
+  # Overridden by SEARXNG_SECRET in the environment.
+  secret_key: "change-me"
+  limiter: false
+  image_proxy: false
+  public_instance: false
+
+outgoing:
+  request_timeout: 4.0
+  max_request_timeout: 10.0

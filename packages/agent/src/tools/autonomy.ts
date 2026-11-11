@@ -136,7 +136,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         );
       const results = await provider.search(args.query, args.count ?? 8);
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd)
-        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'search_queries', 1, 0.005)`);
+        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'search_queries', 1, ${provider.costUsd})`);
       const text = results
         .map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`)
         .join("\n");

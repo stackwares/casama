@@ -23,7 +23,7 @@ import { configureContentKeys } from "./content-keys.ts";
 import { loadEnv } from "./env.ts";
 import { createPagesApp } from "./pages/app.ts";
 import { abuseControlsOn } from "./services/abuse.ts";
-import { disabledEmail, resendEmail } from "./services/email.ts";
+import { disabledEmail, resendEmail, smtpEmail } from "./services/email.ts";
 import { chromiumPdf } from "./services/pdf.ts";
 
 const env = loadEnv();
@@ -105,7 +105,14 @@ if (env.MODE === "api") {
       supabaseUrl: env.SUPABASE_URL,
       jwtSecret: env.SUPABASE_JWT_SECRET,
     }),
-    email: env.RESEND_API_KEY ? resendEmail(env.RESEND_API_KEY, env.EMAIL_FROM) : disabledEmail,
+    email: env.RESEND_API_KEY
+      ? resendEmail(env.RESEND_API_KEY, env.EMAIL_FROM)
+      : env.SMTP_HOST
+        ? await smtpEmail(
+            { host: env.SMTP_HOST, port: env.SMTP_PORT, user: env.SMTP_USER, pass: env.SMTP_PASS },
+            env.EMAIL_FROM,
+          )
+        : disabledEmail,
     pdf: env.PDF_CHROMIUM_PATH ? chromiumPdf(env.PDF_CHROMIUM_PATH) : null,
     readiness: { database: async () => void (await handle.db.execute(sql`select 1`)) },
     // Outbound calls to addresses people type (password managers, Infisical, invites, memory
@@ -147,6 +154,7 @@ if (env.MODE === "api") {
     pagesUrl: env.PAGES_URL,
     publicApiUrl: env.PUBLIC_API_URL,
     geminiLiveModel: env.GEMINI_LIVE_MODEL,
+    searxngUrl: env.SEARXNG_URL,
     auditForwarding: await import("@casama/ee")
       .then((m) => m.verifyLicense(env.CASAMA_LICENSE_KEY))
       .then((l) => !!l && l.expiresAt > new Date() && l.features.includes("audit_forwarding"))

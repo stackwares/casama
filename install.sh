@@ -6,13 +6,14 @@
 #   ./install.sh --domain casama.example.com     # public server with automatic HTTPS
 #   ./install.sh --local [--http-port 8080]      # this machine only, plain HTTP
 # Other options: --with-desktop (also build the desktop computer image, slower), --no-start,
-#   --monitoring (Prometheus and Grafana), --web (the web app; needs a Flutter build image).
+#   --monitoring (Prometheus and Grafana), --web (the web app; needs a Flutter build image),
+#   --search (SearXNG: free web search for bots without a Brave or Tavily key).
 set -euo pipefail
 
 cd "$(dirname "$0")"
 COMPOSE_DIR=infra/compose
 ENV_FILE="$COMPOSE_DIR/.env"
-domain="" local=0 http_port=80 desktop=0 start=1 profiles=()
+domain="" local=0 http_port=80 desktop=0 start=1 search=0 profiles=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -23,6 +24,7 @@ while [[ $# -gt 0 ]]; do
     --no-start) start=0; shift ;;
     --monitoring) profiles+=(--profile monitoring); shift ;;
     --web) profiles+=(--profile web); shift ;;
+    --search) profiles+=(--profile search); search=1; shift ;;
     -h | --help) sed -n '2,10p' "$0"; exit 0 ;;
     *) echo "Unknown option: $1"; exit 2 ;;
   esac
@@ -142,6 +144,7 @@ SAML_PRIVATE_KEY=$(saml_key)
 EGRESS_CONTROL_TOKEN=$(rand 24)
 INTERNAL_TOKEN=$(rand 24)
 TURN_SECRET=$(rand 24)
+SEARXNG_SECRET=$(rand 32)
 METRICS_TOKEN=$(rand 24)
 GRAFANA_ADMIN_PASSWORD=$(rand 12)
 SANDBOX_RUNTIME=$runtime
@@ -163,6 +166,13 @@ CASAMA_CLOUD_URL=
 CASAMA_CLOUD_KEY=
 EOF
   say "Wrote $ENV_FILE"
+fi
+
+# --search (D-179): point the worker at SearXNG, also on an existing .env.
+if [[ "$search" == 1 ]] && ! grep -q '^SEARXNG_URL=.' "$ENV_FILE"; then
+  grep -q '^SEARXNG_SECRET=.' "$ENV_FILE" || echo "SEARXNG_SECRET=$(rand 32)" >>"$ENV_FILE"
+  sed -i.bak '/^SEARXNG_URL=/d' "$ENV_FILE" && rm -f "$ENV_FILE.bak"
+  echo "SEARXNG_URL=http://searxng:8080" >>"$ENV_FILE"
 fi
 
 compose() { docker compose -f "$COMPOSE_DIR/docker-compose.yml" --env-file "$ENV_FILE" ${profiles[@]+"${profiles[@]}"} "$@"; }

@@ -54,7 +54,7 @@ mailboxes, domain, Apple), plus E2B's $150 if we use it for computers.
 | **Phone numbers** | $1.15 / month (local US), $2.15 (toll-free) | Not charged | ❌ Charge monthly per number held |
 | **SMS** | $0.0083 per segment plus carrier fees ($0.0025–0.007) | Not metered separately | ❌ |
 | **Apps through Composio** (our account) | Free up to 20k calls and 1k connected accounts a month. Then (Pro) **$0.002 per call** (Slack, Gmail, Calendar, Sheets, Jira, HubSpot), $0.01 (Salesforce, YouTube, Reddit), $0.0005 (others); **$0.10 once** per connected account past 1k | Not metered | ❌ Add a `app_calls` kind and cap it per plan |
-| **Web search on our key** | Brave $5 per 1k searches; Tavily $0.008 per search; Exa $4–7 per 1k | Not metered | ❌ Meter per search |
+| **Web search** | Brave $5 per 1k searches; Tavily $0.008 per search; Exa $4–7 per 1k; our own SearXNG $0 (runs on the API server) | `search_queries`, priced per provider (D-179) | ✅ Metered. Workspace keys pay their own; without one, SearXNG (free). Cloud never pays per search today |
 | **Images** | fal FLUX schnell $0.003 per image; FLUX dev $0.025; Nano Banana / Seedream about $0.04 | $0.003 per image | ⚠️ Right for schnell only; price per model |
 | **Video** | fal per second: Kling 2.5 / 2.6 Pro $0.07, Kling v3 $0.14, Grok Imagine $0.05, PixVerse V6 $0.005 | `media_video_seconds`, $0.04 / second | ❌ Below Kling. Price per model |
 | **Paid data (places, emails, SEO)** | What the data seller charges | `data_calls`, cost + 20% | ✅ (consider +30% to cover payment fees) |
@@ -124,7 +124,8 @@ Ranked by saving. ✅ = done, ☐ = to do.
    call instead of $0.002, free connections, Casama on the sign-in screen).
 4. **Voice and phone:** ✅ Gemini Live is the default voice (about $0.02 a minute against about $0.10
    for OpenAI Realtime). ☐ Compare Telnyx and other carriers with Twilio.
-5. **Search:** ☐ our own SearXNG by default, Brave or Tavily as the paid fallback; cache results;
+5. **Search:** ✅ our own SearXNG (free) for workspaces without a Brave or Tavily key (D-179; turn it
+   on in production with `--search`). ☐ Cache results;
    Gemini grounding's 5,000 free searches a month.
 6. **Platform and fees:** our own Postgres on the same server (not Supabase Cloud); R2 for snapshots
    (no egress fees); our own TURN (built); free tiers for PostHog and Sentry at first; yearly plans

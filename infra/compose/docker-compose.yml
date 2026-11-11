@@ -3,7 +3,7 @@
 # Run ./install.sh from the repository root (it writes infra/compose/.env and starts this file).
 #   docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env up -d
 # Optional profiles: s3 (SeaweedFS object storage), monitoring (Prometheus, Grafana),
-# web (the Flutter web app), images (build-only computer images).
+# web (the Flutter web app), images (build-only computer images), search (SearXNG web search).
 name: casama
 
 x-casama: &casama
@@ -34,6 +34,16 @@ x-casama: &casama
     INSTANCE_ADMIN_EMAILS: ${INSTANCE_ADMIN_EMAILS:-}
     RESEND_API_KEY: ${RESEND_API_KEY:-}
     EMAIL_FROM: ${EMAIL_FROM:-Casama <no-reply@localhost>}
+    # Invites use the same SMTP server as Auth when there's no Resend key (D-174).
+    SMTP_HOST: ${SMTP_HOST:-}
+    SMTP_PORT: ${SMTP_PORT:-587}
+    SMTP_USER: ${SMTP_USER:-}
+    SMTP_PASS: ${SMTP_PASS:-}
+    # Invites use the same SMTP server as Auth when there's no Resend key (D-174).
+    SMTP_HOST: ${SMTP_HOST:-}
+    SMTP_PORT: ${SMTP_PORT:-587}
+    SMTP_USER: ${SMTP_USER:-}
+    SMTP_PASS: ${SMTP_PASS:-}
     ERROR_REPORTING: ${ERROR_REPORTING:-auto}
     SENTRY_DSN: ${SENTRY_DSN:-}
     POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
@@ -70,6 +80,8 @@ x-casama: &casama
     TREG_API_KEY: ${TREG_API_KEY:-}
     DEFAULT_MODEL_OPENROUTER: ${DEFAULT_MODEL_OPENROUTER:-}
     DEFAULT_MODEL_OPENAI: ${DEFAULT_MODEL_OPENAI:-}
+    # Live calls for workspaces without their own key (D-177).
+    GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
     DEFAULT_REASONING_EFFORT: ${DEFAULT_REASONING_EFFORT:-}
     LAZY_TOOLS_THRESHOLD: ${LAZY_TOOLS_THRESHOLD:-}
     LANGFUSE_BASE_URL: ${LANGFUSE_BASE_URL:-}
@@ -261,6 +273,8 @@ services:
       APNS_TEAM_ID: ${APNS_TEAM_ID:-}
       AI_GATEWAY_URL: ${AI_GATEWAY_URL:-}
       AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:-}
+      # Web search without a workspace key (D-179): http://searxng:8080 with the search profile.
+      SEARXNG_URL: ${SEARXNG_URL:-}
     depends_on: { migrate: { condition: service_completed_successfully } }
 
   # The only service with Docker access. It joins each computer's private network to reach computerd.
@@ -322,6 +336,20 @@ services:
     ports:
       - "3478:3478/udp"
       - "3478:3478/tcp"
+
+  # Free web search for bots (D-179, profile "search"). Set SEARXNG_URL=http://searxng:8080 too.
+  # Internal only: no published port; it needs outbound internet to ask the search engines.
+  searxng:
+    image: searxng/searxng:2026.10.29-c15647b5a
+    profiles: [search]
+    restart: unless-stopped
+    networks: [internal, egress]
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET:-}
+    volumes:
+      - ./selfhost/searxng/settings.yml:/etc/searxng/settings.yml:ro
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETGID, SETUID]
 
   caddy:
     image: caddy:2.10.2-alpine
