@@ -26,6 +26,7 @@ import {
 } from "@modelcontextprotocol/sdk/client/auth.js";
 import { and, eq, sql } from "drizzle-orm";
 import type { Context } from "hono";
+import { getConnectionSettings } from "../../services/connection-settings.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { integrationOut, isAdmin, requireClaims } from "./autonomy.ts";
@@ -118,12 +119,17 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
   // Composio's managed sign-in, or isn't offered when no Composio key is configured.
   const cloud = env.BILLING_ENABLED;
   const clients = preregisteredClients(env, [...fullCatalog, ...APP_CATALOG]);
-  const catalog = catalogFor(fullCatalog, {
-    cloud,
-    composio: !!env.COMPOSIO_API_KEY,
-    hasClient: (id) => !!clients[id],
-  });
-  const findApp = (id: string) => catalog.find((a) => a.id === id) ?? appByIdOrNull(id);
+  /** The server's Composio account is used when it has a key and the admin hasn't turned it off. */
+  const serverComposio = async () =>
+    !!env.COMPOSIO_API_KEY && (await getConnectionSettings(db)).composio === "server";
+  const currentCatalog = async () =>
+    catalogFor(fullCatalog, {
+      cloud,
+      composio: await serverComposio(),
+      hasClient: (id) => !!clients[id],
+    });
+  const findApp = async (id: string) =>
+    (await currentCatalog()).find((a) => a.id === id) ?? appByIdOrNull(id);
 
   const apiBase = (c: Context) =>
     (env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
@@ -224,7 +230,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     return c.json(
       {
         redirect_uri: redirectUri(c),
-        apps: catalog.map((a) => ({
+        apps: (await currentCatalog()).map((a) => ({
           id: a.id,
           name: a.name,
           description: a.description,
@@ -271,13 +277,13 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
   app.openapi(routes.connectApp, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const body = c.req.valid("json");
-    const a = findApp(body.app_id);
+    const a = await findApp(body.app_id);
     if (!a) throw new ApiError(404, "app_not_found", "No such app");
     if (!(await isAdmin(db, claims, body.org_id)))
       throw new ApiError(403, "forbidden", "Only owners and admins can connect apps");
     if (
       !a.auth.includes(body.method) &&
-      !(body.method === "managed" && a.composio && env.COMPOSIO_API_KEY)
+      !(body.method === "managed" && a.composio && (await serverComposio()))
     )
       throw new ApiError(400, "validation_failed", `${a.name} can't connect that way`);
     if (body.integration_id) {
@@ -514,7 +520,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       update public.integration_oauth_flows set status = 'error', error = 'in progress'
       where state = ${state} and status = 'pending' and expires_at > now()
       returning id, org_id, created_by, app_id, name, config, oauth, integration_id`);
-    const a = flow ? findApp(flow.app_id) : null;
+    const a = flow ? await findApp(flow.app_id) : null;
     if (!flow || !a)
       return c.html(
         resultPage("This sign-in link has expired. Go back to Casama and try again.", false),

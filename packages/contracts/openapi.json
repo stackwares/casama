@@ -7130,6 +7130,27 @@
           "created_at"
         ]
       },
+      "ConnectionSettings": {
+        "type": "object",
+        "properties": {
+          "composio": {
+            "type": "string",
+            "enum": [
+              "server",
+              "own"
+            ],
+            "description": "server: through this server's Composio account (one click). own: people use their own Composio, Pipedream or Zapier accounts."
+          },
+          "composio_key": {
+            "type": "boolean",
+            "description": "Whether this server has a Composio key (COMPOSIO_API_KEY)."
+          }
+        },
+        "required": [
+          "composio",
+          "composio_key"
+        ]
+      },
       "AdminOrgList": {
         "type": "object",
         "properties": {
@@ -7358,6 +7379,21 @@
           "created_at",
           "last_sign_in_at",
           "orgs"
+        ]
+      },
+      "SetConnectionSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "composio": {
+            "type": "string",
+            "enum": [
+              "server",
+              "own"
+            ]
+          }
+        },
+        "required": [
+          "composio"
         ]
       },
       "SetOrgLimitsRequest": {
@@ -22483,6 +22519,106 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AbuseEventList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/connections": {
+      "get": {
+        "operationId": "adminConnectionSettings",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "How apps without their own sign-in connect (owner only)",
+        "responses": {
+          "200": {
+            "description": "How apps without their own sign-in connect (owner only)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionSettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setAdminConnectionSettings",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Choose how apps without their own sign-in connect (owner only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetConnectionSettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionSettings"
                 }
               }
             }

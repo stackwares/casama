@@ -21,9 +21,10 @@ beforeAll(async () => {
       body: chunks.length ? JSON.parse(Buffer.concat(chunks).toString()) : null,
     });
     res.setHeader("content-type", "application/json");
+    if (req.url?.startsWith("/api/v3/auth_configs?")) return res.end(JSON.stringify({ items: [] }));
     if (req.url === "/api/v3/auth_configs")
       return res.end(JSON.stringify({ auth_config: { id: "ac_1" } }));
-    if (req.url === "/api/v3/connected_accounts")
+    if (req.url === "/api/v3/connected_accounts/link")
       return res.end(JSON.stringify({ redirect_url: "https://composio.example/signin/123" }));
     res.writeHead(404).end("{}");
   }).listen(0, "127.0.0.1");
@@ -31,6 +32,7 @@ beforeAll(async () => {
   h = await startHarness({
     env: {
       COMPOSIO_API_KEY: "cmp-key",
+      INSTANCE_ADMIN_EMAILS: "instance-owner@example.com",
       COMPOSIO_API_URL: `http://127.0.0.1:${(composio.address() as AddressInfo).port}`,
     },
   });
@@ -87,6 +89,49 @@ describe("Google permissions", () => {
     ).toBe(false);
   });
 
+  it("the instance owner switches between the server's Composio account and people's own (D-173)", async () => {
+    const owner = await h.user("instance-owner@example.com");
+    const someone = await h.user("not-the-owner@example.com");
+    const slackAuth = async () =>
+      (await j(await h.request("/v1/apps", { token: owner.token }))).apps.find(
+        (a: { id: string }) => a.id === "slack",
+      ).auth;
+    expect(await j(await h.request("/v1/admin/connections", { token: owner.token }))).toEqual({
+      composio: "server",
+      composio_key: true,
+    });
+    expect(await slackAuth()).toEqual(["managed"]);
+    const denied = await h.request("/v1/admin/connections", {
+      method: "PUT",
+      token: someone.token,
+      json: { composio: "own" },
+    });
+    expect(denied.status).toBe(403);
+    const own = await h.request("/v1/admin/connections", {
+      method: "PUT",
+      token: owner.token,
+      json: { composio: "own" },
+    });
+    expect(await j(own)).toMatchObject({ composio: "own" });
+    // People's own accounts: Slack's sheet offers the hubs, and the server account is refused.
+    expect(await slackAuth()).toEqual(["oauth"]);
+    expect(
+      (
+        await h.request("/v1/apps/connect", {
+          method: "POST",
+          token: owner.token,
+          json: { org_id: crypto.randomUUID(), app_id: "slack", method: "managed" },
+        })
+      ).status,
+    ).not.toBe(200);
+    await h.request("/v1/admin/connections", {
+      method: "PUT",
+      token: owner.token,
+      json: { composio: "server" },
+    });
+    expect(await slackAuth()).toEqual(["managed"]);
+  });
+
   it("connecting Slack through Composio asks Composio for its Slack sign-in", async () => {
     const owner = await h.user("composio-slack@example.com");
     const orgId = (
@@ -106,9 +151,14 @@ describe("Google permissions", () => {
       status: "authorize",
       authorize_url: "https://composio.example/signin/123",
     });
-    expect(calls[before]).toMatchObject({
+    expect(calls[before]?.path).toContain("/api/v3/auth_configs?toolkit_slug=slack");
+    expect(calls[before + 1]).toMatchObject({
       path: "/api/v3/auth_configs",
       body: { toolkit: { slug: "slack" } },
+    });
+    expect(calls[before + 2]).toMatchObject({
+      path: "/api/v3/connected_accounts/link",
+      body: { auth_config_id: "ac_1", user_id: orgId },
     });
     const [i] = await h.tdb.admin<{ name: string; config: { toolkits: string[] } }[]>`
       select name, config from public.integrations where org_id = ${orgId}`;
@@ -134,12 +184,12 @@ describe("Google permissions", () => {
       status: "authorize",
       authorize_url: "https://composio.example/signin/123",
     });
-    expect(calls[before]).toMatchObject({
+    expect(calls[before + 1]).toMatchObject({
       path: "/api/v3/auth_configs",
       key: "cmp-key",
       body: { toolkit: { slug: "gmail" } },
     });
-    expect(calls[before + 1]?.body).toMatchObject({ connection: { user_id: orgId } });
+    expect(calls[before + 2]?.body).toMatchObject({ user_id: orgId });
     const [i] = await h.tdb.admin<
       { kind: string; config: { toolkits: string[]; managed: boolean } }[]
     >`select kind, config from public.integrations where org_id = ${orgId}`;

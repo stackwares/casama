@@ -83,3 +83,20 @@ export const UpdateNotice = z
     url: z.string().nullable(),
   })
   .openapi("UpdateNotice");
+
+/** How apps without their own sign-in connect (D-173), set from the admin console. */
+export const ConnectionSettings = z
+  .object({
+    composio: z.enum(["server", "own"]).openapi({
+      description:
+        "server: through this server's Composio account (one click). own: people use their own Composio, Pipedream or Zapier accounts.",
+    }),
+    composio_key: z
+      .boolean()
+      .openapi({ description: "Whether this server has a Composio key (COMPOSIO_API_KEY)." }),
+  })
+  .openapi("ConnectionSettings");
+
+export const SetConnectionSettingsRequest = z
+  .object({ composio: z.enum(["server", "own"]) })
+  .openapi("SetConnectionSettingsRequest");

@@ -80,11 +80,13 @@ Class | Method | HTTP request | Description
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**deleteActionRule**](doc/ActionRulesApi.md#deleteactionrule) | **DELETE** /v1/action-rules/{id} | 
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**listActionRules**](doc/ActionRulesApi.md#listactionrules) | **GET** /v1/action-rules | A bot&#39;s rules plus the workspace&#39;s (or only the workspace&#39;s without bot_id)
 [*AdminApi*](doc/AdminApi.md) | [**adminAbuseEvents**](doc/AdminApi.md#adminabuseevents) | **GET** /v1/admin/abuse | Recent abuse signals and actions (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminConnectionSettings**](doc/AdminApi.md#adminconnectionsettings) | **GET** /v1/admin/connections | How apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
 [*AdminApi*](doc/AdminApi.md) | [**adminOverview**](doc/AdminApi.md#adminoverview) | **GET** /v1/admin/overview | Instance totals (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminServices**](doc/AdminApi.md#adminservices) | **GET** /v1/admin/services | Configured providers and system health
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdates**](doc/AdminApi.md#adminupdates) | **GET** /v1/admin/updates | Whether a newer Casama release exists
 [*AdminApi*](doc/AdminApi.md) | [**adminUsers**](doc/AdminApi.md#adminusers) | **GET** /v1/admin/users | Everyone on this instance
+[*AdminApi*](doc/AdminApi.md) | [**setAdminConnectionSettings**](doc/AdminApi.md#setadminconnectionsettings) | **PUT** /v1/admin/connections | Choose how apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setOrgLimits**](doc/AdminApi.md#setorglimits) | **PATCH** /v1/admin/orgs/{id}/limits | Set a workspace&#39;s quotas
 [*AdminApi*](doc/AdminApi.md) | [**suspendOrg**](doc/AdminApi.md#suspendorg) | **POST** /v1/admin/orgs/{id}/suspend | Suspend a workspace: stops its computers and runs, keeps its data
 [*AdminApi*](doc/AdminApi.md) | [**unsuspendOrg**](doc/AdminApi.md#unsuspendorg) | **DELETE** /v1/admin/orgs/{id}/suspend | Lift a workspace&#39;s suspension
@@ -450,6 +452,7 @@ Class | Method | HTTP request | Description
  - [ConnectFlowStatus](doc/ConnectFlowStatus.md)
  - [ConnectKey](doc/ConnectKey.md)
  - [ConnectKeyList](doc/ConnectKeyList.md)
+ - [ConnectionSettings](doc/ConnectionSettings.md)
  - [Conversation](doc/Conversation.md)
  - [ConversationList](doc/ConversationList.md)
  - [ConversationThread](doc/ConversationThread.md)
@@ -729,6 +732,7 @@ Class | Method | HTTP request | Description
  - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
  - [SetBotAccessRequestEntriesInner](doc/SetBotAccessRequestEntriesInner.md)
+ - [SetConnectionSettingsRequest](doc/SetConnectionSettingsRequest.md)
  - [SetDeviceGrantRequest](doc/SetDeviceGrantRequest.md)
  - [SetEncryptionRequest](doc/SetEncryptionRequest.md)
  - [SetGitSyncRequest](doc/SetGitSyncRequest.md)

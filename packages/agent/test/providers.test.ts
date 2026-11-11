@@ -37,8 +37,8 @@ describe("guided provider connections", () => {
         ],
       },
       "/api/v3/auth_configs": { auth_config: { id: "ac_1" } },
+      "/api/v3/connected_accounts/link": { redirect_url: "https://composio.dev/link/abc" },
       "/api/v3/connected_accounts?": { items: [{ toolkit: { slug: "gmail" }, status: "ACTIVE" }] },
-      "/api/v3/connected_accounts": { id: "ca_1", redirect_url: "https://composio.dev/link/abc" },
     });
     const dir = composioDirectory(rec("composio", {}), f);
     expect(await dir.apps("mail")).toEqual([
@@ -49,15 +49,32 @@ describe("guided provider connections", () => {
     expect(await dir.connect("gmail", "https://api.test/oauth/done")).toEqual({
       redirect_url: "https://composio.dev/link/abc",
     });
-    expect(calls[1]?.body).toEqual({
+    // No managed auth config for Gmail yet: one is made, then a Connect Link starts the sign-in.
+    expect(calls[1]?.url).toContain("/api/v3/auth_configs?toolkit_slug=gmail");
+    expect(calls[2]?.body).toEqual({
       toolkit: { slug: "gmail" },
       auth_config: { type: "use_composio_managed_auth" },
     });
-    expect(calls[2]?.body).toEqual({
-      auth_config: { id: "ac_1" },
-      connection: { user_id: "org-1", callback_url: "https://api.test/oauth/done" },
+    expect(calls[3]?.url).toContain("/api/v3/connected_accounts/link");
+    expect(calls[3]?.body).toEqual({
+      auth_config_id: "ac_1",
+      user_id: "org-1",
+      callback_url: "https://api.test/oauth/done",
     });
     expect(await dir.accounts()).toEqual([{ app: "gmail", status: "connected" }]);
+  });
+
+  it("Composio: reuses the project's managed auth config for an app", async () => {
+    const { f, calls } = fake({
+      "/api/v3/auth_configs?": { items: [{ id: "ac_9", status: "ENABLED" }] },
+      "/api/v3/connected_accounts/link": { redirect_url: "https://composio.dev/link/xyz" },
+    });
+    const dir = composioDirectory(rec("composio", {}), f);
+    expect(await dir.connect("slack", "https://api.test/oauth/done")).toEqual({
+      redirect_url: "https://composio.dev/link/xyz",
+    });
+    expect(calls.map((c) => c.method)).toEqual(["GET", "POST"]);
+    expect(calls[1]?.body).toMatchObject({ auth_config_id: "ac_9" });
   });
 
   it("Pipedream: searches apps, makes a Connect Link for one app, and reads accounts", async () => {

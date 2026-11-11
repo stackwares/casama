@@ -6,6 +6,10 @@ import { verifyLicense } from "@casama/ee";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { suspendOrg, unsuspendOrg } from "../../services/abuse.ts";
+import {
+  getConnectionSettings,
+  setConnectionSettings,
+} from "../../services/connection-settings.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -39,6 +43,20 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         "Only the instance owner can open the admin console",
       );
   };
+
+  app.openapi(routes.adminConnectionSettings, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const settings = await getConnectionSettings(db);
+    return c.json({ ...settings, composio_key: !!env.COMPOSIO_API_KEY }, 200);
+  });
+
+  app.openapi(routes.setAdminConnectionSettings, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const body = c.req.valid("json");
+    const settings = await setConnectionSettings(db, { composio: body.composio });
+    deps.logger.info("connection settings changed", { composio: settings.composio });
+    return c.json({ ...settings, composio_key: !!env.COMPOSIO_API_KEY }, 200);
+  });
 
   app.openapi(routes.adminOverview, async (c) => {
     await requireOwner(requireClaims(c.get("claims")));
@@ -254,9 +272,13 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       },
       {
         name: "Email",
-        configured: !!env.RESEND_API_KEY,
+        configured: !!(env.RESEND_API_KEY || env.SMTP_HOST),
         healthy: null,
-        detail: env.RESEND_API_KEY ? "Resend" : "Off: invites return a code",
+        detail: env.RESEND_API_KEY
+          ? "Resend"
+          : env.SMTP_HOST
+            ? "SMTP"
+            : "Off: invites return a code",
       },
       {
         name: "Error reporting",

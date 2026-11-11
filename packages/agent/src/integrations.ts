@@ -833,28 +833,40 @@ export function composioDirectory(rec: IntegrationRecord, fetchImpl: typeof fetc
         };
       });
     },
-    /** Starts a sign-in for one app; returns the page to open. */
+    /**
+     * Starts a sign-in for one app; returns the page to open. Reuses the project's Composio-managed
+     * auth config for the app (one per app, made on first use) and starts the sign-in with a
+     * Connect Link (POST /connected_accounts/link; Composio retired creating managed-auth
+     * connections on POST /connected_accounts in 2026).
+     */
     async connect(app: string, callbackUrl: string): Promise<{ redirect_url: string }> {
-      const config = await call("/api/v3/auth_configs", {
-        method: "POST",
-        body: JSON.stringify({
-          toolkit: { slug: app },
-          auth_config: { type: "use_composio_managed_auth" },
-        }),
-      });
-      const authConfigId =
-        str((config.auth_config as Record<string, unknown>)?.id) ?? str(config.id);
+      const existing = await call(
+        `/api/v3/auth_configs?toolkit_slug=${encodeURIComponent(app)}&is_composio_managed=true&limit=10`,
+      ).catch(() => ({ items: [] }) as Record<string, unknown>);
+      const found = ((existing.items as Array<Record<string, unknown>>) ?? []).find(
+        (c) => c.status !== "DISABLED",
+      );
+      let authConfigId = str(found?.id);
+      if (!authConfigId) {
+        const config = await call("/api/v3/auth_configs", {
+          method: "POST",
+          body: JSON.stringify({
+            toolkit: { slug: app },
+            auth_config: { type: "use_composio_managed_auth" },
+          }),
+        });
+        authConfigId = str((config.auth_config as Record<string, unknown>)?.id) ?? str(config.id);
+      }
       if (!authConfigId) throw new Error("Composio did not return an auth config");
-      const account = await call("/api/v3/connected_accounts", {
+      const link = await call("/api/v3/connected_accounts/link", {
         method: "POST",
         body: JSON.stringify({
-          auth_config: { id: authConfigId },
-          connection: { user_id: userId, callback_url: callbackUrl },
+          auth_config_id: authConfigId,
+          user_id: userId,
+          callback_url: callbackUrl,
         }),
       });
-      const redirect =
-        str(account.redirect_url) ??
-        str((account.connectionData as Record<string, unknown>)?.redirect_url);
+      const redirect = str(link.redirect_url);
       if (!redirect) throw new Error("Composio did not return a sign-in link");
       return { redirect_url: redirect };
     },

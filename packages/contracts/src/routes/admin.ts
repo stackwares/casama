@@ -5,6 +5,8 @@ import {
   AdminOverview,
   AdminService,
   AdminUser,
+  ConnectionSettings,
+  SetConnectionSettingsRequest,
   SetOrgLimitsRequest,
   SuspendOrgRequest,
   UpdateNotice,
@@ -54,6 +56,24 @@ export const adminUpdates = get(
   "Whether a newer Casama release exists",
   UpdateNotice,
 );
+
+export const adminConnectionSettings = get(
+  "adminConnectionSettings",
+  "/v1/admin/connections",
+  "How apps without their own sign-in connect (owner only)",
+  ConnectionSettings,
+);
+
+export const setAdminConnectionSettings = createRoute({
+  operationId: "setAdminConnectionSettings",
+  method: "put",
+  path: "/v1/admin/connections",
+  tags: ["admin"],
+  security,
+  summary: "Choose how apps without their own sign-in connect (owner only)",
+  request: { body: jsonBody(SetConnectionSettingsRequest) },
+  responses: { 200: jsonResponse("Updated", ConnectionSettings), 401: e401, 403: e403 },
+});
 
 export const setOrgLimits = createRoute({
   operationId: "setOrgLimits",

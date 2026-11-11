@@ -145,6 +145,7 @@ lib/src/model/connect_app_response.dart
 lib/src/model/connect_flow_status.dart
 lib/src/model/connect_key.dart
 lib/src/model/connect_key_list.dart
+lib/src/model/connection_settings.dart
 lib/src/model/conversation.dart
 lib/src/model/conversation_list.dart
 lib/src/model/conversation_thread.dart
@@ -424,6 +425,7 @@ lib/src/model/send_message_response.dart
 lib/src/model/set_bot_a2a_request.dart
 lib/src/model/set_bot_access_request.dart
 lib/src/model/set_bot_access_request_entries_inner.dart
+lib/src/model/set_connection_settings_request.dart
 lib/src/model/set_device_grant_request.dart
 lib/src/model/set_encryption_request.dart
 lib/src/model/set_git_sync_request.dart

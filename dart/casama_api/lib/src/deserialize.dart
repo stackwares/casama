@@ -84,6 +84,7 @@ import 'package:casama_api/src/model/connect_app_response.dart';
 import 'package:casama_api/src/model/connect_flow_status.dart';
 import 'package:casama_api/src/model/connect_key.dart';
 import 'package:casama_api/src/model/connect_key_list.dart';
+import 'package:casama_api/src/model/connection_settings.dart';
 import 'package:casama_api/src/model/conversation.dart';
 import 'package:casama_api/src/model/conversation_list.dart';
 import 'package:casama_api/src/model/conversation_thread.dart';
@@ -350,6 +351,7 @@ import 'package:casama_api/src/model/send_message_response.dart';
 import 'package:casama_api/src/model/set_bot_a2a_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request_entries_inner.dart';
+import 'package:casama_api/src/model/set_connection_settings_request.dart';
 import 'package:casama_api/src/model/set_device_grant_request.dart';
 import 'package:casama_api/src/model/set_encryption_request.dart';
 import 'package:casama_api/src/model/set_git_sync_request.dart';
@@ -679,6 +681,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ConnectKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConnectKeyList':
           return ConnectKeyList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ConnectionSettings':
+          return ConnectionSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Conversation':
           return Conversation.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConversationList':
@@ -1250,6 +1254,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetBotAccessRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotAccessRequestEntriesInner':
           return SetBotAccessRequestEntriesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetConnectionSettingsRequest':
+          return SetConnectionSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetDeviceGrantRequest':
           return SetDeviceGrantRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetEncryptionRequest':
