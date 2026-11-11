@@ -81,14 +81,33 @@ export function oauthRedirectFor(apiBase: string): string {
   return `${u.origin}/oauth/callback`;
 }
 
-/** The catalog a server offers: on Casama Cloud, inbox apps only through Composio, or not at all (D-130). */
+/**
+ * The catalog a server offers (D-172, like other agent apps do): an app whose own sign-in needs a
+ * client this server doesn't have connects through Composio's sign-in on the server's Composio
+ * account instead, when there is one. On Casama Cloud, Google's apps (Developer Preview, D-166)
+ * always go through Composio, or aren't offered without it.
+ */
 export function catalogFor(
   catalog: CatalogApp[],
-  o: { cloud: boolean; composio: boolean },
+  o: { cloud: boolean; composio: boolean; hasClient?: (id: string) => boolean },
 ): CatalogApp[] {
+  const hasClient = o.hasClient ?? (() => false);
   return catalog
-    .filter((a) => !(o.cloud && a.inbox && !o.composio))
-    .map((a) => (o.cloud && a.inbox ? { ...a, auth: ["managed"], oauthClient: undefined } : a));
+    .filter((a) => !(o.cloud && a.category === "google" && !o.composio))
+    .map((a) => {
+      const ownSignIn =
+        a.auth.includes("oauth") && (a.oauthClient !== "preregistered" || hasClient(a.id));
+      const viaComposio =
+        o.composio &&
+        !!a.composio &&
+        ((o.cloud && a.category === "google") || (a.auth.includes("oauth") && !ownSignIn));
+      if (!viaComposio) return a;
+      return {
+        ...a,
+        auth: ["managed", ...a.auth.filter((m) => m !== "oauth")] as CatalogApp["auth"],
+        oauthClient: undefined,
+      };
+    });
 }
 
 export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts: AppsOptions = {}) {
@@ -98,9 +117,13 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
   // Casama Cloud's own Google app has no restricted scopes (D-130): inbox reading goes through
   // Composio's managed sign-in, or isn't offered when no Composio key is configured.
   const cloud = env.BILLING_ENABLED;
-  const catalog = catalogFor(fullCatalog, { cloud, composio: !!env.COMPOSIO_API_KEY });
-  const findApp = (id: string) => catalog.find((a) => a.id === id) ?? appByIdOrNull(id);
   const clients = preregisteredClients(env, [...fullCatalog, ...APP_CATALOG]);
+  const catalog = catalogFor(fullCatalog, {
+    cloud,
+    composio: !!env.COMPOSIO_API_KEY,
+    hasClient: (id) => !!clients[id],
+  });
+  const findApp = (id: string) => catalog.find((a) => a.id === id) ?? appByIdOrNull(id);
 
   const apiBase = (c: Context) =>
     (env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
@@ -254,7 +277,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       throw new ApiError(403, "forbidden", "Only owners and admins can connect apps");
     if (
       !a.auth.includes(body.method) &&
-      !(body.method === "managed" && a.inbox && env.COMPOSIO_API_KEY)
+      !(body.method === "managed" && a.composio && env.COMPOSIO_API_KEY)
     )
       throw new ApiError(400, "validation_failed", `${a.name} can't connect that way`);
     if (body.integration_id) {
@@ -267,10 +290,11 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     const config: Record<string, unknown> = { url: a.url, app: a.id, auth: body.method };
 
     if (body.method === "managed") {
-      // Composio's managed sign-in on Casama Cloud's own Composio account, one user per workspace.
+      // Composio's sign-in on the server's own Composio account, one Composio user per workspace,
+      // one connection ("apps") that gains each app's tools as it's connected (D-172).
       if (!env.COMPOSIO_API_KEY)
         throw new ApiError(400, "managed_unavailable", `${a.name} isn't available on this server`);
-      const slug = a.id === "gmail_inbox" ? "gmail" : a.id;
+      const slug = a.composio ?? a.id;
       let [row] = await db.execute<{ id: string }>(
         sql`select id from public.integrations where org_id = ${body.org_id}::uuid and kind = 'composio' and config ->> 'managed' = 'true' limit 1`,
       );
@@ -278,7 +302,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
         const secretId = await vault(env.COMPOSIO_API_KEY, "composio managed");
         [row] = await db.execute<{ id: string }>(sql`
           insert into public.integrations (org_id, kind, name, config, vault_secret_id, created_by)
-          values (${body.org_id}::uuid, 'composio', ${await freeName(body.org_id, "google_inbox")},
+          values (${body.org_id}::uuid, 'composio', ${await freeName(body.org_id, "apps")},
                   ${JSON.stringify({ managed: true, toolkits: [], ...(env.COMPOSIO_API_URL ? { base_url: env.COMPOSIO_API_URL } : {}) })}::jsonb,
                   ${secretId}::uuid, ${claims.sub}::uuid)
           returning id`);

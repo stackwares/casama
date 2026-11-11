@@ -61,6 +61,60 @@ describe("Google permissions", () => {
     expect(gmail({ cloud: false, composio: false })?.auth).toEqual(["oauth"]);
   });
 
+  it("apps whose own sign-in isn't set up connect through Composio when the server has a key (D-172)", async () => {
+    const view = catalogFor(APP_CATALOG, { cloud: false, composio: true, hasClient: () => false });
+    expect(view.find((a) => a.id === "slack")?.auth).toEqual(["managed"]);
+    expect(view.find((a) => a.id === "github")?.auth).toEqual(["managed", "api_key"]);
+    // Apps that register themselves keep their own one-click sign-in.
+    expect(view.find((a) => a.id === "notion")?.auth).toEqual(["oauth"]);
+    // With the vendor's client set up, the app's own sign-in comes first again.
+    const withSlack = catalogFor(APP_CATALOG, {
+      cloud: false,
+      composio: true,
+      hasClient: (id) => id === "slack",
+    });
+    expect(withSlack.find((a) => a.id === "slack")?.auth).toEqual(["oauth"]);
+    // No Composio key: unchanged (the connect sheet offers the hubs instead).
+    const none = catalogFor(APP_CATALOG, { cloud: false, composio: false });
+    expect(none.find((a) => a.id === "slack")?.auth).toEqual(["oauth"]);
+    // Casama Cloud: Google's apps only through Composio.
+    const cloud = catalogFor(APP_CATALOG, { cloud: true, composio: true });
+    expect(cloud.find((a) => a.id === "google_calendar")?.auth).toEqual(["managed"]);
+    expect(
+      catalogFor(APP_CATALOG, { cloud: true, composio: false }).some(
+        (a) => a.category === "google",
+      ),
+    ).toBe(false);
+  });
+
+  it("connecting Slack through Composio asks Composio for its Slack sign-in", async () => {
+    const owner = await h.user("composio-slack@example.com");
+    const orgId = (
+      await j(
+        await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "S" } }),
+      )
+    ).id;
+    const before = calls.length;
+    const r = await j(
+      await h.request("/v1/apps/connect", {
+        method: "POST",
+        token: owner.token,
+        json: { org_id: orgId, app_id: "slack", method: "managed" },
+      }),
+    );
+    expect(r).toMatchObject({
+      status: "authorize",
+      authorize_url: "https://composio.example/signin/123",
+    });
+    expect(calls[before]).toMatchObject({
+      path: "/api/v3/auth_configs",
+      body: { toolkit: { slug: "slack" } },
+    });
+    const [i] = await h.tdb.admin<{ name: string; config: { toolkits: string[] } }[]>`
+      select name, config from public.integrations where org_id = ${orgId}`;
+    expect(i).toMatchObject({ name: "apps", config: { toolkits: ["slack"] } });
+  });
+
   it("connecting the inbox through Composio's managed sign-in returns the sign-in page", async () => {
     const owner = await h.user("google@example.com");
     const orgId = (
@@ -68,6 +122,7 @@ describe("Google permissions", () => {
         await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "G" } }),
       )
     ).id;
+    const before = calls.length;
     const r = await j(
       await h.request("/v1/apps/connect", {
         method: "POST",
@@ -79,12 +134,12 @@ describe("Google permissions", () => {
       status: "authorize",
       authorize_url: "https://composio.example/signin/123",
     });
-    expect(calls[0]).toMatchObject({
+    expect(calls[before]).toMatchObject({
       path: "/api/v3/auth_configs",
       key: "cmp-key",
       body: { toolkit: { slug: "gmail" } },
     });
-    expect(calls[1]?.body).toMatchObject({ connection: { user_id: orgId } });
+    expect(calls[before + 1]?.body).toMatchObject({ connection: { user_id: orgId } });
     const [i] = await h.tdb.admin<
       { kind: string; config: { toolkits: string[]; managed: boolean } }[]
     >`select kind, config from public.integrations where org_id = ${orgId}`;

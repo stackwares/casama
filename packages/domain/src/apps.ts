@@ -56,6 +56,11 @@ export interface CatalogApp {
   capabilities: string[];
   popular?: boolean;
   /**
+   * Composio's name for the app (its toolkit slug). With a Composio key on the server, apps whose
+   * own sign-in isn't set up connect through Composio's sign-in on that account (D-172).
+   */
+  composio?: string;
+  /**
    * Reads the inbox (a restricted Google scope, D-130). Casama Cloud offers it only through
    * Composio's managed sign-in until Google's restricted-scope review passes.
    */
@@ -66,6 +71,7 @@ export const APP_CATALOG: CatalogApp[] = [
   // ------------------------------------------------------------ developer
   {
     id: "github",
+    composio: "github",
     name: "GitHub",
     description: "Repositories, issues, pull requests and code search.",
     category: "developer",
@@ -279,6 +285,7 @@ export const APP_CATALOG: CatalogApp[] = [
   },
   {
     id: "asana",
+    composio: "asana",
     name: "Asana",
     description: "Tasks, projects and goals.",
     category: "productivity",
@@ -313,6 +320,7 @@ export const APP_CATALOG: CatalogApp[] = [
   },
   {
     id: "box",
+    composio: "box",
     name: "Box",
     description: "Files and folders in Box.",
     category: "productivity",
@@ -329,6 +337,7 @@ export const APP_CATALOG: CatalogApp[] = [
   // server announces (Gmail's includes full mailbox access).
   {
     id: "gmail",
+    composio: "gmail",
     name: "Gmail",
     description: "Search and read your email, draft replies, and label threads.",
     category: "google",
@@ -348,6 +357,7 @@ export const APP_CATALOG: CatalogApp[] = [
   },
   {
     id: "google_calendar",
+    composio: "googlecalendar",
     name: "Google Calendar",
     description: "Events, availability and invites.",
     category: "google",
@@ -372,6 +382,7 @@ export const APP_CATALOG: CatalogApp[] = [
   },
   {
     id: "google_drive",
+    composio: "googledrive",
     name: "Google Drive",
     description: "Files in Drive that you pick or that it creates.",
     category: "google",
@@ -386,6 +397,7 @@ export const APP_CATALOG: CatalogApp[] = [
   },
   {
     id: "google_docs",
+    composio: "googledocs",
     name: "Google Docs",
     description: "Read and edit your documents.",
     category: "google",
@@ -400,6 +412,7 @@ export const APP_CATALOG: CatalogApp[] = [
   },
   {
     id: "google_sheets",
+    composio: "googlesheets",
     name: "Google Sheets",
     description: "Read and update your spreadsheets.",
     category: "google",
@@ -414,6 +427,7 @@ export const APP_CATALOG: CatalogApp[] = [
   },
   {
     id: "google_slides",
+    composio: "googleslides",
     name: "Google Slides",
     description: "Read and edit your presentations.",
     category: "google",
@@ -428,6 +442,7 @@ export const APP_CATALOG: CatalogApp[] = [
   },
   {
     id: "google_contacts",
+    composio: "googlecontacts",
     name: "Google Contacts",
     description: "Look up people in your contacts and your organization's directory.",
     category: "google",
@@ -474,6 +489,7 @@ export const APP_CATALOG: CatalogApp[] = [
   // --------------------------------------------------------------- design
   {
     id: "figma",
+    composio: "figma",
     name: "Figma",
     description: "Designs, components and variables.",
     category: "design",
@@ -500,6 +516,7 @@ export const APP_CATALOG: CatalogApp[] = [
   },
   {
     id: "slack",
+    composio: "slack",
     name: "Slack",
     description: "Channels, messages and people in your workspace.",
     category: "productivity",
@@ -606,6 +623,7 @@ export const APP_CATALOG: CatalogApp[] = [
   // ---------------------------------------------------------------- sales
   {
     id: "hubspot",
+    composio: "hubspot",
     name: "HubSpot",
     description: "Contacts, companies, deals and tickets.",
     category: "sales",
