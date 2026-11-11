@@ -1,7 +1,10 @@
 # Casama Cloud server
 
 How `api.casama.ai` and `auth.casama.ai` move from the development Mac's tunnel (D-171) to a
-server of their own (D-197). The server runs the normal self-host stack from published images.
+server of their own (D-197). The server runs the normal self-host stack from published images
+(`ghcr.io/stackwares/casama/<name>`, tags `<sha>`, `edge` and `latest`). A new package is private
+until its visibility is set to public in GitHub package settings. `./install.sh --pull` cannot
+download a private package.
 
 ## 1. Install
 

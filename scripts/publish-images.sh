@@ -9,7 +9,9 @@
 # Defaults: ref HEAD, every image, linux/amd64,linux/arm64, registry ghcr.io/stackwares/casama.
 # Tags: <short sha>, edge and latest (--no-latest skips latest). Log in first:
 #   gh auth token | docker login ghcr.io -u <github user> --password-stdin
-# New GHCR packages start private: make each one public once in its package settings.
+# New organization packages start private, and GitHub has no API to change that.
+# Set each one to public once, or a server cannot pull it:
+#   https://github.com/orgs/stackwares/packages/container/package/casama%2F<name>/settings
 set -euo pipefail
 
 registry=ghcr.io/stackwares/casama
@@ -39,6 +41,8 @@ git -C "$root" worktree add --detach --quiet "$src" "$full"
 echo "==> Building $sha for $platforms into $registry"
 
 # name|Dockerfile (relative to the repository). computer-desktop builds on computer-headless.
+# The web app is not in this list. A self-host deploy builds client/Dockerfile.web, which runs
+# scripts/build-web.sh, so that image is always Wasm (D-196).
 images=(
   "server|apps/server/Dockerfile"
   "supervisor|apps/supervisor/Dockerfile"
@@ -61,11 +65,16 @@ for entry in "${images[@]}"; do
   args=()
   [[ "$name" == computer-desktop ]] && args+=(--build-arg "BASE=$registry/computer-headless:$sha")
   echo "==> $name"
-  docker buildx build "$src" -f "$src/$file" --platform "$platforms" --push \
-    --label "org.opencontainers.image.revision=$full" \
-    --label "org.opencontainers.image.licenses=Apache-2.0" \
-    --label "org.opencontainers.image.title=casama-$name" \
-    ${args[@]+"${args[@]}"} "${tags[@]}"
+  # An array, not ${arr[@]+...}: bash 3.2 (macOS) mishandles that form once it is non-empty.
+  build=(docker buildx build "$src" -f "$src/$file" --platform "$platforms" --push
+    --label "org.opencontainers.image.revision=$full"
+    --label "org.opencontainers.image.licenses=Apache-2.0"
+    --label "org.opencontainers.image.title=casama-$name")
+  if [[ ${#args[@]} -gt 0 ]]; then
+    build+=("${args[@]}")
+  fi
+  build+=("${tags[@]}")
+  "${build[@]}"
 done
 
 echo "==> Published $sha. Install with: ./install.sh --pull $sha (or --pull for latest)"
