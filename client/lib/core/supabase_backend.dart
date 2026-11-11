@@ -71,9 +71,10 @@ class SupabaseBackend implements Backend {
   String? get userId => supabase.auth.currentUser?.id;
 
   /// Where sign-in emails and Google, Apple and SSO send people back to: the app itself (the
-  /// casama:// scheme, which Supabase picks up), or on the web the page they came from.
+  /// casama:// scheme, which Supabase picks up), or on the web the site they came from (the
+  /// server's site address would be the marketing page, not the web app).
   static const authRedirect = 'casama://app/login-callback';
-  static String? get _authRedirect => kIsWeb ? null : authRedirect;
+  static String? get _authRedirect => kIsWeb ? Uri.base.origin : authRedirect;
 
   @override
   Future<void> signIn(String email, String password) => supabase.auth.signInWithPassword(email: email, password: password);
