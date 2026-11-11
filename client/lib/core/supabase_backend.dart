@@ -2859,20 +2859,12 @@ class SupabaseBackend implements Backend {
       (await api.admin.setAdminCloudModels(cloudModels: models)).data!;
   @override
   Future<ConnectionSettings> setAdminConnectionSettings({
-    bool? serverComposio,
-    bool? googleDirect,
+    required bool serverComposio,
   }) async => (await api.admin.setAdminConnectionSettings(
     setConnectionSettingsRequest: SetConnectionSettingsRequest(
-      composio: serverComposio == null
-          ? null
-          : serverComposio
+      composio: serverComposio
           ? SetConnectionSettingsRequestComposioEnum.server
           : SetConnectionSettingsRequestComposioEnum.own,
-      google: googleDirect == null
-          ? null
-          : googleDirect
-          ? SetConnectionSettingsRequestGoogleEnum.direct
-          : SetConnectionSettingsRequestGoogleEnum.composio,
     ),
   )).data!;
 
