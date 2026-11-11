@@ -2000,3 +2000,10 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Pricing:** each result carries its model and cost: per megapixel (fal's megapixel is 1024×1024, rounded up) or per image for images, per second for video, from tables of fal's list prices in `packages/agent/src/media.ts`. Models not in the tables are priced high on purpose ($0.04 an image, $0.10 a second). The ledger's `model` column now names the model instead of `fal`.
 - **Still needs a key:** images and video work only with a workspace's own fal key. Offering them on Casama Cloud without one needs a fal account for Casama (a server-wide key, like `GOOGLE_AI_API_KEY` for calls).
 - **Tests:** `packages/agent/test/media-prices.test.ts`, the media case in `packages/agent/test/autonomy.test.ts`.
+
+## D-183 Images on Qwen Image 3.0 Pro through OpenRouter; Seedream 4.5 on fal
+
+- **Why:** FLUX.2 klein 4B (D-182's default) is cheap but ranks 72nd of 84 on arena.ai's text-to-image leaderboard (2026-11-08). Near the top for a fraction of GPT Image's price (about $0.13 an image, ranks 1–5): **Qwen Image 3.0 Pro** (Alibaba, rank 14) at $0.04 an image, only on OpenRouter; Seedream 5.0 Pro (ByteDance, rank 17) at $0.045 on OpenRouter ($0.0675 on fal, tentative). Seedance is ByteDance's video model, not images.
+- **Decision:** `mediaFor` uses the workspace's OpenRouter key for images (`OpenRouterMediaProvider`, `POST /api/v1/images`, default `qwen/qwen-image-3-pro`), recording the cost OpenRouter reports (`usage.cost`), else a list price. Without an OpenRouter key, images use fal with **Seedream 4.5** (rank 38, $0.04) by default. Video stays on fal and needs a fal key (`MediaRouter`). OpenRouter returns images inline as base64: they're written to the computer and never put in the conversation.
+- **Notes:** OpenRouter needs at least $1 of balance for image output. Casama Cloud's own key isn't used for media yet (workspace keys only).
+- **Tests:** `packages/agent/test/media-prices.test.ts`, the media cases in `packages/agent/test/autonomy.test.ts` (fal) and `apps/server/test/autonomy.test.ts` (OpenRouter).

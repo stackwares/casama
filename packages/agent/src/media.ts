@@ -1,6 +1,12 @@
-/** Image and video generation behind one interface; fal.ai is the first adapter. */
+/**
+ * Image and video generation behind one interface (D-182, D-183): images on OpenRouter (Qwen
+ * Image 3.0 Pro) when the workspace has an OpenRouter key, else fal; video on fal.
+ */
 export interface MediaResult {
+  /** Where to download it; empty when the bytes come inline (`data`). */
   url: string;
+  /** The file itself, for providers that return it inline (OpenRouter returns base64). */
+  data?: Uint8Array;
   contentType: string;
   width?: number;
   height?: number;
@@ -52,8 +58,9 @@ export class FalMediaProvider implements MediaProvider {
       apiKey: opts.apiKey,
       syncBase: (opts.syncBase ?? "https://fal.run").replace(/\/$/, ""),
       queueBase: (opts.queueBase ?? "https://queue.fal.run").replace(/\/$/, ""),
-      // FLUX.2 klein 4B: about $0.005 an image, well ahead of FLUX.1 schnell for $0.002 more (D-182).
-      imageModel: opts.imageModel ?? "fal-ai/flux-2/klein/4b",
+      // Seedream 4.5: arena rank 38 for $0.04 an image, fal's best value among strong models
+      // (D-183). Workspaces with an OpenRouter key get Qwen Image 3.0 Pro instead.
+      imageModel: opts.imageModel ?? "fal-ai/bytedance/seedream/v4.5/text-to-image",
       videoModel: opts.videoModel ?? "fal-ai/ltx-video",
       pollMs: opts.pollMs ?? 2000,
       timeoutMs: opts.timeoutMs ?? 10 * 60_000,
@@ -181,4 +188,102 @@ export function falImageCost(model: string, width?: number, height?: number): nu
   // fal's megapixel is 1024 × 1024 pixels.
   const mp = Math.max(1, Math.ceil(((width ?? 1024) * (height ?? 1024)) / (1024 * 1024)));
   return perMp * mp;
+}
+
+// ---------------------------------------------------------------------------
+// OpenRouter images (D-183): POST /api/v1/images, base64 results, exact cost in `usage.cost`.
+
+/** OpenRouter list prices per image at 1K (2026-11-11), for when a response has no cost. */
+export const OPENROUTER_IMAGE_PRICES: Record<string, number> = {
+  "qwen/qwen-image-3-pro": 0.04,
+  "qwen/qwen-image-3": 0.03,
+  "bytedance-seed/seedream-5-0-pro": 0.045,
+  "bytedance-seed/seedream-5-0-lite": 0.035,
+  "bytedance-seed/seedream-5-0-flash": 0.018,
+};
+
+const ASPECT = { square: "1:1", portrait: "3:4", landscape: "16:9" } as const;
+
+export class OpenRouterMediaProvider implements MediaProvider {
+  readonly id = "openrouter";
+  private readonly key: string;
+  private readonly base: string;
+  private readonly fetchImpl: typeof fetch;
+  private readonly imageModel: string;
+  constructor(
+    key: string,
+    opts: { base?: string; fetch?: typeof fetch; imageModel?: string } = {},
+  ) {
+    this.key = key;
+    this.base = (opts.base ?? "https://openrouter.ai/api/v1").replace(/\/$/, "");
+    this.fetchImpl = opts.fetch ?? fetch;
+    // Qwen Image 3.0 Pro: arena rank 14 of 84 for $0.04 an image; the top five (GPT Image) cost
+    // about $0.13. Seedream 5.0 Pro is close behind at $0.045.
+    this.imageModel = opts.imageModel ?? "qwen/qwen-image-3-pro";
+  }
+
+  async generateImage(input: {
+    prompt: string;
+    size?: "square" | "portrait" | "landscape";
+    model?: string;
+  }) {
+    const model = input.model ?? this.imageModel;
+    const res = await this.fetchImpl(`${this.base}/images`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${this.key}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        model,
+        prompt: input.prompt,
+        aspect_ratio: ASPECT[input.size ?? "square"],
+        n: 1,
+      }),
+      signal: AbortSignal.timeout(180_000),
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      data?: Array<{ b64_json?: string; media_type?: string }>;
+      usage?: { cost?: number | null };
+      error?: { message?: string };
+    };
+    if (!res.ok)
+      throw new Error(
+        `OpenRouter returned ${res.status}: ${String(body.error?.message ?? "").slice(0, 300)}`,
+      );
+    const images = (body.data ?? []).filter((d) => d.b64_json);
+    if (!images.length) throw new Error("OpenRouter returned no images");
+    const total =
+      typeof body.usage?.cost === "number"
+        ? body.usage.cost
+        : (OPENROUTER_IMAGE_PRICES[model] ?? MEDIA_PRICES.image) * images.length;
+    return images.map((d) => ({
+      url: "",
+      data: Uint8Array.from(Buffer.from(d.b64_json as string, "base64")),
+      contentType: d.media_type ?? "image/png",
+      model,
+      costUsd: total / images.length,
+    }));
+  }
+
+  async generateVideo(): Promise<MediaResult> {
+    throw new Error("Video needs a fal.ai key in Model keys.");
+  }
+}
+
+/** Images from one provider, video from another (either may be missing). */
+export class MediaRouter implements MediaProvider {
+  readonly id: string;
+  private readonly images: MediaProvider | null;
+  private readonly video: MediaProvider | null;
+  constructor(images: MediaProvider | null, video: MediaProvider | null) {
+    this.images = images;
+    this.video = video;
+    this.id = images?.id ?? video?.id ?? "none";
+  }
+  generateImage(input: Parameters<MediaProvider["generateImage"]>[0]) {
+    if (!this.images) throw new Error("Images need an OpenRouter or fal.ai key in Model keys.");
+    return this.images.generateImage(input);
+  }
+  generateVideo(input: Parameters<MediaProvider["generateVideo"]>[0]) {
+    if (!this.video) throw new Error("Video needs a fal.ai key in Model keys.");
+    return this.video.generateVideo(input);
+  }
 }

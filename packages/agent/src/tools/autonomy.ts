@@ -742,12 +742,20 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
 
   // --- media generation ---------------------------------------------------------
 
-  async function saveMedia(ctx: ToolContext, url: string, ext: string) {
+  async function saveMedia(
+    ctx: ToolContext,
+    media: { url: string; data?: Uint8Array },
+    ext: string,
+  ) {
     if (!ctx.computer) return null;
-    const res = await deps.fetch(url);
-    if (!res.ok) return null;
+    let bytes = media.data;
+    if (!bytes) {
+      const res = await deps.fetch(media.url);
+      if (!res.ok) return null;
+      bytes = new Uint8Array(await res.arrayBuffer());
+    }
     const path = `media/${new Date().toISOString().replace(/[:.]/g, "-")}.${ext}`;
-    await (await ctx.computer()).writeFile(path, new Uint8Array(await res.arrayBuffer()));
+    await (await ctx.computer()).writeFile(path, bytes);
     return path;
   }
 
@@ -766,19 +774,22 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       if (!provider)
         throw new ToolError(
           "no_media_provider",
-          "No media generation key is configured. Add a fal.ai key in Model keys.",
+          "No image generation key is configured. Add an OpenRouter or fal.ai key in Model keys.",
         );
       const [img] = await provider.generateImage({ prompt: args.prompt, size: args.size });
       if (!img) throw new ToolError("media_failed", "No image was returned.");
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model)
         values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'media_images', 1, ${img.costUsd ?? MEDIA_PRICES.image}, ${img.model ?? provider.id})`);
-      const path = await saveMedia(
-        ctx,
-        img.url,
-        img.contentType.includes("png") ? "png" : "jpg",
-      ).catch(() => null);
+      const ext = img.contentType.includes("png")
+        ? "png"
+        : img.contentType.includes("webp")
+          ? "webp"
+          : "jpg";
+      const path = await saveMedia(ctx, img, ext).catch(() => null);
+      // Inline images (OpenRouter) have no link; never put their bytes in the conversation.
+      const where = img.url ? `Generated image: ${img.url}` : "Generated image";
       return {
-        content: `Generated image: ${img.url}${path ? `\nSaved to ~/workspace/${path}` : ""}`,
+        content: `${where}${path ? `\nSaved to ~/workspace/${path}` : img.url ? "" : " (no computer to save it to)"}`,
         preview: path ?? "image generated",
         artifactPath: path,
       };
@@ -809,7 +820,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       const seconds = video.durationS ?? args.duration_s ?? 5;
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model)
         values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'media_video_seconds', ${seconds}, ${video.costUsd ?? seconds * MEDIA_PRICES.videoPerSecond}, ${video.model ?? provider.id})`);
-      const path = await saveMedia(ctx, video.url, "mp4").catch(() => null);
+      const path = await saveMedia(ctx, video, "mp4").catch(() => null);
       return {
         content: `Generated video: ${video.url}${path ? `\nSaved to ~/workspace/${path}` : ""}`,
         preview: path ?? "video generated",

@@ -43,7 +43,15 @@ async function startServices() {
       await server.connect(transport);
       return transport.handleRequest(req, res, raw ? JSON.parse(raw) : undefined);
     }
-    if (url.pathname === "/fal-ai/flux-2/klein/4b")
+    // OpenRouter images (D-183): this workspace has an OpenRouter key, so images go there.
+    if (url.pathname === "/images")
+      return json(res, 200, {
+        data: [
+          { b64_json: Buffer.from([137, 80, 78, 71]).toString("base64"), media_type: "image/png" },
+        ],
+        usage: { cost: 0.04 },
+      });
+    if (url.pathname === "/fal-ai/bytedance/seedream/v4.5/text-to-image")
       return json(res, 200, {
         images: [{ url: `${servicesUrl}/img.png`, content_type: "image/png" }],
       });
@@ -115,7 +123,7 @@ beforeAll(async () => {
       fixtures: FIXTURES,
       push,
       egressExemptCidrs: ["127.0.0.1/32"],
-      providerBases: { fal: servicesUrl },
+      providerBases: { fal: servicesUrl, openrouter: servicesUrl },
     },
   });
   owner = await h.user("phase4@example.com");
@@ -415,6 +423,11 @@ describe("Phase 4 gate", () => {
       { n: string }[]
     >`select count(*) as n from public.usage_ledger where run_id = ${runId} and kind = 'media_images'`;
     expect(Number(row?.n)).toBe(1);
+    // With an OpenRouter key, images are Qwen Image 3.0 Pro at OpenRouter's reported cost.
+    const [priced] = await h.tdb.admin<{ model: string; cost_usd: string }[]>`
+      select model, cost_usd from public.usage_ledger where run_id = ${runId} and kind = 'media_images'`;
+    expect(priced?.model).toBe("qwen/qwen-image-3-pro");
+    expect(Number(priced?.cost_usd)).toBeCloseTo(0.04, 6);
   }, 60_000);
 
   it("a signed custom webhook starts its routine; a bad signature does not", async () => {

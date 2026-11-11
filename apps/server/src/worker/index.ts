@@ -15,9 +15,11 @@ import {
   type FixtureTurn,
   hashEmbedder,
   LangfuseSink,
+  MediaRouter,
   type ModelGateway,
   memoryStoreFor,
   NotificationService,
+  OpenRouterMediaProvider,
   openAiEmbedder,
   type PushSender,
   RecordingPushSender,
@@ -115,6 +117,7 @@ export interface WorkerOptions {
     fal?: string;
     brave?: string;
     tavily?: string;
+    openrouter?: string;
     openai?: string;
     gemini?: string;
     deepgram?: string;
@@ -271,16 +274,28 @@ export async function startWorker(opts: WorkerOptions) {
     db,
     fetch: fetchOut,
     notifications,
+    // Images on OpenRouter when the workspace has a key (Qwen Image 3.0 Pro), else fal; video on
+    // fal (D-183).
     mediaFor: async (orgId) => {
-      const k = await providerKey(orgId, ["fal"]);
-      return k?.key
+      const [or, f] = await Promise.all([
+        providerKey(orgId, ["openrouter"]),
+        providerKey(orgId, ["fal"]),
+      ]);
+      const fal = f?.key
         ? new FalMediaProvider({
-            apiKey: k.key,
+            apiKey: f.key,
             fetch: fetchOut,
             syncBase: opts.providerBases?.fal,
             queueBase: opts.providerBases?.fal,
           })
         : null;
+      const openrouter = or?.key
+        ? new OpenRouterMediaProvider(or.key, {
+            fetch: fetchOut,
+            base: opts.providerBases?.openrouter,
+          })
+        : null;
+      return openrouter || fal ? new MediaRouter(openrouter ?? fal, fal) : null;
     },
     searchFor: async (orgId) => {
       const k = await providerKey(orgId, ["brave_search", "tavily"]);
