@@ -106,6 +106,9 @@ void main() {
   test('the apps only use passkeys made for casama.ai', () {
     expect(() => PasskeyCeremony.checkDomain('casama.ai', web: false), returnsNormally);
     expect(() => PasskeyCeremony.checkDomain('example.com', web: false), throwsA(isA<PasskeyProblem>()));
-    expect(() => PasskeyCeremony.checkDomain('example.com', web: true), returnsNormally);
+    expect(() => PasskeyCeremony.checkDomain('example.com', web: true, pageHost: 'example.com'), returnsNormally);
+    expect(() => PasskeyCeremony.checkDomain('casama.ai', web: true, pageHost: 'app.casama.ai'), returnsNormally);
+    expect(() => PasskeyCeremony.checkDomain('casama.ai', web: true, pageHost: 'localhost'), throwsA(isA<PasskeyProblem>()));
+    expect(() => PasskeyCeremony.checkDomain('casama.ai', web: true, pageHost: 'notcasama.ai'), throwsA(isA<PasskeyProblem>()));
   });
 }

@@ -417,6 +417,20 @@ class WallpaperTheme extends ThemeExtension<WallpaperTheme> {
   }
 }
 
+/// Marks that an ancestor [Wallpaper] already paints the wallpaper for this subtree, so a nested
+/// `Wallpaper(force: true)` on [ChatScreen] doesn't paint a second copy when `everywhere` is on.
+class _WallpaperScope extends InheritedWidget {
+  const _WallpaperScope({required this.painting, required super.child});
+  final bool painting;
+
+  static bool isPainting(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_WallpaperScope>()?.painting ??
+      false;
+
+  @override
+  bool updateShouldNotify(_WallpaperScope old) => old.painting != painting;
+}
+
 /// Paints the wallpaper behind [child]. Pages get it from [WallpaperPageTransitionsBuilder];
 /// chats use `force` so they keep it when the wallpaper is set to chats only.
 class Wallpaper extends StatefulWidget {
@@ -483,29 +497,39 @@ class _WallpaperState extends State<Wallpaper> {
     final force = widget.force;
     final theme = specOverride ?? Theme.of(context).extension<WallpaperTheme>();
     if (theme == null) return child;
+    // When the page route already paints the wallpaper everywhere, a nested forced wallpaper (such
+    // as ChatScreen inside the shell on desktop/tablet) lets the outer one show through instead of
+    // painting a second copy. On mobile, ChatScreen is its own route so its route's outer Wallpaper
+    // paints plain when everywhere is false and the inner forced Wallpaper paints the chat's wallpaper.
+    if (force && specOverride == null && _WallpaperScope.isPainting(context)) {
+      return child;
+    }
     final plain = !force && !theme.spec.everywhere;
-    return Stack(
-      fit: StackFit.passthrough,
-      children: [
-        Positioned.fill(
-          child: RepaintBoundary(
-            child: _PhotoLoader(
-              source: plain ? null : theme.spec.photo,
-              builder: (photo) => _WallpaperLayer(
-                epoch: _epoch,
-                theme: theme,
-                plain: plain,
-                photo: photo,
-                screen: specOverride != null
-                    ? null
-                    : MediaQuery.sizeOf(context),
-                textDirection: Directionality.of(context),
+    return _WallpaperScope(
+      painting: !plain && specOverride == null,
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: _PhotoLoader(
+                source: plain ? null : theme.spec.photo,
+                builder: (photo) => _WallpaperLayer(
+                  epoch: _epoch,
+                  theme: theme,
+                  plain: plain,
+                  photo: photo,
+                  screen: specOverride != null
+                      ? null
+                      : MediaQuery.sizeOf(context),
+                  textDirection: Directionality.of(context),
+                ),
               ),
             ),
           ),
-        ),
-        child,
-      ],
+          child,
+        ],
+      ),
     );
   }
 }

@@ -108,10 +108,12 @@ abstract final class AppTheme {
     final textTheme = typography(base.textTheme).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
     final sheetColor = isDark ? scheme.surfaceContainerLow : scheme.surfaceContainerLowest;
     final selectedTint = Color.alphaBlend(scheme.primary.withValues(alpha: isDark ? 0.22 : 0.14), sheetColor);
-    final fieldFill = isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest;
+    // Text fields read as places to type on any surface: a fill a step lighter than sheets and
+    // dialogs in dark mode, and a visible outline (the page hairline vanishes on dark sheets).
+    final fieldFill = isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLowest;
     final fieldBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: colors.hairline),
+      borderSide: BorderSide(color: scheme.outlineVariant),
     );
 
     return base.copyWith(
@@ -156,7 +158,7 @@ abstract final class AppTheme {
         fillColor: fieldFill,
         border: fieldBorder,
         enabledBorder: fieldBorder,
-        disabledBorder: fieldBorder.copyWith(borderSide: BorderSide(color: colors.hairline.withValues(alpha: 0.5))),
+        disabledBorder: fieldBorder.copyWith(borderSide: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5))),
         focusedBorder: fieldBorder.copyWith(borderSide: BorderSide(color: scheme.primary, width: 1.5)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         helperMaxLines: 3,

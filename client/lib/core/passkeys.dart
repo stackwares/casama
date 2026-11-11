@@ -46,8 +46,18 @@ class PasskeyCeremony {
   }
 
   @visibleForTesting
-  static void checkDomain(String rpId, {bool web = kIsWeb}) {
-    if (web) return; // The browser checks the page's own domain.
+  static void checkDomain(String rpId, {bool web = kIsWeb, String? pageHost}) {
+    if (web) {
+      // The browser only allows passkeys for the page's own domain or a parent of it, so a local
+      // web build on localhost can't use casama.ai passkeys.
+      final host = pageHost ?? Uri.base.host;
+      if (rpId.isEmpty || (host != rpId && !host.endsWith('.$rpId'))) {
+        throw PasskeyProblem(
+          "This server's passkeys only work on ${rpId.isEmpty ? 'its own site' : rpId}, not on $host. Sign in another way.",
+        );
+      }
+      return;
+    }
     if (!passkeyAppDomains.contains(rpId)) {
       throw PasskeyProblem("This server's passkeys are for ${rpId.isEmpty ? 'another site' : rpId}, which this app can't use. Sign in another way.");
     }

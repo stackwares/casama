@@ -122,6 +122,27 @@ void main() {
     expect(find.byKey(const Key('nameStep')), findsNothing);
   });
 
+  testWidgets('the name step waits for the two-step code and a new password', (tester) async {
+    await setSize(tester, const Size(400, 800));
+    final backend = FakeBackend()
+      ..about = const AboutYouView(displayName: 'Robin Park', nameAsked: false)
+      ..twoStepCodeNeeded = true;
+    await tester.pumpWidget(harness(backend, const _Steps()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('nameStep')), findsNothing);
+
+    final container = ProviderScope.containerOf(tester.element(find.byType(_Steps)));
+    backend.twoStepCodeNeeded = false;
+    backend.newPasswordNeeded = true;
+    container.invalidate(twoStepCodeNeededProvider);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('nameStep')), findsNothing);
+
+    backend.newPasswordNeeded = false;
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('nameStep')), findsOneWidget);
+  });
+
   testWidgets('people who already answered never see the name step', (tester) async {
     await tester.pumpWidget(harness(FakeBackend()..about = const AboutYouView(displayName: 'Robin Park', preferredName: 'Rob'), const _Steps()));
     await tester.pumpAndSettle();

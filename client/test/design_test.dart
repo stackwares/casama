@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -174,6 +176,48 @@ void main() {
       await tester.tap(find.byKey(const Key('wallpaperEverywhere')));
       await tester.pumpAndSettle();
       expect(wallpaper().spec.everywhere, isFalse);
+
+      // With "Show in the whole app" off, chats still force their own wallpaper; with it on,
+      // the route's outer wallpaper already covers the chat so it doesn't paint a second copy.
+      await tester.pumpWidget(
+        _app(
+          FakeBackend(),
+          const ChatScreen(botId: botId, conversationId: convId),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final chatContainer = ProviderScope.containerOf(
+        tester.element(find.byType(ChatScreen)),
+      );
+      expect(
+        find
+            .descendant(
+              of: find.byType(ChatScreen),
+              matching: find.byWidgetPredicate(
+                (w) => w is Wallpaper && w.force,
+              ),
+            ),
+        findsOneWidget,
+      );
+      unawaited(
+        chatContainer
+            .read(appearanceProvider.notifier)
+            .setWallpaper(
+              chatContainer
+                  .read(appearanceProvider)
+                  .wallpaper
+                  .copyWith(everywhere: false),
+            ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find
+            .descendant(
+              of: find.byType(ChatScreen),
+              matching: find.byType(RepaintBoundary),
+            ),
+        findsWidgets,
+      );
     },
   );
 

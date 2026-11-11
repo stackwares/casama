@@ -29,6 +29,20 @@ final newPasswordNeededProvider = StreamProvider<bool>((ref) async* {
   yield* backend.newPasswordNeededChanges;
 });
 
+/// Signed in with a password or link but the two-step code (aal2) not entered yet. Re-read on
+/// every auth change; the two-step screen also invalidates it once the code passes.
+final twoStepCodeNeededProvider = Provider<bool>((ref) {
+  ref.watch(signedInProvider);
+  return ref.watch(backendProvider).twoStepCodeNeeded;
+});
+
+/// Signed in all the way: the two-step code and any new password after a reset are done. The
+/// one-time pages over the app (the name step, turning on notifications) wait for this.
+final signInFinishedProvider = Provider<bool>((ref) {
+  if (ref.watch(signedInProvider).value != true) return false;
+  return !ref.watch(twoStepCodeNeededProvider) && ref.watch(newPasswordNeededProvider).value != true;
+});
+
 /// Signed-in state, updated from the backend's auth stream.
 final signedInProvider = StreamProvider<bool>((ref) async* {
   final backend = ref.watch(backendProvider);

@@ -315,6 +315,7 @@ class _TwoStepPromptScreenState extends ConsumerState<TwoStepPromptScreen> {
       _codeInvalid = ok != true;
     });
     if (ok == true) {
+      ref.invalidate(twoStepCodeNeededProvider);
       ref.invalidate(organizationsProvider);
       context.go('/bots');
     }

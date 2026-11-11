@@ -94,6 +94,8 @@ class _FirstRunSteps extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Sign-in finishes first: the two-step code and a new password come before these pages.
+    final signInDone = ref.watch(signInFinishedProvider);
     final name = ref.watch(nameStepNeededProvider) ?? false;
     return ValueListenableBuilder<bool>(
       valueListenable: push.needsAsk,
@@ -102,7 +104,7 @@ class _FirstRunSteps extends ConsumerWidget {
           child,
           if (name)
             const Positioned.fill(child: NameStep())
-          else if (ask)
+          else if (ask && signInDone)
             Positioned.fill(child: NotificationsPrimer(onEnable: push.enable, onLater: push.snooze)),
         ],
       ),

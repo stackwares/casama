@@ -207,7 +207,7 @@ class FormNote extends StatelessWidget {
   }
 }
 
-/// A switch row styled like the form's fields: hairline border, title, help line.
+/// A switch row styled like the form's fields: the same fill and outline, title, help line.
 class FormSwitch extends StatelessWidget {
   const FormSwitch({super.key, required this.title, required this.value, required this.onChanged, this.subtitle, this.icon});
   final String title;
@@ -221,10 +221,10 @@ class FormSwitch extends StatelessWidget {
     final scheme = context.colorScheme;
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(14),
-      side: BorderSide(color: context.appColors.hairline),
+      side: BorderSide(color: scheme.outlineVariant),
     );
     return Material(
-      color: context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
+      color: context.isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLowest,
       shape: shape,
       clipBehavior: Clip.antiAlias,
       child: SwitchListTile(

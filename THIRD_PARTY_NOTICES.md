@@ -73,6 +73,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | haptic_feedback                                                       | client                             | BSD-3-Clause                  |
 | stupid_simple_sheet, motor, scroll_drag_detector                      | client                             | MIT                           |
 | phone_numbers_parser                                                  | client (phone number formatting)   | MIT                           |
+| passkeys (Corbado; web bundle with @github/webauthn-json vendored)    | client (passkey sign-in)           | MIT                           |
 
 ## Other software
 

@@ -15,6 +15,7 @@ import '../../core/voice.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../theme/wallpaper.dart';
 import '../../ui/bottom_padding.dart';
 import '../groups/group_chats.dart';
 import '../../ui/edge_fade.dart';
@@ -421,8 +422,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final computerInUse = ref.watch(chatControllerProvider(widget.botId).select(_computerInUse));
     final computerLive = computerInUse || (chat.running && const {ComputerState.provisioning, ComputerState.starting}.contains(computer?.state));
 
-    return Scaffold(
-      appBar: ShellHeader(
+    return Wallpaper(
+      force: true,
+      child: Scaffold(
+        appBar: ShellHeader(
         title: name,
         subtitle: status,
         showBack: layout == LayoutSize.phone ? true : null,
@@ -667,6 +670,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             );
           },
         ),
+      ),
       ),
     );
   }

@@ -26,11 +26,12 @@ final _nameStepDoneProvider = NotifierProvider<_NameStepDone, bool>(
   _NameStepDone.new,
 );
 
-/// Whether the full-screen name step should show (About you, D-169): signed in, and "What should
+/// Whether the full-screen name step should show (About you, D-169): signed in all the way
+/// (after the two-step code and any new password, [signInFinishedProvider]), and "What should
 /// bots call you?" never answered or skipped. Null while the profile is still loading. If it
 /// can't load, the step stays out of the way.
 final nameStepNeededProvider = Provider.autoDispose<bool?>((ref) {
-  if (ref.watch(signedInProvider).value != true) return false;
+  if (!ref.watch(signInFinishedProvider)) return false;
   if (ref.watch(_nameStepDoneProvider)) return false;
   return ref
       .watch(aboutYouProvider)
