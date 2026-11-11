@@ -22,7 +22,7 @@ approved in both stores; public launch done. Status re-measured in the November 
 
 - Publish computer images (and Daytona snapshots) built from a commit at or after `83abfa1` (Plugins, D-121). The image compiles computerd from the repository, so any image built from `main` now can run plugin servers; none has been published yet (publishing to GHCR is manual, `images.yml`). Until then, plugins with only skills and remote servers work, and `stdio` servers don't start.
 - The developer guide (`docs-site/develop/plugins.md`), the example (`examples/hello-plugin`) and the checker (`packages/plugin-check`, GitHub Action `.github/actions/plugin-check`) are ready (D-160).
-- The supervisor's default image names point at `ghcr.io/casama-dev/…` while the repository is `stackwares/casama`: confirm where images are published before launch.
+- Images are `ghcr.io/stackwares/casama/<name>` (D-197). Publish a commit with `scripts/publish-images.sh`. Nothing is on GHCR yet: the registry login still needs package permission, and this change has to be committed before a publish, because the script builds a clean checkout.
 
 ## Also built for the launch
 

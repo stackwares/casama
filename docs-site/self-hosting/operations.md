@@ -136,6 +136,39 @@ a user who can run Docker:
 
 Then sync `/backups` to other storage with your usual tool.
 
+### Off-site backups
+
+`./install.sh --backups` starts a `backup` container that does this every day, without cron. It
+dumps the database, optionally the computer archives, encrypts each file with age, and uploads the
+folder to any S3-compatible bucket (Cloudflare R2, AWS S3, Backblaze B2, MinIO). The `.env` is
+included only when `BACKUP_AGE_RECIPIENTS` is set. If encryption fails, the folder is deleted and
+nothing is uploaded.
+
+| Setting | What it does |
+| --- | --- |
+| `BACKUP_S3_BUCKET` | Bucket name. Empty keeps backups only in the local `backups` volume. |
+| `BACKUP_S3_ENDPOINT` | `https://<account>.r2.cloudflarestorage.com` for R2. Empty for AWS. |
+| `BACKUP_S3_REGION` | `auto` for R2. The bucket's region for AWS. |
+| `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY` | The bucket's key. |
+| `BACKUP_S3_PREFIX` | Folder in the bucket (default `casama`). |
+| `BACKUP_TIME` | `HH:MM` in UTC (default `03:30`). |
+| `BACKUP_KEEP_DAYS` | Delete backups older than this many days (default `30`). |
+| `BACKUP_AGE_RECIPIENTS` | Comma-separated age public keys (`age1…`) or SSH public keys. |
+| `BACKUP_OBJECTS` | `true` to include computer archives. |
+| `BACKUP_PING_URL` | Called after each success. `/fail` is appended after a failure. |
+
+```sh
+docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env \
+  --profile backup run --rm backup now
+docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env \
+  --profile backup run --rm backup list
+```
+
+To read one back: download the folder, `age -d -i backup.key -o postgres.dump postgres.dump.age`,
+then `pg_restore --list postgres.dump`. Restore the database with
+[Restore](#restore) after decrypting. Casama Cloud's settings are in
+`deploy/casama-cloud/settings.env`.
+
 ### Restore
 
 `restore` replaces the current data with the backup.
@@ -404,7 +437,7 @@ What the chart does:
 
 | Value                      | Default                               | What it does                                                         |
 | -------------------------- | ------------------------------------- | -------------------------------------------------------------------- |
-| `image.registry`           | `ghcr.io/casama-dev`                  | Where the `server`, `supervisor`, `computer-headless`, `computer-desktop` and `web` images come from. |
+| `image.registry`           | `ghcr.io/stackwares/casama`                  | Where the `server`, `supervisor`, `computer-headless`, `computer-desktop` and `web` images come from. |
 | `image.tag`                | `latest`                              | Image tag for all of them.                                           |
 | `image.pullSecrets`        | `[]`                                  | Pull secrets for a private registry.                                 |
 | `publicUrl`                | `https://casama.example.com`          | The API's public address.                                            |

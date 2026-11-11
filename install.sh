@@ -8,12 +8,22 @@
 # Other options: --with-desktop (also build the desktop computer image, slower), --no-start,
 #   --monitoring (Prometheus and Grafana), --web (the web app; needs a Flutter build image),
 #   --search (SearXNG: free web search for bots without a Brave or Tavily key).
+# Published images (D-197): --pull [tag] uses ghcr.io/stackwares/casama images instead of building
+#   them (tag defaults to latest); re-running then upgrades by pulling.
+# Behind a tunnel or another proxy: --behind-proxy --domain api.example.com serves plain HTTP on
+#   --http-port while the public address stays https://<domain>; live view then needs
+#   --turn-host <name or IP> that reaches this machine directly (UDP and TCP 3478).
+# Also: --admin-email <a@b,c@d> (instance admins), --settings <file> (KEY=VALUE lines merged into
+#   the .env, e.g. deploy/casama-cloud/settings.env), --backups (daily off-site backups; set the
+#   BACKUP_* settings, see docs-site/self-hosting/operations.md).
 set -euo pipefail
 
 cd "$(dirname "$0")"
 COMPOSE_DIR=infra/compose
 ENV_FILE="$COMPOSE_DIR/.env"
+REGISTRY=ghcr.io/stackwares/casama
 domain="" local=0 http_port=80 desktop=0 start=1 search=0 profiles=()
+pull="" behind_proxy=0 turn_host_opt="" admin_email="" settings_file="" backups=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -25,13 +35,21 @@ while [[ $# -gt 0 ]]; do
     --monitoring) profiles+=(--profile monitoring); shift ;;
     --web) profiles+=(--profile web); shift ;;
     --search) profiles+=(--profile search); search=1; shift ;;
-    -h | --help) sed -n '2,10p' "$0"; exit 0 ;;
+    --pull)
+      if [[ $# -gt 1 && "$2" != --* ]]; then pull="$2"; shift 2; else pull=latest; shift; fi ;;
+    --behind-proxy) behind_proxy=1; shift ;;
+    --turn-host) turn_host_opt="$2"; shift 2 ;;
+    --admin-email) admin_email="$2"; shift 2 ;;
+    --settings) settings_file="$2"; shift 2 ;;
+    --backups) backups=1; shift ;;
+    -h | --help) sed -n '2,18p' "$0"; exit 0 ;;
     *) echo "Unknown option: $1"; exit 2 ;;
   esac
 done
 
 say() { printf '\033[1m==> %s\033[0m\n' "$*"; }
 die() { printf '\033[31mError: %s\033[0m\n' "$*" >&2; exit 1; }
+[[ "$behind_proxy" -eq 1 && -z "$domain" && ! -f "$ENV_FILE" ]] && die "--behind-proxy needs --domain (the public name the proxy serves)"
 
 # ---------------------------------------------------------------- checks
 command -v docker >/dev/null || die "Docker is not installed. See https://docs.docker.com/engine/install/"
@@ -121,6 +139,11 @@ else
     site=":80"
     public="http://localhost$([[ "$http_port" == 80 ]] || echo ":$http_port")"
     turn_host=localhost
+  elif [[ "$behind_proxy" -eq 1 ]]; then
+    # TLS ends at the proxy or tunnel; Caddy serves plain HTTP on HTTP_PORT.
+    site=":80"
+    public="https://$domain"
+    turn_host="${turn_host_opt:-$domain}"
   else
     site="$domain"
     public="https://$domain"
@@ -181,6 +204,41 @@ EOF
   say "Wrote $ENV_FILE"
 fi
 
+# Sets KEY=VALUE in the .env, replacing an existing line (values are written verbatim).
+set_env() {
+  local tmp="$ENV_FILE.tmp"
+  { grep -v "^$1=" "$ENV_FILE" || true; printf '%s=%s\n' "$1" "$2"; } >"$tmp"
+  chmod 600 "$tmp" && mv "$tmp" "$ENV_FILE"
+}
+env_value() { grep "^$1=" "$ENV_FILE" 2>/dev/null | tail -n1 | cut -d= -f2- || true; }
+
+# Sign-up hook secret (Standard Webhooks, D-094): the same value on Auth and the API.
+[[ -n "$(env_value AUTH_HOOK_SECRET)" ]] || set_env AUTH_HOOK_SECRET "v1,whsec_$(openssl rand -base64 32 | tr -d '\n')"
+[[ -n "$turn_host_opt" ]] && set_env TURN_PUBLIC_HOST "$turn_host_opt"
+# Behind a tunnel or proxy on this machine, Caddy listens on loopback only: Docker's published
+# ports skip ufw, so 0.0.0.0 would serve plain HTTP to the internet.
+[[ "$behind_proxy" -eq 1 ]] && set_env HTTP_BIND 127.0.0.1
+[[ -n "$admin_email" ]] && set_env INSTANCE_ADMIN_EMAILS "$admin_email"
+if [[ -n "$settings_file" ]]; then
+  [[ -f "$settings_file" ]] || die "No such settings file: $settings_file"
+  say "Applying settings from $settings_file"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
+    [[ "$line" =~ ^([A-Z_][A-Z0-9_]*)=(.*)$ ]] || die "Bad line in $settings_file: $line"
+    set_env "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+  done <"$settings_file"
+fi
+if [[ -n "$pull" ]]; then
+  set_env CASAMA_REGISTRY "$REGISTRY"
+  set_env CASAMA_VERSION "$pull"
+fi
+[[ "$backups" -eq 1 ]] && set_env CASAMA_BACKUPS on
+# Remembered on re-runs, so an upgrade never drops the backup service.
+[[ "$(env_value CASAMA_BACKUPS)" == on ]] && profiles+=(--profile backup) && backups=1
+registry=$(env_value CASAMA_REGISTRY)
+use_published=0
+[[ -n "$registry" && "$registry" != casama ]] && use_published=1
+
 # --search (D-179): point the worker at SearXNG, also on an existing .env.
 if [[ "$search" == 1 ]] && ! grep -q '^SEARXNG_URL=.' "$ENV_FILE"; then
   grep -q '^SEARXNG_SECRET=.' "$ENV_FILE" || echo "SEARXNG_SECRET=$(rand 32)" >>"$ENV_FILE"
@@ -201,12 +259,23 @@ for attempt in 1 2 3 4 5; do
   sleep $((attempt * 15))
 done
 [[ "$pulled" -eq 1 ]] || die "Couldn't pull the images. Check your internet connection (or registry rate limits) and run this again."
-say "Building Casama images (first run takes a few minutes)"
-# CASAMA_BUILD_FLAGS=--no-cache forces clean rebuilds.
-compose build --quiet ${CASAMA_BUILD_FLAGS:-} api supervisor egress turn
-COMPOSE_PROFILES=images compose build --quiet ${CASAMA_BUILD_FLAGS:-} computer-headless
-if [[ "$desktop" -eq 1 ]]; then
-  COMPOSE_PROFILES=images compose build --quiet ${CASAMA_BUILD_FLAGS:-} computer-desktop
+casama_services=(api supervisor egress turn)
+[[ "$backups" -eq 1 ]] && casama_services+=(backup)
+if [[ "$use_published" -eq 1 ]]; then
+  say "Pulling Casama images ($registry, $(env_value CASAMA_VERSION))"
+  compose pull --quiet "${casama_services[@]}"
+  COMPOSE_PROFILES=images compose pull --quiet computer-headless
+  if [[ "$desktop" -eq 1 ]]; then
+    COMPOSE_PROFILES=images compose pull --quiet computer-desktop
+  fi
+else
+  say "Building Casama images (first run takes a few minutes)"
+  # CASAMA_BUILD_FLAGS=--no-cache forces clean rebuilds.
+  compose build --quiet ${CASAMA_BUILD_FLAGS:-} "${casama_services[@]}"
+  COMPOSE_PROFILES=images compose build --quiet ${CASAMA_BUILD_FLAGS:-} computer-headless
+  if [[ "$desktop" -eq 1 ]]; then
+    COMPOSE_PROFILES=images compose build --quiet ${CASAMA_BUILD_FLAGS:-} computer-desktop
+  fi
 fi
 
 [[ "$start" -eq 1 ]] || { say "Images ready; start with: docker compose -f $COMPOSE_DIR/docker-compose.yml --env-file $ENV_FILE up -d"; exit 0; }

@@ -77,10 +77,11 @@ SIGNUP_HOOK_URI=https://casama.example.com/hooks/auth/before-user-created
 
 If a load balancer or another reverse proxy terminates TLS:
 
-1. Set `CASAMA_SITE=:80` so Caddy serves plain HTTP.
+1. Set `CASAMA_SITE=:80` so Caddy serves plain HTTP. `./install.sh --behind-proxy --domain <name>` does this.
 2. Keep `CASAMA_PUBLIC_URL` on the public `https://` address.
 3. Route your proxy to Caddy's HTTP port (`HTTP_PORT`), including WebSocket upgrades.
-4. Keep port 3478 (UDP and TCP) reachable directly for live view: an HTTP proxy can't carry TURN.
+4. Set `HTTP_BIND=127.0.0.1` (the installer does this with `--behind-proxy`). Docker-published ports skip the host firewall, so `0.0.0.0` would serve plain HTTP to anyone who can reach the server's IP.
+5. Keep port 3478 (UDP and TCP) reachable directly for live view, and set `TURN_PUBLIC_HOST` (`--turn-host`) to a name that points at the server with DNS only, not through the HTTP proxy. Media stays inside coturn, so the relay range 49160–49260 does not need to be open.
 
 ## Generated secrets
 
@@ -91,6 +92,7 @@ table says it's safe: several are baked into the database or into each other.
 | ------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
 | `POSTGRES_PASSWORD`      | Password for Postgres and the Supabase service roles                           | No. Postgres keeps the password it was first started with.              |
 | `WORKER_DB_PASSWORD`     | Password for `casama_worker`, the worker's least-privilege database role       | Yes. The `migrate` service sets it again at every start.                |
+| `AUTH_HOOK_SECRET`       | Shared secret for the sign-up hook (`v1,whsec_…`), on Auth and the API         | Yes, if you change it in both places and restart Auth and the API.      |
 | `JWT_SECRET`             | Signs Supabase tokens                                                          | No. `ANON_KEY` and `SERVICE_ROLE_KEY` are signed with it.               |
 | `ANON_KEY`               | Supabase anon key (a JWT)                                                      | No                                                                     |
 | `SERVICE_ROLE_KEY`       | Supabase service role key (a JWT)                                              | No                                                                     |

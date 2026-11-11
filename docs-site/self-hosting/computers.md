@@ -138,8 +138,8 @@ two settings:
 
 | Name                    | Default                                          | What it does                    |
 | ----------------------- | ------------------------------------------------ | ------------------------------- |
-| `HOSTED_IMAGE_HEADLESS` | `ghcr.io/casama-dev/computer-headless:latest`    | Image for headless computers.   |
-| `HOSTED_IMAGE_DESKTOP`  | `ghcr.io/casama-dev/computer-desktop:latest`     | Image for desktop computers.    |
+| `HOSTED_IMAGE_HEADLESS` | `ghcr.io/stackwares/casama/computer-headless:latest`    | Image for headless computers.   |
+| `HOSTED_IMAGE_DESKTOP`  | `ghcr.io/stackwares/casama/computer-desktop:latest`     | Image for desktop computers.    |
 
 If you build your own images, push them to a registry these providers can pull from and set both.
 

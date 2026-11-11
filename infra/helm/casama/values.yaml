@@ -3,7 +3,7 @@
 # supervisor's Kubernetes provider (D-139).
 
 image:
-  registry: ghcr.io/casama-dev
+  registry: ghcr.io/stackwares/casama
   tag: latest
   pullPolicy: IfNotPresent
   pullSecrets: []

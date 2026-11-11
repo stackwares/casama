@@ -2,7 +2,7 @@
 # resized), a lightweight window manager, AT-SPI accessibility, agent-desktop, xdotool, a text
 # editor for desktop tasks, and the Neko WebRTC streamer (D-054), which computerd starts on demand.
 #   docker build -f infra/images/computer/Dockerfile.desktop --build-arg BASE=casama/computer-headless:dev -t casama/computer-desktop:dev .
-ARG BASE=ghcr.io/stackwares/casama-computer-headless:latest
+ARG BASE=ghcr.io/stackwares/casama/computer-headless:latest
 
 # --- Neko server, built on the same Ubuntu release as the runtime (glibc and GStreamer match) ---
 FROM ubuntu:24.04 AS neko

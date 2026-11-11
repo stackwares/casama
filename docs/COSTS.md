@@ -33,6 +33,7 @@ adds a paid service or a vendor changes its price.
 | Langfuse (optional) | $0 up to 50k units, then $29 / month | |
 | Email: Zoho Mail | $1–4 per mailbox / month | hello@ sends sign-in email; switch sign-in mail to Resend ($20 / month for 50k) when volume grows |
 | Cloudflare (DNS, site, docs, gallery, tunnel) | $0; Workers Paid $5 / month if needed | The gallery (D-184) is static assets: free, no bandwidth charge; R2 at $0.015 per GB-month only if images outgrow the static limits |
+| Off-site database backups (R2 bucket `casama-backups`, D-197) | $0 within the 10 GB-month free tier | Then $0.015 per GB-month, no egress fee. Daily age-encrypted dumps, 14 days kept |
 | Unsplash API (wallpaper photo search, D-087) | $0 | Free at both Demo (50 requests/hour) and Production rate limits; Unsplash reserves the right to charge for very heavy use |
 | Domain casama.ai | about $80 / year | Unverified; check the Cloudflare dashboard |
 | Apple Developer Program | $99 / year | |

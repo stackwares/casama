@@ -35,6 +35,8 @@ Optional Compose profiles add more:
 | ------------ | ------------------------------------------ | -------------------------------------------------- |
 | `web`        | The web app at the same address            | `./install.sh --web`                               |
 | `monitoring` | Prometheus, node-exporter and Grafana      | `./install.sh --monitoring`                        |
+| `search`     | SearXNG, free web search for bots          | `./install.sh --search`                            |
+| `backup`     | Daily off-site backups                     | `./install.sh --backups`                           |
 | `s3`         | SeaweedFS, S3-compatible object storage    | See [Object storage](/self-hosting/configuration#object-storage) |
 | `images`     | Build-only services for the computer images | Used by the installer                             |
 
@@ -147,7 +149,14 @@ about 3 GB of third-party images. Re-running it with images in place takes about
 | `--with-desktop`    | Also builds the desktop computer image, needed for live view and desktop apps. Slower.                                    |
 | `--monitoring`      | Adds the `monitoring` profile: Prometheus, node-exporter and Grafana.                                                    |
 | `--web`             | Adds the `web` profile: the Flutter web app at the same address. The build runs Flutter in Docker and takes a while.     |
-| `--no-start`        | Writes `.env` and builds the images, but doesn't start the stack.                                                        |
+| `--search`          | Adds SearXNG and points the worker at it, so bots can search the web without a Brave or Tavily key.                      |
+| `--pull [tag]`      | Pulls published images from `ghcr.io/stackwares/casama` instead of building them. The tag defaults to `latest`.          |
+| `--behind-proxy`    | TLS ends at a tunnel or another proxy. Needs `--domain`. Caddy listens on loopback only (`HTTP_BIND=127.0.0.1`).          |
+| `--turn-host <name>` | The name or IP clients use for live view, when it differs from `--domain`. Needs UDP and TCP 3478 open to that host.   |
+| `--admin-email <list>` | Comma-separated instance admin emails (`INSTANCE_ADMIN_EMAILS`).                                                      |
+| `--settings <file>` | Merges `KEY=VALUE` lines from a file into `.env`. Comments and blank lines are skipped.                                 |
+| `--backups`         | Adds the `backup` profile: a daily encrypted upload. See [Operations](/self-hosting/operations#off-site-backups).         |
+| `--no-start`        | Writes `.env` and builds or pulls the images, but doesn't start the stack.                                               |
 | `-h`, `--help`      | Prints the usage.                                                                                                        |
 
 With neither `--domain` nor `--local`, the installer asks for a domain. An empty answer (or no
@@ -163,6 +172,8 @@ CASAMA_BUILD_FLAGS=--no-cache ./install.sh
 When `infra/compose/.env` exists, the installer keeps it as is and only adds settings that newer
 releases introduced. `--domain`, `--local` and `--http-port` have no effect on a re-run. To change
 the address later, edit the settings in [Core and URLs](/self-hosting/configuration#core-and-urls).
+`--pull`, `--behind-proxy`, `--turn-host`, `--admin-email`, `--settings` and `--backups` do apply
+on a re-run.
 :::
 
 ### `--local` versus `--domain`

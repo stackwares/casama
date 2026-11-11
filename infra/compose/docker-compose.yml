@@ -7,7 +7,7 @@
 name: casama
 
 x-casama: &casama
-  image: casama/server:${CASAMA_VERSION:-local}
+  image: ${CASAMA_REGISTRY:-casama}/server:${CASAMA_VERSION:-local}
   build:
     context: ../..
     dockerfile: apps/server/Dockerfile
@@ -48,7 +48,36 @@ x-casama: &casama
     CHATGPT_SIGN_IN: ${CHATGPT_SIGN_IN:-auto}
     ABUSE_CONTROLS: ${ABUSE_CONTROLS:-auto}
     SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
-    BILLING_ENABLED: "false"
+    # Plans and payments (Phase 7): off for self-hosting; Casama Cloud turns it on (D-197).
+    BILLING_ENABLED: ${BILLING_ENABLED:-false}
+    DODO_API_KEY: ${DODO_API_KEY:-}
+    DODO_WEBHOOK_SECRET: ${DODO_WEBHOOK_SECRET:-}
+    DODO_ENVIRONMENT: ${DODO_ENVIRONMENT:-}
+    APP_STORE_ISSUER_ID: ${APP_STORE_ISSUER_ID:-}
+    APP_STORE_KEY_ID: ${APP_STORE_KEY_ID:-}
+    APP_STORE_PRIVATE_KEY: ${APP_STORE_PRIVATE_KEY:-}
+    APP_STORE_BUNDLE_ID: ${APP_STORE_BUNDLE_ID:-}
+    APP_STORE_ENVIRONMENT: ${APP_STORE_ENVIRONMENT:-}
+    GOOGLE_PLAY_PACKAGE_NAME: ${GOOGLE_PLAY_PACKAGE_NAME:-}
+    GOOGLE_PLAY_SERVICE_ACCOUNT: ${GOOGLE_PLAY_SERVICE_ACCOUNT:-}
+    GOOGLE_PLAY_RTDN_TOKEN: ${GOOGLE_PLAY_RTDN_TOKEN:-}
+    GOOGLE_PLAY_RTDN_AUDIENCE: ${GOOGLE_PLAY_RTDN_AUDIENCE:-}
+    GOOGLE_PLAY_RTDN_EMAIL: ${GOOGLE_PLAY_RTDN_EMAIL:-}
+    CLOUD_CONNECT: ${CLOUD_CONNECT:-}
+    CLOUD_MODEL_UPSTREAM_URL: ${CLOUD_MODEL_UPSTREAM_URL:-}
+    CLOUD_MODEL_UPSTREAM_KEY: ${CLOUD_MODEL_UPSTREAM_KEY:-}
+    CLOUD_MODEL_MARKUP: ${CLOUD_MODEL_MARKUP:-}
+    CLOUD_COMPUTER_USD_PER_HOUR: ${CLOUD_COMPUTER_USD_PER_HOUR:-}
+    COMPUTER_RATES: ${COMPUTER_RATES:-}
+    # Abuse controls (D-094): sign-up proofs, App Check project, OAuth redirect for app connections.
+    SIGNUP_PROOFS: ${SIGNUP_PROOFS:-}
+    SIGNUP_POW_DIFFICULTY: ${SIGNUP_POW_DIFFICULTY:-}
+    APP_CHECK_PROJECT_NUMBER: ${APP_CHECK_PROJECT_NUMBER:-}
+    OAUTH_REDIRECT_URL: ${OAUTH_REDIRECT_URL:-}
+    PHONE_CALLS: ${PHONE_CALLS:-}
+    APNS_VOIP_TOPIC: ${APNS_VOIP_TOPIC:-}
+    POSTHOG_HOST: ${POSTHOG_HOST:-}
+    LOG_LEVEL: ${LOG_LEVEL:-}
     # Shared by the API and the worker: encryption at rest (D-136) and the sign-up hook (D-145).
     CONTENT_ENCRYPTION_KEY: ${CONTENT_ENCRYPTION_KEY:-}
     CONTENT_ENCRYPTION_KEY_PREVIOUS: ${CONTENT_ENCRYPTION_KEY_PREVIOUS:-}
@@ -282,7 +311,7 @@ services:
 
   # The only service with Docker access. It joins each computer's private network to reach computerd.
   supervisor:
-    image: casama/supervisor:${CASAMA_VERSION:-local}
+    image: ${CASAMA_REGISTRY:-casama}/supervisor:${CASAMA_VERSION:-local}
     build:
       context: ../..
       dockerfile: apps/supervisor/Dockerfile
@@ -296,8 +325,8 @@ services:
       EGRESS_CONTROL_URL: http://casama-egress:3129
       EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
       SUPERVISOR_CONTAINER: casama-supervisor
-      COMPUTER_IMAGE_HEADLESS: casama/computer-headless:${CASAMA_VERSION:-local}
-      COMPUTER_IMAGE_DESKTOP: casama/computer-desktop:${CASAMA_VERSION:-local}
+      COMPUTER_IMAGE_HEADLESS: ${CASAMA_REGISTRY:-casama}/computer-headless:${CASAMA_VERSION:-local}
+      COMPUTER_IMAGE_DESKTOP: ${CASAMA_REGISTRY:-casama}/computer-desktop:${CASAMA_VERSION:-local}
       COMPUTER_MEMORY_MB: ${COMPUTER_MEMORY_MB:-2048}
       WARM_POOL_SIZE: ${WARM_POOL_SIZE:-0}
       OBJECT_STORE_DIR: /data/objects
@@ -311,7 +340,7 @@ services:
 
   # The only route from computers to the internet; blocks private and metadata addresses.
   egress:
-    image: casama/egress-proxy:${CASAMA_VERSION:-local}
+    image: ${CASAMA_REGISTRY:-casama}/egress-proxy:${CASAMA_VERSION:-local}
     build:
       context: ../..
       dockerfile: infra/egress-proxy/Dockerfile
@@ -327,7 +356,7 @@ services:
 
   # TURN relay for live view (D-055). Production also wants TLS on 5349 (turns:).
   turn:
-    image: casama/turn:${CASAMA_VERSION:-local}
+    image: ${CASAMA_REGISTRY:-casama}/turn:${CASAMA_VERSION:-local}
     build:
       context: ../..
       dockerfile: infra/turn/Dockerfile
@@ -339,6 +368,40 @@ services:
     ports:
       - "3478:3478/udp"
       - "3478:3478/tcp"
+
+  # Daily off-site backups (D-197, profile "backup"): the database, the .env (only age-encrypted)
+  # and optionally computer archives, to any S3-compatible bucket. install.sh --backups turns it on.
+  # Run one now: docker compose ... --profile backup run --rm backup now
+  backup:
+    image: ${CASAMA_REGISTRY:-casama}/backup:${CASAMA_VERSION:-local}
+    build:
+      context: ../..
+      dockerfile: infra/backup/Dockerfile
+    container_name: casama-backup
+    profiles: [backup]
+    restart: unless-stopped
+    networks: [internal, egress]
+    depends_on: [db]
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+      BACKUP_TIME: ${BACKUP_TIME:-03:30}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-30}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-auto}
+      BACKUP_S3_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID:-}
+      BACKUP_S3_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY:-}
+      BACKUP_S3_PREFIX: ${BACKUP_S3_PREFIX:-casama}
+      BACKUP_AGE_RECIPIENTS: ${BACKUP_AGE_RECIPIENTS:-}
+      BACKUP_OBJECTS: ${BACKUP_OBJECTS:-false}
+      BACKUP_PING_URL: ${BACKUP_PING_URL:-}
+    volumes:
+      - backups:/backups
+      - objects:/objects:ro
+      - ./.env:/env:ro
 
   # Free web search for bots (D-179, profile "search"). Set SEARXNG_URL=http://searxng:8080 too.
   # Internal only: no published port; it needs outbound internet to ask the search engines.
@@ -363,8 +426,8 @@ services:
       CASAMA_SITE: ${CASAMA_SITE}
       CASAMA_PAGES_SITE: ${CASAMA_PAGES_SITE:-:8790}
     ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
+      - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-80}:80"
+      - "${HTTP_BIND:-0.0.0.0}:${HTTPS_PORT:-443}:443"
       - "${PAGES_PORT:-8790}:8790"
     volumes:
       - ./selfhost/Caddyfile:/etc/caddy/Caddyfile:ro
@@ -372,7 +435,7 @@ services:
 
   # ---------------------------------------------------------------- optional
   web:
-    image: casama/web:${CASAMA_VERSION:-local}
+    image: ${CASAMA_REGISTRY:-casama}/web:${CASAMA_VERSION:-local}
     profiles: [web]
     build:
       context: ../..
@@ -445,7 +508,7 @@ services:
     build:
       context: ../..
       dockerfile: infra/images/computer/Dockerfile.headless
-    image: casama/computer-headless:${CASAMA_VERSION:-local}
+    image: ${CASAMA_REGISTRY:-casama}/computer-headless:${CASAMA_VERSION:-local}
     profiles: [images]
 
   computer-desktop:
@@ -453,8 +516,8 @@ services:
       context: ../..
       dockerfile: infra/images/computer/Dockerfile.desktop
       args:
-        BASE: casama/computer-headless:${CASAMA_VERSION:-local}
-    image: casama/computer-desktop:${CASAMA_VERSION:-local}
+        BASE: ${CASAMA_REGISTRY:-casama}/computer-headless:${CASAMA_VERSION:-local}
+    image: ${CASAMA_REGISTRY:-casama}/computer-desktop:${CASAMA_VERSION:-local}
     profiles: [images]
 
 networks:
@@ -465,6 +528,7 @@ volumes:
   db-data: {}
   db-config: {}
   objects: {}
+  backups: {}
   caddy-data: {}
   s3data: {}
   prometheus-data: {}
