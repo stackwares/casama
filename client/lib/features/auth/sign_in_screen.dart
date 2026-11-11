@@ -14,6 +14,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/brand_sign_in_buttons.dart';
 import '../../ui/form_sheet.dart';
 import 'floating_mascots.dart';
+import 'welcome_tagline.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/otp_code_field.dart';
 import '../../ui/revealable.dart';
@@ -45,55 +46,73 @@ class SignInScreen extends ConsumerWidget {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpace.xl,
-                    0,
-                    AppSpace.xl,
-                    AppSpace.lg,
-                  ),
-                  child: Column(
-                    children: [
-                      const Spacer(flex: 5),
-                      Text(
-                        'Casama',
-                        textAlign: TextAlign.center,
-                        style: context.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -1,
-                          color: scheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpace.sm),
-                      Text(
-                        l10n.signInTagline,
-                        textAlign: TextAlign.center,
-                        style: context.textTheme.titleMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          height: 1.4,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const Spacer(flex: 6),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: FilledButton(
-                          key: const Key('openSignIn'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: scheme.onSurface,
-                            foregroundColor: scheme.surface,
-                            shape: const StadiumBorder(),
-                            textStyle: context.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                // Spaced out when it fits; scrolls when large text or a small screen doesn't.
+                child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: IntrinsicHeight(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpace.xl,
+                            0,
+                            AppSpace.xl,
+                            AppSpace.lg,
                           ),
-                          onPressed: () => openOptions(context),
-                          child: Text(l10n.signInCta),
+                          child: Column(
+                            children: [
+                              const Spacer(flex: 5),
+                              Text(
+                                'Casama',
+                                textAlign: TextAlign.center,
+                                style: context.textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -1,
+                                  color: scheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpace.sm),
+                              WelcomeTagline(
+                                taglines: [
+                                  l10n.signInTagline,
+                                  l10n.signInTagline2,
+                                  l10n.signInTagline3,
+                                  l10n.signInTagline4,
+                                  l10n.signInTagline5,
+                                ],
+                                style: context.textTheme.titleMedium?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              const Spacer(flex: 6),
+                              // At least 56 tall but free to grow, so large text sizes and longer
+                              // translations wrap instead of being cut off.
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton(
+                                  key: const Key('openSignIn'),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: scheme.onSurface,
+                                    foregroundColor: scheme.surface,
+                                    shape: const StadiumBorder(),
+                                    minimumSize: const Size.fromHeight(56),
+                                    padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg, vertical: AppSpace.sm),
+                                    textStyle: context.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  onPressed: () => openOptions(context),
+                                  child: Text(l10n.welcomeCta, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpace.md),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: AppSpace.md),
-                    ],
+                    ),
                   ),
                 ),
               ),

@@ -1723,11 +1723,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start Casama when you log in to this Mac, ready for the quick-ask shortcut.';
 
   @override
-  String get signInCta => 'Sign in or create account';
+  String get signInTagline =>
+      'Teammates that keep working after you close the app.';
 
   @override
-  String get signInTagline =>
-      'Your AI teammates, each with its own computer, memory and tools.';
+  String get signInTagline2 => 'Meet your AI crew.';
+
+  @override
+  String get signInTagline3 =>
+      'AI that doesn\'t just talk. It gets things done.';
+
+  @override
+  String get signInTagline4 => 'Capable teammates that ask before they act.';
+
+  @override
+  String get signInTagline5 => 'Hand it off. Come back to it done.';
 
   @override
   String get noBotsHelp =>
@@ -5887,6 +5897,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get getStarted => 'Get started';
+
+  @override
+  String get welcomeCta => 'Let\'s go';
 
   @override
   String get inviteAsAdmin => 'Invite as admins';

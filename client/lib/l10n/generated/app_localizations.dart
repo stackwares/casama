@@ -2986,17 +2986,35 @@ abstract class AppLocalizations {
   /// **'Start Casama when you log in to this Mac, ready for the quick-ask shortcut.'**
   String get openAtLoginHelp;
 
-  /// No description provided for @signInCta.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in or create account'**
-  String get signInCta;
-
   /// No description provided for @signInTagline.
   ///
   /// In en, this message translates to:
-  /// **'Your AI teammates, each with its own computer, memory and tools.'**
+  /// **'Teammates that keep working after you close the app.'**
   String get signInTagline;
+
+  /// No description provided for @signInTagline2.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet your AI crew.'**
+  String get signInTagline2;
+
+  /// No description provided for @signInTagline3.
+  ///
+  /// In en, this message translates to:
+  /// **'AI that doesn\'t just talk. It gets things done.'**
+  String get signInTagline3;
+
+  /// No description provided for @signInTagline4.
+  ///
+  /// In en, this message translates to:
+  /// **'Capable teammates that ask before they act.'**
+  String get signInTagline4;
+
+  /// No description provided for @signInTagline5.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand it off. Come back to it done.'**
+  String get signInTagline5;
 
   /// No description provided for @noBotsHelp.
   ///
@@ -10047,6 +10065,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get started'**
   String get getStarted;
+
+  /// No description provided for @welcomeCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s go'**
+  String get welcomeCta;
 
   /// No description provided for @inviteAsAdmin.
   ///

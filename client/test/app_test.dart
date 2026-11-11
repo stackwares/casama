@@ -59,6 +59,19 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  testWidgets('the sign-in button fits on a small phone with the largest text size', (tester) async {
+    await setSize(tester, const Size(320, 640));
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpWidget(harness(FakeBackend()..signedIn = false, const SignInScreen()));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.takeException(), isNull);
+    final button = tester.getRect(find.byKey(const Key('openSignIn')));
+    final label = tester.getRect(find.text("Let's go"));
+    expect(button.height, greaterThanOrEqualTo(56));
+    expect(button.contains(label.topLeft) && button.contains(label.bottomRight - const Offset(1, 1)), isTrue);
+  });
+
   testWidgets('email sign-in sends a magic link first, with a password one tap away', (tester) async {
     // The code step is taller than the default test window.
     await setSize(tester, const Size(500, 1100));
