@@ -4,11 +4,12 @@
 set -euo pipefail
 v="$1"; dir="$2"
 sum() { awk '{print $1}' "$dir/casama-$v-$1.tar.gz.sha256"; }
-base="https://github.com/stackwares/casama/releases/download/cli-v$v"
+# The source repo is private; CLI archives are mirrored to the public casama-releases repo.
+base="https://github.com/stackwares/casama-releases/releases/download/cli-v$v"
 cat <<RUBY
 class Casama < Formula
   desc "Command-line client for Casama, the self-hostable home for AI bots with computers"
-  homepage "https://github.com/stackwares/casama"
+  homepage "https://casama.ai"
   version "$v"
   license "Apache-2.0"
 

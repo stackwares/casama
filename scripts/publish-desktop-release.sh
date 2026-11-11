@@ -29,4 +29,5 @@ read -r -p "Every installed desktop app will offer this update. Continue? [y/N] 
 [[ "$ok" == "y" || "$ok" == "Y" ]] || exit 1
 notes=(--notes "Casama $version")
 [[ -n "${NOTES_FILE:-}" ]] && notes=(--notes-file "$NOTES_FILE")
-gh release create "$tag" --repo "$repo" --title "Casama $version" "${notes[@]}" ${DRAFT:+--draft} "${files[@]}"
+# --latest: feeds use releases/latest, and CLI releases in the same repo are published with --latest=false.
+gh release create "$tag" --repo "$repo" --title "Casama $version" --latest "${notes[@]}" ${DRAFT:+--draft} "${files[@]}"

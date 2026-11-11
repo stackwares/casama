@@ -3,7 +3,7 @@
 Control your Casama bots from AI coding tools over the Model Context Protocol, using your
 `casama login` session. For apps that only take a URL, use the hosted endpoint at
 `https://<your server>/mcp` instead. Both are described in
-[Connect AI apps](../../docs-site/guide/mcp.md).
+[Connect AI apps](https://docs.casama.ai/guide/mcp).
 
 ```sh
 casama login                     # once, with the Casama CLI
