@@ -95,7 +95,7 @@ class Conversation {
 
 
 
-      /// Group chats: every bot, the lead first (D-118)
+      /// Group chats: every bot, the lead first
   @JsonKey(
     
     name: r'bot_ids',

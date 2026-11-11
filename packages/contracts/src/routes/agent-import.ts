@@ -21,7 +21,7 @@ export const startAgentImport = createRoute({
   path: "/v1/agent-imports",
   tags,
   security,
-  summary: "Read an OpenClaw or Hermes Agent folder into a bot template for review (D-122)",
+  summary: "Read an OpenClaw or Hermes Agent folder into a bot template for review",
   request: { body: jsonBody(StartAgentImportRequest) },
   responses: { 201: jsonResponse("The mapping", AgentImportPlan), 400: e400, 401: e401 },
 });

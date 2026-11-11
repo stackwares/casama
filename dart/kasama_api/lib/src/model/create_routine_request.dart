@@ -161,7 +161,7 @@ class CreateRoutineRequest {
 
 
 
-      /// Required for calendar_event triggers (D-132)
+      /// Required for calendar_event triggers
   @JsonKey(
     
     name: r'calendar',
@@ -174,7 +174,7 @@ class CreateRoutineRequest {
 
 
 
-      /// Filters for message triggers: an email or chat message that matches starts the routine (D-134)
+      /// Filters for message triggers: an email or chat message that matches starts the routine
   @JsonKey(
     
     name: r'message',
@@ -187,7 +187,7 @@ class CreateRoutineRequest {
 
 
 
-      /// Required for device triggers (D-151): the event on your own phone or computer
+      /// Required for device triggers: the event on your own phone or computer
   @JsonKey(
     
     name: r'device',

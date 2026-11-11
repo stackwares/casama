@@ -12,7 +12,7 @@ export const getBotAccess = createRoute({
   path: "/v1/bots/{id}/access",
   tags: ["bots"],
   security,
-  summary: "Who can chat with, edit or administer this bot (D-131)",
+  summary: "Who can chat with, edit or administer this bot",
   request: { params: idParam },
   responses: { 200: jsonResponse("Access", BotAccess), 401: e401, 404: e404 },
 });

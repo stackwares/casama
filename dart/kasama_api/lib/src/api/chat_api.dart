@@ -381,7 +381,7 @@ _responseData = rawData == null ? null : deserialize<ConversationList, Conversat
     );
   }
 
-  /// Group chats in a workspace that you can see (D-118)
+  /// Group chats in a workspace that you can see
   /// 
   ///
   /// Parameters:

@@ -5,12 +5,19 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseSkillMd, SkillFormatError } from "@kasama/domain";
+import {
+  parseSkillMd,
+  SKILL_MAX_FILE_BYTES,
+  SKILL_MAX_FILES,
+  SKILL_MAX_TOTAL_BYTES,
+  SKILL_SAFE_PATH,
+  SkillFormatError,
+} from "@kasama/domain";
 import { ApiError } from "../api/errors.ts";
 
-export const MAX_FILE_BYTES = 1024 * 1024;
-export const MAX_SKILL_BYTES = 5 * 1024 * 1024;
-export const MAX_FILES = 60;
+export const MAX_FILE_BYTES = SKILL_MAX_FILE_BYTES;
+export const MAX_SKILL_BYTES = SKILL_MAX_TOTAL_BYTES;
+export const MAX_FILES = SKILL_MAX_FILES;
 
 export interface SkillBundle {
   name: string;
@@ -27,7 +34,7 @@ export interface CatalogSkill extends SkillBundle {
   category: string;
 }
 
-const SAFE_PATH = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/;
+const SAFE_PATH = SKILL_SAFE_PATH;
 
 /** Checks a set of files against the limits and the safe-path rule. */
 export function checkBundle(files: SkillBundle["files"]) {

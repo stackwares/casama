@@ -27,7 +27,7 @@ export const setTelephony = createRoute({
   path: "/v1/orgs/{id}/telephony",
   tags,
   security,
-  summary: "Connect the workspace's Twilio account for calls bots place (D-141)",
+  summary: "Connect the workspace's Twilio account for calls bots place",
   request: { params, body: jsonBody(SetTelephonyRequest) },
   responses: {
     200: jsonResponse("Settings", TelephonySettings),

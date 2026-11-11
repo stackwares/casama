@@ -51,7 +51,7 @@ class VoiceSessionRequest {
 
 
 
-      /// An answered phone call (D-135): the session uses its conversation and the bot speaks first
+      /// An answered phone call: the session uses its conversation and the bot speaks first
   @JsonKey(
     
     name: r'call_id',

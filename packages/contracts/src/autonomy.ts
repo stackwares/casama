@@ -31,7 +31,7 @@ export const ApprovalDecisionRequest = z
   .openapi("ApprovalDecisionRequest");
 
 export const SecretKind = z.enum(["value", "totp"]).openapi("SecretKind", {
-  description: "value: the secret itself; totp: a two-step seed bots use as {{totp:NAME}} (D-102)",
+  description: "value: the secret itself; totp: a two-step seed bots use as {{totp:NAME}}",
 });
 
 export const Secret = z
@@ -63,7 +63,7 @@ export const BotSecretRequest = z
     created_at: ts,
   })
   .openapi("BotSecretRequest", {
-    description: "A bot asking for a secret (D-101); never holds a value",
+    description: "A bot asking for a secret; never holds a value",
   });
 
 export const FulfillSecretRequestBody = z
@@ -291,14 +291,14 @@ export const CreateRoutineRequest = z
       .optional()
       .openapi({ description: "GitHub event names to accept" }),
     calendar: CalendarTriggerConfig.optional().openapi({
-      description: "Required for calendar_event triggers (D-132)",
+      description: "Required for calendar_event triggers",
     }),
     message: MessageTriggerConfig.optional().openapi({
       description:
-        "Filters for message triggers: an email or chat message that matches starts the routine (D-134)",
+        "Filters for message triggers: an email or chat message that matches starts the routine",
     }),
     device: DeviceTriggerConfig.optional().openapi({
-      description: "Required for device triggers (D-151): the event on your own phone or computer",
+      description: "Required for device triggers: the event on your own phone or computer",
     }),
   })
   .openapi("CreateRoutineRequest");
@@ -366,7 +366,7 @@ export const Task = z
     labels: z.array(z.string()),
     position: z.number(),
     review_required: z.boolean(),
-    project_id: Uuid.nullable().openapi({ description: "Its project (D-113)" }),
+    project_id: Uuid.nullable().openapi({ description: "Its project" }),
     milestone_id: Uuid.nullable(),
     parent_task_id: Uuid.nullable(),
     conversation_id: Uuid.nullable(),

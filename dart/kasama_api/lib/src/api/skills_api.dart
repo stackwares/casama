@@ -726,7 +726,7 @@ _responseData = rawData == null ? null : deserialize<InstalledSkill, InstalledSk
     );
   }
 
-  /// Skills and skill edits bots proposed from their runs (D-126)
+  /// Skills and skill edits bots proposed from their runs
   /// 
   ///
   /// Parameters:

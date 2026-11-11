@@ -700,7 +700,7 @@ _responseData = rawData == null ? null : deserialize<SecretList, SecretList>(raw
     );
   }
 
-  /// Keep bots&#39; named secrets in the workspace&#39;s Infisical project (admins, D-145)
+  /// Keep bots&#39; named secrets in the workspace&#39;s Infisical project (admins)
   /// 
   ///
   /// Parameters:

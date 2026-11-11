@@ -274,7 +274,7 @@ _responseData = rawData == null ? null : deserialize<PasswordManagerVaultList, P
     );
   }
 
-  /// The workspace&#39;s password managers and your own (D-128)
+  /// The workspace&#39;s password managers and your own
   /// 
   ///
   /// Parameters:

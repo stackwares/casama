@@ -39,6 +39,37 @@ export async function teamFolder(db: Database, botId: string): Promise<string> {
 }
 
 /**
+ * Bots link files by their path under the home folder ("workspace/report.md", D-148), and often
+ * pass that same path to the file tools, whose relative paths already start in ~/workspace. Read
+ * "workspace/..." as the home-folder form, so the file lands where its link points instead of in
+ * ~/workspace/workspace/...
+ */
+export function homeRelative(p: string | undefined): string | undefined {
+  if (p === undefined) return p;
+  const v = p.trim().replace(/^\.\/+/, "");
+  if (v === "workspace") return "";
+  return v.startsWith("workspace/") ? v.slice("workspace/".length) : p;
+}
+
+/** A handle whose file paths accept the home-folder form ([homeRelative]). */
+export function withHomePaths(h: SandboxHandle): SandboxHandle {
+  return {
+    ...h,
+    resolvePath: (p) => {
+      const r = homeRelative(p) ?? "";
+      return h.resolvePath ? h.resolvePath(r) : r;
+    },
+    exec: (cmd: string, opts?: ExecOptions) =>
+      h.exec(cmd, opts?.cwd === undefined ? opts : { ...opts, cwd: homeRelative(opts.cwd) }),
+    readFile: (p) => h.readFile(homeRelative(p) ?? p),
+    writeFile: (p, data) => h.writeFile(homeRelative(p) ?? p, data),
+    deleteFile: (p) => h.deleteFile(homeRelative(p) ?? p),
+    listDir: (p) => h.listDir(homeRelative(p) ?? p),
+    search: (q, p) => h.search(q, homeRelative(p)),
+  };
+}
+
+/**
  * A handle whose relative paths start in the bot's folder. Paths under `shared/` or `bots/` stay
  * relative to the workspace (so every bot reaches the shared folder the same way); absolute and
  * home (`~`) paths are left alone.

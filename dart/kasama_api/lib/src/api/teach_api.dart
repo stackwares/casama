@@ -476,7 +476,7 @@ _responseData = rawData == null ? null : deserialize<SaveTeachResponse, SaveTeac
     );
   }
 
-  /// Start recording a task while you have control of a computer (D-120)
+  /// Start recording a task while you have control of a computer
   /// 
   ///
   /// Parameters:

@@ -53,6 +53,20 @@ export async function createRoutineRun(
     if (held) eventText = eventText ? `${eventText}\n\n${held}` : held;
   }
   let conversationId = r.conversation_id;
+  // No chat recorded (made in Settings, or before D-155): the person's latest chat with this bot,
+  // so results land where they already talk to it. Only a person with no chat yet gets a new one.
+  if (!conversationId && r.created_by) {
+    const [latest] = await tx.execute<{ id: string }>(sql`
+      select id from public.conversations
+      where bot_id = ${r.bot_id}::uuid and kind = 'direct' and created_by = ${r.created_by}::uuid and channel_id is null
+      order by coalesce(last_message_at, created_at) desc limit 1`);
+    if (latest) {
+      conversationId = latest.id;
+      await tx.execute(
+        sql`update public.routines set conversation_id = ${conversationId}::uuid where id = ${r.id}::uuid`,
+      );
+    }
+  }
   if (!conversationId) {
     const [conv] = await tx.execute<{ id: string }>(sql`
       insert into public.conversations (org_id, bot_id, title, created_by) values (${r.org_id}::uuid, ${r.bot_id}::uuid, ${r.name}, ${r.created_by}::uuid)
@@ -72,7 +86,7 @@ export async function createRoutineRun(
     : r.instructions_md;
   await tx.execute(sql`
     insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
-    values (${r.org_id}::uuid, ${conversationId}::uuid, 'user', ${r.created_by}::uuid, ${contentKeys.sealJson(r.org_id, [{ type: "text", text }])}::jsonb, ${runId}::uuid)`);
+    values (${r.org_id}::uuid, ${conversationId}::uuid, 'user', ${r.created_by}::uuid, ${contentKeys.sealJson(r.org_id, [{ type: "text", text, routine: { id: r.id, name: r.name } }])}::jsonb, ${runId}::uuid)`);
   await tx.execute(
     sql`update public.routines set last_run_id = ${runId}::uuid, last_run_at = now() where id = ${r.id}::uuid`,
   );

@@ -22,7 +22,7 @@ export const setPaymentSettings = createRoute({
   path: "/v1/orgs/{id}/payments",
   tags,
   security,
-  summary: "Connect the workspace's card issuing account for single-use cards (owners, D-142)",
+  summary: "Connect the workspace's card issuing account for single-use cards (owners)",
   request: { params, body: jsonBody(SetPaymentSettingsRequest) },
   responses: {
     200: jsonResponse("Settings", PaymentSettings),

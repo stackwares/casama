@@ -13,7 +13,7 @@ export const getEncryption = createRoute({
   path: "/v1/orgs/{id}/encryption",
   tags,
   security,
-  summary: "Encryption at rest for a workspace (D-136)",
+  summary: "Encryption at rest for a workspace",
   request: { params },
   responses: { 200: jsonResponse("Status", EncryptionStatus), 401: e401, 403: e403, 404: e404 },
 });

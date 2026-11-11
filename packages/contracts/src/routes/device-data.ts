@@ -26,7 +26,7 @@ export const listDeviceSources = createRoute({
   path: "/v1/device-sources",
   tags,
   security,
-  summary: "Your devices that share data (D-149)",
+  summary: "Your devices that share data",
   responses: {
     200: jsonResponse("Devices", z.object({ items: z.array(DeviceSource) })),
     401: e401,
@@ -140,7 +140,7 @@ export const reportDeviceEvents = createRoute({
   path: "/v1/device-sources/{key}/events",
   tags,
   security,
-  summary: "Report events that start device-triggered routines (D-151)",
+  summary: "Report events that start device-triggered routines",
   request: { params: key, body: jsonBody(ReportDeviceEventsRequest) },
   responses: {
     200: jsonResponse("Accepted", z.object({ accepted: z.number().int(), runs: z.number().int() })),

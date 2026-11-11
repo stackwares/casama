@@ -20,7 +20,7 @@ export const previewPlugin = createRoute({
   path: "/v1/plugins/preview",
   tags,
   security,
-  summary: "What an Agent Plugins 1.0 package from GitHub would add (D-121)",
+  summary: "What an Agent Plugins 1.0 package from GitHub would add",
   request: { body: jsonBody(PreviewPluginRequest) },
   responses: { 200: jsonResponse("Preview", PluginPreview), 400: e400, 401: e401, 404: e404 },
 });

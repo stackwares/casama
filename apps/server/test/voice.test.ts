@@ -214,7 +214,7 @@ describe("voice (Phase 6)", () => {
     expect(tool.status).toBe("completed");
     expect(toolMs).toBeLessThan(1000);
 
-    // Under "always ask", the same tool waits for approval instead of running.
+    // Under "always ask", a tool with side effects outside Kasama waits for approval instead of running.
     await h.handle.db.execute(
       sql`update public.bots set autonomy = 'ask_always' where id = ${botId}::uuid`,
     );
@@ -226,13 +226,28 @@ describe("voice (Phase 6)", () => {
           bot_id: botId,
           conversation_id: convId,
           call_id: "c2",
-          name: "notify__user",
-          arguments: { title: "Hi", message: "Water the fern" },
+          name: "http__request",
+          arguments: { url: "https://example.com/water", method: "POST" },
         },
       }),
     );
     expect(gated.status).toBe("waiting_approval");
     expect(gated.approval_id).toBeTruthy();
+    // A message to the person themselves only touches Kasama, so it never asks (D-155).
+    const own = await j(
+      await h.request("/v1/voice/tool", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          bot_id: botId,
+          conversation_id: convId,
+          call_id: "c3",
+          name: "notify__user",
+          arguments: { title: "Hi", message: "Water the fern" },
+        },
+      }),
+    );
+    expect(own.status).toBe("completed");
   }, 60_000);
 
   it("saves the call transcript and its duration", async () => {

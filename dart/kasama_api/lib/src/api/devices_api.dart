@@ -610,7 +610,7 @@ _responseData = rawData == null ? null : deserialize<ListDeviceRequests200Respon
     );
   }
 
-  /// Your devices that share data (D-149)
+  /// Your devices that share data
   /// 
   ///
   /// Parameters:
@@ -686,7 +686,7 @@ _responseData = rawData == null ? null : deserialize<ListDeviceSources200Respons
     );
   }
 
-  /// Report events that start device-triggered routines (D-151)
+  /// Report events that start device-triggered routines
   /// 
   ///
   /// Parameters:

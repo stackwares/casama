@@ -1,6 +1,6 @@
 import type { ExecChunk, ExecOptions, SandboxHandle } from "@kasama/sandbox";
 import { describe, expect, it } from "vitest";
-import { folderSlug, inTeamFolder } from "../src/team-computer.ts";
+import { folderSlug, homeRelative, inTeamFolder, withHomePaths } from "../src/team-computer.ts";
 
 /** Team computer layout (D-148): folder names and paths that start in the bot's folder. */
 describe("team computer folders", () => {
@@ -69,5 +69,32 @@ describe("team computer folders", () => {
     ]);
     expect(h.resolvePath?.("report.md")).toBe("bots/researcher/report.md");
     expect(h.resolvePath?.("bots/researcher/report.md")).toBe("bots/researcher/report.md");
+  });
+});
+
+describe("home-folder paths (the form bots link files with)", () => {
+  it("reads workspace/... as under ~/workspace, so a written file is where its link points", async () => {
+    expect(homeRelative("workspace/bots/kasama/report.md")).toBe("bots/kasama/report.md");
+    expect(homeRelative("./workspace/report.md")).toBe("report.md");
+    expect(homeRelative("workspace")).toBe("");
+    expect(homeRelative("notes/workspace/a.md")).toBe("notes/workspace/a.md");
+    expect(homeRelative("/home/kasama/workspace/a.md")).toBe("/home/kasama/workspace/a.md");
+
+    const writes: string[] = [];
+    const base = {
+      ref: "c1",
+      async *exec() {},
+      writeFile: async (p: string) => {
+        writes.push(p);
+      },
+    } as unknown as SandboxHandle;
+    // A team computer: the link form doesn't nest inside the bot's folder.
+    const team = withHomePaths(inTeamFolder(base, "kasama"));
+    await team.writeFile("workspace/bots/kasama/report.md", new Uint8Array());
+    expect(team.resolvePath?.("workspace/bots/kasama/report.md")).toBe("bots/kasama/report.md");
+    // A bot's own computer: no ~/workspace/workspace.
+    const own = withHomePaths(base);
+    await own.writeFile("workspace/report.md", new Uint8Array());
+    expect(writes.slice(-2)).toEqual(["bots/kasama/report.md", "report.md"]);
   });
 });

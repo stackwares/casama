@@ -280,6 +280,7 @@ import 'package:kasama_api/src/model/public_config.dart';
 import 'package:kasama_api/src/model/purchase_request.dart';
 import 'package:kasama_api/src/model/redirect_url.dart';
 import 'package:kasama_api/src/model/release_lease_request.dart';
+import 'package:kasama_api/src/model/rename_two_step_factor_request.dart';
 import 'package:kasama_api/src/model/replay.dart';
 import 'package:kasama_api/src/model/replay_from_teach_request.dart';
 import 'package:kasama_api/src/model/replay_list.dart';
@@ -1066,6 +1067,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RedirectUrl.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReleaseLeaseRequest':
           return ReleaseLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RenameTwoStepFactorRequest':
+          return RenameTwoStepFactorRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Replay':
           return Replay.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReplayFromTeachRequest':

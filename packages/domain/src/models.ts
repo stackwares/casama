@@ -1,11 +1,11 @@
-/** Default models (D-064): GPT-6 Luna at medium reasoning effort, configurable per server. */
+/** Default models (D-064): Muse Ember on OpenRouter, GPT-6 Luna on direct OpenAI; medium reasoning effort unless a bot overrides. */
 
 export const REASONING_EFFORTS = ["none", "low", "medium", "high", "xhigh", "max"] as const;
 export type ReasoningEffort = (typeof REASONING_EFFORTS)[number];
 
-/** Model ids for GPT-6 Luna per provider (checked on OpenRouter and OpenAI, 2026-11-09). */
+/** Default model ids per provider (OpenRouter catalog, 2026-11-11). */
 export const DEFAULT_MODELS: Readonly<Record<string, string>> = {
-  openrouter: "openai/gpt-6-luna",
+  openrouter: "meta/muse-ember",
   openai: "gpt-6-luna",
 };
 export const DEFAULT_REASONING_EFFORT: ReasoningEffort = "medium";
@@ -29,10 +29,11 @@ export interface ModelOption {
 /**
  * A short list of good chat models per provider, shown first in the picker and used when the
  * provider's live model list can't be fetched. Ids checked against OpenRouter's catalog on
- * 2026-11-10; the live list is the source of truth.
+ * 2026-11-11; the live list is the source of truth.
  */
 export const FEATURED_MODELS: Readonly<Record<string, readonly ModelOption[]>> = {
   openrouter: [
+    { id: "meta/muse-ember", name: "Meta: Muse Ember" },
     { id: "openai/gpt-6-luna", name: "OpenAI: GPT-6 Luna" },
     { id: "openai/gpt-6.1-sol", name: "OpenAI: GPT-6.1 Sol" },
     { id: "openai/gpt-6.1-terra", name: "OpenAI: GPT-6.1 Terra" },

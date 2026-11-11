@@ -39,6 +39,20 @@ export const deleteMyAccount = createRoute({
   responses: { 200: jsonResponse("Scheduled", AccountDeletion), 400: e400, 401: e401 },
 });
 
+export const renameTwoStepFactor = createRoute({
+  operationId: "renameTwoStepFactor",
+  method: "patch",
+  path: "/v1/me/two-step/{id}",
+  tags,
+  security,
+  summary: "Rename one of your authenticator apps (two-step sign-in)",
+  request: {
+    params: z.object({ id: Uuid }),
+    body: jsonBody(z.object({ name: z.string().trim().min(1).max(60) })),
+  },
+  responses: { 204: { description: "Renamed" }, 400: e400, 401: e401, 404: e404 },
+});
+
 export const getOrgSettings = createRoute({
   operationId: "getOrgSettings",
   method: "get",

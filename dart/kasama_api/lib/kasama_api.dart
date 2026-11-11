@@ -348,6 +348,7 @@ export 'package:kasama_api/src/model/purchase_request.dart';
 export 'package:kasama_api/src/model/reasoning_effort.dart';
 export 'package:kasama_api/src/model/redirect_url.dart';
 export 'package:kasama_api/src/model/release_lease_request.dart';
+export 'package:kasama_api/src/model/rename_two_step_factor_request.dart';
 export 'package:kasama_api/src/model/replay.dart';
 export 'package:kasama_api/src/model/replay_from_teach_request.dart';
 export 'package:kasama_api/src/model/replay_list.dart';

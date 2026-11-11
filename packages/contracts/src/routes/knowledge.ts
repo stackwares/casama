@@ -13,7 +13,7 @@ export const listKnowledgeSources = createRoute({
   path: "/v1/knowledge-sources",
   tags,
   security,
-  summary: "A bot's knowledge sources and the workspace's shared ones (D-125)",
+  summary: "A bot's knowledge sources and the workspace's shared ones",
   request: { query: z.object({ org_id: Uuid, bot_id: Uuid.optional() }) },
   responses: {
     200: jsonResponse(

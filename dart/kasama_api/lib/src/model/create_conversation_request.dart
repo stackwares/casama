@@ -52,7 +52,7 @@ class CreateConversationRequest {
 
 
 
-      /// A group chat (D-118): the other bots (the lead may be listed too); 2 to 10 bots in all
+      /// A group chat: the other bots (the lead may be listed too); 2 to 10 bots in all
   @JsonKey(
     
     name: r'bot_ids',

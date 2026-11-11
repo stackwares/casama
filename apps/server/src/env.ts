@@ -146,7 +146,7 @@ export const EnvSchema = z.object({
   KASAMA_MODEL_RECORD: z.string().optional(),
   /** Worker: memory embeddings. auto = the org's OpenAI key when present, else full-text search only. */
   EMBEDDINGS: z.enum(["auto", "none", "hash"]).default("auto"),
-  /** Default models (D-064): GPT-6 Luna on OpenRouter and OpenAI unless overridden. */
+  /** Default models (D-064): Muse Ember on OpenRouter, GPT-6 Luna on OpenAI, unless overridden. */
   DEFAULT_MODEL_OPENROUTER: z.string().optional(),
   DEFAULT_MODEL_OPENAI: z.string().optional(),
   DEFAULT_REASONING_EFFORT: z

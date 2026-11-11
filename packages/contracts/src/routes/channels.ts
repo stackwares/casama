@@ -13,7 +13,7 @@ export const listChannels = createRoute({
   path: "/v1/channels",
   tags,
   security,
-  summary: "A bot's chat apps (D-134)",
+  summary: "A bot's chat apps",
   request: { query: z.object({ bot_id: Uuid }) },
   responses: {
     200: jsonResponse("Channels", z.object({ items: z.array(Channel) }).openapi("ChannelList")),

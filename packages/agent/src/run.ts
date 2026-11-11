@@ -112,9 +112,16 @@ import {
   TAKEOVER_TTL_MS,
   takeoverState,
 } from "./takeover.ts";
-import { claimDesktop, inTeamFolder, releaseDesktop, teamFolder } from "./team-computer.ts";
+import {
+  claimDesktop,
+  inTeamFolder,
+  releaseDesktop,
+  teamFolder,
+  withHomePaths,
+} from "./team-computer.ts";
 import { ticketAfterRun, ticketStarted } from "./tickets.ts";
 import { type ToolDefinition, ToolError, ToolRegistry } from "./tools/registry.ts";
+import { UI_SHOWN_RESULT } from "./tools/ui.ts";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
 export type StepRunner = <T>(name: string, fn: () => Promise<T>) => Promise<T>;
@@ -577,6 +584,14 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
 
     const turn: ChatMessage[] = [];
     let final: { text: string; messageId: string } | null = null;
+    // The latest message this run said before its final reply; the reply follows it in the thread.
+    let lastSaid: string | null = null;
+    let beforeSaid: string | null = null;
+    // Mid-task messages this run has already shown the model.
+    const arrived = new Set<string>();
+    // Loop guard: identical actions and failures in a row (a stuck page, a click that keeps missing).
+    const callCounts = new Map<string, number>();
+    let failStreak = 0;
     // Untrusted content read since the last approval (web pages, outside services).
     let untrusted = false;
 
@@ -591,6 +606,20 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         return { status: "failed" };
       }
 
+      // Messages the person sent while this run works (direct chats): the bot sees them now and
+      // decides whether to fold them in, switch, or finish first.
+      if (info.conversationId && !info.group && info.current) {
+        const seen = [...arrived];
+        const currentId = info.current.id;
+        const fresh = await step(`arrived-${i}`, () =>
+          arrivedMessages(db, info.runId, currentId, seen),
+        );
+        for (const m of fresh) {
+          arrived.add(m.id);
+          turn.push({ role: "user", content: `[Sent while you were working on this]\n${m.text}` });
+          lastSaid = m.id;
+        }
+      }
       const out = await step(`model-${i}`, () =>
         modelStep(
           deps,
@@ -615,7 +644,48 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         break;
       }
       turn.push({ role: "assistant", content: out.text, toolCalls: out.toolCalls });
+      // Words said before acting ("On it, opening Google.") stay in the chat as their own message,
+      // ahead of the steps, like a person answering before they start.
+      if (out.text.trim() && info.conversationId && !info.group) {
+        const said = out;
+        const parent = lastSaid;
+        await step(`said-${i}`, () => saveInterimMessage(db, info, said, parent, bus));
+        beforeSaid = lastSaid;
+        lastSaid = said.messageId;
+      }
+      // One card at a time: after a card is shown the turn ends and the answer comes back as the
+      // person's next message. Without this, a bot could stack several question cards at once.
+      let cardShown = false;
       for (const call of out.toolCalls) {
+        // The same action a third time (not just looking: snapshots, reads, lists) isn't run; the
+        // model is told to change approach or say what's blocking it.
+        const looking =
+          registry.get(call.name)?.readOnly === true ||
+          /\.(snapshot|screenshot|read|list|search|load)$/.test(call.name);
+        const signature = `${call.name} ${JSON.stringify(call.args ?? {})}`;
+        const times = (callCounts.get(signature) ?? 0) + 1;
+        callCounts.set(signature, times);
+        if (!looking && times >= 3) {
+          const res = await step(`loop-${i}-${call.callId}`, () =>
+            blockedStep(deps, info, call, LOOP_NUDGE, bus),
+          );
+          turn.push({ role: "tool", callId: call.callId, name: call.name, content: res.content });
+          failStreak++;
+          continue;
+        }
+        if (cardShown && call.name === "ui.show") {
+          const res = await step(`blocked-${i}-${call.callId}`, () =>
+            blockedStep(
+              deps,
+              info,
+              call,
+              "A card is already showing. Show one card at a time and wait for the answer.",
+              bus,
+            ),
+          );
+          turn.push({ role: "tool", callId: call.callId, name: call.name, content: res.content });
+          continue;
+        }
         const gate = await step(`gate-${i}-${call.callId}`, () =>
           approvalGate(deps, registry, info, call, untrusted, bus, redactor),
         );
@@ -775,6 +845,9 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
               toolStep(deps, registry, info, call, bus, redactor, secrets),
             );
         if (res.untrusted) untrusted = true;
+        failStreak = blocked || res.content.startsWith("Error (") ? failStreak + 1 : 0;
+        if (!blocked && call.name === "ui.show" && res.content.startsWith(UI_SHOWN_RESULT))
+          cardShown = true;
         turn.push({
           role: "tool",
           callId: call.callId,
@@ -782,12 +855,42 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           content: handBack ? `${handBack}\n\n${res.content}` : res.content,
         });
       }
+      // Five failed steps in a row: stop rather than burn the budget retrying.
+      if (failStreak >= STUCK_AFTER_FAILURES) {
+        await step("stuck", () =>
+          finishFailed(
+            db,
+            info,
+            {
+              code: "stuck_looping",
+              message:
+                "The bot kept hitting the same problem, so it stopped to save your budget. Check the steps above, then ask again or suggest another way.",
+            },
+            bus,
+          ),
+        );
+        return { status: "failed" };
+      }
+      if (cardShown) {
+        // This step's words become the final reply (with the card): it follows what came before.
+        if (lastSaid === out.messageId) lastSaid = beforeSaid;
+        final = { text: out.text, messageId: out.messageId };
+        break;
+      }
     }
 
     const finalMessage = final;
-    const wakes = await step("finish", () => saveFinalMessage(db, info, finalMessage, bus));
+    const after = lastSaid;
+    const wakes = await step("finish", () => saveFinalMessage(db, info, finalMessage, bus, after));
     // Bots this reply @mentioned in a group chat (D-118); starting a run twice is harmless.
     for (const id of wakes) await deps.startRun?.(id).catch(() => {});
+    // A message that arrived after the last model step gets its own run, so nothing is dropped.
+    if (info.conversationId && !info.group && info.current) {
+      const seen = [...arrived];
+      const currentId = info.current.id;
+      const next = await step("leftover", () => followUpRun(db, info, currentId, seen));
+      if (next) await deps.startRun?.(next).catch(() => {});
+    }
     await step("memory", () =>
       extractStep(
         deps,
@@ -1581,10 +1684,11 @@ async function toolStep(
         };
         const acting = h.withActivity?.(activity) ?? h;
         // Team computers (D-148): each bot starts in its own folder next to shared/.
-        const scoped =
+        const scoped = withHomePaths(
           row.kind === "team"
             ? inTeamFolder(acting, await teamFolder(deps.db, info.botId))
-            : acting;
+            : acting,
+        );
         computer = { id: row.id, org_id: row.org_id, kind: row.kind, handle: scoped };
       } else {
         await deps.computers.touch(computer.id);
@@ -1816,11 +1920,101 @@ async function wakeMentioned(
   return ids;
 }
 
+/** Failed steps in a row after which a run stops (the loop guard). */
+export const STUCK_AFTER_FAILURES = 5;
+const LOOP_NUDGE =
+  "You've already done exactly this twice and it didn't get you further, so it wasn't run again. Try a different approach (another element, reload the page, a different site), or stop and tell the person what's blocking you.";
+
+/** The person's messages attached to this run after it started that the model hasn't seen yet. */
+async function arrivedMessages(db: Database, runId: string, currentId: string, seen: string[]) {
+  const rows = await db.execute<{ id: string; content: unknown }>(sql`
+    select id, content from public.messages
+    where run_id = ${runId}::uuid and role = 'user' and id <> ${currentId}::uuid
+      and not (id::text in (select jsonb_array_elements_text(${JSON.stringify(seen)}::jsonb)))
+    order by created_at`);
+  return rows.map((r) => ({ id: r.id, text: partsText(r.content) }));
+}
+
+/** Moves messages the run never saw to a new run of their own, and returns its id. */
+async function followUpRun(db: Database, info: RunInfo, currentId: string, seen: string[]) {
+  return db.transaction(async (tx) => {
+    const left = await tx.execute<{ id: string; author_user_id: string | null }>(sql`
+      select id, author_user_id from public.messages
+      where run_id = ${info.runId}::uuid and role = 'user' and id <> ${currentId}::uuid
+        and not (id::text in (select jsonb_array_elements_text(${JSON.stringify(seen)}::jsonb)))
+      order by created_at for update`);
+    if (!left.length) return null;
+    const [run] = await tx.execute<{ id: string }>(sql`
+      insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
+      values (${info.orgId}::uuid, ${info.botId}::uuid, ${info.conversationId}::uuid, ${left[0]?.author_user_id ?? info.createdBy}::uuid, 'chat')
+      returning id`);
+    await tx.execute(sql`
+      update public.messages set run_id = ${run?.id}::uuid
+      where id::text in (select jsonb_array_elements_text(${JSON.stringify(left.map((m) => m.id))}::jsonb))`);
+    return run?.id ?? null;
+  });
+}
+
+/**
+ * After a run is stopped or fails: messages the person sent while it worked get a run of their
+ * own (the bot may have seen some; answering again beats dropping what they asked).
+ */
+export async function followUpLeftovers(db: Database, runId: string): Promise<string | null> {
+  const [r] = await db.execute<{
+    org_id: string;
+    bot_id: string;
+    conversation_id: string | null;
+    created_by: string | null;
+    group: boolean;
+  }>(sql`
+    select r.org_id, r.bot_id, r.conversation_id, r.created_by, coalesce(c.kind = 'group', false) as "group"
+    from public.runs r left join public.conversations c on c.id = r.conversation_id where r.id = ${runId}::uuid`);
+  if (!r?.conversation_id || r.group) return null;
+  const [first] = await db.execute<{ id: string }>(sql`
+    select id from public.messages where run_id = ${runId}::uuid and role = 'user' order by created_at limit 1`);
+  if (!first) return null;
+  return followUpRun(
+    db,
+    {
+      runId,
+      orgId: r.org_id,
+      botId: r.bot_id,
+      conversationId: r.conversation_id,
+      createdBy: r.created_by,
+    } as RunInfo,
+    first.id,
+    [],
+  );
+}
+
+/** Text a step said alongside its tool calls, kept as its own message in the thread. */
+async function saveInterimMessage(
+  db: Database,
+  info: RunInfo,
+  said: { text: string; messageId: string },
+  after: string | null,
+  busFn: () => Promise<EventBus>,
+) {
+  const content = [{ type: "text", text: said.text }];
+  const parent =
+    after ?? (info.current && /^[0-9a-f-]{36}$/.test(info.current.id) ? info.current.id : null);
+  await db.execute(sql`
+    insert into public.messages (id, org_id, conversation_id, role, content, run_id, parent_message_id, bot_id)
+    values (${said.messageId}::uuid, ${info.orgId}::uuid, ${info.conversationId}::uuid, 'assistant', ${contentKeys.sealJson(info.orgId, content)}::jsonb,
+            ${info.runId}::uuid, ${parent}::uuid, ${info.botId}::uuid)
+    on conflict (id) do nothing`);
+  await (await busFn()).append(info.runId, "message.completed", {
+    message_id: said.messageId,
+    content,
+  });
+}
+
 async function saveFinalMessage(
   db: Database,
   info: RunInfo,
   final: { text: string; messageId: string },
   busFn: () => Promise<EventBus>,
+  after: string | null = null,
 ) {
   let wakes: string[] = [];
   const bus = await busFn();
@@ -1838,8 +2032,8 @@ async function saveFinalMessage(
     await db.execute(sql`
       insert into public.messages (id, org_id, conversation_id, role, content, run_id, parent_message_id, bot_id)
       values (${final.messageId}::uuid, ${info.orgId}::uuid, ${info.conversationId}::uuid, 'assistant', ${contentKeys.sealJson(info.orgId, content)}::jsonb, ${info.runId}::uuid,
-              ${!info.group && info.current && /^[0-9a-f-]{36}$/.test(info.current.id) ? info.current.id : null}::uuid, ${info.botId}::uuid)
-      on conflict (id) do nothing`);
+              ${info.group ? null : (after ?? (info.current && /^[0-9a-f-]{36}$/.test(info.current.id) ? info.current.id : null))}::uuid, ${info.botId}::uuid)
+      on conflict (id) do update set content = excluded.content`);
     // In a group chat, several bots answer at once; their replies append to the thread (D-118).
     if (info.group) wakes = await wakeMentioned(db, info, final, bus);
     const title = info.current?.text.replace(/\s+/g, " ").trim().slice(0, 60) || null;
@@ -2131,6 +2325,7 @@ async function approvalGate(
       autonomy: info.autonomy,
       risk,
       readOnly: def.readOnly === true,
+      selfOnly: def.selfOnly === true,
       confirmUnderDefault: def.confirm === true,
       untrustedSinceApproval: untrusted,
       granted: !!grant,

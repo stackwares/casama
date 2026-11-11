@@ -59,7 +59,7 @@ export const Bot = z
     archived_at: ts.nullable(),
     setup_status: z
       .enum(["pending", "done", "skipped"])
-      .openapi({ description: "The setup interview (D-105)" }),
+      .openapi({ description: "The setup interview" }),
     created_at: ts,
   })
   .openapi("Bot");
@@ -93,9 +93,7 @@ export const Conversation = z
     title: z.string().nullable(),
     last_message_at: ts.nullable(),
     kind: z.enum(["direct", "group"]),
-    bot_ids: z
-      .array(Uuid)
-      .openapi({ description: "Group chats: every bot, the lead first (D-118)" }),
+    bot_ids: z.array(Uuid).openapi({ description: "Group chats: every bot, the lead first" }),
     created_at: ts,
   })
   .openapi("Conversation");
@@ -105,8 +103,7 @@ export const CreateConversationRequest = z
     bot_id: Uuid.openapi({ description: "The bot, or a group chat's lead" }),
     title: z.string().max(200).optional(),
     bot_ids: z.array(Uuid).min(1).max(10).optional().openapi({
-      description:
-        "A group chat (D-118): the other bots (the lead may be listed too); 2 to 10 bots in all",
+      description: "A group chat: the other bots (the lead may be listed too); 2 to 10 bots in all",
     }),
   })
   .openapi("CreateConversationRequest");
@@ -147,7 +144,7 @@ export const SendMessageRequest = z
       .max(5)
       .optional()
       .openapi({
-        description: "Skills picked with / in the composer; the run loads them up front (D-104)",
+        description: "Skills picked with / in the composer; the run loads them up front",
       }),
   })
   .refine((b) => b.text.length > 0 || (b.attachments?.length ?? 0) > 0 || !!b.ui_action, {
@@ -174,6 +171,10 @@ export const SendMessageResponse = z
     run_id: Uuid,
     conversation_id: Uuid,
     run_ids: z.array(Uuid).optional().openapi({ description: "Group chats: every bot's run" }),
+    joined: z.boolean().optional().openapi({
+      description:
+        "The bot was already working here: the message joined that run (run_id), which sees it before its next step",
+    }),
   })
   .openapi("SendMessageResponse");
 
@@ -204,10 +205,7 @@ export const Run = z
     started_at: ts.nullable(),
     ended_at: ts.nullable(),
     error: z.object({ code: z.string(), message: z.string() }).nullable(),
-    trace_id: z
-      .string()
-      .nullable()
-      .openapi({ description: "OpenTelemetry trace of this run (D-107)" }),
+    trace_id: z.string().nullable().openapi({ description: "OpenTelemetry trace of this run" }),
     created_at: ts,
   })
   .openapi("Run");

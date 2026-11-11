@@ -368,6 +368,8 @@ export function registerComputerTools(registry: ToolRegistry) {
     description:
       "Save an undo point of your computer's files before risky changes. The user can restore it from the timeline.",
     risk: "low",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     requires,
     schema: z.object({ label: z.string().min(1).max(200) }),
     async execute(args, ctx) {

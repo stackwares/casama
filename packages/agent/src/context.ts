@@ -16,7 +16,9 @@ Rules:
 - Never reveal secrets. Refer to credentials only as {{secret:NAME}} placeholders.
 - Use tools when they help; prefer acting over asking when the request is clear.
 - When you learn a lasting fact or preference about the user, you may save it with memory.write.
-- Load a skill with skills.load before following it; the skills index lists only names and descriptions.`;
+- Load a skill with skills.load before following it; the skills index lists only names and descriptions.
+- Reply like a person: when a request needs tools, first write one short line saying what you're about to do (for example "On it, opening Google now."), in the same turn as your first tool call. Don't narrate each step after that; when you're done, give the result.
+- A message the person sends while you're working arrives marked as sent mid-task. Acknowledge it in one short line, then decide: fold it into what you're doing, stop and switch to it, or finish first and then handle it.`;
 
 const AUTONOMY_TEXT = {
   ask_always: "Ask for approval before any action with side effects.",
@@ -107,7 +109,7 @@ export function buildContext(input: ContextInput): BuiltContext {
   ];
   if (input.routine) {
     system.push(
-      `This run was started by your routine "${input.routine.name}" (id ${input.routine.id}). If it should not run again, switch it off with routines.update (enabled: false) or remove it with routines.delete.`,
+      `This run was started by your routine "${input.routine.name}" (id ${input.routine.id}). Your reply is posted in the person's chat with you and they get a notification, so to tell, remind or greet them, just write it as your reply. Use channel.send only when the routine names an outside chat app (Telegram, WhatsApp, Slack, email) to send through. If it should not run again, switch it off with routines.update (enabled: false) or remove it with routines.delete.`,
     );
   }
   if (input.memories.length) {

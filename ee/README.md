@@ -1,7 +1,7 @@
 # Kasama Enterprise features (`ee/`)
 
 Source-available under the [Kasama Enterprise License](LICENSE) (draft): readable and free to try,
-production use needs a license key. Everything outside this folder is Apache-2.0 (D-073).
+production use needs a license key. Everything outside this folder is Apache-2.0.
 
 | Feature      | What it does                                                                                               | Endpoint                                  |
 | ------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
@@ -14,5 +14,7 @@ valid key the endpoints answer 402 `license_required`; the rest of Kasama is una
 
 Issue a key (maintainers, with the private signing key): `node ee/scripts/issue-license.ts --customer
 "Acme" --features audit_export,sso --seats 50 --days 365`.
+
+How to set up SSO for a workspace: see [Workspaces and teams](../docs-site/guide/workspaces.md).
 
 Planned: advanced roles (viewer and billing roles, per-bot permissions) and priority support tooling.

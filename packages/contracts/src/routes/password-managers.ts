@@ -18,7 +18,7 @@ export const listPasswordManagers = createRoute({
   path: "/v1/password-managers",
   tags,
   security,
-  summary: "The workspace's password managers and your own (D-128)",
+  summary: "The workspace's password managers and your own",
   request: { query: z.object({ org_id: Uuid }) },
   responses: {
     200: jsonResponse(

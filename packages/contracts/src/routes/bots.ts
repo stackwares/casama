@@ -359,7 +359,7 @@ export const listGroupChats = createRoute({
   path: "/v1/group-chats",
   tags: ["chat"],
   security,
-  summary: "Group chats in a workspace that you can see (D-118)",
+  summary: "Group chats in a workspace that you can see",
   request: { query: z.object({ org_id: Uuid }) },
   responses: { 200: jsonResponse("Group chats", list("GroupChatList", Conversation)), 401: e401 },
 });
@@ -371,7 +371,7 @@ export const startWelcome = createRoute({
   tags: ["bots"],
   security: [{ bearerAuth: [] }],
   summary:
-    "A new person's personal workspace, bot and welcome chat (D-129); the same chat again if it exists",
+    "A new person's personal workspace, bot and welcome chat; the same chat again if it exists",
   request: { body: jsonBody(StartWelcomeRequest) },
   responses: {
     200: jsonResponse("Welcome chat", WelcomeChat),

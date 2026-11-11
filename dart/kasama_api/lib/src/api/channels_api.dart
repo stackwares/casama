@@ -274,7 +274,7 @@ _responseData = rawData == null ? null : deserialize<ChannelEventList, ChannelEv
     );
   }
 
-  /// A bot&#39;s chat apps (D-134)
+  /// A bot&#39;s chat apps
   /// 
   ///
   /// Parameters:

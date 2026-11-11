@@ -20,4 +20,5 @@ await for (final e in watchRun(client, sent.runId)) {
 }
 ```
 
-See `example/example.dart`, and `examples/sdk_sample` in the repository for a complete app.
+See `example/example.dart`, `examples/sdk_sample` in the repository for a complete app, and the
+[SDK guide](https://github.com/stackwares/kasama/blob/main/docs-site/develop/sdk.md).

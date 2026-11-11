@@ -55,12 +55,12 @@ Give a flat list of components; the one with id "root" is the top. Containers na
 - Button: {child: id of a Text, variant?: "primary"|"default"|"borderless", action: {event: {name, context?}}}
 - TextField: {label, value: {"@path": "/form/x"}, placeholder?, variant?: "shortText"|"longText"|"number"}
 - CheckBox: {label, value: {"@path": "/form/agree"}}
-- ChoicePicker: {label?, options: [{label, value}], value: {"@path": "/form/plan"}, variant?: "mutuallyExclusive"|"multipleSelection", displayStyle?: "chips"|"checkbox"}. Its value is a list of strings.
+- ChoicePicker: {label?, options: [{label, value}], value: {"@path": "/form/plan"}, variant?: "mutuallyExclusive"|"multipleSelection", displayStyle?: "chips"|"checkbox"}. Its value is a list of strings. The default allows one choice; when the person may pick several ("pick any", "all that apply"), set variant "multipleSelection".
 - Slider: {label?, min?, max, value: {"@path": "/form/n"}}
 - DateTimeInput: {value: {"@path": "/form/when"}, enableDate?: true, enableTime?: true, label?}
 - Image: {url, description?}. Icon: {name}, e.g. "check", "info", "event", "mail".
 
-Inputs keep their values at their data path; bind with {"@path": "/form/x"} (note the @). A Button's action sends an event to you; put the values you need in its context with paths, e.g. {"event": {"name": "submit", "context": {"plan": {"@path": "/form/plan"}, "note": {"@path": "/form/note"}}}}. For simple choices make one Button per option with a literal context, e.g. {"event": {"name": "choose", "context": {"plan": "pro"}}}.
+Inputs keep their values at their data path; bind with {"@path": "/form/x"} (note the @). A Button's action sends an event to you; put the values you need in its context with paths, e.g. {"event": {"name": "submit", "context": {"plan": {"@path": "/form/plan"}, "note": {"@path": "/form/note"}}}}. For simple choices make one Button per option with a literal context, e.g. {"event": {"name": "choose", "context": {"plan": "pro"}}}. Inputs alone send nothing: every UI with inputs needs a Button that sends them (one is added if you leave it out).
 
 After calling this, end your turn: the person's choice arrives as their next message.`;
 
@@ -121,23 +121,83 @@ export function checkComponents(components: Array<Record<string, unknown>>) {
   }
 }
 
+const INPUTS = new Set(["TextField", "CheckBox", "ChoicePicker", "Slider", "DateTimeInput"]);
+
+/**
+ * A UI with inputs but no button can't be answered: picking changes only the card. Models leave
+ * the button out now and then, so add a Send button whose context carries every bound input.
+ */
+export function ensureSubmit(components: Array<Record<string, unknown>>) {
+  const inputs = components.filter((c) => INPUTS.has(String(c.component)));
+  if (!inputs.length || components.some((c) => c.component === "Button" && c.action))
+    return components;
+  const context: Record<string, unknown> = {};
+  for (const c of inputs) {
+    const path = (c.value as { "@path"?: unknown } | undefined)?.["@path"];
+    if (typeof path !== "string") continue;
+    const key = path.split("/").filter(Boolean).pop() ?? String(c.id);
+    context[key in context ? String(c.id) : key] = { "@path": path };
+  }
+  if (!Object.keys(context).length) return components;
+  const ids = new Set(components.map((c) => String(c.id)));
+  const fresh = (base: string) => {
+    let id = base;
+    for (let n = 2; ids.has(id); n++) id = `${base}_${n}`;
+    ids.add(id);
+    return id;
+  };
+  const send = fresh("send");
+  const label = fresh("send_text");
+  const added = [
+    {
+      id: send,
+      component: "Button",
+      child: label,
+      variant: "primary",
+      action: { event: { name: "submit", context } },
+    },
+    { id: label, component: "Text", text: "Send" },
+  ];
+  const root = components.find((c) => c.id === "root") as Record<string, unknown>;
+  const children = root.children;
+  if (root.component === "Column" && Array.isArray(children))
+    return [
+      ...components.map((c) => (c === root ? { ...root, children: [...children, send] } : c)),
+      ...added,
+    ];
+  // Any other root goes under a new column with the button below it.
+  const body = fresh("root_body");
+  return [
+    { id: "root", component: "Column", children: [body, send] },
+    ...components.map((c) => (c === root ? { ...root, id: body } : c)),
+    ...added,
+  ];
+}
+
+/** How a shown card's tool result starts; the run loop ends the turn after one (one card at a time). */
+export const UI_SHOWN_RESULT = "Showing the UI (";
+
 /** ui.show: interactive UI in the chat. The app renders it and sends the person's action back. */
 export function registerUiTools(registry: ToolRegistry) {
   registry.register({
     name: "ui.show",
     description: DESCRIPTION,
     risk: "low",
+    // Showing a card changes nothing; what the person picks comes back as their own message. So it
+    // never waits for approval, even for bots set to ask before everything.
+    readOnly: true,
     schema: UiShowArgs,
     async execute(args, ctx) {
       const components = normalizeBindings(args.components) as Array<Record<string, unknown>>;
       checkComponents(components);
+      const shown = ensureSubmit(components);
       const surfaceId = `ui_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
       await ctx.emit("ui.shown", {
         surface_id: surfaceId,
-        messages: surfaceMessages(surfaceId, components, args.data),
+        messages: surfaceMessages(surfaceId, shown, args.data),
       });
       return {
-        content: `Showing the UI (${surfaceId}) to the person now. End your turn; their answer arrives as their next message.`,
+        content: `${UI_SHOWN_RESULT}${surfaceId}) to the person now. End your turn; their answer arrives as their next message.`,
         preview: "shown",
       };
     },

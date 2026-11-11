@@ -281,7 +281,7 @@ _responseData = rawData == null ? null : deserialize<PluginList, PluginList>(raw
     );
   }
 
-  /// What an Agent Plugins 1.0 package from GitHub would add (D-121)
+  /// What an Agent Plugins 1.0 package from GitHub would add
   /// 
   ///
   /// Parameters:

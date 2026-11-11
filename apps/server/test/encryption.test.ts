@@ -93,7 +93,7 @@ describe("encryption at rest", () => {
     );
     const [m] = await h.tdb.admin<
       { content: unknown }[]
-    >`select content from public.messages where run_id = ${sent.run_id}`;
+    >`select content from public.messages where id = ${sent.message_id}`;
     expect(JSON.stringify(m!.content)).not.toContain("PIN");
     expect(m!.content).toEqual({ $enc: expect.stringMatching(/^enc:v1:/) });
     const fresh = await memory.write({

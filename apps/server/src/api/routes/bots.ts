@@ -531,6 +531,39 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         return c.json({ message_id: r.messageId, run_id: r.runId, conversation_id: id }, 202);
       }
     }
+    // Sent while the bot is working on something here: the message joins that run, which sees it
+    // before its next step and decides whether to fold it in, switch, or finish first.
+    if (!ui_action) {
+      const joined = await withUserSession(db, claims, async (tx) => {
+        const [active] = await tx.execute<{ id: string; org_id: string }>(sql`
+          select r.id, r.org_id from public.runs r
+          where r.conversation_id = ${id}::uuid and r.status in ('queued', 'running')
+            and r.cancel_requested_at is null
+            and exists (select 1 from public.messages m where m.run_id = r.id and m.role = 'user')
+          order by r.created_at desc limit 1`);
+        if (!active) return null;
+        const [msg] = await tx.execute<{ id: string }>(sql`
+          insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+          values (${active.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid,
+                  ${contentKeys.sealJson(active.org_id, [
+                    { type: "text", text },
+                    ...(attachments ?? []).map((f) => ({ type: "file", ...f })),
+                  ])}::jsonb, ${active.id}::uuid)
+          returning id`);
+        await tx
+          .update(conversations)
+          .set({ lastMessageAt: sql`now()` })
+          .where(eq(conversations.id, id));
+        return { runId: active.id, messageId: (msg as { id: string }).id };
+      });
+      if (joined) {
+        await deps.workflows.signalRun(joined.runId).catch(() => {});
+        return c.json(
+          { message_id: joined.messageId, run_id: joined.runId, conversation_id: id, joined: true },
+          202,
+        );
+      }
+    }
     return withSpan("chat.send", { conversation_id: id }, async (span) => {
       const created = await withUserSession(db, claims, async (tx) => {
         const [conv] = await tx.select().from(conversations).where(eq(conversations.id, id));

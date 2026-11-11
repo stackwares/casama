@@ -27,6 +27,8 @@ class SendMessageResponse {
     required  this.conversationId,
 
      this.runIds,
+
+     this.joined,
   });
 
   @JsonKey(
@@ -78,6 +80,19 @@ class SendMessageResponse {
 
 
 
+      /// The bot was already working here: the message joined that run (run_id), which sees it before its next step
+  @JsonKey(
+    
+    name: r'joined',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? joined;
+
+
+
 
 
     @override
@@ -85,14 +100,16 @@ class SendMessageResponse {
       other.messageId == messageId &&
       other.runId == runId &&
       other.conversationId == conversationId &&
-      other.runIds == runIds;
+      other.runIds == runIds &&
+      other.joined == joined;
 
     @override
     int get hashCode =>
         messageId.hashCode +
         runId.hashCode +
         conversationId.hashCode +
-        runIds.hashCode;
+        runIds.hashCode +
+        joined.hashCode;
 
   factory SendMessageResponse.fromJson(Map<String, dynamic> json) => _$SendMessageResponseFromJson(json);
 

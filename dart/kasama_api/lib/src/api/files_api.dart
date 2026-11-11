@@ -99,7 +99,7 @@ _responseData = rawData == null ? null : deserialize<GitSyncStatus, GitSyncStatu
     );
   }
 
-  /// Routines and skills as Markdown files, zipped (D-124)
+  /// Routines and skills as Markdown files, zipped
   /// 
   ///
   /// Parameters:

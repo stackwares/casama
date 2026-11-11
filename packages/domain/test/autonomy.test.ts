@@ -24,6 +24,18 @@ describe("needsApproval", () => {
     expect(needsApproval({ ...base, risk: "low", untrustedSinceApproval: true })).toBe(false);
     expect(needsApproval({ ...base, risk: "medium", confirmUnderDefault: true })).toBe(true);
   });
+  it("self-only tools (the bot's own notes, schedule, tasks, messages to the person) never ask (D-155)", () => {
+    for (const autonomy of ["ask_always", "ask_risky", "autonomous"] as const)
+      expect(
+        needsApproval({
+          ...base,
+          autonomy,
+          risk: "medium",
+          selfOnly: true,
+          untrustedSinceApproval: true,
+        }),
+      ).toBe(false);
+  });
   it("ask_always asks for anything with side effects; read-only never asks", () => {
     expect(needsApproval({ ...base, autonomy: "ask_always" })).toBe(true);
     expect(needsApproval({ ...base, autonomy: "ask_always", readOnly: true })).toBe(false);

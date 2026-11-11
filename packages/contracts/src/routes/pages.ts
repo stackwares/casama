@@ -20,7 +20,7 @@ export const listPages = createRoute({
   path: "/v1/pages",
   tags: ["pages"],
   security,
-  summary: "Pages you can open in a workspace (D-119)",
+  summary: "Pages you can open in a workspace",
   request: { query: z.object({ org_id: Uuid, bot_id: Uuid.optional() }) },
   responses: {
     200: jsonResponse("Pages", z.object({ items: z.array(Page) }).openapi("PageList")),

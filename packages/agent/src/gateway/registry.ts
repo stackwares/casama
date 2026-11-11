@@ -22,7 +22,12 @@ const DEFAULT: ModelCapabilities = {
 
 // Prices are list prices at the time of writing; the cost meter is checked against provider bills.
 const KNOWN: Array<[RegExp, Partial<ModelCapabilities>]> = [
-  // GPT-6 family (OpenRouter list prices, 2026-11-09); the default model is GPT-6 Luna (D-064).
+  // OpenRouter list prices (2026-11-11); default on OpenRouter is Muse Ember (D-064).
+  [
+    /muse-ember/,
+    { contextWindow: 1_048_576, vision: true, caching: true, inputPrice: 0.1, outputPrice: 0.5 },
+  ],
+  // GPT-6 family (OpenRouter list prices, 2026-11-09); default on direct OpenAI is GPT-6 Luna (D-064).
   [
     /gpt-6(\.\d+)?-luna/,
     { contextWindow: 1_050_000, vision: true, caching: true, inputPrice: 0.1, outputPrice: 0.5 },

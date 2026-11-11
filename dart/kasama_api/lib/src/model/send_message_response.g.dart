@@ -15,6 +15,8 @@ abstract class _$SendMessageResponseCWProxy {
 
   SendMessageResponse runIds(List<String>? runIds);
 
+  SendMessageResponse joined(bool? joined);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `SendMessageResponse(...).copyWith.fieldName(value)`.
@@ -28,6 +30,7 @@ abstract class _$SendMessageResponseCWProxy {
     String runId,
     String conversationId,
     List<String>? runIds,
+    bool? joined,
   });
 }
 
@@ -51,6 +54,9 @@ class _$SendMessageResponseCWProxyImpl implements _$SendMessageResponseCWProxy {
   @override
   SendMessageResponse runIds(List<String>? runIds) => call(runIds: runIds);
 
+  @override
+  SendMessageResponse joined(bool? joined) => call(joined: joined);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `SendMessageResponse(...).copyWith.fieldName(value)`.
@@ -65,6 +71,7 @@ class _$SendMessageResponseCWProxyImpl implements _$SendMessageResponseCWProxy {
     Object? runId = const $CopyWithPlaceholder(),
     Object? conversationId = const $CopyWithPlaceholder(),
     Object? runIds = const $CopyWithPlaceholder(),
+    Object? joined = const $CopyWithPlaceholder(),
   }) {
     return SendMessageResponse(
       messageId: messageId == const $CopyWithPlaceholder() || messageId == null
@@ -85,6 +92,10 @@ class _$SendMessageResponseCWProxyImpl implements _$SendMessageResponseCWProxy {
           ? _value.runIds
           // ignore: cast_nullable_to_non_nullable
           : runIds as List<String>?,
+      joined: joined == const $CopyWithPlaceholder()
+          ? _value.joined
+          // ignore: cast_nullable_to_non_nullable
+          : joined as bool?,
     );
   }
 }
@@ -121,6 +132,7 @@ SendMessageResponse _$SendMessageResponseFromJson(Map<String, dynamic> json) =>
             'run_ids',
             (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
           ),
+          joined: $checkedConvert('joined', (v) => v as bool?),
         );
         return val;
       },
@@ -139,4 +151,5 @@ Map<String, dynamic> _$SendMessageResponseToJson(
   'run_id': instance.runId,
   'conversation_id': instance.conversationId,
   'run_ids': ?instance.runIds,
+  'joined': ?instance.joined,
 };

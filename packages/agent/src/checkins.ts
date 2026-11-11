@@ -102,6 +102,8 @@ export function registerSuggestionTools(
     description:
       "Suggest something for the person to do or approve, shown in their For you feed. Include the action you'd run if they accept (a tool name and its arguments), the sources, and the urgency. Only urgent suggestions send a notification.",
     risk: "low",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({
       title: z.string().min(1).max(200),
       body: z.string().max(5000).optional(),

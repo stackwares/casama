@@ -295,7 +295,7 @@ _responseData = rawData == null ? null : deserialize<SavedImportedMemories, Save
     );
   }
 
-  /// Read an OpenClaw or Hermes Agent folder into a bot template for review (D-122)
+  /// Read an OpenClaw or Hermes Agent folder into a bot template for review
   /// 
   ///
   /// Parameters:

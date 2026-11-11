@@ -118,7 +118,7 @@ _responseData = rawData == null ? null : deserialize<BotLink, BotLink>(rawData, 
     );
   }
 
-  /// Invite a trusted contact&#39;s bot to link with this one (D-143)
+  /// Invite a trusted contact&#39;s bot to link with this one
   /// 
   ///
   /// Parameters:

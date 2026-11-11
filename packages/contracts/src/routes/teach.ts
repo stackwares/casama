@@ -21,7 +21,7 @@ export const startTeach = createRoute({
   path: "/v1/teach",
   tags,
   security,
-  summary: "Start recording a task while you have control of a computer (D-120)",
+  summary: "Start recording a task while you have control of a computer",
   request: { body: jsonBody(StartTeachRequest) },
   responses: {
     201: jsonResponse("Recording", TeachSession),

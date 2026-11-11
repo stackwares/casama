@@ -1,6 +1,9 @@
 # Kasama MCP server
 
-Control your Kasama bots from AI coding tools over the Model Context Protocol.
+Control your Kasama bots from AI coding tools over the Model Context Protocol, using your
+`kasama login` session. For apps that only take a URL, use the hosted endpoint at
+`https://<your server>/mcp` instead. Both are described in
+[Connect AI apps](../../docs-site/guide/mcp.md).
 
 ```sh
 kasama login                     # once, with the Kasama CLI

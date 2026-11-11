@@ -22,7 +22,7 @@ export const setSecretStore = createRoute({
   path: "/v1/orgs/{id}/secret-store",
   tags,
   security,
-  summary: "Keep bots' named secrets in the workspace's Infisical project (admins, D-145)",
+  summary: "Keep bots' named secrets in the workspace's Infisical project (admins)",
   request: { params, body: jsonBody(SetSecretStoreRequest) },
   responses: {
     200: jsonResponse("Store", SecretStoreSettings),

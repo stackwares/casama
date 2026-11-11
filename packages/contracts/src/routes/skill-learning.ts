@@ -13,7 +13,7 @@ export const listSkillProposals = createRoute({
   path: "/v1/skill-proposals",
   tags,
   security,
-  summary: "Skills and skill edits bots proposed from their runs (D-126)",
+  summary: "Skills and skill edits bots proposed from their runs",
   request: { query: z.object({ org_id: Uuid, bot_id: Uuid.optional() }) },
   responses: {
     200: jsonResponse(

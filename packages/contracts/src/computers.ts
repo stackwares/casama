@@ -24,7 +24,7 @@ export const Computer = z
     }),
     has_snapshot: z.boolean(),
     max_desktops: z.number().int().openapi({
-      description: "Team computers: bots that may use the desktop at the same time (D-148)",
+      description: "Team computers: bots that may use the desktop at the same time",
     }),
     last_active_at: ts.nullable(),
     error: z.string().nullable(),
@@ -78,7 +78,7 @@ export const CreateComputerRequest = z
       ])
       .optional()
       .openapi({
-        description: "Hosted providers must be configured on the supervisor (D-057, D-139)",
+        description: "Hosted providers must be configured on the supervisor",
       }),
   })
   .openapi("CreateComputerRequest");
@@ -96,7 +96,7 @@ export const UpdateComputerRequest = z
       .min(1)
       .max(10)
       .optional()
-      .openapi({ description: "Team computers only (D-148)" }),
+      .openapi({ description: "Team computers only" }),
   })
   .openapi("UpdateComputerRequest");
 

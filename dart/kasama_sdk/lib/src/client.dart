@@ -45,11 +45,12 @@ class KasamaClient {
   final AuthClient auth;
   final SessionStore sessions;
 
-  /// Connects to an API server and loads its public configuration.
-  static Future<KasamaClient> connect(String baseUrl, {SessionStore? sessions}) async {
+  /// Connects to an API server and loads its public configuration, or uses [config] when the
+  /// caller already has it (saves a round trip).
+  static Future<KasamaClient> connect(String baseUrl, {SessionStore? sessions, PublicConfig? config}) async {
     final dio = Dio(BaseOptions(baseUrl: baseUrl, connectTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 60)));
     final api = KasamaApi(dio: dio, interceptors: const []);
-    final config = (await api.getSystemApi().getConfig()).data!;
+    config ??= (await api.getSystemApi().getConfig()).data!;
     final auth = AuthClient(supabaseUrl: config.supabaseUrl, anonKey: config.supabaseAnonKey);
     final client = KasamaClient._(baseUrl, api, config, auth, sessions ?? MemorySessionStore());
     dio.interceptors.add(

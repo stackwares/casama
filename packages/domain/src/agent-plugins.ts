@@ -8,6 +8,9 @@ export const PLUGIN_SCHEMA_1_0 = "https://agent-plugins.org/schemas/1.0.0/plugin
 export const MCP_SCHEMA_1_0 = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json";
 /** Kasama's own extension namespace inside `extensions` (allowed by the specification). */
 export const KASAMA_EXTENSION = "com.kasama";
+/** The most a plugin folder can hold (fetched from GitHub at install). */
+export const PLUGIN_MAX_FILES = 400;
+export const PLUGIN_MAX_BYTES = 10 * 1024 * 1024;
 
 const NAME = /^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
 const MANIFEST_FIELDS = new Set([

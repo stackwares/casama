@@ -14,6 +14,7 @@ import {
   CredentialResolver,
   directSteps,
   type FixtureFile,
+  followUpLeftovers,
   hashEmbedder,
   MemoryService,
   PostgresMemoryStore,
@@ -184,6 +185,58 @@ const fixtures: FixtureFile[] = [
         events: [{ type: "text", text: "Here is the report in three bullets." }, finish()],
       },
       {
+        when: { lastUserIncludes: "keep clicking" },
+        events: [
+          {
+            type: "tool_call",
+            call: { callId: "k", name: "files__write", args: { path: "a.txt", content: "x" } },
+          },
+          finish(),
+        ],
+      },
+      {
+        when: { lastUserIncludes: "Sent while you were working on this" },
+        events: [{ type: "text", text: "Sure, I'll use the blue one instead." }, finish()],
+      },
+      {
+        when: { lastUserIncludes: "set me up", lastRole: "user" },
+        events: [
+          { type: "text", text: "A couple of questions." },
+          {
+            type: "tool_call",
+            call: {
+              callId: "u1",
+              name: "ui__show",
+              args: { components: [{ id: "root", component: "Text", text: "Question one?" }] },
+            },
+          },
+          {
+            type: "tool_call",
+            call: {
+              callId: "u2",
+              name: "ui__show",
+              args: { components: [{ id: "root", component: "Text", text: "Question two?" }] },
+            },
+          },
+          finish(),
+        ],
+      },
+      {
+        // Never reached: the turn ends after the first card.
+        when: { lastUserIncludes: "set me up", lastRole: "tool" },
+        events: [
+          {
+            type: "tool_call",
+            call: {
+              callId: "u3",
+              name: "ui__show",
+              args: { components: [{ id: "root", component: "Text", text: "Question three?" }] },
+            },
+          },
+          finish(),
+        ],
+      },
+      {
         when: { lastUserIncludes: "bad tool", lastRole: "user" },
         events: [
           {
@@ -244,9 +297,20 @@ describe("runAgent", () => {
     );
     expect(types.indexOf("tool.started")).toBeLessThan(types.indexOf("tool.completed"));
 
-    const [msg] = await tdb.admin<{ content: Array<{ text: string }> }[]>`
-      select content from public.messages where conversation_id = ${conversationId} and role = 'assistant'`;
-    expect(msg?.content[0]?.text).toBe("Got it, teal it is.");
+    // What it said before acting stays in the thread, then the reply follows it (one thread, no branch).
+    const said = await tdb.admin<
+      { id: string; parent_message_id: string | null; content: Array<{ text: string }> }[]
+    >`
+      select id, parent_message_id, content from public.messages where conversation_id = ${conversationId} and role = 'assistant' order by created_at`;
+    expect(said.map((m) => m.content[0]?.text)).toEqual([
+      "Noted, saving that. ",
+      "Got it, teal it is.",
+    ]);
+    expect(said[1]?.parent_message_id).toBe(said[0]?.id);
+    const thread = await tdb.admin<
+      { role: string }[]
+    >`select role from public.conversation_thread(${conversationId})`;
+    expect(thread.map((m) => m.role)).toEqual(["user", "assistant", "assistant"]);
 
     const mems = await tdb.admin<
       { kind: string; content: string }[]
@@ -335,6 +399,67 @@ describe("runAgent", () => {
     expect((await events(runId)).find((e) => e.type === "tool.failed")?.payload).toMatchObject({
       error_code: "skill_not_found",
     });
+  });
+
+  it("shows one card at a time: the turn ends after a card and a second one is refused", async () => {
+    const botId = await makeBot();
+    const { runId, conversationId } = await startRun(botId, "set me up");
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("completed");
+    const evs = await events(runId);
+    expect(evs.filter((e) => e.type === "ui.shown")).toHaveLength(1);
+    expect(evs.filter((e) => e.type === "tool.started").map((e) => e.payload.call_id)).toEqual([
+      "u1",
+    ]);
+    expect(evs.find((e) => e.type === "tool.failed")?.payload).toMatchObject({ call_id: "u2" });
+    const [msg] = await tdb.admin<{ content: Array<{ type: string; text?: string }> }[]>`
+      select content from public.messages where conversation_id = ${conversationId} and role = 'assistant'`;
+    expect(msg?.content.filter((p) => p.type === "ui")).toHaveLength(1);
+    expect(msg?.content[0]?.text).toBe("A couple of questions.");
+  });
+
+  it("a run stuck retrying the same failing action stops early instead of burning its budget", async () => {
+    const botId = await makeBot({ budget: { per_run_usd: 1000, daily_usd: 1000 } });
+    const { runId } = await startRun(botId, "keep clicking");
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("failed");
+    const evs = await events(runId);
+    // Tried twice for real; the third identical try onward isn't run.
+    expect(evs.filter((e) => e.type === "tool.started")).toHaveLength(2);
+    expect(evs.at(-1)).toMatchObject({
+      type: "run.failed",
+      payload: { error_code: "stuck_looping" },
+    });
+  });
+
+  it("a message sent mid-task reaches the run before its next step", async () => {
+    const botId = await makeBot();
+    const { runId, conversationId } = await startRun(botId, "paint the fence");
+    await tdb.admin`
+      insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+      values (${orgId}, ${conversationId}, 'user', ${userId}, ${tdb.admin.json([{ type: "text", text: "actually use blue" }])}, ${runId})`;
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("completed");
+    const [reply] = await tdb.admin<{ content: Array<{ text: string }> }[]>`
+      select content from public.messages where conversation_id = ${conversationId} and role = 'assistant' order by created_at desc limit 1`;
+    expect(reply?.content[0]?.text).toContain("blue one");
+    // Seen, so no follow-up run for it.
+    const [n] = await tdb.admin<
+      { n: number }[]
+    >`select count(*)::int as n from public.runs where conversation_id = ${conversationId}`;
+    expect(n?.n).toBe(1);
+  });
+
+  it("after a stopped run, what the person sent meanwhile gets a run of its own", async () => {
+    const botId = await makeBot();
+    const { runId, conversationId } = await startRun(botId, "first thing");
+    const [late] = await tdb.admin<{ id: string }[]>`
+      insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+      values (${orgId}, ${conversationId}, 'user', ${userId}, ${tdb.admin.json([{ type: "text", text: "and this" }])}, ${runId}) returning id`;
+    const next = await followUpLeftovers(h.db, runId);
+    expect(next).toBeTruthy();
+    const [moved] = await tdb.admin<
+      { run_id: string }[]
+    >`select run_id from public.messages where id = ${late!.id}`;
+    expect(moved?.run_id).toBe(next);
+    expect(await followUpLeftovers(h.db, runId)).toBeNull();
   });
 
   it("rejects runs when the org quota is used up", async () => {

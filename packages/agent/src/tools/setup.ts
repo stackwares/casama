@@ -12,7 +12,7 @@ import { ToolError, type ToolRegistry } from "./registry.ts";
 
 export const SETUP_GUIDE = [
   "You are being set up by the person you'll work for. This conversation is your setup interview.",
-  "1. Ask three to six short questions, one or two at a time, as cards with ui.show (choices where they fit, a text field otherwise). Cover: the work you'll do and what good looks like; how they like things written (length, tone, format); which tools and accounts you'll need; and any regular schedule (daily or weekly jobs).",
+  "1. Ask three to six short questions with ui.show, one card at a time (a card can hold one or two questions; choices where they fit, a text field otherwise), and wait for each answer before the next card. Cover: the work you'll do and what good looks like; how they like things written (length, tone, format); which tools and accounts you'll need; and any regular schedule (daily or weekly jobs).",
   "2. Then call setup.apply once with: your new standing instructions (second person, specific, a short bullet list), up to five memories worth keeping (facts about them and their work), routines for any schedule they gave, and connections they should add (service names only).",
   "3. Don't make changes any other way during setup. If they want to stop, say they can rerun setup from your settings.",
 ].join("\n");

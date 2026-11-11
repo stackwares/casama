@@ -8,6 +8,7 @@ import {
   collect,
   expireCalls,
   expireCards,
+  followUpLeftovers,
   gitSyncTick,
   knowledgeTick,
   listModels,
@@ -93,35 +94,51 @@ async function approvalState(db: Database, approvalId: string, runId: string) {
 
 /** One durable workflow per run: every model and tool call is a checkpointed step. */
 export const agentRunWorkflow = DBOS.registerWorkflow(
-  async (runId: string) =>
-    runAgent(runId, {
-      ...rt().agent,
-      step: (name, fn) => DBOS.runStep(fn, { name }),
-      // Waits durably (days if needed) without holding a process: woken by decisions and cancels.
-      waitUntil: async (name, done, timeoutMs) => {
-        const deadline = (await DBOS.now()) + timeoutMs;
-        for (;;) {
-          if (await DBOS.runStep(done, { name: `${name}-check` })) return;
-          const now = await DBOS.now();
-          if (now >= deadline) return;
-          await DBOS.recv("signal", Math.max(1, Math.min(300, Math.ceil((deadline - now) / 1000))));
-        }
-      },
-      waitForApproval: async (approvalId, run, timeoutMs) => {
-        const deadline = (await DBOS.now()) + timeoutMs;
-        for (;;) {
-          const state = await DBOS.runStep(() => approvalState(rt().db, approvalId, run), {
-            name: "approval-state",
-          });
-          if (state !== "pending") return;
-          const now = await DBOS.now();
-          if (now >= deadline) return;
-          await DBOS.recv("signal", Math.max(1, Math.min(300, Math.ceil((deadline - now) / 1000))));
-        }
-      },
-    }),
+  async (runId: string) => {
+    const result = await runAgentDurably(runId);
+    // Stopped or failed: what the person sent meanwhile still gets an answer.
+    if (result.status !== "completed") {
+      const next = await DBOS.runStep(() => followUpLeftovers(rt().db, runId).catch(() => null), {
+        name: "leftover-after-stop",
+      });
+      if (next)
+        await rt()
+          .agent.startRun?.(next)
+          .catch(() => {});
+    }
+    return result;
+  },
   { name: WORKFLOWS.agentRun },
 );
+
+function runAgentDurably(runId: string) {
+  return runAgent(runId, {
+    ...rt().agent,
+    step: (name, fn) => DBOS.runStep(fn, { name }),
+    // Waits durably (days if needed) without holding a process: woken by decisions and cancels.
+    waitUntil: async (name, done, timeoutMs) => {
+      const deadline = (await DBOS.now()) + timeoutMs;
+      for (;;) {
+        if (await DBOS.runStep(done, { name: `${name}-check` })) return;
+        const now = await DBOS.now();
+        if (now >= deadline) return;
+        await DBOS.recv("signal", Math.max(1, Math.min(300, Math.ceil((deadline - now) / 1000))));
+      }
+    },
+    waitForApproval: async (approvalId, run, timeoutMs) => {
+      const deadline = (await DBOS.now()) + timeoutMs;
+      for (;;) {
+        const state = await DBOS.runStep(() => approvalState(rt().db, approvalId, run), {
+          name: "approval-state",
+        });
+        if (state !== "pending") return;
+        const now = await DBOS.now();
+        if (now >= deadline) return;
+        await DBOS.recv("signal", Math.max(1, Math.min(300, Math.ceil((deadline - now) / 1000))));
+      }
+    },
+  });
+}
 
 /** Advisory lock keys for tick steps that must not overlap. */
 const TICK_LOCKS = { projects: 731_001, imessage: 731_002 } as const;

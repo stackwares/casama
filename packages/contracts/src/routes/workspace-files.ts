@@ -19,7 +19,7 @@ export const exportWorkspaceFiles = createRoute({
   path: "/v1/orgs/{id}/files/export",
   tags,
   security,
-  summary: "Routines and skills as Markdown files, zipped (D-124)",
+  summary: "Routines and skills as Markdown files, zipped",
   request: { params: idParam },
   responses: { 200: jsonResponse("ZIP", WorkspaceFilesExport), 401: e401, 403: e403 },
 });

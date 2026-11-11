@@ -32,7 +32,7 @@ export const createBotLink = createRoute({
   path: "/v1/bots/{id}/links",
   tags,
   security,
-  summary: "Invite a trusted contact's bot to link with this one (D-143)",
+  summary: "Invite a trusted contact's bot to link with this one",
   request: { params, body: jsonBody(CreateBotLinkRequest) },
   responses: { 201: jsonResponse("Invite", CreatedBotLink), 401: e401, 403: e403, 404: e404 },
 });

@@ -18,7 +18,7 @@ class EncryptionApi {
 
   const EncryptionApi(this._dio);
 
-  /// Encryption at rest for a workspace (D-136)
+  /// Encryption at rest for a workspace
   /// 
   ///
   /// Parameters:

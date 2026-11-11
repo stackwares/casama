@@ -279,7 +279,7 @@ _responseData = rawData == null ? null : deserialize<BotPageDetail, BotPageDetai
     );
   }
 
-  /// Pages you can open in a workspace (D-119)
+  /// Pages you can open in a workspace
   /// 
   ///
   /// Parameters:

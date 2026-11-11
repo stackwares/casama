@@ -165,7 +165,7 @@ class OrganizationWithRole {
 
 
 
-      /// Suspended by the instance owner: bots don't run and computers don't start (D-094)
+      /// Suspended by the instance owner: bots don't run and computers don't start
   @JsonKey(
     
     name: r'suspended',

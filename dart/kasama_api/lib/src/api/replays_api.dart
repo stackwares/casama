@@ -100,7 +100,7 @@ _responseData = rawData == null ? null : deserialize<DeletedReplay, DeletedRepla
     );
   }
 
-  /// A bot&#39;s saved replays (D-127)
+  /// A bot&#39;s saved replays
   /// 
   ///
   /// Parameters:

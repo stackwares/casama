@@ -23,19 +23,18 @@ export const OrgSettings = z
         "Owners and admins must use two-step sign-in (turning it on needs an aal2 session)",
     }),
     mcp_decide_approvals: z.boolean().openapi({
-      description: "Allow approving or denying actions from AI apps connected over MCP (D-117)",
+      description: "Allow approving or denying actions from AI apps connected over MCP",
     }),
     allow_bot_to_bot: z.boolean().openapi({
-      description:
-        "Bots may @mention, message and delegate to each other (D-133); subagents always work",
+      description: "Bots may @mention, message and delegate to each other; subagents always work",
     }),
     a2a_enabled: z.boolean().openapi({
       description:
-        "Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys (D-140)",
+        "Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys",
     }),
     llm_tracing: z.boolean().openapi({
       description:
-        "Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse",
+        "Send model calls to the server's Langfuse, secrets redacted; no effect without Langfuse",
     }),
   })
   .openapi("OrgSettings");

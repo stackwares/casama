@@ -93,6 +93,8 @@ export async function createTakeover(
             title: `${info.botName} needs your help`,
             body: reason,
             link: `/computer/live?c=${computerId}&takeover=${id}`,
+            // Marked read once the takeover is answered (taken, dismissed or expired).
+            takeover_id: id,
             bot_id: info.botId,
           })
           .catch(() => {}),

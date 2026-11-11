@@ -60,7 +60,7 @@ class OrgSettings {
 
 
 
-      /// Allow approving or denying actions from AI apps connected over MCP (D-117)
+      /// Allow approving or denying actions from AI apps connected over MCP
   @JsonKey(
     
     name: r'mcp_decide_approvals',
@@ -73,7 +73,7 @@ class OrgSettings {
 
 
 
-      /// Bots may @mention, message and delegate to each other (D-133); subagents always work
+      /// Bots may @mention, message and delegate to each other; subagents always work
   @JsonKey(
     
     name: r'allow_bot_to_bot',
@@ -86,7 +86,7 @@ class OrgSettings {
 
 
 
-      /// Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys (D-140)
+      /// Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys
   @JsonKey(
     
     name: r'a2a_enabled',
@@ -99,7 +99,7 @@ class OrgSettings {
 
 
 
-      /// Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse
+      /// Send model calls to the server's Langfuse, secrets redacted; no effect without Langfuse
   @JsonKey(
     
     name: r'llm_tracing',

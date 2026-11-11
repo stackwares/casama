@@ -443,6 +443,11 @@ describe("routine tools", () => {
       select id, schedule_cron, trigger, next_run_at from public.routines where bot_id = ${botId}`;
     expect(row!.schedule_cron).toBeNull();
     expect(row!.trigger.type).toBe("once");
+    // It runs in the chat it was asked for in, not a new thread (D-155).
+    const [saved] = await tdb.admin<{ same: boolean }[]>`
+      select r.conversation_id = run.conversation_id as same from public.routines r, public.runs run
+      where r.id = ${row!.id} and run.id = ${runId}`;
+    expect(saved!.same).toBe(true);
     const delay = new Date(row!.next_run_at).getTime() - before;
     expect(delay).toBeGreaterThanOrEqual(55_000);
     expect(delay).toBeLessThan(70_000);

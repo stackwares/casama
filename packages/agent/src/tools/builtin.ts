@@ -98,6 +98,8 @@ export function builtinTools(deps: {
     description:
       "Save a lasting fact or preference to long-term memory. Near-duplicates are updated instead of added. Use one standalone sentence.",
     risk: "low",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({
       content: z.string().min(1).max(1000),
       kind: z.enum(["fact", "preference"]).optional(),
@@ -127,6 +129,8 @@ export function builtinTools(deps: {
     readOnly: true,
     description: "Load the full instructions of one skill from the skills index by name.",
     risk: "low",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({ name: z.string().min(1).max(63) }),
     async execute(args, ctx) {
       const [skill] = await deps.db.execute<{ id: string; name: string; body_md: string }>(sql`

@@ -30,6 +30,23 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }) as never;
   });
 
+  // Supabase Auth can't rename a factor, so the API does it for the signed-in person's own factors.
+  // Names stay unique per person: the hidden " · <time>" suffix the app adds at enrollment is kept.
+  app.openapi(routes.renameTwoStepFactor, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { name } = c.req.valid("json");
+    const clean = name.replace(/\s*·\s*/g, " ").trim();
+    const rows = await db.execute<{ id: string }>(sql`
+      update auth.mfa_factors
+      set friendly_name = ${clean} || ' · ' || coalesce(nullif(split_part(friendly_name, ' · ', 2), ''), extract(epoch from created_at)::bigint::text),
+          updated_at = now()
+      where id = ${id}::uuid and user_id = ${claims.sub}::uuid
+      returning id`);
+    if (!rows.length) throw new ApiError(404, "factor_not_found", "Authenticator not found");
+    return c.body(null, 204) as never;
+  });
+
   app.openapi(routes.deleteMyAccount, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { confirm_email } = c.req.valid("json");

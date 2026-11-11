@@ -228,7 +228,7 @@ class Bot {
 
 
 
-      /// The setup interview (D-105)
+      /// The setup interview
   @JsonKey(
     
     name: r'setup_status',
@@ -324,15 +324,15 @@ String toString() => value;
 }
 
 
-/// The setup interview (D-105)
+/// The setup interview
 enum BotSetupStatusEnum {
-    /// The setup interview (D-105)
+    /// The setup interview
 @JsonValue(r'pending')
 pending(r'pending'),
-    /// The setup interview (D-105)
+    /// The setup interview
 @JsonValue(r'done')
 done(r'done'),
-    /// The setup interview (D-105)
+    /// The setup interview
 @JsonValue(r'skipped')
 skipped(r'skipped');
 

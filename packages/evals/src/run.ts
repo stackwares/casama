@@ -31,7 +31,7 @@ const { values: a } = parseArgs({
 });
 
 const live = a.mode === "live";
-const model = a.model ?? (live ? "openai/gpt-6-luna" : "fixture-main");
+const model = a.model ?? (live ? "meta/muse-ember" : "fixture-main");
 const available = new Set((process.env.EVAL_CAPABILITIES ?? "").split(",").filter(Boolean));
 
 async function token() {

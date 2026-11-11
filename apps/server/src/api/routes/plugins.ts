@@ -16,7 +16,14 @@ import {
 } from "@kasama/agent";
 import { routes } from "@kasama/contracts";
 import { type JwtClaims, pgErrorCode, withUserSession } from "@kasama/db";
-import { type CheckedPlugin, checkPlugin, PluginError, type PluginServer } from "@kasama/domain";
+import {
+  type CheckedPlugin,
+  checkPlugin,
+  PLUGIN_MAX_BYTES,
+  PLUGIN_MAX_FILES,
+  PluginError,
+  type PluginServer,
+} from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import {
   bundleFrom,
@@ -29,8 +36,8 @@ import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
 
-const MAX_FILES = 400;
-const MAX_BYTES = 10 * 1024 * 1024;
+const MAX_FILES = PLUGIN_MAX_FILES;
+const MAX_BYTES = PLUGIN_MAX_BYTES;
 
 type Loaded = {
   ref: GitHubRef;

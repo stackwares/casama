@@ -2242,7 +2242,7 @@
               },
               "suspended": {
                 "type": "boolean",
-                "description": "Suspended by the instance owner: bots don't run and computers don't start (D-094)"
+                "description": "Suspended by the instance owner: bots don't run and computers don't start"
               }
             },
             "required": [
@@ -2689,7 +2689,7 @@
               "string",
               "null"
             ],
-            "description": "OpenTelemetry trace of this run (D-107)"
+            "description": "OpenTelemetry trace of this run"
           },
           "created_at": {
             "type": "string",
@@ -2953,7 +2953,7 @@
               "done",
               "skipped"
             ],
-            "description": "The setup interview (D-105)"
+            "description": "The setup interview"
           },
           "created_at": {
             "type": "string",
@@ -3145,7 +3145,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Group chats: every bot, the lead first (D-118)"
+            "description": "Group chats: every bot, the lead first"
           },
           "created_at": {
             "type": "string",
@@ -3182,7 +3182,7 @@
             },
             "minItems": 1,
             "maxItems": 10,
-            "description": "A group chat (D-118): the other bots (the lead may be listed too); 2 to 10 bots in all"
+            "description": "A group chat: the other bots (the lead may be listed too); 2 to 10 bots in all"
           }
         },
         "required": [
@@ -3292,6 +3292,10 @@
               "format": "uuid"
             },
             "description": "Group chats: every bot's run"
+          },
+          "joined": {
+            "type": "boolean",
+            "description": "The bot was already working here: the message joined that run (run_id), which sees it before its next step"
           }
         },
         "required": [
@@ -3695,7 +3699,7 @@
               "pattern": "^[a-z0-9][a-z0-9_-]{0,62}$"
             },
             "maxItems": 5,
-            "description": "Skills picked with / in the composer; the run loads them up front (D-104)"
+            "description": "Skills picked with / in the composer; the run loads them up front"
           }
         }
       },
@@ -4097,7 +4101,7 @@
           },
           "max_desktops": {
             "type": "integer",
-            "description": "Team computers: bots that may use the desktop at the same time (D-148)"
+            "description": "Team computers: bots that may use the desktop at the same time"
           },
           "last_active_at": {
             "type": [
@@ -4190,7 +4194,7 @@
               "boat",
               "railway"
             ],
-            "description": "Hosted providers must be configured on the supervisor (D-057, D-139)"
+            "description": "Hosted providers must be configured on the supervisor"
           }
         },
         "required": [
@@ -4542,7 +4546,7 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 10,
-            "description": "Team computers only (D-148)"
+            "description": "Team computers only"
           }
         }
       },
@@ -5082,7 +5086,7 @@
                 "$ref": "#/components/schemas/CalendarTriggerConfig"
               },
               {
-                "description": "Required for calendar_event triggers (D-132)"
+                "description": "Required for calendar_event triggers"
               }
             ]
           },
@@ -5092,7 +5096,7 @@
                 "$ref": "#/components/schemas/MessageTriggerConfig"
               },
               {
-                "description": "Filters for message triggers: an email or chat message that matches starts the routine (D-134)"
+                "description": "Filters for message triggers: an email or chat message that matches starts the routine"
               }
             ]
           },
@@ -5102,7 +5106,7 @@
                 "$ref": "#/components/schemas/DeviceTriggerConfig"
               },
               {
-                "description": "Required for device triggers (D-151): the event on your own phone or computer"
+                "description": "Required for device triggers: the event on your own phone or computer"
               }
             ]
           }
@@ -5167,7 +5171,7 @@
           "value",
           "totp"
         ],
-        "description": "value: the secret itself; totp: a two-step seed bots use as {{totp:NAME}} (D-102)"
+        "description": "value: the secret itself; totp: a two-step seed bots use as {{totp:NAME}}"
       },
       "CreateSecretRequest": {
         "type": "object",
@@ -5300,7 +5304,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "Its project (D-113)"
+            "description": "Its project"
           },
           "milestone_id": {
             "type": [
@@ -5679,7 +5683,7 @@
           "expires_at",
           "created_at"
         ],
-        "description": "A bot asking for a secret (D-101); never holds a value"
+        "description": "A bot asking for a secret; never holds a value"
       },
       "DeletedRoutine": {
         "type": "object",
@@ -6147,7 +6151,7 @@
           "call_id": {
             "type": "string",
             "format": "uuid",
-            "description": "An answered phone call (D-135): the session uses its conversation and the bot speaks first"
+            "description": "An answered phone call: the session uses its conversation and the bot speaks first"
           }
         },
         "required": [
@@ -7437,19 +7441,19 @@
           },
           "mcp_decide_approvals": {
             "type": "boolean",
-            "description": "Allow approving or denying actions from AI apps connected over MCP (D-117)"
+            "description": "Allow approving or denying actions from AI apps connected over MCP"
           },
           "allow_bot_to_bot": {
             "type": "boolean",
-            "description": "Bots may @mention, message and delegate to each other (D-133); subagents always work"
+            "description": "Bots may @mention, message and delegate to each other; subagents always work"
           },
           "a2a_enabled": {
             "type": "boolean",
-            "description": "Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys (D-140)"
+            "description": "Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys"
           },
           "llm_tracing": {
             "type": "boolean",
-            "description": "Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse"
+            "description": "Send model calls to the server's Langfuse, secrets redacted; no effect without Langfuse"
           }
         },
         "required": [
@@ -7475,19 +7479,19 @@
           },
           "mcp_decide_approvals": {
             "type": "boolean",
-            "description": "Allow approving or denying actions from AI apps connected over MCP (D-117)"
+            "description": "Allow approving or denying actions from AI apps connected over MCP"
           },
           "allow_bot_to_bot": {
             "type": "boolean",
-            "description": "Bots may @mention, message and delegate to each other (D-133); subagents always work"
+            "description": "Bots may @mention, message and delegate to each other; subagents always work"
           },
           "a2a_enabled": {
             "type": "boolean",
-            "description": "Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys (D-140)"
+            "description": "Bots the workspace chooses can be published as A2A agents, reachable with workspace API keys"
           },
           "llm_tracing": {
             "type": "boolean",
-            "description": "Send model calls to the server's Langfuse, secrets redacted (D-107); no effect without Langfuse"
+            "description": "Send model calls to the server's Langfuse, secrets redacted; no effect without Langfuse"
           }
         }
       },
@@ -15927,7 +15931,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Group chats in a workspace that you can see (D-118)",
+        "summary": "Group chats in a workspace that you can see",
         "parameters": [
           {
             "schema": {
@@ -16355,7 +16359,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "A new person's personal workspace, bot and welcome chat (D-129); the same chat again if it exists",
+        "summary": "A new person's personal workspace, bot and welcome chat; the same chat again if it exists",
         "requestBody": {
           "required": true,
           "content": {
@@ -22053,6 +22057,86 @@
         }
       }
     },
+    "/v1/me/two-step/{id}": {
+      "patch": {
+        "operationId": "renameTwoStepFactor",
+        "tags": [
+          "privacy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Rename one of your authenticator apps (two-step sign-in)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Renamed"
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/wallpapers": {
       "get": {
         "operationId": "searchWallpapers",
@@ -24603,7 +24687,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Read an OpenClaw or Hermes Agent folder into a bot template for review (D-122)",
+        "summary": "Read an OpenClaw or Hermes Agent folder into a bot template for review",
         "requestBody": {
           "required": true,
           "content": {
@@ -24820,7 +24904,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "A bot's knowledge sources and the workspace's shared ones (D-125)",
+        "summary": "A bot's knowledge sources and the workspace's shared ones",
         "parameters": [
           {
             "schema": {
@@ -25008,7 +25092,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Who can chat with, edit or administer this bot (D-131)",
+        "summary": "Who can chat with, edit or administer this bot",
         "parameters": [
           {
             "schema": {
@@ -25281,7 +25365,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "A bot's chat apps (D-134)",
+        "summary": "A bot's chat apps",
         "parameters": [
           {
             "schema": {
@@ -25525,7 +25609,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Encryption at rest for a workspace (D-136)",
+        "summary": "Encryption at rest for a workspace",
         "parameters": [
           {
             "schema": {
@@ -25882,7 +25966,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Connect the workspace's Twilio account for calls bots place (D-141)",
+        "summary": "Connect the workspace's Twilio account for calls bots place",
         "parameters": [
           {
             "schema": {
@@ -26297,7 +26381,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Connect the workspace's card issuing account for single-use cards (owners, D-142)",
+        "summary": "Connect the workspace's card issuing account for single-use cards (owners)",
         "parameters": [
           {
             "schema": {
@@ -26527,7 +26611,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Invite a trusted contact's bot to link with this one (D-143)",
+        "summary": "Invite a trusted contact's bot to link with this one",
         "parameters": [
           {
             "schema": {
@@ -26909,7 +26993,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Keep bots' named secrets in the workspace's Infisical project (admins, D-145)",
+        "summary": "Keep bots' named secrets in the workspace's Infisical project (admins)",
         "parameters": [
           {
             "schema": {
@@ -27633,7 +27717,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Your devices that share data (D-149)",
+        "summary": "Your devices that share data",
         "responses": {
           "200": {
             "description": "Devices",
@@ -27680,7 +27764,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Report events that start device-triggered routines (D-151)",
+        "summary": "Report events that start device-triggered routines",
         "parameters": [
           {
             "schema": {
@@ -28181,7 +28265,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Pages you can open in a workspace (D-119)",
+        "summary": "Pages you can open in a workspace",
         "parameters": [
           {
             "schema": {
@@ -28378,7 +28462,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "The workspace's password managers and your own (D-128)",
+        "summary": "The workspace's password managers and your own",
         "parameters": [
           {
             "schema": {
@@ -28697,7 +28781,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "A bot's saved replays (D-127)",
+        "summary": "A bot's saved replays",
         "parameters": [
           {
             "schema": {
@@ -29138,7 +29222,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Skills and skill edits bots proposed from their runs (D-126)",
+        "summary": "Skills and skill edits bots proposed from their runs",
         "parameters": [
           {
             "schema": {
@@ -29475,7 +29559,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "What an Agent Plugins 1.0 package from GitHub would add (D-121)",
+        "summary": "What an Agent Plugins 1.0 package from GitHub would add",
         "requestBody": {
           "required": true,
           "content": {
@@ -29969,7 +30053,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Start recording a task while you have control of a computer (D-120)",
+        "summary": "Start recording a task while you have control of a computer",
         "requestBody": {
           "required": true,
           "content": {
@@ -30463,7 +30547,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Routines and skills as Markdown files, zipped (D-124)",
+        "summary": "Routines and skills as Markdown files, zipped",
         "parameters": [
           {
             "schema": {

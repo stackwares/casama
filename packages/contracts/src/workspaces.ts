@@ -71,8 +71,7 @@ export const OrganizationWithRole = Organization.extend({
     description: "Owners and admins need two-step sign-in (an aal2 session) to use their powers",
   }),
   suspended: z.boolean().optional().openapi({
-    description:
-      "Suspended by the instance owner: bots don't run and computers don't start (D-094)",
+    description: "Suspended by the instance owner: bots don't run and computers don't start",
   }),
 }).openapi("OrganizationWithRole");
 

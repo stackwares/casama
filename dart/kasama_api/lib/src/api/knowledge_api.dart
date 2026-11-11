@@ -194,7 +194,7 @@ _responseData = rawData == null ? null : deserialize<DeletedKnowledgeSource, Del
     );
   }
 
-  /// A bot&#39;s knowledge sources and the workspace&#39;s shared ones (D-125)
+  /// A bot&#39;s knowledge sources and the workspace&#39;s shared ones
   /// 
   ///
   /// Parameters:

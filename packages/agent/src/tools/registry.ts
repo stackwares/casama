@@ -39,6 +39,12 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   destinationHost?: (args: z.infer<S>, ctx: ToolContext) => Promise<string | null> | string | null;
   /** No side effects: never needs approval. */
   readOnly?: boolean;
+  /**
+   * Only changes the bot's own state inside Kasama (notes, schedule, board tasks, messages and cards
+   * for the person): never asks, even for bots that ask before everything (D-155). Anything that
+   * reaches outside Kasama or costs money must not set this.
+   */
+  selfOnly?: boolean;
   /** Asks for approval under the default autonomy whatever its risk (for example media generation). */
   confirm?: boolean;
   /** Always asks, whatever the autonomy, grants or action rules (payments, D-142). */

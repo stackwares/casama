@@ -13,7 +13,7 @@ export const listReplays = createRoute({
   path: "/v1/replays",
   tags,
   security,
-  summary: "A bot's saved replays (D-127)",
+  summary: "A bot's saved replays",
   request: { query: z.object({ bot_id: Uuid }) },
   responses: {
     200: jsonResponse("Replays", z.object({ items: z.array(Replay) }).openapi("ReplayList")),

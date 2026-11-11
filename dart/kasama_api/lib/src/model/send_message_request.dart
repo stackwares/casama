@@ -67,7 +67,7 @@ class SendMessageRequest {
 
 
 
-      /// Skills picked with / in the composer; the run loads them up front (D-104)
+      /// Skills picked with / in the composer; the run loads them up front
   @JsonKey(
     
     name: r'skills',

@@ -253,7 +253,7 @@ _responseData = rawData == null ? null : deserialize<PaymentRequestList, Payment
     );
   }
 
-  /// Connect the workspace&#39;s card issuing account for single-use cards (owners, D-142)
+  /// Connect the workspace&#39;s card issuing account for single-use cards (owners)
   /// 
   ///
   /// Parameters:

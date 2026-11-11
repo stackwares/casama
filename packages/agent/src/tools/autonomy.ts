@@ -154,6 +154,8 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Send a push notification to the bot's owner (use sparingly: finished work, blockers, urgent findings).",
     risk: "low",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({ title: z.string().min(1).max(120), message: z.string().min(1).max(1000) }),
     async execute(args, ctx) {
       if (!deps.notifications)
@@ -199,6 +201,8 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Add a ticket to the board, optionally assigned to a bot by name (that bot starts on it right away).",
     risk: "low",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({
       title: z.string().min(1).max(300),
       details: z.string().max(10_000).optional(),
@@ -225,6 +229,8 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Update a ticket: status (todo, in_progress, in_review, blocked, done), a result, priority or the bot it's assigned to.",
     risk: "low",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({
       task_id: z.uuid(),
       status: z.enum(STATUSES).optional(),
@@ -251,6 +257,8 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     name: "tasks.comment",
     description: "Post a comment on a ticket (progress, questions, results).",
     risk: "low",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({ task_id: z.uuid(), body: z.string().min(1).max(20_000) }),
     async execute(args, ctx) {
       const rows = await db.execute<{ id: string }>(sql`
@@ -319,8 +327,10 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
   registry.register({
     name: "routines.create",
     description:
-      "Schedule work for yourself later. For something that should happen once (a reminder, a follow-up), pass in_minutes or run_at; it runs a single time and switches itself off. Use schedule_cron (5-field cron in the user's timezone) only for work that repeats. Results arrive in a dedicated conversation.",
+      "Schedule work for yourself later. For something that should happen once (a reminder, a follow-up), pass in_minutes or run_at; it runs a single time and switches itself off. Use schedule_cron (5-field cron in the user's timezone) only for work that repeats. Each run posts its reply in this chat and notifies the person, so a reminder or greeting needs no other way of sending.",
     risk: "medium",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({
       bot: BOT_ARG,
       name: z.string().min(1).max(120),
@@ -384,6 +394,12 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     }),
     async execute(args, ctx) {
       const target = await routineBot(args.bot, ctx);
+      // Runs post in the chat the routine was asked for in (one thread per person, like a chat app),
+      // when that chat is a direct one with the routine's bot.
+      const [here] = await db.execute<{ id: string }>(sql`
+        select c.id from public.runs r join public.conversations c on c.id = r.conversation_id
+        where r.id = ${ctx.runId}::uuid and c.bot_id = ${target}::uuid and c.kind = 'direct'`);
+      const conversationId = here?.id ?? null;
       const kinds = [
         args.in_minutes != null,
         !!args.run_at,
@@ -411,9 +427,9 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
             "Device routines need a person: this run isn't acting for anyone.",
           );
         const [r] = await db.execute<{ id: string }>(sql`
-          insert into public.routines (org_id, bot_id, created_by, name, instructions_md, timezone, trigger, notify)
+          insert into public.routines (org_id, bot_id, created_by, name, instructions_md, timezone, trigger, notify, conversation_id)
           values (${ctx.orgId}::uuid, ${target}::uuid, ${person}::uuid, ${args.name}, ${args.instructions}, ${args.timezone ?? "UTC"},
-                  ${JSON.stringify({ type: "device", ...d })}::jsonb, ${args.notify ?? true}) returning id`);
+                  ${JSON.stringify({ type: "device", ...d })}::jsonb, ${args.notify ?? true}, ${conversationId}::uuid) returning id`);
         return {
           content: `Created routine ${r?.id}: it runs on ${d.event}${d.place ? ` (${d.place})` : ""}${d.app ? ` (${d.app})` : ""}.`,
           preview: `${args.name} · on ${d.event}`,
@@ -440,9 +456,9 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       const once = !args.schedule_cron;
       const trigger = JSON.stringify({ type: once ? "once" : "schedule" });
       const [r] = await db.execute<{ id: string }>(sql`
-        insert into public.routines (org_id, bot_id, created_by, name, instructions_md, schedule_cron, timezone, trigger, notify, next_run_at)
+        insert into public.routines (org_id, bot_id, created_by, name, instructions_md, schedule_cron, timezone, trigger, notify, next_run_at, conversation_id)
         values (${ctx.orgId}::uuid, ${target}::uuid, ${owner?.user_id ?? null}::uuid, ${args.name}, ${args.instructions},
-                ${args.schedule_cron ?? null}, ${tz}, ${trigger}::jsonb, ${args.notify ?? true}, ${next.toISOString()}::timestamptz) returning id`);
+                ${args.schedule_cron ?? null}, ${tz}, ${trigger}::jsonb, ${args.notify ?? true}, ${next.toISOString()}::timestamptz, ${conversationId}::uuid) returning id`);
       return {
         content: once
           ? `Scheduled one-time routine ${r?.id} for ${next.toISOString()}. It runs once, then switches itself off.`
@@ -498,6 +514,8 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Change, pause (enabled: false) or resume one of your routines. Find its id with routines.list.",
     risk: "medium",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({
       bot: BOT_ARG,
       routine_id: z.uuid(),
@@ -554,6 +572,8 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Delete one of your routines for good (its past results stay). Find its id with routines.list.",
     risk: "medium",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({ routine_id: z.uuid(), bot: BOT_ARG }),
     async execute(args, ctx) {
       const target = await routineBot(args.bot, ctx);

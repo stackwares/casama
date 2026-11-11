@@ -234,6 +234,8 @@ export function registerBotTools(registry: ToolRegistry, deps: { db: Database })
     description:
       "Organize the bots in the sidebar into folders, in order. Bots you don't mention keep their place; an empty folder list leaves folders alone.",
     risk: "low",
+    // Only the bot's own state inside Kasama: never asks (D-155).
+    selfOnly: true,
     schema: z.object({
       folders: z
         .array(

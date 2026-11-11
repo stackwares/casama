@@ -30,6 +30,19 @@ create table if not exists auth.users (
   updated_at timestamptz default now()
 );
 
+-- Two-step sign-in factors (the columns the API touches; names unique per person, like Supabase).
+create table if not exists auth.mfa_factors (
+  id uuid primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  friendly_name text,
+  factor_type text not null default 'totp',
+  status text not null default 'verified',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists mfa_factors_user_friendly_name_unique on auth.mfa_factors (friendly_name, user_id)
+  where trim(both from friendly_name) <> '';
+
 create or replace function auth.jwt() returns jsonb language sql stable as $$
   select coalesce(
     nullif(current_setting('request.jwt.claim', true), ''),

@@ -332,7 +332,7 @@ _responseData = rawData == null ? null : deserialize<TelephonySettings, Telephon
     );
   }
 
-  /// Connect the workspace&#39;s Twilio account for calls bots place (D-141)
+  /// Connect the workspace&#39;s Twilio account for calls bots place
   /// 
   ///
   /// Parameters:

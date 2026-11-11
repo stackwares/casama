@@ -135,6 +135,24 @@ describe("audit fixes", () => {
   });
 });
 
+describe("routines post in the person's chat (D-155)", () => {
+  it("a routine with no chat recorded runs in the person's latest chat with the bot, marked as a routine", async () => {
+    const [chat] = await h.tdb.admin<{ id: string }[]>`
+      insert into public.conversations (org_id, bot_id, created_by, last_message_at) values (${orgA}, ${botA}, ${owner.id}, now()) returning id`;
+    const past = new Date(Date.now() - 60_000).toISOString();
+    const [r] = await h.tdb.admin<{ id: string }[]>`
+      insert into public.routines (org_id, bot_id, created_by, name, instructions_md, trigger, timezone, next_run_at)
+      values (${orgA}, ${botA}, ${owner.id}, 'Say hi', 'Say hi', '{"type":"once"}', 'UTC', ${past}) returning id`;
+    await claimDueRoutines(h.deps.db);
+    const [run] = await h.tdb.admin<{ conversation_id: string }[]>`
+      select conversation_id from public.runs where routine_id = ${r!.id}`;
+    expect(run!.conversation_id).toBe(chat!.id);
+    const [m] = await h.tdb.admin<{ content: Array<{ routine?: { name: string } }> }[]>`
+      select content from public.messages where run_id in (select id from public.runs where routine_id = ${r!.id}) and role = 'user'`;
+    expect(m!.content[0]!.routine?.name).toBe("Say hi");
+  });
+});
+
 describe("the API role can enqueue runs (audit 2026-11)", () => {
   it("the worker grants the API's database role access to DBOS's tables", async () => {
     const h2 = await startHarness({

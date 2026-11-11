@@ -253,30 +253,7 @@ export function introMessage(s: WelcomeState, o: { hasModel: boolean }) {
     : "No problem. I can help with email and calendar, projects, code, research and errands. Here's how to get the most out of me.";
   const apps = [...new Set(focus.flatMap((f) => MAIN_CONNECTION[f]))].slice(0, 3);
   const parts: Array<Record<string, unknown>> = [{ type: "text", text: intro }];
-  if (!o.hasModel)
-    parts.push(
-      card(
-        column(
-          ["t", "row"],
-          [
-            text("t", "First, I need a model to think with. Pick one way:"),
-            { id: "row", component: "Row", children: ["chatgpt", "key", "local"] },
-            ...button(
-              "chatgpt",
-              "Continue with ChatGPT",
-              "app:route",
-              { path: "/settings/keys", provider: "chatgpt" },
-              "primary",
-            ),
-            ...button("key", "Add a model key", "app:route", { path: "/settings/keys" }),
-            ...button("local", "Use a local model", "app:route", {
-              path: "/settings/keys",
-              provider: "openai_compatible",
-            }),
-          ],
-        ),
-      ),
-    );
+  if (!o.hasModel) parts.push(modelCard());
   if (apps.length) {
     const names = apps.map((a) => APP_NAMES[a] ?? a);
     parts.push(
@@ -358,6 +335,43 @@ export function introMessage(s: WelcomeState, o: { hasModel: boolean }) {
   return parts;
 }
 
+/**
+ * How the bot gets a model, when the workspace has no usable key yet. With [again], it's shown after
+ * someone tried to go on without one, with a button to carry on once a key is added.
+ */
+export function modelCard(again = false) {
+  return card(
+    column(again ? ["t", "row", "row2"] : ["t", "row"], [
+      text(
+        "t",
+        again
+          ? "I need a model before I can do that. Pick one way, then tap Continue:"
+          : "First, I need a model to think with. Pick one way:",
+      ),
+      { id: "row", component: "Row", children: ["chatgpt", "key", "local"] },
+      // The app starts ChatGPT sign-in itself where it can (desktop) and explains elsewhere.
+      ...button(
+        "chatgpt",
+        "Continue with ChatGPT",
+        "app:route",
+        { path: "/settings/keys", provider: "chatgpt" },
+        "primary",
+      ),
+      ...button("key", "Add a model key", "app:route", { path: "/settings/keys" }),
+      ...button("local", "Use a local model", "app:route", {
+        path: "/settings/keys",
+        provider: "openai_compatible",
+      }),
+      ...(again
+        ? [
+            { id: "row2", component: "Row", children: ["next"] },
+            ...button("next", "Continue", "welcome.next"),
+          ]
+        : []),
+    ]),
+  );
+}
+
 /** The first task card for the first pick. */
 export function firstTaskMessage(s: WelcomeState) {
   const t = FIRST_TASK[s.focus[0] ?? "other"];
@@ -374,13 +388,7 @@ export function firstTaskMessage(s: WelcomeState) {
             value: { "@path": "/form/text" },
             variant: "longText",
           },
-          ...button(
-            "go",
-            "Go",
-            "welcome.task",
-            { text: { "@path": "/form/text" }, prefix: t.prefix },
-            "primary",
-          ),
+          ...button("go", "Go", "welcome.task", { text: { "@path": "/form/text" } }, "primary"),
         ],
       ),
       { form: { text: "" } },
@@ -665,6 +673,8 @@ export async function handleWelcomeAction(
       return scripted(parts);
     }
     case "welcome.next": {
+      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides)))
+        return scripted([modelCard(true)]);
       const calendarOrMail = await hasConnection(db, c.orgId, [
         "google_calendar",
         "gmail",
@@ -679,6 +689,8 @@ export async function handleWelcomeAction(
       s.step = "first_value";
       return scripted(firstTaskMessage(s));
     case "welcome.catchup":
+      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides)))
+        return scripted([modelCard(true)]);
       s.step = "first_value";
       return modelTurn(CATCHUP_TEXT);
     case "welcome.task": {
@@ -688,10 +700,18 @@ export async function handleWelcomeAction(
           { type: "text", text: "Type what you'd like first, then tap Go." },
           ...firstTaskMessage(s),
         ]);
+      // Nothing would answer without a model; keep the task card for after one is added.
+      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides)))
+        return scripted([modelCard(true)]);
       s.step = "first_value";
-      return modelTurn(`${typeof ctx.prefix === "string" ? ctx.prefix : ""}${t}`.slice(0, 4000));
+      const prefix =
+        FIRST_TASK[s.focus[0] ?? "other"]?.prefix ??
+        (typeof ctx.prefix === "string" ? ctx.prefix : "");
+      return modelTurn(`${prefix}${t}`.slice(0, 4000));
     }
     case "welcome.setup":
+      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides)))
+        return scripted([modelCard(true)]);
       s.step = "interview";
       await db.execute(
         sql`update public.bots set setup_status = 'pending' where id = ${c.botId}::uuid`,

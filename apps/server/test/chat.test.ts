@@ -78,7 +78,7 @@ describe("model keys", () => {
       token: owner.token,
       json: {},
     });
-    expect(await j(res)).toMatchObject({ ok: true, model: "openai/gpt-6-luna" });
+    expect(await j(res)).toMatchObject({ ok: true, model: "meta/muse-ember" });
     const list = await j(await call(`/v1/credentials?org_id=${orgId}`, { token: owner.token }));
     expect(list.items[0]).toMatchObject({ id: credentialId, last_test_ok: true });
   });
@@ -88,7 +88,7 @@ describe("model keys", () => {
     expect(res.status).toBe(200);
     const body = await j(res);
     expect(body.source).toBe("featured");
-    expect(body.items[0]).toMatchObject({ id: "openai/gpt-6-luna", featured: true });
+    expect(body.items[0]).toMatchObject({ id: "meta/muse-ember", featured: true });
     const stranger = await h.user("models-stranger@example.com");
     const denied = await call(`/v1/credentials/${credentialId}/models`, { token: stranger.token });
     expect(denied.status).toBe(404);

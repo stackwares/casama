@@ -312,7 +312,7 @@ _responseData = rawData == null ? null : deserialize<BotTemplateFile, BotTemplat
     );
   }
 
-  /// Who can chat with, edit or administer this bot (D-131)
+  /// Who can chat with, edit or administer this bot
   /// 
   ///
   /// Parameters:
@@ -902,7 +902,7 @@ _responseData = rawData == null ? null : deserialize<StartSetupResponse, StartSe
     );
   }
 
-  /// A new person&#39;s personal workspace, bot and welcome chat (D-129); the same chat again if it exists
+  /// A new person&#39;s personal workspace, bot and welcome chat; the same chat again if it exists
   /// 
   ///
   /// Parameters:

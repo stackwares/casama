@@ -14,6 +14,11 @@ export interface ParsedSkill {
 export class SkillFormatError extends Error {}
 
 export const SKILL_NAME = /^[a-z0-9][a-z0-9_-]{0,62}$/;
+/** A skill's extra files (besides SKILL.md): how many, how big, and which names. */
+export const SKILL_MAX_FILES = 60;
+export const SKILL_MAX_FILE_BYTES = 1024 * 1024;
+export const SKILL_MAX_TOTAL_BYTES = 5 * 1024 * 1024;
+export const SKILL_SAFE_PATH = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/;
 
 const unquote = (v: string) => {
   const t = v.trim();

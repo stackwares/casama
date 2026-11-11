@@ -171,7 +171,7 @@ class Computer {
 
 
 
-      /// Team computers: bots that may use the desktop at the same time (D-148)
+      /// Team computers: bots that may use the desktop at the same time
   @JsonKey(
     
     name: r'max_desktops',

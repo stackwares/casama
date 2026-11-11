@@ -209,7 +209,7 @@ class Run {
 
 
 
-      /// OpenTelemetry trace of this run (D-107)
+      /// OpenTelemetry trace of this run
   @JsonKey(
     
     name: r'trace_id',

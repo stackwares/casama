@@ -125,6 +125,25 @@ describe("welcome chat", () => {
     expect(runs?.n).toBe(0);
   });
 
+  it("without a model, going on shows the model card again instead of starting a run", async () => {
+    await act(await last(), "welcome.next", {}, "Done, next");
+    const again = await last();
+    expect(components(again).find((c) => c.id === "t")?.text).toMatch(/I need a model/);
+    expect(actions(again).map((a) => `${a.name}:${a.context?.provider ?? ""}`)).toEqual([
+      "app:route:chatgpt",
+      "app:route:",
+      "app:route:openai_compatible",
+      "welcome.next:",
+    ]);
+    // A task typed before any key exists doesn't start a run that can only fail.
+    await act(again, "welcome.task", { text: "Fix the login bug" }, "Fix the login bug");
+    expect(components(await last()).find((c) => c.id === "t")?.text).toMatch(/I need a model/);
+    const [runs] = await h.tdb.admin<
+      { n: number }[]
+    >`select count(*)::int as n from public.runs where conversation_id = ${w.conversation_id} and trigger <> 'welcome'`;
+    expect(runs?.n).toBe(0);
+  });
+
   it("with a key added, the first task runs on the model, then the setup interview and 'What I learned'", async () => {
     await h.request("/v1/credentials", {
       method: "POST",
@@ -151,7 +170,7 @@ describe("welcome chat", () => {
     const [bot] = await h.tdb.admin<
       { model_policy: { primary: { model: string } } }[]
     >`select model_policy from public.bots where id = ${w.bot_id}`;
-    expect(bot?.model_policy.primary.model).toBe("openai/gpt-6-luna");
+    expect(bot?.model_policy.primary.model).toBe("meta/muse-ember");
     const offer = await last();
     expect(offer[0]?.text).toContain("a few quick questions");
     await act(offer, "welcome.setup", {}, "Let's do it");

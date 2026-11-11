@@ -52,7 +52,7 @@ class UpdateComputerRequest {
 
 
 
-      /// Team computers only (D-148)
+      /// Team computers only
           // minimum: 1
           // maximum: 10
   @JsonKey(

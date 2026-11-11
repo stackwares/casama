@@ -96,24 +96,24 @@ Class | Method | HTTP request | Description
 [*BotsApi*](doc/BotsApi.md) | [**createBot**](doc/BotsApi.md#createbot) | **POST** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**createBotShare**](doc/BotsApi.md#createbotshare) | **POST** /v1/bots/{id}/share | Make a share link for a bot template (a snapshot; anyone signed in with the link can import it)
 [*BotsApi*](doc/BotsApi.md) | [**exportBot**](doc/BotsApi.md#exportbot) | **GET** /v1/bots/{id}/export | A bot as a shareable template file (no secrets; memories only when asked)
-[*BotsApi*](doc/BotsApi.md) | [**getBotAccess**](doc/BotsApi.md#getbotaccess) | **GET** /v1/bots/{id}/access | Who can chat with, edit or administer this bot (D-131)
+[*BotsApi*](doc/BotsApi.md) | [**getBotAccess**](doc/BotsApi.md#getbotaccess) | **GET** /v1/bots/{id}/access | Who can chat with, edit or administer this bot
 [*BotsApi*](doc/BotsApi.md) | [**getBotShare**](doc/BotsApi.md#getbotshare) | **GET** /v1/bot-shares/{token} | Read a shared bot template, to preview before importing
 [*BotsApi*](doc/BotsApi.md) | [**importBot**](doc/BotsApi.md#importbot) | **POST** /v1/bots/import | Create a bot from a template file
 [*BotsApi*](doc/BotsApi.md) | [**listBots**](doc/BotsApi.md#listbots) | **GET** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listTemplates**](doc/BotsApi.md#listtemplates) | **GET** /v1/templates | 
 [*BotsApi*](doc/BotsApi.md) | [**setBotAccess**](doc/BotsApi.md#setbotaccess) | **PUT** /v1/bots/{id}/access | Replace the bot&#39;s visibility and access list
 [*BotsApi*](doc/BotsApi.md) | [**startBotSetup**](doc/BotsApi.md#startbotsetup) | **POST** /v1/bots/{id}/setup | Start (or rerun) the bot&#39;s setup interview in a new conversation
-[*BotsApi*](doc/BotsApi.md) | [**startWelcome**](doc/BotsApi.md#startwelcome) | **POST** /v1/welcome | A new person&#39;s personal workspace, bot and welcome chat (D-129); the same chat again if it exists
+[*BotsApi*](doc/BotsApi.md) | [**startWelcome**](doc/BotsApi.md#startwelcome) | **POST** /v1/welcome | A new person&#39;s personal workspace, bot and welcome chat; the same chat again if it exists
 [*ChannelsApi*](doc/ChannelsApi.md) | [**createChannel**](doc/ChannelsApi.md#createchannel) | **POST** /v1/channels | Connect a chat app to a bot
 [*ChannelsApi*](doc/ChannelsApi.md) | [**deleteChannel**](doc/ChannelsApi.md#deletechannel) | **DELETE** /v1/channels/{id} | 
 [*ChannelsApi*](doc/ChannelsApi.md) | [**listChannelEvents**](doc/ChannelsApi.md#listchannelevents) | **GET** /v1/channels/{id}/events | Recent messages in and out, including ignored senders
-[*ChannelsApi*](doc/ChannelsApi.md) | [**listChannels**](doc/ChannelsApi.md#listchannels) | **GET** /v1/channels | A bot&#39;s chat apps (D-134)
+[*ChannelsApi*](doc/ChannelsApi.md) | [**listChannels**](doc/ChannelsApi.md#listchannels) | **GET** /v1/channels | A bot&#39;s chat apps
 [*ChannelsApi*](doc/ChannelsApi.md) | [**updateChannel**](doc/ChannelsApi.md#updatechannel) | **PATCH** /v1/channels/{id} | 
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**editMessage**](doc/ChatApi.md#editmessage) | **POST** /v1/conversations/{id}/messages/{message_id}/edit | Edit a sent message: forks the conversation there and reruns it (the old branch stays)
 [*ChatApi*](doc/ChatApi.md) | [**getConversationThread**](doc/ChatApi.md#getconversationthread) | **GET** /v1/conversations/{id}/thread | The branch being shown, oldest first (what conversation_thread returns, with content opened)
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
-[*ChatApi*](doc/ChatApi.md) | [**listGroupChats**](doc/ChatApi.md#listgroupchats) | **GET** /v1/group-chats | Group chats in a workspace that you can see (D-118)
+[*ChatApi*](doc/ChatApi.md) | [**listGroupChats**](doc/ChatApi.md#listgroupchats) | **GET** /v1/group-chats | Group chats in a workspace that you can see
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
 [*ChatApi*](doc/ChatApi.md) | [**switchBranch**](doc/ChatApi.md#switchbranch) | **POST** /v1/conversations/{id}/branch | Show another branch of the conversation (its newest message under the given one)
 [*CheckinsApi*](doc/CheckinsApi.md) | [**acceptSuggestion**](doc/CheckinsApi.md#acceptsuggestion) | **POST** /v1/suggestions/{id}/accept | Have the bot do it, through normal approvals
@@ -160,17 +160,17 @@ Class | Method | HTTP request | Description
 [*DevicesApi*](doc/DevicesApi.md) | [**listDevicePlaces**](doc/DevicesApi.md#listdeviceplaces) | **GET** /v1/device-places | Your named places
 [*DevicesApi*](doc/DevicesApi.md) | [**listDeviceReadings**](doc/DevicesApi.md#listdevicereadings) | **GET** /v1/device-readings | What your devices have shared
 [*DevicesApi*](doc/DevicesApi.md) | [**listDeviceRequests**](doc/DevicesApi.md#listdevicerequests) | **GET** /v1/device-sources/{key}/requests | Work waiting for this device
-[*DevicesApi*](doc/DevicesApi.md) | [**listDeviceSources**](doc/DevicesApi.md#listdevicesources) | **GET** /v1/device-sources | Your devices that share data (D-149)
-[*DevicesApi*](doc/DevicesApi.md) | [**reportDeviceEvents**](doc/DevicesApi.md#reportdeviceevents) | **POST** /v1/device-sources/{key}/events | Report events that start device-triggered routines (D-151)
+[*DevicesApi*](doc/DevicesApi.md) | [**listDeviceSources**](doc/DevicesApi.md#listdevicesources) | **GET** /v1/device-sources | Your devices that share data
+[*DevicesApi*](doc/DevicesApi.md) | [**reportDeviceEvents**](doc/DevicesApi.md#reportdeviceevents) | **POST** /v1/device-sources/{key}/events | Report events that start device-triggered routines
 [*DevicesApi*](doc/DevicesApi.md) | [**saveDevicePlace**](doc/DevicesApi.md#savedeviceplace) | **POST** /v1/device-places | Add or update a named place (up to 20)
 [*DevicesApi*](doc/DevicesApi.md) | [**saveDeviceSource**](doc/DevicesApi.md#savedevicesource) | **PUT** /v1/device-sources/{key} | Register this device and the kinds it shares; kinds turned off lose their data
 [*DevicesApi*](doc/DevicesApi.md) | [**setDeviceGrant**](doc/DevicesApi.md#setdevicegrant) | **PUT** /v1/device-grants | Allow or stop a bot reading one kind of your device data
 [*DevicesApi*](doc/DevicesApi.md) | [**uploadDeviceReadings**](doc/DevicesApi.md#uploaddevicereadings) | **POST** /v1/device-sources/{key}/readings | Upload summaries (re-uploading the same external_id replaces it)
-[*EncryptionApi*](doc/EncryptionApi.md) | [**getEncryption**](doc/EncryptionApi.md#getencryption) | **GET** /v1/orgs/{id}/encryption | Encryption at rest for a workspace (D-136)
+[*EncryptionApi*](doc/EncryptionApi.md) | [**getEncryption**](doc/EncryptionApi.md#getencryption) | **GET** /v1/orgs/{id}/encryption | Encryption at rest for a workspace
 [*EncryptionApi*](doc/EncryptionApi.md) | [**rotateEncryptionKey**](doc/EncryptionApi.md#rotateencryptionkey) | **POST** /v1/orgs/{id}/encryption/rotate | Rewrap the workspace&#39;s data key with the server&#39;s current key (rows are not rewritten)
 [*EncryptionApi*](doc/EncryptionApi.md) | [**setEncryption**](doc/EncryptionApi.md#setencryption) | **PUT** /v1/orgs/{id}/encryption | Turn encryption at rest on or off (owners); existing rows are sealed or opened in the background
 [*FilesApi*](doc/FilesApi.md) | [**deleteGitSync**](doc/FilesApi.md#deletegitsync) | **DELETE** /v1/orgs/{id}/git-sync | 
-[*FilesApi*](doc/FilesApi.md) | [**exportWorkspaceFiles**](doc/FilesApi.md#exportworkspacefiles) | **POST** /v1/orgs/{id}/files/export | Routines and skills as Markdown files, zipped (D-124)
+[*FilesApi*](doc/FilesApi.md) | [**exportWorkspaceFiles**](doc/FilesApi.md#exportworkspacefiles) | **POST** /v1/orgs/{id}/files/export | Routines and skills as Markdown files, zipped
 [*FilesApi*](doc/FilesApi.md) | [**getGitSync**](doc/FilesApi.md#getgitsync) | **GET** /v1/orgs/{id}/git-sync | 
 [*FilesApi*](doc/FilesApi.md) | [**importWorkspaceFiles**](doc/FilesApi.md#importworkspacefiles) | **POST** /v1/orgs/{id}/files/import | Create and update routines and skills from files (dry_run shows what would change)
 [*FilesApi*](doc/FilesApi.md) | [**runGitSync**](doc/FilesApi.md#rungitsync) | **POST** /v1/orgs/{id}/git-sync/run | Sync on the worker&#39;s next minute
@@ -178,7 +178,7 @@ Class | Method | HTTP request | Description
 [*ImportApi*](doc/ImportApi.md) | [**getMemoryImportPrompt**](doc/ImportApi.md#getmemoryimportprompt) | **GET** /v1/memory-import/prompt | The prompt to paste into ChatGPT or Claude to get your saved memories
 [*ImportApi*](doc/ImportApi.md) | [**parseMemoryImport**](doc/ImportApi.md#parsememoryimport) | **POST** /v1/memory-import/parse | 
 [*ImportApi*](doc/ImportApi.md) | [**saveImportedMemories**](doc/ImportApi.md#saveimportedmemories) | **POST** /v1/bots/{id}/memories/import | Add the memories the person kept
-[*ImportApi*](doc/ImportApi.md) | [**startAgentImport**](doc/ImportApi.md#startagentimport) | **POST** /v1/agent-imports | Read an OpenClaw or Hermes Agent folder into a bot template for review (D-122)
+[*ImportApi*](doc/ImportApi.md) | [**startAgentImport**](doc/ImportApi.md#startagentimport) | **POST** /v1/agent-imports | Read an OpenClaw or Hermes Agent folder into a bot template for review
 [*ImportApi*](doc/ImportApi.md) | [**writeAgentImportFiles**](doc/ImportApi.md#writeagentimportfiles) | **POST** /v1/agent-imports/{id}/files | Copy the files nothing mapped to into ~/imported/ on the bot&#39;s computer
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**attachIntegration**](doc/IntegrationsApi.md#attachintegration) | **POST** /v1/bots/{id}/integrations | Let a bot use an integration&#39;s tools (optionally only some)
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectApp**](doc/IntegrationsApi.md#connectapp) | **POST** /v1/apps/connect | Connect a built-in app: with an API key at once, or start an OAuth sign-in
@@ -194,10 +194,10 @@ Class | Method | HTTP request | Description
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**updateIntegration**](doc/IntegrationsApi.md#updateintegration) | **PATCH** /v1/integrations/{id} | 
 [*KnowledgeApi*](doc/KnowledgeApi.md) | [**createKnowledgeSource**](doc/KnowledgeApi.md#createknowledgesource) | **POST** /v1/knowledge-sources | Add files, a website, a GitHub repository or documents from a connection; the worker reads it within a minute
 [*KnowledgeApi*](doc/KnowledgeApi.md) | [**deleteKnowledgeSource**](doc/KnowledgeApi.md#deleteknowledgesource) | **DELETE** /v1/knowledge-sources/{id} | 
-[*KnowledgeApi*](doc/KnowledgeApi.md) | [**listKnowledgeSources**](doc/KnowledgeApi.md#listknowledgesources) | **GET** /v1/knowledge-sources | A bot&#39;s knowledge sources and the workspace&#39;s shared ones (D-125)
+[*KnowledgeApi*](doc/KnowledgeApi.md) | [**listKnowledgeSources**](doc/KnowledgeApi.md#listknowledgesources) | **GET** /v1/knowledge-sources | A bot&#39;s knowledge sources and the workspace&#39;s shared ones
 [*KnowledgeApi*](doc/KnowledgeApi.md) | [**resyncKnowledgeSource**](doc/KnowledgeApi.md#resyncknowledgesource) | **POST** /v1/knowledge-sources/{id}/sync | 
 [*LinksApi*](doc/LinksApi.md) | [**acceptBotLink**](doc/LinksApi.md#acceptbotlink) | **POST** /v1/links/accept | Accept a contact&#39;s invite with one of your bots (works across Kasama servers)
-[*LinksApi*](doc/LinksApi.md) | [**createBotLink**](doc/LinksApi.md#createbotlink) | **POST** /v1/bots/{id}/links | Invite a trusted contact&#39;s bot to link with this one (D-143)
+[*LinksApi*](doc/LinksApi.md) | [**createBotLink**](doc/LinksApi.md#createbotlink) | **POST** /v1/bots/{id}/links | Invite a trusted contact&#39;s bot to link with this one
 [*LinksApi*](doc/LinksApi.md) | [**listBotLinks**](doc/LinksApi.md#listbotlinks) | **GET** /v1/bots/{id}/links | 
 [*LinksApi*](doc/LinksApi.md) | [**listLinkExchanges**](doc/LinksApi.md#listlinkexchanges) | **GET** /v1/links/{id}/exchanges | 
 [*LinksApi*](doc/LinksApi.md) | [**revokeBotLink**](doc/LinksApi.md#revokebotlink) | **DELETE** /v1/links/{id} | 
@@ -222,27 +222,28 @@ Class | Method | HTTP request | Description
 [*PagesApi*](doc/PagesApi.md) | [**createPageViewLink**](doc/PagesApi.md#createpageviewlink) | **POST** /v1/pages/{id}/view-link | A single-use link (60 s) that opens the page in a browser
 [*PagesApi*](doc/PagesApi.md) | [**deletePage**](doc/PagesApi.md#deletepage) | **DELETE** /v1/pages/{id} | 
 [*PagesApi*](doc/PagesApi.md) | [**getPage**](doc/PagesApi.md#getpage) | **GET** /v1/pages/{id} | 
-[*PagesApi*](doc/PagesApi.md) | [**listPages**](doc/PagesApi.md#listpages) | **GET** /v1/pages | Pages you can open in a workspace (D-119)
+[*PagesApi*](doc/PagesApi.md) | [**listPages**](doc/PagesApi.md#listpages) | **GET** /v1/pages | Pages you can open in a workspace
 [*PagesApi*](doc/PagesApi.md) | [**revertPage**](doc/PagesApi.md#revertpage) | **POST** /v1/pages/{id}/revert | Bring back an earlier version (as a new version)
 [*PagesApi*](doc/PagesApi.md) | [**updatePage**](doc/PagesApi.md#updatepage) | **PATCH** /v1/pages/{id} | Change who can open a page; making it public returns a new link
 [*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**createPasswordManager**](doc/PasswordManagersApi.md#createpasswordmanager) | **POST** /v1/password-managers | Connect 1Password or Bitwarden; then choose which vaults bots may use
 [*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**deletePasswordManager**](doc/PasswordManagersApi.md#deletepasswordmanager) | **DELETE** /v1/password-managers/{id} | 
 [*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**listPasswordManagerVaults**](doc/PasswordManagersApi.md#listpasswordmanagervaults) | **GET** /v1/password-managers/{id}/vaults | 
-[*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**listPasswordManagers**](doc/PasswordManagersApi.md#listpasswordmanagers) | **GET** /v1/password-managers | The workspace&#39;s password managers and your own (D-128)
+[*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**listPasswordManagers**](doc/PasswordManagersApi.md#listpasswordmanagers) | **GET** /v1/password-managers | The workspace&#39;s password managers and your own
 [*PasswordManagersApi*](doc/PasswordManagersApi.md) | [**updatePasswordManager**](doc/PasswordManagersApi.md#updatepasswordmanager) | **PATCH** /v1/password-managers/{id} | 
 [*PaymentsApi*](doc/PaymentsApi.md) | [**deletePaymentSettings**](doc/PaymentsApi.md#deletepaymentsettings) | **DELETE** /v1/orgs/{id}/payments | 
 [*PaymentsApi*](doc/PaymentsApi.md) | [**getPaymentSettings**](doc/PaymentsApi.md#getpaymentsettings) | **GET** /v1/orgs/{id}/payments | 
 [*PaymentsApi*](doc/PaymentsApi.md) | [**listPaymentRequests**](doc/PaymentsApi.md#listpaymentrequests) | **GET** /v1/orgs/{id}/payments/requests | Cards bots asked for (owners see all; others their own)
-[*PaymentsApi*](doc/PaymentsApi.md) | [**setPaymentSettings**](doc/PaymentsApi.md#setpaymentsettings) | **PUT** /v1/orgs/{id}/payments | Connect the workspace&#39;s card issuing account for single-use cards (owners, D-142)
+[*PaymentsApi*](doc/PaymentsApi.md) | [**setPaymentSettings**](doc/PaymentsApi.md#setpaymentsettings) | **PUT** /v1/orgs/{id}/payments | Connect the workspace&#39;s card issuing account for single-use cards (owners)
 [*PluginsApi*](doc/PluginsApi.md) | [**getPluginUpdate**](doc/PluginsApi.md#getpluginupdate) | **GET** /v1/plugins/{id}/update | The latest commit of the plugin&#39;s source and what changes
 [*PluginsApi*](doc/PluginsApi.md) | [**installPlugin**](doc/PluginsApi.md#installplugin) | **POST** /v1/plugins | Install a plugin for a bot, pinned to the previewed commit
 [*PluginsApi*](doc/PluginsApi.md) | [**listPlugins**](doc/PluginsApi.md#listplugins) | **GET** /v1/plugins | 
-[*PluginsApi*](doc/PluginsApi.md) | [**previewPlugin**](doc/PluginsApi.md#previewplugin) | **POST** /v1/plugins/preview | What an Agent Plugins 1.0 package from GitHub would add (D-121)
+[*PluginsApi*](doc/PluginsApi.md) | [**previewPlugin**](doc/PluginsApi.md#previewplugin) | **POST** /v1/plugins/preview | What an Agent Plugins 1.0 package from GitHub would add
 [*PluginsApi*](doc/PluginsApi.md) | [**uninstallPlugin**](doc/PluginsApi.md#uninstallplugin) | **DELETE** /v1/plugins/{id} | Remove the plugin and everything it added
 [*PluginsApi*](doc/PluginsApi.md) | [**updatePlugin**](doc/PluginsApi.md#updateplugin) | **POST** /v1/plugins/{id}/update | 
 [*PrivacyApi*](doc/PrivacyApi.md) | [**deleteMyAccount**](doc/PrivacyApi.md#deletemyaccount) | **DELETE** /v1/me | Delete your account: you are signed out now, and your data, workspaces you solely own and their computer snapshots are purged after the grace period
 [*PrivacyApi*](doc/PrivacyApi.md) | [**exportMyData**](doc/PrivacyApi.md#exportmydata) | **GET** /v1/me/export | Download everything you can see as a ZIP of JSON files
 [*PrivacyApi*](doc/PrivacyApi.md) | [**getOrgSettings**](doc/PrivacyApi.md#getorgsettings) | **GET** /v1/orgs/{id}/settings | 
+[*PrivacyApi*](doc/PrivacyApi.md) | [**renameTwoStepFactor**](doc/PrivacyApi.md#renametwostepfactor) | **PATCH** /v1/me/two-step/{id} | Rename one of your authenticator apps (two-step sign-in)
 [*PrivacyApi*](doc/PrivacyApi.md) | [**updateOrgSettings**](doc/PrivacyApi.md#updateorgsettings) | **PATCH** /v1/orgs/{id}/settings | Change workspace settings such as run event retention (admins)
 [*ProjectsApi*](doc/ProjectsApi.md) | [**approveProjectPlan**](doc/ProjectsApi.md#approveprojectplan) | **POST** /v1/projects/{id}/plan/approve | Approve the proposed plan; sessions start
 [*ProjectsApi*](doc/ProjectsApi.md) | [**createProject**](doc/ProjectsApi.md#createproject) | **POST** /v1/projects | Start a project; its lead bot drafts a plan for you to approve
@@ -251,7 +252,7 @@ Class | Method | HTTP request | Description
 [*ProjectsApi*](doc/ProjectsApi.md) | [**signOffMilestone**](doc/ProjectsApi.md#signoffmilestone) | **POST** /v1/projects/{id}/milestones/{milestone_id}/signoff | Sign off a finished milestone so the next one begins
 [*ProjectsApi*](doc/ProjectsApi.md) | [**updateProject**](doc/ProjectsApi.md#updateproject) | **PATCH** /v1/projects/{id} | Pause, resume or cancel a project, or change its budget, deadline or plan
 [*ReplaysApi*](doc/ReplaysApi.md) | [**deleteReplay**](doc/ReplaysApi.md#deletereplay) | **DELETE** /v1/replays/{id} | 
-[*ReplaysApi*](doc/ReplaysApi.md) | [**listReplays**](doc/ReplaysApi.md#listreplays) | **GET** /v1/replays | A bot&#39;s saved replays (D-127)
+[*ReplaysApi*](doc/ReplaysApi.md) | [**listReplays**](doc/ReplaysApi.md#listreplays) | **GET** /v1/replays | A bot&#39;s saved replays
 [*ReplaysApi*](doc/ReplaysApi.md) | [**replayFromTeach**](doc/ReplaysApi.md#replayfromteach) | **POST** /v1/teach/{id}/replay | Save a teach recording as a replay
 [*ReplaysApi*](doc/ReplaysApi.md) | [**runReplay**](doc/ReplaysApi.md#runreplay) | **POST** /v1/replays/{id}/run | Run a replay without the model; the bot takes over if a step fails
 [*RoutinesApi*](doc/RoutinesApi.md) | [**createRoutine**](doc/RoutinesApi.md#createroutine) | **POST** /v1/routines | Schedule a routine (cron in a timezone) or create a GitHub/custom webhook trigger
@@ -271,7 +272,7 @@ Class | Method | HTTP request | Description
 [*SecretsApi*](doc/SecretsApi.md) | [**getSecretStore**](doc/SecretsApi.md#getsecretstore) | **GET** /v1/orgs/{id}/secret-store | 
 [*SecretsApi*](doc/SecretsApi.md) | [**listSecretRequests**](doc/SecretsApi.md#listsecretrequests) | **GET** /v1/secrets/requests | Bots waiting for a secret (pending requests you can see)
 [*SecretsApi*](doc/SecretsApi.md) | [**listSecrets**](doc/SecretsApi.md#listsecrets) | **GET** /v1/secrets | 
-[*SecretsApi*](doc/SecretsApi.md) | [**setSecretStore**](doc/SecretsApi.md#setsecretstore) | **PUT** /v1/orgs/{id}/secret-store | Keep bots&#39; named secrets in the workspace&#39;s Infisical project (admins, D-145)
+[*SecretsApi*](doc/SecretsApi.md) | [**setSecretStore**](doc/SecretsApi.md#setsecretstore) | **PUT** /v1/orgs/{id}/secret-store | Keep bots&#39; named secrets in the workspace&#39;s Infisical project (admins)
 [*SkillsApi*](doc/SkillsApi.md) | [**acceptSkillProposal**](doc/SkillsApi.md#acceptskillproposal) | **POST** /v1/skill-proposals/{id}/accept | Save the proposed skill or edit, optionally changed first
 [*SkillsApi*](doc/SkillsApi.md) | [**applySkillUpdate**](doc/SkillsApi.md#applyskillupdate) | **POST** /v1/skills/{id}/update | Update a GitHub skill to a newer commit (after reviewing the diff)
 [*SkillsApi*](doc/SkillsApi.md) | [**checkSkillUpdate**](doc/SkillsApi.md#checkskillupdate) | **GET** /v1/skills/{id}/update | Compare a GitHub skill with its source&#39;s latest commit (diff before updating)
@@ -280,7 +281,7 @@ Class | Method | HTTP request | Description
 [*SkillsApi*](doc/SkillsApi.md) | [**getSkillStats**](doc/SkillsApi.md#getskillstats) | **GET** /v1/skills/{id}/stats | Uses, success rate, last failure and history of a skill
 [*SkillsApi*](doc/SkillsApi.md) | [**installCatalogSkill**](doc/SkillsApi.md#installcatalogskill) | **POST** /v1/skills/install | Install a catalog skill to the workspace (admins) or one bot (its managers)
 [*SkillsApi*](doc/SkillsApi.md) | [**installGitHubSkill**](doc/SkillsApi.md#installgithubskill) | **POST** /v1/skills/github/install | Install a GitHub skill pinned to the previewed commit
-[*SkillsApi*](doc/SkillsApi.md) | [**listSkillProposals**](doc/SkillsApi.md#listskillproposals) | **GET** /v1/skill-proposals | Skills and skill edits bots proposed from their runs (D-126)
+[*SkillsApi*](doc/SkillsApi.md) | [**listSkillProposals**](doc/SkillsApi.md#listskillproposals) | **GET** /v1/skill-proposals | Skills and skill edits bots proposed from their runs
 [*SkillsApi*](doc/SkillsApi.md) | [**previewGitHubSkill**](doc/SkillsApi.md#previewgithubskill) | **POST** /v1/skills/github/preview | Read a skill folder from GitHub at its latest commit and show its files before installing
 [*SystemApi*](doc/SystemApi.md) | [**getConfig**](doc/SystemApi.md#getconfig) | **GET** /v1/config | Public client configuration (no auth)
 [*SystemApi*](doc/SystemApi.md) | [**getSignupChallenge**](doc/SystemApi.md#getsignupchallenge) | **GET** /v1/signup/challenge | A proof-of-work puzzle for signing up when the server asks for one (no auth)
@@ -297,13 +298,13 @@ Class | Method | HTTP request | Description
 [*TeachApi*](doc/TeachApi.md) | [**getTeach**](doc/TeachApi.md#getteach) | **GET** /v1/teach/{id} | 
 [*TeachApi*](doc/TeachApi.md) | [**markTeachSecret**](doc/TeachApi.md#markteachsecret) | **POST** /v1/teach/{id}/steps/{seq}/secret | Mark a typed value as a secret: its text is deleted and it becomes a {{secret:NAME}} input
 [*TeachApi*](doc/TeachApi.md) | [**saveTeach**](doc/TeachApi.md#saveteach) | **POST** /v1/teach/{id}/save | Save the (edited) draft as one of the bot&#39;s skills, and optionally try it now
-[*TeachApi*](doc/TeachApi.md) | [**startTeach**](doc/TeachApi.md#startteach) | **POST** /v1/teach | Start recording a task while you have control of a computer (D-120)
+[*TeachApi*](doc/TeachApi.md) | [**startTeach**](doc/TeachApi.md#startteach) | **POST** /v1/teach | Start recording a task while you have control of a computer
 [*TeachApi*](doc/TeachApi.md) | [**stopTeach**](doc/TeachApi.md#stopteach) | **POST** /v1/teach/{id}/stop | Stop recording; the bot drafts a skill from it
 [*TelephonyApi*](doc/TelephonyApi.md) | [**deleteTelephony**](doc/TelephonyApi.md#deletetelephony) | **DELETE** /v1/orgs/{id}/telephony | 
 [*TelephonyApi*](doc/TelephonyApi.md) | [**endOutboundCall**](doc/TelephonyApi.md#endoutboundcall) | **POST** /v1/outbound-calls/{id}/end | 
 [*TelephonyApi*](doc/TelephonyApi.md) | [**getOutboundCall**](doc/TelephonyApi.md#getoutboundcall) | **GET** /v1/outbound-calls/{id} | A call a bot placed, with its live transcript
 [*TelephonyApi*](doc/TelephonyApi.md) | [**getTelephony**](doc/TelephonyApi.md#gettelephony) | **GET** /v1/orgs/{id}/telephony | 
-[*TelephonyApi*](doc/TelephonyApi.md) | [**setTelephony**](doc/TelephonyApi.md#settelephony) | **PUT** /v1/orgs/{id}/telephony | Connect the workspace&#39;s Twilio account for calls bots place (D-141)
+[*TelephonyApi*](doc/TelephonyApi.md) | [**setTelephony**](doc/TelephonyApi.md#settelephony) | **PUT** /v1/orgs/{id}/telephony | Connect the workspace&#39;s Twilio account for calls bots place
 [*TelephonyApi*](doc/TelephonyApi.md) | [**takeOverOutboundCall**](doc/TelephonyApi.md#takeoveroutboundcall) | **POST** /v1/outbound-calls/{id}/take-over | Move the call to your own phone (saves the number to your profile)
 [*UsageApi*](doc/UsageApi.md) | [**getUsage**](doc/UsageApi.md#getusage) | **GET** /v1/usage | 
 [*VoiceApi*](doc/VoiceApi.md) | [**answerVoiceCall**](doc/VoiceApi.md#answervoicecall) | **POST** /v1/calls/{id}/answer | Answer a call; then start a voice session with its call_id
@@ -630,6 +631,7 @@ Class | Method | HTTP request | Description
  - [ReasoningEffort](doc/ReasoningEffort.md)
  - [RedirectUrl](doc/RedirectUrl.md)
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
+ - [RenameTwoStepFactorRequest](doc/RenameTwoStepFactorRequest.md)
  - [Replay](doc/Replay.md)
  - [ReplayFromTeachRequest](doc/ReplayFromTeachRequest.md)
  - [ReplayList](doc/ReplayList.md)

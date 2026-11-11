@@ -6,6 +6,11 @@ export interface ApprovalInput {
   risk: Risk;
   /** Read-only tools never need approval (search, read, list, snapshot). */
   readOnly: boolean;
+  /**
+   * Tools that only change the bot's own state inside Kasama, visibly and reversibly (its notes,
+   * schedule, board tasks, messages to the person): never asked for, whatever the autonomy (D-155).
+   */
+  selfOnly?: boolean;
   /** The tool asks for approval under ask_risky whatever its risk (for example media generation). */
   confirmUnderDefault?: boolean;
   /** The provider always requires approval for high-risk actions (the local computer companion). */
@@ -22,7 +27,7 @@ export interface ApprovalInput {
  * input, and tools that always confirm. autonomous: only providers that force approval for high risk.
  */
 export function needsApproval(i: ApprovalInput): boolean {
-  if (i.readOnly) return false;
+  if (i.readOnly || i.selfOnly) return false;
   if (i.forceHighRisk && i.risk === "high") return true;
   if (i.granted) return false;
   switch (i.autonomy) {
