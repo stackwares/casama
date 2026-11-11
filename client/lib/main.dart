@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
+import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -20,6 +21,7 @@ import 'core/theme.dart';
 import 'theme/appearance.dart';
 import 'theme/fonts.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'ui/brand_splash.dart';
 import 'ui/glow_button.dart';
 import 'ui/text_scale.dart';
 import 'ui/friendly_error_view.dart';
@@ -88,7 +90,7 @@ Future<void> main() async {
   await Telemetry.run(const StartupGate(config: AppConfig.fromEnvironment));
 }
 
-/// Connects to the server, showing progress and a retry when it cannot be reached.
+/// Connects to the server. The first frame is the launch cloud, which then plays; a failure offers a retry.
 class StartupGate extends StatefulWidget {
   const StartupGate({super.key, required this.config, this.connect});
   final AppConfig config;
@@ -108,12 +110,26 @@ class _StartupGateState extends State<StartupGate> {
   /// The first screens' pictures, decoding while the app connects (see [precacheStartupAssets]).
   Future<void>? _assets;
 
+  /// The brand loop, decoded while the launch still is up. Null until then; the still stands in.
+  LottieComposition? _brand;
+
+  /// Stays up over the ready app until the cloud has faded out.
+  var _splash = true;
+
   @override
   void initState() {
     super.initState();
     // Self-hosters point the app at their own server (D-076); the choice is remembered.
     onChangeServer = _switchServer;
+    unawaited(_loadBrand());
     _start();
+  }
+
+  Future<void> _loadBrand() async {
+    try {
+      final composition = await AssetLottie(BrandSplash.lottieAsset).load();
+      if (mounted) setState(() => _brand = composition);
+    } catch (_) {}
   }
 
   @override
@@ -147,14 +163,39 @@ class _StartupGateState extends State<StartupGate> {
       await Supabase.instance.dispose();
     } catch (_) {}
     if (!mounted) return;
-    setState(() => _app = null);
+    setState(() {
+      _app = null;
+      _splash = true;
+    });
     await _start();
   }
 
   @override
   Widget build(BuildContext context) {
     final app = _app;
-    if (app != null) return app;
+    if (app != null && !_splash) return app;
+    // The same splash element stays mounted when the app arrives underneath it, so the loop and
+    // the delayed label are not rebuilt for the fade. Keys keep that element when the stack gains
+    // the app as a sibling.
+    final gate = SplashHandoff(
+      key: const ValueKey('startup-splash'),
+      leaving: app != null && _error == null,
+      onLeft: () {
+        if (mounted) setState(() => _splash = false);
+      },
+      child: _frame(),
+    );
+    return Stack(
+      alignment: Alignment.topLeft,
+      fit: StackFit.expand,
+      children: [
+        if (app != null) KeyedSubtree(key: const ValueKey('startup-app'), child: app),
+        gate,
+      ],
+    );
+  }
+
+  Widget _frame() {
     return MaterialApp(
       onGenerateTitle: (c) => AppLocalizations.of(c).appTitle,
       debugShowCheckedModeBanner: false,
@@ -166,20 +207,15 @@ class _StartupGateState extends State<StartupGate> {
       home: Builder(
         builder: (context) {
           final l10n = AppLocalizations.of(context);
+          final failed = _error != null;
           return Scaffold(
-            body: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: _error == null
-                    ? Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const CircularProgressIndicator(),
-                          const SizedBox(height: 16),
-                          Text(l10n.connectingToServer, key: const Key('startupConnecting')),
-                        ],
-                      )
-                    : Column(
+            key: failed ? null : const Key('startupSplash'),
+            backgroundColor: BrandSplash.backgroundOf(context),
+            body: failed
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(LucideIcons.cloudOff, size: 48, color: Theme.of(context).colorScheme.outline),
@@ -203,8 +239,12 @@ class _StartupGateState extends State<StartupGate> {
                           ),
                         ],
                       ),
-              ),
-            ),
+                    ),
+                  )
+                : BrandSplash(
+                    composition: _brand,
+                    label: Text(l10n.connectingToServer, key: const Key('startupConnecting'), textAlign: TextAlign.center),
+                  ),
           );
         },
       ),

@@ -1037,6 +1037,8 @@
   "providerSetupHelp": "{provider} signs in to the apps for you, so you never handle their keys.",
   "@providerSetupHelp": {"placeholders": {"provider": {"type": "String"}}},
   "getFreeKey": "Get a free key",
+  "connectedThroughHub": "Through {provider}",
+  "@connectedThroughHub": {"placeholders": {"provider": {"type": "String"}}},
   "providerAppsTitle": "Apps through {provider}",
   "@providerAppsTitle": {"placeholders": {"provider": {"type": "String"}}},
   "addAnApp": "Add an app",

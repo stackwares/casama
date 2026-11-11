@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../features/integrations/app_logo.dart';
 import '../ui/brand_sign_in_buttons.dart';
+import '../ui/brand_splash.dart';
 import '../ui/mascot.dart';
 
 /// Decodes bundled pictures before a screen asks for them, so they paint with the screen instead of
@@ -29,12 +30,13 @@ Future<void> precacheAssets({required BuildContext context, required List<String
 /// accounts see on the home and Bots screens before they have a bot.
 List<String> get startupStills => [for (final m in Mascot.values) m.stillAsset, BlankBotImage.stillAsset];
 
-/// Run by the startup gate while the app connects. Waits for [startupStills]. Then starts, without
-/// waiting, what comes a tap or more later: the Google and Apple marks in the sign-in sheet and the
-/// bundled app logos on the Connections screens. The Lottie loops are left alone: each mascot's
-/// still pose stands in until its loop loads.
+/// Run by the startup gate while the app connects. Waits for the launch still and [startupStills].
+/// Then starts, without waiting, what comes a tap or more later: the Google and Apple marks in the
+/// sign-in sheet and the bundled app logos on the Connections screens. The mascot loops are left
+/// alone: each still pose stands in until its loop loads. The brand loop is decoded by the startup
+/// gate itself, so the launch screen can play it without waiting out the connection.
 Future<void> precacheStartupAssets(BuildContext context) async {
-  await precacheAssets(context: context, paths: startupStills);
+  await precacheAssets(context: context, paths: [BrandSplash.stillAsset, ...startupStills]);
   if (!context.mounted) return;
   unawaited(_precacheLater(context));
 }

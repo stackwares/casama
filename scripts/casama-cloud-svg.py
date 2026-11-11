@@ -1269,8 +1269,9 @@ def blank():
 
 BOTS = [winky, sleepy, starry, lovey, cool, thinker, giggly, shy, focused, wow]
 
-# The app icon's own cloud: Winky in the original lavender. Written as casama-brand.svg (still only) for the
-# launch screens (scripts/casama-splash.py).
+# The app icon's own cloud: Winky in the original lavender. casama-brand.svg is the wink still;
+# casama-brand-animated.svg is the loop, and the launch screens freeze its first frame
+# (scripts/casama-splash.py, played in the app as assets/mascots/brand.json).
 BRAND_BODY = ('#FFFCF8', '#F7EEFB', '#E2D2F6', '#C9B1EC', '#A88BDB', '#9C7DD6', '#E9DDF6', '#B07AF0', '#6A2BA8', '#2A0C40')
 
 
@@ -1286,6 +1287,7 @@ if __name__ == '__main__':
         open(f"{OUT}/casama-{bot.key}.svg", 'w').write(build(bot, False))
         open(f"{OUT}/casama-{bot.key}-animated.svg", 'w').write(build(bot, True))
     open(f"{OUT}/casama-brand.svg", 'w').write(build(brand(), False))
+    open(f"{OUT}/casama-brand-animated.svg", 'w').write(build(brand(), True))
     b = blank()  # for empty states, not offered as a bot icon
     open(f"{OUT}/casama-blank.svg", 'w').write(build(b, False))
     open(f"{OUT}/casama-blank-animated.svg", 'w').write(build(b, True))

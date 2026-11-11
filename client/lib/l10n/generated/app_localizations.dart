@@ -5548,6 +5548,12 @@ abstract class AppLocalizations {
   /// **'Get a free key'**
   String get getFreeKey;
 
+  /// No description provided for @connectedThroughHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Through {provider}'**
+  String connectedThroughHub(String provider);
+
   /// No description provided for @providerAppsTitle.
   ///
   /// In en, this message translates to:

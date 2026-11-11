@@ -3492,6 +3492,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get getFreeKey => 'Get a free key';
 
   @override
+  String connectedThroughHub(String provider) {
+    return 'Through $provider';
+  }
+
+  @override
   String providerAppsTitle(String provider) {
     return 'Apps through $provider';
   }
