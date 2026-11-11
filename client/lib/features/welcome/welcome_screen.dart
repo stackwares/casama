@@ -9,6 +9,7 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/mascot.dart';
+import '../settings/name_step.dart';
 
 /// Welcome chat (D-129): a new person gets a personal space and bot, and lands in its chat. No
 /// form; the old wizard is behind "Set up manually".
@@ -21,11 +22,19 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   Object? _error;
+  var _started = false;
 
   @override
   void initState() {
     super.initState();
-    _start();
+    // The name step comes first (it shows over this page): the chat is made once it's answered,
+    // so the welcome chat can greet them by name instead of asking again.
+    ref.listenManual<bool?>(nameStepNeededProvider, (_, needed) {
+      if (needed == false && !_started) {
+        _started = true;
+        _start();
+      }
+    }, fireImmediately: true);
   }
 
   Future<void> _start() async {

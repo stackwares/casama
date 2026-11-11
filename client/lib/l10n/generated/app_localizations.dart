@@ -10581,6 +10581,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your bots will use it in every workspace. You can change it later in Settings → About you.'**
   String get nameCardHelp;
+
+  /// No description provided for @nameStepBubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice to meet you!'**
+  String get nameStepBubble;
+
+  /// No description provided for @nameStepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get nameStepHint;
 }
 
 class _AppLocalizationsDelegate

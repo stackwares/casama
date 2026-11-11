@@ -562,10 +562,14 @@ class FakeBackend implements Backend {
   @override
   Future<AboutYouView> aboutYou() async => about;
   @override
-  Future<void> saveAboutYou(AboutYouView value) async => about = value;
+  Future<void> saveAboutYou(AboutYouView value) async =>
+      about = (value.preferredName?.trim().isNotEmpty ?? false) ? value.copyWith(nameAsked: true) : value;
   var nameAskedMarked = false;
   @override
-  Future<void> markNameAsked() async => nameAskedMarked = true;
+  Future<void> markNameAsked() async {
+    nameAskedMarked = true;
+    about = about.copyWith(nameAsked: true);
+  }
   @override
   Future<List<UserFactView>> userFacts() async => [...facts];
   @override

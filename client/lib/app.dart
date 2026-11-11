@@ -16,6 +16,7 @@ import 'core/mac_bridge.dart';
 import 'core/push.dart';
 import 'core/updater.dart';
 import 'features/notifications/notifications_primer.dart';
+import 'features/settings/name_step.dart';
 import 'features/companion/companion_controller.dart';
 import 'features/companion/companion_overlay.dart';
 import 'features/companion/desktop_shell.dart';
@@ -65,29 +66,36 @@ class CasamaApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       builder: (context, child) => _DismissKeyboard(
         child: CompanionOverlay(
-          child: _NotificationsAsk(push: ref.read(pushProvider), child: child ?? const SizedBox.shrink()),
+          child: _FirstRunSteps(push: ref.read(pushProvider), child: child ?? const SizedBox.shrink()),
         ),
       ),
     );
   }
 }
 
-/// The "Turn on notifications" page over the app, once after sign-in (see [PushRegistrar.needsAsk]).
-class _NotificationsAsk extends StatelessWidget {
-  const _NotificationsAsk({required this.push, required this.child});
+/// The one-time pages over the app after sign-in: "What should bots call you?" first (see
+/// [nameStepNeededProvider]), then "Turn on notifications" (see [PushRegistrar.needsAsk]).
+class _FirstRunSteps extends ConsumerWidget {
+  const _FirstRunSteps({required this.push, required this.child});
   final PushRegistrar push;
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
-    valueListenable: push.needsAsk,
-    builder: (context, ask, _) => Stack(
-      children: [
-        child,
-        if (ask) Positioned.fill(child: NotificationsPrimer(onEnable: push.enable, onLater: push.snooze)),
-      ],
-    ),
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final name = ref.watch(nameStepNeededProvider) ?? false;
+    return ValueListenableBuilder<bool>(
+      valueListenable: push.needsAsk,
+      builder: (context, ask, _) => Stack(
+        children: [
+          child,
+          if (name)
+            const Positioned.fill(child: NameStep())
+          else if (ask)
+            Positioned.fill(child: NotificationsPrimer(onEnable: push.enable, onLater: push.snooze)),
+        ],
+      ),
+    );
+  }
 }
 
 /// Phones: a tap outside the text field being typed in puts the keyboard away, as people expect

@@ -3289,5 +3289,7 @@
   "removedFromProfile": "Removed from your profile",
   "factsImported": "Added {count, plural, =1{1 fact} other{{count} facts}}",
   "@factsImported": {"placeholders": {"count": {"type": "int"}}},
-  "nameCardHelp": "Your bots will use it in every workspace. You can change it later in Settings → About you."
+  "nameCardHelp": "Your bots will use it in every workspace. You can change it later in Settings → About you.",
+  "nameStepBubble": "Nice to meet you!",
+  "nameStepHint": "Your name"
 }

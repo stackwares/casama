@@ -676,10 +676,18 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }
     if (!orgId) throw new ApiError(409, "slug_taken", "Could not create your space; try again");
     if (deps.billing?.enabled) await deps.billing.recompute(orgId);
-    // About you (D-169): the name card is filled in from a real name only, never the email.
-    const [profile] = await db.execute<{ name: string | null }>(sql`
-      select coalesce(nullif(btrim(preferred_name), ''), nullif(split_part(btrim(display_name), ' ', 1), '')) as name
-      from public.profiles where user_id = ${claims.sub}::uuid`);
+    // About you (D-169): the name card is filled in from a real name only, never the email. When
+    // the app's name step already asked, the chat greets them by it and skips the question.
+    const [profile] = await db.execute<{
+      name: string | null;
+      preferred: string | null;
+      asked: boolean;
+    }>(sql`
+      select coalesce(nullif(btrim(p.preferred_name), ''), nullif(split_part(btrim(p.display_name), ' ', 1), '')) as name,
+             nullif(btrim(p.preferred_name), '') as preferred,
+             (a.name_asked_at is not null or nullif(btrim(p.preferred_name), '') is not null) as asked
+      from public.profiles p left join public.user_about a on a.user_id = p.user_id
+      where p.user_id = ${claims.sub}::uuid`);
     const emailPrefix = email.split("@")[0] ?? "";
     const realFirst =
       b.first_name?.trim() ||
@@ -688,8 +696,13 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const w = await startWelcome(db, {
       orgId,
       userId: claims.sub,
-      firstName: realFirst ? `${realFirst[0]?.toUpperCase()}${realFirst.slice(1)}` : "",
+      firstName: profile?.preferred
+        ? profile.preferred
+        : realFirst
+          ? `${realFirst[0]?.toUpperCase()}${realFirst.slice(1)}`
+          : "",
       botName: b.bot_name ?? "Casama",
+      nameKnown: !!profile?.asked,
     });
     return c.json(
       { org_id: w.orgId, bot_id: w.botId, conversation_id: w.conversationId, created: true },

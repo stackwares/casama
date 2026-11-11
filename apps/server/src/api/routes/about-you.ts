@@ -3,6 +3,7 @@
  * straight to Supabase because the text is sealed with the person's key when they belong to a
  * workspace that encrypts (D-136); reads through this client are opened transparently.
  */
+import { welcomeNameAnswered } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -84,6 +85,8 @@ export function registerAboutYouRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         learn = coalesce(${b.learn ?? null}::boolean, public.user_about.learn),
         name_asked_at = coalesce(public.user_about.name_asked_at, ${b.name_asked || b.preferred_name ? sql`now()` : sql`null`}),
         updated_at = now()`);
+    // Answered here: a welcome chat still asking for the name moves on instead of asking again.
+    if (b.name_asked || orNull(b.preferred_name)) await welcomeNameAnswered(db, userId);
     return c.json(await read(userId), 200);
   });
 

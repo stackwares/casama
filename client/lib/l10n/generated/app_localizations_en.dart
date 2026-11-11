@@ -6234,4 +6234,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get nameCardHelp =>
       'Your bots will use it in every workspace. You can change it later in Settings → About you.';
+
+  @override
+  String get nameStepBubble => 'Nice to meet you!';
+
+  @override
+  String get nameStepHint => 'Your name';
 }

@@ -19,7 +19,6 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
-import '../settings/name_card.dart';
 import '../settings/model_keys_screen.dart';
 import 'model_picker.dart';
 import 'template_picker.dart';
@@ -234,7 +233,7 @@ class BotsScreen extends ConsumerWidget {
         ],
       ),
       // About you (D-169): the one-time name card for people who joined before it was asked.
-      body: const Column(children: [NameCard(), Expanded(child: BotsList())]),
+      body: const BotsList(),
     );
   }
 }

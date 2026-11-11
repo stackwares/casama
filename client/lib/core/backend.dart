@@ -228,14 +228,14 @@ class AboutYouView {
     return d.isEmpty ? '' : d.split(RegExp(r'\s+')).first;
   }
 
-  AboutYouView copyWith({String? preferredName, String? pronouns, String? about, String? replyStyle, bool? learn}) => AboutYouView(
+  AboutYouView copyWith({String? preferredName, String? pronouns, String? about, String? replyStyle, bool? learn, bool? nameAsked}) => AboutYouView(
     displayName: displayName,
     preferredName: preferredName ?? this.preferredName,
     pronouns: pronouns ?? this.pronouns,
     about: about ?? this.about,
     replyStyle: replyStyle ?? this.replyStyle,
     learn: learn ?? this.learn,
-    nameAsked: nameAsked,
+    nameAsked: nameAsked ?? this.nameAsked,
   );
 }
 

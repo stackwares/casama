@@ -252,13 +252,18 @@ export function scopeCard() {
   );
 }
 
-export function openingMessage(botName: string, firstName = "") {
+/**
+ * The scripted opening. When the person already said what to call them (the app's name step,
+ * About you D-169), it greets them by name and goes straight to the focus question.
+ */
+export function openingMessage(botName: string, firstName = "", nameKnown = false) {
+  const hi = nameKnown && firstName.trim() ? `Hi ${firstName.trim()}!` : "Hi!";
   return [
     {
       type: "text",
-      text: `Hi! I'm ${botName}, your assistant. I can work on my own computer, use your apps when you connect them, and remember how you like things done. A couple of quick questions so I can start in the right place.`,
+      text: `${hi} I'm ${botName}, your assistant. I can work on my own computer, use your apps when you connect them, and remember how you like things done. A couple of quick questions so I can start in the right place.`,
     },
-    nameCard(firstName),
+    nameKnown ? focusCard() : nameCard(firstName),
   ];
 }
 
@@ -659,6 +664,12 @@ export async function handleWelcomeAction(
         await db.execute(
           sql`update public.profiles set preferred_name = ${name} where user_id = ${c.userId}::uuid`,
         );
+      // An older copy of the card, answered after the chat moved on (welcomeNameAnswered): take
+      // the name, but don't ask the focus question again.
+      if (s.step !== "name")
+        return scripted([
+          { type: "text", text: name ? `Got it, I'll call you ${name}.` : "Let's keep going." },
+        ]);
       // Answered or skipped, the one-time name card elsewhere never asks again.
       await db.execute(sql`
         insert into public.user_about (user_id, name_asked_at) values (${c.userId}::uuid, now())
@@ -834,6 +845,51 @@ export async function afterWelcomeRun(
   }
 }
 
+/**
+ * About you (D-169): the person answered (or skipped) "What should bots call you?" somewhere else,
+ * like the app's name step. A welcome chat still on its name question moves on, so it never asks
+ * twice: the name card shows as answered, then the focus question.
+ */
+export async function welcomeNameAnswered(db: Database, userId: string) {
+  // Claims the step first, so two saves at once can't both post.
+  const [conv] = await db.execute<{ id: string; org_id: string; bot_id: string }>(sql`
+    update public.conversations set welcome = jsonb_set(welcome, '{step}', '"focus"')
+    where id = (select id from public.conversations
+                where created_by = ${userId}::uuid and welcome is not null order by created_at limit 1)
+      and welcome ->> 'step' = 'name'
+    returning id, org_id, bot_id`);
+  if (!conv) return false;
+  const [opening] = await db.execute<{ content: unknown }>(sql`
+    select content from public.messages where conversation_id = ${conv.id}::uuid and role = 'assistant'
+    order by created_at limit 1`);
+  const parts = contentKeys.open(opening?.content) as Array<{
+    type?: string;
+    surface_id?: string;
+  }> | null;
+  const surface = Array.isArray(parts) ? parts.find((p) => p.type === "ui")?.surface_id : undefined;
+  const [p] = await db.execute<{ name: string | null }>(sql`
+    select nullif(btrim(preferred_name), '') as name from public.profiles where user_id = ${userId}::uuid`);
+  const name = p?.name ?? "";
+  await postScripted(
+    db,
+    { orgId: conv.org_id, botId: conv.bot_id, conversationId: conv.id, userId },
+    [...(name ? [{ type: "text", text: `Nice to meet you, ${name}!` }] : []), focusCard()],
+    {
+      text: name || "Skip",
+      ...(surface
+        ? {
+            uiAction: {
+              surface_id: surface,
+              name: "welcome.name",
+              context: name ? { name } : { skip: true },
+            },
+          }
+        : {}),
+    },
+  );
+  return true;
+}
+
 /** The welcome chat this person already has, if any. */
 export async function existingWelcome(db: Database, userId: string) {
   const [w] = await db.execute<{ org_id: string; bot_id: string; id: string }>(sql`
@@ -845,7 +901,15 @@ export async function existingWelcome(db: Database, userId: string) {
 /** In a new personal workspace: the personal bot and its welcome chat, with the scripted opening. */
 export async function startWelcome(
   db: Database,
-  a: { orgId: string; userId: string; firstName: string; botName: string; mascot?: string },
+  a: {
+    orgId: string;
+    userId: string;
+    firstName: string;
+    botName: string;
+    mascot?: string;
+    /** They already answered "What should bots call you?" (About you, D-169). */
+    nameKnown?: boolean;
+  },
 ): Promise<{ orgId: string; botId: string; conversationId: string }> {
   return db.transaction(async (tx) => {
     const [bot] = await tx.execute<{ id: string }>(sql`
@@ -855,11 +919,11 @@ export async function startWelcome(
       returning id`);
     const [conv] = await tx.execute<{ id: string }>(sql`
       insert into public.conversations (org_id, bot_id, title, created_by, last_message_at, purpose, welcome)
-      values (${a.orgId}::uuid, ${bot?.id}::uuid, 'Welcome', ${a.userId}::uuid, now(), 'welcome', ${JSON.stringify({ step: "name", focus: [] })}::jsonb)
+      values (${a.orgId}::uuid, ${bot?.id}::uuid, 'Welcome', ${a.userId}::uuid, now(), 'welcome', ${JSON.stringify({ step: a.nameKnown ? "focus" : "name", focus: [] })}::jsonb)
       returning id`);
     await tx.execute(sql`
       insert into public.messages (org_id, conversation_id, role, content, bot_id)
-      values (${a.orgId}::uuid, ${conv?.id}::uuid, 'assistant', ${contentKeys.sealJson(a.orgId, openingMessage(a.botName, a.firstName))}::jsonb, ${bot?.id}::uuid)`);
+      values (${a.orgId}::uuid, ${conv?.id}::uuid, 'assistant', ${contentKeys.sealJson(a.orgId, openingMessage(a.botName, a.firstName, a.nameKnown))}::jsonb, ${bot?.id}::uuid)`);
     return { orgId: a.orgId, botId: bot?.id as string, conversationId: conv?.id as string };
   });
 }

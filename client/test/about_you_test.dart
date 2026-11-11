@@ -2,8 +2,8 @@ import 'package:casama_app/core/backend.dart';
 import 'package:casama_app/core/providers.dart';
 import 'package:casama_app/features/chat/chat_controller.dart';
 import 'package:casama_app/features/chat/widgets/chat_widgets.dart';
-import 'package:casama_app/features/bots/bots_screen.dart';
 import 'package:casama_app/features/settings/about_you_screen.dart';
+import 'package:casama_app/features/settings/name_step.dart';
 import 'package:casama_app/features/workspaces/people_screen.dart';
 import 'package:casama_app/features/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
@@ -94,30 +94,39 @@ void main() {
     expect(undone, 'fact-1');
   });
 
-  testWidgets('people who joined before the welcome question get the name card once', (tester) async {
-    await setSize(tester, const Size(800, 1600));
+  testWidgets('the name step comes first, filled in from the sign-in name, and goes once saved', (tester) async {
+    await setSize(tester, const Size(400, 800));
     final backend = FakeBackend()..about = const AboutYouView(displayName: 'Robin Park', nameAsked: false);
-    await tester.pumpWidget(harness(backend, const BotsScreen()));
+    await tester.pumpWidget(harness(backend, const _Steps()));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('nameCard')), findsOneWidget);
-    expect(tester.widget<TextField>(find.byKey(const Key('nameCardField'))).controller!.text, 'Robin');
-    await tester.enterText(find.byKey(const Key('nameCardField')), 'Rob');
+    expect(find.byKey(const Key('nameStep')), findsOneWidget);
+    expect(tester.widget<TextField>(find.byKey(const Key('nameStepField'))).controller!.text, 'Robin');
+    await tester.enterText(find.byKey(const Key('nameStepField')), 'Rob');
     await tester.pump();
-    await tester.tap(find.byKey(const Key('nameCardSave')));
+    await tester.tap(find.byKey(const Key('nameStepContinue')));
     await tester.pumpAndSettle();
     expect(backend.about.preferredName, 'Rob');
-    expect(find.byKey(const Key('nameCard')), findsNothing);
+    expect(find.byKey(const Key('nameStep')), findsNothing);
+    expect(find.text('app'), findsOneWidget);
   });
 
-  testWidgets('"Not now" dismisses the name card for good', (tester) async {
-    await setSize(tester, const Size(800, 1600));
-    final backend = FakeBackend()..about = const AboutYouView(displayName: 'Robin Park', nameAsked: false);
-    await tester.pumpWidget(harness(backend, const BotsScreen()));
+  testWidgets('an empty name is not saved, and "Not now" skips the name step for good', (tester) async {
+    await setSize(tester, const Size(400, 800));
+    final backend = FakeBackend()..about = const AboutYouView(nameAsked: false);
+    await tester.pumpWidget(harness(backend, const _Steps()));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('nameCardLater')));
+    expect(tester.widget<FilledButton>(find.byKey(const Key('nameStepContinue'))).onPressed, isNull);
+    await tester.tap(find.byKey(const Key('nameStepLater')));
     await tester.pumpAndSettle();
     expect(backend.nameAskedMarked, isTrue);
-    expect(find.byKey(const Key('nameCard')), findsNothing);
+    expect(find.byKey(const Key('nameStep')), findsNothing);
+  });
+
+  testWidgets('people who already answered never see the name step', (tester) async {
+    await tester.pumpWidget(harness(FakeBackend()..about = const AboutYouView(displayName: 'Robin Park', preferredName: 'Rob'), const _Steps()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('nameStep')), findsNothing);
+    expect(find.text('app'), findsOneWidget);
   });
 
   testWidgets('People shows the name someone goes by and their pronouns', (tester) async {
@@ -129,4 +138,17 @@ void main() {
     expect(find.text('Ana (she/her)'), findsOneWidget);
     expect(find.text('ana@acme.test'), findsOneWidget);
   });
+}
+
+/// The app with the name step over it, the way the app shows it.
+class _Steps extends ConsumerWidget {
+  const _Steps();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Stack(
+    children: [
+      const Scaffold(body: Text('app')),
+      if (ref.watch(nameStepNeededProvider) ?? false) const Positioned.fill(child: NameStep()),
+    ],
+  );
 }

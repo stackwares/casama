@@ -221,4 +221,60 @@ describe("welcome chat", () => {
       (await h.request("/v1/welcome", { method: "POST", token: bob.token, json: {} })).status,
     ).toBe(409);
   });
+
+  it("a name given in the app's name step first skips the chat's name question", async () => {
+    const bea = await h.user("bea@example.com");
+    await h.request("/v1/me/about", {
+      method: "PATCH",
+      token: bea.token,
+      json: { preferred_name: "Bea" },
+    });
+    const bw = await j(
+      await h.request("/v1/welcome", { method: "POST", token: bea.token, json: {} }),
+    );
+    const [m] = await h.tdb.admin<
+      { content: Part[] }[]
+    >`select content from public.messages where conversation_id = ${bw.conversation_id} and role = 'assistant'`;
+    const open = m?.content ?? [];
+    expect(open[0]?.text).toMatch(/^Hi Bea! I'm Casama/);
+    expect(components(open).find((c) => c.id === "name")).toBeFalsy();
+    expect(components(open).find((c) => c.component === "ChoicePicker")).toBeTruthy();
+  });
+
+  it("answering the name elsewhere moves a waiting welcome chat on, once", async () => {
+    const cy = await h.user("cy@example.com");
+    const cw = await j(
+      await h.request("/v1/welcome", {
+        method: "POST",
+        token: cy.token,
+        json: { first_name: "cy" },
+      }),
+    );
+    const messages = () =>
+      h.tdb.admin<
+        { role: string; content: Part[] }[]
+      >`select role, content from public.messages where conversation_id = ${cw.conversation_id} order by created_at`;
+    const [opening] = await messages();
+    for (let i = 0; i < 2; i++)
+      await h.request("/v1/me/about", {
+        method: "PATCH",
+        token: cy.token,
+        json: { preferred_name: "Cyrus" },
+      });
+    const all = await messages();
+    expect(all.map((x) => x.role)).toEqual(["assistant", "user", "assistant"]);
+    // The old name card shows as answered, then the focus question.
+    expect(all[1]?.content.find((p) => p.type === "ui_action")).toMatchObject({
+      surface_id: surface(opening?.content ?? []),
+      name: "welcome.name",
+    });
+    expect(all[2]?.content[0]?.text).toBe("Nice to meet you, Cyrus!");
+    expect(
+      components(all[2]?.content ?? []).find((c) => c.component === "ChoicePicker"),
+    ).toBeTruthy();
+    const [conv] = await h.tdb.admin<
+      { welcome: { step: string } }[]
+    >`select welcome from public.conversations where id = ${cw.conversation_id}`;
+    expect(conv?.welcome.step).toBe("focus");
+  });
 });
