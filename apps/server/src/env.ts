@@ -137,6 +137,11 @@ export const EnvSchema = z.object({
   APNS_VOIP_TOPIC: z.string().default("ai.casama.app.voip"),
   APNS_URL: z.url().optional(),
   RESEND_API_KEY: z.string().optional(),
+  /** Invite and notice email over SMTP instead of Resend (D-174). Resend wins when both are set. */
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().default("Casama <no-reply@localhost>"),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(120),
   /** Error reporting (D-063): auto = Sentry if SENTRY_DSN, else PostHog if POSTHOG_API_KEY. */
