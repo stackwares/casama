@@ -142,7 +142,7 @@ async function startApi() {
     if (url.pathname === "/v1/connect/proj_1/actions/run")
       return json(res, 200, { ret: { sent: body?.configured_props?.text, action: body?.id } });
     // fal.ai
-    if (url.pathname === "/fal-ai/flux/schnell")
+    if (url.pathname === "/fal-ai/flux-2/klein/4b")
       return json(res, 200, {
         images: [
           { url: `${apiUrl}/files/img.png`, content_type: "image/png", width: 1024, height: 1024 },
@@ -400,6 +400,11 @@ describe("approvals", () => {
       { n: string }[]
     >`select count(*) as n from public.usage_ledger where run_id = ${runId} and kind = 'media_images'`;
     expect(Number(u?.n)).toBe(1);
+    // Priced per model: FLUX.2 klein 4B at $0.005 a megapixel (D-182).
+    const [priced] = await tdb.admin<{ cost_usd: string; model: string }[]>`
+      select cost_usd, model from public.usage_ledger where run_id = ${runId} and kind = 'media_images'`;
+    expect(priced).toMatchObject({ model: "fal-ai/flux-2/klein/4b" });
+    expect(Number(priced?.cost_usd)).toBeCloseTo(0.005, 6);
     const again = await startRun(botId, "make an image of a robot");
     expect((await runAgent(again, makeDeps(fix()).deps)).status).toBe("completed");
     expect((await events(again)).some((e) => e.type === "approval.requested")).toBe(false);

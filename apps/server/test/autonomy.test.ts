@@ -43,7 +43,7 @@ async function startServices() {
       await server.connect(transport);
       return transport.handleRequest(req, res, raw ? JSON.parse(raw) : undefined);
     }
-    if (url.pathname === "/fal-ai/flux/schnell")
+    if (url.pathname === "/fal-ai/flux-2/klein/4b")
       return json(res, 200, {
         images: [{ url: `${servicesUrl}/img.png`, content_type: "image/png" }],
       });

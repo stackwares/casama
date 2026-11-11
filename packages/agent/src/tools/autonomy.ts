@@ -771,7 +771,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       const [img] = await provider.generateImage({ prompt: args.prompt, size: args.size });
       if (!img) throw new ToolError("media_failed", "No image was returned.");
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model)
-        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'media_images', 1, ${MEDIA_PRICES.image}, ${provider.id})`);
+        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'media_images', 1, ${img.costUsd ?? MEDIA_PRICES.image}, ${img.model ?? provider.id})`);
       const path = await saveMedia(
         ctx,
         img.url,
@@ -808,7 +808,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       });
       const seconds = video.durationS ?? args.duration_s ?? 5;
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model)
-        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'media_video_seconds', ${seconds}, ${seconds * MEDIA_PRICES.videoPerSecond}, ${provider.id})`);
+        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'media_video_seconds', ${seconds}, ${video.costUsd ?? seconds * MEDIA_PRICES.videoPerSecond}, ${video.model ?? provider.id})`);
       const path = await saveMedia(ctx, video.url, "mp4").catch(() => null);
       return {
         content: `Generated video: ${video.url}${path ? `\nSaved to ~/workspace/${path}` : ""}`,

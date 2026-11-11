@@ -32,7 +32,8 @@ adds a paid service or a vendor changes its price.
 | PostHog | $0 up to 1M events / month | Then from $0.00005 per event |
 | Langfuse (optional) | $0 up to 50k units, then $29 / month | |
 | Email: Zoho Mail | $1–4 per mailbox / month | hello@ sends sign-in email; switch sign-in mail to Resend ($20 / month for 50k) when volume grows |
-| Cloudflare (DNS, site, docs, tunnel) | $0; Workers Paid $5 / month if needed | |
+| Cloudflare (DNS, site, docs, gallery, tunnel) | $0; Workers Paid $5 / month if needed | The gallery (D-184) is static assets: free, no bandwidth charge; R2 at $0.015 per GB-month only if images outgrow the static limits |
+| Unsplash API (wallpaper photo search, D-087) | $0 | Free at both Demo (50 requests/hour) and Production rate limits; Unsplash reserves the right to charge for very heavy use |
 | Domain casama.ai | about $80 / year | Unverified; check the Cloudflare dashboard |
 | Apple Developer Program | $99 / year | |
 | Google Play registration | $25 once | |
@@ -55,8 +56,8 @@ mailboxes, domain, Apple), plus E2B's $150 if we use it for computers.
 | **SMS** | $0.0083 per segment plus carrier fees ($0.0025–0.007) | Not metered separately | ❌ |
 | **Apps through Composio** (our account) | Free up to 20k calls and 1k connected accounts a month. Then (Pro) **$0.002 per call** (Slack, Gmail, Calendar, Sheets, Jira, HubSpot), $0.01 (Salesforce, YouTube, Reddit), $0.0005 (others); **$0.10 once** per connected account past 1k | Not metered | ❌ Add a `app_calls` kind and cap it per plan |
 | **Web search** | Brave $5 per 1k searches; Tavily $0.008 per search; Exa $4–7 per 1k; our own SearXNG $0 (runs on the API server) | `search_queries`, priced per provider (D-179) | ✅ Metered. Workspace keys pay their own; without one, SearXNG (free). Cloud never pays per search today |
-| **Images** | fal FLUX schnell $0.003 per image; FLUX dev $0.025; Nano Banana / Seedream about $0.04 | $0.003 per image | ⚠️ Right for schnell only; price per model |
-| **Video** | fal per second: Kling 2.5 / 2.6 Pro $0.07, Kling v3 $0.14, Grok Imagine $0.05, PixVerse V6 $0.005 | `media_video_seconds`, $0.04 / second | ❌ Below Kling. Price per model |
+| **Images** | fal per megapixel (1024×1024): FLUX.2 klein 4B $0.005 (default), FLUX.1 schnell $0.003, Z-Image Turbo $0.005, FLUX.2 $0.012, FLUX dev $0.025; Seedream 4.5 $0.04 per image. OpenRouter sells the same models for more (klein 4B $0.014 / MP, its cheapest image model Recraft v4.1 Flash $0.007) | `media_images`, priced per model and size (D-182); unknown models at $0.04 | ✅ Per model |
+| **Video** | fal per second: PixVerse V6 $0.005, MiniMax H3 Max Turbo $0.025, Grok Imagine $0.05, LTX-2.3 $0.04–0.06, Wan 3 $0.05–0.20, Kling 2.5 / 2.6 Pro $0.07, Kling v3 $0.14 | `media_video_seconds`, priced per model (D-182); unknown models at $0.10 / second | ✅ Per model (high for unknown ones) |
 | **Paid data (places, emails, SEO)** | What the data seller charges | `data_calls`, cost + 20% | ✅ (consider +30% to cover payment fees) |
 | **Memory embeddings** | OpenAI text-embedding-3-small $0.02 per 1M tokens | Not metered | ✅ Negligible |
 | **Live view and take control** (TURN relay) | Our own coturn on the server: bandwidth only (about €1 / TB over 20 TB). Cloudflare TURN $0.05 / GB if we switch | `stream_seconds` (not priced) | ✅ For now |
@@ -101,9 +102,10 @@ Ranked by saving. ✅ = done, ☐ = to do.
      computer awake; waking restores its files.
    - ✅ A computer switched to the desktop for a takeover goes back to headless when it next
      sleeps (D-178). A desktop someone picks stays.
-   - ✅ Hosted sizes: computers carry their size (1 vCPU / 1 GB by default) and Daytona gets it on
-     create. E2B takes its size from the template, so ☐ build the E2B templates at 1 vCPU / 1 GB
-     (headless) and 2 vCPU / 4 GB (desktop), not E2B's 2 vCPU / 4 GB default for both.
+   - Casama runs computers on **Docker** (all of them today); E2B and Daytona are optional
+     adapters for self-hosters, not something Casama pays for. If they're ever used: computers
+     carry their size and Daytona gets it on create; E2B's size comes from its template, so build
+     those at 1 vCPU / 1 GB (headless) and 2 vCPU / 4 GB (desktop).
    - A small warm pool (built); EU servers (US ones cost about twice as much).
 2. **Models on our keys:**
    - ✅ Anthropic prompt caching: Claude requests ask for caching, so the instructions, tools and
@@ -155,7 +157,7 @@ discussion); with it, $15 / $39 / $149 undercuts every product that gives bots t
    (D-181). ☐ Add OpenRouter's 5.5% credit fee through the markup setting (item 5).
 3. **Meter what isn't metered:** Composio calls and connected accounts, phone numbers per month, SMS,
    Twilio Media Streams, and the voice model inside phone calls. (Web search ✅, D-179.)
-4. **Per-model media prices** for images and video.
+4. ✅ **Per-model media prices** for images and video (D-182).
 5. **A markup setting** (default 1.3) applied to every metered cost, and plan prices that account for
    store and payment fees.
 6. **Caps per plan** for Composio calls, search, storage and computer hours, so one heavy bot can't
