@@ -198,14 +198,18 @@ enabled = true
 [auth.webauthn]
 rp_display_name = "Casama"
 rp_id = "casama.ai"
-# Web pages under casama.ai, and the Android app: android:apk-key-hash is the base64url SHA-256
-# of the signing certificate. Release builds still sign with the debug key, and that fingerprint
-# is the one below. Play App Signing has no ai.casama.app app yet, so there is no Play certificate
-# to add. iOS and macOS report https://casama.ai.
+# Web pages under casama.ai (app-dev is the dev web app on this Mac, through the tunnel), and the
+# Android app: android:apk-key-hash is the base64url SHA-256 of the signing certificate: the debug
+# key (local builds), Casama's upload key (release builds installed directly) and Play's app signing
+# key (installs from Google Play; Play Console → App integrity).
+# iOS and macOS report https://casama.ai.
 rp_origins = [
   "https://casama.ai",
   "https://app.casama.ai",
+  "https://app-dev.casama.ai",
   "android:apk-key-hash:iKc-CP4rIK3ljIwQDmQU3hd67qOAeiF1ljy7Unekunw",
+  "android:apk-key-hash:MFIB2oja2cDTqZZ2t7yvrx3Ezl_zUTKtx-pgCtFVpNs",
+  "android:apk-key-hash:mWLmCWhTfJ9JYtiOXQILcucbwScsXPngdZpKJ0LIW-0",
 ]
 
 [auth.rate_limit]

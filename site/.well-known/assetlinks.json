@@ -8,7 +8,9 @@
       "namespace": "android_app",
       "package_name": "ai.casama.app",
       "sha256_cert_fingerprints": [
-        "88:A7:3E:08:FE:2B:20:AD:E5:8C:8C:10:0E:64:14:DE:17:7A:EE:A3:80:7A:21:75:96:3C:BB:52:77:A4:BA:7C"
+        "88:A7:3E:08:FE:2B:20:AD:E5:8C:8C:10:0E:64:14:DE:17:7A:EE:A3:80:7A:21:75:96:3C:BB:52:77:A4:BA:7C",
+        "30:52:01:DA:88:DA:D9:C0:D3:A9:96:76:B7:BC:AF:AF:1D:C4:CE:5F:F3:51:32:AD:C7:EA:60:0A:D1:55:A4:DB",
+        "99:62:E6:09:68:53:7C:9F:49:62:D8:8E:5D:02:0B:72:E7:1B:C1:27:2C:5C:F9:E0:75:9A:4A:27:42:C8:5B:ED"
       ]
     }
   }

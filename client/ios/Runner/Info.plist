@@ -115,5 +115,8 @@
 		<string>remote-notification</string>
 		<string>voip</string>
 	</array>
+	<!-- Only standard HTTPS and the OS's own encryption: no export-compliance questions per upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
