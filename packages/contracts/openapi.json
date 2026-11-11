@@ -11000,6 +11000,13 @@
             "type": "string",
             "description": "A skill's one-line description."
           },
+          "requires": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Features the look needs from the app (doodles, mesh, scheme-colors). Apps hide items that need something they can't draw."
+          },
           "document": {
             "type": "object",
             "additionalProperties": {},

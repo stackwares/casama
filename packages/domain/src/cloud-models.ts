@@ -37,7 +37,11 @@ type CloudChoice = { credential_id: string; model: string };
  */
 export function useSharedKeyForMissing<
   T extends { primary?: CloudChoice; fallbacks?: CloudChoice[]; cheap?: CloudChoice },
->(policy: T, liveCredentialIds: ReadonlySet<string>, shared: CloudChoice | null): {
+>(
+  policy: T,
+  liveCredentialIds: ReadonlySet<string>,
+  shared: CloudChoice | null,
+): {
   policy: T;
   changed: boolean;
 } {

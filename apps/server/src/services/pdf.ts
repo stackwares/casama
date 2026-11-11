@@ -53,11 +53,9 @@ export function chromiumPdf(executable: string): PdfRenderer {
         const src = join(dir, "page.html");
         const out = join(dir, "page.pdf");
         await writeFile(src, html);
-        await run(
-          executable,
-          chromiumPdfArgs({ profile: join(dir, "profile"), out, src }),
-          { timeout: 60_000 },
-        );
+        await run(executable, chromiumPdfArgs({ profile: join(dir, "profile"), out, src }), {
+          timeout: 60_000,
+        });
         return new Uint8Array(await readFile(out));
       } finally {
         await rm(dir, { recursive: true, force: true });

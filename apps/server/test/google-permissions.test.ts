@@ -114,11 +114,13 @@ describe("Google permissions", () => {
       (await j(await h.request("/v1/apps", { token: owner.token }))).apps.find(
         (a: { id: string }) => a.id === "slack",
       ).auth;
-    expect(await j(await h.request("/v1/admin/connections", { token: owner.token }))).toMatchObject({
-      composio: "server",
-      google: "composio",
-      composio_key: true,
-    });
+    expect(await j(await h.request("/v1/admin/connections", { token: owner.token }))).toMatchObject(
+      {
+        composio: "server",
+        google: "composio",
+        composio_key: true,
+      },
+    );
     expect(await slackAuth()).toEqual(["managed"]);
     const denied = await h.request("/v1/admin/connections", {
       method: "PUT",

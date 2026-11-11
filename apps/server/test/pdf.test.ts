@@ -3,7 +3,10 @@ import { chromiumPdfArgs } from "../src/services/pdf.ts";
 
 describe("PDF print", () => {
   const args = (asRoot: boolean) =>
-    chromiumPdfArgs({ profile: "/tmp/profile", out: "/tmp/page.pdf", src: "/tmp/page.html" }, { asRoot });
+    chromiumPdfArgs(
+      { profile: "/tmp/profile", out: "/tmp/page.pdf", src: "/tmp/page.html" },
+      { asRoot },
+    );
 
   it("blocks network and other files, and sandboxes when it can", () => {
     const flags = args(false);

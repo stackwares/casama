@@ -47,6 +47,8 @@ class GalleryDetail {
 
      this.description,
 
+     this.requires,
+
     required  this.document,
 
     required  this.files,
@@ -212,6 +214,19 @@ class GalleryDetail {
 
 
 
+      /// Features the look needs from the app (doodles, mesh, scheme-colors). Apps hide items that need something they can't draw.
+  @JsonKey(
+    
+    name: r'requires',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? requires;
+
+
+
   @JsonKey(
     
     name: r'document',
@@ -265,6 +280,7 @@ class GalleryDetail {
       other.category == category &&
       other.icon == icon &&
       other.description == description &&
+      other.requires == requires &&
       other.document == document &&
       other.files == files &&
       other.skillMd == skillMd;
@@ -284,6 +300,7 @@ class GalleryDetail {
         category.hashCode +
         icon.hashCode +
         description.hashCode +
+        requires.hashCode +
         (document == null ? 0 : document.hashCode) +
         files.hashCode +
         (skillMd == null ? 0 : skillMd.hashCode);

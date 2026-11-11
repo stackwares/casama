@@ -33,6 +33,8 @@ abstract class _$GalleryDetailCWProxy {
 
   GalleryDetail description(String? description);
 
+  GalleryDetail requires(List<String>? requires);
+
   GalleryDetail document(Map<String, Object?>? document);
 
   GalleryDetail files(List<String> files);
@@ -61,6 +63,7 @@ abstract class _$GalleryDetailCWProxy {
     String? category,
     String? icon,
     String? description,
+    List<String>? requires,
     Map<String, Object?>? document,
     List<String> files,
     String? skillMd,
@@ -115,6 +118,9 @@ class _$GalleryDetailCWProxyImpl implements _$GalleryDetailCWProxy {
       call(description: description);
 
   @override
+  GalleryDetail requires(List<String>? requires) => call(requires: requires);
+
+  @override
   GalleryDetail document(Map<String, Object?>? document) =>
       call(document: document);
 
@@ -147,6 +153,7 @@ class _$GalleryDetailCWProxyImpl implements _$GalleryDetailCWProxy {
     Object? category = const $CopyWithPlaceholder(),
     Object? icon = const $CopyWithPlaceholder(),
     Object? description = const $CopyWithPlaceholder(),
+    Object? requires = const $CopyWithPlaceholder(),
     Object? document = const $CopyWithPlaceholder(),
     Object? files = const $CopyWithPlaceholder(),
     Object? skillMd = const $CopyWithPlaceholder(),
@@ -204,6 +211,10 @@ class _$GalleryDetailCWProxyImpl implements _$GalleryDetailCWProxy {
           ? _value.description
           // ignore: cast_nullable_to_non_nullable
           : description as String?,
+      requires: requires == const $CopyWithPlaceholder()
+          ? _value.requires
+          // ignore: cast_nullable_to_non_nullable
+          : requires as List<String>?,
       document: document == const $CopyWithPlaceholder()
           ? _value.document
           // ignore: cast_nullable_to_non_nullable
@@ -274,6 +285,10 @@ GalleryDetail _$GalleryDetailFromJson(Map<String, dynamic> json) =>
         category: $checkedConvert('category', (v) => v as String?),
         icon: $checkedConvert('icon', (v) => v as String?),
         description: $checkedConvert('description', (v) => v as String?),
+        requires: $checkedConvert(
+          'requires',
+          (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+        ),
         document: $checkedConvert(
           'document',
           (v) => v as Map<String, dynamic>?,
@@ -302,6 +317,7 @@ Map<String, dynamic> _$GalleryDetailToJson(GalleryDetail instance) =>
       'category': ?instance.category,
       'icon': ?instance.icon,
       'description': ?instance.description,
+      'requires': ?instance.requires,
       'document': instance.document,
       'files': instance.files,
       'skill_md': instance.skillMd,

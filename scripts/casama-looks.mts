@@ -26,7 +26,9 @@ function channel(c: number) {
 }
 function luminance(hex: string) {
   const n = Number.parseInt(hex.slice(1), 16);
-  return 0.2126 * channel((n >> 16) & 255) + 0.7152 * channel((n >> 8) & 255) + 0.0722 * channel(n & 255);
+  return (
+    0.2126 * channel((n >> 16) & 255) + 0.7152 * channel((n >> 8) & 255) + 0.0722 * channel(n & 255)
+  );
 }
 function contrast(a: string, b: string) {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
@@ -34,7 +36,8 @@ function contrast(a: string, b: string) {
 }
 const color = (hex: string) => `Color(0xFF${hex.slice(1).toUpperCase()})`;
 const num = (v: number) => (Number.isInteger(v) ? `${v}` : `${v}`);
-const dartString = (s: string) => `'${s.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\$/g, "\\$")}'`;
+const dartString = (s: string) =>
+  `'${s.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\$/g, "\\$")}'`;
 const number = (v: unknown) => (typeof v === "number" ? v : Number.parseFloat(String(v)));
 const dartDouble = (v: unknown) => {
   const n = number(v);
@@ -46,7 +49,11 @@ function meshDart(id: string, raw: Record<string, unknown>) {
   const where = `meshes/${id}.json`;
   for (const key of ["light", "dark"] as const) {
     const list = raw[key];
-    if (!Array.isArray(list) || list.length !== 9 || !list.every((c) => typeof c === "string" && HEX.test(c))) {
+    if (
+      !Array.isArray(list) ||
+      list.length !== 9 ||
+      !list.every((c) => typeof c === "string" && HEX.test(c))
+    ) {
       errors.push(`${where}: ${key} must be nine #RRGGBB colors`);
       return "";
     }
@@ -56,7 +63,8 @@ function meshDart(id: string, raw: Record<string, unknown>) {
     }
   }
   const points = raw.points as [number, number][];
-  if (!Array.isArray(points) || points.length !== 9) errors.push(`${where}: points must be nine [x, y]`);
+  if (!Array.isArray(points) || points.length !== 9)
+    errors.push(`${where}: points must be nine [x, y]`);
   else
     points.forEach(([x, y], i) => {
       const col = i % 3;
@@ -66,7 +74,9 @@ function meshDart(id: string, raw: Record<string, unknown>) {
       if ((col === 1 && (x < 0.2 || x > 0.8)) || (row === 1 && (y < 0.2 || y > 0.8)))
         errors.push(`${where}: point ${i} must stay between 0.2 and 0.8`);
     });
-  const offsets = points.map(([x, y]) => (x === 0 && y === 0 ? "Offset.zero" : `Offset(${num(x)}, ${num(y)})`));
+  const offsets = points.map(([x, y]) =>
+    x === 0 && y === 0 ? "Offset.zero" : `Offset(${num(x)}, ${num(y)})`,
+  );
   return `  ${id}(
     ${dartString(raw.name as string)},
     [${(raw.light as string[]).map(color).join(", ")}],
@@ -128,7 +138,14 @@ function patternDart(id: string, raw: Record<string, unknown>) {
 }
 
 // ------------------------------------------------------------------ schemes
-const SIX = ["primary", "primaryContainer", "secondary", "secondaryContainer", "tertiary", "tertiaryContainer"];
+const SIX = [
+  "primary",
+  "primaryContainer",
+  "secondary",
+  "secondaryContainer",
+  "tertiary",
+  "tertiaryContainer",
+];
 function schemeDart(id: string, raw: Record<string, Record<string, string>>) {
   const where = `schemes/${id}.json`;
   const mode = (m: "light" | "dark") => {
@@ -137,9 +154,11 @@ function schemeDart(id: string, raw: Record<string, Record<string, string>>) {
       if (!HEX.test(c?.[key] ?? "")) errors.push(`${where}: ${m}.${key} must be a #RRGGBB color`);
     if (errors.length) return "";
     for (const key of ["primary", "secondary", "tertiary"])
-      if (contrast(c[key], c.background) < 4.5) errors.push(`${where}: ${m}.${key} is below 4.5:1 on the background`);
+      if (contrast(c[key], c.background) < 4.5)
+        errors.push(`${where}: ${m}.${key} is below 4.5:1 on the background`);
     for (const key of ["primaryContainer", "secondaryContainer", "tertiaryContainer"])
-      if (contrast(c.onBackground, c[key]) < 4.5) errors.push(`${where}: ${m} text is below 4.5:1 on ${key}`);
+      if (contrast(c.onBackground, c[key]) < 4.5)
+        errors.push(`${where}: ${m} text is below 4.5:1 on ${key}`);
     return `FlexSchemeColor(
     primary: ${color(c.primary)},
     primaryContainer: ${color(c.primaryContainer)},

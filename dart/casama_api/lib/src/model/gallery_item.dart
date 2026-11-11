@@ -47,6 +47,8 @@ class GalleryItem {
 
      this.description,
 
+     this.requires,
+
      this.document,
 
     required  this.files,
@@ -210,6 +212,19 @@ class GalleryItem {
 
 
 
+      /// Features the look needs from the app (doodles, mesh, scheme-colors). Apps hide items that need something they can't draw.
+  @JsonKey(
+    
+    name: r'requires',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? requires;
+
+
+
       /// A theme, scheme or wallpaper document, so a list can draw previews without fetching each item.
   @JsonKey(
     
@@ -252,6 +267,7 @@ class GalleryItem {
       other.category == category &&
       other.icon == icon &&
       other.description == description &&
+      other.requires == requires &&
       other.document == document &&
       other.files == files;
 
@@ -270,6 +286,7 @@ class GalleryItem {
         category.hashCode +
         icon.hashCode +
         description.hashCode +
+        requires.hashCode +
         document.hashCode +
         files.hashCode;
 
